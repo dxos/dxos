@@ -13,7 +13,7 @@ import {
   setSchemaProperty,
   getSchemaProperty,
   getObjectAnnotation,
-  getEchoIdentifierAnnotation,
+  getObjectIdentifierAnnotation,
   EntityKind,
   JsonSchemaType,
   createSchemaReference,
@@ -317,7 +317,7 @@ describe('json-to-effect', () => {
       typename: 'example.com/type/Project',
       version: '0.1.0',
     });
-    expect(getEchoIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
+    expect(getObjectIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
   });
 
   test('symbol annotations get compared', () => {

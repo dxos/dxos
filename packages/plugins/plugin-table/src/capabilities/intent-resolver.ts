@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
+import { contributes, Capabilities, createResolver, type PluginsContext } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { initializeTable, TableType } from '@dxos/react-ui-table';
 import { ViewProjection } from '@dxos/schema';
@@ -12,13 +13,14 @@ import { ViewProjection } from '@dxos/schema';
 import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
 
-export default () =>
+export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: TableAction.Create,
-      resolve: async ({ space, name, initialSchema }) => {
+      resolve: async ({ space, name, typename }) => {
+        const client = context.requestCapability(ClientCapabilities.Client);
         const table = create(TableType, { name, threads: [] });
-        await initializeTable({ space, table, initialSchema });
+        await initializeTable({ client, space, table, typename });
         return { data: { object: table } };
       },
     }),

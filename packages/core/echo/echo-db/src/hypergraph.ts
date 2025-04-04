@@ -6,11 +6,17 @@ import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
 import { Reference } from '@dxos/echo-protocol';
-import { RuntimeSchemaRegistry, type BaseObject, type ObjectId } from '@dxos/echo-schema';
+import {
+  type BaseSchema,
+  RuntimeSchemaRegistry,
+  type BaseObject,
+  type ObjectId,
+  ImmutableSchema,
+} from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId, DXN } from '@dxos/keys';
-import type { RefResolver } from '@dxos/live-object';
+import { type RefResolver } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
@@ -21,10 +27,10 @@ import { type ReactiveEchoObject, getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
-  Filter,
   filterMatch,
-  type FilterSource,
   optionsToProto,
+  Filter,
+  type FilterSource,
   Query,
   type QueryContext,
   type QueryFn,
@@ -50,12 +56,22 @@ export class Hypergraph {
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<ReactiveEchoObject<any>>>>();
-
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   get schemaRegistry(): RuntimeSchemaRegistry {
     return this._schemaRegistry;
+  }
+
+  // TODO(burdon): Use DXN.
+  // TODO(burdon): Ensure static and dynamic schema do not have overlapping type names.
+  async getSchemaByTypename(typename: string, db: EchoDatabase): Promise<BaseSchema | undefined> {
+    const schema = this.schemaRegistry.getSchema(typename);
+    if (schema) {
+      return new ImmutableSchema(schema);
+    }
+
+    return await db.schemaRegistry.query({ typename }).firstOrUndefined();
   }
 
   /**

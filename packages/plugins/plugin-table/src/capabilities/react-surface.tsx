@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { isInstanceOf, type Ref, type S } from '@dxos/echo-schema';
+import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
+import { getTypenameOrThrow, isInstanceOf, type Ref, type S } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
+import { useClient } from '@dxos/react-client';
 import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { TableType } from '@dxos/react-ui-table';
@@ -15,7 +17,7 @@ import { ViewType } from '@dxos/schema';
 
 import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
 import { TABLE_PLUGIN } from '../meta';
-import { InitialSchemaAnnotationId } from '../types';
+import { TypenameAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -59,28 +61,44 @@ export default () =>
         return <ObjectDetailsPanel objectId={data.subject.id} view={viewTarget} />;
       },
     }),
+    // TODO(burdon): Factor out from Table, Kanban, and Map.
     createSurface({
       id: `${TABLE_PLUGIN}/create-initial-schema-form`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        if (data.prop !== 'initialSchema') {
+        if (data.prop !== 'typename') {
           return false;
         }
 
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialSchemaAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
+        const client = useClient();
         const props = inputProps as any as InputProps;
         const space = isSpace(target) ? target : getSpace(target);
         if (!space) {
           return null;
         }
 
-        // TODO(ZaymonFC): Make this reactive.
-        // TODO(burdon): Also add static types?
-        const schemata = space?.db.schemaRegistry.query().runSync();
-        return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
+        const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
+        const whitelistedTypenames = useMemo(
+          () => new Set(schemaWhitelists.flatMap((typeArray) => typeArray.map((type) => type.typename))),
+          [schemaWhitelists],
+        );
+
+        const fixed = client.graph.schemaRegistry.schemas.filter((schema) =>
+          whitelistedTypenames.has(getTypenameOrThrow(schema)),
+        );
+        const dynamic = space?.db.schemaRegistry.query().runSync();
+        const typenames = Array.from(
+          new Set<string>([
+            ...fixed.map((schema) => getTypenameOrThrow(schema)),
+            ...dynamic.map((schema) => schema.typename),
+          ]),
+        ).sort();
+
+        return <SelectInput {...props} options={typenames.map((typename) => ({ value: typename }))} />;
       },
     }),
   ]);
