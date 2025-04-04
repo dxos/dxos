@@ -102,6 +102,6 @@ jobs:
             [ios.codesign]
             identity = ${{ secrets.APPLE_DISTRIBUTION_CODESIGN_IDENTITY }}
             [ios.distribution]
-            method = debugging
+            method = app-store
             [mac.codesign]
             identity = ${{ secrets.APPLE_DISTRIBUTION_CODESIGN_IDENTITY }}
