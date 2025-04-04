@@ -24,11 +24,17 @@ import {
  * In contrast to {@link EchoSchema} this definition is not recorded in the database.
  */
 export interface TypedObject<A = any, I = any> extends S.Schema<A, I> {
-  /** Fully qualified type name. */
+  /**
+   * Schema global typename.
+   *
+   * @example example.com/type/Test
+   */
   readonly typename: string;
 
   /**
-   * Semver schema version.
+   * Schema version in semver format.
+   *
+   * @example 0.1.0
    */
   readonly version: string;
 }

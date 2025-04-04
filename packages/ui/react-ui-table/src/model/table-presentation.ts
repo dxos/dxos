@@ -60,7 +60,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
         cells = {};
     }
 
-    if (plane === 'grid' && this.model.features.editable === false) {
+    if (plane === 'grid' && this.model.features.dataEditable === false) {
       Object.values(cells).forEach((cell) => {
         cell.readonly = true;
       });
@@ -239,7 +239,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
   private getNewColumnCell(): DxGridPlaneCells {
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        accessoryHtml: this.model.features.editable
+        accessoryHtml: this.model.features.schemaEditable
           ? tableButtons.addColumn.render({
               disabled: (this.model.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })

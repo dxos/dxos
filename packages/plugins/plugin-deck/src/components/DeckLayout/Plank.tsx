@@ -107,7 +107,8 @@ const PlankImpl = memo(
     }, [id, scrollIntoView, layoutMode]);
 
     const isSolo = layoutMode === 'solo' && part === 'solo';
-    const isAttendable = isSolo || (layoutMode === 'deck' && part === 'deck');
+    const isAttendable =
+      (layoutMode === 'solo' && part.startsWith('solo')) || (layoutMode === 'deck' && part === 'deck');
 
     const sizeAttrs = useMainSize();
 
@@ -129,7 +130,8 @@ const PlankImpl = memo(
       'attention-surface relative',
       isSolo && mainIntrinsicSize,
       isSolo && railGridHorizontal,
-      isSolo && 'grid absolute inset-0',
+      isSolo && 'absolute inset-0',
+      part.startsWith('solo') && 'grid',
       part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
       part.startsWith('solo-') && 'row-span-2 min-is-0',
       part === 'solo-companion' && '!border-separator border-is',

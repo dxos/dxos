@@ -4,13 +4,18 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
+import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { type EchoSchema } from '@dxos/echo-schema';
+import { ImmutableSchema, type BaseSchema } from '@dxos/echo-schema';
 
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
  */
-export const useSchema = (space: Space | undefined, typename: string | undefined): EchoSchema | undefined => {
+export const useSchema = (
+  client: Client,
+  space: Space | undefined,
+  typename: string | undefined,
+): BaseSchema | undefined => {
   const { subscribe, getSchema } = useMemo(() => {
     if (!typename || !space) {
       return {
@@ -19,8 +24,18 @@ export const useSchema = (space: Space | undefined, typename: string | undefined
       };
     }
 
+    const staticSchema = client.graph.schemaRegistry.getSchema(typename);
+    if (staticSchema) {
+      // Don't inline into getSchema, need a stable reference.
+      const immutableSchema = new ImmutableSchema(staticSchema);
+      return {
+        subscribe: () => () => {},
+        getSchema: () => immutableSchema,
+      };
+    }
+
     const query = space.db.schemaRegistry.query({ typename });
-    const initialResult = query.runSync()[0];
+    const initialResult: BaseSchema = query.runSync()[0];
     let currentSchema = initialResult;
 
     return {
@@ -29,6 +44,7 @@ export const useSchema = (space: Space | undefined, typename: string | undefined
           currentSchema = query.results[0];
           onStoreChange();
         });
+
         return unsubscribe;
       },
       getSchema: () => currentSchema,

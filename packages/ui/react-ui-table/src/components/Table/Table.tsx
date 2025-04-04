@@ -209,7 +209,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
       (cell) => {
-        if (!model?.features.editable) {
+        if (!model?.features.dataEditable) {
           return;
         }
 
@@ -229,7 +229,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
       (event) => {
-        if (!model?.features.editable) {
+        if (!model?.features.dataEditable) {
           return;
         }
 
