@@ -107,10 +107,12 @@ export const search = async <Schema extends S.Schema.AnyNoContext>(
   // log('rawObjects', { rawObjects });
 
   const entries = mappedSchema.flatMap((schema, i) => {
-    return (rawObjects[i] as any[]).map((object: any) => ({
-      data: schema.pipe(S.decodeUnknownSync)(object),
-      schema: options.schema[i],
-    }));
+    return (
+      (rawObjects[i] as any[])?.map((object: any) => ({
+        data: object,
+        schema: options.schema[i],
+      })) ?? []
+    );
   });
 
   // log('verified objects', { entries });

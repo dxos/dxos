@@ -5604,9 +5604,6 @@ importers:
       effect:
         specifier: 3.13.3
         version: 3.13.3
-      exa-js:
-        specifier: ^1.5.12
-        version: 1.5.12(encoding@0.1.13)
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1
@@ -6465,15 +6462,33 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../../experimental/artifact
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../../experimental/assistant
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../../plugin-deck
@@ -6498,6 +6513,12 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      exa-js:
+        specifier: ^1.5.12
+        version: 1.5.12(encoding@0.1.13)
       main-thread-scheduling:
         specifier: ^14.1.1
         version: 14.2.0
@@ -49193,7 +49214,7 @@ snapshots:
 
   dotenv-expand@11.0.6:
     dependencies:
-      dotenv: 16.4.5
+      dotenv: 16.4.7
 
   dotenv@16.3.1: {}
 

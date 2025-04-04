@@ -24,9 +24,15 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
@@ -35,6 +41,8 @@
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "exa-js": "^1.5.12",
     "main-thread-scheduling": "^14.1.1"
   },
   "devDependencies": {
