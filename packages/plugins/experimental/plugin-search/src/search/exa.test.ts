@@ -1,8 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
 import { AIServiceEdgeClient, OllamaClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
-import { describe, test } from 'vitest';
+
 import { search } from './exa';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
@@ -24,7 +30,7 @@ describe('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.ContactType],
-        aiService: aiService,
+        aiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -35,7 +41,7 @@ describe('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.ContactType, Testing.ProjectType, Testing.OrgType],
-        aiService: aiService,
+        aiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -46,7 +52,7 @@ describe('Search', () => {
       const objects = await search({
         query: 'a19z org, projects they invest in and team',
         schema: [Testing.ProjectType, Testing.OrgType, Testing.ContactType],
-        aiService: aiService,
+        aiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -57,7 +63,7 @@ describe('Search', () => {
       const objects = await search({
         query: 'companies building CRDTs',
         schema: [Testing.ProjectType, Testing.OrgType, Testing.ContactType],
-        aiService: aiService,
+        aiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -70,7 +76,7 @@ describe('Search', () => {
       const objects = await search({
         context: COMPOSER_DXOS_DOC,
         schema: [Testing.ProjectType, Testing.OrgType, Testing.ContactType],
-        aiService: aiService,
+        aiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -81,7 +87,7 @@ describe('Search', () => {
       const objects = await search({
         context: EDGE_ARCHITECTURE_DOC,
         schema: [Testing.ProjectType, Testing.OrgType, Testing.ContactType],
-        aiService: aiService,
+        aiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -171,7 +177,7 @@ Learn more about DXOS and Composer be exploring our [documentation](https://docs
 Join our [Discord](https://dxos.org/discord) to share feature requests, bug reports, and general questions about our platform.
 // `;
 
-// TODO(dmaretskyi): Import as txt. 
+// TODO(dmaretskyi): Import as txt.
 const EDGE_ARCHITECTURE_DOC = `
 ## Composition
 

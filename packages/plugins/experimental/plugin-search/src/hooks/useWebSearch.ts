@@ -1,3 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { useState } from 'react';
+
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { getSchema, getTypename } from '@dxos/echo-schema';
@@ -5,10 +11,10 @@ import type { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getIconAnnotation } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
-import { useState } from 'react';
+
+import { getStringProperty } from './sync';
 import { search } from '../search';
 import type { SearchResult } from '../types';
-import { getStringProperty } from './sync';
 
 // TODO(dmaretskyi): Get from config/credentials
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
@@ -29,7 +35,7 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
         query,
         context,
         schema: [Testing.ProjectType, Testing.OrgType, Testing.ContactType],
-        aiService: aiService,
+        aiService,
         exaApiKey: EXA_API_KEY,
       });
 

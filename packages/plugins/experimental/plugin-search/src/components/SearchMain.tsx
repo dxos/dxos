@@ -4,6 +4,7 @@
 
 import React, { type FC, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -12,9 +13,8 @@ import { groupSurface, mx } from '@dxos/react-ui-theme';
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
 import { useGlobalSearch, useGlobalSearchResults } from '../hooks';
-import { SEARCH_PLUGIN } from '../meta';
 import { useWebSearch } from '../hooks/useWebSearch';
-import { log } from '@dxos/log';
+import { SEARCH_PLUGIN } from '../meta';
 
 export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, space }) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
