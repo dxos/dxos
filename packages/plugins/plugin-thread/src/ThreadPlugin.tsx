@@ -49,8 +49,6 @@ export const ThreadPlugin = () =>
           id: ChannelType.typename,
           metadata: {
             icon: 'ph--chat--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (channel: ChannelType) => await RefArray.loadAll(channel.threads ?? []),
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -92,7 +90,7 @@ export const ThreadPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: ChannelType,
-            getIntent: () => createIntent(ThreadAction.Create),
+            getIntent: (_, options) => createIntent(ThreadAction.CreateChannel, { spaceId: options.space.id }),
           }),
         ),
     }),
