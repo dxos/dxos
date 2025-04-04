@@ -45,9 +45,18 @@ export default () =>
       id: `${SEARCH_DIALOG}/search`,
       role: 'complementary--search',
       component: ({ data }) => {
+        /*
+          data: {
+            id: 'B2UX75DTB6F45T27UD5P6KDAMG5S5XNNB:01JMKV3QACH00R21429HJ54YDY',
+            popoverAnchorId: undefined,
+            subject: dxos.org/type/Document#01JMKV3QACH00R21429HJ54YDY,
+            workspace: 'B2UX75DTB6F45T27UD5P6KDAMG5S5XNNB',
+          }
+        */
         const layout = useLayout();
         const { graph } = useAppGraph();
         const space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
+
         if (!space) {
           return null;
         }

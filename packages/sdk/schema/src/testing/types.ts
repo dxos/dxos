@@ -11,7 +11,9 @@ import {
   LabelAnnotationId,
   AST,
   Ref,
+  EchoObject,
 } from '@dxos/echo-schema';
+import { withIcon, IconAnnotationId } from '../annotations';
 
 export namespace Testing {
   //
@@ -32,14 +34,14 @@ export namespace Testing {
     ),
   }).annotations({
     [LabelAnnotationId]: 'name',
+    // TODO(dmaretskyi): Use combinator.
+    [IconAnnotationId]: 'building',
   });
 
   export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
-  export class OrgType extends TypedObject({
-    typename: 'example.com/type/Org',
-    version: '0.1.0',
-  })(OrgSchema.fields) {}
+  export const OrgType = OrgSchema.pipe(EchoObject('example.com/type/Org', '0.1.0'));
+  export type OrgType = S.Schema.Type<typeof OrgType>;
 
   //
   // Contact
@@ -79,15 +81,14 @@ export namespace Testing {
     // address: S.optional(AddressSchema),
   }).annotations({
     [LabelAnnotationId]: ['label', 'name'],
+    // TODO(dmaretskyi): Use combinator.
+    [IconAnnotationId]: 'user',
   });
 
   export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
-  export class ContactType extends TypedObject({
-    typename: 'example.com/type/Contact',
-    version: '0.1.0',
-  })(ContactSchema.fields) {}
-
+  export const ContactType = ContactSchema.pipe(EchoObject('example.com/type/Contact', '0.1.0'));
+  export type ContactType = S.Schema.Type<typeof ContactType>;
   //
   // Project
   // TODO(burdon): Use with concrete Task type.
@@ -101,15 +102,14 @@ export namespace Testing {
     description: S.optional(S.String),
   }).annotations({
     [LabelAnnotationId]: 'name',
+    // TODO(dmaretskyi): Use combinator.
+    [IconAnnotationId]: 'kanban',
   });
 
   export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
 
-  export class ProjectType extends TypedObject({
-    typename: 'example.com/type/Project',
-    version: '0.1.0',
-  })(ProjectSchema.fields) {}
-
+  export const ProjectType = ProjectSchema.pipe(EchoObject('example.com/type/Project', '0.1.0'));
+  export type ProjectType = S.Schema.Type<typeof ProjectType>;
   //
   // Email
   //
