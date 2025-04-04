@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Option, SchemaAST, type Schema } from 'effect';
 
 export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnnotationId');

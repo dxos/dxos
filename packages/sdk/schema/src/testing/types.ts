@@ -13,7 +13,8 @@ import {
   Ref,
   EchoObject,
 } from '@dxos/echo-schema';
-import { withIcon, IconAnnotationId } from '../annotations';
+
+import { IconAnnotationId } from '../annotations';
 
 export namespace Testing {
   //

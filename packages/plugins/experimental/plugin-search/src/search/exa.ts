@@ -1,4 +1,11 @@
-import { defineTool, Message, TextContentBlock } from '@dxos/artifact';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Option, SchemaAST } from 'effect';
+import Exa from 'exa-js';
+
+import { defineTool, Message, type TextContentBlock } from '@dxos/artifact';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest } from '@dxos/assistant';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { createStatic, getObjectAnnotation, ObjectId, Ref, S } from '@dxos/echo-schema';
@@ -6,8 +13,6 @@ import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
-import { Option, SchemaAST } from 'effect';
-import Exa from 'exa-js';
 
 export type SearchOptions<Schema extends S.Schema.AnyNoContext> = {
   query?: string;
@@ -234,7 +239,7 @@ const SoftRef = S.Struct({
 
 const mapSchemaRefs = (schema: S.Schema.AnyNoContext) => {
   return S.make(
-    mapAst(schema.ast, function mapper(ast, key) {
+    mapAst(schema.ast, (ast, key) => {
       if (SchemaAST.getIdentifierAnnotation(ast).pipe(Option.getOrNull) === Ref.schemaIdentifier) {
         return SoftRef.ast;
       }
