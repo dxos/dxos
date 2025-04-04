@@ -1,4 +1,4 @@
-name: Socket Builds
+name: Socket Distribution Builds
 
 on: [push]
 
