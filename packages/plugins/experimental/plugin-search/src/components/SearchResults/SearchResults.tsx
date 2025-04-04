@@ -52,7 +52,8 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, forwardRef) => {
-  const { id, type, label, snippet, match, selected, onSelect } = item;
+  const { id, objectType, icon, type, label, snippet, match, selected, onSelect } = item;
+  // TODO(dmaretskyi): How do I use <Icon /> component from @dxos/react-ui?
   const Icon = type ? getIcon(type) : undefined;
 
   return (
@@ -61,6 +62,11 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
       classNames={mx('mx-2 mt-2 cursor-pointer', selected && '!bg-groupSurface', ghostHover)}
       onClick={() => onSelect?.(id)}
     >
+      {objectType && (
+        <>
+          <div className='text-xs text-neutral-400 ml-4'>{objectType}</div>
+        </>
+      )}
       <Card.Header>
         <Card.Title title={label ?? 'Untitled'} />
         {Icon && <Card.Endcap Icon={Icon} />}

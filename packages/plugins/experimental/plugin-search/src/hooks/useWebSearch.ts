@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
-import type { SearchResult } from '../types';
-import { search } from '../search';
-import { Testing } from '@dxos/schema/testing';
-import { useCapability } from '@dxos/app-framework';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { getSchema, getTypename } from '@dxos/echo-schema';
+import type { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { getIconAnnotation } from '@dxos/schema';
+import { Testing } from '@dxos/schema/testing';
+import { useState } from 'react';
+import { search } from '../search';
+import type { SearchResult } from '../types';
 import { getStringProperty } from './sync';
 
 // TODO(dmaretskyi): Get from config/credentials
@@ -32,11 +34,14 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
       });
 
       const mappedResults = results.data.map((result): SearchResult => {
+        const schema = getSchema(result);
         return {
           id: result.id,
+          objectType: getTypename(result) as DXN.String | undefined,
           label: getStringProperty(result, ['name', 'title', 'label']),
           snippet: getStringProperty(result, ['description', 'content', 'website', 'email']),
           object: result,
+          icon: schema?.pipe(getIconAnnotation),
         };
       });
 

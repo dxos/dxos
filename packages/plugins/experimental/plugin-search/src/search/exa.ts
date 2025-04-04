@@ -3,11 +3,10 @@ import { MixedStreamParser, type AIServiceClient, type GenerateRequest } from '@
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { createStatic, getObjectAnnotation, ObjectId, Ref, S } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
-import { assertArgument, failedInvariant, invariant, InvariantViolation } from '@dxos/invariant';
+import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
-import { Option } from 'effect';
-import { getIdentifierAnnotation } from 'effect/SchemaAST';
+import { Option, SchemaAST } from 'effect';
 import Exa from 'exa-js';
 
 export type SearchOptions<Schema extends S.Schema.AnyNoContext> = {
@@ -91,7 +90,7 @@ export const search = async <Schema extends S.Schema.AnyNoContext>(
         mappedSchema.map((s, index) => [
           `objects_${index}`,
           S.Array(s).annotations({
-            description: `The objects to answer the query of type ${getObjectAnnotation(s)?.typename ?? getIdentifierAnnotation(s.ast).pipe(Option.getOrNull)}`,
+            description: `The objects to answer the query of type ${getObjectAnnotation(s)?.typename ?? SchemaAST.getIdentifierAnnotation(s.ast).pipe(Option.getOrNull)}`,
           }),
         ]),
       ),
@@ -236,7 +235,7 @@ const SoftRef = S.Struct({
 const mapSchemaRefs = (schema: S.Schema.AnyNoContext) => {
   return S.make(
     mapAst(schema.ast, function mapper(ast, key) {
-      if (getIdentifierAnnotation(ast).pipe(Option.getOrNull) === Ref.schemaIdentifier) {
+      if (SchemaAST.getIdentifierAnnotation(ast).pipe(Option.getOrNull) === Ref.schemaIdentifier) {
         return SoftRef.ast;
       }
 

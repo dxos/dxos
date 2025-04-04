@@ -9,7 +9,7 @@ export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnno
  */
 export const withIcon =
   (icon: string) =>
-  <S extends Schema.Schema.AnyNoContext>(schema: S) =>
+  <Self extends Schema.Schema.All>(schema: Self) =>
     schema.annotations({
       [IconAnnotationId]: icon,
     });

@@ -35,6 +35,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "effect": "3.13.3",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
