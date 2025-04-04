@@ -6,10 +6,11 @@ import { Schema as S } from 'effect';
 import { describe, test } from 'vitest';
 
 import { EchoObject, Ref as RefFn } from './ast';
+import { FormatAnnotationId, FormatEnum } from './formats';
 import { getTypename } from './object';
 
 /**
- * ECHO namespace.
+ * ECHO API.
  */
 export namespace Echo {
   export const Object = ({ typename, version }: { typename: string; version: string }) => EchoObject(typename, version);
@@ -29,6 +30,7 @@ type Org = S.Schema.Type<typeof Org>;
 
 const Contact = S.Struct({
   name: S.String,
+  email: S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email }),
   org: Echo.Ref(Org),
 }).pipe(
   Echo.Object({
