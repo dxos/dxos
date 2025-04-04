@@ -7946,6 +7946,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-outliner':
+        specifier: workspace:*
+        version: link:../experimental/plugin-outliner
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
