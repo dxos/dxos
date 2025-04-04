@@ -99,8 +99,8 @@ jobs:
           apple-mac-provisioning-profile: ${{ secrets.APPLE_MAC_DISTRIBUTION_PROVISIONING_PROFILE }}
           config: |
             [ios.codesign]
-            identity = ${{ secrets.APPLE_IOS_CODESIGN_IDENTITY }}
+            identity = ${{ secrets.APPLE_DISTRIBUTION_CODESIGN_IDENTITY }}
             [ios.distribution]
             method = debugging
             [mac.codesign]
-            identity = ${{ secrets.APPLE_MACOS_CODESIGN_IDENTITY }}
+            identity = ${{ secrets.APPLE_DISTRIBUTION_CODESIGN_IDENTITY }}
