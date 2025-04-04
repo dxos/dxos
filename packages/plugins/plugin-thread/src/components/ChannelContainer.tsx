@@ -57,7 +57,11 @@ const ChannelContainer = ({
     (action: MenuAction) => (state.activities[channel.id] = currentActivity === action.id ? undefined : action.id),
     [currentActivity],
   );
+
   const space = getSpace(channel);
+  if (!space) {
+    return null;
+  }
 
   return (
     <StackItem.Content toolbar>
