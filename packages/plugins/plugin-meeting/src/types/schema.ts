@@ -5,6 +5,7 @@
 import { Schema as S } from 'effect';
 
 import { Ref, TypedObject } from '@dxos/echo-schema';
+import { TreeType } from '@dxos/plugin-outliner/types';
 import { ChannelType } from '@dxos/plugin-space/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
 import { TextType } from '@dxos/schema';
@@ -17,7 +18,7 @@ export const MeetingSchema = S.Struct({
   participants: S.mutable(S.Array(IdentityDidSchema)),
   channel: S.optional(Ref(ChannelType)),
   transcript: S.optional(Ref(TranscriptType)),
-  notes: S.optional(Ref(TextType)),
+  notes: S.optional(Ref(TreeType)),
   summary: S.optional(Ref(TextType)),
 });
 

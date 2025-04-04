@@ -13,21 +13,21 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { Outliner } from './Outliner';
-import { OutlinerAction, type OutlineType } from '../types';
+import { OutlinerAction, type TreeType } from '../types';
 
-const OutlinerContainer = ({ outline, role }: { outline: OutlineType; role: string }) => {
+const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  const space = getSpace(outline);
-  if (!space || !outline.tree.target) {
+  const space = getSpace(tree);
+  if (!space || !tree) {
     return null;
   }
 
   return (
-    <StackItem.Content toolbar={false}>
+    <StackItem.Content toolbar={false} role={role}>
       <Outliner.Root
         classNames={mx(attentionSurface, 'p-1.5')}
-        tree={outline.tree.target}
+        tree={tree}
         onCreate={() => {
           return {
             id: ObjectId.random(),
