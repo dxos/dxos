@@ -14,8 +14,8 @@ export default () =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: KanbanAction.Create,
-      resolve: async ({ space, initialSchema, initialPivotColumn }) => ({
-        data: { object: await createKanban({ space, initialSchema, initialPivotColumn }) },
+      resolve: async ({ space, typename, initialPivotColumn }) => ({
+        data: { object: await createKanban({ space, typename, initialPivotColumn }) },
       }),
     }),
     createResolver({

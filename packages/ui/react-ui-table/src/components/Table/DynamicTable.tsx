@@ -49,7 +49,7 @@ export const DynamicTable = ({
     tableRef.current?.update?.();
   }, []);
 
-  const features = useMemo(() => ({ selection: false, editable: false }), []);
+  const features = useMemo(() => ({ selection: false, dataEditable: false }), []);
 
   const model = useTableModel({
     table,

@@ -9,12 +9,12 @@ import { createRoot } from 'react-dom/client';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { Icon, ThemeProvider, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
+  EditorView,
   automerge,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  EditorView,
   keymap,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -28,6 +28,12 @@ export type NodeEditorController = {
 };
 
 export type NodeEditorEvent =
+  // TODO(burdon): Allows plugins to extend actions.
+  | {
+      type: 'action';
+      node: TreeNodeType;
+      action: string;
+    }
   | {
       type: 'focus';
       node: TreeNodeType;
@@ -55,12 +61,6 @@ export type NodeEditorEvent =
       type: 'indent';
       node: TreeNodeType;
       direction?: 'previous' | 'next';
-    }
-  // TODO(burdon): Allows plugins to extend actions.
-  | {
-      type: 'action';
-      node: TreeNodeType;
-      action: string;
     };
 
 export type NodeEditorProps = ThemedClassName<{

@@ -39,12 +39,6 @@ export type ObjectAnnotation = {
 };
 
 /**
- * ECHO identifier for a schema.
- * Must be a `dxn:echo:` URI.
- */
-export const EchoIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/EchoIdentifier');
-
-/**
  * @returns {@link ObjectAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
@@ -57,9 +51,7 @@ export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | un
 /**
  * @returns {@link EntityKind} from a schema.
  */
-export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => {
-  return getObjectAnnotation(schema)?.kind;
-};
+export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => getObjectAnnotation(schema)?.kind;
 
 /**
  * @returns Schema typename (without dxn: prefix or version number).
@@ -72,9 +64,17 @@ export const getSchemaTypename = (schema: S.Schema.All): string | undefined => g
  */
 export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.version;
 
-export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
+/**
+ * ECHO identifier for a schema.
+ * Must be a `dxn:echo:` URI.
+ */
+// TODO(burdon): Rename/remove ECHO prefix. Create namespace.
+export const ObjectIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/ObjectIdentifier');
+
+// TODO(burdon): Remove ECHO prefix OR use consistently (e.g., re getObjectAnnotation above).
+export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
   flow(
-    AST.getAnnotation<string>(EchoIdentifierAnnotationId),
+    AST.getAnnotation<string>(ObjectIdentifierAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
 

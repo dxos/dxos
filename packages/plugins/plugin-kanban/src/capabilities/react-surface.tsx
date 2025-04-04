@@ -14,7 +14,7 @@ import { type KanbanType } from '@dxos/react-ui-kanban';
 
 import { KanbanContainer, KanbanViewEditor } from '../components';
 import { KANBAN_PLUGIN } from '../meta';
-import { isKanban, InitialSchemaAnnotationId, InitialPivotColumnAnnotationId } from '../types';
+import { isKanban, TypenameAnnotationId, PivotColumnAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -34,7 +34,7 @@ export default () =>
       id: `${KANBAN_PLUGIN}/create-initial-schema-form-[schema]`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialSchemaAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
@@ -43,8 +43,8 @@ export default () =>
         if (!space) {
           return null;
         }
-        const schemata = space?.db.schemaRegistry.query().runSync();
 
+        const schemata = space?.db.schemaRegistry.query().runSync();
         return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
       },
     }),
@@ -52,7 +52,7 @@ export default () =>
       id: `${KANBAN_PLUGIN}/create-initial-schema-form-[pivot-column]`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialPivotColumnAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, PivotColumnAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {

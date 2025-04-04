@@ -9,21 +9,22 @@ import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { MapType } from './map';
 import { MAP_PLUGIN } from '../meta';
 
-export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-map/annotation/InitialSchema');
-export const LocationPropertyAnnotationId = Symbol.for('@dxos/plugin-map/annotation/LocationProperty');
+// TODO(burdon): Move to FormatEnum or SDK.
+export const TypenameAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Typename');
+export const LocationAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Location');
 
 // Create schema for map creation
 export const CreateMapSchema = S.Struct({
   name: S.optional(S.String),
   initialSchema: S.optional(
     S.String.annotations({
-      [InitialSchemaAnnotationId]: true,
+      [TypenameAnnotationId]: true,
       [AST.TitleAnnotationId]: 'Schema',
     }),
   ),
   locationProperty: S.optional(
     S.String.annotations({
-      [LocationPropertyAnnotationId]: true,
+      [LocationAnnotationId]: true,
       [AST.TitleAnnotationId]: 'Location property',
     }),
   ),

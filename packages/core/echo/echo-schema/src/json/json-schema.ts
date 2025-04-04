@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 import { orderKeys } from '@dxos/util';
 
 import {
-  EchoIdentifierAnnotationId,
+  ObjectIdentifierAnnotationId,
   EntityKind,
   EntityKindSchema,
   FieldLookupAnnotationId,
@@ -21,7 +21,7 @@ import {
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
-  getEchoIdentifierAnnotation,
+  getObjectIdentifierAnnotation,
   getObjectAnnotation,
   type JsonSchemaReferenceInfo,
   Ref,
@@ -101,7 +101,7 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);
   }
 
-  const echoIdentifier = getEchoIdentifierAnnotation(schema);
+  const echoIdentifier = getObjectIdentifierAnnotation(schema);
   if (echoIdentifier) {
     jsonSchema.$id = echoIdentifier;
   }
@@ -414,7 +414,7 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
     schemaFields[ECHO_REFINEMENT_KEY] = echoRefinement;
   }
 
-  const echoIdentifier = annotations[EchoIdentifierAnnotationId];
+  const echoIdentifier = annotations[ObjectIdentifierAnnotationId];
   if (echoIdentifier) {
     schemaFields[ECHO_REFINEMENT_KEY] ??= {};
     schemaFields[ECHO_REFINEMENT_KEY].schemaId = echoIdentifier;
@@ -445,11 +445,11 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
 
   // Limit to dxn:echo: URIs.
   if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
-    annotations[EchoIdentifierAnnotationId] = schema.$id;
+    annotations[ObjectIdentifierAnnotationId] = schema.$id;
   } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
     const id = schema?.echo?.type?.schemaId;
     if (ObjectId.isValid(id)) {
-      annotations[EchoIdentifierAnnotationId] = DXN.fromLocalObjectId(id).toString();
+      annotations[ObjectIdentifierAnnotationId] = DXN.fromLocalObjectId(id).toString();
     }
   }
 
