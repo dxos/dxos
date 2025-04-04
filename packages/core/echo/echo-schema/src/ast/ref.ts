@@ -51,10 +51,10 @@ export interface Ref$<T extends WithId> extends S.SchemaClass<Ref<T>, EncodedRef
 interface RefFn {
   <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
 
+  schemaIdentifier: string;
+
   isRef: (obj: any) => obj is Ref<any>;
   hasObjectId: (id: ObjectId) => (ref: Ref<any>) => boolean;
-
-  schemaIdentifier: string;
 }
 
 /**
