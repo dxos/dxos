@@ -9,10 +9,10 @@ import {
   typeToFormat,
   FormatEnum,
   type JsonProp,
-  type EchoSchema,
   S,
   TypeEnum,
   type JsonSchemaType,
+  type BaseSchema,
 } from '@dxos/echo-schema';
 import { getSchemaReference, createSchemaReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -46,9 +46,7 @@ export class ViewProjection {
   private _hiddenProperties = computed(() => this._view.hiddenFields?.map((field) => field.path as string) ?? []);
 
   constructor(
-    // TODO(burdon): This could be StoredSchema?
-    // TODO(burdon): How to use tables with static schema.
-    private readonly _schema: EchoSchema,
+    private readonly _schema: BaseSchema,
     private readonly _view: ViewType,
   ) {
     this.normalizeView();

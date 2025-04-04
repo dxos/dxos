@@ -65,7 +65,7 @@ export default () => {
           const intent = pipe(
             createIntent(KanbanAction.Create, {
               space: extensions.space,
-              initialSchema: typename,
+              typename,
               initialPivotColumn: pivotColumn,
             }),
             chain(SpaceAction.AddObject, { target: extensions.space }),

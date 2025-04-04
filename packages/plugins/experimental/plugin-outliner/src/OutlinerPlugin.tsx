@@ -63,6 +63,11 @@ export const OutlinerPlugin = () =>
       activate: () => contributes(ClientCapabilities.Schema, [TaskType, TreeType, JournalEntryType, JournalType]),
     }),
     defineModule({
+      id: `${meta.id}/module/whitelist-schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [TaskType]),
+    }),
+    defineModule({
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,

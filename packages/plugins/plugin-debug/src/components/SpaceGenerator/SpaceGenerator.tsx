@@ -118,7 +118,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
             const parts = schema.typename.split('/');
             const name = parts[parts.length - 1];
             const table = create(TableType, { name, threads: [] });
-            await initializeTable({ space, table, initialSchema: schema.typename });
+            await initializeTable({ client, space, table, typename: schema.typename });
             await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: table }));
             return table;
           }),

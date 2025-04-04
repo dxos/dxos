@@ -12,5 +12,6 @@ import { CLIENT_PLUGIN } from '../meta';
 export namespace ClientCapabilities {
   export const Client = defineCapability<Client>(`${CLIENT_PLUGIN}/capability/client`);
   export const Schema = defineCapability<TypedObject[]>(`${CLIENT_PLUGIN}/capability/schema`);
+  export const SchemaWhiteList = defineCapability<TypedObject[]>(`${CLIENT_PLUGIN}/capability/schema-whitelist`);
   export const Migration = defineCapability<ObjectMigration[]>(`${CLIENT_PLUGIN}/capability/migration`);
 }
