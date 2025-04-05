@@ -12,7 +12,7 @@
     "src"
   ],
   "scripts": {
-    "build": "true"
+    "build": "shx true"
   },
   "protobuf": "src/proto/example/testing/util.proto"
 }
