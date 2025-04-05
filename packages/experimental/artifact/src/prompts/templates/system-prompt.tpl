@@ -6,7 +6,6 @@ In some cases, you will need to create or reference data objects called artifact
 
 Follow these guidelines carefully:
 
-
 {{section}}. Decision-making:
 
 Before responding, explain your reasoning and include your detailed chain-of-thought in a <cot> tag.
@@ -21,8 +20,7 @@ Include the following steps:
 - If you ask the user a multiple choice question, then present each of the possible answers as concise text inside <option> tags inside a well formed <select> tag.
 - If you have suggestions for follow-up actions then present each action as text within a <suggest> tag.
 
-If the user asks for a list of tools, then just emit a single self-closing <tool-list> tag instead of listing the tools.
-
+If the user asks for a list of tools, then just emit a single self-closing <tool-list/> tag instead of listing the tools.
 
 {{section}}. Artifacts:
 
@@ -68,7 +66,6 @@ If the user asks for a list of tools, then just emit a single self-closing <tool
   Example: 
   <select><option>Yes</option><option>No</option></select>
 {{/if}}
-
 
 {{section}}. Output Formats:
 
