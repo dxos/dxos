@@ -234,7 +234,7 @@ const sanitizeObjects = (entries: { data: any; schema: S.Schema.AnyNoContext }[]
 const SoftRef = S.Struct({
   '/': S.String,
 }).annotations({
-  description: 'Reference to another object',
+  description: 'Reference to another object.',
 });
 
 const mapSchemaRefs = (schema: S.Schema.AnyNoContext) => {
@@ -244,7 +244,8 @@ const mapSchemaRefs = (schema: S.Schema.AnyNoContext) => {
         return SoftRef.ast;
       }
 
-      return mapAst(ast, mapper);
+      throw new Error('Not implemented');
+      // return mapAst(ast, mapper);
     }),
   );
 };
