@@ -17,6 +17,7 @@ import {
   type JournalEntryType,
   getJournalEntries,
   getDateString,
+  parseDateString,
 } from '../../types';
 import { Outliner } from '../Outliner';
 
@@ -75,8 +76,8 @@ const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
     return null;
   }
 
-  const date = new Date(entry.date);
-  const isToday = getDateString(new Date()) === entry.date;
+  const date = parseDateString(entry.date);
+  const isToday = getDateString() === entry.date;
   return (
     <div className={mx('flex flex-col', classNames)}>
       <div className='pis-2'>
