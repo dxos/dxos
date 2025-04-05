@@ -170,6 +170,11 @@ export class CallManager extends Resource {
     await this._mediaManager.close();
   }
 
+  async peek(roomId: string) {
+    const peers = await this._swarmSynchronizer.querySwarm(roomId);
+    return peers.length;
+  }
+
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
   @synchronized
   async join() {

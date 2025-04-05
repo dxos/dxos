@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useCallback } from 'react';
+import React, { type FC, useCallback, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
@@ -22,10 +22,7 @@ type LobbyProps = ThemedClassName & {
 export const Lobby: FC<LobbyProps> = ({ classNames, roomId }) => {
   const { t } = useTranslation(MEETING_PLUGIN);
   const call = useCapability(MeetingCapabilities.CallManager);
-  // const sessionError = call.media.peer?.sessionError;
-  // TODO(mykola): Users number is not correct now, we are joining swarm on press of join button.
-  // So we can not scan users list before joining.
-  // const numUsers = call.users?.filter((user) => user.joined).length ?? 0;
+  const [count, setCount] = useState<number>();
 
   const joinSound = useSoundEffect('JoinCall');
   const handleJoin = useCallback(async () => {
@@ -40,6 +37,15 @@ export const Lobby: FC<LobbyProps> = ({ classNames, roomId }) => {
     }
   }, [joinSound, roomId, call.joined, call.leave, call.setRoomId, call.join]);
 
+  // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.
+  useEffect(() => {
+    void call.peek(roomId).then((count) => setCount(count));
+    const interval = setInterval(() => {
+      void call.peek(roomId).then((count) => setCount(count));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [call, roomId]);
+
   return (
     <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
       <ResponsiveContainer>
@@ -48,9 +54,8 @@ export const Lobby: FC<LobbyProps> = ({ classNames, roomId }) => {
 
       <Toolbar.Root classNames='justify-between'>
         <IconButton variant='primary' label={t('join call')} onClick={handleJoin} icon='ph--phone-incoming--regular' />
-        {/* <div className='grow text-sm text-subdued'>
-          {sessionError ?? `${numUsers} ${numUsers === 1 ? t('lobby participant') : t('lobby participants')}`}
-        </div> */}
+        {count !== undefined && <div className='text-sm text-subdued'>{t('lobby participants', { count })}</div>}
+        <div className='grow' />
         <MediaButtons />
       </Toolbar.Root>
     </div>

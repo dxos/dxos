@@ -188,6 +188,12 @@ export class CallSwarmSynchronizer extends Resource {
     this._state.self = undefined;
   }
 
+  async querySwarm(roomId: string) {
+    const topic = getTopic(roomId);
+    const swarm = await this._networkService.querySwarm({ topic });
+    return swarm.peers ?? [];
+  }
+
   /**
    * Notify and schedule send state task.
    */

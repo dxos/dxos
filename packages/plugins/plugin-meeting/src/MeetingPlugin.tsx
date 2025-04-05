@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
-import { ThreadEvents, ThreadCapabilities } from '@dxos/plugin-thread';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import {
   AppGraphBuilder,
@@ -17,7 +19,7 @@ import {
 } from './capabilities';
 import { MEETING_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { MeetingType } from './types';
+import { MeetingAction, MeetingType } from './types';
 
 export const MeetingPlugin = () =>
   definePlugin(meta, [
@@ -32,19 +34,31 @@ export const MeetingPlugin = () =>
       activate: () => contributes(Capabilities.Translations, translations),
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [MeetingType]),
+      id: `${meta.id}/module/metadata`,
+      activatesOn: Events.SetupMetadata,
+      activate: () => [
+        contributes(Capabilities.Metadata, {
+          id: MeetingType.typename,
+          metadata: {
+            label: (object: any) =>
+              isInstanceOf(MeetingType, object) ? object.name || new Date(object.created).toLocaleString() : undefined,
+            icon: 'ph--video-camera--regular',
+          },
+        }),
+      ],
     }),
     defineModule({
-      id: `${meta.id}/module/activity`,
-      activatesOn: ThreadEvents.SetupActivity,
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () =>
-        contributes(ThreadCapabilities.Activity, {
-          id: 'meeting',
-          label: ['meeting activity label', { ns: MEETING_PLUGIN }],
-          icon: 'ph--video-camera--regular',
-        }),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: MeetingType,
+            hidden: true,
+            getIntent: (_, options) => createIntent(MeetingAction.Create, { spaceId: options.space.id }),
+          }),
+        ),
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,

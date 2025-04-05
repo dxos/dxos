@@ -32,6 +32,14 @@ export default () =>
       }),
     }),
     createResolver({
+      intent: OutlinerAction.CreateTree,
+      resolve: () => ({
+        data: {
+          object: createTree(),
+        },
+      }),
+    }),
+    createResolver({
       intent: OutlinerAction.CreateTask,
       resolve: ({ node }) => {
         const task = create(TaskType, {

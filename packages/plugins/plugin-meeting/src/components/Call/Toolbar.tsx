@@ -3,10 +3,9 @@
 //
 
 import { Effect } from 'effect';
-import React, { useRef } from 'react';
+import React from 'react';
 
 import { useCapability } from '@dxos/app-framework';
-import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
@@ -17,21 +16,20 @@ import { type MeetingType, type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
 
 export type CallToolbarProps = {
-  onTranscriptionStart?: () => Effect.Effect<ReactiveEchoObject<MeetingType>, Error>;
-  onTranscriptionStop?: (meeting: MeetingType) => Effect.Effect<void, Error>;
+  meeting?: MeetingType;
 };
 
 // TODO(mykola): Move transcription related logic to a separate component.
-export const CallToolbar = ({ onTranscriptionStart, onTranscriptionStop }: CallToolbarProps) => {
+export const CallToolbar = ({ meeting }: CallToolbarProps) => {
   const { t } = useTranslation(MEETING_PLUGIN);
   const call = useCapability(MeetingCapabilities.CallManager);
-  const ref = useRef<MeetingType>();
 
   // Screen sharing.
   const isScreensharing = call.media.screenshareTrack !== undefined;
   const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
+  // TODO(wittjosiah): Leaving the call doesn't relinquish system audio/video.
   const leaveSound = useSoundEffect('LeaveCall');
   const handleLeave = () => {
     void call.turnScreenshareOff();
@@ -44,15 +42,8 @@ export const CallToolbar = ({ onTranscriptionStart, onTranscriptionStop }: CallT
     Effect.runPromise(
       Effect.gen(function* () {
         const newTranscription: TranscriptionState = { enabled: !call.transcription.enabled };
-        if (onTranscriptionStart && newTranscription.enabled && !call.transcription.queueDxn) {
-          const object = yield* onTranscriptionStart();
-          ref.current = object;
-          if (object.transcript?.target?.queue) {
-            newTranscription.queueDxn = object.transcript.target.queue;
-          }
-        } else if (onTranscriptionStop && ref.current && !newTranscription.enabled) {
-          yield* onTranscriptionStop(ref.current);
-          ref.current = undefined;
+        if (newTranscription.enabled && !call.transcription.queueDxn && meeting?.transcript.target?.queue) {
+          newTranscription.queueDxn = meeting.transcript.target.queue;
         }
         call.setTranscription(newTranscription);
       }),
@@ -63,7 +54,7 @@ export const CallToolbar = ({ onTranscriptionStart, onTranscriptionStop }: CallT
       <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={handleLeave} />
       <div className='grow'></div>
       {/* TODO(burdon): Capability test. */}
-      {(onTranscriptionStart || onTranscriptionStop) && (
+      {meeting && (
         <IconButton
           iconOnly
           icon={call.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}

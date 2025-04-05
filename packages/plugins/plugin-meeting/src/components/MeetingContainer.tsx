@@ -6,20 +6,23 @@ import React, { useCallback, useState } from 'react';
 
 import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { TranscriptionAction } from '@dxos/plugin-transcription/types';
+import { getSpace } from '@dxos/react-client/echo';
 import { ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 
+import { CallContainer } from './CallContainer';
 import { MEETING_PLUGIN } from '../meta';
 import { type MeetingType } from '../types';
 
 export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
   const { t } = useTranslation(MEETING_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const [activeTab, setActiveTab] = useState<string>('notes');
-  const transcript = meeting.transcript?.target;
-  const notes = meeting.notes?.target;
-  const summary = meeting.summary?.target;
+  const [activeTab, setActiveTab] = useState<string>('call');
+  const space = getSpace(meeting);
+  const notes = meeting.notes.target;
+  const transcript = meeting.transcript.target;
+  const summary = meeting.summary.target;
 
   // TODO(dmaretskyi): Pending state and errors should be handled by the framework!!!
   const [isSummarizing, setIsSummarizing] = useState(false);
@@ -52,8 +55,10 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
         classNames='grid grid-rows-[min-content_1fr] [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid'
       >
         <Tabs.Tablist classNames='border-be border-separator'>
-          <Tabs.Tab value='notes'>{t('notes tab label')}</Tabs.Tab>
-          <Tabs.Tab value='transcript'>{t('transcript tab label')}</Tabs.Tab>
+          <Tabs.Tab value='call'>{t('call tab label')}</Tabs.Tab>
+          {space && <Tabs.Tab value='chat'>{t('chat tab label')}</Tabs.Tab>}
+          {notes && <Tabs.Tab value='notes'>{t('notes tab label')}</Tabs.Tab>}
+          {transcript && <Tabs.Tab value='transcript'>{t('transcript tab label')}</Tabs.Tab>}
           <ButtonGroup>
             <Tabs.Tab value='summary'>{t('summary tab label')}</Tabs.Tab>
             <IconButton
@@ -67,6 +72,12 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
             />
           </ButtonGroup>
         </Tabs.Tablist>
+        <Tabs.Tabpanel value='call'>
+          <CallContainer meeting={meeting} />
+        </Tabs.Tabpanel>
+        <Tabs.Tabpanel value='chat'>
+          {space && <Surface role='tabpanel' data={{ subject: meeting.chat.dxn, space, type: 'chat' }} />}
+        </Tabs.Tabpanel>
         <Tabs.Tabpanel value='notes'>{notes && <Surface role='tabpanel' data={{ subject: notes }} />}</Tabs.Tabpanel>
         <Tabs.Tabpanel value='transcript'>
           {transcript && <Surface role='tabpanel' data={{ subject: transcript }} />}
