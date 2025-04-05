@@ -24,7 +24,7 @@ import { tagsExtension } from './tags';
 import { type TreeNodeType } from '../../types';
 
 export type NodeEditorController = {
-  focus: (at?: 'start' | 'end') => void;
+  focus: (at?: 'start' | 'end' | number) => void;
 };
 
 export type NodeEditorEvent =
@@ -55,12 +55,13 @@ export type NodeEditorEvent =
   | {
       type: 'navigate';
       node: TreeNodeType;
-      direction?: 'previous' | 'next';
+      direction: 'previous' | 'next';
+      at: 'start' | 'end' | number;
     }
   | {
       type: 'indent';
       node: TreeNodeType;
-      direction?: 'previous' | 'next';
+      direction: 'previous' | 'next';
     };
 
 export type NodeEditorProps = ThemedClassName<{
@@ -166,7 +167,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                   if (from > 0) {
                     return false;
                   } else {
-                    onEvent?.({ type: 'navigate', node, direction: 'previous' });
+                    onEvent?.({ type: 'navigate', node, direction: 'previous', at: 'end' });
                     return true;
                   }
                 },
@@ -178,7 +179,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                   if (from < view.state.doc.length) {
                     return false;
                   } else {
-                    onEvent?.({ type: 'navigate', node, direction: 'next' });
+                    onEvent?.({ type: 'navigate', node, direction: 'next', at: 'start' });
                     return true;
                   }
                 },
@@ -187,24 +188,16 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                 key: 'ArrowUp',
                 run: (view) => {
                   const { from } = view.state.selection.ranges[0];
-                  if (from > 0) {
-                    return false;
-                  } else {
-                    onEvent?.({ type: 'navigate', node, direction: 'previous' });
-                    return true;
-                  }
+                  onEvent?.({ type: 'navigate', node, direction: 'previous', at: from });
+                  return true;
                 },
               },
               {
                 key: 'ArrowDown',
                 run: (view) => {
                   const { from } = view.state.selection.ranges[0];
-                  if (from < view.state.doc.length) {
-                    return false;
-                  } else {
-                    onEvent?.({ type: 'navigate', node, direction: 'next' });
-                    return true;
-                  }
+                  onEvent?.({ type: 'navigate', node, direction: 'next', at: from });
+                  return true;
                 },
               },
 
@@ -243,7 +236,12 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                 view.focus();
                 view.dispatch({
                   selection: {
-                    anchor: at === 'start' ? 0 : view.state.doc.length,
+                    anchor:
+                      typeof at === 'number'
+                        ? Math.min(Math.max(at, 0), view.state.doc.length)
+                        : at === 'start'
+                          ? 0
+                          : view.state.doc.length,
                   },
                 });
               }
