@@ -5,7 +5,7 @@
 import { S } from '@dxos/echo-schema';
 
 import { TaskType } from './task';
-import { TreeNodeType } from './tree';
+import { TreeNodeType, TreeType } from './tree';
 import { JournalType, OutlineType } from './types';
 import { OUTLINER_PLUGIN } from '../meta';
 
@@ -27,6 +27,13 @@ export namespace OutlinerAction {
     }),
     output: S.Struct({
       object: OutlineType,
+    }),
+  }) {}
+
+  export class CreateTree extends S.TaggedClass<CreateTree>()(`${OUTLINER_ACTION}/create-tree`, {
+    input: S.Void,
+    output: S.Struct({
+      object: TreeType,
     }),
   }) {}
 
