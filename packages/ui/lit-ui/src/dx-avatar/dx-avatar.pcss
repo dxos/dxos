@@ -1,0 +1,61 @@
+.dx-avatar-group dx-avatar {
+  @apply -mie-2
+}
+
+.dx-avatar-group dx-avatar {
+  &[size="0"], &[size="px"], &[size="0.5"], &[size="1"], &[size="1.5"], &[size="2"], &[size="2.5"] {
+    @apply -mie-1
+  }
+}
+
+dx-avatar {
+  @apply relative inline-flex shrink-0;
+
+  .dx-avatar__frame {
+    @apply is-full bs-full bg-[--surface-bg]
+  }
+
+  .dx-avatar__frame, .dx-avatar__ring {
+    @apply rounded-full;
+  }
+
+  &[data-variant="square"] {
+    .dx-avatar__frame, .dx-avatar__ring {
+      @apply rounded;
+    }
+  }
+
+  .dx-avatar__status-icon {
+    @apply absolute block-end-0 inline-end-0;
+    //  todo: continue refactor
+  }
+
+  .dx-avatar__ring {
+    @apply absolute inset-0 border-2 border-[color:var(--surface-bg)];
+  }
+
+  &[data-status="current"] .dx-avatar__ring {
+    @apply border-currentFill;
+  }
+
+  &[data-status="active"] .dx-avatar__ring {
+    @apply border-activeFill;
+  }
+
+  &[data-status="error"] .dx-avatar__ring {
+    @apply border-errorFill;
+  }
+
+  &[data-status="warning"] .dx-avatar__ring {
+    @apply border-warningFill;
+  }
+
+  &[data-status="internal"] .dx-avatar__ring {
+    @apply border-internalFill;
+  }
+
+  &[data-status="inactive"] .dx-avatar__ring {
+    @apply border-separator;
+  }
+}
+

@@ -19,19 +19,22 @@ const rx = '0.25rem';
 
 @customElement('dx-avatar')
 export class DxAvatar extends LitElement {
-  private labelId: string;
-  private descriptionId: string;
   private maskId: string;
 
   constructor() {
     super();
-    this.labelId = makeId('avatar__label');
-    this.descriptionId = makeId('avatar__description');
     this.maskId = makeId('avatar__mask');
+    this.setAttribute('aria-labelledby', this.labelId);
+    this.setAttribute('role', 'img');
+    this.setAttribute('data-size', this.size.toString());
+    this.setAttribute('data-variant', this.variant);
   }
 
   @property({ type: String })
-  label: string = 'never';
+  fallback: string = 'never';
+
+  @property({ type: String })
+  labelId: string = 'never';
 
   @property({ type: String })
   imgSrc: string | undefined = undefined;
@@ -88,76 +91,75 @@ export class DxAvatar extends LitElement {
     const ringWidth = this.status ? (numericSize > 4 ? 2 : numericSize > 3 ? 1 : 1) : 0;
     const ringGap = this.status ? (numericSize > 12 ? 3 : numericSize > 4 ? 2 : numericSize > 3 ? 1 : 0) : 0;
     const r = sizePx / 2 - ringGap - ringWidth;
-    const isTextOnly = Boolean(this.label && /[0-9a-zA-Z]+/.test(this.label));
+    const isTextOnly = Boolean(this.fallback && /[0-9a-zA-Z]+/.test(this.fallback));
     const fontScale = (isTextOnly ? 3 : 4) * (1 / 1.612);
-    return html`<span class="dx-avatar"
-      ><svg
-        viewBox=${`0 0 ${sizePx} ${sizePx}`}
-        width=${sizePx}
-        height=${sizePx}
-        class=${tx('avatar.frame', 'avatar__frame', { variant })}
-      >
-        <defs>
-          <mask id=${this.maskId}>
-            {variant === 'circle' ? (
-            <circle fill="white" cx="50%" cy="50%" r=${r} />
-            ) : (
-            <rect
-              fill="white"
-              width=${2 * r}
-              height=${2 * r}
+    return html`<svg
+      viewBox=${`0 0 ${sizePx} ${sizePx}`}
+      width=${sizePx}
+      height=${sizePx}
+      class="dx-avatar__frame"
+    >
+      <defs>
+        <mask id=${this.maskId}>
+          {variant === 'circle' ? (
+          <circle fill="white" cx="50%" cy="50%" r=${r} />
+          ) : (
+          <rect
+            fill="white"
+            width=${2 * r}
+            height=${2 * r}
+            x=${ringGap + ringWidth}
+            y=${ringGap + ringWidth}
+            rx=${rx}
+          />
+          )}
+        </mask>
+      </defs>
+      ${
+        this.variant === 'circle'
+          ? html` <circle
+              cx="50%"
+              cy="50%"
+              r=${r}
+              fill=${this.hue ? `var(--dx-${this.hue}Fill)` : 'var(--surface-bg)'}
+            />`
+          : html` <rect
+              fill=${this.hue ? `var(--dx-${this.hue}Fill)` : 'var(--surface-bg)'}
               x=${ringGap + ringWidth}
               y=${ringGap + ringWidth}
+              width=${2 * r}
+              height=${2 * r}
               rx=${rx}
-            />
-            )}
-          </mask>
-        </defs>
-        ${
-          this.variant === 'circle'
-            ? html`<circle
-                cx="50%"
-                cy="50%"
-                r=${r}
-                fill=${this.hue ? `var(--dx-${this.hue}Fill)` : 'var(--surface-bg)'}
-              />`
-            : html`<rect
-                fill=${this.hue ? `var(--dx-${this.hue}Fill)` : 'var(--surface-bg)'}
-                x=${ringGap + ringWidth}
-                y=${ringGap + ringWidth}
-                width=${2 * r}
-                height=${2 * r}
-                rx=${rx}
-              />`
-        }
-        ${
-          this.imgSrc &&
-          html`<image
-            preserveAspectRatio="xMidYMid slice"
-            width="100%"
-            height="100%"
-            href=${this.imgSrc}
-            ?crossorigin=${this.imgCrossOrigin}
-            ?referrerpolicy=${this.imgReferrerPolicy}
-            @load=${this.handleLoad}
-            @error=${this.handleError}
-          />`
-        }
+            />`
+      }
+      ${
+        this.imgSrc &&
+        html` <image
+          width="100%"
+          height="100%"
+          preserveAspectRatio="xMidYMid slice"
+          href=${this.imgSrc}
+          ?crossorigin=${this.imgCrossOrigin}
+          ?referrerpolicy=${this.imgReferrerPolicy}
+          @load=${this.handleLoad}
+          @error=${this.handleError}
+        />`
+      }
       <text
         x='50%'
         y='50%'
-        class=${tx('avatar.fallbackText', 'avatar__fallback-text')}
-      textAnchor='middle'
-      alignmentBaseline='central'
-      fontSize=${this.size === 'px' ? '200%' : this.size * fontScale}
-      mask=${`url(#${this.maskId})`}
-    >
-      </svg>
-      <span
-        role="none"
-        class=${tx('avatar.ring', 'avatar__ring', { size, variant, status, animation })}
-        style=${styleMap({ borderWidth: ringWidth + 'px' })}
-    /></span>`;
+        class="dx-avatar__fallback-text"
+        textAnchor="middle"
+        alignmentBaseline="central"
+        fontSize=${this.size === 'px' ? '200%' : this.size * fontScale}
+        mask=${`url(#${this.maskId})`}
+      >
+    </svg>
+    <span
+      role="none"
+      class="dx-avatar__ring"
+      style=${styleMap({ borderWidth: ringWidth + 'px' })}
+    />`;
   }
 
   override createRenderRoot() {
