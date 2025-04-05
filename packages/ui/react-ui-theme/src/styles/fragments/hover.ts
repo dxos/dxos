@@ -16,7 +16,7 @@ export const hoverableControls =
 export const hoverableFocusedKeyboardControls = 'focus-visible:[--controls-opacity:1]';
 export const hoverableFocusedWithinControls = 'focus-within:[--controls-opacity:1]';
 export const hoverableFocusedControls = 'focus:[--controls-opacity:1]';
-export const staticHoverableControls = 'hover-hover:[--controls-opacity:1]';
 export const hoverableOpenControlItem = 'hover-hover:aria-[expanded=true]:[--controls-opacity:1]';
+export const staticHoverableControls = 'hover-hover:[--controls-opacity:1]';
 
 export const hoverableControlItem = 'opacity-[--controls-opacity]';

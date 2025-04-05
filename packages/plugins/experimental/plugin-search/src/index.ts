@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './context';
+export * from './hooks';
 export * from './meta';
-export * from './search-sync';
+export * from './types';
 
 export * from './SearchPlugin';

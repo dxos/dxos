@@ -4,7 +4,7 @@
 
 import { S } from '@dxos/echo-schema';
 
-import { SEARCH_PLUGIN } from './meta';
+import { SEARCH_PLUGIN } from '../meta';
 
 export namespace SearchAction {
   const SEARCH_ACTION = `${SEARCH_PLUGIN}/action`;

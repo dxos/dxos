@@ -21,14 +21,7 @@ import {
   useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import {
-  Main,
-  useTranslation,
-  toLocalizedString,
-  IconButton,
-  ScrollArea as NaturalScrollArea,
-  type Label,
-} from '@dxos/react-ui';
+import { Main, useTranslation, toLocalizedString, IconButton, type Label } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { byPosition } from '@dxos/util';
@@ -185,14 +178,7 @@ type ComplementarySidebarPanelProps = {
 };
 
 const ScrollArea = ({ children }: PropsWithChildren) => {
-  return (
-    <NaturalScrollArea.Root>
-      <NaturalScrollArea.Viewport>{children}</NaturalScrollArea.Viewport>
-      <NaturalScrollArea.Scrollbar orientation='vertical'>
-        <NaturalScrollArea.Thumb />
-      </NaturalScrollArea.Scrollbar>
-    </NaturalScrollArea.Root>
-  );
+  return <div className='flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-thin'>{children}</div>;
 };
 
 const ComplementarySidebarPanel = ({ panel, activePanelId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {

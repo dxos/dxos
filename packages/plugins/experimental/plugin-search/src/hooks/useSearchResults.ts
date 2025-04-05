@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { TextType } from '@dxos/schema';
 
 // TODO(thure): Deprecate search-sync, move still-relevant utilities elsewhere (here, probably).
-import { mapObjectToTextFields, queryStringToMatch } from './search-sync';
+import { mapObjectToTextFields, queryStringToMatch } from './sync';
 
 export const filterObjects = async <T extends Record<string, any>>(
   objects: T[],

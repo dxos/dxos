@@ -5,17 +5,11 @@
 import { type Icon, Buildings, Folders, User } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_RESULT } from '../../meta';
-import type { SearchResult } from '../../search-sync';
-
-// TODO(burdon): Factor out.
-const styles = {
-  selected: '!bg-primary-100 !dark:bg-primary-900',
-};
+import { type SearchResult } from '../../types';
 
 // TODO(burdon): Registry defined by plugins?
 const getIcon = (type: string): Icon | undefined => {
@@ -58,15 +52,21 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, forwardRef) => {
-  const { id, type, label, snippet, match, selected, onSelect } = item;
+  const { id, objectType, icon, type, label, snippet, match, selected, onSelect } = item;
+  // TODO(dmaretskyi): How do I use <Icon /> component from @dxos/react-ui?
   const Icon = type ? getIcon(type) : undefined;
 
   return (
     <Card.Root
       ref={forwardRef}
-      classNames={mx('mx-2 mt-2 cursor-pointer', ghostHover, selected && styles.selected)}
+      classNames={mx('mx-2 mt-2 cursor-pointer', selected && '!bg-groupSurface', ghostHover)}
       onClick={() => onSelect?.(id)}
     >
+      {objectType && (
+        <>
+          <div className='text-xs text-neutral-400 ml-4'>{objectType}</div>
+        </>
+      )}
       <Card.Header>
         <Card.Title title={label ?? 'Untitled'} />
         {Icon && <Card.Endcap Icon={Icon} />}
@@ -90,8 +90,8 @@ export type SearchResultsProps = {
 // TODO(burdon): Key cursor up/down.
 export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
   return (
-    <ScrollArea.Root classNames='grow'>
-      <ScrollArea.Viewport>
+    <div className='flex flex-col grow overflow-y-auto'>
+      <div className='flex flex-col'>
         {items.map((item) => (
           <SearchItem
             key={item.id}
@@ -101,11 +101,7 @@ export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps)
             selected={selected === item.id}
           />
         ))}
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation='vertical'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-      <ScrollArea.Corner />
-    </ScrollArea.Root>
+      </div>
+    </div>
   );
 };

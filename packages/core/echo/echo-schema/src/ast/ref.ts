@@ -51,6 +51,8 @@ export interface Ref$<T extends WithId> extends S.SchemaClass<Ref<T>, EncodedRef
 interface RefFn {
   <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
 
+  schemaIdentifier: string;
+
   isRef: (obj: any) => obj is Ref<any>;
   hasObjectId: (id: ObjectId) => (ref: Ref<any>) => boolean;
 }
@@ -116,6 +118,8 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
 
+Ref.schemaIdentifier = 'Ref';
+
 /**
  * `reference` field on the schema object.
  */
@@ -171,6 +175,7 @@ export const createEchoReferenceSchema = (
           typename: typename ?? '',
           version,
         },
+        identifier: Ref.schemaIdentifier,
       },
     ),
   );
