@@ -29,20 +29,20 @@ import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../o
 /**
  * Base schema type.
  */
-export interface BaseSchema extends S.Schema.AnyNoContext, TypedObject {
+export interface BaseSchema<A = any, I = any> extends TypedObject<A, I> {
   get readonly(): boolean;
-  get snapshot(): S.Schema.AnyNoContext;
+  get mutable(): EchoSchema<A, I>;
+  get snapshot(): S.Schema<A, I>;
   get jsonSchema(): JsonSchemaType;
-  get mutable(): EchoSchema;
 }
 
 /**
  * Immutable schema type.
  */
 // TODO(burdon): Common abstract base class?
-export class ImmutableSchema implements BaseSchema {
+export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
   private readonly _objectAnnotation: ObjectAnnotation;
-  constructor(private readonly _schema: S.Schema.AnyNoContext) {
+  constructor(private readonly _schema: S.Schema<A, I>) {
     this._objectAnnotation = getObjectAnnotation(this._schema)!;
     invariant(this._objectAnnotation);
   }
@@ -56,11 +56,11 @@ export class ImmutableSchema implements BaseSchema {
   }
 
   public get Type() {
-    return this._schema;
+    return this._schema.Type;
   }
 
   public get Encoded() {
-    return this._schema;
+    return this._schema.Encoded;
   }
 
   public get Context() {
@@ -168,11 +168,10 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
 // TODO(burdon): Rename MutableSchema.
-export class EchoSchema extends EchoSchemaConstructor() implements BaseSchema {
+export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implements BaseSchema<A, I> {
   private _schema: S.Schema.AnyNoContext | undefined;
   private _isDirty = true;
 
-  // TODO(burdon): Support dynamic schema.
   constructor(private readonly _storedSchema: StoredSchema) {
     super();
   }
@@ -186,11 +185,11 @@ export class EchoSchema extends EchoSchemaConstructor() implements BaseSchema {
   }
 
   public get Type() {
-    return this._storedSchema;
+    return this._storedSchema as A;
   }
 
   public get Encoded() {
-    return this._storedSchema;
+    return this._storedSchema as I;
   }
 
   public get Context() {
