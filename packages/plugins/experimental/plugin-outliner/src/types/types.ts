@@ -57,7 +57,7 @@ export const createTree = () => {
 /**
  * Date string in YYYY-MM-DD format (based on current timezone).
  */
-export const getDateString = (date: Date) => {
+export const getDateString = (date = new Date()) => {
   return (
     date.getFullYear() +
     '-' +
@@ -65,4 +65,12 @@ export const getDateString = (date: Date) => {
     '-' +
     String(date.getDate()).padStart(2, '0')
   );
+};
+
+/**
+ * Parse date string in YYYY-MM-DD format (based on current timezone).
+ */
+export const parseDateString = (str: string) => {
+  const date = new Date(str);
+  return new Date(date.getTime() + date.getTimezoneOffset() * 60_000);
 };

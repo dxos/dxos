@@ -212,14 +212,14 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               // Move.
               //
               {
-                key: 'cmd-ArrowUp',
+                key: 'alt-ArrowUp',
                 run: (view) => {
                   onEvent?.({ type: 'move', node, direction: 'previous' });
                   return true;
                 },
               },
               {
-                key: 'cmd-ArrowDown',
+                key: 'alt-ArrowDown',
                 run: (view) => {
                   onEvent?.({ type: 'move', node, direction: 'next' });
                   return true;
@@ -239,12 +239,14 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
           focus: (at) => {
             if (view) {
               parentRef.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
-              view.focus();
-              view.dispatch({
-                selection: {
-                  anchor: at === 'start' ? 0 : view.state.doc.length,
-                },
-              });
+              if (!view.hasFocus) {
+                view.focus();
+                view.dispatch({
+                  selection: {
+                    anchor: at === 'start' ? 0 : view.state.doc.length,
+                  },
+                });
+              }
             }
           },
         };
