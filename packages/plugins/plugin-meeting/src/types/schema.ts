@@ -4,9 +4,8 @@
 
 import { Schema as S } from 'effect';
 
-import { Ref, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
 import { TreeType } from '@dxos/plugin-outliner/types';
-import { ChannelType } from '@dxos/plugin-space/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
 import { TextType } from '@dxos/schema';
 
@@ -15,14 +14,16 @@ const IdentityDidSchema = S.String;
 
 export const MeetingSchema = S.Struct({
   name: S.optional(S.String),
+  created: S.String.annotations({ description: 'ISO timestamp' }),
   participants: S.mutable(S.Array(IdentityDidSchema)),
-  channel: S.optional(Ref(ChannelType)),
-  transcript: S.optional(Ref(TranscriptType)),
-  notes: S.optional(Ref(TreeType)),
-  summary: S.optional(Ref(TextType)),
+  // Queue of messages.
+  chat: Ref(Expando),
+  notes: Ref(TreeType),
+  transcript: Ref(TranscriptType),
+  summary: Ref(TextType),
 });
 
 export class MeetingType extends TypedObject({
   typename: 'dxos.org/type/Meeting',
-  version: '0.1.0',
+  version: '0.2.0',
 })(MeetingSchema.fields) {}

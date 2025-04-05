@@ -20,11 +20,11 @@ import { create, Filter, makeRef, useQuery, useQueue } from '@dxos/react-client/
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ActivityContainer, type ActivityContainerProps } from './ActivityContainer';
+import { CallContainer, type CallContainerProps } from './CallContainer';
 import { MeetingPlugin } from '../MeetingPlugin';
 import translations from '../translations';
 
-const Render = (props: ActivityContainerProps) => {
+const Render = (props: CallContainerProps) => {
   const client = useClient();
   const space = client.spaces.get().at(-1);
   const transcripts = useQuery(space, Filter.schema(TranscriptType));
@@ -38,7 +38,7 @@ const Render = (props: ActivityContainerProps) => {
   return (
     <div className='flex grow gap-8 justify-center'>
       <div className='flex h-full border border-neutral-500'>
-        <ActivityContainer {...props} />
+        <CallContainer {...props} />
       </div>
       <div className='flex h-full w-[30rem] border border-neutral-500'>
         <ScrollContainer>
@@ -49,9 +49,9 @@ const Render = (props: ActivityContainerProps) => {
   );
 };
 
-const meta: Meta<ActivityContainerProps> = {
-  title: 'plugins/plugin-meeting/ActivityContainer',
-  component: ActivityContainer,
+const meta: Meta<CallContainerProps> = {
+  title: 'plugins/plugin-meeting/CallContainer',
+  component: CallContainer,
   render: Render,
   decorators: [
     withPluginManager({
@@ -90,7 +90,7 @@ const meta: Meta<ActivityContainerProps> = {
 
 export default meta;
 
-type Story = StoryObj<ActivityContainerProps>;
+type Story = StoryObj<CallContainerProps>;
 
 export const Default: Story = {
   args: {
