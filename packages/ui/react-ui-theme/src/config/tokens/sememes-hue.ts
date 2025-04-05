@@ -5,7 +5,7 @@
 import { huePalettes } from './physical-colors';
 import { type ColorAliases, type ColorSememes } from './types';
 
-export const peerSememes: ColorSememes = Object.keys(huePalettes).reduce((acc: ColorSememes, palette) => {
+export const hueSememes: ColorSememes = Object.keys(huePalettes).reduce((acc: ColorSememes, palette) => {
   acc[`${palette}Cursor`] = {
     light: [palette, 400],
     dark: [palette, 300],
@@ -30,7 +30,15 @@ export const peerSememes: ColorSememes = Object.keys(huePalettes).reduce((acc: C
 }, {});
 
 const valenceAliasSememeStems = ['Text', 'Surface', 'SurfaceText'];
-const valenceMapping = { success: 'emerald', info: 'cyan', warning: 'amber', error: 'rose' };
+const valenceMapping = {
+  success: 'emerald',
+  info: 'cyan',
+  warning: 'amber',
+  error: 'rose',
+  current: 'primary',
+  active: 'emerald',
+  internal: 'fuchsia',
+};
 
 export const valenceAliases: ColorAliases = valenceAliasSememeStems.reduce((acc: ColorAliases, stem) => {
   return Object.entries(valenceMapping).reduce((acc: ColorAliases, [valence, hue]) => {

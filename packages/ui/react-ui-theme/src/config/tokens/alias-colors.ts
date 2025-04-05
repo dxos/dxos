@@ -4,7 +4,7 @@
 
 import { type AliasLayer } from '@ch-ui/tokens';
 
-import { valenceAliases } from './sememes-peer';
+import { valenceAliases } from './sememes-hue';
 import { sheetAliases } from './sememes-sheet';
 import { systemAliases } from './sememes-system';
 
