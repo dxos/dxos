@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prec } from '@codemirror/state';
+import { EditorSelection, Prec, type SelectionRange } from '@codemirror/state';
 import React, { forwardRef, StrictMode, useImperativeHandle } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createDocAccessor } from '@dxos/react-client/echo';
-import { Icon, ThemeProvider, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
+import { getLabel } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { createDocAccessor, getSchema } from '@dxos/react-client/echo';
+import { Icon, ThemeProvider, useDynamicRef, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorView,
   automerge,
@@ -23,8 +25,13 @@ import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { tagsExtension } from './tags';
 import { type TreeNodeType } from '../../types';
 
+export type CursorPosition = {
+  line?: 'first' | 'last';
+  goalColumn?: number;
+};
+
 export type NodeEditorController = {
-  focus: (at?: 'start' | 'end' | number) => void;
+  focus: (cursor?: CursorPosition) => void;
 };
 
 export type NodeEditorEvent =
@@ -52,12 +59,11 @@ export type NodeEditorEvent =
       node: TreeNodeType;
       direction?: 'previous' | 'next';
     }
-  | {
+  | ({
       type: 'navigate';
       node: TreeNodeType;
       direction: 'previous' | 'next';
-      at: 'start' | 'end' | number;
-    }
+    } & CursorPosition)
   | {
       type: 'indent';
       node: TreeNodeType;
@@ -66,7 +72,7 @@ export type NodeEditorEvent =
 
 export type NodeEditorProps = ThemedClassName<{
   node: TreeNodeType;
-  editable?: boolean;
+  readOnly?: boolean;
   placeholder?: string;
   onEvent?: (event: NodeEditorEvent) => void;
 }>;
@@ -76,18 +82,29 @@ export type NodeEditorProps = ThemedClassName<{
  * Subset of markdown editor.
  */
 export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
-  ({ classNames, node, editable, placeholder, onEvent }, ref) => {
+  ({ classNames, node, readOnly, placeholder, onEvent }, ref) => {
     const { themeMode } = useThemeContext();
 
+    // TODO(burdon): Factor out.
+    let initialValue = node.data.text;
+    if (node.ref?.target) {
+      const schema = getSchema(node.ref.target);
+      if (schema) {
+        initialValue = getLabel(schema, node.ref.target);
+      }
+    }
+
     // NOTE: Must not change callbacks.
+    const handleEvent = useDynamicRef<NodeEditorProps['onEvent']>(onEvent);
+
     const { parentRef, view } = useTextEditor(() => {
       return {
-        initialValue: node.data.text,
+        initialValue,
         extensions: [
           // NOTE: Path is relative to tree (ECHO object).
-          automerge(createDocAccessor(node, ['data', 'text'])),
+          readOnly ? [] : automerge(createDocAccessor(node, ['data', 'text'])),
 
-          createBasicExtensions({ readonly: !editable, editable: false, placeholder }),
+          createBasicExtensions({ readOnly, placeholder }),
           createThemeExtensions({ themeMode }),
 
           // Markdown subset.
@@ -101,9 +118,9 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
           EditorView.focusChangeEffect.of((_state, focusing) => {
             if (focusing) {
               // Ensure focus events happen after unfocusing.
-              setTimeout(() => onEvent?.({ type: 'focus', node, focusing }));
+              setTimeout(() => handleEvent.current?.({ type: 'focus', node, focusing }));
             } else {
-              onEvent?.({ type: 'focus', node, focusing });
+              handleEvent.current?.({ type: 'focus', node, focusing });
             }
             return null;
           }),
@@ -163,11 +180,10 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               {
                 key: 'ArrowLeft',
                 run: (view) => {
-                  const { from } = view.state.selection.ranges[0];
-                  if (from > 0) {
+                  if (view.state.selection.main.from > 0) {
                     return false;
                   } else {
-                    onEvent?.({ type: 'navigate', node, direction: 'previous', at: 'end' });
+                    onEvent?.({ type: 'navigate', node, direction: 'previous', line: 'last' });
                     return true;
                   }
                 },
@@ -175,11 +191,10 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               {
                 key: 'ArrowRight',
                 run: (view) => {
-                  const { from } = view.state.selection.ranges[0];
-                  if (from < view.state.doc.length) {
+                  if (view.state.selection.main.from < view.state.doc.length) {
                     return false;
                   } else {
-                    onEvent?.({ type: 'navigate', node, direction: 'next', at: 'start' });
+                    onEvent?.({ type: 'navigate', node, direction: 'next', line: 'first' });
                     return true;
                   }
                 },
@@ -187,15 +202,11 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               {
                 key: 'ArrowUp',
                 run: (view) => {
-                  const { from } = view.state.selection.ranges[0];
-                  const lineHeight = view.defaultLineHeight;
-                  const cursorCoords = view.coordsAtPos(from);
-                  const editorRect = view.scrollDOM.getBoundingClientRect();
-                  const onFirstLine = cursorCoords && cursorCoords.top - lineHeight < editorRect.top;
-                  if (!onFirstLine) {
+                  if (!isFirstLine(view, view.state.selection.main)) {
                     return false;
                   } else {
-                    onEvent?.({ type: 'navigate', node, direction: 'previous', at: from });
+                    const goalColumn = getColumn(view, view.state.selection.main);
+                    onEvent?.({ type: 'navigate', node, direction: 'previous', line: 'last', goalColumn });
                     return true;
                   }
                 },
@@ -203,15 +214,11 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               {
                 key: 'ArrowDown',
                 run: (view) => {
-                  const { from } = view.state.selection.ranges[0];
-                  const lineHeight = view.defaultLineHeight;
-                  const cursorCoords = view.coordsAtPos(from);
-                  const editorRect = view.scrollDOM.getBoundingClientRect();
-                  const onLastLine = cursorCoords && cursorCoords.bottom + lineHeight > editorRect.bottom;
-                  if (!onLastLine) {
+                  if (!isLastLine(view, view.state.selection.main)) {
                     return false;
                   } else {
-                    onEvent?.({ type: 'navigate', node, direction: 'next', at: from });
+                    const goalColumn = getColumn(view, view.state.selection.main);
+                    onEvent?.({ type: 'navigate', node, direction: 'next', line: 'first', goalColumn });
                     return true;
                   }
                 },
@@ -238,28 +245,28 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
           ),
         ],
       };
-    }, [node, editable]);
+    }, [node, readOnly]);
 
     // Controller.
     useImperativeHandle(
       ref,
       () => {
         return {
-          focus: (at) => {
+          focus: ({ line = 'last', goalColumn = 0 } = {}) => {
             if (view) {
               parentRef.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
               if (!view.hasFocus) {
+                const anchor =
+                  line === 'first'
+                    ? goalColumn
+                    : getPosition(
+                        view,
+                        EditorSelection.range(view.state.doc.length, view.state.doc.length),
+                        goalColumn,
+                      );
+
                 view.focus();
-                view.dispatch({
-                  selection: {
-                    anchor:
-                      typeof at === 'number'
-                        ? Math.min(Math.max(at, 0), view.state.doc.length)
-                        : at === 'start'
-                          ? 0
-                          : view.state.doc.length,
-                  },
-                });
+                view.dispatch({ selection: { anchor } });
               }
             }
           },
@@ -271,6 +278,36 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
     return <div ref={parentRef} className={mx('w-full', classNames)} />;
   },
 );
+
+const isFirstLine = (view: EditorView, selection: SelectionRange): boolean => {
+  const cursorCoords = view.coordsAtPos(selection.from);
+  invariant(cursorCoords);
+  const editorRect = view.scrollDOM.getBoundingClientRect();
+  return cursorCoords.top - view.defaultLineHeight < editorRect.top;
+};
+
+const isLastLine = (view: EditorView, selection: SelectionRange): boolean => {
+  const cursorCoords = view.coordsAtPos(selection.from);
+  invariant(cursorCoords);
+  const editorRect = view.scrollDOM.getBoundingClientRect();
+  return cursorCoords.bottom + view.defaultLineHeight > editorRect.bottom;
+};
+
+/**
+ * Return the current column (allowing for line wrapping).
+ */
+const getColumn = (view: EditorView, selection: SelectionRange): number => {
+  const { from } = view.moveToLineBoundary(selection, false, true);
+  return selection.head - from;
+};
+
+/**
+ * Return the position at the goal column on the current line (allowing for line wrapping).
+ */
+const getPosition = (view: EditorView, selection: SelectionRange, goalColumn: number): number => {
+  const { from } = view.moveToLineBoundary(selection, false, true);
+  return Math.min(from + goalColumn, view.state.doc.length);
+};
 
 // TODO(burdon): Factor out style.
 const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
