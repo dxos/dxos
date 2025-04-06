@@ -24,9 +24,9 @@ import {
 import { useActionHandler, useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
 
-type StoryProps = { placeholder?: string; readonly?: boolean } & UseTextEditorProps;
+type StoryProps = { placeholder?: string; readOnly?: boolean } & UseTextEditorProps;
 
-const DefaultStory = ({ autoFocus, initialValue, placeholder, readonly }: StoryProps) => {
+const DefaultStory = ({ autoFocus, initialValue, placeholder, readOnly }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const toolbarState = useEditorToolbarState({ viewMode: 'source' });
   const trackFormatting = useFormattingState(toolbarState);
@@ -38,7 +38,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, readonly }: StoryP
       moveToEndOfLine: true,
       extensions: [
         editorInputMode ? InputModeExtensions[editorInputMode] : [],
-        createBasicExtensions({ placeholder, lineWrapping: true, readonly }),
+        createBasicExtensions({ placeholder, lineWrapping: true, readOnly }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         decorateMarkdown(),
@@ -46,7 +46,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, readonly }: StoryP
         trackFormatting,
       ],
     }),
-    [editorInputMode, themeMode, placeholder, readonly],
+    [editorInputMode, themeMode, placeholder, readOnly],
   );
 
   const handleAction = useActionHandler(view);

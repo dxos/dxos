@@ -262,7 +262,7 @@ type StoryProps = {
   id?: string;
   debug?: DebugMode;
   text?: string;
-  readonly?: boolean;
+  readOnly?: boolean;
   placeholder?: string;
   lineNumbers?: boolean;
   onReady?: (view: EditorView) => void;
@@ -273,7 +273,7 @@ const DefaultStory = ({
   debug,
   text,
   extensions,
-  readonly,
+  readOnly,
   placeholder = 'New document.',
   scrollTo,
   selection,
@@ -289,7 +289,7 @@ const DefaultStory = ({
       initialValue: text,
       extensions: [
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        createBasicExtensions({ readonly, placeholder, lineNumbers, scrollPastEnd: true }),
+        createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
@@ -376,7 +376,7 @@ export const Empty = {
 };
 
 export const Readonly = {
-  render: () => <DefaultStory text={text} extensions={defaultExtensions} readonly />,
+  render: () => <DefaultStory text={text} extensions={defaultExtensions} readOnly />,
 };
 
 export const NoExtensions = {
