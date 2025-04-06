@@ -1,14 +1,22 @@
-.dx-avatar-group dx-avatar {
+.dx-avatar-group {
+  @apply inline-flex items-center;
+}
+
+.dx-avatar-group .dx-avatar {
   @apply -mie-2
 }
 
-.dx-avatar-group dx-avatar {
+.dx-avatar-group .dx-avatar {
   &[size="0"], &[size="px"], &[size="0.5"], &[size="1"], &[size="1.5"], &[size="2"], &[size="2.5"] {
     @apply -mie-1
   }
 }
 
 dx-avatar {
+  display: contents;
+}
+
+.dx-avatar {
   @apply relative inline-flex shrink-0;
 
   .dx-avatar__frame {
@@ -56,6 +64,14 @@ dx-avatar {
 
   &[data-status="inactive"] .dx-avatar__ring {
     @apply border-separator;
+  }
+
+  &[data-animation="pulse"] .dx-avatar__ring {
+    @apply animate-halo-pulse;
+  }
+
+  .dx-avatar__fallback-text {
+    @apply fill-white;
   }
 }
 

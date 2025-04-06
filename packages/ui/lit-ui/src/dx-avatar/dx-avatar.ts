@@ -24,10 +24,6 @@ export class DxAvatar extends LitElement {
   constructor() {
     super();
     this.maskId = makeId('avatar__mask');
-    this.setAttribute('aria-labelledby', this.labelId);
-    this.setAttribute('role', 'img');
-    this.setAttribute('data-size', this.size.toString());
-    this.setAttribute('data-variant', this.variant);
   }
 
   @property({ type: String })
@@ -63,6 +59,12 @@ export class DxAvatar extends LitElement {
   @property({ type: String })
   size: Size = 10;
 
+  @property({ type: String })
+  icon: string | undefined = undefined;
+
+  @property({ type: Number })
+  viewBoxSize: number = 256;
+
   @state()
   loadingStaus: ImageLoadingStatus = 'idle';
 
@@ -93,7 +95,15 @@ export class DxAvatar extends LitElement {
     const r = sizePx / 2 - ringGap - ringWidth;
     const isTextOnly = Boolean(this.fallback && /[0-9a-zA-Z]+/.test(this.fallback));
     const fontScale = (isTextOnly ? 3 : 4) * (1 / 1.612);
-    return html`<svg
+    return html`<span
+      role="img"
+      class="dx-avatar"
+      aria-labelledby=${this.labelId}
+      data-size=${this.size}
+      data-variant=${this.variant}
+      ?data-animation=${this.animation}
+      ?data-status=${this.status}
+    ><svg
       viewBox=${`0 0 ${sizePx} ${sizePx}`}
       width=${sizePx}
       height=${sizePx}
@@ -159,7 +169,7 @@ export class DxAvatar extends LitElement {
       role="none"
       class="dx-avatar__ring"
       style=${styleMap({ borderWidth: ringWidth + 'px' })}
-    />`;
+    /></span>`;
   }
 
   override createRenderRoot() {
