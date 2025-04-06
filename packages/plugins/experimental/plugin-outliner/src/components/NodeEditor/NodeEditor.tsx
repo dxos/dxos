@@ -252,18 +252,26 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
       ref,
       () => {
         return {
-          focus: ({ line = 'last', goalColumn = 0 } = {}) => {
+          focus: ({ line = 'last', goalColumn } = {}) => {
             if (view) {
               parentRef.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
               if (!view.hasFocus) {
-                const anchor =
-                  line === 'first'
-                    ? goalColumn
-                    : getPosition(
+                let anchor = 0;
+                switch (line) {
+                  case 'first':
+                    anchor = Math.min(view.state.doc.length, goalColumn ?? 0);
+                    break;
+                  case 'last':
+                    anchor = Math.min(
+                      view.state.doc.length,
+                      getPosition(
                         view,
                         EditorSelection.range(view.state.doc.length, view.state.doc.length),
-                        goalColumn,
-                      );
+                        goalColumn ?? -1,
+                      ),
+                    );
+                    break;
+                }
 
                 view.focus();
                 view.dispatch({ selection: { anchor } });
@@ -303,10 +311,15 @@ const getColumn = (view: EditorView, selection: SelectionRange): number => {
 
 /**
  * Return the position at the goal column on the current line (allowing for line wrapping).
+ * If goalColumn is -1, return the position at the end of the line.
  */
 const getPosition = (view: EditorView, selection: SelectionRange, goalColumn: number): number => {
-  const { from } = view.moveToLineBoundary(selection, false, true);
-  return Math.min(from + goalColumn, view.state.doc.length);
+  const { from } = view.moveToLineBoundary(selection, goalColumn === -1, true);
+  if (goalColumn === -1) {
+    return from;
+  } else {
+    return Math.min(from + goalColumn, view.state.doc.length);
+  }
 };
 
 // TODO(burdon): Factor out style.
