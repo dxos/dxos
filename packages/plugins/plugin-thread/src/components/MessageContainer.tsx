@@ -144,7 +144,7 @@ const TextboxBlock = ({
     () => ({
       initialValue: block.text,
       extensions: [
-        createBasicExtensions({ readonly: !isAuthor || !editing }),
+        createBasicExtensions({ readOnly: !isAuthor || !editing }),
         createThemeExtensions({ themeMode }),
         command,
         EditorView.updateListener.of((update) => {
