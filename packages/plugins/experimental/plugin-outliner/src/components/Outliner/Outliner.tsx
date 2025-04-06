@@ -45,7 +45,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
     const model = useMemo(() => (tree ? new Tree(tree) : undefined), [tree]);
 
     const [editor, setEditor] = useState<NodeEditorController | null>(null);
-    const [direction, setDirection] = useState<'start' | 'end'>();
+    const [direction, setDirection] = useState<'start' | 'end' | number>();
     useEffect(() => {
       editor?.focus(direction);
     }, [editor, direction]);
@@ -184,7 +184,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
                 const previous = model.getPrevious(node);
                 if (previous && previous.id !== model.root.id) {
                   setActive(previous.id);
-                  setDirection('start');
+                  setDirection(event.at);
                 }
                 break;
               }
@@ -193,7 +193,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
                 const next = model.getNext(node);
                 if (next) {
                   setActive(next.id);
-                  setDirection('end');
+                  setDirection(event.at);
                 }
                 break;
               }
