@@ -12,7 +12,7 @@ import { Outliner } from './Outliner';
 import { useOutlinerHandlers } from '../hooks';
 import { type TreeType } from '../types';
 
-const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => {
+const OutlinerContainer = ({ role, tree }: { role: string; tree: TreeType }) => {
   const space = getSpace(tree);
   const handlers = useOutlinerHandlers(space);
   if (!tree) {
