@@ -234,6 +234,7 @@ export const getLabel = <S extends S.Schema.Any>(schema: S, object: S.Schema.Typ
   if (!Array.isArray(annotation)) {
     annotation = [annotation];
   }
+
   for (const accessor of annotation as string[]) {
     assertArgument(typeof accessor === 'string', 'Label annotation must be a string or an array of strings');
     const value = getField(object, accessor as JsonPath);
@@ -251,5 +252,6 @@ export const getLabel = <S extends S.Schema.Any>(schema: S, object: S.Schema.Typ
         continue;
     }
   }
+
   return undefined;
 };

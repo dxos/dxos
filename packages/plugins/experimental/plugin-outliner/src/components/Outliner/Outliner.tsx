@@ -13,9 +13,10 @@ import React, {
   useState,
 } from 'react';
 
+import { getLabel, getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DropdownMenu, IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { DropdownMenu, Icon, IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -202,7 +203,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           }
         }
       },
-      [model],
+      [model, onCreate, onDelete, onAction],
     );
 
     // TODO(burdon): Convert to grid.
@@ -287,6 +288,14 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
   ({ classNames, node, indent, active, editable, onEvent }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
 
+    let linkText: string | undefined;
+    if (node.ref) {
+      const schema = getSchema(node.ref.target);
+      if (schema) {
+        linkText = getLabel(schema, node.ref.target);
+      }
+    }
+
     return (
       <div className={mx('flex w-full', classNames)}>
         <div className={mx('pis-2', 'border-l-4', active ? 'border-primary-500' : 'border-transparent text-subdued')}>
@@ -303,14 +312,24 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
           </div>
         </div>
 
-        <NodeEditor
-          ref={forwardedRef}
-          classNames='pis-1 pie-1 pbs-1 pbe-1'
-          node={node}
-          editable={editable}
-          placeholder={indent === 0 ? t('text placeholder') : undefined}
-          onEvent={onEvent}
-        />
+        {linkText && (
+          <div className='flex p-1 gap-1 items-center'>
+            <a href='#'>
+              <Icon icon='ph--link--regular' size={4} />
+            </a>
+            <span>{linkText}</span>
+          </div>
+        )}
+        {!node.ref && (
+          <NodeEditor
+            ref={forwardedRef}
+            classNames='pis-1 pie-1 pbs-1 pbe-1'
+            node={node}
+            editable={editable}
+            placeholder={indent === 0 ? t('text placeholder') : undefined}
+            onEvent={onEvent}
+          />
+        )}
 
         {editable && (
           <div>

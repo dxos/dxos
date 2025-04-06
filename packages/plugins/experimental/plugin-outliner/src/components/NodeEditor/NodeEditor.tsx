@@ -7,7 +7,7 @@ import React, { forwardRef, StrictMode, useImperativeHandle } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { Icon, ThemeProvider, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, ThemeProvider, useDynamicRef, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorView,
   automerge,
@@ -79,6 +79,8 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
     const { themeMode } = useThemeContext();
 
     // NOTE: Must not change callbacks.
+    const handleEvent = useDynamicRef<NodeEditorProps['onEvent']>(onEvent);
+
     const { parentRef, view } = useTextEditor(() => {
       return {
         initialValue: node.data.text,
@@ -100,9 +102,9 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
           EditorView.focusChangeEffect.of((_state, focusing) => {
             if (focusing) {
               // Ensure focus events happen after unfocusing.
-              setTimeout(() => onEvent?.({ type: 'focus', node, focusing }));
+              setTimeout(() => handleEvent.current?.({ type: 'focus', node, focusing }));
             } else {
-              onEvent?.({ type: 'focus', node, focusing });
+              handleEvent.current?.({ type: 'focus', node, focusing });
             }
             return null;
           }),

@@ -8,16 +8,17 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { ObjectId } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { useSpace } from '@dxos/react-client/echo';
+import { create, makeRef, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerController } from './Outliner';
 import { createTree } from '../../testing';
 import translations from '../../translations';
-import { TreeType } from '../../types';
+import { TaskType, TreeType } from '../../types';
 
 const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
@@ -46,12 +47,21 @@ const meta: Meta<typeof Outliner.Root> = {
         }}
         onAction={(action) => {
           log.info('action', { action });
+          switch (action.action) {
+            case 'task': {
+              invariant(space);
+              const task = space.db.add(create(TaskType, { text: action.node.data.text }));
+              action.node.ref = makeRef(task);
+              action.node.data.text = '';
+              break;
+            }
+          }
         }}
       />
     );
   },
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [TreeType] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [TaskType, TreeType] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],

@@ -12,13 +12,42 @@ import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
 
-import { Outliner } from './Outliner';
+import { Outliner, type OutlinerRootProps } from './Outliner';
 import { OutlinerAction, type TreeType } from '../types';
 
 const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-
   const space = getSpace(tree);
+
+  const handleCreate: NonNullable<OutlinerRootProps['onCreate']> = () => {
+    return {
+      id: ObjectId.random(),
+      children: [],
+      data: { text: '' },
+    };
+  };
+
+  const handleDelete: NonNullable<OutlinerRootProps['onDelete']> = (node) => {
+    space?.db.remove(node);
+  };
+
+  const handleAction: NonNullable<OutlinerRootProps['onAction']> = (action) => {
+    switch (action.action) {
+      case 'task': {
+        void dispatch(createIntent(OutlinerAction.CreateTask, { node: action.node })).then(({ data }) => {
+          // TODO(burdon): Show link.
+          log.info('task created', { data });
+          if (space && data) {
+            const task = space.db.add(data.object);
+            action.node.ref = makeRef(task);
+            action.node.data.text = '';
+          }
+        });
+        break;
+      }
+    }
+  };
+
   if (!space || !tree) {
     return null;
   }
@@ -28,31 +57,9 @@ const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => 
       <Outliner.Root
         classNames={mx(attentionSurface, 'p-1.5')}
         tree={tree}
-        onCreate={() => {
-          return {
-            id: ObjectId.random(),
-            children: [],
-            data: { text: '' },
-          };
-        }}
-        onDelete={(node) => {
-          space.db.remove(node);
-        }}
-        onAction={(event) => {
-          log.info('action', { event });
-          switch (event.action) {
-            case 'task': {
-              void dispatch(createIntent(OutlinerAction.CreateTask, { node: event.node })).then(({ data }) => {
-                log.info('task created', { data });
-                if (data) {
-                  const task = space.db.add(data.object);
-                  event.node.ref = makeRef(task);
-                }
-              });
-              break;
-            }
-          }
-        }}
+        onCreate={handleCreate}
+        onDelete={handleDelete}
+        onAction={handleAction}
       />
     </StackItem.Content>
   );
