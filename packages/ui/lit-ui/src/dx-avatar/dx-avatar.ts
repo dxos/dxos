@@ -92,9 +92,10 @@ export class DxAvatar extends LitElement {
     const sizePx = numericSize * 4;
     const ringWidth = this.status ? (numericSize > 4 ? 2 : numericSize > 3 ? 1 : 1) : 0;
     const ringGap = this.status ? (numericSize > 12 ? 3 : numericSize > 4 ? 2 : numericSize > 3 ? 1 : 0) : 0;
-    const r = sizePx / 2 - ringGap - ringWidth;
+    const viewBoxCoefficient = this.viewBoxSize / sizePx;
+    const r = (sizePx / 2 - ringGap - ringWidth) * viewBoxCoefficient;
     const isTextOnly = Boolean(this.fallback && /[0-9a-zA-Z]+/.test(this.fallback));
-    const fontScale = (isTextOnly ? 3 : 4) * (1 / 1.612);
+    const fontScale = (isTextOnly ? 3 : 4) * (1 / 1.612) * viewBoxCoefficient;
     return html`<span
       role="img"
       class="dx-avatar"
@@ -104,7 +105,7 @@ export class DxAvatar extends LitElement {
       ?data-animation=${this.animation}
       ?data-status=${this.status}
     ><svg
-      viewBox=${`0 0 ${sizePx} ${sizePx}`}
+      viewBox=${`0 0 ${this.viewBoxSize} ${this.viewBoxSize}`}
       width=${sizePx}
       height=${sizePx}
       class="dx-avatar__frame"
@@ -118,8 +119,8 @@ export class DxAvatar extends LitElement {
             fill="white"
             width=${2 * r}
             height=${2 * r}
-            x=${ringGap + ringWidth}
-            y=${ringGap + ringWidth}
+            x=${(ringGap + ringWidth) * viewBoxCoefficient}
+            y=${(ringGap + ringWidth) * viewBoxCoefficient}
             rx=${rx}
           />
           )}
@@ -135,8 +136,8 @@ export class DxAvatar extends LitElement {
             />`
           : html` <rect
               fill=${this.hue ? `var(--dx-${this.hue}Fill)` : 'var(--surface-bg)'}
-              x=${ringGap + ringWidth}
-              y=${ringGap + ringWidth}
+              x=${(ringGap + ringWidth) * viewBoxCoefficient}
+              y=${(ringGap + ringWidth) * viewBoxCoefficient}
               width=${2 * r}
               height=${2 * r}
               rx=${rx}
@@ -155,6 +156,7 @@ export class DxAvatar extends LitElement {
           @error=${this.handleError}
         />`
       }
+      ${this.icon && html`<use href=${this.icon} />`}
       <text
         x='50%'
         y='50%'
