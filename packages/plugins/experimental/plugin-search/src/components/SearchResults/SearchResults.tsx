@@ -55,6 +55,7 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
   const { id, objectType, icon, type, label, snippet, match, selected, onSelect } = item;
   // TODO(dmaretskyi): How do I use <Icon /> component from @dxos/react-ui?
   const Icon = type ? getIcon(type) : undefined;
+  console.log(icon);
 
   return (
     <Card.Root
