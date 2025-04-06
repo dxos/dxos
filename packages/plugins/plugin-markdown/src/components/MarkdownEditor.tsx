@@ -127,7 +127,7 @@ export const MarkdownEditor = ({
         comment && commentObserver,
         comment && commentClickObserver,
         createBasicExtensions({
-          readonly: viewMode === 'readonly',
+          readOnly: viewMode === 'readonly',
           placeholder: t('editor placeholder'),
           scrollPastEnd: role === 'section' ? false : scrollPastEnd,
         }),
