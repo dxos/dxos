@@ -114,6 +114,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           // Create.
           //
           case 'create': {
+            console.log('create', { onCreate });
             const created = onCreate?.();
             if (created) {
               const idx = nodes.findIndex((n) => n.id === node.id);
@@ -132,7 +133,10 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
               const previous = model.getPrevious(node);
               const deleted = model.deleteNode(parent, node.id);
               if (deleted && previous) {
-                setTimeout(() => setActive(previous.id));
+                setTimeout(() => {
+                  setPosition({ line: 'last' });
+                  setActive(previous.id);
+                });
               }
             }
             break;
