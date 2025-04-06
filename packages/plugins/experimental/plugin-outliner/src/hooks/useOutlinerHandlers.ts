@@ -12,7 +12,9 @@ import { type Space } from '@dxos/react-client/echo';
 import { type OutlinerRootProps } from '../components';
 import { OutlinerAction } from '../types';
 
-export const useOutlinerHandlers = (space: Space | undefined) => {
+type UseOutlinerHandlersProps = Pick<OutlinerRootProps, 'onCreate' | 'onDelete' | 'onAction'>;
+
+export const useOutlinerHandlers = (space: Space | undefined): UseOutlinerHandlersProps => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleCreate = useCallback<NonNullable<OutlinerRootProps['onCreate']>>(() => {
@@ -25,7 +27,7 @@ export const useOutlinerHandlers = (space: Space | undefined) => {
 
   const handleDelete = useCallback<NonNullable<OutlinerRootProps['onDelete']>>(
     (node) => {
-      space?.db.remove(node);
+      // No-op (not an ECHO object).
     },
     [space],
   );
@@ -48,5 +50,9 @@ export const useOutlinerHandlers = (space: Space | undefined) => {
     [dispatch, space],
   );
 
-  return { handleCreate, handleDelete, handleAction };
+  return {
+    onCreate: handleCreate,
+    onDelete: handleDelete,
+    onAction: handleAction,
+  };
 };
