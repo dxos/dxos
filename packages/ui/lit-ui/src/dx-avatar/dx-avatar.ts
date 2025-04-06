@@ -7,15 +7,34 @@ import { customElement, state, property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';
-import { type Size } from '@dxos/react-ui-types';
 
-type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
+import { type Size } from '../defs';
 
-type AvatarVariant = 'square' | 'circle';
-type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
-type AvatarAnimation = 'pulse' | 'none';
+export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
+
+export type AvatarVariant = 'square' | 'circle';
+export type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
+export type AvatarAnimation = 'pulse' | 'none';
 
 const rx = '0.25rem';
+
+export type DxAvatarProps = Partial<
+  Pick<
+    DxAvatar,
+    | 'fallback'
+    | 'labelId'
+    | 'imgSrc'
+    | 'imgCrossOrigin'
+    | 'imgReferrerPolicy'
+    | 'variant'
+    | 'status'
+    | 'animation'
+    | 'hue'
+    | 'size'
+    | 'icon'
+    | 'viewBoxSize'
+  >
+>;
 
 @customElement('dx-avatar')
 export class DxAvatar extends LitElement {
@@ -49,9 +68,6 @@ export class DxAvatar extends LitElement {
 
   @property({ type: String })
   animation: AvatarAnimation = 'none';
-
-  @property({ type: Boolean })
-  inGroup: boolean = false;
 
   @property({ type: String })
   hue: string | undefined = undefined;
@@ -102,8 +118,8 @@ export class DxAvatar extends LitElement {
       aria-labelledby=${this.labelId}
       data-size=${this.size}
       data-variant=${this.variant}
-      ?data-animation=${this.animation}
-      ?data-status=${this.status}
+      data-status=${this.status}
+      data-animation=${this.animation}
     ><svg
       viewBox=${`0 0 ${this.viewBoxSize} ${this.viewBoxSize}`}
       width=${sizePx}

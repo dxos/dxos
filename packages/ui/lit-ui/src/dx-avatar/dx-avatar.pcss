@@ -35,7 +35,6 @@ dx-avatar {
 
   .dx-avatar__status-icon {
     @apply absolute block-end-0 inline-end-0;
-    //  todo: continue refactor
   }
 
   .dx-avatar__ring {
@@ -43,23 +42,23 @@ dx-avatar {
   }
 
   &[data-status="current"] .dx-avatar__ring {
-    @apply border-currentFill;
+    @apply border-[color:var(--dx-currentFill)];
   }
 
   &[data-status="active"] .dx-avatar__ring {
-    @apply border-activeFill;
+    @apply border-[color:var(--dx-activeFill)];
   }
 
   &[data-status="error"] .dx-avatar__ring {
-    @apply border-errorFill;
+    @apply border-[color:var(--dx-errorFill)];
   }
 
   &[data-status="warning"] .dx-avatar__ring {
-    @apply border-warningFill;
+    @apply border-[color:var(--dx-warningFill)];
   }
 
   &[data-status="internal"] .dx-avatar__ring {
-    @apply border-internalFill;
+    @apply border-[color:var(--dx-internalFill)];
   }
 
   &[data-status="inactive"] .dx-avatar__ring {

@@ -29,20 +29,19 @@ export const hueSememes: ColorSememes = Object.keys(huePalettes).reduce((acc: Co
   return acc;
 }, {});
 
-const valenceAliasSememeStems = ['Text', 'Surface', 'SurfaceText'];
+const valenceAliasSememeStems = ['Text', 'Surface', 'SurfaceText', 'Fill'];
 const valenceMapping = {
-  success: 'emerald',
-  info: 'cyan',
-  warning: 'amber',
-  error: 'rose',
-  current: 'primary',
-  active: 'emerald',
-  internal: 'fuchsia',
+  emerald: ['success', 'active'],
+  cyan: ['info'],
+  amber: ['warning'],
+  rose: ['error'],
+  blue: ['current'],
+  fuchsia: ['internal'],
 };
 
 export const valenceAliases: ColorAliases = valenceAliasSememeStems.reduce((acc: ColorAliases, stem) => {
-  return Object.entries(valenceMapping).reduce((acc: ColorAliases, [valence, hue]) => {
-    acc[`${valence}${stem}`] = { root: [`${hue}${stem}`] };
+  return Object.entries(valenceMapping).reduce((acc: ColorAliases, [hue, valences]) => {
+    acc[`${hue}${stem}`] = { root: valences.map((valence) => `${valence}${stem}`) };
     return acc;
   }, acc);
 }, {});
