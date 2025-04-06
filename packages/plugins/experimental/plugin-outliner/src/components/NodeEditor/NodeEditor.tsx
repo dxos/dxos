@@ -188,16 +188,32 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                 key: 'ArrowUp',
                 run: (view) => {
                   const { from } = view.state.selection.ranges[0];
-                  onEvent?.({ type: 'navigate', node, direction: 'previous', at: from });
-                  return true;
+                  const lineHeight = view.defaultLineHeight;
+                  const cursorCoords = view.coordsAtPos(from);
+                  const editorRect = view.scrollDOM.getBoundingClientRect();
+                  const onFirstLine = cursorCoords && cursorCoords.top - lineHeight < editorRect.top;
+                  if (!onFirstLine) {
+                    return false;
+                  } else {
+                    onEvent?.({ type: 'navigate', node, direction: 'previous', at: from });
+                    return true;
+                  }
                 },
               },
               {
                 key: 'ArrowDown',
                 run: (view) => {
                   const { from } = view.state.selection.ranges[0];
-                  onEvent?.({ type: 'navigate', node, direction: 'next', at: from });
-                  return true;
+                  const lineHeight = view.defaultLineHeight;
+                  const cursorCoords = view.coordsAtPos(from);
+                  const editorRect = view.scrollDOM.getBoundingClientRect();
+                  const onLastLine = cursorCoords && cursorCoords.bottom + lineHeight > editorRect.bottom;
+                  if (!onLastLine) {
+                    return false;
+                  } else {
+                    onEvent?.({ type: 'navigate', node, direction: 'next', at: from });
+                    return true;
+                  }
                 },
               },
 
