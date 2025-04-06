@@ -44,7 +44,6 @@ export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, 
   };
 
   const allResults = [...results, ...webResults];
-
   log.info('results', { results, webResults });
 
   return (

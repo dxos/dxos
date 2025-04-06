@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Icon, Buildings, Folders, User } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
 import { Card } from '@dxos/react-ui-card';
@@ -10,17 +9,6 @@ import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_RESULT } from '../../meta';
 import { type SearchResult } from '../../types';
-
-// TODO(burdon): Registry defined by plugins?
-const getIcon = (type: string): Icon | undefined => {
-  const iconMap: Record<string, Icon> = {
-    user: User,
-    organization: Buildings,
-    project: Folders,
-  };
-
-  return iconMap[type];
-};
 
 export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) => {
   let content = <>{text}</>;
@@ -52,10 +40,11 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
 export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, forwardRef) => {
-  const { id, objectType, icon, type, label, snippet, match, selected, onSelect } = item;
-  // TODO(dmaretskyi): How do I use <Icon /> component from @dxos/react-ui?
-  const Icon = type ? getIcon(type) : undefined;
-  console.log(icon);
+  const { id, objectType, label, snippet, match, selected, onSelect } = item;
+
+  // TODO(burdon): Convert react-ui-card to use react-ui-icon.
+  // TODO(burdon): Get icon from plugin registry based on object type.
+  const Icon = undefined;
 
   return (
     <Card.Root
