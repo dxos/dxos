@@ -132,7 +132,10 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
               const previous = model.getPrevious(node);
               const deleted = model.deleteNode(parent, node.id);
               if (deleted && previous) {
-                setTimeout(() => setActive(previous.id));
+                setTimeout(() => {
+                  setPosition({ line: 'last' });
+                  setActive(previous.id);
+                });
               }
             }
             break;
