@@ -6160,6 +6160,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -7946,6 +7949,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-outliner':
+        specifier: workspace:*
+        version: link:../experimental/plugin-outliner
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -9368,6 +9374,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object

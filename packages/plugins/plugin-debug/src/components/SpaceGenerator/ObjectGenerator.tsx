@@ -150,7 +150,7 @@ export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): Obj
       (await space.db.schemaRegistry.register([type]))[0];
 
     // Create objects.
-    const generate = createAsyncGenerator(generator, schema.getSchemaSnapshot(), { db: space.db });
+    const generate = createAsyncGenerator(generator, schema.snapshot, { db: space.db });
     const objects = await generate.createObjects(n);
 
     // Find or create table and view.

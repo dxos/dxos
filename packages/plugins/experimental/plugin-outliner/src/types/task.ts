@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EchoObject, FormatAnnotationId, FormatEnum, S } from '@dxos/echo-schema';
+import { EchoObject, FormatAnnotationId, FormatEnum, LabelAnnotationId, S } from '@dxos/echo-schema';
 
 // TOOD(burdon): Move to plugin-task.
 
@@ -24,6 +24,10 @@ export const TaskType = S.Struct({
   // due: Date,
   // TODO(burdon): Generic tags.
   // tags: [String],
-}).pipe(EchoObject('dxos.org/type/Task', '0.1.0'));
+})
+  .pipe(EchoObject('dxos.org/type/Task', '0.1.0'))
+  .annotations({
+    [LabelAnnotationId]: 'text',
+  });
 
 export interface TaskType extends S.Schema.Type<typeof TaskType> {}

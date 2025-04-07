@@ -32,12 +32,14 @@ export type TableRowAction = {
 // TODO(ZaymonFC): There should be a separate concept for immutable schemata.
 export type TableFeatures = {
   selection: boolean;
-  editable: boolean;
+  dataEditable: boolean;
+  schemaEditable: boolean;
 };
 
 const defaultFeatures: TableFeatures = {
   selection: true,
-  editable: false,
+  dataEditable: false,
+  schemaEditable: false,
 };
 
 export type TableModelProps<T extends BaseTableRow = { id: string }> = {
