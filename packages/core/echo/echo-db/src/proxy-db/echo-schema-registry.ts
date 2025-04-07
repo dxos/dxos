@@ -5,9 +5,9 @@
 import { Event, type UnsubscribeCallback } from '@dxos/async';
 import { Resource, type Context } from '@dxos/context';
 import {
-  EchoIdentifierAnnotationId,
+  ObjectIdentifierAnnotationId,
   EchoSchema,
-  getEchoIdentifierAnnotation,
+  getObjectIdentifierAnnotation,
   getObjectAnnotation,
   ObjectAnnotationId,
   S,
@@ -274,12 +274,11 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return echoSchema;
   }
 
-  // TODO(burdon): Tighten type signature to TypedObject?
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
   private _addSchema(schema: S.Schema.AnyNoContext): EchoSchema {
     if (schema instanceof EchoSchema) {
-      schema = schema.getSchemaSnapshot().annotations({
-        [EchoIdentifierAnnotationId]: undefined,
+      schema = schema.snapshot.annotations({
+        [ObjectIdentifierAnnotationId]: undefined,
       });
     }
 
@@ -288,7 +287,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
       [ObjectAnnotationId]: meta,
-      [EchoIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
+      [ObjectIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
     });
 
     schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
@@ -348,7 +347,7 @@ const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
 };
 
 const getObjectIdFromSchema = (schema: S.Schema.AnyNoContext): ObjectId | undefined => {
-  const echoIdentifier = getEchoIdentifierAnnotation(schema);
+  const echoIdentifier = getObjectIdentifierAnnotation(schema);
   if (!echoIdentifier) {
     return undefined;
   }

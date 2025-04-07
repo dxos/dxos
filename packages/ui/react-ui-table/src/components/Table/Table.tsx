@@ -16,7 +16,7 @@ import React, {
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Filter } from '@dxos/react-client/echo';
-import { useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell, type DxGridPosition } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
@@ -69,30 +69,23 @@ export type TableController = {
   update?: (cell?: DxGridPosition) => void;
 };
 
-export type TableFeatures = { selection?: boolean };
-
 export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
   ignoreAttention?: boolean;
-  features?: TableFeatures;
   onRowClicked?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, onRowClicked, features }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, onRowClicked }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
     const modals = useMemo(() => new ModalController(), []);
 
-    const { selection } = useDefaultValue(features, () => ({
-      selection: true,
-    }));
-
     const frozen = useMemo(
-      () => ({ frozenRowsStart: 1, frozenColsStart: selection ? 1 : 0, frozenColsEnd: 1 }),
-      [selection],
+      () => ({ frozenRowsStart: 1, frozenColsStart: model?.features.selection ? 1 : 0, frozenColsEnd: 1 }),
+      [model],
     );
 
     /**
@@ -216,6 +209,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
       (cell) => {
+        if (!model?.features.dataEditable) {
+          return;
+        }
+
         // TODO(burdon): Insert row only if bottom row isn't completely blank already.
         if (model && cell.row === model.getRowCount() - 1) {
           model.insertRow(cell.row);
@@ -232,6 +229,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
       (event) => {
+        if (!model?.features.dataEditable) {
+          return;
+        }
+
         const cell = closestCell(event.target);
         if (!model || !cell) {
           return;
@@ -310,7 +311,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
         return [];
       },
-      [model],
+      [model, t],
     );
 
     if (!model || !modals) {

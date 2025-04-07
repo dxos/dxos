@@ -11,7 +11,14 @@ import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
-import { type JournalType, createJournalEntry, type JournalEntryType, getJournalEntries } from '../../types';
+import {
+  type JournalType,
+  createJournalEntry,
+  type JournalEntryType,
+  getJournalEntries,
+  getDateString,
+  parseDateString,
+} from '../../types';
 import { Outliner } from '../Outliner';
 
 type JournalRootProps = ThemedClassName<{
@@ -69,11 +76,11 @@ const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
     return null;
   }
 
-  const date = new Date(entry.date);
-  const isToday = date.toDateString() === new Date().toDateString();
+  const date = parseDateString(entry.date);
+  const isToday = getDateString() === entry.date;
   return (
     <div className={mx('flex flex-col', classNames)}>
-      <div className='px-2'>
+      <div className='pis-2'>
         <span className={mx('text-lg', isToday && 'text-primary-500')}>{format(date, 'MMM d, yyyy')}</span>
         <span className='text-sm text-subdued pis-2'>{format(date, 'EEEE')}</span>
       </div>

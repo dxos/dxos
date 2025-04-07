@@ -407,8 +407,7 @@ describe('ViewProjection', () => {
       },
     });
 
-    const effectSchema = mutable.getSchemaSnapshot();
-
+    const effectSchema = mutable.snapshot;
     expect(() => S.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
     expect(() => S.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
     expect(() => S.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
@@ -462,7 +461,7 @@ describe('ViewProjection', () => {
     });
 
     const projection = new ViewProjection(mutable, view);
-    const initialSchema = mutable.getSchemaSnapshot();
+    const initialSchema = mutable.snapshot;
 
     // Verify only the included fields are in the view.
     expect(view.fields).to.have.length(2);
@@ -531,7 +530,7 @@ describe('ViewProjection', () => {
     expect(getFieldId(view, 'email')).to.equal(emailId);
 
     // Ensure schema still matches.
-    expect(mutable.getSchemaSnapshot()).to.deep.equal(initialSchema);
+    expect(mutable.snapshot).to.deep.equal(initialSchema);
   });
 
   test('schema fields are automatically added to hiddenFields', async ({ expect }) => {

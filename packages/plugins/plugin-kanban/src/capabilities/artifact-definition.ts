@@ -29,7 +29,7 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: meta.id,
+    id: `artifact:${meta.id}`,
     name: meta.name,
     instructions: `
       - Before adding items to a kanban board, inspect the board to see its schema
@@ -65,7 +65,7 @@ export default () => {
           const intent = pipe(
             createIntent(KanbanAction.Create, {
               space: extensions.space,
-              initialSchema: typename,
+              typename,
               initialPivotColumn: pivotColumn,
             }),
             chain(SpaceAction.AddObject, { target: extensions.space }),

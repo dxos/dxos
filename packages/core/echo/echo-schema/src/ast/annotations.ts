@@ -7,7 +7,6 @@ import { type Simplify } from 'effect/Types';
 
 import { getField, type JsonPath } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';
@@ -39,12 +38,6 @@ export type ObjectAnnotation = {
 };
 
 /**
- * ECHO identifier for a schema.
- * Must be a `dxn:echo:` URI.
- */
-export const EchoIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/EchoIdentifier');
-
-/**
  * @returns {@link ObjectAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
@@ -57,9 +50,7 @@ export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | un
 /**
  * @returns {@link EntityKind} from a schema.
  */
-export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => {
-  return getObjectAnnotation(schema)?.kind;
-};
+export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => getObjectAnnotation(schema)?.kind;
 
 /**
  * @returns Schema typename (without dxn: prefix or version number).
@@ -72,9 +63,17 @@ export const getSchemaTypename = (schema: S.Schema.All): string | undefined => g
  */
 export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.version;
 
-export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
+/**
+ * ECHO identifier for a schema.
+ * Must be a `dxn:echo:` URI.
+ */
+// TODO(burdon): Rename/remove ECHO prefix. Create namespace.
+export const ObjectIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/ObjectIdentifier');
+
+// TODO(burdon): Remove ECHO prefix OR use consistently (e.g., re getObjectAnnotation above).
+export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
   flow(
-    AST.getAnnotation<string>(EchoIdentifierAnnotationId),
+    AST.getAnnotation<string>(ObjectIdentifierAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
 
@@ -226,6 +225,7 @@ export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generat
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.
  */
+// TODO(burdon): Convert to JsonPath?
 export const getLabel = <S extends S.Schema.Any>(schema: S, object: S.Schema.Type<S>): string | undefined => {
   let annotation = schema.ast.annotations[LabelAnnotationId];
   if (!annotation) {
@@ -234,10 +234,10 @@ export const getLabel = <S extends S.Schema.Any>(schema: S, object: S.Schema.Typ
   if (!Array.isArray(annotation)) {
     annotation = [annotation];
   }
+
   for (const accessor of annotation as string[]) {
     assertArgument(typeof accessor === 'string', 'Label annotation must be a string or an array of strings');
     const value = getField(object, accessor as JsonPath);
-    log.info('getLabel', { annotation, accessor, value });
     switch (typeof value) {
       case 'string':
       case 'number':
@@ -251,5 +251,6 @@ export const getLabel = <S extends S.Schema.Any>(schema: S, object: S.Schema.Typ
         continue;
     }
   }
+
   return undefined;
 };

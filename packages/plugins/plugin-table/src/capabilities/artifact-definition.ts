@@ -32,7 +32,7 @@ const QualifiedId = S.String.annotations({
 
 export default () => {
   const definition = defineArtifact({
-    id: meta.id,
+    id: `artifact:${meta.id}`,
     name: meta.name,
     // TODO(ZaymonFC): See if we need instructions beyond what the tools define.
     instructions: `
@@ -71,7 +71,7 @@ export default () => {
           const intent = pipe(
             createIntent(TableAction.Create, {
               space: extensions.space,
-              initialSchema: typename,
+              typename,
               name: name ?? schema.typename,
             }),
             chain(SpaceAction.AddObject, { target: extensions.space }),

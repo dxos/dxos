@@ -49,7 +49,7 @@ const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
       initialValue: text.content,
       extensions: [
         formattingObserver,
-        createBasicExtensions({ readonly: toolbarState.viewMode === 'readonly' }),
+        createBasicExtensions({ readOnly: toolbarState.viewMode === 'readonly' }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: { editor: { className: editorContent } } }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),

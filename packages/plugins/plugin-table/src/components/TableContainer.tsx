@@ -5,9 +5,11 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { ImmutableSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
+import { useClient } from '@dxos/react-client';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
@@ -28,8 +30,9 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
+  const client = useClient();
   const space = getSpace(table);
-  const schema = useSchema(space, table.view?.target?.query.typename);
+  const schema = useSchema(client, space, table.view?.target?.query.typename);
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
@@ -66,9 +69,15 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     return new ViewProjection(schema, table.view.target!);
   }, [schema, table.view?.target]);
 
+  const features = useMemo(
+    () => ({ selection: true, dataEditable: true, schemaEditable: !(schema instanceof ImmutableSchema) }),
+    [],
+  );
+
   const model = useTableModel({
     table,
     projection,
+    features,
     objects: filteredObjects,
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,

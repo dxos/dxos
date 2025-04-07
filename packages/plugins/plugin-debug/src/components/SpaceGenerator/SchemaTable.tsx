@@ -15,7 +15,7 @@ export type SchemaTableProps = {
 
 export const SchemaTable = ({ types, objects = {}, label, onClick }: SchemaTableProps) => {
   return (
-    <div className='grid grid-cols-[1fr_80px_40px] gap-1 overflow-hidden'>
+    <div className='grid grid-cols-[1fr_80px_40px] gap-1 overflow-none'>
       <div className='grid grid-cols-subgrid col-span-3'>
         <div className='px-2 text-sm text-primary-500'>{label}</div>
         <div className='px-2 text-xs text-subdued text-right'>count</div>

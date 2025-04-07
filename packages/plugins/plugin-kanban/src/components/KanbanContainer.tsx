@@ -48,7 +48,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   const model = useKanbanModel({
     kanban,
-    cardSchema,
+    schema: cardSchema,
     projection,
     items: filteredObjects,
   });

@@ -5,18 +5,20 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum, ImmutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
+import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type SchemaPropertyDefinition, ViewProjection, ViewType } from '@dxos/schema';
+import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DynamicTable as DynamicTableComponent } from './DynamicTable';
@@ -37,26 +39,24 @@ faker.seed(0);
 //
 
 const DefaultStory = () => {
+  const client = useClient();
   const { space } = useClientProvider();
-  invariant(space);
 
-  const tables = useQuery(space, Filter.schema(TableType));
-  const [table, setTable] = useState<TableType>();
-  const schema = useSchema(space, table?.view?.target?.query.typename);
-
-  useEffect(() => {
-    if (space && tables.length && !table) {
-      const table = tables[0];
-      invariant(table.view);
-      setTable(table);
-    }
-  }, [space, tables]);
+  const filter = useMemo(() => Filter.schema(TableType), []);
+  const tables = useQuery(space, filter);
+  const table = useMemo(() => tables.at(0), [tables]);
+  const schema = useSchema(client, space, table?.view?.target?.query.typename);
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {
       return new ViewProjection(schema, table.view.target);
     }
   }, [schema, table?.view?.target]);
+
+  const features = useMemo(
+    () => ({ selection: true, dataEditable: true, schemaEditable: !(schema instanceof ImmutableSchema) }),
+    [schema],
+  );
 
   const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
@@ -70,7 +70,7 @@ const DefaultStory = () => {
   const handleDeleteRows = useCallback(
     (_: number, objects: any[]) => {
       for (const object of objects) {
-        space.db.remove(object);
+        space?.db.remove(object);
       }
     },
     [space],
@@ -97,6 +97,7 @@ const DefaultStory = () => {
   const model = useTableModel({
     table,
     projection,
+    features,
     objects: filteredObjects,
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
@@ -134,11 +135,12 @@ const DefaultStory = () => {
   const onTypenameChanged = useCallback(
     (typename: string) => {
       if (table?.view?.target) {
-        schema?.updateTypename(typename);
+        invariant(schema);
+        schema.mutable.updateTypename(typename);
         table.view.target.query.typename = typename;
       }
     },
-    [table?.view?.target, schema],
+    [schema, table?.view?.target],
   );
 
   if (!schema || !table) {
@@ -249,9 +251,9 @@ const meta: Meta<StoryProps> = {
       types: [TableType, ViewType],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
+      onSpaceCreated: async ({ client, space }) => {
         const table = space.db.add(create(TableType, {}));
-        const schema = await initializeTable({ space, table, initialRow: false });
+        const schema = await initializeTable({ client, space, table, initialRow: false });
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             create(schema, {
@@ -269,6 +271,30 @@ const meta: Meta<StoryProps> = {
 export default meta;
 
 export const Default = {};
+
+export const StaticSchema: StoryObj = {
+  render: DefaultStory,
+  parameters: { translations },
+  decorators: [
+    withClientProvider({
+      types: [TableType, ViewType, Testing.ContactType, Testing.OrgType],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: async ({ client, space }) => {
+        const table = space.db.add(create(TableType, {}));
+        await initializeTable({ client, space, table, typename: Testing.ContactType.typename });
+
+        const factory = createObjectFactory(space.db, faker as any);
+        await factory([
+          { type: Testing.ContactType, count: 10 },
+          { type: Testing.OrgType, count: 1 },
+        ]);
+      },
+    }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+  ],
+};
 
 export const DynamicTable: StoryObj = {
   render: DynamicTableStory,

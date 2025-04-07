@@ -29,11 +29,25 @@ export type TableRowAction = {
   translationKey: string;
 };
 
+// TODO(ZaymonFC): There should be a separate concept for immutable schemata.
+export type TableFeatures = {
+  selection: boolean;
+  dataEditable: boolean;
+  schemaEditable: boolean;
+};
+
+const defaultFeatures: TableFeatures = {
+  selection: true,
+  dataEditable: false,
+  schemaEditable: false,
+};
+
 export type TableModelProps<T extends BaseTableRow = { id: string }> = {
   id?: string;
   space?: Space;
   view?: ViewType;
   projection: ViewProjection;
+  features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
   pinnedRows?: { top: number[]; bottom: number[] };
   onInsertRow?: (index?: number) => void;
@@ -63,6 +77,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   private readonly _onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
   private readonly _rowActions: TableRowAction[];
   private readonly _onRowAction?: TableModelProps<T>['onRowAction'];
+  private readonly _features: TableFeatures;
 
   private readonly _rows = signal<T[]>([]);
   private readonly _sorting: TableSorting<T>;
@@ -76,6 +91,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     space,
     view,
     projection,
+    features = {},
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
     onCellUpdate,
@@ -91,6 +107,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     this._space = space;
     this._view = view;
     this._projection = projection;
+    this._features = { ...defaultFeatures, ...features };
 
     this._sorting = new TableSorting(this._rows, this._view, projection);
 
@@ -127,6 +144,10 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   public get rows(): ReadonlySignal<T[]> {
     return this._sorting.sortedRows;
+  }
+
+  public get features(): TableFeatures {
+    return this._features;
   }
 
   /**

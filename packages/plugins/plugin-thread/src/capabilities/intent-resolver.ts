@@ -10,7 +10,9 @@ import {
   LayoutAction,
   type PluginsContext,
 } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo-schema';
+import { ObjectId, Ref } from '@dxos/echo-schema';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
@@ -23,43 +25,47 @@ import { ThreadAction } from '../types';
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
+      intent: ThreadAction.CreateChannel,
+      resolve: ({ spaceId, name }) => ({
+        data: {
+          object: create(ChannelType, {
+            name,
+            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+          }),
+        },
+      }),
+    }),
+    createResolver({
       intent: ThreadAction.Create,
       resolve: ({ name, cursor, subject }) => {
-        if (cursor && subject) {
-          // Seed the threads array if it does not exist.
-          if (subject?.threads === undefined) {
-            try {
-              // Static schema will throw an error if subject does not support threads array property.
-              subject.threads = [];
-            } catch (err) {
-              log.error('Subject does not support threads array', { typename: subject?.typename });
-              return;
-            }
+        // Seed the threads array if it does not exist.
+        if (subject?.threads === undefined) {
+          try {
+            // Static schema will throw an error if subject does not support threads array property.
+            subject.threads = [];
+          } catch (err) {
+            log.error('Subject does not support threads array', { typename: subject?.typename });
+            return;
           }
-
-          const { state } = context.requestCapability(ThreadCapabilities.MutableState);
-          const subjectId = fullyQualifiedId(subject);
-          const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
-          const draft = state.drafts[subjectId];
-          if (draft) {
-            draft.push(thread);
-          } else {
-            state.drafts[subjectId] = [thread];
-          }
-
-          return {
-            data: { object: thread },
-            intents: [
-              createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
-              createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'comments' }),
-            ],
-          };
-        } else {
-          // TODO(wittjosiah): Create separate intent for channel creation.
-          return {
-            data: { object: create(ChannelType, { threads: [makeRef(create(ThreadType, { messages: [] }))] }) },
-          };
         }
+
+        const { state } = context.requestCapability(ThreadCapabilities.MutableState);
+        const subjectId = fullyQualifiedId(subject);
+        const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
+        const draft = state.drafts[subjectId];
+        if (draft) {
+          draft.push(thread);
+        } else {
+          state.drafts[subjectId] = [thread];
+        }
+
+        return {
+          data: { object: thread },
+          intents: [
+            createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
+            createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'comments' }),
+          ],
+        };
       },
     }),
     createResolver({

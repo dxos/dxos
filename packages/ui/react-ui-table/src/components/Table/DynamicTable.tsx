@@ -6,7 +6,7 @@ import React, { useRef, useMemo, useCallback } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { Table, type TableFeatures, type TableController } from './Table';
+import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
 import { TablePresentation, type TableRowAction } from '../../model';
 import { makeDynamicTable, type TablePropertyDefinition } from '../../util';
@@ -49,10 +49,13 @@ export const DynamicTable = ({
     tableRef.current?.update?.();
   }, []);
 
+  const features = useMemo(() => ({ selection: false, dataEditable: false }), []);
+
   const model = useTableModel({
     table,
     objects: data,
     projection: viewProjection,
+    features,
     onCellUpdate: handleCellUpdate,
     onRowOrderChanged: handleRowOrderChanged,
     rowActions,
@@ -65,8 +68,6 @@ export const DynamicTable = ({
     }
   }, [model]);
 
-  const features: TableFeatures = useMemo(() => ({ selection: false }), []);
-
   return (
     <div className={mx('is-full bs-full grow grid', classNames)}>
       <div className='grid min-bs-0 overflow-hidden'>
@@ -75,7 +76,6 @@ export const DynamicTable = ({
             ref={tableRef}
             model={model}
             presentation={presentation}
-            features={features}
             onRowClicked={onRowClicked}
             ignoreAttention
           />

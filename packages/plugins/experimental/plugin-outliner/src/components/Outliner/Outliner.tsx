@@ -13,14 +13,21 @@ import React, {
   useState,
 } from 'react';
 
+import { getLabel, getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DropdownMenu, IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { DropdownMenu, Icon, IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
 import { Tree, type TreeType, type TreeNodeType } from '../../types';
-import { type NodeEditorProps, NodeEditor, type NodeEditorController, type NodeEditorEvent } from '../NodeEditor';
+import {
+  type CursorPosition,
+  type NodeEditorProps,
+  NodeEditor,
+  type NodeEditorController,
+  type NodeEditorEvent,
+} from '../NodeEditor';
 
 type OutlinerController = {
   focus: (id: string | undefined) => void;
@@ -45,10 +52,11 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
     const model = useMemo(() => (tree ? new Tree(tree) : undefined), [tree]);
 
     const [editor, setEditor] = useState<NodeEditorController | null>(null);
-    const [direction, setDirection] = useState<'start' | 'end'>();
+    // TOOD(burdon): Should maintain goal column.
+    const [position, setPosition] = useState<CursorPosition | undefined>();
     useEffect(() => {
-      editor?.focus(direction);
-    }, [editor, direction]);
+      editor?.focus(position);
+    }, [editor, position]);
 
     // Create first item if empty.
     useEffect(() => {
@@ -62,7 +70,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
       forwardedRef,
       () => ({
         focus: (id) => {
-          log.info('focus', { id });
+          log('focus', { id });
           setActive(id);
         },
       }),
@@ -124,7 +132,10 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
               const previous = model.getPrevious(node);
               const deleted = model.deleteNode(parent, node.id);
               if (deleted && previous) {
-                setTimeout(() => setActive(previous.id));
+                setTimeout(() => {
+                  setPosition({ line: 'last' });
+                  setActive(previous.id);
+                });
               }
             }
             break;
@@ -184,7 +195,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
                 const previous = model.getPrevious(node);
                 if (previous && previous.id !== model.root.id) {
                   setActive(previous.id);
-                  setDirection('start');
+                  setPosition(event);
                 }
                 break;
               }
@@ -193,7 +204,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
                 const next = model.getNext(node);
                 if (next) {
                   setActive(next.id);
-                  setDirection('end');
+                  setPosition(event);
                 }
                 break;
               }
@@ -202,20 +213,19 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           }
         }
       },
-      [model],
+      [model, onCreate, onDelete, onAction],
     );
 
     // TODO(burdon): Convert to grid.
     // TODO(burdon): Expand/collapse sub-lists.
     return (
-      <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
+      <div className={mx('flex flex-col overflow-hidden', classNames)}>
         <div ref={scrollRef} className='flex flex-col overflow-y-auto scrollbar-thin'>
           {model && (
             <NodeList
               model={model}
               parent={model.root}
-              indent={0}
-              editable={true}
+              level={0}
               active={active}
               setEditor={setEditor}
               onEvent={handleEvent}
@@ -234,13 +244,13 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
 type NodeListProps = {
   model: Tree;
   parent: TreeNodeType;
-  indent: number;
+  level: number;
   active?: string;
   setEditor: (editor: NodeEditorController) => void;
   onEvent: (event: NodeEditorEvent & { parent: TreeNodeType }) => void;
-} & Pick<NodeEditorProps, 'editable'>;
+} & Pick<NodeEditorProps, 'readOnly'>;
 
-const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props }: NodeListProps) => {
+const NodeList = ({ model, parent, level, setEditor, active, onEvent, ...props }: NodeListProps) => {
   const handleEvent = useCallback<NonNullable<OutlinerRowProps['onEvent']>>(
     (event) => {
       onEvent?.({ ...event, parent });
@@ -248,20 +258,21 @@ const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props 
     [onEvent],
   );
 
-  return model.getChildNodes(parent).map((node) => (
+  return model.getChildNodes(parent).map((node, i) => (
     <Fragment key={node.id}>
       <OutlinerRow
         ref={node.id === active ? setEditor : null}
         node={node}
         active={node.id === active}
-        indent={indent}
+        level={level}
+        placeholder={level === 0 && i === 0}
         onEvent={handleEvent}
         {...props}
       />
       <NodeList
         model={model}
         parent={node}
-        indent={indent + 1}
+        level={level + 1}
         active={active}
         setEditor={setEditor}
         onEvent={onEvent}
@@ -278,23 +289,33 @@ const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props 
 type OutlinerRowProps = ThemedClassName<
   {
     node: TreeNodeType;
-    indent: number;
+    level: number;
     active?: boolean;
-  } & Pick<NodeEditorProps, 'editable' | 'onEvent'>
+    placeholder?: boolean;
+  } & Pick<NodeEditorProps, 'readOnly' | 'onEvent'>
 >;
 
 const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
-  ({ classNames, node, indent, active, editable, onEvent }, forwardedRef) => {
+  ({ classNames, node, level, active, placeholder, readOnly, onEvent }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
+
+    let linkText: string | undefined;
+    if (node.ref) {
+      const schema = getSchema(node.ref.target);
+      if (schema) {
+        linkText = getLabel(schema, node.ref.target);
+      }
+    }
 
     return (
       <div className={mx('flex w-full', classNames)}>
         <div className={mx('pis-2', 'border-l-4', active ? 'border-primary-500' : 'border-transparent text-subdued')}>
-          <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
+          <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: level * 24 }}>
             <Input.Root>
               <Input.Checkbox
                 size={4}
-                checked={node.data.checked}
+                disabled={!!node.ref?.target}
+                checked={node.ref?.target?.data?.checked ?? node.data.checked}
                 onCheckedChange={(checked) => {
                   node.data.checked = checked;
                 }}
@@ -307,40 +328,45 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
           ref={forwardedRef}
           classNames='pis-1 pie-1 pbs-1 pbe-1'
           node={node}
-          editable={editable}
-          placeholder={indent === 0 ? t('text placeholder') : undefined}
+          readOnly={node.ref?.target ? true : readOnly}
+          placeholder={placeholder ? t('text placeholder') : undefined}
           onEvent={onEvent}
         />
+        {linkText && (
+          <a className='px-1 py-2 items-center text-primary-500' href='#'>
+            <Icon icon='ph--link--regular' size={4} />
+          </a>
+        )}
 
-        {editable && (
-          <div>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <IconButton
-                  classNames={mx('opacity-20 hover:opacity-100', active && 'opacity-100')}
-                  icon='ph--dots-three-vertical--regular'
-                  iconOnly
-                  variant='ghost'
-                  label={t('menu label')}
-                />
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content side='top'>
-                  <DropdownMenu.Viewport>
-                    {/* TODO(burdon): Move to plugin-task. */}
+        <div>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <IconButton
+                classNames={mx('opacity-20 hover:opacity-100', active && 'opacity-100')}
+                icon='ph--dots-three-vertical--regular'
+                iconOnly
+                variant='ghost'
+                label={t('menu label')}
+              />
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content side='top'>
+                <DropdownMenu.Viewport>
+                  {/* TODO(burdon): Move to plugin-task. */}
+                  {!node.ref?.target && (
                     <DropdownMenu.Item onClick={() => onEvent?.({ type: 'action', node, action: 'task' })}>
                       {t('task action')}
                     </DropdownMenu.Item>
-                    <DropdownMenu.Item onClick={() => onEvent?.({ type: 'delete', node })}>
-                      {t('delete object label')}
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-          </div>
-        )}
+                  )}
+                  <DropdownMenu.Item onClick={() => onEvent?.({ type: 'delete', node })}>
+                    {t('delete object label')}
+                  </DropdownMenu.Item>
+                </DropdownMenu.Viewport>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        </div>
       </div>
     );
   },

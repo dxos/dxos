@@ -34,10 +34,12 @@ const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverable
 export const MessageContainer = ({
   message,
   members,
+  editable = false,
   onDelete,
 }: {
   message: MessageType;
   members: SpaceMember[];
+  editable?: boolean;
   onDelete?: (id: string) => void;
 }) => {
   const senderIdentity = members.find(
@@ -59,7 +61,7 @@ export const MessageContainer = ({
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
         <ButtonGroup classNames='mie-1'>
-          {userIsAuthor && (
+          {userIsAuthor && editable && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <Button
@@ -142,7 +144,7 @@ const TextboxBlock = ({
     () => ({
       initialValue: block.text,
       extensions: [
-        createBasicExtensions({ readonly: !isAuthor || !editing }),
+        createBasicExtensions({ readOnly: !isAuthor || !editing }),
         createThemeExtensions({ themeMode }),
         command,
         EditorView.updateListener.of((update) => {

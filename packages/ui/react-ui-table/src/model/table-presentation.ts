@@ -34,23 +34,39 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
   ) {}
 
   public getCells(range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells {
+    let cells: DxGridPlaneCells;
+
     switch (plane) {
       case 'grid':
         this._visibleRange.value = range;
-        return this.getMainGridCells(range);
+        cells = this.getMainGridCells(range);
+        break;
       case 'frozenRowsStart':
-        return this.getHeaderCells(range);
+        cells = this.getHeaderCells(range);
+        break;
       case 'frozenColsStart':
-        return this.getSelectionColumnCells(range);
+        cells = this.getSelectionColumnCells(range);
+        break;
       case 'frozenColsEnd':
-        return this.getActionColumnCells(range);
+        cells = this.getActionColumnCells(range);
+        break;
       case 'fixedStartStart':
-        return this.getSelectAllCell();
+        cells = this.getSelectAllCell();
+        break;
       case 'fixedStartEnd':
-        return this.getNewColumnCell();
+        cells = this.getNewColumnCell();
+        break;
       default:
-        return {};
+        cells = {};
     }
+
+    if (plane === 'grid' && this.model.features.dataEditable === false) {
+      Object.values(cells).forEach((cell) => {
+        cell.readonly = true;
+      });
+    }
+
+    return cells;
   }
 
   private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
@@ -223,9 +239,11 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
   private getNewColumnCell(): DxGridPlaneCells {
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        accessoryHtml: tableButtons.addColumn.render({
-          disabled: (this.model.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
-        }),
+        accessoryHtml: this.model.features.schemaEditable
+          ? tableButtons.addColumn.render({
+              disabled: (this.model.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
+            })
+          : undefined,
         className: '!bg-gridHeader',
         readonly: true,
         value: '',
