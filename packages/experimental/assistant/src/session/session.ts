@@ -365,7 +365,7 @@ const createBaseInstructions = ({
     `
   }
 
-  Artifacts already required: ${availableArtifacts.join('\n')}
+  ${availableArtifacts.length > 0 ? `Artifacts already in context: ${availableArtifacts.join('\n')}` : ''}
 
   ${systemPrompt}
 `;
