@@ -70,7 +70,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
       forwardedRef,
       () => ({
         focus: (id) => {
-          log.info('focus', { id });
+          log('focus', { id });
           setActive(id);
         },
       }),
@@ -225,7 +225,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
             <NodeList
               model={model}
               parent={model.root}
-              indent={0}
+              level={0}
               active={active}
               setEditor={setEditor}
               onEvent={handleEvent}
@@ -244,13 +244,13 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
 type NodeListProps = {
   model: Tree;
   parent: TreeNodeType;
-  indent: number;
+  level: number;
   active?: string;
   setEditor: (editor: NodeEditorController) => void;
   onEvent: (event: NodeEditorEvent & { parent: TreeNodeType }) => void;
 } & Pick<NodeEditorProps, 'readOnly'>;
 
-const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props }: NodeListProps) => {
+const NodeList = ({ model, parent, level, setEditor, active, onEvent, ...props }: NodeListProps) => {
   const handleEvent = useCallback<NonNullable<OutlinerRowProps['onEvent']>>(
     (event) => {
       onEvent?.({ ...event, parent });
@@ -258,20 +258,21 @@ const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props 
     [onEvent],
   );
 
-  return model.getChildNodes(parent).map((node) => (
+  return model.getChildNodes(parent).map((node, i) => (
     <Fragment key={node.id}>
       <OutlinerRow
         ref={node.id === active ? setEditor : null}
         node={node}
         active={node.id === active}
-        indent={indent}
+        level={level}
+        placeholder={level === 0 && i === 0}
         onEvent={handleEvent}
         {...props}
       />
       <NodeList
         model={model}
         parent={node}
-        indent={indent + 1}
+        level={level + 1}
         active={active}
         setEditor={setEditor}
         onEvent={onEvent}
@@ -288,13 +289,14 @@ const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props 
 type OutlinerRowProps = ThemedClassName<
   {
     node: TreeNodeType;
-    indent: number;
+    level: number;
     active?: boolean;
+    placeholder?: boolean;
   } & Pick<NodeEditorProps, 'readOnly' | 'onEvent'>
 >;
 
 const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
-  ({ classNames, node, indent, active, readOnly, onEvent }, forwardedRef) => {
+  ({ classNames, node, level, active, placeholder, readOnly, onEvent }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
 
     let linkText: string | undefined;
@@ -308,7 +310,7 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
     return (
       <div className={mx('flex w-full', classNames)}>
         <div className={mx('pis-2', 'border-l-4', active ? 'border-primary-500' : 'border-transparent text-subdued')}>
-          <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
+          <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: level * 24 }}>
             <Input.Root>
               <Input.Checkbox
                 size={4}
@@ -327,6 +329,7 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
           classNames='pis-1 pie-1 pbs-1 pbe-1'
           node={node}
           readOnly={node.ref?.target ? true : readOnly}
+          placeholder={placeholder ? t('text placeholder') : undefined}
           onEvent={onEvent}
         />
         {linkText && (

@@ -7,14 +7,15 @@ import { useCallback } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { makeRef } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
 import { type OutlinerRootProps } from '../components';
 import { OutlinerAction } from '../types';
 
-type UseOutlinerHandlersProps = Pick<OutlinerRootProps, 'onCreate' | 'onDelete' | 'onAction'>;
+type UseOutlinerHandlers = Pick<OutlinerRootProps, 'onCreate' | 'onDelete' | 'onAction'>;
 
-export const useOutlinerHandlers = (space: Space | undefined): UseOutlinerHandlersProps => {
+export const useOutlinerHandlers = (space: Space | undefined): UseOutlinerHandlers => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleCreate = useCallback<NonNullable<OutlinerRootProps['onCreate']>>(() => {
@@ -25,24 +26,21 @@ export const useOutlinerHandlers = (space: Space | undefined): UseOutlinerHandle
     };
   }, []);
 
-  const handleDelete = useCallback<NonNullable<OutlinerRootProps['onDelete']>>(
-    (node) => {
-      // No-op (not an ECHO object).
-    },
-    [space],
-  );
+  const handleDelete = useCallback<NonNullable<OutlinerRootProps['onDelete']>>((node) => {
+    // No-op (not an ECHO object).
+  }, []);
 
   const handleAction = useCallback<NonNullable<OutlinerRootProps['onAction']>>(
-    (action) => {
+    async (action) => {
       switch (action.action) {
         case 'task': {
-          void dispatch(createIntent(OutlinerAction.CreateTask, { node: action.node })).then(({ data }) => {
-            if (space && data) {
-              const task = space.db.add(data.object);
-              action.node.ref = makeRef(task);
-              action.node.data.text = '';
-            }
-          });
+          const { data } = await dispatch(createIntent(OutlinerAction.CreateTask, { node: action.node }));
+          log.info('handleAction', { space: space?.id, data });
+          if (space && data) {
+            const task = space.db.add(data.object);
+            action.node.ref = makeRef(task);
+            action.node.data.text = '';
+          }
           break;
         }
       }
