@@ -386,14 +386,14 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    */
   override async finally() {
     const endTime = new Date();
-    // TODO(nf): move to observability
+    // TODO(nf): Move to observability.
     const installationId = this._observability?.getTag('installationId');
     const did = this._observability?.getTag('did');
     if (this._observability) {
-      this._observability?.event({
+      this._observability?.track({
         installationId: installationId?.value,
         did: did?.value,
-        name: 'cli.command.run',
+        action: 'cli.command.run',
         properties: {
           status: this._failing ? 'failure' : 'success',
           duration: endTime.getTime() - this._startTime.getTime(),
@@ -407,7 +407,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     }
 
     const stopFailsafe = setTimeout(() => {
-      // TODO: log filter not correctly applied for this
+      // TODO(burdon): Log filter not correctly applied for this.
       if (settings.debug) {
         this.log('timeout waiting for all promises to resolve, forcing exit');
       }

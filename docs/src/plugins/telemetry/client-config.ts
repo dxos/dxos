@@ -27,7 +27,9 @@ export default defineClientConfig({
     router.afterEach((to, from, failure) => {
       if (!isNavigationFailure(failure)) {
         observability.page({
+          name: to.path,
           properties: {
+            from: from.path,
             environment: DX_ENVIRONMENT,
             release: DX_RELEASE,
           },

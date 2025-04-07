@@ -9,7 +9,7 @@ import type { Client } from '@dxos/client';
 //  - Identifier can then be reset by user.
 //  - Identifier can be synced via HALO to allow for correlation of events bewteen devices.
 //  - Identifier should also be stored outside of HALO such that it is available immediately on startup.
-export const getTelemetryIdentifier = (client: Client) => {
+export const getTelemetryIdentifier = (client: Client): string | undefined => {
   if (!client?.initialized) {
     return undefined;
   }

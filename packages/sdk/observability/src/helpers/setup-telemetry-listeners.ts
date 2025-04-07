@@ -18,9 +18,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     }
 
     setTimeout(() =>
-      observability.event({
+      observability.track({
         did: getTelemetryIdentifier(client),
-        name: `${namespace}.window.click`,
+        action: `${namespace}.window.click`,
         properties: {
           href: window.location.href,
           id: (event.target as HTMLElement)?.id,
@@ -37,9 +37,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
   const focusCallback = () => {
     const now = new Date();
     setTimeout(() =>
-      observability.event({
+      observability.track({
         did: getTelemetryIdentifier(client),
-        name: `${namespace}.window.focus`,
+        action: `${namespace}.window.focus`,
         properties: {
           href: window.location.href,
           timeAway: now.getTime() - lastFocusEvent.getTime(),
@@ -53,9 +53,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     const now = new Date();
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
     setTimeout(() =>
-      observability.event({
+      observability.track({
         did: getTelemetryIdentifier(client),
-        name: `${namespace}.window.blur`,
+        action: `${namespace}.window.blur`,
         properties: {
           href: window.location.href,
           timeSpent,
@@ -68,9 +68,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
 
   const unloadCallback = () => {
     setTimeout(() =>
-      observability.event({
+      observability.track({
         did: getTelemetryIdentifier(client),
-        name: `${namespace}.page.unload`,
+        action: `${namespace}.page.unload`,
         properties: {
           href: window.location.href,
           timeSpent: totalTime,
@@ -81,9 +81,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
 
   const errorCallback = (event: ErrorEvent) => {
     setTimeout(() =>
-      observability.event({
+      observability.track({
         did: getTelemetryIdentifier(client),
-        name: `${namespace}.window.error`,
+        action: `${namespace}.window.error`,
         properties: {
           href: window.location.href,
           message: event.message,

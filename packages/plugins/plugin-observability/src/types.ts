@@ -14,9 +14,10 @@ const Email = S.String.pipe(
 );
 
 const nonEmpty = <S extends S.Schema.Any>(field: string) =>
-  S.nonEmptyString<S>({ message: () => `${field} is required.` });
+  S.nonEmptyString<S>({ message: () => `Missing field: ${field}` });
+
 const maxLength = <S extends S.Schema.Any>(field: string, length: number) =>
-  S.maxLength<S>(length, { message: () => `${field} is too long.` });
+  S.maxLength<S>(length, { message: () => `Exceeds max length (${length}): ${field}` });
 
 export const UserFeedback = S.Struct({
   name: S.String.pipe(nonEmpty('Name'), maxLength('Name', 256)),
@@ -27,6 +28,7 @@ export const UserFeedback = S.Struct({
 export type UserFeedback = S.Schema.Type<typeof UserFeedback>;
 
 const OBSERVABILITY_ACTION = `${OBSERVABILITY_PLUGIN}/action`;
+
 export namespace ObservabilityAction {
   export class Toggle extends S.TaggedClass<Toggle>()(`${OBSERVABILITY_ACTION}/toggle`, {
     input: S.Struct({
@@ -36,12 +38,13 @@ export namespace ObservabilityAction {
   }) {}
 
   export class SendEvent extends S.TaggedClass<SendEvent>()(`${OBSERVABILITY_ACTION}/send-event`, {
+    // TODO(burdon): Reconcile with SegmentTelemetry types.
     input: S.Struct({
       name: S.String,
-      properties: S.optional(S.Object),
       installationId: S.optional(S.String),
       identityId: S.optional(S.String),
-      timestamp: S.optional(S.Date),
+      timestamp: S.optional(S.Date), // TODO(burdon): Timestamp?
+      properties: S.optional(S.Object),
     }),
     output: S.Void,
   }) {}
