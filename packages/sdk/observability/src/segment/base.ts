@@ -7,12 +7,12 @@ import { type TrackParams, type PageParams } from '@segment/analytics-node';
 import { log } from '@dxos/log';
 
 import {
-  Event,
   type PageOptions,
   type TrackOptions,
   type Tags,
   type IdentityOptions,
   type SegmentIdentityOptions,
+  TelemetryEvent,
 } from './types';
 
 const getIdentityOptions = ({ did, installationId }: IdentityOptions): SegmentIdentityOptions => {
@@ -54,7 +54,7 @@ export abstract class AbstractSegmentTelemetry {
     return {
       ...getIdentityOptions(options),
       ...rest,
-      event: event ?? Event.USER,
+      event: event ?? TelemetryEvent.USER,
       context: this._getTags(),
       properties: {
         action,

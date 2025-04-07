@@ -15,7 +15,7 @@ import { isNode } from '@dxos/util';
 import buildSecrets from './cli-observability-secrets.json';
 import { getTelemetryIdentity, type IPData, mapSpaces } from './helpers';
 import { type OtelLogs, type OtelMetrics, type OtelTraces } from './otel';
-import { type SegmentTelemetry, type TrackOptions, type PageOptions } from './segment';
+import { type SegmentTelemetry, type TrackOptions, type PageOptions, TelemetryEvent } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
 import { type SentryLogProcessor } from './sentry/sentry-log-processor';
 
@@ -362,7 +362,6 @@ export class Observability {
           connectionStates.set(conn.state, (connectionStates.get(conn.state) ?? 0) + 1);
           totalReadBufferSize += conn.readBufferSize ?? 0;
           totalWriteBufferSize += conn.writeBufferSize ?? 0;
-
           for (const stream of conn.streams ?? []) {
             totalChannelBufferSize += stream.writeBufferSize ?? 0;
           }
@@ -409,6 +408,7 @@ export class Observability {
       for (const data of mapSpaces(spaces, { truncateKeys: true })) {
         this.track({
           ...getTelemetryIdentity(client),
+          event: TelemetryEvent.METRICS,
           action: `${namespace}.space.update`,
           properties: data,
         });

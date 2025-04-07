@@ -38,13 +38,21 @@ export type PageOptions = CommonOptions & {
  * https://segment.com/docs/connections/sources/catalog/libraries/server/node/#track
  */
 export type TrackOptions = CommonOptions & {
-  event?: Event;
+  event?: TelemetryEvent;
   action: string;
+  intent?: string; // TODO(burdon): ???
 };
 
 /**
  * Each event will be mapped to a different Postgres table via segment.
  */
-export enum Event {
+export enum TelemetryEvent {
+  /**
+   * Use actions.
+   */
   USER = 'user',
+  /**
+   * High-volume technical metrics.
+   */
+  METRICS = 'metrics',
 }
