@@ -448,23 +448,3 @@ export const RawDataPanel: React.FC<RawDataPanelProps> = ({ span }) => {
     </div>
   );
 };
-
-const filterBySelected = (items: InvocationSpan[], target: string | undefined) => {
-  if (!target) {
-    return [];
-  }
-  return items.filter((item) => decodeReference(item.invocationTarget).dxn?.toString() === target);
-};
-
-const groupByInvocationTarget = (items: InvocationSpan[]): Map<string, InvocationSpan[]> => {
-  const result = new Map<string, InvocationSpan[]>();
-  for (const item of items) {
-    const key = decodeReference(item.invocationTarget).dxn?.toString();
-    if (key) {
-      const list = result.get(key) ?? [];
-      result.set(key, list);
-      list.push(item);
-    }
-  }
-  return result;
-};
