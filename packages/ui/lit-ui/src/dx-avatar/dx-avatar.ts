@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { html, LitElement } from 'lit';
+import { html, svg, LitElement } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
@@ -111,7 +111,7 @@ export class DxAvatar extends LitElement {
     const viewBoxCoefficient = this.viewBoxSize / sizePx;
     const r = (sizePx / 2 - ringGap - ringWidth) * viewBoxCoefficient;
     const isTextOnly = Boolean(this.fallback && /[0-9a-zA-Z]+/.test(this.fallback));
-    const fontScale = (isTextOnly ? 3 : 4) * (1 / 1.612) * viewBoxCoefficient;
+    const fontScale = (isTextOnly ? 3 : 4) * (1 / 1.56) * viewBoxCoefficient;
     return html`<span
       role="img"
       class="dx-avatar"
@@ -120,37 +120,38 @@ export class DxAvatar extends LitElement {
       data-variant=${this.variant}
       data-status=${this.status}
       data-animation=${this.animation}
-    ><svg
-      viewBox=${`0 0 ${this.viewBoxSize} ${this.viewBoxSize}`}
-      width=${sizePx}
-      height=${sizePx}
-      class="dx-avatar__frame"
-    >
-      <defs>
-        <mask id=${this.maskId}>
-          {variant === 'circle' ? (
-          <circle fill="white" cx="50%" cy="50%" r=${r} />
-          ) : (
-          <rect
-            fill="white"
-            width=${2 * r}
-            height=${2 * r}
-            x=${(ringGap + ringWidth) * viewBoxCoefficient}
-            y=${(ringGap + ringWidth) * viewBoxCoefficient}
-            rx=${rx}
-          />
-          )}
-        </mask>
-      </defs>
-      ${
-        this.variant === 'circle'
-          ? html` <circle
-              cx="50%"
-              cy="50%"
+      data-state-loading-status=${this.loadingStaus}
+      >${svg`<svg
+        viewBox=${`0 0 ${this.viewBoxSize} ${this.viewBoxSize}`}
+        width=${sizePx}
+        height=${sizePx}
+        class="dx-avatar__frame"
+      >
+        <defs>
+          <mask id=${this.maskId}>
+            ${
+              this.variant === 'circle'
+                ? svg`<circle fill="white" cx=${this.viewBoxSize / 2} cy=${this.viewBoxSize / 2} r=${r} />`
+                : svg`<rect
+                  fill="white"
+                  width=${2 * r}
+                  height=${2 * r}
+                  x=${(ringGap + ringWidth) * viewBoxCoefficient}
+                  y=${(ringGap + ringWidth) * viewBoxCoefficient}
+                  rx=${rx}
+                />`
+            }
+          </mask>
+        </defs>
+        ${
+          this.variant === 'circle'
+            ? svg` <circle
+              cx=${this.viewBoxSize / 2}
+              cy=${this.viewBoxSize / 2}
               r=${r}
               fill=${this.hue ? `var(--dx-${this.hue}Fill)` : 'var(--surface-bg)'}
             />`
-          : html` <rect
+            : svg` <rect
               fill=${this.hue ? `var(--dx-${this.hue}Fill)` : 'var(--surface-bg)'}
               x=${(ringGap + ringWidth) * viewBoxCoefficient}
               y=${(ringGap + ringWidth) * viewBoxCoefficient}
@@ -158,35 +159,33 @@ export class DxAvatar extends LitElement {
               height=${2 * r}
               rx=${rx}
             />`
-      }
-      ${
-        this.imgSrc &&
-        html` <image
-          width="100%"
-          height="100%"
+        }
+        ${
+          this.imgSrc &&
+          svg`<image
+          width=${this.viewBoxSize}
+          height=${this.viewBoxSize}
           preserveAspectRatio="xMidYMid slice"
           href=${this.imgSrc}
-          ?crossorigin=${this.imgCrossOrigin}
-          ?referrerpolicy=${this.imgReferrerPolicy}
+          mask=${`url(#${this.maskId})`}
+          crossorigin=${this.imgCrossOrigin}
           @load=${this.handleLoad}
           @error=${this.handleError}
         />`
-      }
-      ${this.icon && html`<use href=${this.icon} />`}
-      <text
-        x='50%'
-        y='50%'
-        class="dx-avatar__fallback-text"
-        textAnchor="middle"
-        alignmentBaseline="central"
-        fontSize=${this.size === 'px' ? '200%' : this.size * fontScale}
-        mask=${`url(#${this.maskId})`}
-      >
-    </svg>
-    <span
-      role="none"
-      class="dx-avatar__ring"
-      style=${styleMap({ borderWidth: ringWidth + 'px' })}
+        }
+        ${this.icon && svg`<use href=${this.icon} />`}
+        <text
+          x=${this.viewBoxSize / 2}
+          y=${this.viewBoxSize / 2}
+          class="dx-avatar__fallback-text"
+          text-anchor="middle"
+          alignment-baseline="central"
+          font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
+          mask=${`url(#${this.maskId})`}
+        >
+          ${this.fallback}
+        </text>
+      </svg>`}<span role="none" class="dx-avatar__ring" style=${styleMap({ borderWidth: ringWidth + 'px' })}
     /></span>`;
   }
 

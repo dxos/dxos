@@ -29,7 +29,7 @@ export const hueSememes: ColorSememes = Object.keys(huePalettes).reduce((acc: Co
   return acc;
 }, {});
 
-const valenceAliasSememeStems = ['Text', 'Surface', 'SurfaceText', 'Fill'];
+const valenceAliasSememeStems = ['Text', 'Surface', 'SurfaceText', 'Fill', 'Cursor'];
 const valenceMapping = {
   emerald: ['success', 'active'],
   cyan: ['info'],
