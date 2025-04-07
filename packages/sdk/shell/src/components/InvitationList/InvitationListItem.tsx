@@ -154,11 +154,16 @@ export const InvitationListItemImpl = ({
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
       <Tooltip.Root>
-        <Avatar.Root {...avatarProps} animation={avatarAnimation} status={avatarStatus}>
+        <Avatar.Root>
           <Tooltip.Trigger asChild>
-            <Avatar.Frame tabIndex={0} classNames={[focusRing, 'relative rounded-full place-self-center']}>
-              <Avatar.Fallback text={hexToEmoji(invitationId)} />
-            </Avatar.Frame>
+            <Avatar.Content
+              {...avatarProps}
+              animation={avatarAnimation}
+              status={avatarStatus}
+              fallback={hexToEmoji(invitationId)}
+              tabIndex={0}
+              classNames={[focusRing, 'relative rounded-full place-self-center']}
+            />
           </Tooltip.Trigger>
         </Avatar.Root>
         <Tooltip.Portal>

@@ -12,6 +12,7 @@ import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef, typ
 
 import { type AvatarVariant, type AvatarStatus, type AvatarAnimation, DxAvatar as NaturalDxAvatar } from '@dxos/lit-ui';
 import { useId } from '@dxos/react-hooks';
+import { mx } from '@dxos/react-ui-theme';
 
 import { useIconHref, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -38,12 +39,20 @@ export const DxAvatar = createComponent({
   react: React,
 });
 
-export type DxAvatarProps = ComponentProps<typeof DxAvatar>;
+export type DxAvatarProps = ThemedClassName<ComponentProps<typeof DxAvatar>>;
 
-const AvatarContent = ({ icon, ...props }: DxAvatarProps) => {
+const AvatarContent = ({ icon, classNames, ...props }: DxAvatarProps) => {
   const href = useIconHref(icon);
   const { labelId, descriptionId } = useAvatarContext('AvatarContent');
-  return <DxAvatar {...props} icon={href} labelId={labelId} aria-describedby={descriptionId} />;
+  return (
+    <DxAvatar
+      {...props}
+      icon={href}
+      labelId={labelId}
+      aria-describedby={descriptionId}
+      rootClassName={mx(classNames)}
+    />
+  );
 };
 
 type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {

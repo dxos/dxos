@@ -178,21 +178,21 @@ type PresenceAvatarProps = {
 };
 
 const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: PresenceAvatarProps) => {
-  const Root = group ? AvatarGroupItem.Root : Avatar.Root;
   const status = match ? 'current' : 'active';
   const fallbackValue = keyToFallback(identity.identityKey);
   return (
-    <Root status={status} hue={identity.profile?.data?.hue || fallbackValue.hue}>
-      <Avatar.Frame
+    <Avatar.Root>
+      <Avatar.Content
+        status={status}
+        hue={identity.profile?.data?.hue || fallbackValue.hue}
         data-testid='spacePlugin.presence.member'
         data-status={status}
         {...(index ? { style: { zIndex: index } } : {})}
         onClick={() => onClick?.()}
-      >
-        <Avatar.Fallback text={identity.profile?.data?.emoji || fallbackValue.emoji} />
-      </Avatar.Frame>
-      {showName && <Avatar.Label classNames='text-sm truncate pli-2'>{getName(identity)}</Avatar.Label>}
-    </Root>
+        fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
+      />
+      <Avatar.Label classNames={showName ? 'text-sm truncate pli-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
+    </Avatar.Root>
   );
 };
 

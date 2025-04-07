@@ -2,19 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  type IconProps,
-  Compass,
-  Desktop,
-  DeviceMobile,
-  Devices,
-  DotsThree,
-  ShareFat,
-  Power,
-  Robot,
-  Database,
-  FirstAidKit,
-} from '@phosphor-icons/react';
+import { type IconProps, DotsThree, ShareFat, Power, FirstAidKit } from '@phosphor-icons/react';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -77,37 +65,35 @@ export const DeviceListItem = forwardRef<
         labelId={labelId}
         ref={forwardedRef}
       >
-        <Avatar.Root
-          status={
-            isCurrent && connectionState === ConnectionState.OFFLINE
-              ? 'error'
-              : device.presence === Device.PresenceState.ONLINE
-                ? 'active'
-                : 'inactive'
-          }
-          labelId={labelId}
-          hue={fallbackValue.hue}
-          variant='square'
-        >
-          <Avatar.Frame classNames='place-self-center'>
-            {device.profile?.type ? (
-              device.profile.type === DeviceType.AGENT_MANAGED ? (
-                <Database {...iconProps} />
-              ) : device.profile.type === DeviceType.BROWSER ? (
-                <Compass {...iconProps} />
-              ) : device.profile.type === DeviceType.NATIVE ? (
-                <Desktop {...iconProps} />
-              ) : [DeviceType.AGENT, DeviceType.AGENT_MANAGED].includes(device.profile.type) ? (
-                <Robot {...iconProps} />
-              ) : device.profile.type === DeviceType.MOBILE ? (
-                <DeviceMobile {...iconProps} />
-              ) : (
-                <Devices {...iconProps} />
-              )
-            ) : (
-              <Avatar.Fallback text={fallbackValue.emoji} />
-            )}
-          </Avatar.Frame>
+        <Avatar.Root labelId={labelId}>
+          <Avatar.Content
+            status={
+              isCurrent && connectionState === ConnectionState.OFFLINE
+                ? 'error'
+                : device.presence === Device.PresenceState.ONLINE
+                  ? 'active'
+                  : 'inactive'
+            }
+            hue={fallbackValue.hue}
+            variant='square'
+            classNames='place-self-center'
+            {...(device.profile?.type
+              ? {
+                  icon:
+                    device.profile.type === DeviceType.AGENT_MANAGED
+                      ? 'ph--database--regular'
+                      : device.profile.type === DeviceType.BROWSER
+                        ? 'ph--compass--regular'
+                        : device.profile.type === DeviceType.NATIVE
+                          ? 'ph--desktop--regular'
+                          : [DeviceType.AGENT, DeviceType.AGENT_MANAGED].includes(device.profile.type)
+                            ? 'ph--robot--regular'
+                            : device.profile.type === DeviceType.MOBILE
+                              ? 'ph--mobile--regular'
+                              : 'ph--devices--regular',
+                }
+              : { fallback: fallbackValue.emoji })}
+          />
           <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
           {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
           {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}

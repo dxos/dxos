@@ -33,6 +33,7 @@ export type DxAvatarProps = Partial<
     | 'size'
     | 'icon'
     | 'viewBoxSize'
+    | 'rootClassName'
   >
 >;
 
@@ -81,6 +82,9 @@ export class DxAvatar extends LitElement {
   @property({ type: Number })
   viewBoxSize: number = 256;
 
+  @property({ type: String })
+  rootClassName: string | undefined = undefined;
+
   @state()
   loadingStaus: ImageLoadingStatus = 'idle';
 
@@ -114,7 +118,7 @@ export class DxAvatar extends LitElement {
     const fontScale = (isTextOnly ? 3 : 4) * (1 / 1.56) * viewBoxCoefficient;
     return html`<span
       role="img"
-      class="dx-avatar"
+      class=${`dx-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
       aria-labelledby=${this.labelId}
       data-size=${this.size}
       data-variant=${this.variant}
