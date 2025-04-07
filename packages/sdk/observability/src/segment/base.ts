@@ -7,23 +7,25 @@ import { type TrackParams, type PageParams } from '@segment/analytics-node';
 import { log } from '@dxos/log';
 
 import {
-  type PageOptions,
-  type TrackOptions,
-  type Tags,
   type IdentityOptions,
+  type PageOptions,
   type SegmentIdentityOptions,
+  type Tags,
   TelemetryEvent,
+  type TrackOptions,
 } from './types';
 
+/**
+ * NOTE: Segment provides a default ID if we don't provide one.
+ */
 const getIdentityOptions = ({ did, installationId }: IdentityOptions): SegmentIdentityOptions => {
   if (!did && !installationId) {
     log.warn('No telemetry identifier provided.');
   }
-  console.log(did, installationId);
 
   return {
     userId: did,
-    anonymousId: installationId, // NOTE: Segment provies a default ID if we don't provide one.
+    anonymousId: installationId,
   } as SegmentIdentityOptions;
 };
 

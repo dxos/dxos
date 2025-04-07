@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver, IntentAction, type PluginsContext } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 
 import { ClientCapability, ObservabilityCapabilities } from './capabilities';
@@ -14,8 +15,8 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: IntentAction.Track,
-      resolve: (data) => {
-        console.log('===', data);
+      resolve: (intent) => {
+        log.info('intent', { intent });
       },
     }),
     createResolver({
@@ -45,7 +46,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
         const client = context.requestCapability(ClientCapability);
         // NOTE: This is to ensure that events fired before observability is ready are still sent.
         // TODO(wittjosiah): If the intent dispatcher supports concurrent actions in the future,
-        //   then this could awaited still rather than voiding.
+        //   then this could be awaited still rather than voiding.
         void context.waitForCapability(ObservabilityCapabilities.Observability).then((observability) => {
           observability.track({
             ...getTelemetryIdentity(client),
