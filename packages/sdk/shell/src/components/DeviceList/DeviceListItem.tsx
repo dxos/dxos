@@ -89,7 +89,7 @@ export const DeviceListItem = forwardRef<
                           : [DeviceType.AGENT, DeviceType.AGENT_MANAGED].includes(device.profile.type)
                             ? 'ph--robot--regular'
                             : device.profile.type === DeviceType.MOBILE
-                              ? 'ph--mobile--regular'
+                              ? 'ph--device-mobile--regular'
                               : 'ph--devices--regular',
                 }
               : { fallback: fallbackValue.emoji })}
