@@ -4,6 +4,16 @@
 
 import type { Client } from '@dxos/client';
 
+import { type IdentityOptions } from '../segment';
+
+export type IPData = {
+  city: string;
+  region: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+};
+
 // TODO(wittjosiah): Improve privacy of telemetry identifiers.
 //  - Identifier should be generated client-side with no attachment to identity.
 //  - Identifier can then be reset by user.
@@ -22,4 +32,7 @@ export const getTelemetryIdentifier = (client: Client): string | undefined => {
   return undefined;
 };
 
-export type IPData = { city: string; region: string; country: string; latitude: number; longitude: number };
+export const getTelemetryIdentity = (client: Client): IdentityOptions => {
+  const did = getTelemetryIdentifier(client);
+  return { did };
+};

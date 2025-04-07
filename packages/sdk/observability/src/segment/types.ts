@@ -16,7 +16,8 @@ export type SegmentIdentityOptions =
   | { userId: string; anonymousId?: string }
   | { userId?: string; anonymousId: string };
 
-export type IdentityOptions = { did: string; installationId?: string } | { did?: string; installationId: string };
+// TODO(burdon): Should require one or the other.
+export type IdentityOptions = { did?: string; installationId?: string };
 
 export type CommonOptions = IdentityOptions & {
   timestamp?: Date;

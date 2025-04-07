@@ -4,8 +4,8 @@
 
 import type { Client } from '@dxos/client';
 
-import { getTelemetryIdentifier } from './common';
-import type { Observability } from '../observability';
+import { getTelemetryIdentity } from './common';
+import { type Observability } from '../observability';
 
 let lastFocusEvent = new Date();
 let totalTime = 0;
@@ -17,9 +17,9 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
       return;
     }
 
-    setTimeout(() =>
+    setTimeout(() => {
       observability.track({
-        did: getTelemetryIdentifier(client),
+        ...getTelemetryIdentity(client),
         action: `${namespace}.window.click`,
         properties: {
           href: window.location.href,
@@ -30,59 +30,61 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
             .reverse()
             .join('>'),
         },
-      }),
-    );
+      });
+    });
   };
 
   const focusCallback = () => {
     const now = new Date();
-    setTimeout(() =>
+    setTimeout(() => {
       observability.track({
-        did: getTelemetryIdentifier(client),
+        ...getTelemetryIdentity(client),
         action: `${namespace}.window.focus`,
         properties: {
           href: window.location.href,
           timeAway: now.getTime() - lastFocusEvent.getTime(),
         },
-      }),
-    );
+      });
+    });
+
     lastFocusEvent = now;
   };
 
   const blurCallback = () => {
     const now = new Date();
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
-    setTimeout(() =>
+    setTimeout(() => {
       observability.track({
-        did: getTelemetryIdentifier(client),
+        ...getTelemetryIdentity(client),
         action: `${namespace}.window.blur`,
         properties: {
           href: window.location.href,
           timeSpent,
         },
-      }),
-    );
+      });
+    });
+
     lastFocusEvent = now;
     totalTime = totalTime + timeSpent;
   };
 
   const unloadCallback = () => {
-    setTimeout(() =>
+    setTimeout(() => {
       observability.track({
-        did: getTelemetryIdentifier(client),
+        ...getTelemetryIdentity(client),
         action: `${namespace}.page.unload`,
         properties: {
           href: window.location.href,
           timeSpent: totalTime,
         },
-      }),
-    );
+      });
+    });
   };
 
   const errorCallback = (event: ErrorEvent) => {
-    setTimeout(() =>
+    setTimeout(() => {
       observability.track({
-        did: getTelemetryIdentifier(client),
+        ...getTelemetryIdentity(client),
         action: `${namespace}.window.error`,
         properties: {
           href: window.location.href,
@@ -90,8 +92,8 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
           filename: event.filename,
           stack: (event.error as Error)?.stack,
         },
-      }),
-    );
+      });
+    });
   };
 
   window.addEventListener('click', clickCallback, true);

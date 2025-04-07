@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
-import { getTelemetryIdentifier, storeObservabilityDisabled } from '@dxos/observability';
+import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 
 import { ClientCapability, ObservabilityCapabilities } from './capabilities';
 import { type ObservabilitySettingsProps } from '../components';
@@ -22,7 +22,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
           .getStore<ObservabilitySettingsProps>(OBSERVABILITY_PLUGIN)!.value;
         settings.enabled = state ?? !settings.enabled;
         observability.track({
-          did: getTelemetryIdentifier(client),
+          ...getTelemetryIdentity(client),
           action: `${namespace}.observability.toggle`,
           properties: {
             enabled: settings.enabled,
@@ -42,7 +42,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
         //   then this could awaited still rather than voiding.
         void context.waitForCapability(ObservabilityCapabilities.Observability).then((observability) => {
           observability.track({
-            did: getTelemetryIdentifier(client),
+            ...getTelemetryIdentity(client),
             action: `${namespace}.${data.name}`,
             properties: {
               ...data.properties,

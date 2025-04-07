@@ -4,7 +4,7 @@
 
 import { type TrackParams, type PageParams } from '@segment/analytics-node';
 
-import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import {
   Event,
@@ -16,10 +16,14 @@ import {
 } from './types';
 
 const getIdentityOptions = ({ did, installationId }: IdentityOptions): SegmentIdentityOptions => {
-  invariant(did != null || installationId != null, 'Either did or installationId is required');
+  // invariant(hasValidIdentityOptions({ did, installationId }), 'Either did or installationId is required');
+  if (!did && !installationId) {
+    log.warn('No telemetry identifier provided.');
+  }
+
   return {
     userId: did,
-    anonymousId: installationId,
+    anonymousId: installationId, // TODO(burdon): Check null is supportd.
   } as SegmentIdentityOptions;
 };
 

@@ -399,6 +399,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
           duration: endTime.getTime() - this._startTime.getTime(),
         },
       });
+
       await this._observability.close();
     }
     if (process.env.DX_TRACK_LEAKS) {

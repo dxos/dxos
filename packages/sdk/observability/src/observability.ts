@@ -13,7 +13,7 @@ import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/
 import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
-import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
+import { getTelemetryIdentity, type IPData, mapSpaces } from './helpers';
 import { type OtelLogs, type OtelMetrics, type OtelTraces } from './otel';
 import { type SegmentTelemetry, type TrackOptions, type PageOptions } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
@@ -408,7 +408,7 @@ export class Observability {
       log('send space telemetry');
       for (const data of mapSpaces(spaces, { truncateKeys: true })) {
         this.track({
-          did: getTelemetryIdentifier(client),
+          ...getTelemetryIdentity(client),
           action: `${namespace}.space.update`,
           properties: data,
         });
