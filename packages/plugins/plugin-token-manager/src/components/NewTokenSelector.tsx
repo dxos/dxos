@@ -27,7 +27,7 @@ const OAUTH_PRESETS: OAuthPreset[] = [
   {
     label: 'Gmail',
     note: 'Email read access.',
-    source: 'https://gmail.com/',
+    source: 'gmail.com',
     provider: OAuthProvider.GOOGLE,
     scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
   },
