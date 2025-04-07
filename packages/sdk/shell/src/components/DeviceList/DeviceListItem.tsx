@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, DotsThree, ShareFat, Power, FirstAidKit } from '@phosphor-icons/react';
+import { DotsThree, ShareFat, Power, FirstAidKit } from '@phosphor-icons/react';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -22,14 +22,6 @@ import { getSize } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { type AgentFormProps, type DeviceListItemProps } from './DeviceListProps';
-
-const iconProps: IconProps = {
-  weight: 'duotone',
-  width: 24,
-  height: 24,
-  x: 8,
-  y: 8,
-};
 
 export const DeviceListItem = forwardRef<
   HTMLLIElement,
