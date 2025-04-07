@@ -62,7 +62,7 @@ export const capabilities: AnyCapability[] = [
   contributes(
     Capabilities.ArtifactDefinition,
     defineArtifact({
-      id: 'dxos.org/plugin/image',
+      id: 'artifact:dxos.org/plugin/image',
       name: 'Image',
       instructions: `
         - When presenting an image, you must use an artifact.

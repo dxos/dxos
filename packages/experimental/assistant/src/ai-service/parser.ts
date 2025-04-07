@@ -144,7 +144,7 @@ export class MixedStreamParser {
             case 'text_delta': {
               const chunks = transformer.transform(event.delta.text);
               for (const chunk of chunks) {
-                // log.info('text_delta', { chunk, current });
+                log('text_delta', { chunk });
 
                 switch (streamBlock?.type) {
                   //
@@ -158,6 +158,7 @@ export class MixedStreamParser {
                         if (stack.length > 0) {
                           const top = stack.pop();
                           invariant(top && top.type === 'tag');
+                          log('pop', { top });
                           top.content.push(streamBlock);
                           streamBlock = top;
                         } else {

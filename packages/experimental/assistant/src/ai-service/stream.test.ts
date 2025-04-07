@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { type Message } from '@dxos/artifact';
 import { log } from '@dxos/log';
@@ -55,7 +55,7 @@ const TEST_BLOCKS = [
 ];
 
 describe('GenerationStream', () => {
-  it('should generate a stream of blocks', async ({ expect }) => {
+  test('should generate a stream of blocks', async ({ expect }) => {
     const stream = createGenerationStream(new Response(createTestSSEStream(TEST_BLOCKS)));
     const events: GenerationStreamEvent[] = [];
     for await (const event of stream) {
@@ -66,7 +66,7 @@ describe('GenerationStream', () => {
   });
 
   for (const splitBy of ['word'] as const) {
-    it(`should emit xml blocks (splitBy: ${splitBy})`, async ({ expect }) => {
+    test(`should emit xml blocks (splitBy: ${splitBy})`, async ({ expect }) => {
       const stream = createGenerationStream(new Response(createTestSSEStream(TEST_BLOCKS, { splitBy })));
       const parser = new MixedStreamParser();
 
@@ -98,4 +98,28 @@ describe('GenerationStream', () => {
       ]);
     });
   }
+
+  test.skip('invalid xml', async ({ expect }) => {
+    const BLOCKS = [
+      //
+      '<cot> thoughts <tool-list> more thoughts </cot> <tool-list/>',
+    ];
+
+    const stream = createGenerationStream(new Response(createTestSSEStream(BLOCKS, { splitBy: 'word' })));
+    const parser = new MixedStreamParser();
+
+    const result = await parser.parse(stream);
+    expect(result[0].content).to.deep.eq([
+      {
+        type: 'text',
+        disposition: 'cot',
+        text: 'thoughts more thoughts',
+      },
+      {
+        type: 'json',
+        disposition: 'tool_list',
+        json: '{}',
+      },
+    ]);
+  });
 });
