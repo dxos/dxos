@@ -16,14 +16,14 @@ import {
 } from './types';
 
 const getIdentityOptions = ({ did, installationId }: IdentityOptions): SegmentIdentityOptions => {
-  // invariant(hasValidIdentityOptions({ did, installationId }), 'Either did or installationId is required');
   if (!did && !installationId) {
     log.warn('No telemetry identifier provided.');
   }
+  console.log(did, installationId);
 
   return {
     userId: did,
-    anonymousId: installationId, // TODO(burdon): Check null is supportd.
+    anonymousId: installationId, // NOTE: Segment provies a default ID if we don't provide one.
   } as SegmentIdentityOptions;
 };
 
@@ -54,7 +54,7 @@ export abstract class AbstractSegmentTelemetry {
     return {
       ...getIdentityOptions(options),
       ...rest,
-      event: event ?? TelemetryEvent.USER,
+      event: event ?? TelemetryEvent.ACTION,
       context: this._getTags(),
       properties: {
         action,

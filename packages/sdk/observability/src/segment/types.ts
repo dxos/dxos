@@ -21,7 +21,7 @@ export type IdentityOptions = { did?: string; installationId?: string };
 
 export type CommonOptions = IdentityOptions & {
   timestamp?: Date;
-  properties?: Record<string, unknown>; // TODO(burdon): Rename custom.
+  properties?: Record<string, unknown>;
 };
 
 /**
@@ -30,7 +30,7 @@ export type CommonOptions = IdentityOptions & {
  */
 export type PageOptions = CommonOptions & {
   category?: string;
-  name: string;
+  name?: string;
 };
 
 /**
@@ -40,7 +40,6 @@ export type PageOptions = CommonOptions & {
 export type TrackOptions = CommonOptions & {
   event?: TelemetryEvent;
   action: string;
-  intent?: string; // TODO(burdon): ???
 };
 
 /**
@@ -50,7 +49,7 @@ export enum TelemetryEvent {
   /**
    * Use actions.
    */
-  USER = 'user',
+  ACTION = 'action',
   /**
    * High-volume technical metrics.
    */

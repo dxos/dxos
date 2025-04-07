@@ -42,7 +42,7 @@ export type ObservabilityOptions = {
   /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
   namespace: string;
   mode: Mode;
-  // TODO(nf): make platform a required extension?
+  // TODO(nf): Make platform a required extension?
   // platform: Platform;
   release?: string;
   environment?: string;
@@ -68,7 +68,8 @@ export type ObservabilityOptions = {
  *
  * Testing:
  * https://app.segment.com/dxos/sources/composer-app/settings/keys
- * set DX_TELEMETRY_API_KEY for local dev.
+ * - DX_TELEMETRY_API_KEY=XXX
+ * - DX_SENTRY_DESTINATION
  *
  * Sentry:
  * https://sentry.io/organizations/dxos/issues
@@ -546,6 +547,7 @@ export class Observability {
         scrubFilenames: this._mode !== 'full',
         onError: (event) => this._sentryLogProcessor!.addLogBreadcrumbsTo(event),
       });
+
       // TODO(nf): Set platform at instantiation? needed for node.
       // TODO(nf): Is this different than passing as properties in options?
       this._tags.forEach((v, k) => {

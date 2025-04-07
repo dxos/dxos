@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver, IntentAction, type PluginsContext } from '@dxos/app-framework';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 
 import { ClientCapability, ObservabilityCapabilities } from './capabilities';
@@ -12,6 +12,12 @@ import { ObservabilityAction } from '../types';
 
 export default ({ context, namespace }: { context: PluginsContext; namespace: string }) =>
   contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: IntentAction.Track,
+      resolve: (data) => {
+        console.log('===', data);
+      },
+    }),
     createResolver({
       intent: ObservabilityAction.Toggle,
       resolve: async ({ state }) => {
