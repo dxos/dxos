@@ -20,34 +20,35 @@ import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ControlledSelector, PanelContainer, Placeholder } from '../../../components';
+import { PanelContainer, Placeholder } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
 export const InvocationTracePanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn);
-  const [selectedInvocation, setSelectedInvocation] = useState<InvocationSpan>();
+  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
+    pollInterval: 1000,
+  });
 
   const invocationSpans = useMemo(
     () => createInvocationSpans(invocationsQueue?.items),
     [invocationsQueue?.items ?? []],
   );
-  const invocationsByTarget = groupByInvocationTarget(invocationSpans);
-  const [selectedTarget, setSelectedTarget] = useState<string>();
 
-  useEffect(() => {
-    if (selectedTarget && !invocationsByTarget.has(selectedTarget)) {
-      setSelectedTarget(undefined);
-    } else if (!selectedTarget && invocationsByTarget.size) {
-      setSelectedTarget([...invocationsByTarget.keys()][0]);
+  const [selectedId, setSelectedId] = useState<string>();
+
+  const selectedInvocation = useMemo(() => {
+    if (!selectedId) {
+      return undefined;
     }
-  }, [invocationsByTarget ?? null]);
+    return invocationSpans.find((span) => selectedId === span.id);
+  }, [selectedId, invocationSpans]);
 
   const invocationProperties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'time', title: 'Time', format: FormatEnum.String, sort: 'desc' as const },
+      { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 },
+      { name: 'time', title: 'Time', format: FormatEnum.String, sort: 'desc' as const, size: 200 },
       {
         name: 'status',
         title: 'Status',
@@ -69,52 +70,43 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   );
 
   const invocationData = useMemo(() => {
-    return filterBySelected(invocationSpans, selectedTarget).map((item) => {
+    return invocationSpans.map((invocation) => {
       let status = 'unknown';
-      if (item.outcome === 'in-progress') {
+      if (invocation.outcome === 'in-progress') {
         status = 'in-progress';
-      } else if (item.outcome === InvocationOutcome.SUCCESS) {
+      } else if (invocation.outcome === InvocationOutcome.SUCCESS) {
         status = 'success';
-      } else if (item.outcome === InvocationOutcome.FAILURE) {
+      } else if (invocation.outcome === InvocationOutcome.FAILURE) {
         status = 'failure';
       }
 
+      const targetDxn = decodeReference(invocation.invocationTarget).dxn?.toString() ?? 'unknown';
+      const targetName = targetDxn.split(':').pop() ?? 'unknown';
+
       return {
-        id: `${item.timestampMs}-${Math.random()}`,
-        time: new Date(item.timestampMs).toLocaleString(),
+        id: `${invocation.id}`,
+        time: new Date(invocation.timestampMs).toLocaleString(),
+        target: targetName,
         status,
-        duration: `${item.durationMs}ms`,
-        queue: decodeReference(item.invocationTraceQueue).dxn?.toString() ?? 'unknown',
-        _original: item,
+        duration: `${invocation.durationMs}ms`,
+        queue: decodeReference(invocation.invocationTraceQueue).dxn?.toString() ?? 'unknown',
+        _original: invocation,
       };
     });
-  }, [invocationsQueue?.items, selectedTarget]);
+  }, [invocationSpans]);
 
   const handleInvocationRowClicked = useCallback((row: any) => {
     if (!row) {
       return;
     }
-    const invocation = row._original;
-    setSelectedInvocation(invocation);
+    setSelectedId(row.id);
   }, []);
 
   const [activeTab, setActiveTab] = useState('logs');
 
   return (
-    <PanelContainer
-      toolbar={
-        <Toolbar.Root>
-          {!props.space && <DataSpaceSelector />}
-          <ControlledSelector
-            placeholder={'Invocation target'}
-            values={[...invocationsByTarget.keys()]}
-            value={selectedTarget ?? ''}
-            setValue={setSelectedTarget}
-          />
-        </Toolbar.Root>
-      }
-    >
-      <div className={mx('bs-full grid grid-cols-[1fr_36rem]')}>
+    <PanelContainer toolbar={<Toolbar.Root>{!props.space && <DataSpaceSelector />}</Toolbar.Root>}>
+      <div className={mx('bs-full grid grid-cols-[1fr_30rem]')}>
         <div>
           <DynamicTable
             properties={invocationProperties}
@@ -275,7 +267,7 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
   }, [span?.invocationTraceQueue]);
 
   // Fetch all trace events from the queue
-  const eventQueue = useQueue<TraceEvent>(traceQueueDxn);
+  const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
 
   // Define properties for the DynamicTable
   const logProperties: TablePropertyDefinition[] = useMemo(
@@ -319,16 +311,8 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
     });
   }, [eventQueue?.items]);
 
-  if (!span) {
-    return <div className={mx('flex items-center justify-center h-full')}>Select an invocation to see logs</div>;
-  }
-
-  if (traceQueueDxn && eventQueue === undefined) {
-    return <div className={mx('flex items-center justify-center h-full')}>Loading trace data...</div>;
-  }
-
-  if (!logData.length) {
-    return <div className={mx('flex items-center justify-center h-full')}>No logs available</div>;
+  if (traceQueueDxn && eventQueue?.isLoading) {
+    return <div className={mx('flex items-center justify-center')}>Loading trace data...</div>;
   }
 
   return (
@@ -349,7 +333,7 @@ export const ExceptionPanel: React.FC<ExceptionPanelProps> = ({ span }) => {
   }, [span.invocationTraceQueue]);
 
   // Fetch all trace events from the queue
-  const eventQueue = useQueue<TraceEvent>(traceQueueDxn);
+  const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
 
   // Extract error logs from all trace events
   const errorLogs = useMemo(() => {
@@ -369,12 +353,12 @@ export const ExceptionPanel: React.FC<ExceptionPanelProps> = ({ span }) => {
       .sort((a, b) => a.timestampMs - b.timestampMs);
   }, [eventQueue?.items]);
 
-  if (traceQueueDxn && eventQueue === undefined) {
+  if (traceQueueDxn && eventQueue?.isLoading) {
     return <div className={mx('flex items-center justify-center h-full')}>Loading trace data...</div>;
   }
 
   if (errorLogs.length === 0) {
-    return <div className={mx('flex items-center justify-center h-full')}>No errors found</div>;
+    return <div className={mx('flex items-center justify-center h-full')}>No exceptions found</div>;
   }
 
   return (
