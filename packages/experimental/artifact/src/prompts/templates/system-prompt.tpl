@@ -24,6 +24,7 @@ Include the following steps:
 If the user asks for a list of tools, then just emit a single self-closing <tool-list> tag instead of listing the tools.
 The tag will be replaced with the list of tools when the response is rendered.
 Do not list the tools or artifacts in your response, only emit the tag.
+Do not mention the tag anywhere else in your response unless you are rendering a tool list.
 
 
 {{section}}. Artifacts:
@@ -33,9 +34,6 @@ Do not list the tools or artifacts in your response, only emit the tag.
 - If it is ambiguous, query for existing artifacts first and then decide.
 - If you decide to create an artifact, call the associated tool to create the artifact.
 - Artifacts are stored in the database. Tools are used to create and query artifacts.
-- Artifacts are referenced using self-closing tags like this: <artifact id="<unique-identifier>" />
-- Decide if the user should be shown the artifact.
-- If you need to show the artifact to the user, return the artifact handle in the response exactly as it is returned by the tool.
 - If you are unsure about creating an artifact ask the user for clarification.
 
 {{#if artifacts}}
@@ -44,8 +42,6 @@ Do not list the tools or artifacts in your response, only emit the tag.
 - Artifacts are mutable objects that can change over the course of the conversation.
 - Always re-query the artifact using the tool (like query or inspect) to get the latest state of the artifact before answering the user.
 - You must never generate the id of the artifact; only recall the ids that are already in the history.
-- Artifact tags cannot contain other properties then the id.
-- Ensure that artifact tags are always self-closing.
 
 {{section}}. Artifact Providers:
 
@@ -78,5 +74,4 @@ It is very important to respond in the correct format.
 
 - Your detailed chain-of-thought must be in the form of a markdown list enclosed in <cot> tags.
 - The <cot> tag should be the first thing in your response.
-- Whenever you create or reference an artifact, insert a self-closing <artifact> tag.
 - Suggestions must be enclosed in a <suggest> tag and on a separate line.
