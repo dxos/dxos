@@ -36,6 +36,10 @@ export const tailwindConfig = ({
     },
     extend: merge(
       {
+        spacing: {
+          prose: 'var(--dx-prose)',
+          containerMaxWidth: 'var(--dx-containerMaxWidth)',
+        },
         screens: {
           'pointer-fine': { raw: '(pointer: fine)' },
           'hover-hover': { raw: '(hover: hover)' },

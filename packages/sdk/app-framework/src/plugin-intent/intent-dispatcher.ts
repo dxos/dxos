@@ -174,8 +174,8 @@ export const createDispatcher = (
   const handleIntent = (intent: AnyIntent) =>
     Effect.gen(function* () {
       const candidates = getResolvers(intent.module)
-        .filter((r) => r.intent._tag === intent.id)
-        .filter((r) => !r.filter || r.filter(intent.data))
+        .filter((resolver) => resolver.intent._tag === intent.id)
+        .filter((resolver) => !resolver.filter || resolver.filter(intent.data))
         .toSorted(byPosition);
       if (candidates.length === 0) {
         yield* Effect.fail(new NoResolversError(intent.id));
@@ -199,16 +199,27 @@ export const createDispatcher = (
         yield* Ref.update(resultsRef, (results) => [result, ...results]);
         if (result.intents) {
           for (const intent of result.intents) {
-            // Returned intents are dispatched but not yielded into results,
-            // as such they cannot be undone.
+            // Returned intents are dispatched but not yielded into results, as such they cannot be undone.
             // TODO(wittjosiah): Use higher execution concurrency?
             yield* dispatch(intent, depth + 1);
           }
         }
+
         if (result.error) {
+          // yield* dispatch(
+          //   createIntent(IntentAction.Track, {
+          //     intents: intentChain.all.map((i) => i.id),
+          //     error: result.error.message,
+          //   }),
+          // );
           yield* Effect.fail(result.error);
         }
       }
+
+      // Track the intent chain.
+      // if (intentChain.all.some((intent) => intent.id !== IntentAction.Track._tag)) {
+      //   yield* dispatch(createIntent(IntentAction.Track, { intents: intentChain.all.map((i) => i.id) }));
+      // }
 
       const results = yield* resultsRef.get;
       const result = results[0];

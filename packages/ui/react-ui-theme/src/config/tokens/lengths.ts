@@ -16,8 +16,16 @@ export const lengthsFacet = {
           slope: 1,
         },
       },
+      size: {
+        root: {
+          unit: 'rem',
+          initial: 0,
+          slope: 10,
+        },
+      },
     },
   } satisfies LinearPhysicalLayer,
+
   semantic: {
     namespace: 'dx-',
     conditions: { root: [':root'] },
@@ -25,8 +33,11 @@ export const lengthsFacet = {
       noLine: { root: ['line', 0] },
       hairLine: { root: ['line', 1] },
       thickLine: { root: ['line', 2] },
+      prose: { root: ['size', 5] },
+      containerMaxWidth: { root: ['size', 5] },
     },
   },
+
   alias: {
     namespace: 'dx-',
     conditions: { root: [':root'] },

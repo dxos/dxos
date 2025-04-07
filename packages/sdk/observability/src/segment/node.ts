@@ -7,18 +7,20 @@ import { Analytics } from '@segment/analytics-node';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { EventOptions, SegmentTelemetryOptions, PageOptions } from './types';
+import { AbstractSegmentTelemetry } from './base';
+import type { SegmentTelemetryOptions, PageOptions, TrackOptions } from './types';
 import { captureException } from '../sentry';
 
-export class SegmentTelemetry {
+/**
+ * Node telemetry.
+ */
+export class SegmentTelemetry extends AbstractSegmentTelemetry {
   private _analytics?: Analytics;
-  private _getTags: () => { [key: string]: string };
 
   constructor({ apiKey, batchSize, getTags }: SegmentTelemetryOptions) {
-    this._getTags = getTags;
+    super(getTags);
     try {
-      invariant(apiKey, 'Key required to send telemetry');
-
+      invariant(apiKey, 'Missing API key.');
       this._analytics = new Analytics({
         writeKey: apiKey,
         flushAt: batchSize,
@@ -28,52 +30,33 @@ export class SegmentTelemetry {
     }
   }
 
-  /**
-   * Track a page view.
-   */
-  page({ installationId: anonymousId, did: userId, ...options }: PageOptions = {}) {
+  page(options: PageOptions) {
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'page' });
       return;
     }
 
     try {
-      this._analytics.page({
-        ...options,
-        userId,
-        anonymousId: anonymousId!,
-      });
+      this._analytics.page(this.createPageProps(options));
     } catch (err) {
       log.catch('Failed to track page', err);
     }
   }
 
-  /**
-   * Track an event.
-   */
-  event({ installationId: anonymousId, did: userId, name: event, ...options }: EventOptions) {
-    log('sending event to telemetry', { event, options, tags: this._getTags() });
+  track(options: TrackOptions) {
     if (!this._analytics) {
-      log('Analytics not initialized', { action: 'event' });
+      log('Analytics not initialized', { action: 'track' });
       return;
     }
 
+    log.info('sending event to telemetry', { options });
     try {
-      this._analytics.track({
-        ...options,
-        properties: { ...options.properties, ...this._getTags() },
-        userId,
-        anonymousId: anonymousId!,
-        event,
-      });
+      this._analytics.track(this.createTrackProps(options));
     } catch (err) {
-      log.catch('Failed to track event', err);
+      log.catch('Failed to track action', err);
     }
   }
 
-  /**
-   * Flush the event queue.
-   */
   async flush() {
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'flush' });
@@ -92,6 +75,7 @@ export class SegmentTelemetry {
     if (!this._analytics) {
       return;
     }
+
     await this._analytics.closeAndFlush();
   }
 }

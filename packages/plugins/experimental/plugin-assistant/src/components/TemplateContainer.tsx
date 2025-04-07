@@ -50,7 +50,7 @@ export const TemplateContainer = ({ template, role }: { template: TemplateType; 
   );
 
   return (
-    <StackItem.Content toolbar role={role} classNames='mli-auto w-full max-w-[50rem]'>
+    <StackItem.Content role={role} toolbar classNames='container-max-width'>
       {/* TODO(wittjosiah): Move this toolbar into c11y sidebar. */}
       <Toolbar.Root>
         <Select.Root value={template.kind.include} onValueChange={handleKindChange}>

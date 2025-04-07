@@ -44,7 +44,7 @@ export type SectionItem = {
 export const useSections = (): SectionItem[] => {
   return [
     {
-      id: '/client',
+      id: 'client',
       title: 'Client',
       Icon: Users,
       items: [
@@ -76,7 +76,7 @@ export const useSections = (): SectionItem[] => {
       ],
     },
     {
-      id: '/halo',
+      id: 'halo',
       title: 'HALO',
       Icon: IdentificationBadge,
       items: [
@@ -103,7 +103,7 @@ export const useSections = (): SectionItem[] => {
       ],
     },
     {
-      id: '/echo',
+      id: 'echo',
       title: 'ECHO',
       Icon: Database,
       items: [

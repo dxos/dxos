@@ -58,12 +58,6 @@
       "@dxos/plugin-native": [
         "packages/plugins/experimental/plugin-native/src/index.ts"
       ],
-      "@dxos/plugin-outliner": [
-        "packages/plugins/experimental/plugin-outliner/src/index.ts"
-      ],
-      "@dxos/plugin-outliner/types": [
-        "packages/plugins/experimental/plugin-outliner/src/types/index.ts"
-      ],
       "@dxos/plugin-script": [
         "packages/plugins/experimental/plugin-script/src/index.ts"
       ],
@@ -168,6 +162,12 @@
       ],
       "@dxos/plugin-observability/types": [
         "packages/plugins/plugin-observability/src/types.ts"
+      ],
+      "@dxos/plugin-outliner": [
+        "packages/plugins/plugin-outliner/src/index.ts"
+      ],
+      "@dxos/plugin-outliner/types": [
+        "packages/plugins/plugin-outliner/src/types/index.ts"
       ],
       "@dxos/plugin-presenter": [
         "packages/plugins/plugin-presenter/src/index.ts"

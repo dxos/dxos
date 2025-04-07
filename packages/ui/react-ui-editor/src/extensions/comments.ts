@@ -181,6 +181,7 @@ const handleCommentClick = EditorView.domEventHandlers({
     return false;
   },
 });
+
 //
 // Cut-and-paste.
 //
