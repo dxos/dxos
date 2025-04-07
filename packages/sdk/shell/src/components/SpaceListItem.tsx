@@ -23,9 +23,7 @@ export const SpaceListItem = forwardRef(
         data-testid='space-list-item'
       >
         <Avatar.Root labelId={labelId}>
-          <Avatar.Frame>
-            <Avatar.Fallback text={fallbackValue} />
-          </Avatar.Frame>
+          <Avatar.Content fallback={fallbackValue} />
           <Avatar.Label classNames='text-sm truncate'>{displayName}</Avatar.Label>
         </Avatar.Root>
       </li>
