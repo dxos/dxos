@@ -85,7 +85,7 @@ export const ChatContainer = ({ space, dxn, context, current, autoFocusTextbox }
 
     queue.append([
       createStatic(MessageType, {
-        sender: { identityKey: identity.identityKey.toHex() },
+        sender: { identityDid: identity.did },
         created: new Date().toISOString(),
         blocks: [{ type: 'text', text: messageRef.current }],
         properties: context ? { context: makeRef(context) } : undefined,
