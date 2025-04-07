@@ -37,6 +37,8 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const invocationsByTarget = groupByInvocationTarget(invocationSpans);
   const [selectedTarget, setSelectedTarget] = useState<string>();
 
+  console.log(selectedTarget);
+
   useEffect(() => {
     if (selectedTarget && !invocationsByTarget.has(selectedTarget)) {
       setSelectedTarget(undefined);
@@ -55,7 +57,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
         size: 140,
         config: {
           options: [
-            { id: 'success', title: 'Success', color: 'green' },
+            { id: 'success', title: 'Success', color: 'emerald' },
             { id: 'failure', title: 'Failure', color: 'red' },
             { id: 'unknown', title: 'Unknown', color: 'neutral' },
           ],
@@ -75,7 +77,6 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
           case 'failure':
             return 'failure';
           default:
-            // Log unknown outcome values.
             console.log(`Unknown outcome value: ${item.outcome}`);
             return 'unknown';
         }
@@ -115,7 +116,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className={mx('bs-full grid grid-cols-[1fr_24rem]')}>
+      <div className={mx('bs-full grid grid-cols-[1fr_36rem]')}>
         <div>
           <DynamicTable
             properties={invocationProperties}
@@ -165,17 +166,13 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
     return <div className={mx('flex items-center justify-center')}>Select an invocation to see details</div>;
   }
 
-  // Extract target name from reference
   const targetDxn = decodeReference(span.invocationTarget).dxn?.toString() ?? 'unknown';
   const targetName = targetDxn.split(':').pop() ?? 'unknown';
 
-  // Format timestamp
   const timestamp = new Date(span.timestampMs).toLocaleString();
-
-  // Format duration
   const duration = `${span.durationMs}ms`;
 
-  // Determine status and outcome styling
+  // TODO(ZaymonFC): Fix this.
   const isRunning = span.outcome === undefined;
   const outcomeColor = (() => {
     if (isRunning) {
@@ -192,14 +189,14 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
         <div>
           <h3 className={mx('text-lg font-medium mb-1')}>{targetName}</h3>
           <div className={mx('flex gap-2 items-center')}>
-            <Tag color={outcomeColor}>{outcomeLabel}</Tag>
+            <Tag palette={outcomeColor}>{outcomeLabel}</Tag>
             <span className={mx('text-sm text-neutral')}>{timestamp}</span>
             <span className={mx('text-sm')}>{duration}</span>
           </div>
         </div>
 
         {span.trigger && (
-          <Tag color='amber'>
+          <Tag palette='amber'>
             Triggered{' '}
             <span className={mx('opacity-80')}>{decodeReference(span.trigger).dxn?.toString().split(':').pop()}</span>
           </Tag>
@@ -287,6 +284,10 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
     return <div className={mx('flex items-center justify-center h-full')}>Select an invocation to see logs</div>;
   }
 
+  if (traceQueueDxn && eventQueue === undefined) {
+    return <div className={mx('flex items-center justify-center h-full')}>Loading trace data...</div>;
+  }
+
   if (!logData.length) {
     return <div className={mx('flex items-center justify-center h-full')}>No logs available</div>;
   }
@@ -328,6 +329,10 @@ export const ExceptionPanel: React.FC<ExceptionPanelProps> = ({ span }) => {
       )
       .sort((a, b) => a.timestampMs - b.timestampMs);
   }, [eventQueue?.items]);
+
+  if (traceQueueDxn && eventQueue === undefined) {
+    return <div className={mx('flex items-center justify-center h-full')}>Loading trace data...</div>;
+  }
 
   if (errorLogs.length === 0) {
     return <div className={mx('flex items-center justify-center h-full')}>No errors found</div>;
