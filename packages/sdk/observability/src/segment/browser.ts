@@ -6,20 +6,18 @@ import snippet from '@segment/snippet';
 
 import { log } from '@dxos/log';
 
-import type { EventOptions, SegmentTelemetryOptions, PageOptions } from './types';
+import { AbstractSegmentTelemetry } from './base';
+import type { TrackOptions, SegmentTelemetryOptions, PageOptions } from './types';
 import { captureException } from '../sentry';
 
-export class SegmentTelemetry {
-  private _getTags: () => { [key: string]: string };
-
+/**
+ * Browser telemetry.
+ */
+export class SegmentTelemetry extends AbstractSegmentTelemetry {
   constructor({ apiKey, batchSize, getTags }: SegmentTelemetryOptions) {
-    this._getTags = getTags;
+    super(getTags);
     try {
-      const contents = snippet.min({
-        apiKey,
-        page: false,
-      });
-
+      const contents = snippet.min({ apiKey, page: false });
       const script = document.createElement('script');
       script.innerHTML = contents;
       document.body.append(script);
@@ -28,28 +26,17 @@ export class SegmentTelemetry {
     }
   }
 
-  page({ did: userId, ...options }: PageOptions = {}) {
+  page(options: PageOptions) {
     try {
-      (window as any).analytics?.page({
-        context: this._getTags(),
-        ...options,
-        userId,
-      });
+      (window as any).analytics?.page(this.createPageProps(options));
     } catch (err) {
       log.catch('Failed to track page', err);
     }
   }
 
-  event({ did: userId, name: event, ...options }: EventOptions) {
+  track(options: TrackOptions) {
     try {
-      options.properties = {
-        ...options.properties,
-        ...this._getTags(),
-      };
-      (window as any).analytics?.track({
-        ...options,
-        event,
-      });
+      (window as any).analytics?.track(this.createTrackProps(options));
     } catch (err) {
       log.catch('Failed to track event', err);
     }
