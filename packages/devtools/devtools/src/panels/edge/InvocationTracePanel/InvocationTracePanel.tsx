@@ -30,15 +30,6 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn);
   const [selectedInvocation, setSelectedInvocation] = useState<InvocationSpan>();
 
-  const traceQueueDxn = useMemo(() => {
-    return selectedInvocation?.invocationTraceQueue
-      ? decodeReference(selectedInvocation.invocationTraceQueue).dxn
-      : undefined;
-  }, [selectedInvocation?.invocationTraceQueue]);
-
-  const eventQueue = useQueue<TraceEvent>(traceQueueDxn);
-
-  const [selectedObject, setSelectedObject] = useState<any>();
   const invocationSpans = useMemo(
     () => createInvocationSpans(invocationsQueue?.items),
     [invocationsQueue?.items ?? []],
@@ -106,14 +97,6 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
     }
     const invocation = row._original;
     setSelectedInvocation(invocation);
-    setSelectedObject(invocation);
-  }, []);
-
-  const handleEventRowClicked = useCallback((row: any) => {
-    if (!row) {
-      return;
-    }
-    setSelectedObject(row._original);
   }, []);
 
   const [activeTab, setActiveTab] = useState('logs');
