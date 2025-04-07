@@ -106,12 +106,12 @@ export class AISession {
   async run(options: SessionRunOptions): Promise<Message[]> {
     const systemTools: Tool[] = [
       defineTool('system', {
-        name: 'query_artifacts',
-        description: 'Query the available artifacts',
+        name: 'query_artifact_definitions',
+        description: 'Query the available artifact definitions',
         schema: S.Struct({}),
         execute: async () => {
           return ToolResult.Success({
-            artifacts: options.artifacts.map((artifact) => ({
+            artifactDefinitions: options.artifacts.map((artifact) => ({
               id: artifact.id,
               name: artifact.name,
               description: artifact.description,
@@ -208,25 +208,27 @@ export class AISession {
       case 'immediate':
         systemTools.push(
           defineTool('system', {
-            name: 'require_artifacts',
+            name: 'require_artifact_definitions',
             description:
-              'Require the use of specific artifacts. This will allow the model to interact with artifacts and use their tools.',
+              'Require the use of specific artifact definitions. This will allow the model to interact with artifact definitions and use their tools.',
             schema: S.Struct({
-              artifactIds: S.Array(S.String).annotations({
-                description: 'The ids of the artifacts to require',
+              artifactDefinitionIds: S.Array(S.String).annotations({
+                description: 'The ids of the artifact definitions to require',
                 examples: [['artifact:dxos.org/example/Test']],
               }),
             }),
-            execute: async ({ artifactIds }) => {
-              const missingArtifactIds = artifactIds.filter(
+            execute: async ({ artifactDefinitionIds }) => {
+              const missingArtifactDefinitionIds = artifactDefinitionIds.filter(
                 (artifactId) => !options.artifacts.some((artifact) => artifact.id === artifactId),
               );
-              if (missingArtifactIds.length > 0) {
-                return ToolResult.Error(`One or more artifact ids are invalid: ${missingArtifactIds.join(', ')}`);
+              if (missingArtifactDefinitionIds.length > 0) {
+                return ToolResult.Error(
+                  `One or more artifact definition ids are invalid: ${missingArtifactDefinitionIds.join(', ')}`,
+                );
               }
 
-              for (const artifactId of artifactIds) {
-                requiredArtifactIds.add(artifactId);
+              for (const artifactDefinitionId of artifactDefinitionIds) {
+                requiredArtifactIds.add(artifactDefinitionId);
               }
 
               return ToolResult.Success({});
@@ -271,11 +273,12 @@ export class AISession {
           // TODO(burdon): Rename messages or separate history/message.
           history: [...this._history, ...this._pending],
           tools,
-          systemPrompt: createBaseInstructions({
-            availableArtifacts: Array.from(requiredArtifactIds),
-            operationModel: this._options.operationModel,
-            systemPrompt: options.systemPrompt,
-          }),
+          systemPrompt:
+            options.systemPrompt ??
+            createBaseInstructions({
+              availableArtifacts: Array.from(requiredArtifactIds),
+              operationModel: this._options.operationModel,
+            }),
         });
 
         // Wait until complete.
@@ -335,11 +338,9 @@ export class AISession {
 const createBaseInstructions = ({
   availableArtifacts,
   operationModel,
-  systemPrompt,
 }: {
   availableArtifacts: string[];
   operationModel: OperationModel;
-  systemPrompt?: string;
 }) => `
   You are a friendly, advanced AI assistant capable of creating and managing artifacts from available data and tools. 
   Your task is to process user commands and questions and decide how best to respond.
@@ -366,8 +367,6 @@ const createBaseInstructions = ({
   }
 
   ${availableArtifacts.length > 0 ? `Artifacts already in context: ${availableArtifacts.join('\n')}` : ''}
-
-  ${systemPrompt}
 `;
 
 export class AIServiecOverloadedError extends S.TaggedError<AIServiecOverloadedError>()(
