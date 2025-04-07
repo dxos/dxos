@@ -15,7 +15,11 @@ const hues = ['lime', 'teal', 'purple', 'pink'];
 
 const StorybookAvatarGroupItem = ({ n }: { n: number }) => {
   const emoji = toEmoji(n);
-  return <Avatar.Content fallback={emoji} hue={hues[n]} size={8} variant='circle' />;
+  return (
+    <Avatar.Root>
+      <Avatar.Content fallback={emoji} hue={hues[n]} size={8} variant='circle' />
+    </Avatar.Root>
+  );
 };
 
 const StorybookAvatarGroup = () => {
