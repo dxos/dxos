@@ -156,7 +156,7 @@ export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   object: any,
 ): object is S.Schema.Type<Schema> => {
-  if (schema == null) {
+  if (object == null) {
     return false;
   }
 
