@@ -22,6 +22,8 @@ Include the following steps:
 - If you have suggestions for follow-up actions then present each action as text within a <suggest> tag.
 
 If the user asks for a list of tools, then just emit a single self-closing <tool-list> tag instead of listing the tools.
+The tag will be replaced with the list of tools when the response is rendered.
+Do not list the tools or artifacts in your response, only emit the tag.
 
 
 {{section}}. Artifacts:

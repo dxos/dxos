@@ -37,9 +37,11 @@ export type SessionRunOptions = {
 
   prompt: string;
 
-  generationOptions?: Pick<GenerateRequest, 'model' | 'systemPrompt'>;
+  generationOptions?: Pick<GenerateRequest, 'model'>;
 
   extensions?: ToolContextExtensions;
+
+  systemPrompt?: string;
 
   /**
    * Pre-require artifacts.
@@ -272,6 +274,7 @@ export class AISession {
           systemPrompt: createBaseInstructions({
             availableArtifacts: Array.from(requiredArtifactIds),
             operationModel: this._options.operationModel,
+            systemPrompt: options.systemPrompt,
           }),
         });
 
@@ -332,9 +335,11 @@ export class AISession {
 const createBaseInstructions = ({
   availableArtifacts,
   operationModel,
+  systemPrompt,
 }: {
   availableArtifacts: string[];
   operationModel: OperationModel;
+  systemPrompt?: string;
 }) => `
   You are a friendly, advanced AI assistant capable of creating and managing artifacts from available data and tools. 
   Your task is to process user commands and questions and decide how best to respond.
@@ -361,6 +366,8 @@ const createBaseInstructions = ({
   }
 
   Artifacts already required: ${availableArtifacts.join('\n')}
+
+  ${systemPrompt}
 `;
 
 export class AIServiecOverloadedError extends S.TaggedError<AIServiecOverloadedError>()(

@@ -126,11 +126,11 @@ export class ChatProcessor {
         history: options.history ?? [],
         artifacts: this._artifacts ?? [],
         tools: this._tools ?? [],
-        prompt: message,
+        prompt: message, 
+        systemPrompt: this._options.systemPrompt,
         extensions: this._extensions,
         generationOptions: {
           model: this._options.model,
-          systemPrompt: this._options.systemPrompt,
         },
       });
 
