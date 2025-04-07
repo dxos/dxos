@@ -37,8 +37,6 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const invocationsByTarget = groupByInvocationTarget(invocationSpans);
   const [selectedTarget, setSelectedTarget] = useState<string>();
 
-  console.log(selectedTarget);
-
   useEffect(() => {
     if (selectedTarget && !invocationsByTarget.has(selectedTarget)) {
       setSelectedTarget(undefined);
@@ -51,18 +49,20 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
     () => [
       { name: 'time', title: 'Time', format: FormatEnum.String, sort: 'desc' as const },
       {
-        name: 'outcome',
-        title: 'Outcome',
+        name: 'status',
+        title: 'Status',
         format: FormatEnum.SingleSelect,
-        size: 140,
+        size: 110,
         config: {
           options: [
+            { id: 'in-progress', title: 'In Progress', color: 'blue' },
             { id: 'success', title: 'Success', color: 'emerald' },
             { id: 'failure', title: 'Failure', color: 'red' },
             { id: 'unknown', title: 'Unknown', color: 'neutral' },
           ],
         },
       },
+      { name: 'duration', title: 'Duration', format: FormatEnum.String, size: 120 },
       { name: 'queue', title: 'Queue', format: FormatEnum.String },
     ],
     [],
@@ -70,22 +70,20 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
 
   const invocationData = useMemo(() => {
     return filterBySelected(invocationSpans, selectedTarget).map((item) => {
-      const outcomeValue = (() => {
-        switch (item.outcome) {
-          case 'success':
-            return 'success';
-          case 'failure':
-            return 'failure';
-          default:
-            console.log(`Unknown outcome value: ${item.outcome}`);
-            return 'unknown';
-        }
-      })();
+      let status = 'unknown';
+      if (item.outcome === 'in-progress') {
+        status = 'in-progress';
+      } else if (item.outcome === InvocationOutcome.SUCCESS) {
+        status = 'success';
+      } else if (item.outcome === InvocationOutcome.FAILURE) {
+        status = 'failure';
+      }
 
       return {
         id: `${item.timestampMs}-${Math.random()}`,
         time: new Date(item.timestampMs).toLocaleString(),
-        outcome: outcomeValue,
+        status,
+        duration: `${item.durationMs}ms`,
         queue: decodeReference(item.invocationTraceQueue).dxn?.toString() ?? 'unknown',
         _original: item,
       };
@@ -162,6 +160,31 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
 type SpanSummaryProps = { span?: InvocationSpan };
 
 export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
+  const [currentDuration, setCurrentDuration] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (!span) {
+      return;
+    }
+
+    const isInProgress = span.outcome === 'in-progress';
+    if (!isInProgress) {
+      setCurrentDuration(span.durationMs);
+      return;
+    }
+
+    // For in-progress spans, update duration every 500ms
+    setCurrentDuration(Date.now() - span.timestampMs);
+
+    const interval = setInterval(() => {
+      setCurrentDuration(Date.now() - span.timestampMs);
+    }, 100);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [span]);
+
   if (!span) {
     return <div className={mx('flex items-center justify-center')}>Select an invocation to see details</div>;
   }
@@ -170,18 +193,34 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
   const targetName = targetDxn.split(':').pop() ?? 'unknown';
 
   const timestamp = new Date(span.timestampMs).toLocaleString();
-  const duration = `${span.durationMs}ms`;
 
-  // TODO(ZaymonFC): Fix this.
-  const isRunning = span.outcome === undefined;
+  // Format duration based on length
+  const formattedDuration = (() => {
+    if (currentDuration === undefined) {
+      return `${span.durationMs}ms`;
+    }
+
+    if (currentDuration < 1000) {
+      return `${currentDuration}ms`;
+    }
+    return `${(currentDuration / 1000).toFixed(2)}s`;
+  })();
+
+  const isInProgress = span.outcome === 'in-progress';
   const outcomeColor = (() => {
-    if (isRunning) {
+    if (isInProgress) {
       return 'blue';
     }
     return span.outcome === InvocationOutcome.SUCCESS ? 'emerald' : 'red';
   })();
 
-  const outcomeLabel = isRunning ? 'Running' : span.outcome;
+  const outcomeLabel = (() => {
+    if (isInProgress) {
+      return 'In Progress';
+    }
+    // Capitalize first letter of outcome
+    return span.outcome.charAt(0).toUpperCase() + span.outcome.slice(1);
+  })();
 
   return (
     <div className={mx('p-2 overflow-auto')}>
@@ -191,7 +230,7 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
           <div className={mx('flex gap-2 items-center')}>
             <Tag palette={outcomeColor}>{outcomeLabel}</Tag>
             <span className={mx('text-sm text-neutral')}>{timestamp}</span>
-            <span className={mx('text-sm')}>{duration}</span>
+            <span className={mx('text-sm')}>{formattedDuration}</span>
           </div>
         </div>
 
