@@ -17,6 +17,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { mergeConfig } from 'vitest/config';
 import { baseConfig } from '../../../vitest.shared';
 
 import { appKey } from './src/constants';
@@ -32,7 +33,7 @@ const isFalse = (str?: string) => str === 'false' || str === '0';
  */
 export default defineConfig((env) => ({
   // Vitest config.
-  test: baseConfig({ cwd: __dirname })['test'] as any,
+  test: mergeConfig(baseConfig({ cwd: __dirname }), defineConfig({ test: { environment: 'jsdom' } }))['test'] as any,
   server: {
     host: true,
     https:

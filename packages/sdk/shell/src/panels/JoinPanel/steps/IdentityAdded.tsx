@@ -43,10 +43,12 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
     <>
       <StepHeading>{t('identity added label')}</StepHeading>
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
-        <Avatar.Root status='active' labelId={labelId} hue={addedIdentity?.profile?.data?.hue || fallbackValue.hue}>
-          <Avatar.Frame>
-            <Avatar.Fallback text={addedIdentity?.profile?.data?.emoji || fallbackValue.emoji} />
-          </Avatar.Frame>
+        <Avatar.Root labelId={labelId}>
+          <Avatar.Content
+            status='active'
+            hue={addedIdentity?.profile?.data?.hue || fallbackValue.hue}
+            fallback={addedIdentity?.profile?.data?.emoji || fallbackValue.emoji}
+          />
           <Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
             {displayName}
           </Avatar.Label>
