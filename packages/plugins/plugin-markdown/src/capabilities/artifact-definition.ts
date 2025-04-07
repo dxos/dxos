@@ -21,7 +21,7 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: meta.id,
+    id: `artifact:${meta.id}`,
     name: meta.name,
     instructions: `
       - The markdown plugin allows you to work with text documents in the current space.
