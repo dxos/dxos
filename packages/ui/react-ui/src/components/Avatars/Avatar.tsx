@@ -33,15 +33,15 @@ const AvatarRoot = ({ children, labelId: propsLabelId, descriptionId: propsDescr
   return <AvatarProvider {...{ labelId, descriptionId }}>{children}</AvatarProvider>;
 };
 
-export const DxAvatar = createComponent({
+const DxAvatar = createComponent({
   tagName: 'dx-avatar',
   elementClass: NaturalDxAvatar,
   react: React,
 });
 
-export type DxAvatarProps = ThemedClassName<ComponentProps<typeof DxAvatar>>;
+type AvatarContentProps = ThemedClassName<Omit<ComponentProps<typeof DxAvatar>, 'children'>>;
 
-const AvatarContent = ({ icon, classNames, ...props }: DxAvatarProps) => {
+const AvatarContent = ({ icon, classNames, ...props }: AvatarContentProps) => {
   const href = useIconHref(icon);
   const { labelId, descriptionId } = useAvatarContext('AvatarContent');
   return (
@@ -106,4 +106,11 @@ export const Avatar = {
 
 export { useAvatarContext };
 
-export type { AvatarStatus, AvatarVariant, AvatarAnimation, AvatarLabelProps, AvatarDescriptionProps };
+export type {
+  AvatarStatus,
+  AvatarVariant,
+  AvatarAnimation,
+  AvatarContentProps,
+  AvatarLabelProps,
+  AvatarDescriptionProps,
+};

@@ -18,9 +18,9 @@ import {
   useTranslation,
   Avatar,
   useThemeContext,
-  type AvatarRootProps,
   Tooltip,
   type ThemedClassName,
+  type AvatarContentProps,
 } from '@dxos/react-ui';
 import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
@@ -44,13 +44,13 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
-const avatarProps: Pick<AvatarRootProps, 'size' | 'variant'> = { size: 10, variant: 'circle' };
+const avatarProps: Pick<AvatarContentProps, 'size' | 'variant'> = { size: 10, variant: 'circle' };
 
 const AvatarStackEffect = ({
   animation,
   status,
   reverseEffects,
-}: Pick<AvatarRootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => {
+}: Pick<AvatarContentProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => {
   const { tx } = useThemeContext();
   return (
     <>
