@@ -12,7 +12,7 @@ import { Journal } from './Journal';
 import { useOutlinerHandlers } from '../hooks';
 import { type JournalType } from '../types';
 
-const JournalContainer = ({ journal, role }: { journal: JournalType; role: string }) => {
+const JournalContainer = ({ role, journal }: { role: string; journal: JournalType }) => {
   const space = getSpace(journal);
   const handlers = useOutlinerHandlers(space);
   if (!space) {
@@ -20,8 +20,8 @@ const JournalContainer = ({ journal, role }: { journal: JournalType; role: strin
   }
 
   return (
-    <StackItem.Content toolbar={false}>
-      <Journal.Root classNames={mx(attentionSurface, 'p-1.5')} journal={journal} {...handlers} />
+    <StackItem.Content role={role} toolbar={false} classNames='container-max-width'>
+      <Journal.Root classNames={mx(attentionSurface, 'pbs-2')} journal={journal} {...handlers} />
     </StackItem.Content>
   );
 };

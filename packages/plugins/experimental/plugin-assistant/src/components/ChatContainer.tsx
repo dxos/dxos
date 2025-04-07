@@ -13,12 +13,12 @@ import { ASSISTANT_PLUGIN } from '../meta';
 import { type AssistantSettingsProps, type AIChatType } from '../types';
 
 // TODO(burdon): Attention.
-export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
+export const ChatContainer = ({ role, chat }: { role: string; chat: AIChatType }) => {
   const transcription = useCapabilities(TranscriptionCapabilities.Transcription).length > 0;
   const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)?.value;
 
   return (
-    <StackItem.Content toolbar={false} role={role} classNames='mli-auto w-full max-w-[50rem]'>
+    <StackItem.Content role={role} toolbar={false} classNames='container-max-width'>
       <ThreadContainer chat={chat} settings={settings} transcription={transcription} />
     </StackItem.Content>
   );
