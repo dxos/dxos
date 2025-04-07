@@ -8,7 +8,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { type Observability } from '@dxos/observability';
 import { type UserFeedback } from '@dxos/plugin-observability/types';
-import { FeedbackForm, STATUS_BAR_PLUGIN } from '@dxos/plugin-status-bar';
+import { FeedbackForm } from '@dxos/plugin-status-bar';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -160,10 +160,7 @@ export const ResetDialog = ({
             {observabilityPromise && (
               <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
                 <Popover.Trigger asChild>
-                  <IconButton
-                    icon='ph--paper-plane-tilt--regular'
-                    label={t('feedback label', { ns: STATUS_BAR_PLUGIN })}
-                  />
+                  <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback label')} />
                 </Popover.Trigger>
                 <Popover.Portal>
                   <Popover.Content>

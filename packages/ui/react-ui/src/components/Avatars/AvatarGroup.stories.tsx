@@ -3,49 +3,42 @@
 //
 
 import '@dxos-theme';
-
 import React from 'react';
 
+import { useId } from '@dxos/react-hooks';
 import { toEmoji } from '@dxos/util';
 
 import { Avatar } from './Avatar';
-import { AvatarGroup, AvatarGroupItem } from './AvatarGroup';
 import { withTheme } from '../../testing';
 
-const items = [
-  '[&_.avatarFrameFill]:fill-lime-500',
-  '[&_.avatarFrameFill]:fill-teal-500',
-  '[&_.avatarFrameFill]:fill-purple-500',
-  '[&_.avatarFrameFill]:fill-pink-500',
-];
+const hues = ['lime', 'teal', 'purple', 'pink'];
 
 const StorybookAvatarGroupItem = ({ n }: { n: number }) => {
   const emoji = toEmoji(n);
   return (
-    <AvatarGroupItem.Root>
-      <Avatar.Frame classNames={items[n]}>
-        <Avatar.Fallback text={emoji} />
-      </Avatar.Frame>
-    </AvatarGroupItem.Root>
+    <Avatar.Root>
+      <Avatar.Content fallback={emoji} hue={hues[n]} size={8} variant='circle' />
+    </Avatar.Root>
   );
 };
 
 const StorybookAvatarGroup = () => {
+  const labelId = useId('sb-avatar-group');
   return (
-    <AvatarGroup.Root size={8} variant='circle'>
+    <div className='dx-avatar-group' aria-labelledby={labelId}>
       {[0, 1, 2, 3].map((n) => (
         <StorybookAvatarGroupItem key={n} n={n} />
       ))}
-      <AvatarGroup.Label srOnly>
-        <span>23</span>
-      </AvatarGroup.Label>
-    </AvatarGroup.Root>
+      <span className='sr-only' id={labelId}>
+        23
+      </span>
+    </div>
   );
 };
 
 export default {
   title: 'ui/react-ui-core/AvatarGroup',
-  component: AvatarGroup,
+  component: StorybookAvatarGroup,
   render: StorybookAvatarGroup,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

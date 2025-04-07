@@ -9,6 +9,7 @@ import echo from './echo.ts?raw';
 import email from './email.ts?raw';
 import forexEffect from './forex-effect.ts?raw';
 import forex from './forex.ts?raw';
+import gmail from './gmail.ts?raw';
 
 const removeHeader = (str: string) => str.split('\n').slice(4).join('\n');
 
@@ -58,5 +59,11 @@ export const templates: Template[] = [
     name: 'Discord',
     source: removeHeader(discord),
     presetId: 'dxos.org/function/discord',
+  },
+  {
+    id: 'dxos.org/script/gmail',
+    name: 'Gmail',
+    source: removeHeader(gmail),
+    presetId: 'dxos.org/function/gmail',
   },
 ];

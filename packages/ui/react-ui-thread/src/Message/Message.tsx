@@ -27,7 +27,7 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   ) => {
     return (
       // Must wrap the message since Avatar.Label may be used in the content.
-      <Avatar.Root size={avatarSize} hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}>
+      <Avatar.Root>
         <div
           role='none'
           data-testid='thread.message'
@@ -36,10 +36,12 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           ref={forwardedRef}
         >
           <div role='none' className='flex flex-col items-center gap-2 pbs-2'>
-            <Avatar.Frame>
-              <Avatar.Fallback text={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')} />
-              {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
-            </Avatar.Frame>
+            <Avatar.Content
+              size={avatarSize}
+              hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
+              fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
+              {...(authorImgSrc && { imgSrc: authorImgSrc })}
+            />
             {continues && <div role='none' className='is-px grow bg-separator' />}
           </div>
           <div role='none' className='plb-1 min-is-0'>

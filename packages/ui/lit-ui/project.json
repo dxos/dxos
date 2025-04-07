@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "lit-ui",
+  "tags": [
+    "scope:ui"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "@nx/js:tsc",
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
+        ],
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.json"
+      }
+    },
+    "e2e": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "options": {
+        "config": "{projectRoot}/src/testing/playwright/playwright.config.cts"
+      }
+    },
+    "lint": {
+      "options": {
+        "lintFilePatterns": [
+          "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "pack": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "node-std"
+  ]
+}

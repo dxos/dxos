@@ -26,15 +26,16 @@ export const HaloButton = (props: HaloButtonProps) => {
   const { swarm: connectionState } = useNetworkStatus();
   return (
     <button className={mx(focusRing, 'rounded grid place-items-center')} onClick={onClick}>
-      <Avatar.Root
-        size={size}
-        variant='circle'
-        status={connectionState === ConnectionState.OFFLINE ? 'error' : internal ? 'internal' : 'active'}
-        hue={props.hue || fallbackValue.hue}
-      >
-        <Avatar.Frame data-testid='treeView.haloButton' data-joyride='welcome/halo'>
-          {internal ? <Avatar.Image href={INTERNAL} /> : <Avatar.Fallback text={props.emoji || fallbackValue.emoji} />}
-        </Avatar.Frame>
+      <Avatar.Root>
+        <Avatar.Content
+          size={size}
+          variant='circle'
+          status={connectionState === ConnectionState.OFFLINE ? 'error' : internal ? 'internal' : 'active'}
+          hue={props.hue || fallbackValue.hue}
+          data-testid='treeView.haloButton'
+          data-joyride='welcome/halo'
+          {...(internal ? { imgSrc: INTERNAL } : { fallback: props.emoji || fallbackValue.emoji })}
+        />
       </Avatar.Root>
     </button>
   );

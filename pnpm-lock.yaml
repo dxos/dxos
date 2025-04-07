@@ -10754,6 +10754,19 @@ importers:
         specifier: workspace:*
         version: link:../../common/test-utils
 
+  packages/ui/lit-ui:
+    dependencies:
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../primitives/react-hooks
+      lit:
+        specifier: ^3.2.0
+        version: 3.2.0
+    devDependencies:
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
+
   packages/ui/primitives/react-hooks:
     dependencies:
       '@dxos/async':
@@ -10870,6 +10883,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10891,6 +10907,9 @@ importers:
       '@fluentui/react-tabster':
         specifier: ^9.24.2
         version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@lit/react':
+        specifier: ^1.0.5
+        version: 1.0.5(@types/react@18.2.79)
       '@radix-ui/primitive':
         specifier: 1.1.1
         version: 1.1.1
