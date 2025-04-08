@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, type FC } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { createTree } from '@dxos/plugin-outliner/types';
 import { type ChannelType } from '@dxos/plugin-space/types';
 import { TranscriptionAction } from '@dxos/plugin-transcription/types';
 import { create, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
@@ -58,7 +59,7 @@ export const ActivityContainer: FC<ActivityContainerProps> = ({ channel, roomId:
             participants: [],
             channel: channel ? makeRef(channel) : undefined,
             transcript: makeRef(transcript),
-            notes: makeRef(create(TextType, { content: '' })),
+            notes: makeRef(createTree()),
             summary: makeRef(create(TextType, { content: '' })),
           }),
         );

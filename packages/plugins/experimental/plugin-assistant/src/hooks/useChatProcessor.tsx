@@ -66,7 +66,7 @@ export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseCh
   const systemPrompt = useMemo(
     () =>
       createSystemPrompt({
-        artifacts: artifactDefinitions.map((definition) => definition.instructions),
+        artifacts: artifactDefinitions.map((definition) => `${definition.name}\n${definition.instructions}`),
       }),
     [artifactDefinitions],
   );

@@ -15,6 +15,7 @@ export default [
           'If you’re encountering issues, reloading may fix the issue. If reloading doesn’t help, consider resetting the app.',
         'caught error message': 'Something went wrong; check the console for details.',
         'copy error label': 'Copy this error',
+        'feedback label': 'Feedback',
         'reload page label': 'Reload',
         'update and reload page label': 'Update',
         'reset app label': 'Reset',

@@ -132,6 +132,9 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-outliner"
+    },
+    {
       "path": "../plugin-space"
     },
     {

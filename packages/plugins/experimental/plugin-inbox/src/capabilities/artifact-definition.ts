@@ -18,7 +18,7 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: meta.id,
+    id: `artifact:${meta.id}`,
     name: meta.name,
     instructions: `
       - Manage the calendar for the current space.

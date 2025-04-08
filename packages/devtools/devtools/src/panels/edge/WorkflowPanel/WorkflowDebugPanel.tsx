@@ -228,10 +228,8 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
 };
 
 const RobotAvatar = () => (
-  <Avatar.Root size={6} variant='circle'>
-    <Avatar.Frame>
-      <Avatar.Icon icon='ph--robot--regular' />
-    </Avatar.Frame>
+  <Avatar.Root>
+    <Avatar.Content size={6} variant='circle' icon='ph--robot--regular' />
   </Avatar.Root>
 );
 
