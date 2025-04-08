@@ -17,7 +17,7 @@ import {
   defaultStyles,
 } from '@dxos/gem-spore';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
-import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
+import { type SpaceMember, useMembers, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -91,8 +91,9 @@ const classes = {
   ],
 };
 
-export const NetworkPanel = () => {
-  const { space } = useDevtoolsState();
+export const NetworkPanel = (props: { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
   const identity = useIdentity();
 
   const isMe = (node: NetworkGraphNode | undefined) =>
@@ -136,9 +137,11 @@ export const NetworkPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar.Root>
-          <DataSpaceSelector />
-        </Toolbar.Root>
+        !props.space && (
+          <Toolbar.Root>
+            <DataSpaceSelector />
+          </Toolbar.Root>
+        )
       }
     >
       <SVGRoot context={context}>
