@@ -83,10 +83,18 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const { t } = useTranslation(translationKey);
     const modals = useMemo(() => new ModalController(), []);
 
-    const frozen = useMemo(
-      () => ({ frozenRowsStart: 1, frozenColsStart: model?.features.selection ? 1 : 0, frozenColsEnd: 1 }),
-      [model],
-    );
+    const frozen = useMemo(() => {
+      const noActionColumn =
+        model?.features.dataEditable === false &&
+        model?.features.schemaEditable === false &&
+        model.rowActions.length === 0;
+
+      return {
+        frozenRowsStart: 1,
+        frozenColsStart: model?.features.selection ? 1 : 0,
+        frozenColsEnd: noActionColumn ? 0 : 1,
+      };
+    }, [model]);
 
     /**
      * Provides an external controller that can be called to repaint the table.
