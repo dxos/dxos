@@ -37,7 +37,7 @@ export type MailboxProps = { mailbox: MailboxType; options?: MailboxOptions };
 
 export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   const [selected, setSelected] = useState<string>();
-  const queue = useQueue<MessageType>(mailbox.queue.dxn);
+  const queue = useQueue<MessageType>(mailbox.queue.dxn, { pollInterval: 1_000 });
   const tRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
     clearTimeout(tRef.current);
