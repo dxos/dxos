@@ -26,6 +26,8 @@ export const ActorSchema = S.Struct({
   contact: S.optional(Ref(ContactType)),
   // TODO(wittjosiah): Should the below fields just be the contact schema?
   //  i.e. it should either be a reference to an existing contact or an inline contact schema.
+  identityDid: S.optional(S.String),
+  /** @deprecated */
   identityKey: S.optional(S.String),
   // TODO(burdon): Generalize to handle/identifier?
   email: S.optional(S.String),
