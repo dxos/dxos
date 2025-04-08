@@ -2,13 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import './mailbox.css';
+
 import { Archive, ArrowClockwise, Trash } from '@phosphor-icons/react';
-import React, { type MouseEvent, useState } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useState, type WheelEvent } from 'react';
+import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { Button, useTranslation } from '@dxos/react-ui';
-import { AttentionGlyph } from '@dxos/react-ui-attention';
-import { baseSurface, fixedBorder, focusRing, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
+import { AttentionGlyph, useAttention } from '@dxos/react-ui-attention';
+import { type DxGridElement, type DxGridPlaneCells, Grid, toPlaneCellIndex } from '@dxos/react-ui-grid';
+import { fixedBorder, focusRing, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 import { type MessageType } from '@dxos/schema';
+import { getFirstTwoRenderableChars } from '@dxos/util';
 
 import { INBOX_PLUGIN } from '../../meta';
 import { styles } from '../styles';
@@ -21,30 +26,105 @@ export type MessageListProps = {
   selected?: string;
   onSelect?: (id: string) => void;
   onAction?: (message: MessageType, action: ActionType) => void;
+  attendableId?: string;
+  ignoreAttention?: boolean;
 };
 
+const messageRowDefault = {
+  grid: { size: 100 },
+};
+
+const messageColumnDefault = {
+  grid: { size: 100 },
+};
+
+const renderMessageCell = (message: MessageType, now: Date) => {
+  const text = message.blocks.find((block) => block.type === 'text')?.text;
+  const date = formatDate(now, message.created ? new Date(message.created) : new Date());
+  const from = message.sender?.name ?? message.sender?.email;
+  const subject = message.properties?.subject ?? text;
+
+  return `<div class="message__thumb" role="none"
+    ><dx-avatar hue="neutral" variant="square" fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"></dx-avatar
+  ></div><div class="message__abstract" role="none"
+    ><h3 class="message__abstract__row" role="none"><span>${from}</span><span>${date}</span></h3
+    ><p>${subject}</p
+  ></div>`;
+};
+
+const messageCellClassName = 'message';
+
 // TODO(burdon): Factor out list (and implement navigation).
-export const MessageList = ({ messages = [], selected, onSelect, onAction }: MessageListProps) => {
+export const MessageList = ({
+  messages = [],
+  selected,
+  onSelect,
+  onAction,
+  attendableId,
+  ignoreAttention,
+}: MessageListProps) => {
   const { t } = useTranslation(INBOX_PLUGIN);
+  const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
+  const { hasAttention } = useAttention(attendableId);
+  const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
+
+  const handleResize = useCallback<OnResizeCallback>(
+    ({ width }) => width && setColumnDefault({ grid: { size: width - 1 } }),
+    [],
+  );
+
+  const { ref: measureRef } = useResizeDetector({
+    onResize: handleResize,
+    refreshOptions: { leading: true },
+    refreshMode: 'debounce',
+    refreshRate: 16,
+  });
+
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      if (!ignoreAttention && !hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention, ignoreAttention],
+  );
+
+  useEffect(() => {
+    if (dxGrid && messages) {
+      dxGrid.getCells = (range, plane) => {
+        const now = new Date();
+        switch (plane) {
+          case 'grid': {
+            const cells: DxGridPlaneCells = {};
+            for (let row = range.start.row; row <= range.end.row && row < messages.length; row++) {
+              cells[toPlaneCellIndex({ col: 0, row })] = {
+                readonly: true,
+                accessoryHtml: renderMessageCell(messages[row], now),
+                className: messageCellClassName,
+              };
+            }
+            return cells;
+          }
+          default:
+            return {};
+        }
+      };
+    }
+  }, [dxGrid, messages]);
 
   return (
-    <div
-      className={mx(
-        'flex flex-col is-full overflow-x-hidden overflow-y-auto divide-y divide-separator scrollbar-thin',
-        baseSurface,
-      )}
-    >
-      {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
-      {messages?.map((message) => (
-        <MessageItem
-          key={message.id}
-          message={message}
-          selected={message.id === selected}
-          onSelect={onSelect ? () => onSelect(message.id) : undefined}
-          onAction={onAction ? (action) => onAction(message, action) : undefined}
-        />
-      ))}
-    </div>
+    <Grid.Root id={`${attendableId}__grid`}>
+      <Grid.Content
+        limitColumns={1}
+        limitRows={messages.length}
+        rowDefault={messageRowDefault}
+        columnDefault={columnDefault}
+        onWheel={handleWheel}
+        className='[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
+        ref={setDxGrid}
+      />
+      <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
+    </Grid.Root>
   );
 };
 

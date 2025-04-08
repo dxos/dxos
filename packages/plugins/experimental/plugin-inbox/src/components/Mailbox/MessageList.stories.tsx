@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+import './mailbox.css';
 
 import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';

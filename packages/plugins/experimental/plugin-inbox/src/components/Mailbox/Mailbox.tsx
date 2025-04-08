@@ -80,5 +80,13 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     }
   };
 
-  return <MessageList messages={messages} selected={selected} onSelect={setSelected} onAction={handleAction} />;
+  return (
+    <MessageList
+      attendableId={mailbox.id}
+      messages={messages}
+      selected={selected}
+      onSelect={setSelected}
+      onAction={handleAction}
+    />
+  );
 };

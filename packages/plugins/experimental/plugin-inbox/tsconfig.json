@@ -60,6 +60,9 @@
       "path": "../../../ui/react-ui-attention"
     },
     {
+      "path": "../../../ui/react-ui-grid"
+    },
+    {
       "path": "../../../ui/react-ui-stack"
     },
     {
