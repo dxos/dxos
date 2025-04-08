@@ -28,7 +28,8 @@ export type TriggerEditorProps = {
 
 const PayloadInput = (props: InputProps & { property: string }) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
-  const inputProps = useInputProps(['payload', props.property]);
+  // TODO(dmaretskyi): Prop name (`meta`) should be passed in.
+  const inputProps = useInputProps(['meta', props.property]);
   return (
     <div role='none' className='flex items-center mt-2 gap-1'>
       <div role='none' className='flex-1'>
