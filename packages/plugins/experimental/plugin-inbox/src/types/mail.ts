@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Ref, S, TypedObject } from '@dxos/echo-schema';
-import { MessageType } from '@dxos/schema';
+import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 
 export enum MessageState {
   NONE = 0,
@@ -12,7 +11,7 @@ export enum MessageState {
   SPAM = 3,
 }
 
-export class MailboxType extends TypedObject({ typename: 'dxos.org/type/MailboxType', version: '0.1.0' })({
+export class MailboxType extends TypedObject({ typename: 'dxos.org/type/Mailbox', version: '0.1.0' })({
   name: S.optional(S.String),
-  messages: S.mutable(S.Array(Ref(MessageType))),
+  queue: Ref(Expando),
 }) {}

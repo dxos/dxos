@@ -25,7 +25,6 @@ export type ScriptType = S.Schema.Type<typeof ScriptType>;
 /**
  * Function deployment.
  */
-// TODO(burdon): Move to core/functions.
 export class FunctionType extends TypedObject({
   typename: 'dxos.org/type/Function',
   version: '0.1.0',

@@ -64,6 +64,11 @@
       },
       "group": {
         "kind": "test"
+      },
+      "options": {
+        "env": {
+          "DX_LABS": "true"
+        }
       }
     }
   ]
