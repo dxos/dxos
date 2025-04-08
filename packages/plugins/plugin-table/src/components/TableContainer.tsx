@@ -110,7 +110,11 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
 
   return (
     <StackItem.Content role={role} toolbar>
-      <TableToolbar onAction={handleAction} attendableId={fullyQualifiedId(table)} />
+      <TableToolbar
+        onAction={handleAction}
+        attendableId={fullyQualifiedId(table)}
+        classNames='border-be border-separator'
+      />
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
       </Table.Root>
