@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
+import { IdentityDid } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
@@ -16,7 +16,7 @@ export const createCommentThread = (identity: Identity) => {
         makeRef(
           create(MessageType, {
             sender: {
-              identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
+              identityDid: faker.datatype.boolean() ? identity.did : IdentityDid.random(),
             },
             created: new Date().toISOString(),
             blocks: [{ type: 'text', text: faker.lorem.sentences(3) }],
