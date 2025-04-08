@@ -16,7 +16,7 @@ import {
   ScriptType,
 } from '@dxos/functions/types';
 import { type DXN } from '@dxos/keys';
-import { Filter, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
 import { IconButton, Tag, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -27,17 +27,31 @@ import { PanelContainer, Placeholder } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
-export const InvocationTracePanel = (props: { space?: Space }) => {
+type InvocationTracePanelProps = {
+  space?: Space;
+  script?: ScriptType;
+};
+
+export const InvocationTracePanel = (props: InvocationTracePanelProps) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
+  const functionsForScript = useInvocationTargetsForScript(props?.script);
   const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
     pollInterval: 1000,
   });
 
-  const invocationSpans = useMemo(
-    () => createInvocationSpans(invocationsQueue?.items),
-    [invocationsQueue?.items ?? []],
-  );
+  const invocationSpans = useMemo(() => createInvocationSpans(invocationsQueue?.items), [invocationsQueue?.items]);
+  const scopedInvocationSpans = useMemo(() => {
+    if (functionsForScript) {
+      return invocationSpans.filter((span) => {
+        const targetId = decodeReference(span.invocationTarget).dxn?.toString();
+        const dxnParts = targetId?.toString().split(':');
+        const uuidPart = dxnParts?.at(-1);
+        return uuidPart ? functionsForScript?.has(uuidPart) : false;
+      });
+    }
+    return invocationSpans;
+  }, [invocationSpans]);
 
   const [selectedId, setSelectedId] = useState<string>();
 
@@ -75,7 +89,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   );
 
   const invocationData = useMemo(() => {
-    return invocationSpans.map((invocation) => {
+    return scopedInvocationSpans.map((invocation) => {
       let status = 'unknown';
       if (invocation.outcome === 'in-progress') {
         status = 'in-progress';
@@ -475,6 +489,19 @@ const useScriptNameResolver = ({ space }: { space?: Space }) => {
     },
     [functions, scripts],
   );
+};
+
+const useInvocationTargetsForScript = (script: ScriptType | undefined) => {
+  const space = getSpace(script);
+  const functions = useQuery(space, Filter.schema(FunctionType));
+
+  return useMemo(() => {
+    if (!script) {
+      return undefined;
+    }
+
+    return new Set(functions.filter((func) => func.source?.target?.id === script.id).map((func) => func.name));
+  }, [functions, script]);
 };
 
 const formatDuration = (duration: number): string => {

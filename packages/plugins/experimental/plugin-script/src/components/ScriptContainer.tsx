@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import { InvocationTracePanel } from '@dxos/devtools';
 import { type ScriptType } from '@dxos/functions/types';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -12,7 +13,6 @@ import { createDataExtensions, listener, stackItemContentEditorClassNames } from
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
-import { LogsPanel } from './LogsPanel';
 import { ScriptToolbar } from './ScriptToolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { useDeployState, useToolbarState } from '../hooks';
@@ -66,7 +66,7 @@ export const ScriptContainer = ({
   return (
     <StackItem.Content toolbar={variant !== 'logs'}>
       {variant === 'logs' ? (
-        <LogsPanel script={script} />
+        <InvocationTracePanel space={space} script={script} />
       ) : (
         <>
           <ScriptToolbar state={state} role={role} script={script} />
