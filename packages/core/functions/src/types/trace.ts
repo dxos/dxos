@@ -109,7 +109,7 @@ export type TraceEvent = S.Schema.Type<typeof TraceEvent>;
 export type InvocationSpan = {
   id: string;
   timestampMs: number;
-  outcome: InvocationOutcome;
+  outcome: InvocationOutcome | 'in-progress';
   input: object;
   durationMs: number;
   invocationTraceQueue: Ref<Expando>;
@@ -122,32 +122,51 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
   if (!items) {
     return [];
   }
-  const startEvents = new Map<ObjectId, InvocationTraceStartEvent>();
-  const result: InvocationSpan[] = [];
-  for (const item of items) {
-    if (item.type === InvocationTraceEventType.START) {
-      startEvents.set(item.invocationId, item);
-    } else if (item.type === InvocationTraceEventType.END) {
-      const matchingStart = startEvents.get(item.invocationId);
-      if (!matchingStart) {
-        log.warn('end event without matching start', { item });
-        continue;
-      }
-      result.push({
-        id: item.invocationId,
-        durationMs: item.timestampMs - matchingStart.timestampMs,
-        timestampMs: item.timestampMs,
-        outcome: item.outcome,
-        exception: item.exception,
-        trigger: matchingStart.trigger,
-        input: matchingStart.input,
-        invocationTraceQueue: matchingStart.invocationTraceQueue,
-        invocationTarget: matchingStart.invocationTarget,
-      });
-    } else {
-      // TODO: remove, the deprecated InvocationTrace format is no longer produced by functions backend
-      result.push(item as InvocationSpan);
+
+  const eventsByInvocationId = new Map<string, { start?: InvocationTraceStartEvent; end?: InvocationTraceEndEvent }>();
+  for (const event of items) {
+    if (!('invocationId' in event)) {
+      // Skip legacy format entries.
+      continue;
     }
+
+    const invocationId = event.invocationId;
+    const entry = eventsByInvocationId.get(invocationId) || { start: undefined, end: undefined };
+
+    if (event.type === InvocationTraceEventType.START) {
+      entry.start = event as InvocationTraceStartEvent;
+    } else if (event.type === InvocationTraceEventType.END) {
+      entry.end = event as InvocationTraceEndEvent;
+    }
+
+    eventsByInvocationId.set(invocationId, entry);
   }
+
+  const now = Date.now();
+  const result: InvocationSpan[] = [];
+
+  // Create spans for each invocation
+  for (const [invocationId, { start, end }] of eventsByInvocationId.entries()) {
+    if (!start) {
+      // No start event, can't create a meaningful span
+      log.warn('Found end event without matching start', { invocationId });
+      continue;
+    }
+
+    const isInProgress = end === undefined;
+
+    result.push({
+      id: invocationId,
+      timestampMs: start.timestampMs,
+      durationMs: isInProgress ? now - start.timestampMs : end!.timestampMs - start.timestampMs,
+      outcome: end?.outcome ?? ('in-progress' as const),
+      exception: end?.exception,
+      input: start.input,
+      invocationTraceQueue: start.invocationTraceQueue,
+      invocationTarget: start.invocationTarget,
+      trigger: start.trigger,
+    });
+  }
+
   return result;
 };
