@@ -5,7 +5,7 @@
 //
 
 const renderableCharRegex =
-  /^(?![\p{Control}\p{Mark}\p{Separator}\p{Surrogate}\p{Unassigned}])[\p{L}\p{N}\p{P}\p{S}\p{Emoji}]$/u;
+  /^(?![\p{Control}\p{Mark}\p{Separator}\p{Surrogate}\p{Unassigned}\p{P}])[\p{L}\p{N}\p{S}\p{Emoji}]$/u;
 
 /**
  * Returns the first two renderable characters from a string that are separated by non-word characters.
