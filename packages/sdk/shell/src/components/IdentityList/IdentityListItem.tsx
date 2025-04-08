@@ -33,14 +33,13 @@ export const IdentityListItem = forwardRef<
       labelId={labelId}
       ref={forwardedRef}
     >
-      <Avatar.Root
-        status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'}
-        labelId={labelId}
-        hue={identity.profile?.data?.hue || fallbackValue.hue}
-      >
-        <Avatar.Frame classNames='place-self-center'>
-          <Avatar.Fallback text={identity.profile?.data?.emoji || fallbackValue.emoji} />
-        </Avatar.Frame>
+      <Avatar.Root labelId={labelId}>
+        <Avatar.Content
+          status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'}
+          hue={identity.profile?.data?.hue || fallbackValue.hue}
+          fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
+          classNames='place-self-center'
+        />
         <Avatar.Label classNames='text-sm truncate pli-2'>{displayName}</Avatar.Label>
       </Avatar.Root>
     </ListItem.Root>

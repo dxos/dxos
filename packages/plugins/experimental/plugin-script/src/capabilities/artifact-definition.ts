@@ -23,7 +23,7 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: meta.id,
+    id: `artifact:${meta.id}`,
     name: meta.name,
     // TODO(dmaretskyi): Since writing scripts requires a lot of domain knowledge,
     //  we should offload the work of synthesizing the code to a separate model.

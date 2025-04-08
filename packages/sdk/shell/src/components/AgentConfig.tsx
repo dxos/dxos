@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowsClockwise, Database, Plus, Power } from '@phosphor-icons/react';
+import { ArrowsClockwise, Plus, Power } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Avatar, Button, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
@@ -36,17 +36,13 @@ export const AgentConfig = ({
             className='mlb-2 flex gap-2 items-center'
             aria-describedby='devices-panel.create-agent.description'
           >
-            <Avatar.Root status={agentStatus === 'created' ? 'warning' : 'inactive'} variant='square'>
-              <Avatar.Frame classNames='place-self-center'>
-                <Database
-                  weight='duotone'
-                  width={24}
-                  height={24}
-                  x={8}
-                  y={8}
-                  {...(agentStatus !== 'created' && { className: 'opacity-50' })}
-                />
-              </Avatar.Frame>
+            <Avatar.Root>
+              <Avatar.Content
+                status={agentStatus === 'created' ? 'warning' : 'inactive'}
+                variant='square'
+                classNames={['place-self-center', agentStatus !== 'created' && 'opactiy-50']}
+                icon='ph--database--duotone'
+              />
               <Avatar.Label classNames='flex-1 text-sm truncate'>
                 {t(
                   agentStatus === 'created'
