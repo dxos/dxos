@@ -1,14 +1,13 @@
 .message {
-  @apply grid grid-cols-[var(--rail-size)_1fr] gap-2;
+  @apply grid grid-cols-[var(--rail-action)_1fr] gap-2;
 
   .message__thumb {}
   .message__abstract {
     @apply min-is-0;
-    p { @apply truncate; }
-  }
-  .message__abstract__row {
-    @apply flex gap-2;
-    span:first-child { flex: 1 1 0; @apply truncate; }
-    span:last-child { @apply truncate; }
+    p { @apply truncate text-sm text-description; }
+    h3 {
+      @apply flex gap-2 text-sm;
+      span:first-child { flex: 1 1 0; @apply text-base font-medium truncate; }
+    }
   }
 }

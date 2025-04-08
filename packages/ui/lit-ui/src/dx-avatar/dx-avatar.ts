@@ -16,7 +16,7 @@ export type AvatarVariant = 'square' | 'circle';
 export type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
 export type AvatarAnimation = 'pulse' | 'none';
 
-const rx = '0.25rem';
+const rx = '0.2rem';
 
 export type DxAvatarProps = Partial<
   Pick<
@@ -30,6 +30,7 @@ export type DxAvatarProps = Partial<
     | 'status'
     | 'animation'
     | 'hue'
+    | 'hueVariant'
     | 'size'
     | 'icon'
     | 'rootClassName'
@@ -73,6 +74,9 @@ export class DxAvatar extends LitElement {
   hue: string | undefined = undefined;
 
   @property({ type: String })
+  hueVariant: 'fill' | 'surface' = 'fill';
+
+  @property({ type: String })
   size: Size = 10;
 
   @property({ type: String })
@@ -111,6 +115,12 @@ export class DxAvatar extends LitElement {
     const r = sizePx / 2 - ringGap - ringWidth;
     const isTextOnly = Boolean(this.fallback && /[0-9a-zA-Z]+/.test(this.fallback));
     const fontScale = (isTextOnly ? 3 : 3.6) * (1 / 1.612);
+    const bg = this.hue
+      ? this.hueVariant === 'surface'
+        ? `var(--dx-${this.hue}Surface)`
+        : `var(--dx-${this.hue}Fill)`
+      : 'var(--surface-bg)';
+    const fg = this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-inverse)';
     return html`<span
       role="img"
       class=${`dx-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
@@ -135,8 +145,8 @@ export class DxAvatar extends LitElement {
                   fill="white"
                   width=${2 * r}
                   height=${2 * r}
-            x=${ringGap + ringWidth}
-            y=${ringGap + ringWidth}
+                  x=${ringGap + ringWidth}
+                  y=${ringGap + ringWidth}
                   rx=${rx}
                 />`
             }
@@ -148,10 +158,10 @@ export class DxAvatar extends LitElement {
               cx="50%"
               cy="50%"
               r=${r}
-              fill=${this.hue ? `var(--dx-${this.hue}Fill)` : 'var(--surface-bg)'}
+              fill=${bg}
             />`
             : svg` <rect
-              fill=${this.hue ? `var(--dx-${this.hue}Fill)` : 'var(--surface-bg)'}
+              fill=${bg}
               x=${ringGap + ringWidth}
               y=${ringGap + ringWidth}
               width=${2 * r}
@@ -185,6 +195,7 @@ export class DxAvatar extends LitElement {
                 x="50%"
                 y="50%"
                 class="dx-avatar__fallback-text"
+                fill=${fg}
                 text-anchor="middle"
                 alignment-baseline="central"
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}

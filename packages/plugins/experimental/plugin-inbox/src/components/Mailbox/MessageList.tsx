@@ -13,7 +13,7 @@ import { AttentionGlyph, useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, type DxGridPlaneCells, Grid, toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { fixedBorder, focusRing, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 import { type MessageType } from '@dxos/schema';
-import { getFirstTwoRenderableChars } from '@dxos/util';
+import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
 import { INBOX_PLUGIN } from '../../meta';
 import { styles } from '../styles';
@@ -31,11 +31,18 @@ export type MessageListProps = {
 };
 
 const messageRowDefault = {
-  grid: { size: 100 },
+  grid: { size: 56 },
 };
 
 const messageColumnDefault = {
   grid: { size: 100 },
+};
+
+const hashString = (str?: string): number => {
+  if (!str) {
+    return 0;
+  }
+  return Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0));
 };
 
 const renderMessageCell = (message: MessageType, now: Date) => {
@@ -43,9 +50,10 @@ const renderMessageCell = (message: MessageType, now: Date) => {
   const date = formatDate(now, message.created ? new Date(message.created) : new Date());
   const from = message.sender?.name ?? message.sender?.email;
   const subject = message.properties?.subject ?? text;
+  const hue = toHue(hashString(from));
 
   return `<div class="message__thumb" role="none"
-    ><dx-avatar hue="neutral" variant="square" fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"></dx-avatar
+    ><dx-avatar hue=${hue} variant="square" hueVariant="surface" fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"></dx-avatar
   ></div><div class="message__abstract" role="none"
     ><h3 class="message__abstract__row" role="none"><span>${from}</span><span>${date}</span></h3
     ><p>${subject}</p
@@ -69,7 +77,7 @@ export const MessageList = ({
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
 
   const handleResize = useCallback<OnResizeCallback>(
-    ({ width }) => width && setColumnDefault({ grid: { size: width - 1 } }),
+    ({ width }) => width && setColumnDefault({ grid: { size: width } }),
     [],
   );
 
@@ -146,7 +154,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
 
   const text = message.blocks.find((block) => block.type === 'text')?.text;
   const date = message.created ? new Date(message.created) : new Date();
-  const from = message.sender?.name ?? message.sender?.email;
+  const from = message.sender?.name ?? `${message.sender?.email} (${hashString(message.sender?.email)})`;
   const subject = message.properties?.subject ?? text;
   const now = new Date();
 
