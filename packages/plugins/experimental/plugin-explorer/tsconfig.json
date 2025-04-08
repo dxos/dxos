@@ -74,10 +74,10 @@
       "path": "../../plugin-graph"
     },
     {
-      "path": "../../plugin-space"
+      "path": "../../plugin-outliner"
     },
     {
-      "path": "../plugin-outliner"
+      "path": "../../plugin-space"
     },
     {
       "path": "../plugin-search"
