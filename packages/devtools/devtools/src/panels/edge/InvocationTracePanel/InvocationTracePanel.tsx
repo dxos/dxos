@@ -17,7 +17,7 @@ import {
 } from '@dxos/functions/types';
 import { type DXN } from '@dxos/keys';
 import { Filter, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
-import { Tag, Toolbar } from '@dxos/react-ui';
+import { IconButton, Tag, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -116,18 +116,26 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   }, [selectedInvocation]);
 
   return (
-    <PanelContainer toolbar={<Toolbar.Root>{!props.space && <DataSpaceSelector />}</Toolbar.Root>}>
+    <PanelContainer
+      toolbar={
+        !props.space && (
+          <Toolbar.Root classNames='border-be border-separator'>
+            <DataSpaceSelector />
+          </Toolbar.Root>
+        )
+      }
+    >
       <div className={mx('bs-full', gridLayout)}>
-        <div>
-          <DynamicTable
-            properties={invocationProperties}
-            data={invocationData}
-            onRowClicked={handleInvocationRowClicked}
-          />
-        </div>
+        <DynamicTable
+          properties={invocationProperties}
+          data={invocationData}
+          onRowClicked={handleInvocationRowClicked}
+        />
         {selectedInvocation && (
-          <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-is border-bs border-separator'>
-            <SpanSummary span={selectedInvocation} />
+          <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-is border-separator'>
+            <div>
+              <SpanSummary span={selectedInvocation} space={space} onClose={() => setSelectedId(undefined)} />
+            </div>
             <Tabs.Root
               orientation='horizontal'
               value={activeTab}
@@ -162,9 +170,9 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   );
 };
 
-type SpanSummaryProps = { span: InvocationSpan };
+type SpanSummaryProps = { span: InvocationSpan; space?: Space; onClose: () => void };
 
-export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
+export const SpanSummary: React.FC<SpanSummaryProps> = ({ span, space, onClose }) => {
   const [currentDuration, setCurrentDuration] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -183,11 +191,9 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
     return () => clearInterval(interval);
   }, [span]);
 
-  const targetDxn = useMemo(
-    () => decodeReference(span.invocationTarget).dxn?.toString() ?? 'unknown',
-    [span.invocationTarget],
-  );
-  const targetName = useMemo(() => targetDxn.split(':').pop() ?? 'unknown', [targetDxn]);
+  const targetDxn = useMemo(() => decodeReference(span.invocationTarget).dxn, [span.invocationTarget]);
+  const resolver = useScriptNameResolver({ space });
+  const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
 
   const timestamp = useMemo(() => new Date(span.timestampMs).toLocaleString(), [span.timestampMs]);
   const isInProgress = useMemo(() => span.outcome === 'in-progress', [span.outcome]);
@@ -208,16 +214,17 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
 
   return (
     <div className={mx('p-2 overflow-auto')}>
-      <div className={mx('flex justify-between items-start')}>
-        <div>
+      <div className={mx('is-flex justify-between items-start')}>
+        <div className='is-full flex flex-row justify-between'>
           <h3 className={mx('text-lg font-medium mb-1')}>{targetName}</h3>
-          <div className={mx('flex gap-2 items-center')}>
-            <Tag palette={outcomeColor}>{outcomeLabel}</Tag>
-            <span className={mx('text-sm text-neutral')}>{timestamp}</span>
-            <span className={mx('text-sm')}>
-              {currentDuration ? formatDuration(currentDuration) : formatDuration(span.durationMs)}
-            </span>
-          </div>
+          <IconButton icon='ph--x--regular' iconOnly label='Close panel' onClick={onClose} />
+        </div>
+        <div className={mx('flex gap-2 items-center')}>
+          <Tag palette={outcomeColor}>{outcomeLabel}</Tag>
+          <span className={mx('text-sm text-neutral')}>{timestamp}</span>
+          <span className={mx('text-sm')}>
+            {currentDuration ? formatDuration(currentDuration) : formatDuration(span.durationMs)}
+          </span>
         </div>
 
         {span.trigger && (
