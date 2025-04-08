@@ -92,7 +92,7 @@ const main = async () => {
         </Tooltip.Provider>
       </ThemeProvider>
     ),
-    placeholder: <Placeholder />,
+    placeholder: Placeholder,
     plugins: plugins(conf),
     core: core(conf),
     defaults: defaults(conf),

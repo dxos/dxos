@@ -4,11 +4,11 @@
 
 import React from 'react';
 
+import { Composer } from '@dxos/brand';
 import { Status, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Create skeleton.
-export const Placeholder = () => {
+export const Placeholder = ({ stage }: { stage: number }) => {
   // This is used to test the error boundary & reset dialog.
   if (location.search === '?throw') {
     throw new Error('Test error');
@@ -16,7 +16,16 @@ export const Placeholder = () => {
 
   return (
     <ThemeProvider tx={defaultTx}>
-      <div className='flex flex-col justify-end bs-dvh'>
+      <div className='flex flex-col bs-dvh'>
+        <div className='flex flex-col grow justify-center items-center'>
+          <Composer
+            className={mx(
+              'w-[256px] h-[256px] transition-all duration-500 ease-in-out filter grayscale opacity-0',
+              stage >= 1 && 'grayscale-0 opacity-20',
+              stage >= 2 && 'opacity-0',
+            )}
+          />
+        </div>
         <Status variant='main-bottom' indeterminate aria-label='Initializing' />
       </div>
     </ThemeProvider>
