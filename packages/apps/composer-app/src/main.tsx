@@ -49,11 +49,9 @@ const main = async () => {
     config = await setupConfig();
   }
 
-  // Intentionally do not await, don't block app startup for telemetry.
-  // namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
+  // Intentionally do not await; i.e., don't block app startup for telemetry.
+  // The namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
   const observability = initializeAppObservability({ namespace: appKey, config, replayEnable: true });
-
-  // TODO(nf): refactor.
   const observabilityDisabled = await isObservabilityDisabled(appKey);
   const observabilityGroup = await getObservabilityGroup(appKey);
 
@@ -92,7 +90,7 @@ const main = async () => {
         </Tooltip.Provider>
       </ThemeProvider>
     ),
-    placeholder: <Placeholder />,
+    placeholder: Placeholder,
     plugins: plugins(conf),
     core: core(conf),
     defaults: defaults(conf),

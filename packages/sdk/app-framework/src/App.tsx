@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { useEffect, useState, type FC, type PropsWithChildren } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
@@ -21,7 +21,7 @@ export type CreateAppOptions = {
   plugins?: Plugin[];
   core?: string[];
   defaults?: string[];
-  placeholder?: ReactNode;
+  placeholder?: FC<{ stage: number }>;
   fallback?: ErrorBoundary['props']['fallback'];
   cacheEnabled?: boolean;
 };
@@ -56,7 +56,7 @@ export const createApp = ({
   plugins = [],
   core = plugins.map(({ meta }) => meta.id),
   defaults = [],
-  placeholder = null,
+  placeholder,
   fallback = DefaultFallback,
   cacheEnabled = false,
 }: CreateAppOptions) => {
@@ -110,22 +110,79 @@ export const createApp = ({
   );
 };
 
-type AppProps = Required<Pick<CreateAppOptions, 'placeholder'>> & {
+const DELAY_PLACEHOLDER = 2_000;
+
+enum LoadingState {
+  Loading = 0,
+  FadeIn = 1,
+  FadeOut = 2,
+  Done = 3,
+}
+
+/**
+ * To avoid "flashing" the placeholder, we wait a period of time before starting the loading animation.
+ * If loading completes during this time the placehoder is not shown, otherwise is it displayed for a minimum period of time.
+ *
+ * States:
+ * 0: Loading   - Wait for a period of time before starting the loading animation.
+ * 1: Fade-in   - Display a loading animation.
+ * 2: Fade-out  - Fade out the loading animation.
+ * 3: Done      - Remove the placeholder.
+ */
+const useLoading = (state: AppProps['state']) => {
+  const [stage, setStage] = useState<LoadingState>(LoadingState.Loading);
+  useEffect(() => {
+    const i = setInterval(() => {
+      setStage((tick) => {
+        switch (tick) {
+          case LoadingState.Loading:
+            if (!state.ready) {
+              return LoadingState.FadeIn;
+            } else {
+              clearInterval(i);
+              return LoadingState.Done;
+            }
+          case LoadingState.FadeIn:
+            if (state.ready) {
+              return LoadingState.FadeOut;
+            }
+            break;
+          case LoadingState.FadeOut:
+            clearInterval(i);
+            return LoadingState.Done;
+        }
+
+        return tick;
+      });
+    }, DELAY_PLACEHOLDER);
+
+    return () => clearInterval(i);
+  }, []);
+
+  return stage;
+};
+
+type AppProps = Pick<CreateAppOptions, 'placeholder'> & {
   state: { ready: boolean; error: unknown };
 };
 
-const App = ({ placeholder, state }: AppProps) => {
+const App = ({ placeholder: Placeholder, state }: AppProps) => {
   const reactContexts = useCapabilities(Capabilities.ReactContext);
   const reactRoots = useCapabilities(Capabilities.ReactRoot);
+  const stage = useLoading(state);
 
   if (state.error) {
-    // This trigger the error boundary to provide UI feedback for the startup error.
+    // This triggers the error boundary to provide UI feedback for the startup error.
     throw state.error;
   }
 
   // TODO(wittjosiah): Consider using Suspense instead?
-  if (!state.ready) {
-    return <>{placeholder}</>;
+  if (stage < LoadingState.Done) {
+    if (!Placeholder) {
+      return null;
+    }
+
+    return <Placeholder stage={stage} />;
   }
 
   const ComposedContext = composeContexts(reactContexts);
