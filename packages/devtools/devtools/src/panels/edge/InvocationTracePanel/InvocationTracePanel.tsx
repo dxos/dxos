@@ -27,34 +27,19 @@ import { PanelContainer, Placeholder } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
-type InvocationTracePanelProps = {
+export type InvocationTracePanelProps = {
   space?: Space;
   script?: ScriptType;
+  detailAxis?: 'block' | 'inline';
 };
 
 export const InvocationTracePanel = (props: InvocationTracePanelProps) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-  const functionsForScript = useInvocationTargetsForScript(props?.script);
-  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
-    pollInterval: 1000,
-  });
 
-  const invocationSpans = useMemo(() => createInvocationSpans(invocationsQueue?.items), [invocationsQueue?.items]);
-  const scopedInvocationSpans = useMemo(() => {
-    if (functionsForScript) {
-      return invocationSpans.filter((span) => {
-        const targetId = decodeReference(span.invocationTarget).dxn?.toString();
-        const dxnParts = targetId?.toString().split(':');
-        const uuidPart = dxnParts?.at(-1);
-        return uuidPart ? functionsForScript?.has(uuidPart) : false;
-      });
-    }
-    return invocationSpans;
-  }, [invocationSpans]);
+  const invocationSpans = useInvocationSpans({ space: props.space, script: props.script });
 
   const [selectedId, setSelectedId] = useState<string>();
-
   const selectedInvocation = useMemo(() => {
     if (!selectedId) {
       return undefined;
@@ -89,7 +74,7 @@ export const InvocationTracePanel = (props: InvocationTracePanelProps) => {
   );
 
   const invocationData = useMemo(() => {
-    return scopedInvocationSpans.map((invocation) => {
+    return invocationSpans.map((invocation) => {
       let status = 'unknown';
       if (invocation.outcome === 'in-progress') {
         status = 'in-progress';
@@ -502,6 +487,27 @@ const useInvocationTargetsForScript = (script: ScriptType | undefined) => {
 
     return new Set(functions.filter((func) => func.source?.target?.id === script.id).map((func) => func.name));
   }, [functions, script]);
+};
+
+const useInvocationSpans = ({ space, script }: { space?: Space; script?: ScriptType }) => {
+  const functionsForScript = useInvocationTargetsForScript(script);
+  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
+    pollInterval: 1000,
+  });
+  const invocationSpans = useMemo(() => createInvocationSpans(invocationsQueue?.items), [invocationsQueue?.items]);
+  const scopedInvocationSpans = useMemo(() => {
+    if (functionsForScript) {
+      return invocationSpans.filter((span) => {
+        const targetId = decodeReference(span.invocationTarget).dxn?.toString();
+        const dxnParts = targetId?.toString().split(':');
+        const uuidPart = dxnParts?.at(-1);
+        return uuidPart ? functionsForScript?.has(uuidPart) : false;
+      });
+    }
+    return invocationSpans;
+  }, [invocationSpans]);
+
+  return scopedInvocationSpans;
 };
 
 const formatDuration = (duration: number): string => {
