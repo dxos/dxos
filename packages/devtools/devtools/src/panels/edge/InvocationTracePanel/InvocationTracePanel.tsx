@@ -222,9 +222,7 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span, space, onClose }
         <div className={mx('flex gap-2 items-center')}>
           <Tag palette={outcomeColor}>{outcomeLabel}</Tag>
           <span className={mx('text-sm text-neutral')}>{timestamp}</span>
-          <span className={mx('text-sm')}>
-            {currentDuration ? formatDuration(currentDuration) : formatDuration(span.durationMs)}
-          </span>
+          <span className={mx('text-sm')}>{currentDuration && `${formatDuration(currentDuration)}s`}</span>
         </div>
 
         {span.trigger && (
