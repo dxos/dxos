@@ -68,7 +68,7 @@ export type ObservabilityOptions = {
  *
  * Testing:
  * https://app.segment.com/dxos/sources/composer-app/settings/keys
- * - DX_TELEMETRY_API_KEY=XXX
+ * - DX_TELEMETRY_API_KEY
  * - DX_SENTRY_DESTINATION
  *
  * Sentry:
@@ -157,7 +157,6 @@ export class Observability {
 
       process.env.DX_ENVIRONMENT && (mergedSecrets.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT);
       process.env.DX_RELEASE && (mergedSecrets.DX_RELEASE = process.env.DX_RELEASE);
-      // TODO: prefix these with DX_?
       process.env.SENTRY_DESTINATION && (mergedSecrets.SENTRY_DESTINATION = process.env.SENTRY_DESTINATION);
       process.env.TELEMETRY_API_KEY && (mergedSecrets.TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY);
       process.env.IPDATA_API_KEY && (mergedSecrets.IPDATA_API_KEY = process.env.IPDATA_API_KEY);
@@ -241,6 +240,7 @@ export class Observability {
           log('empty response from identity service', { idqr });
           return;
         }
+
         this.setTag('did', idqr.identity.did);
       });
     }
@@ -251,13 +251,14 @@ export class Observability {
           log('empty response from device service', { device: dqr });
           return;
         }
-        invariant(dqr, 'empty response from device service');
 
+        invariant(dqr, 'empty response from device service');
         const thisDevice = dqr.devices.find((device) => device.kind === DeviceKind.CURRENT);
         if (!thisDevice) {
           log('no current device', { device: dqr });
           return;
         }
+
         this.setTag('deviceKey', thisDevice.deviceKey.truncate());
         if (thisDevice.profile?.label) {
           this.setTag('deviceProfile', thisDevice.profile.label);
