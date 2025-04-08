@@ -4345,6 +4345,9 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
@@ -6047,6 +6050,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../../core/echo/live-object
@@ -6068,9 +6074,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
-      '@dxos/react-ui-grid':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-grid
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
@@ -6089,9 +6092,6 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-      react-resize-detector:
-        specifier: ^12.0.2
-        version: 12.0.2(react@18.2.0)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

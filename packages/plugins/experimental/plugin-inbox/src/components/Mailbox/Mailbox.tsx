@@ -4,8 +4,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
+import { useQueue } from '@dxos/react-client/echo';
 import { type MessageType } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
 import { type MailboxType, MessageState } from '../../types';
@@ -37,14 +37,15 @@ export type MailboxProps = { mailbox: MailboxType; options?: MailboxOptions };
 
 export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   const [selected, setSelected] = useState<string>();
+  const queue = useQueue<MessageType>(mailbox.queue.dxn, { pollInterval: 1_000 });
   const tRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
     clearTimeout(tRef.current);
     if (selected) {
       tRef.current = setTimeout(() => {
-        const object = mailbox?.messages?.find((message) => message.target?.id === selected);
-        if (object?.target?.properties) {
-          setMessageProperty(object.target, 'read', true);
+        const object = queue?.items?.find((message) => message.id === selected);
+        if (object?.properties) {
+          setMessageProperty(object, 'read', true);
         }
       }, options?.readTimout ?? DEFAULT_READ_TIMEOUT);
     }
@@ -52,9 +53,7 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     return () => clearTimeout(tRef.current);
   }, [selected]);
 
-  const messages = [...(mailbox.messages ?? [])]
-    .map((message) => message.target)
-    .filter(isNonNullable) // TODO(burdon): [SDK] Why is filter needed?
+  const messages = [...(queue?.items ?? [])]
     .filter(
       (message) =>
         message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,
