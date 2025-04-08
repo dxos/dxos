@@ -47,7 +47,7 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
   };
 
   const handleAdd = () => {
-    setTrigger(create(FunctionTriggerSchema, { meta: {} }));
+    setTrigger(create(FunctionTriggerSchema, {}));
     setSelected(undefined);
   };
 

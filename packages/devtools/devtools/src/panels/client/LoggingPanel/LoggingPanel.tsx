@@ -92,11 +92,12 @@ export const LoggingPanel = () => {
 
   const presets = useMemo(
     () => [
-      { value: 'verbose', label: 'Verbose' },
-      { value: 'debug', label: 'Debug' },
-      { value: 'info', label: 'Info' },
-      { value: 'warn', label: 'Warn' },
-      { value: 'error', label: 'Error' },
+      { value: 'verbose', label: 'Verbose (all)' },
+      { value: 'debug', label: 'Debug (all)' },
+      { value: 'info', label: 'Info (all)' },
+      { value: 'warn', label: 'Warn (all)' },
+      { value: 'error', label: 'Error (all)' },
+      { value: 'info,echo-edge-replicator:debug', label: 'Debug EDGE Replication' },
     ],
     [],
   );
@@ -105,6 +106,7 @@ export const LoggingPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
+          {/* TODO(wittjosiah): Reset selection value when typing manually in the searchbar. */}
           <Select items={presets} onValueChange={onSearchChange} />
           <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={onSearchChange} />
           <Toolbar.Button onClick={() => setLogs([])}>

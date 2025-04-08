@@ -22,9 +22,9 @@ export default [
         'trigger copy url': 'Copy URL',
         'trigger copy email': 'Copy Email',
 
-        'trigger meta add': 'Add',
-        'trigger meta remove': 'Remove',
-        'trigger meta prop name placeholder': 'New meta property name',
+        'trigger payload add': 'Add',
+        'trigger payload remove': 'Remove',
+        'trigger payload prop name placeholder': 'New payload property name',
       },
     },
   },

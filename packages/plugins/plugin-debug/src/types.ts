@@ -21,7 +21,6 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 
 export const DebugSettingsSchema = S.mutable(
   S.Struct({
-    debug: S.optional(S.Boolean),
     wireframe: S.optional(S.Boolean),
   }),
 );

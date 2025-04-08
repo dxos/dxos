@@ -2,9 +2,9 @@
 @import './dx-grid-multiselect-cell.pcss';
 
 @layer tokens {
-  :root{
-    --dx-grid-cell-padding-block: .25rem;
-    --dx-grid-cell-padding-inline: .5rem;
+  :root {
+    --dx-grid-cell-padding-block: 0.2rem;
+    --dx-grid-cell-padding-inline: 0.25rem;
   }
 }
 
@@ -46,7 +46,7 @@
     }
 
     &:focus-visible::after {
-      content: "";
+      content: '';
       position: absolute;
       inset: 0;
       pointer-events: none;
@@ -63,7 +63,9 @@
   }
 
   .dx-grid {
-    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+    [role='gridcell'],
+    [role='columnheader'],
+    [role='rowheader'] {
       position: relative;
       background: var(--dx-grid-base, var(--dx-baseSurface));
       /** This must match CellEditor styling in `CellEditor.tsx`. */
@@ -75,11 +77,12 @@
       white-space: nowrap;
       cursor: pointer;
 
-      &[aria-readonly='true']{
+      &[aria-readonly='true'] {
         cursor: text;
       }
 
-      &:focus:not([aria-readonly='true']), &:focus-visible {
+      &:focus:not([aria-readonly='true']),
+      &:focus-visible {
         z-index: 2;
         border-color: var(--dx-accentSurface);
         outline: none;
@@ -91,7 +94,9 @@
     }
 
     &[data-grid-select] {
-      [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+      [role='gridcell'],
+      [role='columnheader'],
+      [role='rowheader'] {
         &[aria-selected] {
           background: var(--dx-gridSelectionOverlay);
         }
@@ -100,7 +105,9 @@
   }
 
   .dx-grid-host:focus-within .dx-grid:not(:focus-within) {
-    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+    [role='gridcell'],
+    [role='columnheader'],
+    [role='rowheader'] {
       &[data-dx-active]:not([aria-readonly='true']) {
         border-color: var(--dx-accentSurface);
       }
@@ -114,10 +121,10 @@
     inset: 0;
     display: grid;
     gap: var(--dx-grid-gap);
-    background: rgba(255, 0, 0, .1);
+    background: rgba(255, 0, 0, 0.1);
 
     & .dx-grid-layer--presentation__cell {
-      background: rgba(0, 255, 0, .1);
+      background: rgba(0, 255, 0, 0.1);
     }
   }
 }

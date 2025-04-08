@@ -8,7 +8,6 @@ export type FunctionInvocation = {
 
   /**
    * Runtime name.
-   * Example: dev, faas
    */
   runtime: string;
 

@@ -27,7 +27,7 @@ import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin, NATIVE_PLUGIN } from '@dxos/plugin-native';
 import { NavTreePlugin, NAVTREE_PLUGIN } from '@dxos/plugin-navtree';
 import { ObservabilityPlugin, OBSERVABILITY_PLUGIN } from '@dxos/plugin-observability';
-import { OutlinerPlugin } from '@dxos/plugin-outliner';
+import { OutlinerPlugin, OUTLINER_PLUGIN } from '@dxos/plugin-outliner';
 import { PresenterPlugin } from '@dxos/plugin-presenter';
 import { PwaPlugin, PWA_PLUGIN } from '@dxos/plugin-pwa';
 import { RegistryPlugin, REGISTRY_PLUGIN } from '@dxos/plugin-registry';
@@ -97,6 +97,7 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     // Default
     MARKDOWN_PLUGIN,
     MEETING_PLUGIN,
+    OUTLINER_PLUGIN,
     SHEET_PLUGIN,
     SKETCH_PLUGIN,
     TABLE_PLUGIN,

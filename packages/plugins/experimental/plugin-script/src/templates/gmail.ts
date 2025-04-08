@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { createStatic, defineFunction, DXN, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
+import { createStatic, defineFunction, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
 import {
   HttpClient,
   HttpClientRequest,
@@ -22,7 +22,7 @@ export default defineFunction({
     userId: S.optional(S.String),
     after: S.optional(S.Union(S.Number, S.String)),
     pageSize: S.optional(S.Number),
-    queueId: S.String,
+    mailboxId: S.String,
   }),
 
   outputSchema: S.Struct({
@@ -31,7 +31,7 @@ export default defineFunction({
 
   handler: ({
     event: {
-      data: { queueId, userId = 'me', after = DEFAULT_AFTER, pageSize = 100 },
+      data: { mailboxId, userId = 'me', after = DEFAULT_AFTER, pageSize = 100 },
     },
     context: { space },
   }: any) =>
@@ -61,8 +61,12 @@ export default defineFunction({
       const getMessage = (userId: string, id: string) =>
         makeRequest(`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages/${id}`);
 
+      const mailbox = yield* Effect.tryPromise({
+        try: () => space.db.query({ id: mailboxId }).first(),
+        catch: (e: any) => e,
+      });
       const { objects } = yield* Effect.tryPromise({
-        try: () => space.queues.queryQueue(DXN.parse(queueId)),
+        try: () => space.queues.queryQueue(mailbox.queue.dxn),
         catch: (e: any) => e,
       });
       const newMessages = yield* Ref.make([]);
@@ -120,7 +124,7 @@ export default defineFunction({
           Stream.grouped(10),
           Stream.flatMap((batch: any) =>
             Effect.tryPromise({
-              try: () => space.queues.insertIntoQueue(DXN.parse(queueId), Chunk.toReadonlyArray(batch)),
+              try: () => space.queues.insertIntoQueue(mailbox.queue.dxn, Chunk.toReadonlyArray(batch)),
               catch: (e: any) => e,
             }),
           ),

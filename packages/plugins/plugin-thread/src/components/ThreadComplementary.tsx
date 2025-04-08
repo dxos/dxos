@@ -92,7 +92,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
       thread.messages.push(
         makeRef(
           create(MessageType, {
-            sender: { identityKey: identity?.identityKey.toHex() },
+            sender: { identityDid: identity?.did },
             created: new Date().toISOString(),
             blocks: [{ type: 'text', text: message }],
             // TODO(wittjosiah): Context based on attention.

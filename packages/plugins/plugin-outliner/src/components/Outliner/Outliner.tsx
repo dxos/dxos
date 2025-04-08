@@ -117,7 +117,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
             const created = onCreate?.();
             if (created) {
               const idx = nodes.findIndex((n) => n.id === node.id);
-              model.addNode(parent, created, idx + 1);
+              model.addNode(parent, created, idx + (event.direction === 'previous' ? 0 : 1));
               setActive(created.id);
             }
             break;

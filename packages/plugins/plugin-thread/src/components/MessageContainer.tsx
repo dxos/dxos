@@ -43,10 +43,12 @@ export const MessageContainer = ({
   onDelete?: (id: string) => void;
 }) => {
   const senderIdentity = members.find(
-    (member) => message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey),
+    (member) =>
+      (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
+      (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
   )?.identity;
   const messageMetadata = getMessageMetadata(message.id, senderIdentity);
-  const userIsAuthor = useIdentity()?.identityKey.toHex() === messageMetadata.authorId;
+  const userIsAuthor = useIdentity()?.did === messageMetadata.authorId;
   const [editing, setEditing] = useState(false);
   const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
   const { t } = useTranslation(THREAD_PLUGIN);

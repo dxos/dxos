@@ -14,6 +14,7 @@ export namespace InboxAction {
 
   export class CreateMailbox extends S.TaggedClass<CreateMailbox>()(`${INBOX_ACTION}/create-mailbox`, {
     input: S.Struct({
+      spaceId: S.String,
       name: S.optional(S.String),
     }),
     output: S.Struct({

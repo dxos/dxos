@@ -13,6 +13,8 @@ import {
 
 import { TableType } from '..';
 
+// TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance
+//   schema-tools schema creation.
 type PropertyDisplayProps = {
   size: number;
   title: string;

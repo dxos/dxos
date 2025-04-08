@@ -153,7 +153,7 @@ export class FunctionContext {
       });
     }
 
-    log('invoke', { cell, name, args, cache: value });
+    log.info('invoke', { cell, name, args, cache: value });
     return value;
   }
 }

@@ -348,7 +348,7 @@ export class SheetModel extends Resource {
     const value = this._node.graph.hf.getCellValue(address);
     if (value instanceof DetailedCellError) {
       // TODO(wittjosiah): Error details should be shown in cell `title`.
-      log.info('cell error', { cell, error: value });
+      log.warn('cell error', { cell, error: value });
       return value.toString();
     }
 

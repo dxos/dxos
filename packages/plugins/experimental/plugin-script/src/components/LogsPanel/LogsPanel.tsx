@@ -37,13 +37,13 @@ export const LogsPanel = ({ script, classNames }: LogsPanelProps) => {
   const [selected, setSelected] = useState<InvocationSpan>();
   const workerDxn = `dxn:worker:${existingFunctionUrl?.split('/').at(-1)}`;
 
-  if (!invocationTraceQueue) {
-    return <div>{t('no invocations message')}</div>;
-  }
-
   const handleOpenChange = useCallback((trace: InvocationSpan, open: boolean) => {
     setSelected(open ? trace : undefined);
   }, []);
+
+  if (!invocationTraceQueue) {
+    return <div className='p-1'>{t('no invocations message')}</div>;
+  }
 
   return (
     <List classNames={mx('overflow-y-auto', classNames)}>

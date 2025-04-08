@@ -49,6 +49,7 @@ export type NodeEditorEvent =
   | {
       type: 'create';
       node: TreeNodeType;
+      direction?: 'previous' | 'next';
     }
   | {
       type: 'delete';
@@ -130,8 +131,12 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
             keymap.of([
               {
                 key: 'Enter',
-                run: () => {
-                  onEvent?.({ type: 'create', node });
+                run: (view) => {
+                  onEvent?.({
+                    type: 'create',
+                    node,
+                    direction: view.state.selection.main.from === 0 ? 'previous' : 'next',
+                  });
                   return true;
                 },
                 shift: (view) => {

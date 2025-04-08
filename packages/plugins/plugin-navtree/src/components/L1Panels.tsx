@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
-import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
@@ -36,24 +36,20 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='flex items-center border-be border-separator pis-4 app-drag'>
-            {item.properties.disposition === 'pin-end' && (
-              <IconButton
-                label={t('back label')}
-                iconOnly
-                icon='ph--caret-left--regular'
-                size={5}
-                density='fine'
-                variant='ghost'
-                classNames={mx(
-                  'shrink-0 mie-2 !p-0',
-                  'pointer-fine:pli-1',
-                  hoverableControlItem,
-                  hoverableOpenControlItem,
-                )}
-                onClick={onBack}
-              />
-            )}
+          <h2 className='flex items-center border-be border-separator app-drag'>
+            <Button
+              variant='ghost'
+              density='fine'
+              classNames={mx(
+                'is-6 pli-0 dx-focus-ring-inset',
+                item.properties.disposition !== 'pin-end' && 'invisible',
+                hoverableControlItem,
+                hoverableOpenControlItem,
+              )}
+              onClick={onBack}
+            >
+              <Icon icon='ph--caret-left--regular' size={3} />
+            </Button>
             <span className='flex-1 truncate cursor-default'>{toLocalizedString(item.properties.label, t)}</span>
             <NavTreeItemColumns path={path} item={item} open />
           </h2>
