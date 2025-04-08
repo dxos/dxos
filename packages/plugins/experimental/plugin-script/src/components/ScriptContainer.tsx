@@ -66,7 +66,7 @@ export const ScriptContainer = ({
   return (
     <StackItem.Content toolbar={variant !== 'logs'}>
       {variant === 'logs' ? (
-        <InvocationTracePanel space={space} script={script} />
+        <InvocationTracePanel space={space} script={script} detailAxis='block' />
       ) : (
         <>
           <ScriptToolbar state={state} role={role} script={script} />

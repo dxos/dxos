@@ -27,7 +27,7 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
   // Define properties for the DynamicTable
   const logProperties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'time', title: 'Time', format: FormatEnum.DateTime, sort: 'desc' as const, size: 200 },
+      { name: 'Invoked at', title: 'Time', format: FormatEnum.DateTime, sort: 'desc' as const, size: 210 },
       {
         name: 'level',
         title: 'Level',

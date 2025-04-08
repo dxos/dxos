@@ -29,7 +29,7 @@ export type InvocationTracePanelProps = {
   detailAxis?: 'block' | 'inline';
 };
 
-export const InvocationTracePanel = (props: InvocationTracePanelProps) => {
+export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: InvocationTracePanelProps) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
 
@@ -45,29 +45,35 @@ export const InvocationTracePanel = (props: InvocationTracePanelProps) => {
 
   const resolver = useScriptNameResolver({ space });
 
-  const invocationProperties: TablePropertyDefinition[] = useMemo(
-    () => [
-      { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 },
-      { name: 'time', title: 'Time', format: FormatEnum.DateTime, sort: 'desc' as const, size: 210 },
-      {
-        name: 'status',
-        title: 'Status',
-        format: FormatEnum.SingleSelect,
-        size: 110,
-        config: {
-          options: [
-            { id: 'in-progress', title: 'In Progress', color: 'blue' },
-            { id: 'success', title: 'Success', color: 'emerald' },
-            { id: 'failure', title: 'Failure', color: 'red' },
-            { id: 'unknown', title: 'Unknown', color: 'neutral' },
-          ],
+  const invocationProperties: TablePropertyDefinition[] = useMemo(() => {
+    function* generateProperties() {
+      if (props.script === undefined) {
+        yield { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 };
+      }
+
+      yield* [
+        { name: 'time', title: 'Invoked at', format: FormatEnum.DateTime, sort: 'desc' as const, size: 210 },
+        {
+          name: 'status',
+          title: 'Status',
+          format: FormatEnum.SingleSelect,
+          size: 110,
+          config: {
+            options: [
+              { id: 'in-progress', title: 'In Progress', color: 'blue' },
+              { id: 'success', title: 'Success', color: 'emerald' },
+              { id: 'failure', title: 'Failure', color: 'red' },
+              { id: 'unknown', title: 'Unknown', color: 'neutral' },
+            ],
+          },
         },
-      },
-      { name: 'duration', title: 'Duration', format: FormatEnum.Duration, size: 110 },
-      { name: 'queue', title: 'Queue', format: FormatEnum.String },
-    ],
-    [],
-  );
+        { name: 'duration', title: 'Duration', format: FormatEnum.Duration, size: 110 },
+        { name: 'queue', title: 'Queue', format: FormatEnum.String },
+      ];
+    }
+
+    return [...generateProperties()];
+  }, [props.script]);
 
   const invocationData = useMemo(() => {
     return invocationSpans.map((invocation) => {
@@ -105,10 +111,16 @@ export const InvocationTracePanel = (props: InvocationTracePanelProps) => {
 
   const gridLayout = useMemo(() => {
     if (selectedInvocation) {
-      return 'grid grid-cols-[1fr_30rem]';
+      switch (detailAxis) {
+        case 'inline':
+          return 'grid grid-cols-[1fr_30rem]';
+        case 'block':
+          return 'grid grid-rows-[1fr_2fr]';
+      }
     }
+
     return 'grid grid-cols-1';
-  }, [selectedInvocation]);
+  }, [selectedInvocation, detailAxis]);
 
   return (
     <PanelContainer
@@ -127,7 +139,13 @@ export const InvocationTracePanel = (props: InvocationTracePanelProps) => {
           onRowClicked={handleInvocationRowClicked}
         />
         {selectedInvocation && (
-          <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-is border-separator'>
+          <div
+            className={mx(
+              'grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator',
+              detailAxis === 'inline' && 'border-is',
+              detailAxis === 'block' && 'border-bs',
+            )}
+          >
             <div>
               <SpanSummary span={selectedInvocation} space={space} onClose={() => setSelectedId(undefined)} />
             </div>
