@@ -8,7 +8,6 @@ import { decodeReference } from '@dxos/echo-protocol';
 import { type InvocationSpan, InvocationOutcome } from '@dxos/functions/types';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Tag } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { useScriptNameResolver } from './hooks';
 import { formatDuration } from './utils';
@@ -55,39 +54,37 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span, space, onClose }
   }, [isInProgress, span.outcome]);
 
   return (
-    <div className={mx('p-2 overflow-auto')}>
-      <div className={mx('is-flex justify-between items-start')}>
+    <div className='p-2 overflow-auto'>
+      <div className='is-flex justify-between items-start'>
         <div className='is-full flex flex-row justify-between'>
-          <h3 className={mx('text-lg font-medium mb-1')}>{targetName}</h3>
+          <h3 className='text-lg font-medium mb-1'>{targetName}</h3>
           <IconButton icon='ph--x--regular' iconOnly label='Close panel' onClick={onClose} />
         </div>
-        <div className={mx('flex gap-2 items-center')}>
+        <div className='flex gap-2 items-center'>
           <Tag palette={outcomeColor}>{outcomeLabel}</Tag>
-          <span className={mx('text-sm text-neutral')}>{timestamp}</span>
-          <span className={mx('text-sm')}>{currentDuration && `${formatDuration(currentDuration)}s`}</span>
+          <span className='text-sm text-neutral'>{timestamp}</span>
+          <span className='text-sm'>{currentDuration && `${formatDuration(currentDuration)}s`}</span>
         </div>
 
         {span.trigger && (
           <Tag palette='amber'>
             Triggered{' '}
-            <span className={mx('opacity-80')}>{decodeReference(span.trigger).dxn?.toString().split(':').pop()}</span>
+            <span className='opacity-80'>{decodeReference(span.trigger).dxn?.toString().split(':').pop()}</span>
           </Tag>
         )}
       </div>
 
       {span.exception && (
-        <div className={mx('mt-3 p-2 bg-red/10 rounded border border-red/30')}>
-          <div className={mx('font-medium text-red')}>
-            {span.exception.name}: {span.exception.message}
-          </div>
+        <div className='mlb-2 text-sm font-medium'>
+          {span.exception.name}: {span.exception.message}
         </div>
       )}
 
       {Object.keys(span.input).length > 0 && (
-        <div className={mx('mt-3')}>
-          <details className={mx('text-sm')}>
-            <summary className={mx('cursor-pointer font-medium')}>Input Data</summary>
-            <pre className={mx('mt-2 p-2 bg-neutral/5 rounded text-xs overflow-auto')}>
+        <div className='mt-3'>
+          <details className='text-sm'>
+            <summary className='cursor-pointer font-medium'>Input Data</summary>
+            <pre className='mt-2 p-2 bg-neutral/5 rounded text-xs overflow-auto'>
               {JSON.stringify(span.input, null, 2)}
             </pre>
           </details>

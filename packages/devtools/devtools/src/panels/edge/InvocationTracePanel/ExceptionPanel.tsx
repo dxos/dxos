@@ -56,19 +56,16 @@ export const ExceptionPanel: React.FC<ExceptionPanelProps> = ({ span }) => {
         const stack = context?.stack;
 
         return (
-          <div
-            key={`log-${index}`}
-            className={mx('mb-2 border border-red-200 dark:border-red-900 rounded overflow-hidden')}
-          >
-            <div className={mx('p-2')}>
-              <div className={mx('flex justify-between items-start')}>
-                <div className={mx('font-medium')}>{errorName}</div>
-                <div className={mx('text-xs font-mono opacity-80')}>{time}</div>
+          <div key={`log-${index}`} className='mb-2 border border-red-200 dark:border-red-900 rounded overflow-hidden'>
+            <div className='p-2'>
+              <div className='flex justify-between items-start'>
+                <div className='font-medium'>{errorName}</div>
+                <div className='text-xs font-mono opacity-80'>{time}</div>
               </div>
-              <div className={mx('mt-1 text-xs font-mono whitespace-pre-wrap')}>{errorMessage}</div>
+              <div className='mt-1 text-xs font-mono whitespace-pre-wrap'>{errorMessage}</div>
             </div>
 
-            {stack && <pre className={mx('p-3 text-xs bg-neutral-50 dark:bg-neutral-900 overflow-auto')}>{stack}</pre>}
+            {stack && <pre className='p-3 text-xs bg-neutral-50 dark:bg-neutral-900 overflow-auto'>{stack}</pre>}
           </div>
         );
       })}
