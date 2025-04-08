@@ -188,7 +188,7 @@ export class RpcPeer {
 
     // TODO(burdon): This seems error prone.
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
-    log('sending second open message', { state: this._state });
+    log('resending open message', { state: this._state });
     await this._sendMessage({ openAck: true });
   }
 
@@ -290,7 +290,7 @@ export class RpcPeer {
           });
         });
       } else {
-        DEBUG_CALLS && log('request', { method: req.method });
+        DEBUG_CALLS && log('requesting...', { method: req.method });
         const response = await this._callHandler(req);
         DEBUG_CALLS &&
           log('sending response', {
@@ -374,7 +374,7 @@ export class RpcPeer {
    * Peer should be open before making this call.
    */
   async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
-    DEBUG_CALLS && log('calling', { method });
+    DEBUG_CALLS && log('calling...', { method });
     throwIfNotOpen(this._state);
 
     let response: Response;

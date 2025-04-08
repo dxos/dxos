@@ -254,26 +254,26 @@ export default (context: PluginsContext) =>
                 },
               ],
             },
-            {
-              id: Devtools.Agent.id,
-              data: null,
-              type: DEVTOOLS_TYPE,
-              properties: {
-                label: ['agent label', { ns: DEBUG_PLUGIN }],
-                icon: 'ph--robot--regular',
-              },
-              nodes: [
-                {
-                  id: Devtools.Agent.Dashboard,
-                  data: Devtools.Agent.Dashboard,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['dashboard label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--computer-tower--regular',
-                  },
-                },
-              ],
-            },
+            // {
+            //   id: Devtools.Agent.id,
+            //   data: null,
+            //   type: DEVTOOLS_TYPE,
+            //   properties: {
+            //     label: ['agent label', { ns: DEBUG_PLUGIN }],
+            //     icon: 'ph--robot--regular',
+            //   },
+            //   nodes: [
+            //     {
+            //       id: Devtools.Agent.Dashboard,
+            //       data: Devtools.Agent.Dashboard,
+            //       type: DEVTOOLS_TYPE,
+            //       properties: {
+            //         label: ['dashboard label', { ns: DEBUG_PLUGIN }],
+            //         icon: 'ph--computer-tower--regular',
+            //       },
+            //     },
+            //   ],
+            // },
             {
               id: Devtools.Edge.id,
               data: null,
