@@ -53,7 +53,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const invocationProperties: TablePropertyDefinition[] = useMemo(
     () => [
       { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 },
-      { name: 'time', title: 'Time', format: FormatEnum.String, sort: 'desc' as const, size: 200 },
+      { name: 'time', title: 'Time', format: FormatEnum.DateTime, sort: 'desc' as const, size: 210 },
       {
         name: 'status',
         title: 'Status',
@@ -68,7 +68,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
           ],
         },
       },
-      { name: 'duration', title: 'Duration', format: FormatEnum.String, size: 120 },
+      { name: 'duration', title: 'Duration', format: FormatEnum.Duration, size: 110 },
       { name: 'queue', title: 'Queue', format: FormatEnum.String },
     ],
     [],
@@ -273,7 +273,7 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
   // Define properties for the DynamicTable
   const logProperties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'time', title: 'Time', format: FormatEnum.String, sort: 'desc' as const, size: 200 },
+      { name: 'time', title: 'Time', format: FormatEnum.DateTime, sort: 'desc' as const, size: 200 },
       {
         name: 'level',
         title: 'Level',
@@ -328,15 +328,15 @@ type ExceptionPanelProps = {
 };
 
 export const ExceptionPanel: React.FC<ExceptionPanelProps> = ({ span }) => {
-  // Get the trace queue for this invocation
+  // Get the trace queue for this invocation.
   const traceQueueDxn = useMemo(() => {
     return span.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;
   }, [span.invocationTraceQueue]);
 
-  // Fetch all trace events from the queue
+  // Fetch all trace events from the queue.
   const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
 
-  // Extract error logs from all trace events
+  // Extract error logs from all trace events.
   const errorLogs = useMemo(() => {
     if (!eventQueue?.items?.length) {
       return [];
@@ -480,8 +480,5 @@ const useScriptNameResolver = ({ space }: { space?: Space }) => {
 };
 
 const formatDuration = (duration: number): string => {
-  if (duration < 1000) {
-    return `${duration}ms`;
-  }
-  return `${(duration / 1000).toFixed(2)}s`;
+  return `${(duration / 1000).toFixed(2)}`;
 };
