@@ -32,7 +32,6 @@ import {
   StoragePanel,
   SwarmPanel,
   TracingPanel,
-  DashboardPanel,
   EdgeDashboardPanel,
   AutomergePanel,
   WorkflowPanel,
@@ -204,7 +203,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/halo/credentials`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Credentials,
-      component: () => <CredentialsPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <CredentialsPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/spaces`,
@@ -237,7 +239,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/feeds`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Feeds,
-      component: () => <FeedsPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <FeedsPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/objects`,
@@ -252,7 +257,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/automerge`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
-      component: () => <AutomergePanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <AutomergePanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/queues`,
@@ -264,7 +272,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/members`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Members,
-      component: () => <MembersPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <MembersPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/metadata`,
@@ -288,14 +299,18 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/mesh/network`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Mesh.Network,
-      component: () => <NetworkPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <NetworkPanel space={space} />;
+      },
     }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/agent/dashboard`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
-      component: () => <DashboardPanel />,
-    }),
+    // TODO(wittjosiah): Remove?
+    // createSurface({
+    //   id: `${DEBUG_PLUGIN}/agent/dashboard`,
+    //   role: 'article',
+    //   filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
+    //   component: () => <DashboardPanel />,
+    // }),
     createSurface({
       id: `${DEBUG_PLUGIN}/edge/dashboard`,
       role: 'article',
@@ -306,7 +321,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/edge/workflows`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
-      component: () => <WorkflowPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <WorkflowPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/edge/traces`,
