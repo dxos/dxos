@@ -15,6 +15,7 @@ import {
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { type Space } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -29,10 +30,12 @@ type FeedTableRow = SubscribeToFeedBlocksResponse.Block & {
   issuer: string;
 };
 
-export const FeedsPanel = () => {
+export const FeedsPanel = (props: { space?: Space }) => {
   const devtoolsHost = useDevtools();
   const setContext = useDevtoolsDispatch();
-  const { space, feedKey } = useDevtoolsState();
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
+  const feedKey = state.feedKey;
   const feedMessages = useFeedMessages({ feedKey, maxBlocks: 1000 }).reverse();
   const contacts = useContacts();
   const client = useClient();
@@ -102,7 +105,7 @@ export const FeedsPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <DataSpaceSelector />
+          {!props.space && <DataSpaceSelector />}
           <PublicKeySelector
             placeholder='Select feed'
             getLabel={getLabel}
