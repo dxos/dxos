@@ -12,8 +12,11 @@ import {
   type InvocationSpan,
   createInvocationSpans,
   InvocationOutcome,
+  FunctionType,
+  ScriptType,
 } from '@dxos/functions/types';
-import { useQueue, type Space } from '@dxos/react-client/echo';
+import { type DXN } from '@dxos/keys';
+import { Filter, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
 import { Tag, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -44,6 +47,8 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
     }
     return invocationSpans.find((span) => selectedId === span.id);
   }, [selectedId, invocationSpans]);
+
+  const resolver = useScriptNameResolver({ space });
 
   const invocationProperties: TablePropertyDefinition[] = useMemo(
     () => [
@@ -80,20 +85,19 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
         status = 'failure';
       }
 
-      const targetDxn = decodeReference(invocation.invocationTarget).dxn?.toString() ?? 'unknown';
-      const targetName = targetDxn.split(':').pop() ?? 'unknown';
+      const targetDxn = decodeReference(invocation.invocationTarget).dxn;
 
       return {
         id: `${invocation.id}`,
+        target: resolver(targetDxn),
         time: new Date(invocation.timestampMs).toLocaleString(),
-        target: targetName,
         status,
-        duration: `${invocation.durationMs}ms`,
+        duration: formatDuration(invocation.durationMs),
         queue: decodeReference(invocation.invocationTraceQueue).dxn?.toString() ?? 'unknown',
         _original: invocation,
       };
     });
-  }, [invocationSpans]);
+  }, [invocationSpans, resolver]);
 
   const handleInvocationRowClicked = useCallback((row: any) => {
     if (!row) {
@@ -104,9 +108,16 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
 
   const [activeTab, setActiveTab] = useState('logs');
 
+  const gridLayout = useMemo(() => {
+    if (selectedInvocation) {
+      return 'grid grid-cols-[1fr_30rem]';
+    }
+    return 'grid grid-cols-1';
+  }, [selectedInvocation]);
+
   return (
     <PanelContainer toolbar={<Toolbar.Root>{!props.space && <DataSpaceSelector />}</Toolbar.Root>}>
-      <div className={mx('bs-full grid grid-cols-[1fr_30rem]')}>
+      <div className={mx('bs-full', gridLayout)}>
         <div>
           <DynamicTable
             properties={invocationProperties}
@@ -114,42 +125,44 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
             onRowClicked={handleInvocationRowClicked}
           />
         </div>
-        <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-is border-bs border-separator'>
-          <SpanSummary span={selectedInvocation} />
-          <Tabs.Root
-            orientation='horizontal'
-            value={activeTab}
-            onValueChange={setActiveTab}
-            classNames='grid grid-rows-[min-content_1fr] min-bs-0 [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid border-bs border-separator'
-          >
-            <Tabs.Tablist classNames='border-be border-separator'>
-              <Tabs.Tab value='logs'>Logs</Tabs.Tab>
-              <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>
-              <Tabs.Tab value='raw'>Raw</Tabs.Tab>
-            </Tabs.Tablist>
-            <Tabs.Tabpanel value='logs'>
-              <LogPanel span={selectedInvocation} />
-            </Tabs.Tabpanel>
-            <Tabs.Tabpanel value='exceptions'>
-              {selectedInvocation ? (
-                <ExceptionPanel span={selectedInvocation} />
-              ) : (
-                <Placeholder label='Select an invocation to see exceptions' />
-              )}
-            </Tabs.Tabpanel>
-            <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
-              <div className='text-xs'>
-                {selectedInvocation ? <RawDataPanel span={selectedInvocation} /> : <Placeholder label='Contents' />}
-              </div>
-            </Tabs.Tabpanel>
-          </Tabs.Root>
-        </div>
+        {selectedInvocation && (
+          <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-is border-bs border-separator'>
+            <SpanSummary span={selectedInvocation} />
+            <Tabs.Root
+              orientation='horizontal'
+              value={activeTab}
+              onValueChange={setActiveTab}
+              classNames='grid grid-rows-[min-content_1fr] min-bs-0 [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid border-bs border-separator'
+            >
+              <Tabs.Tablist classNames='border-be border-separator'>
+                <Tabs.Tab value='logs'>Logs</Tabs.Tab>
+                <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>
+                <Tabs.Tab value='raw'>Raw</Tabs.Tab>
+              </Tabs.Tablist>
+              <Tabs.Tabpanel value='logs'>
+                <LogPanel span={selectedInvocation} />
+              </Tabs.Tabpanel>
+              <Tabs.Tabpanel value='exceptions'>
+                {selectedInvocation ? (
+                  <ExceptionPanel span={selectedInvocation} />
+                ) : (
+                  <Placeholder label='Select an invocation to see exceptions' />
+                )}
+              </Tabs.Tabpanel>
+              <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
+                <div className='text-xs'>
+                  {selectedInvocation ? <RawDataPanel span={selectedInvocation} /> : <Placeholder label='Contents' />}
+                </div>
+              </Tabs.Tabpanel>
+            </Tabs.Root>
+          </div>
+        )}
       </div>
     </PanelContainer>
   );
 };
 
-type SpanSummaryProps = { span?: InvocationSpan };
+type SpanSummaryProps = { span: InvocationSpan };
 
 export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
   const [currentDuration, setCurrentDuration] = useState<number | undefined>(undefined);
@@ -164,55 +177,34 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
       setCurrentDuration(span.durationMs);
       return;
     }
-
-    // For in-progress spans, update duration every 500ms
     setCurrentDuration(Date.now() - span.timestampMs);
 
-    const interval = setInterval(() => {
-      setCurrentDuration(Date.now() - span.timestampMs);
-    }, 100);
-
-    return () => {
-      clearInterval(interval);
-    };
+    const interval = setInterval(() => setCurrentDuration(Date.now() - span.timestampMs), 100);
+    return () => clearInterval(interval);
   }, [span]);
 
-  if (!span) {
-    return <div className={mx('flex items-center justify-center')}>Select an invocation to see details</div>;
-  }
+  const targetDxn = useMemo(
+    () => decodeReference(span.invocationTarget).dxn?.toString() ?? 'unknown',
+    [span.invocationTarget],
+  );
+  const targetName = useMemo(() => targetDxn.split(':').pop() ?? 'unknown', [targetDxn]);
 
-  const targetDxn = decodeReference(span.invocationTarget).dxn?.toString() ?? 'unknown';
-  const targetName = targetDxn.split(':').pop() ?? 'unknown';
-
-  const timestamp = new Date(span.timestampMs).toLocaleString();
-
-  // Format duration based on length
-  const formattedDuration = (() => {
-    if (currentDuration === undefined) {
-      return `${span.durationMs}ms`;
-    }
-
-    if (currentDuration < 1000) {
-      return `${currentDuration}ms`;
-    }
-    return `${(currentDuration / 1000).toFixed(2)}s`;
-  })();
-
-  const isInProgress = span.outcome === 'in-progress';
-  const outcomeColor = (() => {
+  const timestamp = useMemo(() => new Date(span.timestampMs).toLocaleString(), [span.timestampMs]);
+  const isInProgress = useMemo(() => span.outcome === 'in-progress', [span.outcome]);
+  const outcomeColor = useMemo(() => {
     if (isInProgress) {
       return 'blue';
     }
     return span.outcome === InvocationOutcome.SUCCESS ? 'emerald' : 'red';
-  })();
+  }, [isInProgress, span.outcome]);
 
-  const outcomeLabel = (() => {
+  const outcomeLabel = useMemo(() => {
     if (isInProgress) {
       return 'In Progress';
     }
     // Capitalize first letter of outcome
     return span.outcome.charAt(0).toUpperCase() + span.outcome.slice(1);
-  })();
+  }, [isInProgress, span.outcome]);
 
   return (
     <div className={mx('p-2 overflow-auto')}>
@@ -222,7 +214,9 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span }) => {
           <div className={mx('flex gap-2 items-center')}>
             <Tag palette={outcomeColor}>{outcomeLabel}</Tag>
             <span className={mx('text-sm text-neutral')}>{timestamp}</span>
-            <span className={mx('text-sm')}>{formattedDuration}</span>
+            <span className={mx('text-sm')}>
+              {currentDuration ? formatDuration(currentDuration) : formatDuration(span.durationMs)}
+            </span>
           </div>
         </div>
 
@@ -447,4 +441,40 @@ export const RawDataPanel: React.FC<RawDataPanelProps> = ({ span }) => {
       </SyntaxHighlighter>
     </div>
   );
+};
+
+// TODO(ZaymonFC): There should be a more efficient and less laborious way of doing this.
+const useScriptNameResolver = ({ space }: { space?: Space }) => {
+  const scripts = useQuery(space, Filter.schema(ScriptType));
+  const functions = useQuery(space, Filter.schema(FunctionType));
+
+  return useCallback(
+    (invocationTargetId: DXN | undefined) => {
+      if (!invocationTargetId) {
+        return undefined;
+      }
+
+      const dxnParts = invocationTargetId.toString().split(':');
+      const uuidPart = dxnParts[dxnParts.length - 1];
+
+      const matchingFunction = functions.find((f) => f.name === uuidPart);
+      if (matchingFunction) {
+        const matchingScript = scripts.find((script) => matchingFunction.source?.target?.id === script.id);
+        if (matchingScript) {
+          return matchingScript.name;
+        }
+        return matchingFunction.name;
+      }
+
+      return undefined;
+    },
+    [functions, scripts],
+  );
+};
+
+const formatDuration = (duration: number): string => {
+  if (duration < 1000) {
+    return `${duration}ms`;
+  }
+  return `${(duration / 1000).toFixed(2)}s`;
 };
