@@ -37,7 +37,7 @@ export const InvocationTracePanel = (props: InvocationTracePanelProps) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
 
-  const invocationSpans = useInvocationSpans({ space: props.space, script: props.script });
+  const invocationSpans = useInvocationSpans({ space, script: props.script });
 
   const [selectedId, setSelectedId] = useState<string>();
   const selectedInvocation = useMemo(() => {
