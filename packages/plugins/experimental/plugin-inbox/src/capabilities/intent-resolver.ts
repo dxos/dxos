@@ -3,7 +3,9 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { ObjectId } from '@dxos/echo-schema';
+import { QueueSubspaceTags, DXN } from '@dxos/keys';
+import { create, refFromDXN } from '@dxos/live-object';
 
 import { CalendarType, ContactsType, InboxAction, MailboxType } from '../types';
 
@@ -11,8 +13,13 @@ export default () =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: InboxAction.CreateMailbox,
-      resolve: () => ({
-        data: { object: create(MailboxType, { messages: [] }) },
+      resolve: ({ spaceId, name }) => ({
+        data: {
+          object: create(MailboxType, {
+            name,
+            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+          }),
+        },
       }),
     }),
     createResolver({

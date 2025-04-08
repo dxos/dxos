@@ -21,6 +21,7 @@ export enum LogLevel {
 export const levels: { [index: string]: LogLevel } = {
   trace: LogLevel.TRACE,
   debug: LogLevel.DEBUG,
+  verbose: LogLevel.VERBOSE,
   info: LogLevel.INFO,
   warn: LogLevel.WARN,
   error: LogLevel.ERROR,
