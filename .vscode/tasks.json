@@ -85,6 +85,21 @@
           "DX_LABS": "true"
         }
       }
+    },
+    {
+      "label": "build and test all packages",
+      "type": "shell",
+      "command": "pnpm -w nx run-many --target=build,test --parallel 12",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
     }
   ]
 }

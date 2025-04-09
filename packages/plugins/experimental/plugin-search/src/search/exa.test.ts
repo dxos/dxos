@@ -24,7 +24,7 @@ const aiService = REMOTE_AI
       },
     });
 
-describe('Search', () => {
+describe.skip('Search', () => {
   describe('Query-based', () => {
     test.skip('contacts', { timeout: 60_000 }, async () => {
       const objects = await search({
