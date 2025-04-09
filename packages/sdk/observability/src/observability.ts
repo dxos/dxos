@@ -188,6 +188,7 @@ export class Observability {
   }
 
   async initialize() {
+    log('initializing...');
     await this._initLogs();
     await this._initMetrics();
     await this._initTelemetry();
@@ -196,6 +197,7 @@ export class Observability {
   }
 
   async close() {
+    log('closing...');
     const closes: Promise<void>[] = [];
     this._telemetry && closes.push(this._telemetry.close());
     this._otelMetrics && closes.push(this._otelMetrics.close());

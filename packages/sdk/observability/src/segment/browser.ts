@@ -22,7 +22,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
       script.innerHTML = contents;
       document.body.append(script);
     } catch (err) {
-      log.catch('Failed to initialize telemetry', err);
+      log.catch('failed to initialize telemetry', err);
     }
   }
 
@@ -30,7 +30,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     try {
       (window as any).analytics?.page(this.createPageProps(options));
     } catch (err) {
-      log.catch('Failed to track page', err);
+      log.catch('failed to track page', err);
     }
   }
 
@@ -38,7 +38,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     try {
       (window as any).analytics?.track(this.createTrackProps(options));
     } catch (err) {
-      log.catch('Failed to track event', err);
+      log.catch('failed to track event', err);
     }
   }
 
