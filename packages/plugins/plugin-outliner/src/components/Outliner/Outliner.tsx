@@ -114,7 +114,6 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           // Create.
           //
           case 'create': {
-            console.log('create', { onCreate });
             const created = onCreate?.();
             if (created) {
               const idx = nodes.findIndex((n) => n.id === node.id);
