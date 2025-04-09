@@ -17,7 +17,14 @@ export const useAnalyticsCallback = (spaceId: string | undefined, name: string, 
   return useCallback(
     (dynamicMeta?: any) => {
       void dispatch(
-        createIntent(ObservabilityAction.SendEvent, { name, properties: { ...meta, ...dynamicMeta, spaceId } }),
+        createIntent(ObservabilityAction.SendEvent, {
+          name,
+          properties: {
+            ...meta,
+            ...dynamicMeta,
+            spaceId,
+          },
+        }),
       );
     },
     [dispatch, name, meta, spaceId],

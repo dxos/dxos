@@ -147,7 +147,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
                   createIntent(ObservabilityAction.SendEvent, {
                     name: 'space.share',
                     properties: {
-                      space: space.id,
+                      spaceId: space.id,
                     },
                   }),
                 ]

@@ -35,20 +35,28 @@ export type ObservabilitySecrets = {
   OTEL_AUTHORIZATION: string | null;
 };
 
-export type Mode = 'basic' | 'full' | 'disabled';
 export type TagScope = 'errors' | 'telemetry' | 'metrics' | 'all';
 
+/** Gathering mode. */
+export type Mode = 'basic' | 'full' | 'disabled';
+
 export type ObservabilityOptions = {
-  /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
-  namespace: string;
   mode: Mode;
-  // TODO(nf): Make platform a required extension?
-  // platform: Platform;
-  release?: string;
+
+  /** Environment. */
   environment?: string;
+
+  /** Application namespace. */
+  namespace: string;
+
+  /** Application release. */
+  release?: string;
+
+  /** User group. */
+  group?: string;
+
   config?: Config;
   secrets?: Record<string, string>;
-  group?: string;
 
   telemetry?: {
     batchSize?: number;
@@ -65,6 +73,11 @@ export type ObservabilityOptions = {
  *
  * Segment:
  * https://app.segment.com/dxos/sources/composer-app/debugger
+ * https://app.segment.com/dxos/sources/composer-app/settings/keys
+ *
+ * NOTE:
+ * - Segment maintains a set of admin creates Source (e.g., "composer-app").
+ * - Each source has at least one API_KEY, which is used by the client.
  *
  * Testing:
  * https://app.segment.com/dxos/sources/composer-app/settings/keys
@@ -78,6 +91,13 @@ export type ObservabilityOptions = {
  * https://dxosorg.grafana.net/explore
  */
 export class Observability {
+  private _mode: Mode;
+  private readonly _namespace: string;
+  private readonly _config?: Config;
+  private readonly _group?: string;
+  private readonly _secrets: ObservabilitySecrets;
+  private readonly _tags = new Map<string, { value: string; scope: TagScope }>();
+
   // TODO(wittjosiah): Generic metrics interface.
   private _otelMetrics?: OtelMetrics;
   private _otelTraces?: OtelTraces;
@@ -90,50 +110,38 @@ export class Observability {
   private _errorReportingOptions?: InitOptions;
   private _captureException?: typeof SentryCaptureException;
   private _captureUserFeedback?: (name: string, email: string, message: string) => Promise<void>;
-
-  private _setTag?: (key: string, value: string) => void;
-  private readonly _tags = new Map<string, { value: string; scope: TagScope }>();
-
-  private readonly _namespace: string;
-  private readonly _config?: Config;
-  private readonly _group?: string;
-  private readonly _secrets: ObservabilitySecrets;
-
-  private _mode: Mode;
   private _lastNetworkStatus?: NetworkStatus;
 
-  // TODO(nf): accept upstream context?
   private _ctx = new Context();
 
   // TODO(nf): make platform a required extension?
   constructor({
+    mode,
     namespace,
     environment,
     release,
     config,
-    secrets,
     group,
-    mode,
+    secrets,
     telemetry,
     errorLog,
   }: ObservabilityOptions) {
-    this._namespace = namespace;
     this._mode = mode;
+    this._namespace = namespace;
     this._config = config;
     this._group = group;
     this._secrets = this._loadSecrets(config, secrets);
+
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
     this._errorReportingOptions = errorLog?.sentryInitOptions;
 
     // Tags.
-    if (this._group) {
-      this.setTag('group', this._group);
-    }
-    this.setTag('namespace', this._namespace);
-    environment && this.setTag('environment', environment);
-    release && this.setTag('release', release);
     this.setTag('mode', this._mode);
+    this.setTag('namespace', this._namespace);
+    this.setTag('environment', environment);
+    this.setTag('release', release);
     this.setTag('session', PublicKey.random().toHex());
+    this.setTag('group', this._group);
   }
 
   get mode() {
@@ -195,8 +203,6 @@ export class Observability {
 
     await Promise.all(closes);
     await this._ctx.dispose();
-
-    // TODO(wittjosiah): Remove telemetry, etc. scripts.
   }
 
   setMode(mode: Mode) {
@@ -207,30 +213,29 @@ export class Observability {
   // Tags
   //
 
+  /** Callback (e.g., to share tags with Sentry.) */
+  private _setTag?: (key: string, value: string) => void;
+
   /**
    * camelCase keys are converted to snake_case in Segment.
    */
-  setTag(key: string, value: string, scope?: TagScope) {
+  setTag(key: string, value: string | undefined, scope?: TagScope) {
+    if (value === undefined) {
+      return;
+    }
     if (this.enabled && (scope === undefined || scope === 'all' || scope === 'errors')) {
       this._setTag?.(key, value);
     }
     if (!scope) {
       scope = 'all';
     }
+
     this._tags.set(key, { value, scope });
   }
 
   getTag(key: string) {
     return this._tags.get(key);
   }
-
-  addIPDataTelemetryTags = (ipData: IPData) => {
-    this.setTag('city', ipData.city, 'telemetry');
-    this.setTag('region', ipData.region, 'telemetry');
-    this.setTag('country', ipData.country, 'telemetry');
-    ipData.latitude && this.setTag('latitude', ipData.latitude.toString(), 'telemetry');
-    ipData.longitude && this.setTag('longitude', ipData.longitude.toString(), 'telemetry');
-  };
 
   // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
   async setIdentityTags(clientServices: Partial<ClientServices>) {
@@ -266,6 +271,14 @@ export class Observability {
       });
     }
   }
+
+  setIPDataTelemetryTags = (ipData: IPData) => {
+    this.setTag('city', ipData.city, 'telemetry');
+    this.setTag('region', ipData.region, 'telemetry');
+    this.setTag('country', ipData.country, 'telemetry');
+    ipData.latitude && this.setTag('latitude', ipData.latitude.toString(), 'telemetry');
+    ipData.longitude && this.setTag('longitude', ipData.longitude.toString(), 'telemetry');
+  };
 
   //
   // Logs

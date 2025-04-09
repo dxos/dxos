@@ -160,7 +160,7 @@ export const initializeAppObservability = async ({
 
     const ipData = await getIPData(config);
 
-    ipData && observability.addIPDataTelemetryTags(ipData);
+    ipData && observability.setIPDataTelemetryTags(ipData);
 
     if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
       setInterval(async () => {

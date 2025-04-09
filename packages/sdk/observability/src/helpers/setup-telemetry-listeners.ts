@@ -52,20 +52,20 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
 
   const blurCallback = () => {
     const now = new Date();
-    const timeSpent = now.getTime() - lastFocusEvent.getTime();
+    const duration = now.getTime() - lastFocusEvent.getTime();
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
         action: `${namespace}.window.blur`,
         properties: {
           href: window.location.href,
-          timeSpent,
+          duration,
         },
       });
     });
 
     lastFocusEvent = now;
-    totalTime = totalTime + timeSpent;
+    totalTime = totalTime + duration;
   };
 
   const unloadCallback = () => {
@@ -75,7 +75,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         action: `${namespace}.page.unload`,
         properties: {
           href: window.location.href,
-          timeSpent: totalTime,
+          duration: totalTime,
         },
       });
     });

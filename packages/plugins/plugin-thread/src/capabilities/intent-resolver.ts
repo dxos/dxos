@@ -97,7 +97,10 @@ export default (context: PluginsContext) =>
           intents: [
             createIntent(ObservabilityAction.SendEvent, {
               name: 'threads.toggle-resolved',
-              properties: { threadId: thread.id, spaceId },
+              properties: {
+                spaceId,
+                threadId: thread.id,
+              },
             }),
           ],
         };
@@ -140,7 +143,10 @@ export default (context: PluginsContext) =>
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.delete',
-                properties: { threadId: thread.id, spaceId: space.id },
+                properties: {
+                  spaceId: space.id,
+                  threadId: thread.id,
+                },
               }),
             ],
           };
@@ -153,7 +159,10 @@ export default (context: PluginsContext) =>
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.undo-delete',
-                properties: { threadId: thread.id, spaceId: space.id },
+                properties: {
+                  spaceId: space.id,
+                  threadId: thread.id,
+                },
               }),
             ],
           };
@@ -167,7 +176,10 @@ export default (context: PluginsContext) =>
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
         const intents = [];
-        const analyticsProperties = { threadId: thread.id, spaceId: space?.id };
+        const analyticsProperties = {
+          spaceId: space?.id,
+          threadId: thread.id,
+        };
 
         if (state.drafts[subjectId]?.find((t) => t === thread)) {
           // Move draft to document.
@@ -185,7 +197,10 @@ export default (context: PluginsContext) =>
         intents.push(
           createIntent(ObservabilityAction.SendEvent, {
             name: 'threads.message-added',
-            properties: { ...analyticsProperties, threadLength: thread.messages.length },
+            properties: {
+              ...analyticsProperties,
+              threadLength: thread.messages.length,
+            },
           }),
         );
 
@@ -221,7 +236,10 @@ export default (context: PluginsContext) =>
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.message.delete',
-                properties: { threadId: thread.id, spaceId: space?.id },
+                properties: {
+                  spaceId: space?.id,
+                  threadId: thread.id,
+                },
               }),
             ],
           };
@@ -235,7 +253,10 @@ export default (context: PluginsContext) =>
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.message.undo-delete',
-                properties: { threadId: thread.id, spaceId: space?.id },
+                properties: {
+                  spaceId: space?.id,
+                  threadId: thread.id,
+                },
               }),
             ],
           };
