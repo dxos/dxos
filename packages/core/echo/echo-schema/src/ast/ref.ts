@@ -45,7 +45,10 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
 /**
  * Reference Schema.
  */
+<<<<<<< Updated upstream
 // Naming pattern (Ref$) is borrowed from effect-schema.
+=======
+>>>>>>> Stashed changes
 export interface Ref$<T extends WithId> extends S.SchemaClass<Ref<T>, EncodedReference> {}
 
 interface RefFn {
