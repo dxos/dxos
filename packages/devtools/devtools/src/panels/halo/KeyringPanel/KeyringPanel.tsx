@@ -35,5 +35,12 @@ export const KeyringPanel = () => {
     return null;
   }
 
-  return <MasterDetailTable properties={properties} data={data} detailsTransform={(d) => d._original} />;
+  return (
+    <MasterDetailTable
+      properties={properties}
+      data={data}
+      detailsTransform={(d) => d._original}
+      detailsPosition='bottom'
+    />
+  );
 };

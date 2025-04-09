@@ -10,7 +10,11 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
 export const JsonView: FC<{ data?: Object; truncate?: boolean }> = ({ data, truncate = true }) => {
-  return <SyntaxHighlighter language='json'>{JSON.stringify(data, replacer(truncate), 2)}</SyntaxHighlighter>;
+  return (
+    <SyntaxHighlighter classNames='p-1' language='json'>
+      {JSON.stringify(data, replacer(truncate), 2)}
+    </SyntaxHighlighter>
+  );
 };
 
 // TODO(burdon): Factor out.

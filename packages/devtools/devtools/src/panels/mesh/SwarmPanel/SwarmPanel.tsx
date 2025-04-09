@@ -11,11 +11,9 @@ import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
 import { ComplexMap } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
-import { styles } from '../../../styles';
 
 // Extend with table-specific properties
 type TableSwarmConnection = {
@@ -47,8 +45,8 @@ const stateOptions = [
 ];
 
 const properties: TablePropertyDefinition[] = [
-  { name: 'swarmId', format: FormatEnum.DID, title: 'swarm', size: 120 },
-  { name: 'swarmTopic', format: FormatEnum.DID, title: 'topic', size: 140 },
+  { name: 'swarmId', format: FormatEnum.DID, title: 'swarm', size: 160 },
+  { name: 'swarmTopic', format: FormatEnum.DID, title: 'topic', size: 160 },
   { name: 'label', format: FormatEnum.String },
   {
     name: 'isActive',
@@ -63,17 +61,17 @@ const properties: TablePropertyDefinition[] = [
     },
   },
   { name: 'session', format: FormatEnum.DID },
-  { name: 'remotePeer', format: FormatEnum.DID, size: 140, title: 'remote peer' },
+  { name: 'remotePeer', format: FormatEnum.DID, size: 160, title: 'remote peer' },
   { name: 'identity', format: FormatEnum.DID, size: 160 },
   {
     name: 'state',
     format: FormatEnum.SingleSelect,
-    size: 140,
+    size: 160,
     config: {
       options: stateOptions,
     },
   },
-  { name: 'buffer', format: FormatEnum.JSON, title: 'buffer (r/w)', size: 140 },
+  { name: 'buffer', format: FormatEnum.JSON, title: 'buffer (r/w)', size: 160 },
   { name: 'transportDetails', format: FormatEnum.JSON, title: 'details' },
   { name: 'statsDisplay', format: FormatEnum.JSON, title: 'stats' },
   { name: 'closeReason', format: FormatEnum.JSON, title: 'close reason', size: 400 },
@@ -151,10 +149,8 @@ export const SwarmPanel = () => {
   }, [swarms, identityMap]);
 
   return (
-    <PanelContainer classNames={mx('divide-y', styles.border)}>
-      <div className='h-1/2 overflow-auto'>
-        <DynamicTable properties={properties} data={data} />
-      </div>
+    <PanelContainer>
+      <DynamicTable properties={properties} data={data} />
     </PanelContainer>
   );
 };
