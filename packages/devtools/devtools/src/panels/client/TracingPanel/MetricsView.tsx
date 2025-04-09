@@ -16,16 +16,14 @@ export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
   }
 
   return (
-    <div className='px-2'>
-      <ResourceName className='text-lg' resource={resource} />
-
-      <div>
-        <h4 className='border-b'>Info</h4>
+    <div className='divide-y divide-separator'>
+      <div className='p-1'>
+        <ResourceName className='text-lg' resource={resource} />
         <JsonView data={resource.info} />
       </div>
 
-      <div>
-        <h4 className='border-b'>Metrics</h4>
+      <div className='p-1'>
+        <h4>Metrics</h4>
         {resource.metrics?.map((metric, idx) => <MetricComponent key={idx} metric={metric} />)}
       </div>
     </div>
