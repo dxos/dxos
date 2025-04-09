@@ -58,11 +58,25 @@ const renderMessageCell = (message: MessageType, now: Date) => {
   const subject = message.properties?.subject ?? text;
   const hue = toHue(hashString(from));
 
-  return `<button class="message__thumb dx-focus-ring-inset" data-inbox-action="select-message" data-message-id="${message.id}"
-    ><dx-avatar hue=${hue} variant="square" hueVariant="surface" fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"></dx-avatar
-  ></button><button class="message__abstract dx-focus-ring-inset" data-inbox-action="current-message" data-message-id="${message.id}"
-    ><p class="message__abstract__heading" role="none"><span>${from}</span><span>${date}</span></p
-    ><p class="message__abstract__body">${subject}</p
+  return `<button
+      class="message__thumb dx-focus-ring-inset"
+      data-inbox-action="select-message"
+      data-message-id="${message.id}"
+      ><dx-avatar
+        hue=${hue}
+        variant="square"
+        hueVariant="surface"
+        fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"
+      ></dx-avatar
+    ></button
+    ><button
+      class="message__abstract dx-focus-ring-inset"
+      data-inbox-action="current-message"
+      data-message-id="${message.id}"
+      ><p class="message__abstract__heading"
+        ><span>${from}</span
+        ><span>${date}</span></p
+      ><p class="message__abstract__body">${subject}</p
   ></button>`;
 };
 
