@@ -153,7 +153,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     FilesPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
-    isLabs && InboxPlugin(),
+    InboxPlugin(),
     IntentPlugin(),
     KanbanPlugin(),
     MapPlugin(),
