@@ -15,7 +15,7 @@ import { DXN } from '@dxos/keys';
 
 import { getObjectIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
 import { type JsonSchemaType } from './json-schema-type';
-import type { ObjectId } from '../object';
+import { type ObjectId } from '../object';
 import { type WithId } from '../types';
 
 /**
@@ -45,10 +45,6 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
 /**
  * Reference Schema.
  */
-<<<<<<< Updated upstream
-// Naming pattern (Ref$) is borrowed from effect-schema.
-=======
->>>>>>> Stashed changes
 export interface Ref$<T extends WithId> extends S.SchemaClass<Ref<T>, EncodedReference> {}
 
 interface RefFn {

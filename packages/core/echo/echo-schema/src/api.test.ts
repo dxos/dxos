@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { log } from '@dxos/log';
 
 import { EchoObject, type JsonSchemaType, Ref as Ref$ } from './ast';
-import { FormatAnnotationId, FormatEnum } from './formats';
+import { FormatEnum, FormatAnnotationId } from './formats/types';
 import { createStatic, type Expando as Expando$, type ObjectId as ObjectId$ } from './object';
 import { type BaseSchema, type EchoSchema, type ImmutableSchema } from './schema';
 import { type WithId } from './types';
@@ -19,9 +19,12 @@ import { type WithId } from './types';
 export namespace Echo {
   export type ObjectId = ObjectId$;
   export type Expando = Expando$;
-  export type Type<T = any> = BaseSchema<T>; // TODO(burdon): Type or Schema? (Type matches effect and typename "example.com/type/Foo").
+
+  // TODO(burdon): Type or Schema? (Type matches effect and typename "example.com/type/Foo").
+  export type Type<T = any> = BaseSchema<T>;
   export type MutableType<T> = EchoSchema<T>;
   export type ImmutableType<T> = ImmutableSchema<T>;
+
   export type Ref<T> = Ref$<T>;
   export type JsonSchema = JsonSchemaType;
 
@@ -48,7 +51,12 @@ interface Org extends S.Schema.Type<typeof Org> {}
 
 const Contact = S.Struct({
   name: S.String,
-  email: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email })), // TODO(burdon): Rename TypeAnnotationId?
+  email: S.optional(
+    S.String.annotations({
+      // TODO(burdon): Rename TypeAnnotationId?
+      [FormatAnnotationId]: FormatEnum.Email,
+    }),
+  ),
   org: S.optional(Echo.Ref(Org)),
 }).pipe(
   Echo.Type({
