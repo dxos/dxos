@@ -4,9 +4,10 @@
 
 import { IdentityDid } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
-import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { MessageType } from '@dxos/schema';
+
+import { MailboxType } from '../types';
 
 faker.seed(1);
 
@@ -14,7 +15,7 @@ export const createInbox = (count = 10) => {
   // const now = new Date();
 
   // TODO(burdon): Timestamp.
-  return create(ThreadType, {
+  return create(MailboxType, {
     messages: faker.helpers.multiple(
       () =>
         makeRef(

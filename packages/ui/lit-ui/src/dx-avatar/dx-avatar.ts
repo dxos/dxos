@@ -16,7 +16,7 @@ export type AvatarVariant = 'square' | 'circle';
 export type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
 export type AvatarAnimation = 'pulse' | 'none';
 
-const rx = '0.2rem';
+const rx = '0.125rem';
 
 export type DxAvatarProps = Partial<
   Pick<
