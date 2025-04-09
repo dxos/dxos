@@ -7,9 +7,10 @@ import { RefArray } from '@dxos/live-object';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
+import { MessageType } from '@dxos/schema';
 
 import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { INBOX_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { CalendarType, ContactsType, EventType, InboxAction, MailboxType } from './types';
 
@@ -30,6 +31,10 @@ export const InboxPlugin = () =>
             icon: 'ph--envelope--regular',
             graphProps: {
               startsWithCompanionSurfaceVariant: 'firstMessage',
+              surfaceVariantLabel: (surfaceVariant: string = '') => {
+                const [variant, _] = surfaceVariant.split('-');
+                return [`${variant} plank heading`, { ns: INBOX_PLUGIN }];
+              },
             },
           },
         }),
@@ -37,6 +42,12 @@ export const InboxPlugin = () =>
           id: ContactsType.typename,
           metadata: {
             icon: 'ph--address-book--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: MessageType.typename,
+          metadata: {
+            icon: 'ph--note--regular',
           },
         }),
         contributes(Capabilities.Metadata, {

@@ -1,5 +1,9 @@
 .message {
-  @apply grid grid-cols-[var(--rail-action)_1fr] gap-2;
+  @apply p-0;
+
+  .message__content {
+    @apply p-1 grid grid-cols-[var(--rail-action)_1fr] gap-2;
+  }
 
   .message__thumb {
     @apply text-start;

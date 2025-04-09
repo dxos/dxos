@@ -4,37 +4,16 @@
 
 import './mailbox.css';
 
-import React, { type MouseEvent, useCallback, useEffect, useRef, useState, useMemo, type WheelEvent } from 'react';
+import React, { type MouseEvent, useCallback, useState, type WheelEvent } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
-import { log } from '@dxos/log';
-import { type Queue } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridPlaneCells, Grid, type GridContentProps, toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { type MessageType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
-import { type MailboxType, MessageState } from '../../types';
+import { type MailboxType } from '../../types';
 import { formatDate } from '../util';
-
-const DEFAULT_READ_TIMEOUT = 3_000;
-
-const byDate =
-  (direction = -1) =>
-  ({ created: a = '' }: MessageType, { created: b = '' }: MessageType) =>
-    a < b ? -direction : a > b ? direction : 0;
-
-const updateMessageProperty = (messages: MessageType[], property: string, value: any) => {
-  messages.forEach((message) => {
-    if (!message.properties) {
-      message.properties = {};
-    }
-
-    message.properties[property] = value;
-  });
-};
-
-export type MailboxOptions = { readTimout?: number };
 
 const messageRowDefault = {
   grid: { size: 56 },
@@ -51,17 +30,18 @@ const hashString = (str?: string): number => {
   return Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0));
 };
 
-const renderMessageCell = (message: MessageType, now: Date) => {
+const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean) => {
+  const id = message.id;
   const text = message.blocks.find((block) => block.type === 'text')?.text;
   const date = formatDate(now, message.created ? new Date(message.created) : new Date());
   const from = message.sender?.name ?? message.sender?.email;
   const subject = message.properties?.subject ?? text;
   const hue = toHue(hashString(from));
 
-  return `<button
+  return `<div class="message__content${isCurrent ? ' bg-currentRelated' : ''}"><button
       class="message__thumb dx-focus-ring-inset"
       data-inbox-action="select-message"
-      data-message-id="${message.id}"
+      data-message-id="${id}"
       ><dx-avatar
         hue=${hue}
         variant="square"
@@ -72,12 +52,12 @@ const renderMessageCell = (message: MessageType, now: Date) => {
     ><button
       class="message__abstract dx-focus-ring-inset"
       data-inbox-action="current-message"
-      data-message-id="${message.id}"
+      data-message-id="${id}"
       ><p class="message__abstract__heading"
         ><span>${from}</span
         ><span>${date}</span></p
       ><p class="message__abstract__body">${subject}</p
-  ></button>`;
+  ></button></div>`;
 };
 
 const messageCellClassName = 'message';
@@ -88,63 +68,21 @@ const messageCellClassName = 'message';
 // TODO(burdon): Create outline/kanban.
 // TODO(burdon): Address book/cards.
 
+export type MailboxAction = 'select' | 'current';
+export type MailboxActionHandler = (payload: { action: MailboxAction; messageId: string }) => void;
+
 export type MailboxProps = Pick<MailboxType, 'name'> & {
   id: string;
-  messagesQueue?: Pick<Queue<MessageType>, 'items'>;
-  options?: MailboxOptions;
+  messages: MessageType[];
   ignoreAttention?: boolean;
+  currentMessageId?: string;
+  onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ messagesQueue, options = {}, id, ignoreAttention }: MailboxProps) => {
-  const [currentMessageId, setCurrentMessageId] = useState<string>();
+export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention }: MailboxProps) => {
   // TODO(thure): The container should manage the queue.
-  const tRef = useRef<ReturnType<typeof setTimeout>>();
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
-
-  useEffect(() => {
-    clearTimeout(tRef.current);
-    if (currentMessageId) {
-      tRef.current = setTimeout(() => {
-        const object = messagesQueue?.items?.find((message) => message.id === currentMessageId);
-        if (object?.properties) {
-          updateMessageProperty([object], 'read', true);
-        }
-      }, options?.readTimout ?? DEFAULT_READ_TIMEOUT);
-    }
-
-    return () => clearTimeout(tRef.current);
-  }, [currentMessageId]);
-
-  const messages = useMemo(
-    () =>
-      [...(messagesQueue?.items ?? [])]
-        .filter(
-          (message) =>
-            message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,
-        )
-        .sort(byDate()),
-    [messagesQueue?.items?.length],
-  );
-
-  const _handleMailboxAction = (messages: MessageType[], action: 'archive' | 'delete' | 'unread') => {
-    switch (action) {
-      case 'archive': {
-        updateMessageProperty(messages, 'state', MessageState.ARCHIVED);
-        setCurrentMessageId(undefined);
-        break;
-      }
-      case 'delete': {
-        updateMessageProperty(messages, 'state', MessageState.DELETED);
-        setCurrentMessageId(undefined);
-        break;
-      }
-      case 'unread': {
-        updateMessageProperty(messages, 'read', false);
-        break;
-      }
-    }
-  };
 
   const handleResize = useCallback<OnResizeCallback>(
     ({ width }) => width && setColumnDefault({ grid: { size: width } }),
@@ -164,22 +102,25 @@ export const Mailbox = ({ messagesQueue, options = {}, id, ignoreAttention }: Ma
     [hasAttention, ignoreAttention],
   );
 
-  const handleClick = useCallback((event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    const actionEl = target.closest('[data-inbox-action]');
-    if (actionEl) {
-      const messageId = actionEl.getAttribute('data-message-id')!;
-      const action = actionEl.getAttribute('data-inbox-action')!;
-      switch (action) {
-        case 'select-message':
-          log.debug(`[select message] ${messageId}`);
-          break;
-        case 'current-message':
-          log.debug(`[current message] ${messageId}`);
-          break;
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const actionEl = target.closest('[data-inbox-action]');
+      if (actionEl) {
+        const messageId = actionEl.getAttribute('data-message-id')!;
+        const action = actionEl.getAttribute('data-inbox-action')!;
+        switch (action) {
+          case 'select-message':
+            onAction?.({ action: 'select', messageId });
+            break;
+          case 'current-message':
+            onAction?.({ action: 'current', messageId });
+            break;
+        }
       }
-    }
-  }, []);
+    },
+    [onAction],
+  );
 
   const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
     (range, plane) => {
@@ -191,7 +132,7 @@ export const Mailbox = ({ messagesQueue, options = {}, id, ignoreAttention }: Ma
             for (let row = range.start.row; row <= range.end.row && row < messages.length; row++) {
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
-                accessoryHtml: renderMessageCell(messages[row], now),
+                accessoryHtml: renderMessageCell(messages[row], now, currentMessageId === messages[row].id),
                 className: messageCellClassName,
               };
             }
@@ -201,7 +142,7 @@ export const Mailbox = ({ messagesQueue, options = {}, id, ignoreAttention }: Ma
       }
       return {} as DxGridPlaneCells;
     },
-    [messages],
+    [messages, currentMessageId],
   );
 
   return (

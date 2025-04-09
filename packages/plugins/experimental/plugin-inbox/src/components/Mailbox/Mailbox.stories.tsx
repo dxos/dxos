@@ -11,12 +11,11 @@ import React, { useState } from 'react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Mailbox } from './Mailbox';
-import { createInbox } from '../../testing';
+import { createMessages } from '../../testing';
 
 const DefaultStory = () => {
-  const [inbox] = useState(() => createInbox(100));
-
-  return <Mailbox id='story' messagesQueue={inbox.queue} />;
+  const [messages] = useState(() => createMessages(100));
+  return <Mailbox id='story' messages={messages} ignoreAttention />;
 };
 
 export const Default = {};
