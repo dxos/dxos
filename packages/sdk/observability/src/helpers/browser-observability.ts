@@ -97,8 +97,9 @@ export const initializeAppObservability = async ({
         tracing: tracingEnable,
         replay: replayEnable,
         // TODO(wittjosiah): Configure these.
+        //   Consider using a sampling function to dynamically configure these values.
+        //   https://docs.sentry.io/platforms/javascript/configuration/sampling/#setting-a-sampling-function
         sampleRate: 1.0,
-        // TODO(mykola): Lower this to 0.1.
         replaySampleRate: 1.0,
         replaySampleRateOnError: 1.0,
       },

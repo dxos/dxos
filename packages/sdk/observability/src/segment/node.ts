@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Analytics } from '@segment/analytics-node';
+import { Analytics, type IdentifyParams } from '@segment/analytics-node';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -27,6 +27,19 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
       });
     } catch (err) {
       log.catch('Failed to initialize telemetry', err);
+    }
+  }
+
+  identify(options: IdentifyParams) {
+    if (!this._analytics) {
+      log('Analytics not initialized', { action: 'identify' });
+      return;
+    }
+
+    try {
+      this._analytics.identify(options);
+    } catch (err) {
+      log.catch('Failed to identify', err);
     }
   }
 

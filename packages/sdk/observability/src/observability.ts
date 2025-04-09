@@ -249,6 +249,7 @@ export class Observability {
         }
 
         this.setTag('did', idqr.identity.did);
+        this._telemetry?.identify({ userId: idqr.identity.did });
       });
     }
 

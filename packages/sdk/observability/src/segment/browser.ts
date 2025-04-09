@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type IdentifyParams } from '@segment/analytics-node';
 import snippet from '@segment/snippet';
 
 import { log } from '@dxos/log';
@@ -13,6 +14,7 @@ import { captureException } from '../sentry';
 /**
  * Browser telemetry.
  */
+// https://segment.com/docs/connections/sources/catalog/libraries/website/javascript/#basic-tracking-methods
 export class SegmentTelemetry extends AbstractSegmentTelemetry {
   constructor({ apiKey, batchSize, getTags }: SegmentTelemetryOptions) {
     super(getTags);
@@ -26,9 +28,18 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
   }
 
+  identify(options: IdentifyParams) {
+    try {
+      (window as any).analytics?.identify(options.userId, options.traits);
+    } catch (err) {
+      log.catch('failed to identify', err);
+    }
+  }
+
   page(options: PageOptions) {
     try {
-      (window as any).analytics?.page(this.createPageProps(options));
+      const props = this.createPageProps(options);
+      (window as any).analytics?.page(props.category, props.name, props.properties);
     } catch (err) {
       log.catch('failed to track page', err);
     }
@@ -36,7 +47,8 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
 
   track(options: TrackOptions) {
     try {
-      (window as any).analytics?.track(this.createTrackProps(options));
+      const props = this.createTrackProps(options);
+      (window as any).analytics?.track(props.event, props.properties);
     } catch (err) {
       log.catch('failed to track event', err);
     }
