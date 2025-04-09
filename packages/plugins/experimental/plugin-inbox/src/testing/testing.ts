@@ -16,22 +16,24 @@ export const createInbox = (count = 10) => {
 
   // TODO(burdon): Timestamp.
   return create(MailboxType, {
-    messages: faker.helpers.multiple(
-      () =>
-        makeRef(
-          create(MessageType, {
-            sender: {
-              identityDid: IdentityDid.random(),
-              name: faker.person.fullName(),
-            },
-            created: faker.date.recent().toISOString(),
-            blocks: [{ type: 'text', text: faker.lorem.paragraph() }],
-            properties: {
-              subject: faker.commerce.productName(),
-            },
-          }),
-        ),
-      { count },
-    ),
+    queue: {
+      items: faker.helpers.multiple(
+        () =>
+          makeRef(
+            create(MessageType, {
+              sender: {
+                identityDid: IdentityDid.random(),
+                name: faker.person.fullName(),
+              },
+              created: faker.date.recent().toISOString(),
+              blocks: [{ type: 'text', text: faker.lorem.paragraph() }],
+              properties: {
+                subject: faker.commerce.productName(),
+              },
+            }),
+          ),
+        { count },
+      ),
+    } as any,
   });
 };
