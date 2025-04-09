@@ -37,6 +37,21 @@
       }
     },
     {
+      "label": "test current file",
+      "type": "shell",
+      "command": "cd ${fileDirname} && pnpm vitest ${file}",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
+    },
+    {
       "label": "storybook",
       "type": "shell",
       "command": "pnpm -w nx storybook stories",
