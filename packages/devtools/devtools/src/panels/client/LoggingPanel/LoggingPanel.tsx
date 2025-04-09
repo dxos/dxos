@@ -64,7 +64,7 @@ export const LoggingPanel = () => {
         size: 100,
         config: {
           options: [
-            { id: 'TRACE', title: 'TRACE', color: 'sky' },
+            { id: 'TRACE', title: 'TRACE', color: 'sky' }, // TODO(burdon): Verbose?
             { id: 'DEBUG', title: 'DEBUG', color: 'green' },
             { id: 'INFO', title: 'INFO', color: 'blue' },
             { id: 'WARN', title: 'WARN', color: 'orange' },
@@ -97,6 +97,10 @@ export const LoggingPanel = () => {
       { value: 'info', label: 'Info' },
       { value: 'warn', label: 'Warn' },
       { value: 'error', label: 'Error' },
+<<<<<<< Updated upstream
+=======
+      { value: 'info,echo-edge-replicator:debug', label: 'Debug EDGE Replication' },
+>>>>>>> Stashed changes
     ],
     [],
   );

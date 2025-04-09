@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
@@ -14,7 +14,6 @@ import { Placeholder } from './Placeholder';
 export type MasterDetailTableProps = {
   properties: TablePropertyDefinition[];
   data: Array<{ id: string; [key: string]: any }>;
-  statusBar?: ReactNode;
   detailsTransform?: (data: any) => MaybePromise<any>;
   detailsPosition?: 'bottom' | 'right';
   onSelectionChanged?: (id: string | undefined) => void;
@@ -23,7 +22,6 @@ export type MasterDetailTableProps = {
 export const MasterDetailTable = ({
   properties,
   data,
-  statusBar,
   detailsTransform,
   detailsPosition = 'right',
   onSelectionChanged,
