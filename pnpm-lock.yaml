@@ -6202,6 +6202,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/devtools':
+        specifier: workspace:*
+        version: link:../../../devtools/devtools
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../../core/echo/echo-protocol
