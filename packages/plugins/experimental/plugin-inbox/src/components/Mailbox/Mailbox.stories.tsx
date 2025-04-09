@@ -16,7 +16,7 @@ import { createInbox } from '../../testing';
 const DefaultStory = () => {
   const [inbox] = useState(() => createInbox(100));
 
-  return <Mailbox mailbox={inbox} />;
+  return <Mailbox id='story' messagesQueue={inbox.queue} />;
 };
 
 export const Default = {};

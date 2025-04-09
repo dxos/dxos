@@ -8,7 +8,7 @@ import React, { type MouseEvent, useCallback, useEffect, useRef, useState, useMe
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { log } from '@dxos/log';
-import { useQueue } from '@dxos/react-client/echo';
+import { type Queue } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridPlaneCells, Grid, type GridContentProps, toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { type MessageType } from '@dxos/schema';
@@ -88,19 +88,25 @@ const messageCellClassName = 'message';
 // TODO(burdon): Create outline/kanban.
 // TODO(burdon): Address book/cards.
 
-export type MailboxProps = { mailbox: MailboxType; options?: MailboxOptions; ignoreAttention?: boolean };
+export type MailboxProps = Pick<MailboxType, 'name'> & {
+  id: string;
+  messagesQueue?: Pick<Queue<MessageType>, 'items'>;
+  options?: MailboxOptions;
+  ignoreAttention?: boolean;
+};
 
-export const Mailbox = ({ mailbox, options = {}, ignoreAttention }: MailboxProps) => {
+export const Mailbox = ({ messagesQueue, options = {}, id, ignoreAttention }: MailboxProps) => {
   const [currentMessageId, setCurrentMessageId] = useState<string>();
-  const queue = useQueue<MessageType>(mailbox.queue.dxn, { pollInterval: 1_000 });
+  // TODO(thure): The container should manage the queue.
   const tRef = useRef<ReturnType<typeof setTimeout>>();
-  const { hasAttention } = useAttention(mailbox.id);
+  const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
+
   useEffect(() => {
     clearTimeout(tRef.current);
     if (currentMessageId) {
       tRef.current = setTimeout(() => {
-        const object = queue?.items?.find((message) => message.id === currentMessageId);
+        const object = messagesQueue?.items?.find((message) => message.id === currentMessageId);
         if (object?.properties) {
           updateMessageProperty([object], 'read', true);
         }
@@ -112,13 +118,13 @@ export const Mailbox = ({ mailbox, options = {}, ignoreAttention }: MailboxProps
 
   const messages = useMemo(
     () =>
-      [...(queue?.items ?? [])]
+      [...(messagesQueue?.items ?? [])]
         .filter(
           (message) =>
             message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,
         )
         .sort(byDate()),
-    [queue?.items?.length],
+    [messagesQueue?.items?.length],
   );
 
   const _handleMailboxAction = (messages: MessageType[], action: 'archive' | 'delete' | 'unread') => {
@@ -147,9 +153,6 @@ export const Mailbox = ({ mailbox, options = {}, ignoreAttention }: MailboxProps
 
   const { ref: measureRef } = useResizeDetector({
     onResize: handleResize,
-    refreshOptions: { leading: true },
-    refreshMode: 'debounce',
-    refreshRate: 16,
   });
 
   const handleWheel = useCallback(
@@ -202,7 +205,7 @@ export const Mailbox = ({ mailbox, options = {}, ignoreAttention }: MailboxProps
   );
 
   return (
-    <Grid.Root id={`${mailbox.id}__grid`}>
+    <Grid.Root id={`${id}__grid`}>
       <Grid.Content
         limitColumns={1}
         limitRows={messages.length}
