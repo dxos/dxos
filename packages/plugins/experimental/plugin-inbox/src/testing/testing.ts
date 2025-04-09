@@ -3,10 +3,11 @@
 //
 
 import { IdentityDid } from '@dxos/keys';
-import { create, makeRef } from '@dxos/live-object';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { MessageType } from '@dxos/schema';
+
+import type { MailboxProps } from '../components/Mailbox/Mailbox';
 
 faker.seed(1);
 
@@ -14,10 +15,10 @@ export const createInbox = (count = 10) => {
   // const now = new Date();
 
   // TODO(burdon): Timestamp.
-  return create(ThreadType, {
-    messages: faker.helpers.multiple(
-      () =>
-        makeRef(
+  return {
+    queue: {
+      items: faker.helpers.multiple(
+        () =>
           create(MessageType, {
             sender: {
               identityDid: IdentityDid.random(),
@@ -29,8 +30,8 @@ export const createInbox = (count = 10) => {
               subject: faker.commerce.productName(),
             },
           }),
-        ),
-      { count },
-    ),
-  });
+        { count },
+      ),
+    } as NonNullable<MailboxProps['messagesQueue']>,
+  };
 };
