@@ -52,12 +52,12 @@ const renderMessageCell = (message: MessageType, now: Date) => {
   const subject = message.properties?.subject ?? text;
   const hue = toHue(hashString(from));
 
-  return `<div class="message__thumb" role="none"
+  return `<button class="message__thumb dx-focus-ring-inset" data-inbox-action="select-message" data-message-id="${message.id}"
     ><dx-avatar hue=${hue} variant="square" hueVariant="surface" fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"></dx-avatar
-  ></div><div class="message__abstract" role="none"
-    ><h3 class="message__abstract__row" role="none"><span>${from}</span><span>${date}</span></h3
-    ><p>${subject}</p
-  ></div>`;
+  ></button><button class="message__abstract dx-focus-ring-inset" data-inbox-action="current-message" data-message-id="${message.id}"
+    ><p class="message__abstract__heading" role="none"><span>${from}</span><span>${date}</span></p
+    ><p class="message__abstract__body">${subject}</p
+  ></button>`;
 };
 
 const messageCellClassName = 'message';
@@ -97,6 +97,26 @@ export const MessageList = ({
     [hasAttention, ignoreAttention],
   );
 
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const actionEl = target.closest('[data-inbox-action]');
+      if (actionEl) {
+        const messageId = actionEl.getAttribute('data-message-id')!;
+        const action = actionEl.getAttribute('data-inbox-action')!;
+        switch (action) {
+          case 'select-message':
+            console.log('[select message]', messageId);
+            break;
+          case 'current-message':
+            console.log('[current message]', messageId);
+            break;
+        }
+      }
+    },
+    [messages],
+  );
+
   useEffect(() => {
     if (dxGrid && messages) {
       dxGrid.getCells = (range, plane) => {
@@ -128,6 +148,7 @@ export const MessageList = ({
         rowDefault={messageRowDefault}
         columnDefault={columnDefault}
         onWheel={handleWheel}
+        onClick={handleClick}
         className='[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
         ref={setDxGrid}
       />

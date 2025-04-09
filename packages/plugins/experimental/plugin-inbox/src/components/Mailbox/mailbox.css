@@ -1,11 +1,13 @@
 .message {
   @apply grid grid-cols-[var(--rail-action)_1fr] gap-2;
 
-  .message__thumb {}
+  .message__thumb {
+    @apply text-start;
+  }
   .message__abstract {
-    @apply min-is-0;
-    p { @apply truncate text-sm text-description; }
-    h3 {
+    @apply text-start min-is-0;
+    .message__abstract__body { @apply truncate text-sm text-description; }
+    .message__abstract__heading {
       @apply flex gap-2 text-sm;
       span:first-child { flex: 1 1 0; @apply text-base font-medium truncate; }
     }
