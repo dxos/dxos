@@ -51,7 +51,12 @@ export const CredentialsPanel = (props: { space?: Space }) => {
         )
       }
     >
-      <MasterDetailTable properties={properties} data={data} detailsTransform={(d) => d._original} />
+      <MasterDetailTable
+        properties={properties}
+        data={data}
+        detailsTransform={(d) => d._original}
+        detailsPosition='bottom'
+      />
     </PanelContainer>
   );
 };

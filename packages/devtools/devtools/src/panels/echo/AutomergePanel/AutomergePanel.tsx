@@ -103,12 +103,7 @@ export const AutomergePanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable
-        properties={properties}
-        data={data}
-        statusBar={<div>Handles: {handles.length}</div>}
-        detailsTransform={({ accessor }) => accessor()}
-      />
+      <MasterDetailTable properties={properties} data={data} detailsTransform={({ accessor }) => accessor()} />
     </PanelContainer>
   );
 };

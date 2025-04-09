@@ -70,7 +70,12 @@ export const MembersPanel = (props: { space?: Space }) => {
         )
       }
     >
-      <MasterDetailTable properties={properties} data={data} detailsTransform={(item) => item._original} />
+      <MasterDetailTable
+        properties={properties}
+        data={data}
+        detailsTransform={(item) => item._original}
+        detailsPosition='bottom'
+      />
     </PanelContainer>
   );
 };

@@ -47,7 +47,7 @@ export const QueuesPanel = () => {
       return;
     }
 
-    // Always pick the last item in the queue
+    // Always pick the last item in the queue.
     const lastItem = queue?.items[queue?.items.length - 1];
     if (lastItem) {
       setSelectedVersionObject(null);
@@ -64,7 +64,8 @@ export const QueuesPanel = () => {
         </Toolbar.Root>
       }
     >
-      <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
+      {/* TODO(burdon): Convert to MasterDetailTable. */}
+      <div className={mx('flex grow flex-col divide-y divide-separator overflow-hidden', styles.border)}>
         <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClicked} />
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}

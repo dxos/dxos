@@ -58,7 +58,12 @@ export const DeviceListPanel = () => {
 
   return (
     <PanelContainer>
-      <MasterDetailTable properties={properties} data={data} detailsTransform={(d) => d._original} />
+      <MasterDetailTable
+        properties={properties}
+        data={data}
+        detailsTransform={(d) => d._original}
+        detailsPosition='bottom'
+      />
     </PanelContainer>
   );
 };
