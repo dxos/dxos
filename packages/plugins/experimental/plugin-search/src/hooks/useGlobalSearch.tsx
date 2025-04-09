@@ -6,7 +6,8 @@ import React, { createContext, type PropsWithChildren, useContext, useMemo, useS
 
 import { raise } from '@dxos/debug';
 
-import { filterObjectsSync, queryStringToMatch, type SearchResult } from './search-sync';
+import { filterObjectsSync, queryStringToMatch } from './sync';
+import { type SearchResult } from '../types';
 
 type SearchContextType = {
   match?: RegExp;

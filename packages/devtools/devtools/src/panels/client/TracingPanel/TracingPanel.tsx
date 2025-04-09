@@ -87,13 +87,6 @@ export const TracingPanel = () => {
     };
   }, [client.services.services.TracingService]);
 
-  const tabClass = mx(
-    'radix-state-active:border-b-neutral-700 focus-visible:radix-state-active:border-b-transparent radix-state-inactive:bg-neutral-50 dark:radix-state-active:border-b-neutral-100 dark:radix-state-active:bg-neutral-500 focus-visible:dark:radix-state-active:border-b-transparent dark:radix-state-inactive:bg-neutral-800',
-    'flex-1 px-3 py-2.5',
-    'first:rounded-tl-lg last:rounded-tr-lg',
-    'border-b first:border-r last:border-l',
-  );
-
   const containerRef = useRef<HTMLDivElement>(null);
 
   const resourceProperties: TablePropertyDefinition[] = useMemo(
@@ -129,38 +122,33 @@ export const TracingPanel = () => {
   //  - 'info' column: font-mono + text-green-500 styling for JSON
 
   return (
-    <PanelContainer>
-      <div className='h-1/3'>
-        <DynamicTable data={resourceData} properties={resourceProperties} onRowClicked={handleRowClicked} />
-      </div>
+    <PanelContainer classNames={mx('grid grid-rows-[1fr_1fr] divide-y divide-separator')}>
+      <DynamicTable data={resourceData} properties={resourceProperties} onRowClicked={handleRowClicked} />
+      <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
+        <Tabs.List className='flex divide-x divide-separator border-b border-separator'>
+          <Tabs.Trigger className='flex-1' value='details'>
+            Details
+          </Tabs.Trigger>
+          <Tabs.Trigger className='flex-1' value='logs'>
+            Logs
+          </Tabs.Trigger>
+          <Tabs.Trigger className='flex-1' value='spans'>
+            Spans
+          </Tabs.Trigger>
+        </Tabs.List>
 
-      <div className='flex flex-col h-2/3 overflow-hidden border-t'>
-        <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
-          <Tabs.List className='flex'>
-            <Tabs.Trigger className={tabClass} value='details'>
-              Details
-            </Tabs.Trigger>
-            <Tabs.Trigger className={tabClass} value='logs'>
-              Logs ({selectedResource?.logs.length ?? 0})
-            </Tabs.Trigger>
-            <Tabs.Trigger className={tabClass} value='spans'>
-              Spans ({selectedResource?.spans.length ?? 0})
-            </Tabs.Trigger>
-          </Tabs.List>
+        <Tabs.Content value='details' className='grow overflow-auto'>
+          <MetricsView resource={selectedResource?.resource} />
+        </Tabs.Content>
 
-          <Tabs.Content value='details' className='grow overflow-auto'>
-            <MetricsView resource={selectedResource?.resource} />
-          </Tabs.Content>
+        <Tabs.Content ref={containerRef} value='logs' className='grow'>
+          <LogTable logs={selectedResource?.logs ?? []} />
+        </Tabs.Content>
 
-          <Tabs.Content ref={containerRef} value='logs' className='grow'>
-            <LogTable logs={selectedResource?.logs ?? []} />
-          </Tabs.Content>
-
-          <Tabs.Content value='spans' className='grow overflow-hidden'>
-            <TraceView state={state} resourceId={selectedResourceId} />
-          </Tabs.Content>
-        </Tabs.Root>
-      </div>
+        <Tabs.Content value='spans' className='grow overflow-hidden'>
+          <TraceView state={state} resourceId={selectedResourceId} />
+        </Tabs.Content>
+      </Tabs.Root>
     </PanelContainer>
   );
 };

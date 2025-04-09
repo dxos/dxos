@@ -6,6 +6,8 @@ import { AST, type S } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/live-object';
 import { TextType } from '@dxos/schema';
 
+import { type SearchResult } from '../types';
+
 export const queryStringToMatch = (queryString?: string): RegExp | undefined => {
   const trimmed = queryString?.trim();
   return trimmed ? new RegExp(trimmed, 'i') : undefined;
@@ -33,15 +35,6 @@ const getIcon = (schema: S.Schema.AnyNoContext | undefined): string | undefined 
 // Plain text fields.
 // TODO(burdon): Reconcile with agent index.
 export type TextFields = Record<string, string>;
-
-export type SearchResult = {
-  id: string;
-  type?: string;
-  label?: string;
-  match?: RegExp;
-  snippet?: string;
-  object?: any;
-};
 
 // TODO(thure): This returns `SearchResult[]` which is not just a narrower set of objects as the name implies.
 export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], match?: RegExp): SearchResult[] => {
@@ -84,7 +77,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 };
 
 // TODO(burdon): Use schema?
-const getStringProperty = (object: Record<string, unknown>, keys: string[]): string | undefined => {
+export const getStringProperty = (object: Record<string, unknown>, keys: string[]): string | undefined => {
   let label;
   keys.some((key) => {
     const value = object[key];
