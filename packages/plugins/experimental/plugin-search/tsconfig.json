@@ -21,16 +21,37 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random"
     },
     {
       "path": "../../../common/storybook-utils"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../core/echo/echo-protocol"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../core/echo/live-object"
+    },
+    {
+      "path": "../../../experimental/artifact"
+    },
+    {
+      "path": "../../../experimental/assistant"
     },
     {
       "path": "../../../sdk/app-framework"
@@ -52,6 +73,9 @@
     },
     {
       "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../plugin-deck"
     },
     {
       "path": "../../plugin-graph"

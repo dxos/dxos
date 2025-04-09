@@ -15,6 +15,7 @@ export default [
         'recently closed heading': 'Recently closed',
         'pending results message': 'Searching…',
         'empty results message': 'No matching items in your spaces',
+        'search label': 'Search',
       },
     },
   },

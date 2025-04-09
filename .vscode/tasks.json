@@ -37,6 +37,21 @@
       }
     },
     {
+      "label": "test current file",
+      "type": "shell",
+      "command": "cd ${fileDirname} && pnpm vitest ${file}",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
+    },
+    {
       "label": "storybook",
       "type": "shell",
       "command": "pnpm -w nx storybook stories",
@@ -69,6 +84,21 @@
         "env": {
           "DX_LABS": "true"
         }
+      }
+    },
+    {
+      "label": "build and test all packages",
+      "type": "shell",
+      "command": "pnpm -w nx run-many --target=build,test --parallel 12",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
       }
     }
   ]
