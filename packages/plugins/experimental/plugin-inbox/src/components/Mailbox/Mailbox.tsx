@@ -7,6 +7,7 @@ import './mailbox.css';
 import React, { type MouseEvent, useCallback, useEffect, useRef, useState, useMemo, type WheelEvent } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
+import { log } from '@dxos/log';
 import { useQueue } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridPlaneCells, Grid, type GridContentProps, toPlaneCellIndex } from '@dxos/react-ui-grid';
@@ -154,10 +155,10 @@ export const Mailbox = ({ mailbox, options = {}, ignoreAttention }: MailboxProps
       const action = actionEl.getAttribute('data-inbox-action')!;
       switch (action) {
         case 'select-message':
-          // console.log('[select message]', messageId);
+          log.debug(`[select message] ${messageId}`);
           break;
         case 'current-message':
-          // console.log('[current message]', messageId);
+          log.debug(`[current message] ${messageId}`);
           break;
       }
     }
