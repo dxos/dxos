@@ -122,7 +122,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
     >
       <div className='bs-full'>
         <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
-        <MasterDetailTable properties={properties} data={tableData} />
+        <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
       </div>
     </PanelContainer>
   );
