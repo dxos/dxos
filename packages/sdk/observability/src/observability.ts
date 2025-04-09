@@ -426,7 +426,7 @@ export class Observability {
         this.track({
           ...getTelemetryIdentity(client),
           event: TelemetryEvent.METRICS,
-          action: `${namespace}.space.update`,
+          action: 'space.update',
           properties: data,
         });
       }

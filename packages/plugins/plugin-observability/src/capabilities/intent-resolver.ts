@@ -30,7 +30,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
         settings.enabled = state ?? !settings.enabled;
         observability.track({
           ...getTelemetryIdentity(client),
-          action: `${namespace}.observability.toggle`,
+          action: 'observability.toggle',
           properties: {
             enabled: settings.enabled,
           },
@@ -50,7 +50,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
         void context.waitForCapability(ObservabilityCapabilities.Observability).then((observability) => {
           observability.track({
             ...getTelemetryIdentity(client),
-            action: `${namespace}.${data.name}`,
+            action: data.name,
             properties: {
               ...data.properties,
             },

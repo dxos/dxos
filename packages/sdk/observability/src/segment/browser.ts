@@ -48,7 +48,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
         captureException(err);
       });
     } catch (err) {
-      log.catch('Failed to flush telemetry', err);
+      log.catch('failed to flush telemetry', err);
     }
   }
 

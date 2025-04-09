@@ -20,9 +20,9 @@ export const useAnalyticsCallback = (spaceId: string | undefined, name: string, 
         createIntent(ObservabilityAction.SendEvent, {
           name,
           properties: {
+            spaceId,
             ...meta,
             ...dynamicMeta,
-            spaceId,
           },
         }),
       );

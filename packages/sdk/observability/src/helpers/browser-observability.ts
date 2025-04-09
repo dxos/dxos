@@ -65,6 +65,7 @@ export type AppObservabilityOptions = {
 export const initializeAppObservability = async ({
   namespace,
   config,
+  // TODO(nf): Configure mode.
   mode = 'basic',
   tracingEnable = false,
   replayEnable = false,
@@ -81,11 +82,7 @@ export const initializeAppObservability = async ({
   const release = `${namespace}@${config.get('runtime.app.build.version')}`;
   const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
 
-  const observabilityDisabled = await isObservabilityDisabled(namespace);
-
   const { Observability } = await import('../observability');
-
-  // TODO(nf): Configure mode.
   const observability = new Observability({
     namespace,
     release,
@@ -109,6 +106,7 @@ export const initializeAppObservability = async ({
   });
 
   // Global kill switch.
+  const observabilityDisabled = await isObservabilityDisabled(namespace);
   if (observabilityDisabled) {
     observability.setMode('disabled');
     log.info('observability disabled');

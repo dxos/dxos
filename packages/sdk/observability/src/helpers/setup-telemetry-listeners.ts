@@ -20,7 +20,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.window.click`,
+        action: 'window.click',
         properties: {
           href: window.location.href,
           id: (event.target as HTMLElement)?.id,
@@ -39,7 +39,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.window.focus`,
+        action: 'window.focus',
         properties: {
           href: window.location.href,
           timeAway: now.getTime() - lastFocusEvent.getTime(),
@@ -56,7 +56,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.window.blur`,
+        action: 'window.blur',
         properties: {
           href: window.location.href,
           duration,
@@ -72,7 +72,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.page.unload`,
+        action: 'page.unload',
         properties: {
           href: window.location.href,
           duration: totalTime,
@@ -85,7 +85,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.window.error`,
+        action: 'window.error',
         properties: {
           href: window.location.href,
           message: event.message,
