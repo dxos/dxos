@@ -8,7 +8,7 @@ import Exa from 'exa-js';
 import { defineTool, Message, type TextContentBlock } from '@dxos/artifact';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest } from '@dxos/assistant';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { createStatic, getObjectAnnotation, ObjectId, Ref, S } from '@dxos/echo-schema';
+import { createStatic, getObjectAnnotation, ObjectId, Ref, ReferenceAnnotationId, S } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -238,14 +238,13 @@ const SoftRef = S.Struct({
 });
 
 const mapSchemaRefs = (schema: S.Schema.AnyNoContext) => {
-  return S.make(
-    mapAst(schema.ast, (ast, key) => {
-      if (SchemaAST.getIdentifierAnnotation(ast).pipe(Option.getOrNull) === Ref.schemaIdentifier) {
-        return SoftRef.ast;
-      }
+  const go = (ast: SchemaAST.AST): SchemaAST.AST => {
+    if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
+      return SoftRef.ast;
+    }
 
-      throw new Error('Not implemented');
-      // return mapAst(ast, mapper);
-    }),
-  );
+    return mapAst(ast, go);
+  };
+
+  return S.make(mapAst(schema.ast, go));
 };
