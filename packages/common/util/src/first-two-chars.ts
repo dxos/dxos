@@ -1,9 +1,9 @@
-// Regular expression to match renderable characters
-// Excludes control characters, combining marks, and other non-renderable characters
 //
 // Copyright 2025 DXOS.org
 //
 
+// Regular expression to match renderable characters
+// Excludes control characters, combining marks, and other non-renderable characters. Also excludes punctuation.
 const renderableCharRegex =
   /^(?![\p{Control}\p{Mark}\p{Separator}\p{Surrogate}\p{Unassigned}\p{P}])[\p{L}\p{N}\p{S}\p{Emoji}]$/u;
 
