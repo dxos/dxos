@@ -73,7 +73,7 @@ export namespace ObservabilityAction {
       S.Struct({
         name: S.Literal('navigation.activate'),
         properties: S.Struct({
-          id: S.String,
+          subjectId: S.String,
           typename: S.optional(S.String),
         }),
       }),
