@@ -44,6 +44,8 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
       intent: ObservabilityAction.SendEvent,
       resolve: (data) => {
         const client = context.requestCapability(ClientCapability);
+        const properties = 'properties' in data ? data.properties : {};
+
         // NOTE: This is to ensure that events fired before observability is ready are still sent.
         // TODO(wittjosiah): If the intent dispatcher supports concurrent actions in the future,
         //   then this could be awaited still rather than voiding.
@@ -51,9 +53,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
           observability.track({
             ...getTelemetryIdentity(client),
             action: data.name,
-            properties: {
-              ...data.properties,
-            },
+            properties,
           });
         });
       },

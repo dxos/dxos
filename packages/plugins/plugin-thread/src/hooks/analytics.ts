@@ -11,37 +11,30 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useOnTransition } from '@dxos/react-ui';
 import { type TextContentBlock } from '@dxos/schema';
 
-export const useAnalyticsCallback = (spaceId: string | undefined, name: string, meta?: any) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-
-  return useCallback(
-    (dynamicMeta?: any) => {
-      void dispatch(
-        createIntent(ObservabilityAction.SendEvent, {
-          name,
-          properties: {
-            spaceId,
-            ...meta,
-            ...dynamicMeta,
-          },
-        }),
-      );
-    },
-    [dispatch, name, meta, spaceId],
-  );
-};
-
 export const useOnEditAnalytics = (
   message: ReactiveObject<any>,
   textBlock: TextContentBlock | undefined,
   editing: boolean,
 ) => {
-  const space = getSpace(message);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  const onEditAnalytics = useAnalyticsCallback(space?.id, 'threads.comment-edited', {
-    messageId: message.id,
-    messageLength: textBlock?.text.length,
-  });
+  const onEdit = useCallback(() => {
+    const space = getSpace(message);
+    if (!space || !textBlock) {
+      return;
+    }
 
-  useOnTransition(editing, true, false, onEditAnalytics);
+    void dispatch(
+      createIntent(ObservabilityAction.SendEvent, {
+        name: 'threads.message.update',
+        properties: {
+          spaceId: space.id,
+          messageId: message.id,
+          messageLength: textBlock?.text.length,
+        },
+      }),
+    );
+  }, [dispatch, message, textBlock]);
+
+  useOnTransition(editing, true, false, onEdit);
 };

@@ -11,12 +11,14 @@ import {
   type PluginsContext,
 } from '@dxos/app-framework';
 import { ObjectId, Ref } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
+import { MessageType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
 import { THREAD_PLUGIN } from '../meta';
@@ -91,7 +93,8 @@ export default (context: PluginsContext) =>
         }
 
         const space = getSpace(thread);
-        const spaceId = space?.id;
+        invariant(space, 'Space not found');
+        const spaceId = space.id;
 
         return {
           intents: [
@@ -170,16 +173,22 @@ export default (context: PluginsContext) =>
       },
     }),
     createResolver({
-      intent: ThreadAction.OnMessageAdd,
-      resolve: ({ thread, subject }) => {
+      intent: ThreadAction.AddMessage,
+      resolve: ({ thread, subject, sender, text }) => {
         const { state } = context.requestCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
+        invariant(space, 'Space not found');
         const intents = [];
-        const analyticsProperties = {
-          spaceId: space?.id,
-          threadId: thread.id,
-        };
+
+        const message = create(MessageType, {
+          sender,
+          created: new Date().toISOString(),
+          blocks: [{ type: 'text', text }],
+          // TODO(wittjosiah): Context based on attention.
+          // context: context ? makeRef(context) : undefined,
+        });
+        thread.messages.push(makeRef(message));
 
         if (state.drafts[subjectId]?.find((t) => t === thread)) {
           // Move draft to document.
@@ -188,18 +197,24 @@ export default (context: PluginsContext) =>
           state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
           intents.push(
             createIntent(ObservabilityAction.SendEvent, {
-              name: 'threads.thread-created',
-              properties: analyticsProperties,
+              name: 'threads.create',
+              properties: {
+                spaceId: space.id,
+                threadId: thread.id,
+              },
             }),
           );
         }
 
         intents.push(
           createIntent(ObservabilityAction.SendEvent, {
-            name: 'threads.message-added',
+            name: 'threads.message.add',
             properties: {
-              ...analyticsProperties,
+              spaceId: space.id,
+              threadId: thread.id,
               threadLength: thread.messages.length,
+              messageId: message.id,
+              messageLength: text.length,
             },
           }),
         );
@@ -211,6 +226,7 @@ export default (context: PluginsContext) =>
       intent: ThreadAction.DeleteMessage,
       resolve: ({ subject, thread, messageId, message, messageIndex }, undo) => {
         const space = getSpace(subject);
+        invariant(space, 'Space not found');
 
         if (!undo) {
           const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
@@ -237,8 +253,9 @@ export default (context: PluginsContext) =>
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.message.delete',
                 properties: {
-                  spaceId: space?.id,
+                  spaceId: space.id,
                   threadId: thread.id,
+                  messageId: message.id,
                 },
               }),
             ],
@@ -254,8 +271,9 @@ export default (context: PluginsContext) =>
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.message.undo-delete',
                 properties: {
-                  spaceId: space?.id,
+                  spaceId: space.id,
                   threadId: thread.id,
+                  messageId: message.id,
                 },
               }),
             ],

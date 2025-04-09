@@ -22,7 +22,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         ...getTelemetryIdentity(client),
         action: 'window.click',
         properties: {
-          href: window.location.href,
           id: (event.target as HTMLElement)?.id,
           path: (event.composedPath() as HTMLElement[])
             .filter((el) => Boolean(el.tagName))
@@ -41,7 +40,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         ...getTelemetryIdentity(client),
         action: 'window.focus',
         properties: {
-          href: window.location.href,
           timeAway: now.getTime() - lastFocusEvent.getTime(),
         },
       });
@@ -58,7 +56,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         ...getTelemetryIdentity(client),
         action: 'window.blur',
         properties: {
-          href: window.location.href,
           duration,
         },
       });
@@ -74,7 +71,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         ...getTelemetryIdentity(client),
         action: 'page.unload',
         properties: {
-          href: window.location.href,
           duration: totalTime,
         },
       });
@@ -87,10 +83,10 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         ...getTelemetryIdentity(client),
         action: 'window.error',
         properties: {
-          href: window.location.href,
           message: event.message,
           filename: event.filename,
           stack: (event.error as Error)?.stack,
+          cause: (event.error as Error)?.cause,
         },
       });
     });
