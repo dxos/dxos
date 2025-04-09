@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar, type SearchbarProps } from './Searchbar';
-import { SearchContextProvider, useGlobalSearch, useGlobalSearchResults } from '../context';
+import { SearchContextProvider, useGlobalSearch, useGlobalSearchResults } from '../hooks';
 
 faker.seed(1);
 

@@ -15,10 +15,11 @@ export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
   };
   value?: string;
   onChange?: (text?: string) => void;
+  onSubmit?: (text?: string) => void;
   delay?: number;
 };
 
-export const Searchbar = ({ classes, variant, placeholder, value, onChange }: SearchbarProps) => {
+export const Searchbar = ({ classes, variant, placeholder, value, onChange, onSubmit }: SearchbarProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState(value);
   useEffect(() => {
@@ -34,8 +35,19 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
     inputRef.current?.focus();
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    switch (event.key) {
+      case 'Enter':
+        onSubmit?.(text);
+        break;
+      case 'Escape':
+        handleReset();
+        break;
+    }
+  };
+
   return (
-    <div className='flex w-full items-center pli-1 pbs-1'>
+    <div className='flex shrink-0w-full items-center pli-1 pbs-1'>
       <Input.Root>
         <Input.TextInput
           ref={inputRef}
@@ -44,7 +56,7 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
           value={text ?? ''}
           classNames={mx('pl-3 pr-10', classes?.input)}
           onChange={({ target }) => handleChange(target.value)}
-          onKeyDown={({ key }) => key === 'Escape' && handleReset()}
+          onKeyDown={handleKeyDown}
         />
 
         {/* TODO(burdon): Margin should be density specific. */}
