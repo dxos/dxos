@@ -154,10 +154,10 @@ export const Mailbox = ({ mailbox, options = {}, ignoreAttention }: MailboxProps
       const action = actionEl.getAttribute('data-inbox-action')!;
       switch (action) {
         case 'select-message':
-          console.log('[select message]', messageId);
+          // console.log('[select message]', messageId);
           break;
         case 'current-message':
-          console.log('[current message]', messageId);
+          // console.log('[current message]', messageId);
           break;
       }
     }
