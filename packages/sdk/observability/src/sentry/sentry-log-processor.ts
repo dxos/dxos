@@ -27,6 +27,7 @@ export class SentryLogProcessor {
     if (entry.level !== LogLevel.WARN && entry.level !== LogLevel.ERROR) {
       return;
     }
+
     // TODO(nf): add rate limiting to avoid spamming Sentry/consuming excessive quota.
     withScope((scope) => {
       const severity = convertLevel(level);
@@ -125,6 +126,7 @@ const formatMessageForSentry = (entry: LogEntry) => {
   if (scopePrefix == null) {
     return entry.message;
   }
+
   const workerPrefix = entry.meta?.S?.hostSessionId ? '[worker] ' : '';
   return `${workerPrefix}${scopePrefix} ${entry.message}`;
 };
@@ -136,6 +138,7 @@ const convertLevel = (level: LogLevel): SeverityLevel => {
   if (level === LogLevel.WARN) {
     return 'warning';
   }
+
   return LogLevel[level].toLowerCase() as SeverityLevel;
 };
 

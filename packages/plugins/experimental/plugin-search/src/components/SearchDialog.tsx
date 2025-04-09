@@ -12,8 +12,8 @@ import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/r
 import { SearchList, type SearchListItemProps } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
+import { useSearchResults } from '../hooks';
 import { SEARCH_PLUGIN } from '../meta';
-import { useSearchResults } from '../search';
 
 export const SEARCH_DIALOG = `${SEARCH_PLUGIN}/SearchDialog`;
 

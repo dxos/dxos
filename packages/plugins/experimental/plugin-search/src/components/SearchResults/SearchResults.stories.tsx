@@ -11,7 +11,7 @@ import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SearchResults, type SearchResultsProps } from './SearchResults';
-import { filterObjectsSync } from '../../search-sync';
+import { filterObjectsSync } from '../../hooks';
 
 faker.seed(1);
 

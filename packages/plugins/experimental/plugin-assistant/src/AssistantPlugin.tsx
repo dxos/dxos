@@ -78,14 +78,14 @@ export const AssistantPlugin = () =>
       activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType]),
     }),
     defineModule({
-      id: `${meta.id}/module/complementary-panels`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'service-registry',
-          label: ['service registry label', { ns: ASSISTANT_PLUGIN }],
-          icon: 'ph--plugs--regular',
-        }),
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntentResolver,
+      activate: IntentResolver,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
@@ -95,14 +95,14 @@ export const AssistantPlugin = () =>
       activate: ReactSurface,
     }),
     defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
+      id: `${meta.id}/module/complementary-panels`,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
+      activate: () =>
+        contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'service-registry',
+          label: ['service registry label', { ns: ASSISTANT_PLUGIN }],
+          icon: 'ph--plugs--regular',
+        }),
     }),
     defineModule({
       id: `${meta.id}/module/ai-client`,

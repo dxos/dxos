@@ -26,7 +26,6 @@ export const getTypename = (obj: BaseObject): string | undefined => {
   if (typename === undefined) {
     typename = obj[ECHO_ATTR_TYPE];
   }
-
   if (typename === undefined) {
     return undefined;
   }
@@ -35,6 +34,9 @@ export const getTypename = (obj: BaseObject): string | undefined => {
   return typename;
 };
 
+/**
+ * @internal
+ */
 export const setTypename = (obj: any, typename: string) => {
   Object.defineProperty(obj, TYPENAME_SYMBOL, {
     value: typename,
