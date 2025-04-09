@@ -8,7 +8,7 @@ import Exa from 'exa-js';
 import { defineTool, Message, type TextContentBlock } from '@dxos/artifact';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest } from '@dxos/assistant';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { createStatic, getObjectAnnotation, ObjectId, Ref, ReferenceAnnotationId, S } from '@dxos/echo-schema';
+import { createStatic, getObjectAnnotation, ObjectId, ReferenceAnnotationId, S } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
