@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -13,8 +14,9 @@ import { MasterDetailTable, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
-export const MembersPanel = () => {
-  const { space } = useDevtoolsState();
+export const MembersPanel = (props: { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
   const members = useMembers(space?.key);
 
   const properties: TablePropertyDefinition[] = useMemo(
@@ -61,12 +63,19 @@ export const MembersPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar.Root>
-          <DataSpaceSelector />
-        </Toolbar.Root>
+        !props.space && (
+          <Toolbar.Root>
+            <DataSpaceSelector />
+          </Toolbar.Root>
+        )
       }
     >
-      <MasterDetailTable properties={properties} data={data} detailsTransform={(item) => item._original} />
+      <MasterDetailTable
+        properties={properties}
+        data={data}
+        detailsTransform={(item) => item._original}
+        detailsPosition='bottom'
+      />
     </PanelContainer>
   );
 };

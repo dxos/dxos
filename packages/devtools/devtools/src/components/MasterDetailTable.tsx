@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
@@ -14,7 +14,6 @@ import { Placeholder } from './Placeholder';
 export type MasterDetailTableProps = {
   properties: TablePropertyDefinition[];
   data: Array<{ id: string; [key: string]: any }>;
-  statusBar?: ReactNode;
   detailsTransform?: (data: any) => MaybePromise<any>;
   detailsPosition?: 'bottom' | 'right';
   onSelectionChanged?: (id: string | undefined) => void;
@@ -23,7 +22,6 @@ export type MasterDetailTableProps = {
 export const MasterDetailTable = ({
   properties,
   data,
-  statusBar,
   detailsTransform,
   detailsPosition = 'right',
   onSelectionChanged,
@@ -70,24 +68,16 @@ export const MasterDetailTable = ({
   }, [selected, detailsTransform]);
 
   const gridLayout = useMemo(() => {
-    if (detailsPosition === 'right') {
-      return selected ? 'grid grid-cols-[4fr_3fr]' : 'grid grid-cols-[1fr_min-content]';
-    } else {
-      return selected ? 'grid grid-rows-[3fr_5fr]' : 'grid grid-rows-[1fr_min-content]';
-    }
-  }, [selected, detailsPosition]);
+    return detailsPosition === 'right' ? 'grid grid-cols-[2fr_1fr]' : 'grid grid-rows-[2fr_1fr]';
+  }, [detailsPosition]);
 
   return (
-    <div className={mx('bs-full', gridLayout)}>
-      <div>
-        <DynamicTable data={data} properties={properties} onRowClicked={handleRowClicked} />
-      </div>
-      <div
-        className={mx('overflow-auto text-sm border-separator border-bs', detailsPosition === 'right' && 'border-is')}
-      >
+    <div className={mx('bs-full divide-x divide-y divide-separator', gridLayout)}>
+      <DynamicTable data={data} properties={properties} onRowClicked={handleRowClicked} />
+      <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-is')}>
         {selected ? (
           isLoading ? (
-            <p className={mx('font-mono text-xs p-1 ')}>Loading details...</p>
+            <p className={mx('font-mono text-xs p-1')}>Loading details...</p>
           ) : (
             <JsonView data={transformedData} />
           )

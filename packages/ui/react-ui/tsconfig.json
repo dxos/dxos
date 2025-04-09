@@ -28,6 +28,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../lit-ui"
+    },
+    {
       "path": "../primitives/react-hooks"
     },
     {

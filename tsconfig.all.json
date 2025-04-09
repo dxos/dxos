@@ -292,9 +292,6 @@
       "path": "packages/plugins/experimental/plugin-native/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-outliner/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/experimental/plugin-script/tsconfig.json"
     },
     {
@@ -356,6 +353,9 @@
     },
     {
       "path": "packages/plugins/plugin-observability/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-presenter/tsconfig.json"
@@ -440,6 +440,9 @@
     },
     {
       "path": "packages/ui/lit-grid/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/lit-ui/tsconfig.json"
     },
     {
       "path": "packages/ui/primitives/react-hooks/tsconfig.json"

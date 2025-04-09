@@ -7,7 +7,6 @@ import { type Simplify } from 'effect/Types';
 
 import { getField, type JsonPath } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';
@@ -226,6 +225,7 @@ export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generat
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.
  */
+// TODO(burdon): Convert to JsonPath?
 export const getLabel = <S extends S.Schema.Any>(schema: S, object: S.Schema.Type<S>): string | undefined => {
   let annotation = schema.ast.annotations[LabelAnnotationId];
   if (!annotation) {
@@ -234,10 +234,10 @@ export const getLabel = <S extends S.Schema.Any>(schema: S, object: S.Schema.Typ
   if (!Array.isArray(annotation)) {
     annotation = [annotation];
   }
+
   for (const accessor of annotation as string[]) {
     assertArgument(typeof accessor === 'string', 'Label annotation must be a string or an array of strings');
     const value = getField(object, accessor as JsonPath);
-    log.info('getLabel', { annotation, accessor, value });
     switch (typeof value) {
       case 'string':
       case 'number':
@@ -251,5 +251,6 @@ export const getLabel = <S extends S.Schema.Any>(schema: S, object: S.Schema.Typ
         continue;
     }
   }
+
   return undefined;
 };

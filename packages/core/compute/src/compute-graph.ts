@@ -73,14 +73,13 @@ export class ComputeGraph extends Resource {
   ) {
     super();
 
-    const contextOptions = {
+    this.context = new FunctionContext(this._hf, this._space, {
       ...this._options,
       onUpdate: (update) => {
         this._options?.onUpdate?.(update);
         this.update.emit({ type: 'valuesUpdated' });
       },
-    } satisfies Partial<FunctionContextOptions>;
-    this.context = new FunctionContext(this._hf, this._space, contextOptions);
+    });
     this._hf.updateConfig({ context: this.context });
 
     // TODO(burdon): If debounce then aggregate changes.

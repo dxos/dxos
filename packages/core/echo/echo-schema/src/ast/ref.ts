@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, Schema as S } from 'effect';
+import { Option, Schema as S, SchemaAST } from 'effect';
 import {
   getDescriptionAnnotation,
   getIdentifierAnnotation,
@@ -50,8 +50,25 @@ export interface Ref$<T extends WithId> extends S.SchemaClass<Ref<T>, EncodedRef
 interface RefFn {
   <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
 
+  /**
+   * @returns True if the object is a reference.
+   */
   isRef: (obj: any) => obj is Ref<any>;
+
+  /**
+   * @returns True if the reference points to the given object id.
+   */
   hasObjectId: (id: ObjectId) => (ref: Ref<any>) => boolean;
+
+  /**
+   * @returns True if the schema is a reference schema.
+   */
+  isRefSchema: (schema: S.Schema<any, any>) => schema is Ref$<any>;
+
+  /**
+   * @returns True if the schema AST is a reference schema.
+   */
+  isRefSchemaAST: (ast: SchemaAST.AST) => boolean;
 }
 
 /**
@@ -114,6 +131,14 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
 };
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
+
+Ref.isRefSchema = (schema: S.Schema<any, any>): schema is Ref$<any> => {
+  return Ref.isRefSchemaAST(schema.ast);
+};
+
+Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean => {
+  return SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome);
+};
 
 /**
  * `reference` field on the schema object.

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { IdentityDid } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
-import { PublicKey } from '@dxos/react-client';
 import { MessageType } from '@dxos/schema';
 
 faker.seed(1);
@@ -20,7 +20,7 @@ export const createInbox = (count = 10) => {
         makeRef(
           create(MessageType, {
             sender: {
-              identityKey: PublicKey.random().toHex(),
+              identityDid: IdentityDid.random(),
               name: faker.person.fullName(),
             },
             created: faker.date.recent().toISOString(),
