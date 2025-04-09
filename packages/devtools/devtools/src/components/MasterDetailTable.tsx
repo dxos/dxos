@@ -68,22 +68,16 @@ export const MasterDetailTable = ({
   }, [selected, detailsTransform]);
 
   const gridLayout = useMemo(() => {
-    if (detailsPosition === 'right') {
-      return selected ? 'grid grid-cols-[4fr_3fr]' : 'grid grid-cols-[1fr_min-content]';
-    } else {
-      return selected ? 'grid grid-rows-[3fr_5fr]' : 'grid grid-rows-[1fr_min-content]';
-    }
-  }, [selected, detailsPosition]);
+    return detailsPosition === 'right' ? 'grid grid-cols-[2fr_1fr]' : 'grid grid-rows-[2fr_1fr]';
+  }, [detailsPosition]);
 
   return (
-    <div className={mx('bs-full border-bs border-separator', gridLayout)}>
-      <div>
-        <DynamicTable data={data} properties={properties} onRowClicked={handleRowClicked} />
-      </div>
-      <div className={mx('overflow-auto text-sm ', detailsPosition === 'right' && 'border-separator border-is')}>
+    <div className={mx('bs-full divide-x divide-y divide-separator', gridLayout)}>
+      <DynamicTable data={data} properties={properties} onRowClicked={handleRowClicked} />
+      <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-is')}>
         {selected ? (
           isLoading ? (
-            <p className={mx('font-mono text-xs p-1 ')}>Loading details...</p>
+            <p className={mx('font-mono text-xs p-1')}>Loading details...</p>
           ) : (
             <JsonView data={transformedData} />
           )

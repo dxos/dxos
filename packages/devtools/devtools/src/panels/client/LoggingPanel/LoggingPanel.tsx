@@ -64,8 +64,9 @@ export const LoggingPanel = () => {
         size: 100,
         config: {
           options: [
-            { id: 'TRACE', title: 'TRACE', color: 'sky' }, // TODO(burdon): Verbose?
+            { id: 'TRACE', title: 'TRACE', color: 'sky' },
             { id: 'DEBUG', title: 'DEBUG', color: 'green' },
+            { id: 'VERBOSE', title: 'VERBOSE', color: 'neutral' },
             { id: 'INFO', title: 'INFO', color: 'blue' },
             { id: 'WARN', title: 'WARN', color: 'orange' },
             { id: 'ERROR', title: 'ERROR', color: 'red' },
@@ -92,15 +93,15 @@ export const LoggingPanel = () => {
 
   const presets = useMemo(
     () => [
-      { value: 'verbose', label: 'Verbose' },
+      { value: 'trace', label: 'Trace' },
       { value: 'debug', label: 'Debug' },
+      { value: 'verbose', label: 'Verbose' },
       { value: 'info', label: 'Info' },
       { value: 'warn', label: 'Warn' },
       { value: 'error', label: 'Error' },
-<<<<<<< Updated upstream
-=======
-      { value: 'info,echo-edge-replicator:debug', label: 'Debug EDGE Replication' },
->>>>>>> Stashed changes
+
+      // TOOD(burdon): Factor out.
+      { value: 'info,echo-edge-replicator:debug', label: 'EDGE Replication' },
     ],
     [],
   );
@@ -109,6 +110,7 @@ export const LoggingPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
+          {/* TODO(wittjosiah): Reset selection value when typing manually in the searchbar. */}
           <Select items={presets} onValueChange={onSearchChange} />
           <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={onSearchChange} />
           <Toolbar.Button onClick={() => setLogs([])}>
@@ -117,7 +119,7 @@ export const LoggingPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable properties={properties} data={tableData} />
+      <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
     </PanelContainer>
   );
 };
