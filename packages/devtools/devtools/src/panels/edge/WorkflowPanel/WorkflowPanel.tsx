@@ -8,7 +8,7 @@ import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor
 import { Filter } from '@dxos/echo-db';
 import { AST, FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
@@ -18,8 +18,9 @@ import { ControlledSelector, MasterDetailTable, PanelContainer } from '../../../
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
-export const WorkflowPanel = () => {
-  const { space } = useDevtoolsState();
+export const WorkflowPanel = (props: { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
   const [displayMode, setDisplayMode] = useState(DisplayMode.COMPILED);
   const [executionMode, setExecutionMode] = useState(WorkflowDebugPanelMode.LOCAL);
   const graphs = useQuery(space, Filter.schema(ComputeGraph));
@@ -72,7 +73,7 @@ export const WorkflowPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <DataSpaceSelector />
+          {!props.space && <DataSpaceSelector />}
           <ControlledSelector values={Object.values(DisplayMode)} value={displayMode} setValue={setDisplayMode} />
           <ControlledSelector
             values={Object.values(WorkflowDebugPanelMode)}
