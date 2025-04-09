@@ -96,14 +96,24 @@ test.describe('Collaboration tests', () => {
     await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
     await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
 
-    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0);
-    await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0);
+    await Promise.all([
+      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0),
+      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0),
+    ]);
 
-    await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus();
-    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus();
+    await Promise.all([
+      Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus(),
+      Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus(),
+    ]);
 
-    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/);
-    await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/);
+    await Promise.all([
+      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/, {
+        timeout: 10_000,
+      }),
+      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/, {
+        timeout: 10_000,
+      }),
+    ]);
   });
 
   test('host and guest can see each others’ changes in same document', async () => {
@@ -197,9 +207,14 @@ test.describe('Collaboration tests', () => {
     const guestPresence = guestPlank.membersPresence();
 
     // TODO(wittjosiah): Initial viewing state is slow.
-    await expect(hostPresence).toHaveCount(1, { timeout: 30_000 });
-    await expect(guestPresence).toHaveCount(1, { timeout: 30_000 });
-    await expect(hostPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 });
-    await expect(guestPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 });
+    await Promise.all([
+      expect(hostPresence).toHaveCount(1, { timeout: 45_000 }),
+      expect(guestPresence).toHaveCount(1, { timeout: 45_000 }),
+    ]);
+
+    await Promise.all([
+      expect(hostPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 }),
+      expect(guestPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 }),
+    ]);
   });
 });

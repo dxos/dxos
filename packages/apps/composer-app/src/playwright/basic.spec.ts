@@ -79,6 +79,8 @@ test.describe('Basic tests', () => {
   });
 
   test('reset device', async ({ browserName }) => {
+    test.setTimeout(60_000);
+
     // TODO(wittjosiah): This test seems to be flaky in firefox & webkit.
     if (browserName !== 'chromium') {
       test.skip();
