@@ -58,6 +58,7 @@ describe('effect-to-json', () => {
       name: Ref(Nested),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
+    // console.log(JSON.stringify(jsonSchema, null, 2));
     const nested = jsonSchema.properties!.name;
     expectReferenceAnnotation(nested);
   });
