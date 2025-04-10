@@ -40,6 +40,12 @@
     "build-cache.json": "jsonc",
     "command-versions.json": "jsonc"
   },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/coverage": true
+  },
   "typescript.preferences.importModuleSpecifier": "relative",
   "search.followSymlinks": false,
   "editor.tabSize": 2,
