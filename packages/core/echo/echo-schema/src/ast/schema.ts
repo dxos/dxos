@@ -15,15 +15,16 @@ export const symbolSchema = Symbol.for('@dxos/schema/Schema');
 // TODO(burdon): Reconcile with `getTypename`.
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
 export const getSchema = (obj: unknown | undefined): S.Schema.AnyNoContext | undefined => {
-  if (obj) {
-    return (obj as any)[symbolSchema];
+  if (!obj) {
+    return undefined;
   }
 
-  return undefined;
+  return (obj as any)[symbolSchema];
 };
 
 /**
  * Internal use only.
+ * @internal
  */
 export const setSchema = (obj: any, schema: S.Schema.AnyNoContext) => {
   Object.defineProperty(obj, symbolSchema, {

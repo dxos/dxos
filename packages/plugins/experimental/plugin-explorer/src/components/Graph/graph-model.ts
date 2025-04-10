@@ -110,7 +110,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
 
             // Runtime schema.
             space.db.graph.schemaRegistry.schemas.forEach((schema) => {
-              const typename = getSchemaDXN(schema)?.toTypename();
+              const typename = getSchemaDXN(schema)?.typename;
               if (typename) {
                 addSchema(typename);
               }
@@ -118,7 +118,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
 
             // Database Schema.
             this._schema?.forEach((schema) => {
-              const typename = getSchemaDXN(schema)?.toTypename();
+              const typename = getSchemaDXN(schema)?.typename;
               if (typename) {
                 addSchema(typename);
               }
@@ -128,7 +128,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
             this._objects.forEach((object) => {
               const schema = getSchema(object);
               if (schema) {
-                const typename = getSchemaDXN(schema)?.toTypename();
+                const typename = getSchemaDXN(schema)?.typename;
                 if (typename) {
                   const current = currentNodes.find((node) => node.id === object.id);
                   this._graph.nodes.push({ ...current, id: object.id, type: 'object', data: { typename, object } });
