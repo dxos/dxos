@@ -22,6 +22,7 @@ export default defineClientConfig({
       mode: 'basic',
       secrets: { TELEMETRY_API_KEY },
     });
+
     await observability.initialize();
 
     router.afterEach((to, from, failure) => {
