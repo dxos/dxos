@@ -26,33 +26,36 @@ import { Echo } from './api';
 interface _Live<T> {}
 type Live<T> = _Live<T> & T;
 
-const Org = S.Struct({
-  name: S.String,
-}).pipe(
-  Echo.Type({
-    typename: 'example.com/type/Org',
-    version: '0.1.0',
+//
+//
+//
+
+interface Org extends S.Schema.Type<typeof Org> {}
+const Org = Echo.Type({
+  typename: 'example.com/type/Org',
+  version: '0.1.0',
+})(
+  S.Struct({
+    name: S.String,
   }),
 );
 
 // TODO(burdon): Remove Schema/Type suffix in Composer?
-interface Org extends S.Schema.Type<typeof Org> {}
-
-const Contact = S.Struct({
-  name: S.String,
-  // TODO(burdon): Support S.Date, etc.
-  // TODO(burdon): Support defaults.
-  dob: S.optional(S.String),
-  email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
-  org: S.optional(Echo.Ref(Org)),
-}).pipe(
-  Echo.Type({
-    typename: 'example.com/type/Contact',
-    version: '0.1.0',
-  }),
-);
 
 interface Contact extends S.Schema.Type<typeof Contact> {}
+const Contact = Echo.Type({
+  typename: 'example.com/type/Contact',
+  version: '0.1.0',
+})(
+  S.Struct({
+    name: S.String,
+    // TODO(burdon): Support S.Date, etc.
+    // TODO(burdon): Support defaults.
+    dob: S.optional(S.String),
+    email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
+    org: S.optional(Echo.Ref(Org)),
+  }),
+);
 
 describe('Experimental API review', () => {
   test('basic', ({ expect }) => {
