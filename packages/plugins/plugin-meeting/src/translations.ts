@@ -3,10 +3,15 @@
 //
 
 import { MEETING_PLUGIN } from './meta';
+import { MeetingType } from './types';
 
 export default [
   {
     'en-US': {
+      [MeetingType.typename]: {
+        'typename label': 'Meeting',
+        'object name placeholder': 'New meeting',
+      },
       [MEETING_PLUGIN]: {
         'plugin name': 'Meeting',
         'meeting room label': 'New meeting room',
@@ -14,8 +19,10 @@ export default [
         'meeting activity label': 'Meeting',
         'meetings label': 'All Meetings',
 
-        'transcript tab label': 'Transcript',
+        'call tab label': 'Call',
+        'chat tab label': 'Chat',
         'notes tab label': 'Notes',
+        'transcript tab label': 'Transcript',
         'summary tab label': 'Summary',
 
         'summarize label': 'Summarize',
@@ -25,8 +32,9 @@ export default [
         'join call': 'Join',
         'leave call': 'Leave',
 
-        'lobby participant': 'participant',
-        'lobby participants': 'participants',
+        'lobby participants_zero': 'No participants',
+        'lobby participants_one': '1 participant',
+        'lobby participants_other': '{{count}} participants',
 
         'icon pin': 'Pin video',
         'icon unpin': 'Unpin video',
