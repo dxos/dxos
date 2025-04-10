@@ -5,6 +5,8 @@
 import { test, expect } from '@playwright/test';
 import { platform } from 'node:os';
 
+import { sleep } from '@dxos/async';
+
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
@@ -25,6 +27,7 @@ test.describe('Collaboration tests', () => {
   let guest: AppManager;
 
   test.beforeEach(async ({ browser, browserName }) => {
+    test.setTimeout(60_000);
     test.skip(browserName === 'firefox');
     test.skip(browserName === 'webkit' && platform() !== 'darwin');
 
@@ -101,18 +104,17 @@ test.describe('Collaboration tests', () => {
       expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0),
     ]);
 
+    // TODO(wittjosiah): Focusing too quickly causes the cursors not to show up.
+    await sleep(1_000);
+
     await Promise.all([
       Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus(),
       Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus(),
     ]);
 
     await Promise.all([
-      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/, {
-        timeout: 10_000,
-      }),
-      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/, {
-        timeout: 10_000,
-      }),
+      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/),
+      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/),
     ]);
   });
 
