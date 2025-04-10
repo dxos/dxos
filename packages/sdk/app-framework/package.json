@@ -28,10 +28,10 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "./testing": [
+      "testing": [
         "dist/types/src/testing/index.d.ts"
       ],
-      "./worker": [
+      "worker": [
         "dist/types/src/worker.d.ts"
       ]
     }
