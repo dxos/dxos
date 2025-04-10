@@ -38,14 +38,14 @@ const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean)
   const subject = message.properties?.subject ?? text;
   const hue = toHue(hashString(from));
 
-  return `<div class="message__content${isCurrent ? ' bg-currentRelated' : ''}"><button
+  return `<button
       class="message__thumb dx-focus-ring-inset"
       data-inbox-action="select-message"
       data-message-id="${id}"
       ><dx-avatar
-        hue=${hue}
-        variant="square"
+        hue="${hue}"
         hueVariant="surface"
+        variant="square"
         fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"
       ></dx-avatar
     ></button
@@ -54,10 +54,11 @@ const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean)
       data-inbox-action="current-message"
       data-message-id="${id}"
       ><p class="message__abstract__heading"
-        ><span>${from}</span
-        ><span>${date}</span></p
+        ><span class="message__abstract__from">${from}</span
+        ><span class="message__abstract__date">${date}</span
+      ></p
       ><p class="message__abstract__body">${subject}</p
-  ></button></div>`;
+  ></button>`;
 };
 
 const messageCellClassName = 'message';
@@ -130,10 +131,11 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
           case 'grid': {
             const cells: DxGridPlaneCells = {};
             for (let row = range.start.row; row <= range.end.row && row < messages.length; row++) {
+              const isCurrent = currentMessageId === messages[row].id;
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
-                accessoryHtml: renderMessageCell(messages[row], now, currentMessageId === messages[row].id),
-                className: messageCellClassName,
+                accessoryHtml: renderMessageCell(messages[row], now, isCurrent),
+                className: `${messageCellClassName}${isCurrent ? ' message--current' : ''}`,
               };
             }
             return cells;

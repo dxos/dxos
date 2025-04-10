@@ -98,7 +98,7 @@ export const systemSememes = {
   'surface-450': surface450,
   'surface-450t': applyAlpha(surface450, 0.1),
 
-  'accentSurface-100t': {
+  'accentSurface-300t': {
     light: ['primary', '300/.1'],
     dark: ['primary', '400/.1'],
   },
@@ -175,7 +175,7 @@ export const systemAliases = {
   'surface-450t': { root: ['hoverOverlay'] },
 
   // accent
-  'accentSurface-100t': { root: ['currentRelated'] },
+  'accentSurface-300t': { root: ['currentRelated'] },
   'accentSurface-400': { root: ['accentSurfaceHover'] },
   'accentSurface-500': { root: ['accentSurface'] },
 } satisfies ColorAliases;
