@@ -61,7 +61,7 @@ export type TypedObjectProps = {
  * Base class factory for typed objects.
  * @deprecated Use pipe(Echo.Type) instead.
  */
-// TODO(burdon): Can this be flattened into a single function (e.g., `class X extends TypedObject({})`).
+// TODO(burdon): Remove.
 export const TypedObject = ({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
   if (!skipTypenameFormatCheck) {
     if (!TYPENAME_REGEX.test(typename)) {

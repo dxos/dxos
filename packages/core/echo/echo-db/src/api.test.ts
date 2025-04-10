@@ -65,7 +65,7 @@ describe('Experimental API review', () => {
     const type: S.Schema<Contact> = getSchema(contact) ?? raise(new Error('No schema found'));
     expect(type).to.eq(Contact);
 
-    // TODO(burdon): Rename getSchemaAnnotation.
+    // TODO(burdon): Rename getTypeAnnotation.
     expect(getObjectAnnotation(type)).to.deep.eq({
       kind: EntityKind.Object,
       typename: 'example.com/type/Contact',
