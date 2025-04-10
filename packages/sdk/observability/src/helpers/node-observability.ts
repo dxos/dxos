@@ -114,11 +114,11 @@ export const initializeNodeObservability = async ({
   const environment = process.env.DX_ENVIRONMENT ?? 'unknown';
 
   const observability = new Observability({
+    mode,
     namespace,
     release,
     environment,
     group,
-    mode,
     errorLog: {
       sentryInitOptions: {
         environment,
@@ -136,9 +136,10 @@ export const initializeNodeObservability = async ({
   try {
     const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);
     const ipData = await res.json();
-    ipData && observability.addIPDataTelemetryTags(ipData);
+    ipData && observability.setIPDataTelemetryTags(ipData);
   } catch (err) {
     observability?.captureException(err);
   }
+
   return observability;
 };

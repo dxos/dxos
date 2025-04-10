@@ -28,6 +28,9 @@ export const InboxPlugin = () =>
           id: MailboxType.typename,
           metadata: {
             icon: 'ph--envelope--regular',
+            graphProps: {
+              startsWithCompanionSurfaceVariant: 'firstMessage',
+            },
           },
         }),
         contributes(Capabilities.Metadata, {

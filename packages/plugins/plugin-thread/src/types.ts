@@ -5,7 +5,7 @@
 import { S } from '@dxos/echo-schema';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
-import { MessageType } from '@dxos/schema';
+import { ActorSchema, MessageType } from '@dxos/schema';
 
 import { THREAD_PLUGIN } from './meta';
 
@@ -58,11 +58,12 @@ export namespace ThreadAction {
     output: S.Void,
   }) {}
 
-  // TODO(wittjosiah): Rename?
-  export class OnMessageAdd extends S.TaggedClass<OnMessageAdd>()(`${THREAD_ACTION}/on-message-add`, {
+  export class AddMessage extends S.TaggedClass<AddMessage>()(`${THREAD_ACTION}/add-message`, {
     input: S.Struct({
-      thread: ThreadType,
       subject: EchoObjectSchema,
+      thread: ThreadType,
+      sender: ActorSchema,
+      text: S.String,
     }),
     output: S.Void,
   }) {}

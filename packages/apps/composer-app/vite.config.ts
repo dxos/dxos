@@ -20,7 +20,7 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import { mergeConfig } from 'vitest/config';
 import { baseConfig } from '../../../vitest.shared';
 
-import { appKey } from './src/constants';
+import { APP_KEY } from './src/constants';
 
 const rootDir = resolve(__dirname, '../../..');
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -248,7 +248,7 @@ export default defineConfig((env) => ({
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
       disable: process.env.DX_ENVIRONMENT !== 'production',
       release: {
-        name: `${appKey}@${process.env.npm_package_version}`,
+        name: `${APP_KEY}@${process.env.npm_package_version}`,
       },
     }),
     ...(process.env.DX_STATS

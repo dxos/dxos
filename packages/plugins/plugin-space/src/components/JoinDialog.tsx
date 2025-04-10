@@ -78,7 +78,12 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
       if (space) {
         await dispatch(
-          createIntent(ObservabilityAction.SendEvent, { name: 'space.join', properties: { spaceId: space.id } }),
+          createIntent(ObservabilityAction.SendEvent, {
+            name: 'space.join',
+            properties: {
+              spaceId: space.id,
+            },
+          }),
         );
       }
     },

@@ -94,7 +94,7 @@ export const SyncStatusDetail = ({ classNames, state, summary, debug }: SyncStat
 
   // TODO(burdon): Normalize to max document count?
   return (
-    <div className={mx('flex flex-col gap-3 p-2 text-xs min-w-96', classNames)}>
+    <div className={mx('flex flex-col gap-3 p-2 text-xs min-w-[400px]', classNames)}>
       <div role='none' className='flex items-center'>
         <h1 className='flex-1'>{t('sync status title')}</h1>
         <div className='flex items-center gap-2'>

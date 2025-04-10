@@ -263,13 +263,13 @@ export default (context: PluginsContext) =>
               ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
               : []),
             createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
-            ...newlyOpen.map((id) => {
-              const active = graph?.findNode(id)?.data;
+            ...newlyOpen.map((subjectId) => {
+              const active = graph?.findNode(subjectId)?.data;
               const typename = isReactiveObject(active) ? getTypename(active) : undefined;
               return createIntent(ObservabilityAction.SendEvent, {
                 name: 'navigation.activate',
                 properties: {
-                  id,
+                  subjectId,
                   typename,
                 },
               });

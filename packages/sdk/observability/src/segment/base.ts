@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type TrackParams, type PageParams } from '@segment/analytics-node';
+import { type TrackParams, type PageParams, type IdentifyParams } from '@segment/analytics-node';
 
 import { log } from '@dxos/log';
 
@@ -35,6 +35,8 @@ const getIdentityOptions = ({ did, installationId }: IdentityOptions): SegmentId
 export abstract class AbstractSegmentTelemetry {
   constructor(private readonly _getTags: () => Tags) {}
 
+  abstract identify(options: IdentifyParams): void;
+
   abstract page(options: PageOptions): void;
 
   abstract track(options: TrackOptions): void;
@@ -44,8 +46,8 @@ export abstract class AbstractSegmentTelemetry {
     return {
       ...getIdentityOptions(options),
       ...rest,
-      context: this._getTags(),
       properties: {
+        common: this._getTags(),
         custom: properties,
       },
     };
@@ -57,9 +59,9 @@ export abstract class AbstractSegmentTelemetry {
       ...getIdentityOptions(options),
       ...rest,
       event: event ?? TelemetryEvent.ACTION,
-      context: this._getTags(),
       properties: {
         action,
+        common: this._getTags(),
         custom: properties,
       },
     };

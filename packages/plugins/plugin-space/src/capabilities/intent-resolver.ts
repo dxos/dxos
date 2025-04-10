@@ -147,7 +147,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
                   createIntent(ObservabilityAction.SendEvent, {
                     name: 'space.share',
                     properties: {
-                      space: space.id,
+                      spaceId: space.id,
                     },
                   }),
                 ]
@@ -265,7 +265,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.Migrate,
-      resolve: async ({ space, version }) => {
+      resolve: async ({ space, version: targetVersion }) => {
         const state = context.requestCapability(SpaceCapabilities.MutableState);
 
         if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
@@ -273,7 +273,8 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
           await space.internal.migrate();
           state.sdkMigrationRunning[space.id] = false;
         }
-        const result = await Migrations.migrate(space, version);
+        const result = await Migrations.migrate(space, targetVersion);
+        const version = Migrations.versionProperty ? space.properties[Migrations.versionProperty] : undefined;
         return {
           data: result,
           intents: [
@@ -283,6 +284,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
                     name: 'space.migrate',
                     properties: {
                       spaceId: space.id,
+                      targetVersion,
                       version,
                     },
                   }),

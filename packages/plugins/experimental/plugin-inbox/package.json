@@ -46,12 +46,14 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",
-    "lodash.get": "^4.4.2"
+    "lodash.get": "^4.4.2",
+    "react-resize-detector": "^12.0.2"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
