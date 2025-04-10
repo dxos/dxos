@@ -20,9 +20,8 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.window.click`,
+        action: 'window.click',
         properties: {
-          href: window.location.href,
           id: (event.target as HTMLElement)?.id,
           path: (event.composedPath() as HTMLElement[])
             .filter((el) => Boolean(el.tagName))
@@ -39,9 +38,8 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.window.focus`,
+        action: 'window.focus',
         properties: {
-          href: window.location.href,
           timeAway: now.getTime() - lastFocusEvent.getTime(),
         },
       });
@@ -52,30 +50,28 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
 
   const blurCallback = () => {
     const now = new Date();
-    const timeSpent = now.getTime() - lastFocusEvent.getTime();
+    const duration = now.getTime() - lastFocusEvent.getTime();
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.window.blur`,
+        action: 'window.blur',
         properties: {
-          href: window.location.href,
-          timeSpent,
+          duration,
         },
       });
     });
 
     lastFocusEvent = now;
-    totalTime = totalTime + timeSpent;
+    totalTime = totalTime + duration;
   };
 
   const unloadCallback = () => {
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.page.unload`,
+        action: 'page.unload',
         properties: {
-          href: window.location.href,
-          timeSpent: totalTime,
+          duration: totalTime,
         },
       });
     });
@@ -85,12 +81,12 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     setTimeout(() => {
       observability.track({
         ...getTelemetryIdentity(client),
-        action: `${namespace}.window.error`,
+        action: 'window.error',
         properties: {
-          href: window.location.href,
           message: event.message,
           filename: event.filename,
           stack: (event.error as Error)?.stack,
+          cause: (event.error as Error)?.cause,
         },
       });
     });

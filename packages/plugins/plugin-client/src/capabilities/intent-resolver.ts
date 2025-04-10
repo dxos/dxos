@@ -34,7 +34,14 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
         const client = context.requestCapability(ClientCapabilities.Client);
         const data = await client.halo.createIdentity();
         await manager.activate(ClientEvents.IdentityCreated);
-        return { data, intents: [createIntent(ObservabilityAction.SendEvent, { name: 'identity.create' })] };
+        return {
+          data,
+          intents: [
+            createIntent(ObservabilityAction.SendEvent, {
+              name: 'identity.create',
+            }),
+          ],
+        };
       },
     }),
     createResolver({
@@ -69,7 +76,9 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
                 blockAlign: 'start',
               },
             }),
-            createIntent(ObservabilityAction.SendEvent, { name: 'identity.share' }),
+            createIntent(ObservabilityAction.SendEvent, {
+              name: 'identity.share',
+            }),
           ],
         };
       },

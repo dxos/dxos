@@ -65,29 +65,24 @@ export type AppObservabilityOptions = {
 export const initializeAppObservability = async ({
   namespace,
   config,
+  // TODO(nf): Configure mode.
   mode = 'basic',
   tracingEnable = false,
   replayEnable = false,
 }: AppObservabilityOptions): Promise<Observability> => {
   log('initializeAppObservability', { config });
 
-  /*
-    const platform = (await client.services.services.SystemService?.getPlatform()) as Platform;
-    if (!platform) {
-      log.error('failed to get platform, could not initialize observability');
-      return undefined;
-    }
-    */
+  // const platform = (await client.services.services.SystemService?.getPlatform()) as Platform;
+  // if (!platform) {
+  //   log.error('failed to get platform, could not initialize observability');
+  //   return undefined;
+  // }
 
   const group = (await getObservabilityGroup(namespace)) ?? undefined;
   const release = `${namespace}@${config.get('runtime.app.build.version')}`;
   const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
 
-  const observabilityDisabled = await isObservabilityDisabled(namespace);
-
   const { Observability } = await import('../observability');
-
-  // TODO(nf): configure mode
   const observability = new Observability({
     namespace,
     release,
@@ -102,15 +97,17 @@ export const initializeAppObservability = async ({
         tracing: tracingEnable,
         replay: replayEnable,
         // TODO(wittjosiah): Configure these.
+        //   Consider using a sampling function to dynamically configure these values.
+        //   https://docs.sentry.io/platforms/javascript/configuration/sampling/#setting-a-sampling-function
         sampleRate: 1.0,
-        // TODO(mykola): Lower this to 0.1.
         replaySampleRate: 1.0,
         replaySampleRateOnError: 1.0,
       },
     },
   });
 
-  // global kill switch
+  // Global kill switch.
+  const observabilityDisabled = await isObservabilityDisabled(namespace);
   if (observabilityDisabled) {
     observability.setMode('disabled');
     log.info('observability disabled');
@@ -152,17 +149,16 @@ export const initializeAppObservability = async ({
     };
 
     // TODO(nf): plugin state?
-
     // TODO(nf): should provide capability to init Sentry earlier in booting process to capture errors during initialization.
 
     await observability.initialize();
     observability.startErrorLogs();
 
     const ipData = await getIPData(config);
-
-    ipData && observability.addIPDataTelemetryTags(ipData);
+    ipData && observability.setIPDataTelemetryTags(ipData);
 
     if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
+      // TODO(burdon): Need to close.
       setInterval(async () => {
         try {
           const storageEstimate = await navigator.storage.estimate();
@@ -171,7 +167,7 @@ export const initializeAppObservability = async ({
         } catch (error) {
           log.warn('Failed to run estimate()', error);
         }
-      }, 10e3);
+      }, 10_000);
     }
   } catch (err: any) {
     log.error('Failed to initialize app observability', err);
