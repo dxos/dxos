@@ -28,7 +28,7 @@ export const VERSION_REGEX = /^\d+.\d+.\d+$/;
 /**
  * Payload stored under {@link ObjectAnnotationId}.
  */
-// TODO(burdon): Reconcile with other types.
+// TODO(burdon): Reconcile with other types; Rename SchemaAnnotation?
 // TODO(burdon): Define as schema with regex patterns above.
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
 export type ObjectAnnotation = {
