@@ -46,6 +46,7 @@ const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean)
         hue="${hue}"
         hueVariant="surface"
         variant="square"
+        size="8"
         fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"
       ></dx-avatar
     ></button
@@ -154,7 +155,7 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
         limitRows={messages.length}
         rowDefault={messageRowDefault}
         columnDefault={columnDefault}
-        onWheel={handleWheel}
+        onWheelCapture={handleWheel}
         onClick={handleClick}
         getCells={getCells}
         className='[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'

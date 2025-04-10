@@ -1,5 +1,5 @@
 .message {
-  @apply grid grid-cols-[var(--rail-action)_1fr] gap-2 border-0;
+  @apply grid grid-cols-[var(--rail-action)_1fr] gap-1 border-0;
   body[data-is-keyboard="true"] article:focus-within & {
     @apply border;
   }
@@ -39,7 +39,7 @@
   }
 
   .message__thumb {
-    @apply text-start;
+    @apply text-start pli-1;
   }
 
   .message__abstract {
