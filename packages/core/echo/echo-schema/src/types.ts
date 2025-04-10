@@ -26,7 +26,7 @@ export const ECHO_ATTR_META = '@meta';
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
 // TODO(dmaretskyi): Rename AnyProperties.
-export type BaseObject = { [key: string]: any };
+export type BaseObject = Record<string, any>;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 

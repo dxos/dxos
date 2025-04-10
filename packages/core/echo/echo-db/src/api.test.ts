@@ -54,10 +54,11 @@ describe('Experimental API review', () => {
     const contact: Contact = create(Contact, { name: 'Test', org: makeRef(org) });
 
     // TODO(burdon): Rename getType; remove getType, getTypename, etc.
+    // TODO(burdon): Function to return { typename, version }, etc? (which type is that?)
     const type: S.Schema<Contact> = getSchema(contact) ?? raise(new Error('No schema found'));
     expect(type).to.eq(Contact);
-    expect(getSchemaDXN(type)?.typename).to.eq(Contact.typename);
     expect(isInstanceOf(Contact, contact)).to.be.true;
+    expect(getSchemaDXN(type)?.typename).to.eq(Contact.typename);
 
     // TODO(burdon): Method to return EchoSchema.
     // const { typename, version } = type;
