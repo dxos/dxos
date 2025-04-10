@@ -39,7 +39,10 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
       await dispatch(
         createIntent(ObservabilityAction.SendEvent, {
           name: 'plugins.toggle',
-          properties: { plugin: id, enabled },
+          properties: {
+            plugin: id,
+            enabled,
+          },
         }),
       );
     },

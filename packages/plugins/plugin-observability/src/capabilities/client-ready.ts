@@ -61,7 +61,6 @@ export default async ({ context, namespace, observability }: ClientReadyOptions)
     createIntent(ObservabilityAction.SendEvent, {
       name: 'page.load',
       properties: {
-        href: window.location.href,
         // TODO(wittjosiah): These apis are deprecated. Is there a better way to find this information?
         loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
       },
