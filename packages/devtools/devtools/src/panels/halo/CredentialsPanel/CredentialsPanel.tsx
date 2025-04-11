@@ -24,7 +24,7 @@ export const CredentialsPanel = (props: { space?: Space }) => {
       { name: 'id', format: FormatEnum.DID, tooltip: true, size: 120 },
       { name: 'issuer', format: FormatEnum.DID, tooltip: true, size: 120 },
       { name: 'type', format: FormatEnum.String, size: 380 },
-      { name: 'issuanceDate', format: FormatEnum.DateTime, title: 'issued', size: 220 },
+      { name: 'issuanceDate', format: FormatEnum.DateTime, title: 'issued', size: 194 },
     ],
     [],
   );
