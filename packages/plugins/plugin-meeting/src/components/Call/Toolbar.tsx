@@ -89,7 +89,7 @@ export const CallToolbar = ({ meeting }: CallToolbarProps) => {
         iconOnly
         icon={isScreensharing ? 'ph--broadcast--regular' : 'ph--screencast--regular'}
         label={isScreensharing ? t('screenshare off') : t('screenshare on')}
-        classNames={[isScreensharing && 'text-red-500']}
+        classNames={[isScreensharing && 'text-activeInCall']}
         onClick={
           isScreensharing
             ? () => call.turnScreenshareOff().catch((err) => log.catch(err))
@@ -100,7 +100,7 @@ export const CallToolbar = ({ meeting }: CallToolbarProps) => {
         iconOnly
         icon={call.raisedHand ? 'ph--hand-waving--regular' : 'ph--hand-palm--regular'}
         label={call.raisedHand ? t('lower hand') : t('raise hand')}
-        classNames={[call.raisedHand && 'text-red-500']}
+        classNames={[call.raisedHand && 'text-activeInCall']}
         onClick={() => call.setRaisedHand(!call.raisedHand)}
       />
       <MediaButtons />

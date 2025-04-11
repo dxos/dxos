@@ -57,7 +57,7 @@ export const Lobby: FC<LobbyProps> = ({ classNames, roomId, onJoin }) => {
       <Toolbar.Root classNames='justify-between'>
         <IconButton variant='primary' label={t('join call')} onClick={handleJoin} icon='ph--phone-incoming--regular' />
         {count !== undefined && <div className='text-sm text-subdued'>{t('lobby participants', { count })}</div>}
-        <div className='grow' />
+        <Toolbar.Separator variant='gap' />
         <MediaButtons />
       </Toolbar.Root>
     </div>
