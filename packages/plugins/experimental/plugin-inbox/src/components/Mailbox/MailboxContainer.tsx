@@ -9,10 +9,15 @@ import { log } from '@dxos/log';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckAction, surfaceVariant } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
+<<<<<<< HEAD
+=======
+import { useTranslation } from '@dxos/react-ui';
+>>>>>>> origin/main
 import { StackItem } from '@dxos/react-ui-stack';
 import type { MessageType } from '@dxos/schema';
 
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
+import { INBOX_PLUGIN } from '../../meta';
 import { type MailboxType, MessageState } from '../../types';
 
 export type MailboxContainerProps = {
@@ -26,6 +31,7 @@ const byDate =
 
 export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const id = fullyQualifiedId(mailbox);
+  const { t } = useTranslation(INBOX_PLUGIN);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -70,6 +76,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   return (
     <StackItem.Content toolbar={false}>
+<<<<<<< HEAD
       <Mailbox
         messages={messages}
         id={id}
@@ -77,6 +84,19 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
         onAction={handleAction}
         currentMessageId={currentMessageId}
       />
+=======
+      {messages && messages.length > 0 ? (
+        <Mailbox
+          messages={messages}
+          id={id}
+          name={mailbox.name}
+          onAction={handleAction}
+          currentMessageId={currentMessageId}
+        />
+      ) : (
+        <p className='text-description text-center p-8'>{t('empty mailbox message')}</p>
+      )}
+>>>>>>> origin/main
     </StackItem.Content>
   );
 };
