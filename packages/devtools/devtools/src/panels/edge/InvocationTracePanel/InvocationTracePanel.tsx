@@ -138,9 +138,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
               detailAxis === 'block' && 'border-bs',
             )}
           >
-            <div>
-              <SpanSummary span={selectedInvocation} space={space} onClose={() => setSelectedId(undefined)} />
-            </div>
+            <SpanSummary span={selectedInvocation} space={space} onClose={() => setSelectedId(undefined)} />
             <Tabs.Root
               orientation='horizontal'
               value={activeTab}
