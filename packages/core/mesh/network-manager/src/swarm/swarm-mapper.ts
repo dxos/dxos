@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event, EventSubscriptions } from '@dxos/async';
+import { Event, Subscriptions } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { PeerInfoHash, type PeerInfo as MessagingPeer } from '@dxos/messaging';
@@ -28,7 +28,7 @@ export interface PeerInfo {
 type Unsubscribe = () => void;
 
 export class SwarmMapper {
-  private readonly _subscriptions = new EventSubscriptions();
+  private readonly _subscriptions = new Subscriptions();
   private readonly _connectionSubscriptions = new ComplexMap<MessagingPeer, Unsubscribe>(PeerInfoHash);
   private readonly _peers = new ComplexMap<MessagingPeer, PeerInfo>(PeerInfoHash);
 

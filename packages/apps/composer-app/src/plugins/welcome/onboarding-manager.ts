@@ -3,7 +3,7 @@
 //
 
 import { createIntent, LayoutAction, type PluginsContext, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { EventSubscriptions, type Trigger } from '@dxos/async';
+import { Subscriptions, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -32,7 +32,7 @@ export type OnboardingManagerParams = {
 
 export class OnboardingManager {
   private readonly _ctx = new Context();
-  private readonly _subscriptions = new EventSubscriptions();
+  private readonly _subscriptions = new Subscriptions();
   private readonly _dispatch: PromiseIntentDispatcher;
   private readonly _client: Client;
   private readonly _context: PluginsContext;

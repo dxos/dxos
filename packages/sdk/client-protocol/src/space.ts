@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
+import { type MulticastObservable, type CleanupFn } from '@dxos/async';
 import type { SpecificCredential } from '@dxos/credentials';
 import { type CoreDatabase, type EchoDatabase, type QueuesAPI, type ReactiveEchoObject } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -135,5 +135,5 @@ export interface Space {
 
   // TODO(wittjosiah): Gather into messaging abstraction?
   postMessage: (channel: string, message: any) => Promise<void>;
-  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
+  listen: (channel: string, callback: (message: GossipMessage) => void) => CleanupFn;
 }

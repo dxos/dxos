@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
+import { Subscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import {
+  type CredentialProcessor,
   createAdmissionCredentials,
   createDidFromIdentityKey,
-  type CredentialProcessor,
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
@@ -18,11 +18,11 @@ import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  ApiError,
-  SpaceNotFoundError,
   encodeError,
-  IdentityNotInitializedError,
+  ApiError,
   AuthorizationError,
+  IdentityNotInitializedError,
+  SpaceNotFoundError,
 } from '@dxos/protocols';
 import {
   SpaceMember,
@@ -140,7 +140,7 @@ export class SpacesServiceImpl implements SpacesService {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
 
-        const subscriptions = new EventSubscriptions();
+        const subscriptions = new Subscriptions();
         ctx.onDispose(() => subscriptions.clear());
 
         // TODO(dmaretskyi): Create a pattern for subscribing to a set of objects.

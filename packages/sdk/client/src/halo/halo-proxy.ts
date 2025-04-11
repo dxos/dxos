@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { asyncTimeout, Event, EventSubscriptions, MulticastObservable, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, Subscriptions, MulticastObservable, Trigger } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf/stream';
 import { inspectObject } from '@dxos/debug';
@@ -34,7 +34,7 @@ import { InvitationsProxy } from '../invitations';
 export class HaloProxy implements Halo {
   private readonly _instanceId = PublicKey.random().toHex();
 
-  private readonly _subscriptions = new EventSubscriptions();
+  private readonly _subscriptions = new Subscriptions();
   private readonly _identityChanged = new Event<Identity | null>(); // TODO(burdon): Move into Identity object.
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();

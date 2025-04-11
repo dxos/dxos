@@ -24,7 +24,7 @@ import {
 import sortBy from 'lodash.sortby';
 import { useEffect, useMemo } from 'react';
 
-import { debounce, type UnsubscribeCallback } from '@dxos/async';
+import { debounce, type CleanupFn } from '@dxos/async';
 import { type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
@@ -579,7 +579,7 @@ class ExternalCommentSync implements PluginValue {
   constructor(
     view: EditorView,
     id: string,
-    subscribe: (sink: () => void) => UnsubscribeCallback,
+    subscribe: (sink: () => void) => CleanupFn,
     getComments: () => Comment[],
   ) {
     const updateComments = () => {
@@ -600,7 +600,7 @@ class ExternalCommentSync implements PluginValue {
 // TODO(burdon): Needs comment.
 export const createExternalCommentSync = (
   id: string,
-  subscribe: (sink: () => void) => UnsubscribeCallback,
+  subscribe: (sink: () => void) => CleanupFn,
   getComments: () => Comment[],
 ): Extension =>
   ViewPlugin.fromClass(

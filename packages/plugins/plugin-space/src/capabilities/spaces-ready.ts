@@ -3,7 +3,7 @@
 //
 
 import { contributes, createIntent, type PluginsContext, Capabilities, LayoutAction } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
+import { Subscriptions } from '@dxos/async';
 import { Expando } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { create } from '@dxos/live-object';
@@ -24,8 +24,8 @@ const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 1000;
 
 export default async (context: PluginsContext) => {
-  const subscriptions = new EventSubscriptions();
-  const spaceSubscriptions = new EventSubscriptions();
+  const subscriptions = new Subscriptions();
+  const spaceSubscriptions = new Subscriptions();
 
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
   const { graph } = context.requestCapability(Capabilities.AppGraph);
