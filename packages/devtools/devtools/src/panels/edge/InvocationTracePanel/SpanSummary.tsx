@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { type FC, useEffect, useState, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { type InvocationSpan, InvocationOutcome } from '@dxos/functions/types';
@@ -14,7 +14,7 @@ import { formatDuration } from './utils';
 
 type SpanSummaryProps = { span: InvocationSpan; space?: Space; onClose: () => void };
 
-export const SpanSummary: React.FC<SpanSummaryProps> = ({ span, space, onClose }) => {
+export const SpanSummary: FC<SpanSummaryProps> = ({ span, space, onClose }) => {
   const [currentDuration, setCurrentDuration] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span, space, onClose }
       return;
     }
 
-    const isInProgress = span.outcome === 'in-progress';
+    const isInProgress = span.outcome === InvocationOutcome.PENDING;
     if (!isInProgress) {
       setCurrentDuration(span.durationMs);
       return;
@@ -38,7 +38,7 @@ export const SpanSummary: React.FC<SpanSummaryProps> = ({ span, space, onClose }
   const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
 
   const timestamp = useMemo(() => new Date(span.timestampMs).toLocaleString(), [span.timestampMs]);
-  const isInProgress = useMemo(() => span.outcome === 'in-progress', [span.outcome]);
+  const isInProgress = useMemo(() => span.outcome === InvocationOutcome.PENDING, [span.outcome]);
   const outcomeColor = useMemo(() => {
     if (isInProgress) {
       return 'blue';

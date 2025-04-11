@@ -6,7 +6,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
-import { InvocationOutcome, type ScriptType } from '@dxos/functions/types';
+import { type ScriptType } from '@dxos/functions/types';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -52,7 +52,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
       }
 
       yield* [
-        { name: 'time', title: 'Invoked at', format: FormatEnum.DateTime, sort: 'desc' as const, size: 210 },
+        { name: 'time', title: 'Started', format: FormatEnum.DateTime, sort: 'desc' as const, size: 194 },
         {
           name: 'status',
           title: 'Status',
@@ -60,7 +60,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
           size: 110,
           config: {
             options: [
-              { id: 'in-progress', title: 'In Progress', color: 'blue' },
+              { id: 'pending', title: 'Pending', color: 'blue' },
               { id: 'success', title: 'Success', color: 'emerald' },
               { id: 'failure', title: 'Failure', color: 'red' },
               { id: 'unknown', title: 'Unknown', color: 'neutral' },
@@ -77,21 +77,13 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
 
   const invocationData = useMemo(() => {
     return invocationSpans.map((invocation) => {
-      let status = 'unknown';
-      if (invocation.outcome === 'in-progress') {
-        status = 'in-progress';
-      } else if (invocation.outcome === InvocationOutcome.SUCCESS) {
-        status = 'success';
-      } else if (invocation.outcome === InvocationOutcome.FAILURE) {
-        status = 'failure';
-      }
-
+      const status = invocation.outcome;
       const targetDxn = decodeReference(invocation.invocationTarget).dxn;
 
       return {
-        id: `${invocation.id}`,
+        id: invocation.id,
         target: resolver(targetDxn),
-        time: new Date(invocation.timestampMs).toLocaleString(),
+        time: new Date(invocation.timestampMs),
         status,
         duration: formatDuration(invocation.durationMs),
         queue: decodeReference(invocation.invocationTraceQueue).dxn?.toString() ?? 'unknown',
