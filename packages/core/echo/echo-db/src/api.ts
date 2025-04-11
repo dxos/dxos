@@ -24,7 +24,7 @@ export namespace Echo {
 
   // TODO(burdon): Type or Schema? (Type matches effect and typename "example.com/type/Test").
   export type Type<T = any> = BaseSchema<T>;
-  export type MutableType<T> = EchoSchema<T>; // TODO(burdon): Rename MutableSchema.
+  export type MutableType<T> = EchoSchema<T>;
   export type ImmutableType<T> = ImmutableSchema<T>;
 
   export type Ref<T> = Ref$<T>;

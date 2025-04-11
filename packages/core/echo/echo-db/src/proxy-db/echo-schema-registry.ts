@@ -223,7 +223,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       return undefined;
     }
 
-    if (!(typeObject instanceof StoredSchema)) {
+    if (!S.is(StoredSchema)(typeObject)) {
       log.warn('type object is not a stored schema', { id: typeObject?.id });
       return undefined;
     }
