@@ -9,11 +9,12 @@ import { log } from '@dxos/log';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckAction, surfaceVariant } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
-import { Status } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import type { MessageType } from '@dxos/schema';
 
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
+import { INBOX_PLUGIN } from '../../meta';
 import { type MailboxType, MessageState } from '../../types';
 
 export type MailboxContainerProps = {
@@ -27,6 +28,7 @@ const byDate =
 
 export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const id = fullyQualifiedId(mailbox);
+  const { t } = useTranslation(INBOX_PLUGIN);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -78,7 +80,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           currentMessageId={currentMessageId}
         />
       ) : (
-        <Status indeterminate aria-label='Loading...' />
+        <p className='text-description text-center p-8'>{t('empty mailbox message')}</p>
       )}
     </StackItem.Content>
   );
