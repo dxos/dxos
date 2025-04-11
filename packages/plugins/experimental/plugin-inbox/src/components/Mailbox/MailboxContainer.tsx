@@ -9,10 +9,7 @@ import { log } from '@dxos/log';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckAction, surfaceVariant } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
-<<<<<<< HEAD
-=======
 import { useTranslation } from '@dxos/react-ui';
->>>>>>> origin/main
 import { StackItem } from '@dxos/react-ui-stack';
 import type { MessageType } from '@dxos/schema';
 
@@ -76,15 +73,6 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   return (
     <StackItem.Content toolbar={false}>
-<<<<<<< HEAD
-      <Mailbox
-        messages={messages}
-        id={id}
-        name={mailbox.name}
-        onAction={handleAction}
-        currentMessageId={currentMessageId}
-      />
-=======
       {messages && messages.length > 0 ? (
         <Mailbox
           messages={messages}
@@ -96,7 +84,6 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
       ) : (
         <p className='text-description text-center p-8'>{t('empty mailbox message')}</p>
       )}
->>>>>>> origin/main
     </StackItem.Content>
   );
 };
