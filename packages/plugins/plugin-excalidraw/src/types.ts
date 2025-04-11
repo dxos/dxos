@@ -7,6 +7,8 @@ import { DiagramType } from '@dxos/plugin-sketch/types';
 
 import { EXCALIDRAW_PLUGIN } from './meta';
 
+export const EXCALIDRAW_SCHEMA = 'excalidraw.com/2';
+
 export namespace SketchAction {
   const SKETCH_ACTION = `${EXCALIDRAW_PLUGIN}/action`;
 

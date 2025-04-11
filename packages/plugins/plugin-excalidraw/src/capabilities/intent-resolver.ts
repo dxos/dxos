@@ -4,9 +4,9 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { create, makeRef } from '@dxos/live-object';
-import { EXCALIDRAW_SCHEMA, CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 
-import { SketchAction } from '../types';
+import { EXCALIDRAW_SCHEMA, SketchAction } from '../types';
 
 export default () =>
   contributes(
