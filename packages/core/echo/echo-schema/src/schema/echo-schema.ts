@@ -42,6 +42,7 @@ export interface BaseSchema<A = any, I = any> extends TypedObject<A, I> {
 // TODO(burdon): Common abstract base class?
 export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
   private readonly _objectAnnotation: ObjectAnnotation;
+
   constructor(private readonly _schema: S.Schema<A, I>) {
     this._objectAnnotation = getObjectAnnotation(this._schema)!;
     invariant(this._objectAnnotation);

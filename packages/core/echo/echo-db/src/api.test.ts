@@ -7,17 +7,17 @@ import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
 import {
-  FormatEnum,
-  FormatAnnotationId,
-  getSchema,
-  getSchemaDXN,
-  isInstanceOf,
-  getObjectAnnotation,
   EntityKind,
   FormatAnnotation,
+  FormatEnum,
+  getObjectAnnotation,
+  getSchema,
+  getSchemaDXN,
+  getSchemaTypename,
+  getSchemaVersion,
+  isInstanceOf,
 } from '@dxos/echo-schema';
 import { create as live, makeRef } from '@dxos/live-object';
-import { log } from '@dxos/log';
 
 // TODO(dmaretskyi): Do all ECHO api's go into `Echo` or do some things like `create` and `Ref` stay separate?
 import { Echo } from './api';
@@ -67,6 +67,8 @@ describe('Experimental API review', () => {
     // TODO(burdon): Rename getType; remove getType, getTypename, etc.
     const type: S.Schema<Contact> = getSchema(contact) ?? raise(new Error('No schema found'));
     expect(type).to.eq(Contact);
+    expect(getSchemaTypename(type)).to.eq('example.com/type/Contact');
+    expect(getSchemaVersion(type)).to.eq('0.1.0');
 
     // TODO(burdon): Rename getTypeAnnotation.
     expect(getObjectAnnotation(type)).to.deep.eq({
@@ -77,9 +79,5 @@ describe('Experimental API review', () => {
 
     expect(getSchemaDXN(type)?.typename).to.eq(Contact.typename);
     expect(isInstanceOf(Contact, contact)).to.be.true;
-
-    // TODO(burdon): Method to return EchoSchema.
-    // const { typename, version } = type;
-    log.info('ok');
   });
 });
