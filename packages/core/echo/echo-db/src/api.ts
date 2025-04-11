@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
+
 import {
   type BaseSchema,
-  EchoObject,
   type EchoSchema,
+  EchoObject,
   type Expando as Expando$,
   type ImmutableSchema,
   type JsonSchemaType,
   type ObjectId as ObjectId$,
   Ref as Ref$,
 } from '@dxos/echo-schema';
-import { Schema } from 'effect';
 
 /**
  * ECHO API.

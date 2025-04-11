@@ -17,18 +17,15 @@ import {
   getSchemaVersion,
   isInstanceOf,
 } from '@dxos/echo-schema';
-import { create as live, makeRef } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 
 // TODO(dmaretskyi): Do all ECHO api's go into `Echo` or do some things like `create` and `Ref` stay separate?
 import { Echo } from './api';
 
 // This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.
-interface _Live<T> {}
-type Live<T> = _Live<T> & T;
-
-//
-//
-//
+// interface _Live<T> {}
+// type Live<T> = _Live<T> & T;
+// const create = create_ as <T>(schema: S.Schema<T>, obj: T, meta?: ObjectMeta) => Live<T>;
 
 interface Org extends S.Schema.Type<typeof Org> {}
 const Org = Echo.Type({
@@ -59,10 +56,10 @@ const Contact = Echo.Type({
 
 describe('Experimental API review', () => {
   test('basic', ({ expect }) => {
-    const org: Live<Org> = live(Org, { name: 'DXOS' });
+    const org = create(Org, { name: 'DXOS' });
 
     // TODO(burdon): Change makeRef to Ref.create?
-    const contact: Live<Org> = live(Contact, { name: 'Test', org: makeRef(org) });
+    const contact = create(Contact, { name: 'Test', org: makeRef(org) });
 
     // TODO(burdon): Rename getType; remove getType, getTypename, etc.
     const type: S.Schema<Contact> = getSchema(contact) ?? raise(new Error('No schema found'));

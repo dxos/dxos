@@ -5,8 +5,7 @@
 import { SchemaAST as AST, type JSONSchema } from 'effect';
 import { Option, pipe } from 'effect';
 
-import type { JsonSchemaType } from '../ast';
-import { createAnnotationHelper, makeAnnotationHelper } from '../ast/annotation-helper';
+import { type JsonSchemaType, createAnnotationHelper } from '../ast';
 
 export enum TypeEnum {
   Object = 'object',
@@ -119,7 +118,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.None]: undefined as any,
   [FormatEnum.String]: TypeEnum.String,
   [FormatEnum.Number]: TypeEnum.Number,
-  // Schema for options in the form
+  // Schema for options in the form.
   [FormatEnum.Boolean]: TypeEnum.Boolean,
   [FormatEnum.Ref]: TypeEnum.Ref,
 
