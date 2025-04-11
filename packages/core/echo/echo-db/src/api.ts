@@ -12,6 +12,7 @@ import {
   type ObjectId as ObjectId$,
   Ref as Ref$,
 } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
 /**
  * ECHO API.
@@ -29,5 +30,5 @@ export namespace Echo {
   export type JsonSchema = JsonSchemaType;
 
   export const Type = ({ typename, version }: { typename: string; version: string }) => EchoObject(typename, version);
-  export const Ref = (schema: any) => Ref$(schema);
+  export const Ref = <S extends Schema.Schema.AnyNoContext>(schema: S) => Ref$<Schema.Schema.Type<S>>(schema);
 }

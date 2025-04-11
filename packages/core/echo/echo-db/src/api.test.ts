@@ -7,60 +7,62 @@ import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
 import {
+  EntityKind,
+  FormatAnnotation,
   FormatEnum,
-  FormatAnnotationId,
+  getObjectAnnotation,
   getSchema,
   getSchemaDXN,
-  isInstanceOf,
-  getObjectAnnotation,
-  EntityKind,
-  getSchemaVersion,
   getSchemaTypename,
+  getSchemaVersion,
+  isInstanceOf,
 } from '@dxos/echo-schema';
-import { create, makeRef } from '@dxos/live-object';
+import { create as live, makeRef } from '@dxos/live-object';
 
+// TODO(dmaretskyi): Do all ECHO api's go into `Echo` or do some things like `create` and `Ref` stay separate?
 import { Echo } from './api';
 
-const Org = S.Struct({
-  name: S.String,
-}).pipe(
-  Echo.Type({
-    typename: 'example.com/type/Org',
-    version: '0.1.0',
+// This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.
+interface _Live<T> {}
+type Live<T> = _Live<T> & T;
+
+//
+//
+//
+
+interface Org extends S.Schema.Type<typeof Org> {}
+const Org = Echo.Type({
+  typename: 'example.com/type/Org',
+  version: '0.1.0',
+})(
+  S.Struct({
+    name: S.String,
   }),
 );
 
 // TODO(burdon): Remove Schema/Type suffix in Composer?
-interface Org extends S.Schema.Type<typeof Org> {}
 
-const Contact = S.Struct({
-  name: S.String,
-  // TODO(burdon): Support S.Date, etc.
-  // TODO(burdon): Support defaults.
-  dob: S.optional(S.String),
-  email: S.optional(
-    S.String.annotations({
-      // TODO(burdon): Rename TypeAnnotationId?
-      // TODO(burdon): Use typed helper?
-      [FormatAnnotationId]: FormatEnum.Email,
-    }),
-  ),
-  org: S.optional(Echo.Ref(Org)),
-}).pipe(
-  Echo.Type({
-    typename: 'example.com/type/Contact',
-    version: '0.1.0',
+interface Contact extends S.Schema.Type<typeof Contact> {}
+const Contact = Echo.Type({
+  typename: 'example.com/type/Contact',
+  version: '0.1.0',
+})(
+  S.Struct({
+    name: S.String,
+    // TODO(burdon): Support S.Date, etc.
+    // TODO(burdon): Support defaults.
+    dob: S.optional(S.String),
+    email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
+    org: S.optional(Echo.Ref(Org)),
   }),
 );
 
-interface Contact extends S.Schema.Type<typeof Contact> {}
-
 describe('Experimental API review', () => {
   test('basic', ({ expect }) => {
-    const org: Org = create(Org, { name: 'DXOS' });
+    const org: Live<Org> = live(Org, { name: 'DXOS' });
 
     // TODO(burdon): Change makeRef to Ref.create?
-    const contact: Contact = create(Contact, { name: 'Test', org: makeRef(org) });
+    const contact: Live<Org> = live(Contact, { name: 'Test', org: makeRef(org) });
 
     // TODO(burdon): Rename getType; remove getType, getTypename, etc.
     const type: S.Schema<Contact> = getSchema(contact) ?? raise(new Error('No schema found'));
