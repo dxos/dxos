@@ -98,6 +98,10 @@ export const systemSememes = {
   'surface-450': surface450,
   'surface-450t': applyAlpha(surface450, 0.1),
 
+  'accentSurface-300t': {
+    light: ['primary', '300/.1'],
+    dark: ['primary', '400/.1'],
+  },
   'accentSurface-400': {
     light: ['primary', 600],
     dark: ['primary', 475],
@@ -155,7 +159,7 @@ export const systemSememes = {
 
 export const systemAliases = {
   // surface cadence
-  'surface-10': { root: ['attention', 'currentRelated'], attention: ['baseSurface'] },
+  'surface-10': { root: ['attention'], attention: ['baseSurface'] },
   'surface-20': { root: ['baseSurface'] },
   'surface-30': { root: ['modalSurface', 'tooltipSurface'], attention: ['input'] },
   'surface-40': { root: ['input'] },
@@ -171,6 +175,7 @@ export const systemAliases = {
   'surface-450t': { root: ['hoverOverlay'] },
 
   // accent
+  'accentSurface-300t': { root: ['currentRelated'] },
   'accentSurface-400': { root: ['accentSurfaceHover'] },
   'accentSurface-500': { root: ['accentSurface'] },
 } satisfies ColorAliases;

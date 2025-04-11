@@ -26,6 +26,7 @@ export default [
         'action archive': 'Archive',
         'action delete': 'Delete',
         'action mark read': 'Mark as read',
+        'message plank heading': 'Message',
       },
     },
   },
