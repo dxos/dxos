@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { encodeReference, Reference } from '@dxos/echo-protocol';
 import { createStatic, Ref, type Ref$, S, TypedObject } from '@dxos/echo-schema';
 
-import { makeRef } from './ref-impl';
+import { makeRef } from './ref';
 
 describe('ref encoding', () => {
   test('static object', () => {

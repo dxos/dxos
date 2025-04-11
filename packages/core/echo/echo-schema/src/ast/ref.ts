@@ -27,7 +27,7 @@ export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
-    return { typename: DXN.parse($ref).toTypename() };
+    return { typename: DXN.parse($ref).typename };
   }
 };
 

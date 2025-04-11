@@ -16,3 +16,11 @@ export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/Schema'
   version: S.String,
   jsonSchema: JsonSchemaType,
 }) {}
+
+// export const StoredSchema = S.Struct({
+//   typename: S.String,
+//   version: S.String,
+//   jsonSchema: JsonSchemaType,
+// }).pipe(EchoObject('dxos.org/type/Schema', '0.1.0'));
+
+// export interface StoredSchema extends S.Schema.Type<typeof StoredSchema> {}

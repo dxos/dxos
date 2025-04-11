@@ -8,6 +8,7 @@ import { getTypeReference, type S } from '@dxos/echo-schema';
 import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler, getSchema, getType } from '@dxos/live-object';
+import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
@@ -61,7 +62,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
     describe(`Proxy properties(schema=${schema != null})`, () => {
       test('handler type', async () => {
         const obj = await createObject();
-        console.log('handler =', Object.getPrototypeOf(getProxyHandler(obj)).constructor.name);
+        log('handler', { handler: Object.getPrototypeOf(getProxyHandler(obj)).constructor.name });
       });
 
       test('object initializer', async () => {
