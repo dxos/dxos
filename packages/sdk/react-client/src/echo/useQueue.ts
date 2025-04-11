@@ -28,7 +28,7 @@ export const useQueue = <T extends BaseEchoObject>(
   options: UseQueueOptions = {},
 ): Queue<T> | undefined => {
   const client = useClient();
-  const activeRef = useRef(true);
+  const mountedRef = useRef(true);
 
   const queue = useMemo<Queue<T> | undefined>(() => {
     if (!queueDxn) {
@@ -44,15 +44,15 @@ export const useQueue = <T extends BaseEchoObject>(
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
-    activeRef.current = true;
+    mountedRef.current = true;
 
     const poll = () => {
-      if (!activeRef.current) {
+      if (!mountedRef.current) {
         return;
       }
 
       void queue?.refresh().finally(() => {
-        if (activeRef.current && options.pollInterval) {
+        if (mountedRef.current && options.pollInterval) {
           timeout = setTimeout(poll, Math.max(options.pollInterval ?? 0, MIN_POLL_INTERVAL));
         }
       });
@@ -63,7 +63,7 @@ export const useQueue = <T extends BaseEchoObject>(
     }
 
     return () => {
-      activeRef.current = false;
+      mountedRef.current = false;
       clearTimeout(timeout);
     };
   }, [queue, options.pollInterval]);
