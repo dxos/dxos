@@ -5,7 +5,7 @@
 import '@tldraw/tldraw/tldraw.css';
 
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
-import { type TLEventInfo, type TLGridProps } from '@tldraw/editor';
+import { type TLInstance, type TLEventInfo, type TLGridProps } from '@tldraw/editor';
 import { type Editor, Tldraw, DefaultToolbar, type TLUiAssetUrlOverrides } from '@tldraw/tldraw';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
@@ -17,11 +17,11 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
-import { type SketchGridType, type DiagramType } from '../../types';
+import { type SketchGridType, type DiagramType, type SketchSettingsProps } from '../../types';
 import { handleSnap } from '../actions';
-import { CustomMenu, CustomStylePanel, DottedGrid, MeshGrid } from '../custom';
+import { CustomMenu, CustomStylePanel, DottedGrid, MeshGrid, DefaultToolbarContent } from '../custom';
+
 import './theme.css';
-import { DefaultToolbarContent } from '../custom/CustomToolbar';
 
 const threadToolId = 'thread';
 
@@ -36,20 +36,20 @@ export type SketchProps = ThemedClassName<{
   autoZoom?: boolean;
   maxZoom?: number;
   hideUi?: boolean;
-  grid?: SketchGridType;
   assetsBaseUrl?: string | null;
+  settings?: SketchSettingsProps;
   onThreadCreate?: () => void;
 }>;
 
 export const Sketch = ({
   sketch,
   readonly = false,
-  autoZoom = false,
+  autoZoom = true,
   maxZoom = 1,
   hideUi = false,
-  grid,
   classNames,
   assetsBaseUrl = '/assets/plugin-sketch',
+  settings,
   onThreadCreate,
 }: SketchProps) => {
   const adapter = useStoreAdapter(sketch);
@@ -59,6 +59,31 @@ export const Sketch = ({
   useEffect(() => {
     hideUi ? editor?.blur() : editor?.focus();
   }, [hideUi, editor]);
+
+  // Editor State.
+  useEffect(() => {
+    if (!settings) {
+      return;
+    }
+
+    const cleanup = editor?.store.listen(
+      ({ changes: { updated } }) => {
+        for (const [id, [from, to]] of Object.entries(updated)) {
+          if (id === 'instance:instance') {
+            const fromInstance = from as TLInstance;
+            const toInstance = to as TLInstance;
+            if (fromInstance.isGridMode !== toInstance.isGridMode) {
+              settings.showGrid = toInstance.isGridMode;
+            }
+          }
+        }
+      },
+      { source: 'user', scope: 'all' },
+    );
+
+    // TODO(burdon): Combine.
+    return () => cleanup?.();
+  }, [settings, editor]);
 
   // Editor events.
   useEffect(() => {
@@ -83,11 +108,11 @@ export const Sketch = ({
         isSnapMode: true,
       });
       editor.updateInstanceState({
-        isGridMode: !hideUi,
+        isGridMode: settings?.showGrid !== false && !hideUi,
         isReadonly: readonly || hideUi,
       });
     }
-  }, [editor, hideUi, readonly]);
+  }, [editor, settings, hideUi, readonly]);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
@@ -107,7 +132,7 @@ export const Sketch = ({
     }
 
     const zoom = (animate = true) => {
-      zoomToContent(editor, width, height, maxZoom, animate);
+      zoomToFit(editor, width, height, maxZoom, animate);
     };
 
     zoom(false);
@@ -167,7 +192,7 @@ export const Sketch = ({
   const components = useMemo(
     () => ({
       DebugPanel: null,
-      Grid: gridComponents[grid ?? 'mesh'],
+      Grid: gridComponents[settings?.gridType ?? 'mesh'],
       HelpMenu: null,
       MenuPanel: CustomMenu,
       NavigationPanel: null,
@@ -180,12 +205,13 @@ export const Sketch = ({
         </DefaultToolbar>
       ),
     }),
-    [grid],
+    [settings],
   );
 
   if (!adapter.store) {
     return null;
   }
+
   return (
     <div
       role='none'
@@ -212,13 +238,12 @@ export const Sketch = ({
 /**
  * Zoom to fit content.
  */
-const zoomToContent = (editor: Editor, width: number, height: number, maxZoom: number, animate = true) => {
+const zoomToFit = (editor: Editor, width: number, height: number, maxZoom: number, animate = true) => {
   const commonBounds = editor.getCurrentPageBounds();
   if (width && height && commonBounds?.width && commonBounds?.height) {
     const padding = 60;
-    // NOTE: Objects are culled (un-styled) if outside of bounds.
+    // NOTE: Objects are "culled" (un-styled) if outside of bounds.
     const zoom = Math.min(maxZoom, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
-
     const center = {
       x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
       y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
@@ -228,9 +253,3 @@ const zoomToContent = (editor: Editor, width: number, height: number, maxZoom: n
     editor.setCamera(center, animate ? { animation: { duration: 250 } } : undefined);
   }
 };
-
-// TODO(burdon): Check new zoomToContent works in 2.1.4
-// const zoomToContent = (animate = true) => {
-//   editor?.zoomToContent({ duration: animate ? 250 : 0 });
-//   setReady(true);
-// };
