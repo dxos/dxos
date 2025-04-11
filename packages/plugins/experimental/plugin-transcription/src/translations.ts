@@ -14,10 +14,10 @@ export default [
       },
       [TRANSCRIPTION_PLUGIN]: {
         'plugin name': 'Transcription',
-        'calls label': 'Transcript',
-        'calls panel label': 'Transcription',
-        'create calls label': 'Create transcription',
-        'delete calls label': 'Delete',
+        'transcript companion label': 'Transcription',
+
+        'start transcription label': 'Start transcription',
+        'stop transcription label': 'Stop transcription',
 
         'delete button': 'Delete',
         'bookmark button': 'Bookmark',

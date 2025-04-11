@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, type FC } from 'react';
+import React, { useCallback, useEffect, type FC } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
@@ -12,6 +12,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Call } from './Call';
 import { Lobby } from './Lobby';
 import { MeetingCapabilities } from '../capabilities';
+import { useCompanions } from '../hooks';
 import { type MeetingType } from '../types';
 
 export type CallContainerProps = {
@@ -30,6 +31,13 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
     }
   }, [roomId, call.joined, call.roomId]);
 
+  const companions = useCompanions(meeting);
+  const handleJoin = useCallback(() => {
+    companions.forEach((companion) => {
+      companion.properties.onJoin?.(roomId);
+    });
+  }, [companions, roomId]);
+
   return (
     <StackItem.Content toolbar={false}>
       {call.joined && call.roomId === roomId ? (
@@ -38,7 +46,7 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
           <Call.Toolbar meeting={meeting} />
         </>
       ) : (
-        <Lobby roomId={roomId} />
+        <Lobby roomId={roomId} onJoin={handleJoin} />
       )}
     </StackItem.Content>
   );

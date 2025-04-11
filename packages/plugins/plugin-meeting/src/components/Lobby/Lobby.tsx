@@ -17,9 +17,10 @@ import { ResponsiveContainer } from '../ResponsiveGrid';
 
 type LobbyProps = ThemedClassName & {
   roomId: string;
+  onJoin?: () => void;
 };
 
-export const Lobby: FC<LobbyProps> = ({ classNames, roomId }) => {
+export const Lobby: FC<LobbyProps> = ({ classNames, roomId, onJoin }) => {
   const { t } = useTranslation(MEETING_PLUGIN);
   const call = useCapability(MeetingCapabilities.CallManager);
   const [count, setCount] = useState<number>();
@@ -32,10 +33,11 @@ export const Lobby: FC<LobbyProps> = ({ classNames, roomId }) => {
       }
       call.setRoomId(roomId);
       await Promise.all([call.join(), joinSound.play()]);
+      onJoin?.();
     } catch (err) {
       log.catch(err);
     }
-  }, [joinSound, roomId, call.joined, call.leave, call.setRoomId, call.join]);
+  }, [joinSound, roomId, call.joined, call, onJoin]);
 
   // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.
   useEffect(() => {

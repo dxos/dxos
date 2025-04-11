@@ -7,10 +7,10 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
-import { JournalEntryType, JournalType, OutlinerAction, OutlineType, TaskType, TreeType } from './types';
+import { JournalEntryType, JournalType, OutlinerAction, OutlineType, TaskType, Tree, TreeType } from './types';
 
 export const OutlinerPlugin = () =>
   definePlugin(meta, [
@@ -33,6 +33,20 @@ export const OutlinerPlugin = () =>
           id: OutlineType.typename,
           metadata: {
             icon: 'ph--tree-structure--regular',
+            // TODO(wittjosiah): Factor out. Artifact? Separate capability?
+            getTextContent: async (outline: OutlineType) => {
+              const tree = new Tree(await outline.tree.load());
+              const textContent: string[] = [];
+              let node = tree.getNext(tree.root);
+              while (node) {
+                if (node.data.text) {
+                  // TODO(wittjosiah): Handle indentation.
+                  textContent.push(`- ${node.data.text}`);
+                }
+                node = tree.getNext(node);
+              }
+              return textContent.join('\n');
+            },
           },
         }),
       ],
@@ -76,5 +90,10 @@ export const OutlinerPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
   ]);

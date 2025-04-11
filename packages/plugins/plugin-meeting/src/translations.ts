@@ -20,11 +20,8 @@ export default [
         'meetings label': 'All Meetings',
 
         'call tab label': 'Call',
-        'chat tab label': 'Chat',
-        'notes tab label': 'Notes',
-        'transcript tab label': 'Transcript',
-        'summary tab label': 'Summary',
 
+        'meeting summary label': 'Summary',
         'summarize label': 'Summarize',
         'summarizing label': 'Summarizing...',
         'create summary message': 'A summary doesn’t exist for this meeting yet. Create one now?',
@@ -49,8 +46,6 @@ export default [
 
         'raise hand': 'Raise hand',
         'lower hand': 'Lower hand',
-        'transcription on': 'Start transcription',
-        'transcription off': 'Stop transcription',
         'screenshare on': 'Start screen sharing',
         'screenshare off': 'Stop screen sharing',
       },

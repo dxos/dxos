@@ -21,6 +21,7 @@ import {
   useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
+import { useNode } from '@dxos/plugin-graph';
 import { Main, useTranslation, toLocalizedString, IconButton, type Label } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -30,7 +31,6 @@ import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
-import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { type Panel } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';

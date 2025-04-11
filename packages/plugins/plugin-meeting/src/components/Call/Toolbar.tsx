@@ -2,17 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect } from 'effect';
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
+import { COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { useNode } from '@dxos/plugin-graph';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { Toolbar, IconButton, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
 import { MeetingCapabilities } from '../../capabilities';
 import { MEETING_PLUGIN } from '../../meta';
-import { type MeetingType, type TranscriptionState } from '../../types';
+import { type MeetingType } from '../../types';
 import { MediaButtons } from '../Media';
 
 export type CallToolbarProps = {
@@ -23,6 +25,36 @@ export type CallToolbarProps = {
 export const CallToolbar = ({ meeting }: CallToolbarProps) => {
   const { t } = useTranslation(MEETING_PLUGIN);
   const call = useCapability(MeetingCapabilities.CallManager);
+  const { graph } = useAppGraph();
+  const node = useNode(graph, meeting && fullyQualifiedId(meeting));
+  const actions = node ? graph.actions(node).filter((action) => action.properties.disposition === 'toolbar') : [];
+  const companions = node ? graph.nodes(node, { type: COMPANION_TYPE }) : [];
+
+  useEffect(() => {
+    const unsubscribeLeft = call.left.on((roomId) => {
+      companions.forEach((companion) => {
+        companion.properties.onLeave?.(roomId);
+      });
+    });
+
+    const unsubscribeCallState = call.callStateUpdated.on((state) => {
+      companions.forEach((companion) => {
+        companion.properties.onCallStateUpdated?.(state);
+      });
+    });
+
+    const unsubscribeMediaState = call.mediaStateUpdated.on((state) => {
+      companions.forEach((companion) => {
+        companion.properties.onMediaStateUpdated?.(state);
+      });
+    });
+
+    return () => {
+      unsubscribeLeft();
+      unsubscribeCallState();
+      unsubscribeMediaState();
+    };
+  }, [call, companions]);
 
   // Screen sharing.
   const isScreensharing = call.media.screenshareTrack !== undefined;
@@ -31,37 +63,27 @@ export const CallToolbar = ({ meeting }: CallToolbarProps) => {
 
   // TODO(wittjosiah): Leaving the call doesn't relinquish system audio/video.
   const leaveSound = useSoundEffect('LeaveCall');
-  const handleLeave = () => {
+  const handleLeave = useCallback(() => {
     void call.turnScreenshareOff();
     void call.leave();
     void leaveSound.play();
-  };
-
-  // TODO(wittjosiah): Experiment with effect for event handlers. Evaluate usage.
-  const handleToggleTranscription = () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const newTranscription: TranscriptionState = { enabled: !call.transcription.enabled };
-        if (newTranscription.enabled && !call.transcription.queueDxn && meeting?.transcript.target?.queue) {
-          newTranscription.queueDxn = meeting.transcript.target.queue;
-        }
-        call.setTranscription(newTranscription);
-      }),
-    );
+  }, [call, companions, leaveSound]);
 
   return (
     <Toolbar.Root>
       <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={handleLeave} />
       <div className='grow'></div>
-      {/* TODO(burdon): Capability test. */}
-      {meeting && (
+      {/* TODO(wittjosiah): Use toolbar. In order to use toolbar, it needs to be updated to actually use the graph action callbacks directly. */}
+      {actions.map((action) => (
         <IconButton
+          key={action.id}
           iconOnly
-          icon={call.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
-          label={call.transcription.enabled ? t('transcription off') : t('transcription on')}
-          onClick={handleToggleTranscription}
+          icon={action.properties.icon}
+          label={toLocalizedString(action.properties.label, t)}
+          classNames={action.properties.classNames}
+          onClick={() => action.data({ node })}
         />
-      )}
+      ))}
       <IconButton
         disabled={!canSharescreen}
         iconOnly

@@ -56,7 +56,7 @@ export const MeetingPlugin = () =>
           defineObjectForm({
             objectSchema: MeetingType,
             hidden: true,
-            getIntent: (_, options) => createIntent(MeetingAction.Create, { spaceId: options.space.id }),
+            getIntent: () => createIntent(MeetingAction.Create),
           }),
         ),
     }),

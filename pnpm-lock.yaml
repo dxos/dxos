@@ -6644,12 +6644,15 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../../plugin-deck
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugin-graph
-      '@dxos/plugin-markdown':
+      '@dxos/plugin-meeting':
         specifier: workspace:*
-        version: link:../../plugin-markdown
+        version: link:../../plugin-meeting
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugin-space
@@ -7903,18 +7906,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-outliner':
-        specifier: workspace:*
-        version: link:../plugin-outliner
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/plugin-thread':
-        specifier: workspace:*
-        version: link:../plugin-thread
-      '@dxos/plugin-transcription':
-        specifier: workspace:*
-        version: link:../experimental/plugin-transcription
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -8301,9 +8295,15 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugin-deck
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-meeting':
+        specifier: workspace:*
+        version: link:../plugin-meeting
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

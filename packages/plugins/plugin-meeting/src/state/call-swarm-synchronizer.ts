@@ -13,12 +13,12 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
-import { TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
+import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Device, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { isNonNullable } from '@dxos/util';
 
-import { codec, type TranscriptionState, type UserState } from '../types';
+import { codec, type ActivityState, type UserState } from '../types';
 
 export type CallState = {
   /**
@@ -39,7 +39,7 @@ export type CallState = {
   /**
    * Swarm synchronized CRDT transcription. Last write wins.
    */
-  transcription?: TranscriptionState;
+  activities?: Record<string, ActivityState>;
 
   raisedHand?: boolean;
   speaking?: boolean;
@@ -58,10 +58,8 @@ export type CallSwarmSynchronizerParams = { networkService: NetworkService };
  */
 export class CallSwarmSynchronizer extends Resource {
   public readonly stateUpdated = new Event<CallState>();
-  private readonly _state: CallState = {
-    transcription: { enabled: false, lamportTimestamp: { id: '', version: 0 } },
-  };
 
+  private readonly _state: CallState = { activities: {} };
   private readonly _networkService: NetworkService;
 
   private _identityKey?: string = undefined;
@@ -115,13 +113,11 @@ export class CallSwarmSynchronizer extends Resource {
     this._notifyAndSchedule();
   }
 
-  setTranscription(transcription: TranscriptionState) {
-    const currentTranscription = this._state.transcription;
-    this._state.transcription = {
-      ...currentTranscription,
-      ...transcription,
-      lamportTimestamp: LamportTimestampCrdt.increment(currentTranscription?.lamportTimestamp ?? {}) as any,
-    };
+  setActivity(key: string, payload: ActivityState['payload']) {
+    const lamportTimestamp = LamportTimestampCrdt.increment(
+      this._state.activities?.[key]?.lamportTimestamp ?? { id: this._deviceKey },
+    );
+    this._state.activities![key] = { lamportTimestamp, payload };
 
     this._notifyAndSchedule();
   }
@@ -139,7 +135,6 @@ export class CallSwarmSynchronizer extends Resource {
    */
   _setDevice(device: Device) {
     this._deviceKey = device.deviceKey.toHex();
-    this._state.transcription!.lamportTimestamp!.id = this._deviceKey;
   }
 
   /**
@@ -213,7 +208,14 @@ export class CallSwarmSynchronizer extends Resource {
       ...this._state,
       id: this._deviceKey,
       name: this._displayName,
-      transcription: buf.create(TranscriptionSchema, this._state.transcription),
+      activities: this._state.activities
+        ? Object.fromEntries(
+            Object.entries(this._state.activities).map(([key, activity]) => [
+              key,
+              buf.create(ActivitySchema, activity),
+            ]),
+          )
+        : {},
     };
 
     await this._networkService.joinSwarm({
@@ -234,22 +236,27 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
-    const lastTranscription = LamportTimestampCrdt.getLastState(
-      users.map((user) => user.transcription).filter(isNonNullable),
-    );
-    if (lastTranscription.lamportTimestamp!.version! > (this._state.transcription?.lamportTimestamp?.version ?? 0)) {
-      this._state.transcription = lastTranscription;
-    }
+    const activityKeys = new Set<string>(users.flatMap((user) => Object.keys(user.activities)));
+    [...activityKeys].forEach((key) => {
+      const activities = users.map((user) => user.activities?.[key]).filter(isNonNullable);
+      const lastActivity = LamportTimestampCrdt.getLastState(activities);
+      if (
+        lastActivity &&
+        lastActivity.lamportTimestamp!.version! > (this._state.activities![key]?.lamportTimestamp?.version ?? 0)
+      ) {
+        this._state.activities![key] = lastActivity;
+      }
+    });
 
     this.stateUpdated.emit(this._state);
   }
 }
 
-type LamportTimestamp = TranscriptionState['lamportTimestamp'];
+type LamportTimestamp = ActivityState['lamportTimestamp'];
 
 // TODO(mykola): Factor out.
 class LamportTimestampCrdt {
-  static getLastState<T extends { lamportTimestamp?: LamportTimestamp }>(states: T[]): T {
+  static getLastState<T extends { lamportTimestamp?: LamportTimestamp }>(states: T[]): T | undefined {
     const maxTimestamp = Math.max(...states.map((state) => state.lamportTimestamp?.version ?? 0));
     const sortedStates = states
       .filter(
@@ -257,7 +264,6 @@ class LamportTimestampCrdt {
           state.lamportTimestamp && state.lamportTimestamp.version === maxTimestamp && state.lamportTimestamp.id,
       )
       .sort((a, b) => a.lamportTimestamp!.id!.localeCompare(b.lamportTimestamp!.id!));
-    invariant(sortedStates.length > 0, 'No states found');
     return sortedStates[0];
   }
 

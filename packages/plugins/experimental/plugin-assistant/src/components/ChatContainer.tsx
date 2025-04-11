@@ -14,7 +14,7 @@ import { type AssistantSettingsProps, type AIChatType } from '../types';
 
 // TODO(burdon): Attention.
 export const ChatContainer = ({ role, chat }: { role: string; chat: AIChatType }) => {
-  const transcription = useCapabilities(TranscriptionCapabilities.Transcription).length > 0;
+  const transcription = useCapabilities(TranscriptionCapabilities.Transcriber).length > 0;
   const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)?.value;
 
   return (

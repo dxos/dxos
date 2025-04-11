@@ -2,38 +2,59 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
-
-import { Capabilities, contributes, createIntent, createResolver, type PluginsContext } from '@dxos/app-framework';
-import { ObjectId } from '@dxos/echo-schema';
-import { QueueSubspaceTags, DXN } from '@dxos/keys';
-import { create, makeRef, refFromDXN } from '@dxos/live-object';
-import { OutlinerAction } from '@dxos/plugin-outliner/types';
-import { TranscriptionAction } from '@dxos/plugin-transcription/types';
+import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { AIServiceEdgeClient } from '@dxos/assistant';
+import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { create, makeRef } from '@dxos/live-object';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { TextType } from '@dxos/schema';
 
+import { getMeetingContent, summarizeTranscript } from '../summarize';
 import { MeetingAction, MeetingType } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MeetingAction.Create,
-      resolve: ({ spaceId, name }) =>
-        Effect.gen(function* () {
-          const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-          const { object: transcript } = yield* dispatch(createIntent(TranscriptionAction.Create, { spaceId }));
-          const { object: tree } = yield* dispatch(createIntent(OutlinerAction.CreateTree));
-          const meeting = create(MeetingType, {
-            name,
-            created: new Date().toISOString(),
-            participants: [],
-            chat: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
-            transcript: makeRef(transcript),
-            notes: makeRef(tree),
-            summary: makeRef(create(TextType, { content: '' })),
-          });
+      resolve: ({ name }) => {
+        const meeting = create(MeetingType, {
+          name,
+          created: new Date().toISOString(),
+          participants: [],
+          artifacts: {},
+        });
 
-          return { data: { object: meeting } };
-        }),
+        return { data: { object: meeting } };
+      },
+    }),
+    createResolver({
+      intent: MeetingAction.Summarize,
+      resolve: async ({ meeting }) => {
+        const client = context.requestCapability(ClientCapabilities.Client);
+        const endpoint = client.config.values.runtime?.services?.ai?.server;
+        invariant(endpoint, 'AI service not configured.');
+        // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
+        const ai = new AIServiceEdgeClient({ endpoint });
+        const resolve = (typename: string) =>
+          context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+
+        const typename = getSchemaTypename(DocumentType)!;
+        let doc = (await meeting.artifacts[typename]?.load()) as DocumentType;
+        let text = await doc?.content?.load();
+        if (!isInstanceOf(DocumentType, doc)) {
+          text = create(TextType, { content: '' });
+          doc = create(DocumentType, { content: makeRef(text), threads: [] });
+          meeting.artifacts[getSchemaTypename(DocumentType)!] = makeRef(doc);
+        }
+
+        const content = await getMeetingContent(meeting, resolve);
+        text.content = 'Generating summary...';
+        const summary = await summarizeTranscript(ai, content);
+        text.content = summary;
+
+        return { data: { object: doc } };
+      },
     }),
   ]);

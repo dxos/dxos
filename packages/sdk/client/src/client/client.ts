@@ -214,6 +214,14 @@ export class Client {
   }
 
   /**
+   * EDGE client.
+   */
+  get edge(): EdgeHttpClient {
+    invariant(this._edgeClient, 'Client not initialized.');
+    return this._edgeClient;
+  }
+
+  /**
    *
    */
   get shell(): Shell {

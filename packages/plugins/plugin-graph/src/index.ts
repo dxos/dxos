@@ -5,4 +5,5 @@
 export * from '@dxos/app-graph';
 
 export * from './GraphPlugin';
+export * from './hooks';
 export * from './meta';

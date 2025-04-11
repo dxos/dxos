@@ -2,19 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
-import { generateName } from '@dxos/display-name';
-import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
-import { TranscriptionManager } from '@dxos/plugin-transcription';
-import { isNonNullable, keyToFallback } from '@dxos/util';
+import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
+import { isNonNullable } from '@dxos/util';
 
 import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
 import { MediaManager, type MediaState } from './media-manager';
-import { type TranscriptionState, CALLS_URL, type EncodedTrackName, TrackNameCodec } from '../types';
+import { type ActivityState, CALLS_URL, type EncodedTrackName, TrackNameCodec, type UserState } from '../types';
 
 export type GlobalState = {
   call: CallState;
@@ -25,6 +23,11 @@ export type GlobalState = {
  * Top level manager for call state.
  */
 export class CallManager extends Resource {
+  public readonly callStateUpdated = new Event<CallState>();
+  // TODO(wittjosiah): Consolidate isSpeaking into the MediaState type.
+  public readonly mediaStateUpdated = new Event<[MediaState, boolean]>();
+  public readonly left = new Event<string>();
+
   /**
    * Live object state. Is changed on internal events.
    * CAUTION: Do not change directly.
@@ -36,45 +39,39 @@ export class CallManager extends Resource {
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
-  private readonly _transcriptionManager: TranscriptionManager;
 
   /** @reactive */
-  get roomId() {
+  get roomId(): string | undefined {
     return this._state.call.roomId;
   }
 
   /** @reactive */
-  get raisedHand() {
+  get raisedHand(): boolean {
     return this._state.call.raisedHand ?? false;
   }
 
   /** @reactive */
-  get speaking() {
+  get speaking(): boolean {
     return this._state.call.speaking ?? false;
   }
 
   /** @reactive */
-  get joined() {
+  get joined(): boolean {
     return this._state.call.joined ?? false;
   }
 
   /** @reactive */
-  get self() {
+  get self(): UserState {
     return this._state.call.self ?? {};
   }
 
   /** @reactive */
-  get tracks() {
+  get tracks(): Tracks {
     return this._state.call.tracks ?? {};
   }
 
   /** @reactive */
-  get transcription() {
-    return this._state.call.transcription ?? {};
-  }
-
-  /** @reactive */
-  get users() {
+  get users(): UserState[] {
     return this._state.call.users ?? [];
   }
 
@@ -88,8 +85,14 @@ export class CallManager extends Resource {
     return Object.values(this._state.media.pulledAudioTracks).map((track) => track.track);
   }
 
+  /** @reactive */
   getVideoStream(name?: EncodedTrackName): MediaStream | undefined {
     return name ? this._state.media.pulledVideoStreams[name]?.stream : undefined;
+  }
+
+  /** @reactive */
+  getActivity(key: string): ActivityState | undefined {
+    return this._state.call.activities?.[key];
   }
 
   setRoomId(roomId: string) {
@@ -104,8 +107,8 @@ export class CallManager extends Resource {
     this._swarmSynchronizer.setRaisedHand(raisedHand);
   }
 
-  setTranscription(transcription: TranscriptionState) {
-    this._swarmSynchronizer.setTranscription(transcription);
+  setActivity(key: string, payload: ActivityState['payload']) {
+    this._swarmSynchronizer.setActivity(key, payload);
   }
 
   turnAudioOn() {
@@ -139,7 +142,6 @@ export class CallManager extends Resource {
 
     const edgeUrl = this._client.config.get('runtime.services.edge.url');
     invariant(edgeUrl);
-    this._transcriptionManager = new TranscriptionManager(new EdgeHttpClient(edgeUrl));
   }
 
   protected override async _open() {
@@ -148,10 +150,6 @@ export class CallManager extends Resource {
     const subscription = this._client.halo.identity.subscribe((identity) => {
       if (identity) {
         this._swarmSynchronizer._setIdentity(identity);
-        this._transcriptionManager.setName(identity.profile?.displayName ?? generateName(identity.identityKey.toHex()));
-        const fallbackValue = keyToFallback(identity!.identityKey);
-        const userHue = identity!.profile?.data?.hue || fallbackValue.hue;
-        this._transcriptionManager.setHue(userHue);
       }
       if (this._client.halo.device) {
         this._swarmSynchronizer._setDevice(this._client.halo.device);
@@ -164,7 +162,6 @@ export class CallManager extends Resource {
   }
 
   protected override async _close() {
-    await this._transcriptionManager.close();
     await this._swarmSynchronizer.leave();
     await this._swarmSynchronizer.close();
     await this._mediaManager.close();
@@ -184,12 +181,10 @@ export class CallManager extends Resource {
       iceServers: this._client.config.get('runtime.services.ice'),
       apiBase: `${CALLS_URL}/api/calls`,
     });
-    await this._transcriptionManager.open();
   }
 
   @synchronized
   async leave() {
-    await this._transcriptionManager.close();
     await this._swarmSynchronizer.leave();
     this._swarmSynchronizer.setJoined(false);
     await this._mediaManager.leave();
@@ -201,9 +196,8 @@ export class CallManager extends Resource {
       ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
       .filter(isNonNullable);
     this._mediaManager._schedulePullTracks(tracksToPull as EncodedTrackName[]);
-    void this._transcriptionManager.setEnabled(state.transcription?.enabled ?? false);
-    void this._transcriptionManager.setQueue(state.transcription?.queueDxn);
 
+    this.callStateUpdated.emit(state);
     this._updateState();
   }
 
@@ -217,10 +211,10 @@ export class CallManager extends Resource {
       screenshareEnabled: state.screenshareEnabled,
     });
 
-    void this._transcriptionManager.setAudioTrack(state.audioTrack);
-    this._swarmSynchronizer.setSpeaking(this._mediaManager.isSpeaking ?? false);
-    this._transcriptionManager.setRecording(this._mediaManager.isSpeaking ?? false);
+    const isSpeaking = this._mediaManager.isSpeaking ?? false;
+    this._swarmSynchronizer.setSpeaking(isSpeaking);
 
+    this.mediaStateUpdated.emit([state, isSpeaking]);
     this._updateState();
   }
 

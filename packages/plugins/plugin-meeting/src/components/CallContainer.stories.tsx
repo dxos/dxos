@@ -9,15 +9,11 @@ import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { Transcript, TranscriptionPlugin } from '@dxos/plugin-transcription';
-import { TranscriptType, type TranscriptBlock } from '@dxos/plugin-transcription/types';
 import { Config, useClient } from '@dxos/react-client';
-import { create, Filter, makeRef, useQuery, useQueue } from '@dxos/react-client/echo';
-import { ScrollContainer } from '@dxos/react-ui-components';
+import { create, makeRef } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CallContainer, type CallContainerProps } from './CallContainer';
@@ -27,9 +23,6 @@ import translations from '../translations';
 const Render = (props: CallContainerProps) => {
   const client = useClient();
   const space = client.spaces.get().at(-1);
-  const transcripts = useQuery(space, Filter.schema(TranscriptType));
-  const dxn = transcripts[0]?.queue;
-  const queue = useQueue<TranscriptBlock>(dxn ? DXN.parse(dxn) : undefined, { pollInterval: 500 });
 
   if (!space) {
     return <div />;
@@ -39,11 +32,6 @@ const Render = (props: CallContainerProps) => {
     <div className='flex grow gap-8 justify-center'>
       <div className='flex h-full border border-neutral-500'>
         <CallContainer {...props} />
-      </div>
-      <div className='flex h-full w-[30rem] border border-neutral-500'>
-        <ScrollContainer>
-          <Transcript blocks={queue?.items} />
-        </ScrollContainer>
       </div>
     </div>
   );
@@ -76,7 +64,6 @@ const meta: Meta<CallContainerProps> = {
         SpacePlugin({ observability: false }),
         IntentPlugin(),
         MeetingPlugin(),
-        TranscriptionPlugin(),
         SettingsPlugin(),
       ],
     }),

@@ -6,7 +6,7 @@
 //
 
 import { effect, untracked } from '@preact/signals-core';
-import { type Effect } from 'effect';
+import { Effect } from 'effect';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -56,8 +56,8 @@ export type Capability<T> = {
 export type AnyCapability = Capability<any>;
 
 type PluginsContextOptions = {
-  activate: (event: ActivationEvent) => MaybePromise<boolean>;
-  reset: (event: ActivationEvent) => MaybePromise<boolean>;
+  activate: (event: ActivationEvent) => Effect.Effect<boolean, Error>;
+  reset: (event: ActivationEvent) => Effect.Effect<boolean, Error>;
 };
 
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
@@ -218,5 +218,13 @@ export class PluginsContext {
     const capability = await trigger.wait();
     unsubscribe();
     return capability;
+  }
+
+  async activatePromise(event: ActivationEvent): Promise<boolean> {
+    return this.activate(event).pipe(Effect.runPromise);
+  }
+
+  async resetPromise(event: ActivationEvent): Promise<boolean> {
+    return this.reset(event).pipe(Effect.runPromise);
   }
 }
