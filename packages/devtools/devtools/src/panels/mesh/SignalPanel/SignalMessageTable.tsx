@@ -38,7 +38,7 @@ const views: View<SignalResponse>[] = [
     // TODO(burdon): Add id property (can't use date?) Same for swarm panel.
 
     properties: [
-      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received', sort: 'desc' },
+      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received', sort: 'desc', size: 194 },
       {
         name: 'response',
         format: FormatEnum.SingleSelect,
@@ -51,7 +51,7 @@ const views: View<SignalResponse>[] = [
         },
       },
       { name: 'peer', format: FormatEnum.DID },
-      { name: 'since', format: FormatEnum.DateTime },
+      { name: 'since', format: FormatEnum.DateTime, size: 194 },
       { name: 'topic', format: FormatEnum.DID },
     ],
     dataTransform: (response: SignalResponse) => ({
@@ -73,7 +73,7 @@ const views: View<SignalResponse>[] = [
       return !!response.message;
     },
     properties: [
-      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received' },
+      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received', size: 194 },
       { name: 'author', format: FormatEnum.DID },
       { name: 'recipient', format: FormatEnum.DID },
       { name: 'message', format: FormatEnum.DID },
@@ -96,7 +96,7 @@ const views: View<SignalResponse>[] = [
       return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
     },
     properties: [
-      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received' },
+      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received', size: 194 },
       { name: 'author', format: FormatEnum.DID },
       { name: 'recipient', format: FormatEnum.DID },
       { name: 'message', format: FormatEnum.DID },
