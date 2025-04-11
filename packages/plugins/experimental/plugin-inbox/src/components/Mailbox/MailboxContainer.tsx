@@ -9,7 +9,6 @@ import { log } from '@dxos/log';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckAction, surfaceVariant } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
-import { Status } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import type { MessageType } from '@dxos/schema';
 
@@ -51,10 +50,11 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const handleAction = useCallback<MailboxActionHandler>(
     ({ action, messageId }) => {
       switch (action) {
-        case 'select':
+        case 'select': {
           log.debug(`[select message] ${messageId}`);
           break;
-        case 'current':
+        }
+        case 'current': {
           void dispatch(
             createIntent(DeckAction.ChangeCompanion, {
               primary: id,
@@ -62,6 +62,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
             }),
           );
           break;
+        }
       }
     },
     [id, dispatch],
@@ -69,17 +70,13 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   return (
     <StackItem.Content toolbar={false}>
-      {messages && messages.length > 0 ? (
-        <Mailbox
-          messages={messages}
-          id={id}
-          name={mailbox.name}
-          onAction={handleAction}
-          currentMessageId={currentMessageId}
-        />
-      ) : (
-        <Status indeterminate aria-label='Loading...' />
-      )}
+      <Mailbox
+        messages={messages}
+        id={id}
+        name={mailbox.name}
+        onAction={handleAction}
+        currentMessageId={currentMessageId}
+      />
     </StackItem.Content>
   );
 };

@@ -280,9 +280,6 @@
       "path": "packages/plugins/experimental/plugin-conductor/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-excalidraw/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/experimental/plugin-explorer/tsconfig.json"
     },
     {
@@ -323,6 +320,9 @@
     },
     {
       "path": "packages/plugins/plugin-deck/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-files/tsconfig.json"
