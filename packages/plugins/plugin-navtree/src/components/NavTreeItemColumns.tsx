@@ -22,10 +22,10 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
 
   const { actions: _actions, groupedActions } = getActions(item);
   const [primaryAction, ...secondaryActions] = _actions.toSorted((a, b) =>
-    a.properties?.disposition === 'toolbar' ? -1 : 1,
+    a.properties?.disposition === 'list-item-primary' ? -1 : 1,
   );
 
-  const actions = (primaryAction?.properties?.disposition === 'toolbar' ? secondaryActions : _actions)
+  const actions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : _actions)
     .flatMap((action) => (isAction(action) ? [action] : []))
     .filter((action) => !action.properties?.hidden);
 
@@ -36,7 +36,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
 
   return (
     <div role='none' className='contents app-no-drag'>
-      {primaryAction?.properties?.disposition === 'toolbar' && !primaryAction?.properties?.disabled ? (
+      {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled ? (
         <NavTreeItemAction
           testId={primaryAction.properties?.testId}
           label={toLocalizedString(primaryAction.properties?.label, t)}

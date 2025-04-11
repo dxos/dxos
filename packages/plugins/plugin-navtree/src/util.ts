@@ -75,7 +75,7 @@ export const sortActions = (actions: Action[]): Action[] =>
       return 0;
     }
 
-    if (a.properties.disposition === 'toolbar') {
+    if (a.properties.disposition === 'list-item-primary') {
       return -1;
     }
 

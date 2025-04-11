@@ -86,9 +86,7 @@ export default (context: PluginsContext) =>
                 ? ['stop transcription label', { ns: TRANSCRIPTION_PLUGIN }]
                 : ['start transcription label', { ns: TRANSCRIPTION_PLUGIN }],
               icon: 'ph--record--regular',
-              // TODO(wittjosiah): Disambiguate from navtree toolbar and content toolbar.
               disposition: 'toolbar',
-              // TODO(wittjosiah): Declare a semantic color.
               classNames: state.enabled ? 'text-activeInCall' : '',
             },
           },
