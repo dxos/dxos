@@ -6,6 +6,8 @@ import { Schema as S } from 'effect';
 
 import { EchoObject, JsonSchemaType } from '../ast';
 
+// import { EchoObject, JsonSchemaType } from '../ast';
+
 /**
  * Stored representation of a schema.
  */
