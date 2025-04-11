@@ -6,12 +6,12 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
-import { EXCALIDRAW_SCHEMA, type DiagramType, isDiagramType } from '@dxos/plugin-sketch/types';
+import { isDiagramType, type DiagramType } from '@dxos/plugin-sketch/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { SketchContainer, SketchSettings } from '../components';
 import { EXCALIDRAW_PLUGIN } from '../meta';
-import { type SketchSettingsProps } from '../types';
+import { EXCALIDRAW_SCHEMA, type SketchSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

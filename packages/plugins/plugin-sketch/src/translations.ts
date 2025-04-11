@@ -15,6 +15,7 @@ export default [
       [SKETCH_PLUGIN]: {
         'plugin name': 'Sketch',
         'settings hover tools label': 'Auto hide controls',
+        'settings grid': 'Show grid',
         'settings grid type label': 'Dotted grid',
       },
     },
