@@ -132,7 +132,7 @@ const DefaultStory = () => {
     [table, model],
   );
 
-  const onTypenameChanged = useCallback(
+  const handleTypenameChanged = useCallback(
     (typename: string) => {
       if (table?.view?.target) {
         invariant(schema);
@@ -161,7 +161,7 @@ const DefaultStory = () => {
             registry={space?.db.schemaRegistry}
             schema={schema}
             view={table.view.target!}
-            onTypenameChanged={onTypenameChanged}
+            onTypenameChanged={handleTypenameChanged}
             onDelete={handleDeleteColumn}
           />
         )}
@@ -197,6 +197,7 @@ type StoryProps = {
   rows?: number;
 } & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
 
+// TODO(burdon): Restore.
 const _TablePerformanceStory = (props: StoryProps) => {
   const getDefaultRows = useCallback(() => 10, []);
   const rows = useDefaultValue(props.rows, getDefaultRows);
