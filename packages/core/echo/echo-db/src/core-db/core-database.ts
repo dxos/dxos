@@ -11,7 +11,7 @@ import {
   Trigger,
   UpdateScheduler,
   type ReadOnlyEvent,
-  type UnsubscribeCallback,
+  type CleanupFn,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
@@ -352,7 +352,7 @@ export class CoreDatabase {
     this._automergeDocLoader.loadObjectDocument(idsToLoad);
 
     return new Promise((resolve, reject) => {
-      let unsubscribe: UnsubscribeCallback | null = null;
+      let unsubscribe: CleanupFn | null = null;
       let inactivityTimeoutTimer: any | undefined;
       const scheduleInactivityTimeout = () => {
         inactivityTimeoutTimer = setTimeout(() => {
@@ -673,7 +673,7 @@ export class CoreDatabase {
     return value ?? raise(new Error('Failed to get sync state'));
   }
 
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): UnsubscribeCallback {
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
     const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
     stream.subscribe(
       (data) => {

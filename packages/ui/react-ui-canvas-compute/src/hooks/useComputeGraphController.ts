@@ -4,14 +4,14 @@
 
 import { type RefObject, useEffect, useState } from 'react';
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { type CleanupFn } from '@dxos/async';
 import { type EditorRootProps, type EditorController } from '@dxos/react-ui-canvas-editor';
 
 import { type ComputeGraphController } from '../graph';
 import { type ComputeShape } from '../shapes';
 
 // TODO(burdon): Move to async/context?
-const combine = (...cbs: UnsubscribeCallback[]) => {
+const combine = (...cbs: CleanupFn[]) => {
   return () => {
     for (const cb of cbs) {
       cb();

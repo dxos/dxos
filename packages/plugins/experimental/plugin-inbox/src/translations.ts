@@ -22,7 +22,7 @@ export default [
       },
       [INBOX_PLUGIN]: {
         'plugin name': 'Inbox',
-        'no messages': 'Mailbox empty',
+        'empty mailbox message': 'Mailbox empty',
         'action archive': 'Archive',
         'action delete': 'Delete',
         'action mark read': 'Mark as read',

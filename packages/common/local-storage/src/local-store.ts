@@ -4,7 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { type CleanupFn } from '@dxos/async';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 import { create, type ReactiveObject } from '@dxos/live-object';
@@ -117,7 +117,7 @@ export class LocalStorageStore<T extends object> {
     };
   }
 
-  private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
+  private readonly _subscriptions = new Map<string, CleanupFn>();
 
   private readonly _values: ReactiveObject<T>;
 

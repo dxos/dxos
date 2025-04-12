@@ -14,7 +14,7 @@ import {
 } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
-import { type UnsubscribeCallback, debounce } from '@dxos/async';
+import { type CleanupFn, debounce } from '@dxos/async';
 import {
   createSheetName,
   type CellAddress,
@@ -92,7 +92,7 @@ export const compute = (options: ComputeOptions = {}): Extension => {
     ViewPlugin.fromClass(
       class {
         // Graph subscription.
-        private _subscription?: UnsubscribeCallback;
+        private _subscription?: CleanupFn;
         constructor(view: EditorView) {
           const id = view.state.facet(documentId);
           const computeGraph = view.state.facet(computeGraphFacet);

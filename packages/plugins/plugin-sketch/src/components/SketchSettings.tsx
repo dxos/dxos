@@ -15,6 +15,12 @@ export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) 
 
   return (
     <DeprecatedFormContainer>
+      <DeprecatedFormInput label={t('settings grid')}>
+        <Input.Switch
+          checked={settings.showGrid !== false}
+          onCheckedChange={(checked) => (settings.showGrid = checked)}
+        />
+      </DeprecatedFormInput>
       <DeprecatedFormInput label={t('settings grid type label')}>
         <Input.Switch
           checked={settings.gridType === 'dotted'}

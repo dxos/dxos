@@ -51,13 +51,13 @@ export const NodePlankHeading = memo(
     const label = pending
       ? t('pending heading')
       : toLocalizedString(
-          (typeof node?.properties?.surfaceVariantLabel === 'function'
-            ? node.properties.surfaceVariantLabel(surfaceVariant)
-            : surfaceVariant
-              ? Array.isArray(node?.properties?.label)
+          (surfaceVariant
+            ? typeof node?.properties?.surfaceVariantLabel === 'function'
+              ? node.properties.surfaceVariantLabel(surfaceVariant)
+              : Array.isArray(node?.properties?.label)
                 ? [`${surfaceVariant} plank heading`, node.properties.label[1]]
                 : ['companion plank heading fallback label', { ns: DECK_PLUGIN }]
-              : node?.properties?.label) ?? ['plank heading fallback label', { ns: DECK_PLUGIN }],
+            : node?.properties?.label) ?? ['plank heading fallback label', { ns: DECK_PLUGIN }],
           t,
         );
     const { dispatchPromise: dispatch } = useIntentDispatcher();

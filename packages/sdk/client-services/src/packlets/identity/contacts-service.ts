@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EventSubscriptions, scheduleTask, UpdateScheduler } from '@dxos/async';
+import { scheduleTask, UpdateScheduler, SubscriptionList } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type MemberInfo } from '@dxos/credentials';
 import { type SpaceManager } from '@dxos/echo-pipeline';
@@ -62,7 +62,7 @@ export class ContactsServiceImpl implements ContactsService {
         { maxFrequency: 2 },
       );
       scheduleTask(ctx, async () => {
-        const subscriptions = new EventSubscriptions();
+        const subscriptions = new SubscriptionList();
         ctx.onDispose(() => subscriptions.clear());
         const subscribeToSpaceAndUpdate = () => {
           const oldSetSize = subscribedSpaceKeySet.size;

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { type CleanupFn } from '@dxos/async';
 
 import { getObjectCore, isEchoObject } from '../echo-handler';
 
@@ -35,7 +35,7 @@ export type UpdateInfo = {
 export const createSubscription = (onUpdate: (info: UpdateInfo) => void): SubscriptionHandle => {
   let subscribed = true;
   let firstUpdate = true;
-  const subscriptions = new Map<any, UnsubscribeCallback>();
+  const subscriptions = new Map<any, CleanupFn>();
 
   const handle = {
     update: (selection: Selection) => {

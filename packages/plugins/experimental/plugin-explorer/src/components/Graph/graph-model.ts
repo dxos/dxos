@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { type CleanupFn } from '@dxos/async';
 import {
   getSchema,
   getSchemaDXN,
@@ -15,7 +15,7 @@ import {
 import { type GraphData, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { Filter, type ReactiveEchoObject, type Space, type Subscription } from '@dxos/react-client/echo';
+import { Filter, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
@@ -47,9 +47,9 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
   };
 
   private _schema?: EchoSchema[];
-  private _schemaSubscription?: UnsubscribeCallback;
+  private _schemaSubscription?: CleanupFn;
   private _objects?: ReactiveEchoObject<any>[];
-  private _objectsSubscription?: Subscription;
+  private _objectsSubscription?: CleanupFn;
 
   constructor(private readonly _options: SpaceGraphModelOptions = {}) {
     super();

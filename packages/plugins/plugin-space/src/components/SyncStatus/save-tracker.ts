@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { type CleanupFn } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 
 export const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 'saving') => void) => {
-  const unsubscribeCallbacks: Record<SpaceId, UnsubscribeCallback> = {};
+  const CleanupFns: Record<SpaceId, CleanupFn> = {};
   const state: Record<SpaceId, 'saved' | 'saving'> = {};
 
   const install = (spaces: Space[]) => {
@@ -18,7 +18,7 @@ export const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 's
       }
 
       state[space.id] = 'saved';
-      unsubscribeCallbacks[space.id] = createSpaceSaveTracker(space, (s) => {
+      CleanupFns[space.id] = createSpaceSaveTracker(space, (s) => {
         state[space.id] = s;
         cb(Object.values(state).some((s) => s === 'saving') ? 'saving' : 'saved');
       });
@@ -30,13 +30,13 @@ export const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 's
   install(client.spaces.get());
 
   return () => {
-    for (const unsubscribe of Object.values(unsubscribeCallbacks)) {
+    for (const unsubscribe of Object.values(CleanupFns)) {
       unsubscribe();
     }
   };
 };
 
-const createSpaceSaveTracker = (space: Space, cb: (state: 'saved' | 'saving') => void): UnsubscribeCallback => {
+const createSpaceSaveTracker = (space: Space, cb: (state: 'saved' | 'saving') => void): CleanupFn => {
   const ctx = new Context();
 
   void space.waitUntilReady().then(() => {

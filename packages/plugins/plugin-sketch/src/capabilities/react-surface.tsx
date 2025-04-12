@@ -9,7 +9,7 @@ import { SettingsStore } from '@dxos/local-storage';
 
 import { SketchContainer, SketchSettings } from '../components';
 import { SKETCH_PLUGIN } from '../meta';
-import { type DiagramType, isDiagramType, type SketchSettingsProps, TLDRAW_SCHEMA } from '../types';
+import { isDiagramType, TLDRAW_SCHEMA, type DiagramType, type SketchSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

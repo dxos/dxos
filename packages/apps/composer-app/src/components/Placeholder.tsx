@@ -21,7 +21,7 @@ export const Placeholder = ({ stage }: { stage: number }) => {
           <Composer
             className={mx(
               'w-[256px] h-[256px] transition-all duration-500 ease-in-out filter grayscale opacity-0',
-              stage >= 1 && 'grayscale-0 opacity-20',
+              stage >= 1 && 'dark:grayscale-0 opacity-20',
               stage >= 2 && 'opacity-0',
             )}
           />

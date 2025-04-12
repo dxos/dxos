@@ -8,6 +8,7 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { type ReactiveEchoObject, Filter, hasType } from '@dxos/echo-db';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -17,7 +18,6 @@ import { FileType } from '@dxos/plugin-wnfs/types';
 
 import { type ChainDocument, type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 const types = [DocumentType, FileType];
 

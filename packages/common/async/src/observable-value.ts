@@ -4,7 +4,7 @@
 
 import { createSetDispatch } from '@dxos/util';
 
-import { type UnsubscribeCallback } from './events';
+import { type CleanupFn } from './cleanup';
 
 /**
  * Return type for processes that support cancellable subscriptions.
@@ -14,7 +14,7 @@ import { type UnsubscribeCallback } from './events';
 export interface ObservableValue<Events, Value = unknown> {
   value?: Value;
   setValue(value: Value): void;
-  subscribe(handler: Events): UnsubscribeCallback;
+  subscribe(handler: Events): CleanupFn;
 }
 
 /**
@@ -48,7 +48,7 @@ export class ObservableProvider<Events extends {}, Value = unknown> implements O
     this._value = value;
   }
 
-  subscribe(handler: Events): UnsubscribeCallback {
+  subscribe(handler: Events): CleanupFn {
     this._handlers.add(handler);
     return () => {
       this._handlers.delete(handler);

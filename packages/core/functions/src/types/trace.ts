@@ -10,6 +10,7 @@ import { FunctionTrigger, type FunctionTriggerType } from './types';
 export enum InvocationOutcome {
   SUCCESS = 'success',
   FAILURE = 'failure',
+  PENDING = 'pending',
 }
 
 export enum InvocationTraceEventType {
@@ -109,7 +110,7 @@ export type TraceEvent = S.Schema.Type<typeof TraceEvent>;
 export type InvocationSpan = {
   id: string;
   timestampMs: number;
-  outcome: InvocationOutcome | 'in-progress';
+  outcome: InvocationOutcome;
   input: object;
   durationMs: number;
   invocationTraceQueue: Ref<Expando>;
@@ -159,7 +160,7 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
       id: invocationId,
       timestampMs: start.timestampMs,
       durationMs: isInProgress ? now - start.timestampMs : end!.timestampMs - start.timestampMs,
-      outcome: end?.outcome ?? ('in-progress' as const),
+      outcome: end?.outcome ?? InvocationOutcome.PENDING,
       exception: end?.exception,
       input: start.input,
       invocationTraceQueue: start.invocationTraceQueue,

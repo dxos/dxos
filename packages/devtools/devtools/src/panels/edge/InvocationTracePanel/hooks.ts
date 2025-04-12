@@ -9,6 +9,11 @@ import { ScriptType, FunctionType, createInvocationSpans, type InvocationTraceEv
 import { type DXN } from '@dxos/keys';
 import { Filter, getSpace, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
 
+import { getUuidFromDxn } from './utils';
+
+/**
+ * Maps invocation target identifiers to readable script names.
+ */
 export const useScriptNameResolver = ({ space }: { space?: Space }) => {
   const scripts = useQuery(space, Filter.schema(ScriptType));
   const functions = useQuery(space, Filter.schema(FunctionType));
@@ -18,9 +23,7 @@ export const useScriptNameResolver = ({ space }: { space?: Space }) => {
       if (!invocationTargetId) {
         return undefined;
       }
-
-      const dxnParts = invocationTargetId.toString().split(':');
-      const uuidPart = dxnParts[dxnParts.length - 1];
+      const uuidPart = getUuidFromDxn(invocationTargetId);
 
       const matchingFunction = functions.find((f) => f.name === uuidPart);
       if (matchingFunction) {
@@ -59,9 +62,8 @@ export const useInvocationSpans = ({ space, script }: { space?: Space; script?: 
   const scopedInvocationSpans = useMemo(() => {
     if (functionsForScript) {
       return invocationSpans.filter((span) => {
-        const targetId = decodeReference(span.invocationTarget).dxn?.toString();
-        const dxnParts = targetId?.toString().split(':');
-        const uuidPart = dxnParts?.at(-1);
+        const targetId = decodeReference(span.invocationTarget).dxn;
+        const uuidPart = getUuidFromDxn(targetId);
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });
     }

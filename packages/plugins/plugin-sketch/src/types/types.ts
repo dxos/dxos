@@ -33,6 +33,7 @@ export type SketchGridType = S.Schema.Type<typeof SketchGridSchema>;
 
 export const SketchSettingsSchema = S.mutable(
   S.Struct({
+    showGrid: S.optional(S.Boolean),
     gridType: S.optional(SketchGridSchema),
   }),
 );

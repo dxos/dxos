@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event, EventSubscriptions } from '@dxos/async';
+import { type CleanupFn, Event, SubscriptionList } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { PeerInfoHash, type PeerInfo as MessagingPeer } from '@dxos/messaging';
@@ -25,11 +25,9 @@ export interface PeerInfo {
   connections: PublicKey[];
 }
 
-type Unsubscribe = () => void;
-
 export class SwarmMapper {
-  private readonly _subscriptions = new EventSubscriptions();
-  private readonly _connectionSubscriptions = new ComplexMap<MessagingPeer, Unsubscribe>(PeerInfoHash);
+  private readonly _subscriptions = new SubscriptionList();
+  private readonly _connectionSubscriptions = new ComplexMap<MessagingPeer, CleanupFn>(PeerInfoHash);
   private readonly _peers = new ComplexMap<MessagingPeer, PeerInfo>(PeerInfoHash);
 
   readonly mapUpdated = new Event<PeerInfo[]>();
@@ -122,6 +120,7 @@ export class SwarmMapper {
   // TODO(burdon): Async open/close.
   destroy() {
     Array.from(this._connectionSubscriptions.values()).forEach((cb) => cb());
+    this._connectionSubscriptions.clear();
     this._subscriptions.clear();
   }
 }

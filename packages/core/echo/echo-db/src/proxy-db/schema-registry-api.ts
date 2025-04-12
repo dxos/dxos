@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { type CleanupFn } from '@dxos/async';
 import { type EchoSchema, type ObjectId, type S } from '@dxos/echo-schema';
 
 export type SchemaSubscriptionCallback = (schema: EchoSchema[]) => void;
@@ -95,7 +95,7 @@ export interface SchemaRegistryPreparedQuery<T> {
    * Subscribe to the query results reactively.
    * Enables signals notifications for `results`.
    */
-  subscribe(cb?: (self: this) => void, opts?: { fire?: boolean }): UnsubscribeCallback;
+  subscribe(cb?: (self: this) => void, opts?: { fire?: boolean }): CleanupFn;
 }
 
 /**

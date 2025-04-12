@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type CleanupFn } from '@dxos/async';
 import { type Space, type Query } from '@dxos/client/echo';
-import { type ReactiveEchoObject, type Filter, type Subscription } from '@dxos/echo-db';
+import { type ReactiveEchoObject, type Filter } from '@dxos/echo-db';
 
 export type ObjectIndexer<T extends ReactiveEchoObject<any>> = (object: T) => string | undefined;
 
@@ -14,7 +15,7 @@ export class ObjectSyncer<T extends ReactiveEchoObject<any>> {
   private readonly _mapById = new Map<string, { indexedValue: string; object: T }>();
   private readonly _mapByIndex = new Map<string, T>();
 
-  private _subscription?: Subscription;
+  private _unsubscribe?: CleanupFn;
 
   constructor(
     private readonly _filter: Filter<T>,
@@ -23,7 +24,7 @@ export class ObjectSyncer<T extends ReactiveEchoObject<any>> {
 
   async open(space: Space) {
     await this.close();
-    this._subscription = space.db.query(this._filter).subscribe(
+    this._unsubscribe = space.db.query(this._filter).subscribe(
       (query: Query<T>) => {
         for (const object of query.objects) {
           const value = this._indexer(object);
@@ -43,8 +44,9 @@ export class ObjectSyncer<T extends ReactiveEchoObject<any>> {
   }
 
   async close() {
-    if (this._subscription) {
-      this._subscription = undefined;
+    if (this._unsubscribe) {
+      this._unsubscribe();
+      this._unsubscribe = undefined;
     }
   }
 
