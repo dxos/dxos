@@ -3,13 +3,13 @@
 //
 
 import React, {
-  forwardRef,
+  type MouseEvent,
   type PropsWithChildren,
+  type WheelEvent,
+  forwardRef,
   useCallback,
   useImperativeHandle,
   useState,
-  type WheelEvent,
-  type MouseEvent,
   useMemo,
 } from 'react';
 

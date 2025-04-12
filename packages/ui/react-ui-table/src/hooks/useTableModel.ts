@@ -17,8 +17,8 @@ export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
   table?: TableType;
   projection?: ViewProjection;
   objects?: ReactiveObject<T>[];
-  onSelectionChanged?: (selection: string[]) => void;
   rowActions?: TableRowAction[];
+  onSelectionChanged?: (selection: string[]) => void;
   onRowAction?: (actionId: string, data: T) => void;
 } & Pick<
   TableModelProps<T>,
@@ -26,12 +26,12 @@ export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
 >;
 
 export const useTableModel = <T extends BaseTableRow = { id: string }>({
-  objects,
   table,
   projection,
+  objects,
+  rowActions,
   features,
   onSelectionChanged,
-  rowActions,
   onRowAction,
   ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
