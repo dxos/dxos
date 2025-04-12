@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { Event, Subscriptions, Trigger } from '@dxos/async';
+import { Event, SubscriptionList, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -43,7 +43,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
 
   private readonly _trigger = new Trigger({ autoReset: true });
-  private readonly _subscriptions = new Subscriptions();
+  private readonly _subscriptions = new SubscriptionList();
 
   public readonly stalled = new Event<FeedSetIterator<T>>();
 

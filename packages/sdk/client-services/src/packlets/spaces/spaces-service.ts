@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Subscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
+import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import {
@@ -140,7 +140,7 @@ export class SpacesServiceImpl implements SpacesService {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
 
-        const subscriptions = new Subscriptions();
+        const subscriptions = new SubscriptionList();
         ctx.onDispose(() => subscriptions.clear());
 
         // TODO(dmaretskyi): Create a pattern for subscribing to a set of objects.
