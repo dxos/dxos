@@ -5,9 +5,17 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
+import { Option, pipe } from 'effect';
 import React, { useMemo } from 'react';
 
-import { AST, type S, ImmutableSchema, toJsonSchema, getSchemaTypename } from '@dxos/echo-schema';
+import {
+  AST,
+  type S,
+  toJsonSchema,
+  ImmutableSchema,
+  type ObjectAnnotation,
+  ObjectAnnotationId,
+} from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
 import { create, makeRef } from '@dxos/react-client/echo';
@@ -22,17 +30,20 @@ import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 
+// TODO(burdon): Document View vs. ViewProjection.
+// TODO(burdon): Mutable and immutable views.
+// TODO(burdon): Reconcile schemas types and utils (see API PR).
+
+// TODO(burdon): This util hook shouldn't be needed (move into API).
+// TODO(burdon): What type should we use for a schema that has the annotation?
 const useTestModel = (schema: S.Schema.AnyNoContext) => {
   const table = useMemo(() => {
-    const title = getAnnotation<string>(AST.TitleAnnotationId)(schema.ast);
-    const view = createView({
-      name: title ?? getSchemaTypename(schema) ?? '?', // TODO(burdon): Create function.
-      typename: getSchemaTypename(schema),
-      jsonSchema: toJsonSchema(schema),
-    });
-
+    const { typename } = pipe(schema.ast, AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId), Option.getOrThrow);
+    const jsonSchema = toJsonSchema(schema);
+    const name = getAnnotation<string>(AST.TitleAnnotationId)(schema.ast) ?? typename;
+    const view = createView({ name, typename, jsonSchema });
     return create(TableType, { view: makeRef(view) });
-  }, []);
+  }, [schema]);
 
   const projection = useMemo(() => {
     if (!table.view?.target) {
