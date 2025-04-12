@@ -23,17 +23,15 @@ type Test = S.Schema.Type<typeof Test>;
 // TODO(burdon): Create vitest harness for functions.
 describe('functions', () => {
   it('should have defaults', ({ expect }) => {
-    {
-      const result = S.decodeSync(Test)({ id: ObjectId.random() });
-      expect(result).contains({ name: 'Anonymous' });
-      expect(differenceInDays(new Date(), new Date(result.created))).toBeGreaterThanOrEqual(30);
-      expect(result.email).toBeUndefined();
-    }
+    const result = S.decodeSync(Test)({ id: ObjectId.random() });
+    expect(result).contains({ name: 'Anonymous' });
+    expect(differenceInDays(new Date(), new Date(result.created))).toBeGreaterThanOrEqual(30);
+    expect(result.email).toBeUndefined();
+  });
 
-    {
-      const result = createStatic(Test, {}); // TODO(burdon): Fix.
-      expect(result.name).toBe('Anonymous');
-    }
+  it('should be constructable with defaults', ({ expect }) => {
+    const result = createStatic(Test, {}); // TODO(burdon): Fix.
+    expect(result.name).toBe('Anonymous');
   });
 });
 
