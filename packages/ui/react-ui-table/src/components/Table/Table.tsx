@@ -72,6 +72,7 @@ export type TableController = {
 export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
+  // TODO(burdon): Rename since attention isn't a useful concept here. Standardize across other components.
   ignoreAttention?: boolean;
   onRowClicked?: (row: any) => void;
 };

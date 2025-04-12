@@ -18,6 +18,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
+import { TablePresentation } from '../../model/table-presentation';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
@@ -31,7 +32,7 @@ const generator: ValueGenerator = faker as any;
 
 // TODO(burdon): This util hook shouldn't be needed (move into API).
 // TODO(burdon): Base type.
-const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>) => {
+const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count: number) => {
   const table = useMemo(() => {
     // const { typename } = pipe(schema.ast, AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId), Option.getOrThrow);
     const jsonSchema = schema.jsonSchema;
@@ -57,28 +58,40 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>) => {
     }
 
     const objectGenerator = createGenerator(generator, schema, { optional: true });
-    const objects: ReactiveObject<T>[] = Array.from({ length: 10 }).map(() => objectGenerator.createObject());
+    const objects: ReactiveObject<T>[] = Array.from({ length: count }).map(() => objectGenerator.createObject());
     model.setRows(objects);
   }, [model]);
 
-  return model;
+  const presentation = useMemo(() => {
+    if (!model) {
+      return;
+    }
+
+    return new TablePresentation(model);
+  }, [model]);
+
+  return { model, presentation };
 };
 
 const DefaultStory = () => {
   // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
   const orgSchema = useMemo(() => new ImmutableSchema(Testing.OrgType), []);
-  const orgModel = useTestModel<Testing.OrgType>(orgSchema);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel<Testing.OrgType>(orgSchema, 12);
 
+  // TODO(burdon): Generate links with references.
   const contactSchema = useMemo(() => new ImmutableSchema(Testing.ContactType), []);
-  const contactModel = useTestModel<Testing.ContactType>(contactSchema);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel<Testing.ContactType>(
+    contactSchema,
+    16,
+  );
 
   return (
     <div className='flex grow grid grid-cols-2 gap-2'>
       <Table.Root>
-        <Table.Main model={orgModel} />
+        <Table.Main model={orgModel} presentation={orgPresentation} />
       </Table.Root>
       <Table.Root>
-        <Table.Main model={contactModel} />
+        <Table.Main model={contactModel} presentation={contactPresentation} />
       </Table.Root>
     </div>
   );
