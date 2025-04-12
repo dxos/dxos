@@ -174,6 +174,7 @@ const DefaultStory = () => {
   );
 };
 
+// TODO(burdon): Move to separate story.
 const DynamicTableStory = () => {
   const properties = useMemo<SchemaPropertyDefinition[]>(
     () => [
@@ -207,16 +208,6 @@ const _TablePerformanceStory = (props: StoryProps) => {
   const simulatorProps = useMemo(() => ({ table, items: objects, ...props }), [table, objects, props]);
   useSimulator(simulatorProps);
 
-  const tableRef = useRef<TableController>(null);
-  const model = useTableModel({
-    table,
-    objects,
-    onDeleteRows: handleDeleteRows,
-    onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChanged: () => tableRef.current?.update?.(),
-  });
-
   const handleDeleteRows = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRows']>>((row) => {
     objectsRef.current.splice(row, 1);
   }, []);
@@ -231,6 +222,16 @@ const _TablePerformanceStory = (props: StoryProps) => {
     [table],
   );
 
+  const tableRef = useRef<TableController>(null);
+  const model = useTableModel({
+    table,
+    objects,
+    onDeleteRows: handleDeleteRows,
+    onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
+  });
+
   return (
     <Table.Root>
       <Table.Main ref={tableRef} model={model} />
@@ -242,9 +243,10 @@ const _TablePerformanceStory = (props: StoryProps) => {
 // Story definitions.
 //
 
+// TODO(burdon): Need super simple story.
+
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-table/Table',
-  component: Table.Main as any,
   render: DefaultStory,
   parameters: { translations },
   decorators: [

@@ -16,8 +16,8 @@ type DynamicTableProps = {
   properties: TablePropertyDefinition[];
   tableName?: string;
   classNames?: string;
-  onRowClicked?: (row: any) => void;
   rowActions?: TableRowAction[];
+  onRowClicked?: (row: any) => void;
   onRowAction?: (actionId: string, datum: any) => void;
 };
 
@@ -30,8 +30,8 @@ export const DynamicTable = ({
   properties,
   classNames,
   tableName = 'com.example/dynamic_table',
-  onRowClicked,
   rowActions,
+  onRowClicked,
   onRowAction,
 }: DynamicTableProps) => {
   // TODO(ZaymonFC): Consider allowing the user to supply a schema directly instead of deriving it from
