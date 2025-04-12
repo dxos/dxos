@@ -49,23 +49,23 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ span, space, onClose }) => {
   const outcomeLabel = useMemo(() => span.outcome.charAt(0).toUpperCase() + span.outcome.slice(1), [span.outcome]);
 
   return (
-    <div className='p-2 overflow-auto'>
-      <div className='is-flex justify-between items-start'>
-        <div className='is-full flex flex-row justify-between'>
+    <div className='p-2 overflow-auto' role='none'>
+      <div className='is-flex justify-between items-start' role='none'>
+        <div className='is-full flex flex-row justify-between' role='none'>
           <h3 className='text-lg font-medium mb-1'>{targetName}</h3>
           <IconButton icon='ph--x--regular' iconOnly label='Close panel' onClick={onClose} />
         </div>
-        <div className='flex gap-2 items-center'>
+        <div className='flex gap-2 items-center' role='none'>
           <Tag palette={outcomeColor}>{outcomeLabel}</Tag>
           <span className='text-sm text-neutral'>{timestamp}</span>
           <span className='text-sm'>{currentDuration && `${formatDuration(currentDuration)}s`}</span>
         </div>
 
         {span.trigger && (
-          <Tag palette='amber'>
-            Triggered{' '}
-            <span className='opacity-80'>{decodeReference(span.trigger).dxn?.toString().split(':').pop()}</span>
-          </Tag>
+          <div className='mt-2 text-sm' role='none'>
+            Trigger ID:{' '}
+            <span className='font-mono'>{decodeReference(span.trigger).dxn?.toString().split(':').pop()}</span>
+          </div>
         )}
       </div>
 
