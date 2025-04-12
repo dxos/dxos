@@ -15,18 +15,16 @@ import { format, subDays } from 'https://esm.sh/date-fns@3.3.1';
 // @ts-ignore
 import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
 
-const DEFAULT_AFTER = format(subDays(new Date(), 30), 'yyyy-MM-dd');
-
-// TODO(burdon): Need to be able to test.
-
 export default defineFunction({
   inputSchema: S.Struct({
+    mailboxId: S.String,
+    userId: S.optional(S.String).pipe(S.withDecodingDefault(() => 'me')),
+    after: S.optional(S.Union(S.Number, S.String)).pipe(
+      S.withDecodingDefault(() => format(subDays(new Date(), 30), 'yyyy-MM-dd')),
+    ),
+    pageSize: S.optional(S.Number),
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
     tick: S.optional(S.String),
-    userId: S.optional(S.String),
-    after: S.optional(S.Union(S.Number, S.String)),
-    pageSize: S.optional(S.Number),
-    mailboxId: S.String,
   }),
 
   outputSchema: S.Struct({
@@ -36,7 +34,7 @@ export default defineFunction({
   handler: ({
     context: { space },
     event: {
-      data: { mailboxId, userId = 'me', after = DEFAULT_AFTER, pageSize = 100 },
+      data: { mailboxId, userId, after, pageSize = 100 },
     },
   }: any) =>
     Effect.gen(function* () {
@@ -167,6 +165,27 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 // TODO(wittjosiah): These schemas should be imported from @dxos/schema.
 //
 
+const MessageType = S.Struct({
+  id: ObjectId,
+  created: S.String.annotations({
+    description: 'ISO date string when the message was sent.',
+  }),
+  sender: ActorSchema.annotations({
+    description: 'Identity of the message sender.',
+  }),
+  blocks: S.Array(MessageContentBlock).annotations({
+    description: 'Contents of the message.',
+  }),
+  properties: S.optional(
+    S.mutable(
+      S.Record({ key: S.String, value: S.Any }).annotations({
+        description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
+      }),
+    ),
+  ),
+}).pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
+type MessageType = S.Schema.Type<typeof MessageType>;
+
 const ActorRoles = ['user', 'assistant'] as const;
 const ActorRole = S.Literal(...ActorRoles);
 type ActorRole = S.Schema.Type<typeof ActorRole>;
@@ -229,24 +248,3 @@ const ReferenceContentBlock = S.extend(
 ).pipe(S.mutable);
 type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
 const MessageContentBlock = S.Union(TextContentBlock, JsonContentBlock, ImageContentBlock, ReferenceContentBlock);
-
-const MessageType = S.Struct({
-  id: ObjectId,
-  created: S.String.annotations({
-    description: 'ISO date string when the message was sent.',
-  }),
-  sender: ActorSchema.annotations({
-    description: 'Identity of the message sender.',
-  }),
-  blocks: S.Array(MessageContentBlock).annotations({
-    description: 'Contents of the message.',
-  }),
-  properties: S.optional(
-    S.mutable(
-      S.Record({ key: S.String, value: S.Any }).annotations({
-        description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
-      }),
-    ),
-  ),
-}).pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
-type MessageType = S.Schema.Type<typeof MessageType>;
