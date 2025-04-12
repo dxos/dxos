@@ -4,7 +4,7 @@
 
 import { type Brand, type Schema as S } from 'effect';
 
-import type { UnsubscribeCallback } from '@dxos/async';
+import type { CleanupFn } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import type { symbolSchema } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
@@ -76,7 +76,7 @@ export class ObjectInternals {
    */
   linkCache: Map<string, ReactiveEchoObject<any>> | undefined = new Map<string, ReactiveEchoObject<any>>();
 
-  subscriptions: UnsubscribeCallback[] = [];
+  subscriptions: CleanupFn[] = [];
 
   /**
    * Schema of the root object.

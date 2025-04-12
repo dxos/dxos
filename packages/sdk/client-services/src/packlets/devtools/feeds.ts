@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EventSubscriptions } from '@dxos/async';
+import { SubscriptionList } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
@@ -27,7 +27,7 @@ export const subscribeToFeeds = (
   { feedKeys }: SubscribeToFeedsRequest,
 ) => {
   return new Stream<SubscribeToFeedsResponse>(({ next }) => {
-    const subscriptions = new EventSubscriptions();
+    const subscriptions = new SubscriptionList();
     const feedMap = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
 
     const update = () => {
@@ -90,7 +90,8 @@ export const subscribeToFeedBlocks = (
     if (!feedKey) {
       return;
     }
-    const subscriptions = new EventSubscriptions();
+
+    const subscriptions = new SubscriptionList();
 
     const timeout = setTimeout(async () => {
       const feed = feedStore.getFeed(feedKey);

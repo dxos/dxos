@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, type UnsubscribeCallback } from '@dxos/async';
+import { Event, type CleanupFn } from '@dxos/async';
 import { Resource, type Context } from '@dxos/context';
 import {
   ObjectIdentifierAnnotationId,
@@ -56,7 +56,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
   private readonly _schemaById: Map<string, EchoSchema> = new Map();
   private readonly _schemaByType: Map<string, EchoSchema> = new Map();
-  private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
+  private readonly _unsubscribeById: Map<string, CleanupFn> = new Map();
   private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
 
   constructor(
@@ -143,7 +143,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     };
 
     const changes = new Event();
-    let unsubscribe: UnsubscribeCallback | undefined;
+    let unsubscribe: CleanupFn | undefined;
     return new SchemaRegistryPreparedQueryImpl({
       changes,
       getResultsSync() {
@@ -308,7 +308,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     }
   }
 
-  private _subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
+  private _subscribe(callback: SchemaSubscriptionCallback): CleanupFn {
     callback([...this._schemaById.values()]);
     this._schemaSubscriptionCallbacks.push(callback);
     return () => {
