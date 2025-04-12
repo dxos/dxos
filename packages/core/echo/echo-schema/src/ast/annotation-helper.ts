@@ -1,4 +1,8 @@
-import { Schema, SchemaAST, Option } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Schema, SchemaAST, type Option } from 'effect';
 
 export interface AnnotationHelper<T> {
   get: (schema: Schema.Schema.Any) => Option.Option<T>;

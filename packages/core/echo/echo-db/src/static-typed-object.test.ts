@@ -1,10 +1,15 @@
-import { invariant } from '@dxos/invariant';
-import { Schema, SchemaAST } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema, type SchemaAST } from 'effect';
 import { describe, test } from 'vitest';
 
+import { invariant } from '@dxos/invariant';
+
 // This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.
-interface _Live<T> {}
-type Live<T> = _Live<T> & T;
+interface _Live {}
+type Live<T> = _Live & T;
 
 const live = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
