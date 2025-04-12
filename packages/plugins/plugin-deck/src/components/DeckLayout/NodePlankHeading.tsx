@@ -52,9 +52,11 @@ export const NodePlankHeading = memo(
       ? t('pending heading')
       : toLocalizedString(
           (surfaceVariant
-            ? Array.isArray(node?.properties?.label)
-              ? [`${surfaceVariant} plank heading`, node.properties.label[1]]
-              : ['companion plank heading fallback label', { ns: DECK_PLUGIN }]
+            ? typeof node?.properties?.surfaceVariantLabel === 'function'
+              ? node.properties.surfaceVariantLabel(surfaceVariant)
+              : Array.isArray(node?.properties?.label)
+                ? [`${surfaceVariant} plank heading`, node.properties.label[1]]
+                : ['companion plank heading fallback label', { ns: DECK_PLUGIN }]
             : node?.properties?.label) ?? ['plank heading fallback label', { ns: DECK_PLUGIN }],
           t,
         );
