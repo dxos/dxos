@@ -18,7 +18,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
-import { TablePresentation } from '../../model/table-presentation';
+import { TablePresentation } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
@@ -26,7 +26,7 @@ import { initializeTable } from '../../util';
 faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
-// TODO(burdon): Document View vs. ViewProjection.
+// TODO(burdon): View vs. ViewProjection?
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 
