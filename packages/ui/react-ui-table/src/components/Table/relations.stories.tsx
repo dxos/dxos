@@ -5,15 +5,15 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
-import { AST, ImmutableSchema, type BaseSchema } from '@dxos/echo-schema';
+import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
-import { create, makeRef } from '@dxos/react-client/echo';
+import { create, makeRef, type ReactiveObject } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { createView, ViewProjection, ViewType } from '@dxos/schema';
-import { Testing } from '@dxos/schema/testing';
+import { createGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -22,12 +22,16 @@ import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 
+faker.seed(1);
+const generator: ValueGenerator = faker as any;
+
 // TODO(burdon): Document View vs. ViewProjection.
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 
 // TODO(burdon): This util hook shouldn't be needed (move into API).
-const useTestModel = (schema: BaseSchema) => {
+// TODO(burdon): Base type.
+const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>) => {
   const table = useMemo(() => {
     // const { typename } = pipe(schema.ast, AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId), Option.getOrThrow);
     const jsonSchema = schema.jsonSchema;
@@ -47,15 +51,26 @@ const useTestModel = (schema: BaseSchema) => {
   }, [schema, table]);
 
   const model = useTableModel({ table, projection, objects: [] });
+  useEffect(() => {
+    if (!model) {
+      return;
+    }
+
+    const objectGenerator = createGenerator(generator, schema, { optional: true });
+    const objects: ReactiveObject<T>[] = Array.from({ length: 10 }).map(() => objectGenerator.createObject());
+    model.setRows(objects);
+  }, [model]);
+
   return model;
 };
 
 const DefaultStory = () => {
+  // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
   const orgSchema = useMemo(() => new ImmutableSchema(Testing.OrgType), []);
-  const orgModel = useTestModel(orgSchema);
+  const orgModel = useTestModel<Testing.OrgType>(orgSchema);
 
   const contactSchema = useMemo(() => new ImmutableSchema(Testing.ContactType), []);
-  const contactModel = useTestModel(contactSchema);
+  const contactModel = useTestModel<Testing.ContactType>(contactSchema);
 
   return (
     <div className='flex grow grid grid-cols-2 gap-2'>
@@ -75,7 +90,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType],
+      types: [TableType, ViewType, Testing.OrgType, Testing.ContactType],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {

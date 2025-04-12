@@ -12,6 +12,7 @@ import {
   LabelAnnotationId,
   Ref,
   EchoObject,
+  ObjectId,
 } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
@@ -21,9 +22,8 @@ export namespace Testing {
   // Org
   //
 
-  // TODO(burdon): Fix when id can be defined.
   export const OrgSchema = S.Struct({
-    // id: S.String,
+    id: ObjectId,
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'company.name',
     }),
@@ -65,7 +65,7 @@ export namespace Testing {
   });
 
   export const ContactSchema = S.Struct({
-    // id: S.String,
+    id: ObjectId,
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'person.fullName',
     }),
@@ -98,7 +98,7 @@ export namespace Testing {
   //
 
   export const ProjectSchema = S.Struct({
-    // id: S.String,
+    id: ObjectId,
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'commerce.productName',
     }),

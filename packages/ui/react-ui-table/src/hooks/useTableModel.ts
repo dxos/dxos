@@ -10,10 +10,10 @@ import { useSelectionActions } from '@dxos/react-ui-attention';
 import { type ViewProjection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { type BaseTableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
+import { type TableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
 import { type TableType } from '../types';
 
-export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
+export type UseTableModelParams<T extends TableRow = TableRow> = {
   table?: TableType;
   projection?: ViewProjection;
   objects?: ReactiveObject<T>[];
@@ -25,7 +25,7 @@ export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
   'features' | 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'
 >;
 
-export const useTableModel = <T extends BaseTableRow = { id: string }>({
+export const useTableModel = <T extends TableRow = TableRow>({
   table,
   projection,
   objects,

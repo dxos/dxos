@@ -9,14 +9,14 @@ import { cellClassesForFieldType, cellClassesForRowSelection, formatForDisplay }
 import {
   type DxGridPlane,
   type DxGridPlaneCells,
-  toPlaneCellIndex,
   type DxGridPlaneRange,
   type DxGridCellValue,
+  toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { VIEW_FIELD_LIMIT, type FieldType } from '@dxos/schema';
 
-import { type BaseTableRow, type TableModel } from './table-model';
+import { type TableRow, type TableModel } from './table-model';
 import { tableButtons, tableControls } from '../util';
 
 /**
@@ -24,7 +24,7 @@ import { tableButtons, tableControls } from '../util';
  * Manages rendering of table cells, headers, selection columns, and action columns across
  * different grid planes.
  */
-export class TablePresentation<T extends BaseTableRow = { id: string }> {
+export class TablePresentation<T extends TableRow = TableRow> {
   constructor(
     private readonly model: TableModel<T>,
     private readonly _visibleRange = signal<DxGridPlaneRange>({
