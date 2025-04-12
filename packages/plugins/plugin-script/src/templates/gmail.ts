@@ -13,9 +13,6 @@ import {
 // @ts-ignore
 import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
 
-// TODO(ZaymonFC): Calculate this dynamically and expose a parameter.
-const DEFAULT_AFTER = '2025-01-01';
-
 export default defineFunction({
   inputSchema: S.Struct({
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
@@ -32,7 +29,7 @@ export default defineFunction({
 
   handler: ({
     event: {
-      data: { mailboxId, userId = 'me', after = DEFAULT_AFTER, pageSize = 100 },
+      data: { mailboxId, userId = 'me', after = getDateThreeMonthsAgo(), pageSize = 100 },
     },
     context: { space },
   }: any) =>
@@ -151,6 +148,15 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
   }
 
   return undefined;
+};
+
+/**
+ * Calculates a date 3 months in the past, formatted as YYYY-MM-DD.
+ */
+const getDateThreeMonthsAgo = (): string => {
+  const date = new Date();
+  date.setMonth(date.getMonth() - 3);
+  return date.toISOString().split('T')[0];
 };
 
 // TODO(wittjosiah): These schemas should be imported from @dxos/schema.
