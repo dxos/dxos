@@ -3,8 +3,8 @@
 //
 
 import React, {
-  forwardRef,
   Fragment,
+  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -23,10 +23,10 @@ import { OUTLINER_PLUGIN } from '../../meta';
 import { Tree, type TreeType, type TreeNodeType } from '../../types';
 import {
   type CursorPosition,
-  type NodeEditorProps,
   NodeEditor,
   type NodeEditorController,
   type NodeEditorEvent,
+  type NodeEditorProps,
 } from '../NodeEditor';
 
 type OutlinerController = {

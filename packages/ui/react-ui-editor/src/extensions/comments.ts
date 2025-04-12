@@ -4,12 +4,12 @@
 
 import { invertedEffects } from '@codemirror/commands';
 import {
+  type ChangeDesc,
+  type EditorState,
   type Extension,
   StateEffect,
   StateField,
   type Text,
-  type ChangeDesc,
-  type EditorState,
 } from '@codemirror/state';
 import {
   hoverTooltip,
@@ -24,7 +24,7 @@ import {
 import sortBy from 'lodash.sortby';
 import { useEffect, useMemo } from 'react';
 
-import { debounce, type UnsubscribeCallback } from '@dxos/async';
+import { debounce, type CleanupFn } from '@dxos/async';
 import { type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
@@ -576,12 +576,7 @@ const hasActiveSelection = (state: EditorState): boolean => {
 class ExternalCommentSync implements PluginValue {
   private readonly unsubscribe: () => void;
 
-  constructor(
-    view: EditorView,
-    id: string,
-    subscribe: (sink: () => void) => UnsubscribeCallback,
-    getComments: () => Comment[],
-  ) {
+  constructor(view: EditorView, id: string, subscribe: (sink: () => void) => CleanupFn, getComments: () => Comment[]) {
     const updateComments = () => {
       const comments = getComments();
       if (id === view.state.facet(documentId)) {
@@ -600,7 +595,7 @@ class ExternalCommentSync implements PluginValue {
 // TODO(burdon): Needs comment.
 export const createExternalCommentSync = (
   id: string,
-  subscribe: (sink: () => void) => UnsubscribeCallback,
+  subscribe: (sink: () => void) => CleanupFn,
   getComments: () => Comment[],
 ): Extension =>
   ViewPlugin.fromClass(
