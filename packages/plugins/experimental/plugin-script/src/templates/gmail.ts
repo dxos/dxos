@@ -13,6 +13,7 @@ import {
 // @ts-ignore
 import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
 
+// TODO(ZaymonFC): Calculate this dynamically and expose a parameter.
 const DEFAULT_AFTER = '2025-01-01';
 
 export default defineFunction({

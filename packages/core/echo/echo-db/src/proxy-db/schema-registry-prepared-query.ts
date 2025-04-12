@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, Mutex, type UnsubscribeCallback } from '@dxos/async';
+import { Event, Mutex, type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import type { SchemaRegistryPreparedQuery } from './schema-registry-api';
@@ -67,7 +67,7 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
     return results[0];
   }
 
-  subscribe(cb?: (self: this) => void, opts?: { fire?: boolean }): UnsubscribeCallback {
+  subscribe(cb?: (self: this) => void, opts?: { fire?: boolean }): CleanupFn {
     if (cb) {
       this._changes.on(cb);
     }
