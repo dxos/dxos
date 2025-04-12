@@ -4,12 +4,12 @@
 
 import { invertedEffects } from '@codemirror/commands';
 import {
+  type ChangeDesc,
+  type EditorState,
   type Extension,
   StateEffect,
   StateField,
   type Text,
-  type ChangeDesc,
-  type EditorState,
 } from '@codemirror/state';
 import {
   hoverTooltip,
