@@ -576,12 +576,7 @@ const hasActiveSelection = (state: EditorState): boolean => {
 class ExternalCommentSync implements PluginValue {
   private readonly unsubscribe: () => void;
 
-  constructor(
-    view: EditorView,
-    id: string,
-    subscribe: (sink: () => void) => CleanupFn,
-    getComments: () => Comment[],
-  ) {
+  constructor(view: EditorView, id: string, subscribe: (sink: () => void) => CleanupFn, getComments: () => Comment[]) {
     const updateComments = () => {
       const comments = getComments();
       if (id === view.state.facet(documentId)) {
