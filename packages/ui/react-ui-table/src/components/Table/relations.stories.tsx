@@ -86,7 +86,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='flex grow grid grid-cols-2 gap-2'>
+    <div className='flex grow grid grid-cols-2 divide-x divide-separator'>
       <Table.Root>
         <Table.Main model={orgModel} presentation={orgPresentation} />
       </Table.Root>

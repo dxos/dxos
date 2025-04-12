@@ -202,13 +202,23 @@ const _TablePerformanceStory = (props: StoryProps) => {
   const getDefaultRows = useCallback(() => 10, []);
   const rows = useDefaultValue(props.rows, getDefaultRows);
   const table = useMemo(() => createTable(), []);
-  const items = useMemo(() => createItems(rows), [rows]);
-  const itemsRef = useRef(items);
-  const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
+  const objects = useMemo(() => createItems(rows), [rows]);
+  const objectsRef = useRef(objects);
+  const simulatorProps = useMemo(() => ({ table, items: objects, ...props }), [table, objects, props]);
   useSimulator(simulatorProps);
 
+  const tableRef = useRef<TableController>(null);
+  const model = useTableModel({
+    table,
+    objects,
+    onDeleteRows: handleDeleteRows,
+    onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
+  });
+
   const handleDeleteRows = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRows']>>((row) => {
-    itemsRef.current.splice(row, 1);
+    objectsRef.current.splice(row, 1);
   }, []);
 
   const handleDeleteColumn = useCallback<NonNullable<UseTableModelParams<any>['onDeleteColumn']>>(
@@ -220,16 +230,6 @@ const _TablePerformanceStory = (props: StoryProps) => {
     },
     [table],
   );
-
-  const tableRef = useRef<TableController>(null);
-  const model = useTableModel({
-    table,
-    objects: items as any[],
-    onDeleteRows: handleDeleteRows,
-    onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChanged: () => tableRef.current?.update?.(),
-  });
 
   return (
     <Table.Root>
