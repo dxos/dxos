@@ -53,10 +53,11 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const handleAction = useCallback<MailboxActionHandler>(
     ({ action, messageId }) => {
       switch (action) {
-        case 'select':
+        case 'select': {
           log.debug(`[select message] ${messageId}`);
           break;
-        case 'current':
+        }
+        case 'current': {
           void dispatch(
             createIntent(DeckAction.ChangeCompanion, {
               primary: id,
@@ -64,6 +65,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
             }),
           );
           break;
+        }
       }
     },
     [id, dispatch],

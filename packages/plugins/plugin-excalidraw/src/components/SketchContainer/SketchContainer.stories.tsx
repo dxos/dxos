@@ -8,14 +8,14 @@ import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SketchContainer } from './SketchContainer';
 
 const createSketch = () => {
-  return createObject(create(DiagramType, { canvas: createObject(create(CanvasType, { content: {} })) }));
+  return createObject(create(DiagramType, { canvas: makeRef(create(CanvasType, { content: {} })) }));
 };
 
 const DefaultStory = () => {
