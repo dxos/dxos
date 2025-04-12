@@ -5,17 +5,9 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import { Option, pipe } from 'effect';
 import React, { useMemo } from 'react';
 
-import {
-  AST,
-  type S,
-  toJsonSchema,
-  ImmutableSchema,
-  type ObjectAnnotation,
-  ObjectAnnotationId,
-} from '@dxos/echo-schema';
+import { AST, ImmutableSchema, type BaseSchema } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
 import { create, makeRef } from '@dxos/react-client/echo';
@@ -35,11 +27,11 @@ import { initializeTable } from '../../util';
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 
 // TODO(burdon): This util hook shouldn't be needed (move into API).
-// TODO(burdon): What type should we use for a schema that has the annotation?
-const useTestModel = (schema: S.Schema.AnyNoContext) => {
+const useTestModel = (schema: BaseSchema) => {
   const table = useMemo(() => {
-    const { typename } = pipe(schema.ast, AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId), Option.getOrThrow);
-    const jsonSchema = toJsonSchema(schema);
+    // const { typename } = pipe(schema.ast, AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId), Option.getOrThrow);
+    const jsonSchema = schema.jsonSchema;
+    const typename = schema.typename;
     const name = getAnnotation<string>(AST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema });
     return create(TableType, { view: makeRef(view) });
@@ -50,26 +42,28 @@ const useTestModel = (schema: S.Schema.AnyNoContext) => {
       return undefined;
     }
 
-    // TODO(burdon): Get schema from view?
-    const base = new ImmutableSchema(schema);
-    return new ViewProjection(base, table.view?.target);
-  }, [table, schema]);
+    // TODO(burdon): Get schema from view inside of ViewProjection?
+    return new ViewProjection(schema, table.view.target);
+  }, [schema, table]);
 
-  // TODO(burdon): Convert to callback initializer.
   const model = useTableModel({ table, projection, objects: [] });
   return model;
 };
 
 const DefaultStory = () => {
-  const org = useTestModel(Testing.OrgType);
-  const contact = useTestModel(Testing.ContactType);
+  const orgSchema = useMemo(() => new ImmutableSchema(Testing.OrgType), []);
+  const orgModel = useTestModel(orgSchema);
+
+  const contactSchema = useMemo(() => new ImmutableSchema(Testing.ContactType), []);
+  const contactModel = useTestModel(contactSchema);
+
   return (
     <div className='flex grow grid grid-cols-2 gap-2'>
       <Table.Root>
-        <Table.Main model={org} />
+        <Table.Main model={orgModel} />
       </Table.Root>
       <Table.Root>
-        <Table.Main model={contact} />
+        <Table.Main model={contactModel} />
       </Table.Root>
     </div>
   );
