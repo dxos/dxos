@@ -24,7 +24,7 @@ import { ActivityContainer, type ActivityContainerProps } from './ActivityContai
 import { MeetingPlugin } from '../MeetingPlugin';
 import translations from '../translations';
 
-const Render = (props: ActivityContainerProps) => {
+const DefaultStory = (props: ActivityContainerProps) => {
   const client = useClient();
   const space = client.spaces.get().at(-1);
   const transcripts = useQuery(space, Filter.schema(TranscriptType));
@@ -52,7 +52,7 @@ const Render = (props: ActivityContainerProps) => {
 const meta: Meta<ActivityContainerProps> = {
   title: 'plugins/plugin-meeting/ActivityContainer',
   component: ActivityContainer,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withPluginManager({
       plugins: [

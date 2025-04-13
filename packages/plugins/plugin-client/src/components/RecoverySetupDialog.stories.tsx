@@ -21,7 +21,7 @@ import translations from '../translations';
 
 const state = create<{ recoveryCode?: string }>({});
 
-const Render = () => {
+const DefaultStory = () => {
   return (
     <AlertDialog.Root open>
       <AlertDialog.Overlay>
@@ -34,7 +34,7 @@ const Render = () => {
 const meta: Meta = {
   title: 'plugins/plugin-client/RecoverySetupDialog',
   component: RecoverySetupDialog,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withPluginManager({
       plugins: [

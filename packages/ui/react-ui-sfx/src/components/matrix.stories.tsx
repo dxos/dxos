@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Matrix, type MatrixProps } from './Matrix';
 
-const Render = (props: MatrixProps) => {
+const DefaultStory = (props: MatrixProps) => {
   const [, forceUpdate] = useState({});
 
   return (
@@ -30,7 +30,7 @@ const Render = (props: MatrixProps) => {
 const meta: Meta<MatrixProps> = {
   title: 'ui/react-ui-sfx/Matrix',
   component: Matrix,
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

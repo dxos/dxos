@@ -21,17 +21,16 @@ import { useTableModel } from '../../hooks';
 import { TablePresentation } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
-import { initializeTable } from '../../util';
 
 faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
 // TODO(burdon): View vs. ViewProjection?
+// TODO(burdon): Many-to-many relations.
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
-
 // TODO(burdon): This util hook shouldn't be needed (move into API).
-// TODO(burdon): Base type.
+// TODO(burdon): Base type (with id).
 const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count: number) => {
   const table = useMemo(() => {
     // const { typename } = pipe(schema.ast, AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId), Option.getOrThrow);
@@ -76,17 +75,18 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 const DefaultStory = () => {
   // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
   const orgSchema = useMemo(() => new ImmutableSchema(Testing.OrgType), []);
-  const { model: orgModel, presentation: orgPresentation } = useTestModel<Testing.OrgType>(orgSchema, 12);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel<Testing.OrgType>(orgSchema, 50);
 
   // TODO(burdon): Generate links with references.
   const contactSchema = useMemo(() => new ImmutableSchema(Testing.ContactType), []);
   const { model: contactModel, presentation: contactPresentation } = useTestModel<Testing.ContactType>(
     contactSchema,
-    16,
+    50,
   );
 
+  // TODO(burdon): Scrolling isn't working.
   return (
-    <div className='flex grow grid grid-cols-2 divide-x divide-separator'>
+    <div className='grow grid grid-cols-2 divide-x divide-separator'>
       <Table.Root>
         <Table.Main model={orgModel} presentation={orgPresentation} />
       </Table.Root>
@@ -106,17 +106,6 @@ const meta: Meta<typeof DefaultStory> = {
       types: [TableType, ViewType, Testing.OrgType, Testing.ContactType],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(create(TableType, {}));
-        const schema = await initializeTable({ client, space, table, initialRow: false });
-        Array.from({ length: 10 }).map(() => {
-          return space.db.add(
-            create(schema, {
-              name: faker.person.fullName(),
-            }),
-          );
-        });
-      },
     }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
