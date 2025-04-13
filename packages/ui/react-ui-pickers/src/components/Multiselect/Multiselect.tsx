@@ -33,7 +33,7 @@ export const Multiselect = ({ items, classNames, onUpdate, ...props }: Multisele
 
   const { parentRef, view } = useTextEditor(
     () => ({
-      initialValue: createText(items),
+      initialValue: createLinks(items),
       extensions: [
         createBasicExtensions({ lineWrapping: false }),
         createMarkdownExtensions({ themeMode }),
@@ -45,7 +45,7 @@ export const Multiselect = ({ items, classNames, onUpdate, ...props }: Multisele
           //   },
           // },
         }),
-        multiselect({ renderIconButton, onUpdate: handleUpdate, ...props }),
+        multiselect({ renderIcon, onUpdate: handleUpdate, ...props }),
       ],
     }),
     [themeMode],
@@ -53,17 +53,17 @@ export const Multiselect = ({ items, classNames, onUpdate, ...props }: Multisele
 
   // TODO(burdon): This will cancel current autocomplete; need CRDT?
   useEffect(() => {
-    view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: createText(items) } });
+    view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: createLinks(items) } });
   }, [view, items]);
 
   return <div ref={parentRef} className={mx('w-full', classNames)} />;
 };
 
-const createText = (items: MultiselectItem[]) => {
+const createLinks = (items: MultiselectItem[]) => {
   return items.map(({ id, label }) => `[${label}](${id})`).join('');
 };
 
-const renderIconButton = (el: Element, icon: string, onClick: () => void) => {
+const renderIcon = (el: Element, icon: string, onClick: () => void) => {
   createRoot(el).render(
     <ThemeProvider tx={defaultTx}>
       <Icon icon={icon} classNames='inline-block p-0' size={3} onClick={onClick} />

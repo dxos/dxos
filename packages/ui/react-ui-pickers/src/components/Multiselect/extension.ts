@@ -25,6 +25,9 @@ import {
 
 export type MultiselectItem = { id: string; label: string };
 
+/**
+ * Apply function formats item as link.
+ */
 export const multiselectApply = (view: EditorView, completion: Completion, from: number, to: number) => {
   const id = (completion as MultiselectItem).id;
   const label = completion.label;
@@ -34,15 +37,18 @@ export const multiselectApply = (view: EditorView, completion: Completion, from:
 export type MultiselectOptions = {
   debug?: boolean;
   // TODO(burdon): Generalize.
-  renderIconButton?: (el: HTMLElement, icon: string, cb: () => void) => void;
+  renderIcon?: (el: HTMLElement, icon: string, cb: () => void) => void;
   onSelect?: (id: string) => void;
   onSearch?: (text: string, ids: Set<string>) => MultiselectItem[];
   onUpdate?: (ids: string[]) => void;
 };
 
+/**
+ * Uses the markdown parser to parse links, which are decorated as pill buttons.
+ */
 export const multiselect = ({
   debug,
-  renderIconButton,
+  renderIcon,
   onSelect,
   onSearch,
   onUpdate,
@@ -107,8 +113,8 @@ export const multiselect = ({
                     from,
                     to,
                     Decoration.replace({
-                      widget: new LinkWidget(
-                        renderIconButton,
+                      widget: new ItemWidget(
+                        renderIcon,
                         text,
                         id,
                         (id) => onSelect?.(id),
@@ -168,9 +174,9 @@ export const multiselect = ({
   return extensions;
 };
 
-class LinkWidget extends WidgetType {
+class ItemWidget extends WidgetType {
   constructor(
-    private readonly renderIconButton: MultiselectOptions['renderIconButton'],
+    private readonly renderIcon: MultiselectOptions['renderIcon'],
     private readonly text: string,
     private readonly id: string,
     private readonly onSelect: (id: string) => void,
@@ -186,17 +192,17 @@ class LinkWidget extends WidgetType {
 
   toDOM() {
     const main = document.createElement('span');
-    main.className = 'cm-link';
+    main.className = 'cm-item';
 
     const link = document.createElement('span');
-    link.className = 'cm-link-text';
+    link.className = 'cm-item-text';
     link.textContent = this.text;
     link.addEventListener('click', () => this.onSelect(this.id));
     main.appendChild(link);
 
     const button = document.createElement('span');
-    button.className = 'cm-link-button';
-    this.renderIconButton?.(button, 'ph--x--regular', () => this.onDelete(this.id));
+    button.className = 'cm-item-button';
+    this.renderIcon?.(button, 'ph--x--regular', () => this.onDelete(this.id));
     main.appendChild(button);
 
     const space = document.createElement('span');
@@ -212,35 +218,35 @@ class LinkWidget extends WidgetType {
 const styles = EditorView.theme({
   // Hide scrollbar.
   '.cm-scroller': {
-    scrollbarWidth: 'none', // for Firefox.
+    scrollbarWidth: 'none', // Firefox.
   },
   '.cm-scroller::-webkit-scrollbar': {
-    display: 'none', // for WebKit browsers.
+    display: 'none', // WebKit.
   },
   '.cm-line': {
     lineHeight: '2 !important',
   },
-  '.cm-link': {
+  '.cm-item': {
     border: '1px solid var(--dx-separator)',
     borderRadius: '4px',
     padding: '2px 3px',
     marginLeft: '2px',
     textDecoration: 'none',
   },
-  '.cm-link:hover': {
+  '.cm-item:hover': {
     backgroundColor: 'var(--dx-hoverSurface)',
   },
-  '.cm-link-text': {
+  '.cm-item-text': {
     cursor: 'pointer',
   },
-  '.cm-link-button': {
+  '.cm-item-button': {
     display: 'inline-block',
     width: '0.75rem',
     marginLeft: '4px',
     cursor: 'pointer',
     opacity: 0.5,
   },
-  '.cm-link-button:hover': {
+  '.cm-item-button:hover': {
     opacity: 1,
   },
 });
