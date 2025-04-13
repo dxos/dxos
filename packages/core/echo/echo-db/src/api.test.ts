@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { raise } from '@dxos/debug';
 import {
   EntityKind,
-  FormatAnnotation,
+  FormatAnnotationId,
   FormatEnum,
   getObjectAnnotation,
   getSchema,
@@ -35,9 +35,9 @@ const Org = Echo.Type({
     name: S.String,
   }),
 );
-interface Org extends S.Schema.Type<typeof Org> {}
 
-// TODO(burdon): Remove Schema/Type suffix in Composer?
+// TODO(burdon): Remove Schema/Type suffix in Composer.
+interface Org extends S.Schema.Type<typeof Org> {}
 
 const Contact = Echo.Type({
   typename: 'example.com/type/Contact',
@@ -48,10 +48,12 @@ const Contact = Echo.Type({
     // TODO(burdon): Support S.Date, etc.
     // TODO(burdon): Support defaults.
     dob: S.optional(S.String),
-    email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
+    email: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email })),
+    // email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
     org: S.optional(Echo.Ref(Org)),
   }),
 );
+
 interface Contact extends S.Schema.Type<typeof Contact> {}
 
 describe('Experimental API review', () => {
