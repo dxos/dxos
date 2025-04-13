@@ -13,6 +13,7 @@ import { type DXN } from '@dxos/keys';
 /**
  * Constructs a reference that points to the given object.
  */
+// TODO(burdon): Tighten type of T?
 // TODO(dmaretskyi): Should be `Ref.make` but that's not possible because of the circular dependency.
 export const makeRef = <T extends BaseObject>(obj: T): Ref<T> => {
   if (typeof obj !== 'object' || obj === null) {

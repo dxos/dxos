@@ -24,7 +24,7 @@ import {
 import { FormatAnnotationId, Email } from '../formats';
 import { TypedObject } from '../object';
 import { StoredSchema } from '../schema';
-import { Contact, prepareAstForCompare } from '../testing';
+import { Testing, prepareAstForCompare } from '../testing';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -125,7 +125,7 @@ describe('effect-to-json', () => {
   });
 
   test('handles suspend -- Contact schema serialization', () => {
-    const schema = toJsonSchema(Contact);
+    const schema = toJsonSchema(Testing.Contact);
     expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
   });
 

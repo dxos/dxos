@@ -26,14 +26,14 @@ export const ECHO_ATTR_META = '@meta';
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
 // TODO(dmaretskyi): Rename AnyProperties.
-export type BaseObject = Record<string, unknown>;
+export type BaseObject = Record<string, any>;
+
+// TODO(burdon): Reconcile with ReactiveEchoObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
+export type WithId = BaseObject & HasId;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
-
-// TODO(burdon): Reconcile with ReactiveEchoObject.
-export type WithId = HasId & BaseObject;
 
 export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
