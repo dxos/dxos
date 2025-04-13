@@ -27,48 +27,51 @@ import { Echo } from './api';
 // type Live<T> = _Live<T> & T;
 // const create = create_ as <T>(schema: S.Schema<T>, obj: T, meta?: ObjectMeta) => Live<T>;
 
-const Org = Echo.Type({
-  typename: 'example.com/type/Org',
-  version: '0.1.0',
-})(
-  S.Struct({
-    name: S.String,
+const Org = S.Struct({
+  name: S.String,
+}).pipe(
+  Echo.Type({
+    typename: 'example.com/type/Org',
+    version: '0.1.0',
   }),
 );
 
 // TODO(burdon): Remove Schema/Type suffix in Composer.
 interface Org extends S.Schema.Type<typeof Org> {}
 
-const Contact = Echo.Type({
-  typename: 'example.com/type/Contact',
-  version: '0.1.0',
-})(
-  S.Struct({
-    name: S.String,
-    dob: S.optional(S.String),
-    email: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email })),
-    // email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
-    org: S.optional(Echo.Ref(Org)),
+const Contact = S.Struct({
+  name: S.String,
+  dob: S.optional(S.String),
+  email: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email })),
+  // email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
+  org: S.optional(Echo.Ref(Org)),
+}).pipe(
+  Echo.Type({
+    typename: 'example.com/type/Contact',
+    version: '0.1.0',
   }),
 );
 
 interface Contact extends S.Schema.Type<typeof Contact> {}
 
-// const Message = Echo.Type({
-//   typename: 'example.com/type/Message',
-//   version: '0.1.0',
-// })(
-//   S.Struct({
-//     // TODO(burdon): Support S.Date, etc.
-//     // TODO(burdon): Support defaults (update create and createStatic).
-//     timestamp: S.optional(S.String).pipe(
-//       S.withDefaults({
-//         constructor: () => new Date().toISOString(),
-//         decoding: () => new Date().toISOString(),
-//       }),
-//     ),
-//   }),
-// );
+const Message = S.Struct({
+  // TODO(burdon): Support S.Date, etc.
+  // TODO(burdon): Support defaults (update create and createStatic).
+  timestamp: S.optional(S.String),
+  // .pipe(
+  // S.annotations({}),
+  // S.withDefaults({
+  //   constructor: () => new Date().toISOString(),
+  //   decoding: () => new Date().toISOString(),
+  // }),
+  // ),
+}).pipe(
+  // Error: EchoObject can only be applied to an S.Struct type.
+  Echo.Type({
+    typename: 'example.com/type/Message',
+    version: '0.1.0',
+  }),
+);
 
 // interface Message extends S.Schema.Type<typeof Message> {}
 
