@@ -205,10 +205,10 @@ const text = str(
 );
 
 const items: Completion[] = [
-  { label: 'DXOS', apply: '[DXOS](#1)' },
-  { label: 'Blue Yard', apply: '[Blue Yard](#2)' },
-  { label: 'Effect', apply: '[Effect](#3)' },
-  { label: 'Socket Supply', apply: '[Socket Supply](#4)' },
+  { label: 'DXOS', apply: '[DXOS](#dxos)' },
+  { label: 'Blue Yard', apply: '[Blue Yard](#blue-yard)' },
+  { label: 'Effect', apply: '[Effect](#effect)' },
+  { label: 'Socket Supply', apply: '[Socket Supply](#socket-supply)' },
 ];
 
 const links: Completion[] = [
@@ -556,6 +556,9 @@ export const Multiselect = {
       extensions={[
         multiselect({
           renderIconButton,
+          onSelect: (id) => {
+            log.info('select', { id });
+          },
           onSearch: (text) => {
             return items.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
           },
@@ -647,10 +650,10 @@ export const Command = {
       text={str('# Command', '')}
       extensions={[
         command({
+          onHint: () => 'Press / for commands.',
           onRender: (el, onClose) => {
             renderRoot(el, <CommandDialog onClose={onClose} />);
           },
-          onHint: () => 'Press / for commands.',
         }),
       ]}
     />

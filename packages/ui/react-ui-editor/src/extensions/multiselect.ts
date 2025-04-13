@@ -13,10 +13,10 @@ import { markdownLanguage } from '@codemirror/lang-markdown';
 import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder, type Extension } from '@codemirror/state';
 import {
+  keymap,
   Decoration,
   type DecorationSet,
   EditorView,
-  keymap,
   type PluginValue,
   ViewPlugin,
   type ViewUpdate,
@@ -27,15 +27,17 @@ export type MultiselectOptions = {
   debug?: boolean;
   // TODO(burdon): Generalize.
   renderIconButton?: (el: HTMLElement, icon: string, cb: () => void) => void;
+  onSelect?: (id: string) => void;
   onSearch?: (text: string) => Completion[];
 };
 
-export const multiselect = ({ debug, renderIconButton, onSearch }: MultiselectOptions = {}): Extension => {
+// TODO(burdon): Convert array of links to text when load/save document.
+// TODO(burdon): Remove non-linked content on space/enter.
+export const multiselect = ({ debug, renderIconButton, onSelect, onSearch }: MultiselectOptions = {}): Extension => {
   const extensions: Extension[] = [
     keymap.of(completionKeymap),
     styles,
 
-    // TODO(burdon): Remove non-linked content on space/enter.
     autocompletion({
       activateOnTyping: true,
       closeOnBlur: !debug,
@@ -70,16 +72,24 @@ export const multiselect = ({ debug, renderIconButton, onSearch }: MultiselectOp
                     from,
                     to,
                     Decoration.replace({
-                      widget: new LinkWidget(renderIconButton, text, url, () => {
-                        view.dispatch({
-                          changes: {
-                            from,
-                            to,
-                            insert: '',
-                          },
-                        });
-                        view.focus();
-                      }),
+                      widget: new LinkWidget(
+                        renderIconButton,
+                        text,
+                        url,
+                        (id) => {
+                          onSelect?.(id);
+                        },
+                        () => {
+                          view.dispatch({
+                            changes: {
+                              from,
+                              to,
+                              insert: '',
+                            },
+                          });
+                          view.focus();
+                        },
+                      ),
                     }),
                   );
                 }
@@ -125,33 +135,51 @@ class LinkWidget extends WidgetType {
   constructor(
     private readonly renderIconButton: MultiselectOptions['renderIconButton'],
     private readonly text: string,
-    private readonly url: string,
-    private readonly onDelete: () => void,
+    private readonly id: string,
+    private readonly onSelect: (id: string) => void,
+    private readonly onDelete: (id: string) => void,
   ) {
     super();
   }
 
   toDOM() {
-    const el = document.createElement('span');
-    el.className = 'cm-link';
-    el.textContent = this.text;
+    const main = document.createElement('span');
+    main.className = 'cm-link';
+
+    const link = document.createElement('span');
+    link.className = 'cm-link-text';
+    link.textContent = this.text;
+    link.addEventListener('click', () => this.onSelect(this.id));
+    main.appendChild(link);
 
     const button = document.createElement('span');
     button.className = 'cm-link-button';
-    this.renderIconButton?.(button, 'ph--x--regular', this.onDelete);
-    el.appendChild(button);
+    this.renderIconButton?.(button, 'ph--x--regular', () => this.onDelete(this.id));
+    main.appendChild(button);
 
+    const space = document.createElement('span');
+    space.textContent = ' ';
+
+    const el = document.createElement('span');
+    el.appendChild(main);
+    el.appendChild(space);
     return el;
   }
 }
 
 const styles = EditorView.theme({
   '.cm-link': {
-    border: '1px solid var(--dx-primary-500)',
+    border: '1px solid var(--dx-separator)',
     borderRadius: '4px',
     padding: '2px 4px',
-    margin: '0 4px',
+    marginLeft: '4px',
     textDecoration: 'none',
+  },
+  '.cm-link:hover': {
+    backgroundColor: 'var(--dx-hoverSurface)',
+  },
+  '.cm-link-text': {
+    cursor: 'pointer',
   },
   '.cm-link-button': {
     display: 'inline-block',
