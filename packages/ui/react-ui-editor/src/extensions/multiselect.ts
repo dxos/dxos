@@ -23,27 +23,53 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
+export type MultiselectItem = Completion & { id: string };
+
+export const multiselectApply = (view: EditorView, completion: Completion, from: number, to: number) => {
+  const id = (completion as MultiselectItem).id;
+  const label = completion.label;
+  view.dispatch({ changes: { from, to, insert: `[${label}](${id})` } });
+};
+
 export type MultiselectOptions = {
   debug?: boolean;
   // TODO(burdon): Generalize.
   renderIconButton?: (el: HTMLElement, icon: string, cb: () => void) => void;
   onSelect?: (id: string) => void;
-  onSearch?: (text: string) => Completion[];
+  onSearch?: (text: string, ids: Set<string>) => Completion[];
+  onUpdate?: (ids: Set<string>) => void;
 };
 
+// TODO(burdon): Factor out multiselect editor to react-ui-pickers.
 // TODO(burdon): Convert array of links to text when load/save document.
-// TODO(burdon): Remove non-linked content on space/enter.
-export const multiselect = ({ debug, renderIconButton, onSelect, onSearch }: MultiselectOptions = {}): Extension => {
+export const multiselect = ({
+  debug,
+  renderIconButton,
+  onSelect,
+  onSearch,
+  onUpdate,
+}: MultiselectOptions = {}): Extension => {
+  const ids = new Set<string>();
+
   const extensions: Extension[] = [
     keymap.of(completionKeymap),
     styles,
 
+    // Autocomplete.
     autocompletion({
       activateOnTyping: true,
       closeOnBlur: !debug,
       tooltipClass: () => 'shadow rounded',
     }),
 
+    // Update when modified.
+    EditorView.updateListener.of((update) => {
+      if (update.docChanged) {
+        onUpdate?.(ids);
+      }
+    }),
+
+    // Decorations.
     ViewPlugin.fromClass(
       class implements PluginValue {
         deco: DecorationSet;
@@ -58,6 +84,7 @@ export const multiselect = ({ debug, renderIconButton, onSelect, onSearch }: Mul
         }
 
         buildDecorations(view: EditorView) {
+          ids.clear();
           const builder = new RangeSetBuilder<Decoration>();
           syntaxTree(view.state).iterate({
             enter: (node) => {
@@ -67,7 +94,8 @@ export const multiselect = ({ debug, renderIconButton, onSelect, onSearch }: Mul
                   const from = node.from;
                   const to = node.to;
                   const text = view.state.doc.sliceString(from + 1, urlNode.from - 2);
-                  const url = view.state.sliceDoc(urlNode.from, urlNode.to);
+                  const id = view.state.sliceDoc(urlNode.from, urlNode.to);
+                  ids.add(id);
                   builder.add(
                     from,
                     to,
@@ -75,18 +103,11 @@ export const multiselect = ({ debug, renderIconButton, onSelect, onSearch }: Mul
                       widget: new LinkWidget(
                         renderIconButton,
                         text,
-                        url,
+                        id,
+                        (id) => onSelect?.(id),
                         (id) => {
-                          onSelect?.(id);
-                        },
-                        () => {
-                          view.dispatch({
-                            changes: {
-                              from,
-                              to,
-                              insert: '',
-                            },
-                          });
+                          ids.delete(id);
+                          view.dispatch({ changes: { from, to, insert: '' } });
                           view.focus();
                         },
                       ),
@@ -121,7 +142,7 @@ export const multiselect = ({ debug, renderIconButton, onSelect, onSearch }: Mul
 
           return {
             from: match.from,
-            options: onSearch(match.text.toLowerCase()),
+            options: onSearch(match.text.toLowerCase(), ids),
           };
         },
       }),

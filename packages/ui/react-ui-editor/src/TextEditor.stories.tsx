@@ -51,6 +51,7 @@ import {
   listener,
   mention,
   multiselect,
+  type MultiselectItem,
   selectionState,
   table,
   typewriter,
@@ -58,6 +59,7 @@ import {
   type CommentsOptions,
   type DebugNode,
   type EditorSelectionState,
+  multiselectApply,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
@@ -204,11 +206,14 @@ const text = str(
   '=== LAST LINE ===',
 );
 
-const items: Completion[] = [
-  { label: 'DXOS', apply: '[DXOS](#dxos)' },
-  { label: 'Blue Yard', apply: '[Blue Yard](#blue-yard)' },
-  { label: 'Effect', apply: '[Effect](#effect)' },
-  { label: 'Socket Supply', apply: '[Socket Supply](#socket-supply)' },
+const items: MultiselectItem[] = [
+  { id: 'cloudflare', label: 'Cloudflare', apply: multiselectApply },
+  { id: 'cursor', label: 'Cursor', apply: multiselectApply },
+  { id: 'dxos', label: 'DXOS', apply: multiselectApply },
+  { id: 'blue-yard', label: 'Blue Yard', apply: multiselectApply },
+  { id: 'effect', label: 'Effect', apply: multiselectApply },
+  { id: 'github', label: 'GitHub', apply: multiselectApply },
+  { id: 'socket-supply', label: 'Socket Supply', apply: multiselectApply },
 ];
 
 const links: Completion[] = [
@@ -559,8 +564,11 @@ export const Multiselect = {
           onSelect: (id) => {
             log.info('select', { id });
           },
-          onSearch: (text) => {
-            return items.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
+          onUpdate: (ids) => {
+            log.info('update', { ids: Array.from(ids) });
+          },
+          onSearch: (text, ids) => {
+            return items.filter(({ id, label }) => !ids.has(id) && label.toLowerCase().includes(text.toLowerCase()));
           },
         }),
       ]}
