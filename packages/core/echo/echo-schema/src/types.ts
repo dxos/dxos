@@ -26,7 +26,7 @@ export const ECHO_ATTR_META = '@meta';
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
 // TODO(dmaretskyi): Rename AnyProperties.
-export type BaseObject = { [key: string]: any };
+export type BaseObject = Record<string, unknown>;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
@@ -152,6 +152,7 @@ export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
   return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };
 
+// TODO(burdon): Can we use `S.is`?
 export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   object: any,
@@ -165,20 +166,20 @@ export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
     throw new Error('Schema must have an object annotation.');
   }
 
-  const objectTypename = getTypename(object);
-  if (!objectTypename) {
+  const typename = getTypename(object);
+  if (!typename) {
     return false;
   }
 
-  if (objectTypename.startsWith('dxn:')) {
-    return schemaDXN.toString() === objectTypename;
+  if (typename.startsWith('dxn:')) {
+    return schemaDXN.toString() === typename;
   } else {
     const typeDXN = schemaDXN.asTypeDXN();
     if (!typeDXN) {
       return false;
     }
 
-    return typeDXN.type === objectTypename;
+    return typeDXN.type === typename;
   }
 };
 

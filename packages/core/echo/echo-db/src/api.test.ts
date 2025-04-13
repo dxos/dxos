@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 import { raise } from '@dxos/debug';
 import {
   EntityKind,
-  FormatAnnotationId,
   FormatEnum,
+  FormatAnnotation,
   getObjectAnnotation,
   getSchema,
   getSchemaDXN,
@@ -45,8 +45,7 @@ interface Org extends S.Schema.Type<typeof Org> {}
 const Contact = S.Struct({
   name: S.String,
   dob: S.optional(S.String),
-  email: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email })), // TODO(burdon): Better way?
-  // email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
+  email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
   org: S.optional(Echo.Ref(Org)),
 }).pipe(
   Echo.Type({
