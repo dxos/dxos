@@ -5,4 +5,5 @@
 export * from './EmojiPicker';
 export * from './HuePicker';
 export * from './IconPicker';
+export * from './Multiselect';
 export * from './ToolbarPicker';

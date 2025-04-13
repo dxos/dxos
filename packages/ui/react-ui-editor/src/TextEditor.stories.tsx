@@ -23,9 +23,9 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, Icon, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, defaultTx, getSize, mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { Button, Input, useThemeContext } from '@dxos/react-ui';
+import { baseSurface, getSize, mx } from '@dxos/react-ui-theme';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace } from './defaults';
 import {
@@ -50,8 +50,6 @@ import {
   linkTooltip,
   listener,
   mention,
-  multiselect,
-  type MultiselectItem,
   selectionState,
   table,
   typewriter,
@@ -59,7 +57,6 @@ import {
   type CommentsOptions,
   type DebugNode,
   type EditorSelectionState,
-  multiselectApply,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
@@ -206,16 +203,6 @@ const text = str(
   '=== LAST LINE ===',
 );
 
-const items: MultiselectItem[] = [
-  { id: 'cloudflare', label: 'Cloudflare', apply: multiselectApply },
-  { id: 'cursor', label: 'Cursor', apply: multiselectApply },
-  { id: 'dxos', label: 'DXOS', apply: multiselectApply },
-  { id: 'blue-yard', label: 'Blue Yard', apply: multiselectApply },
-  { id: 'effect', label: 'Effect', apply: multiselectApply },
-  { id: 'github', label: 'GitHub', apply: multiselectApply },
-  { id: 'socket-supply', label: 'Socket Supply', apply: multiselectApply },
-];
-
 const links: Completion[] = [
   { label: 'DXOS', apply: '[DXOS](https://dxos.org)' },
   { label: 'GitHub', apply: '[DXOS GitHub](https://github.com/dxos)' },
@@ -228,14 +215,6 @@ const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', '
 
 const hover =
   'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
-
-const renderIconButton = (el: Element, icon: string, cb: () => void) => {
-  createRoot(el).render(
-    <ThemeProvider tx={defaultTx}>
-      <Icon icon={icon} classNames='inline-block p-0' size={3} onClick={cb} />
-    </ThemeProvider>,
-  );
-};
 
 const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
@@ -357,12 +336,14 @@ const DefaultStory = ({
   );
 };
 
-export default {
+const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-editor/TextEditor',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: DefaultStory,
   parameters: { translations, layout: 'fullscreen' },
 };
+
+export default meta;
 
 const defaultExtensions: Extension[] = [
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
@@ -553,28 +534,6 @@ export const Typescript = {
 //
 // Custom
 //
-
-export const Multiselect = {
-  render: () => (
-    <DefaultStory
-      text={str('# Multiselect', '', content.footer)}
-      extensions={[
-        multiselect({
-          renderIconButton,
-          onSelect: (id) => {
-            log.info('select', { id });
-          },
-          onUpdate: (ids) => {
-            log.info('update', { ids: Array.from(ids) });
-          },
-          onSearch: (text, ids) => {
-            return items.filter(({ id, label }) => !ids.has(id) && label.toLowerCase().includes(text.toLowerCase()));
-          },
-        }),
-      ]}
-    />
-  ),
-};
 
 export const Autocomplete = {
   render: () => (

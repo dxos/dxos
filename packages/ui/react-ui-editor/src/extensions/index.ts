@@ -18,6 +18,5 @@ export * from './listener';
 export * from './markdown';
 export * from './mention';
 export * from './modes';
-export * from './multiselect';
 export * from './selection';
 export * from './typewriter';
