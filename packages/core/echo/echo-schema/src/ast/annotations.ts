@@ -30,7 +30,7 @@ export const VERSION_REGEX = /^\d+.\d+.\d+$/;
 /**
  * Payload stored under {@link ObjectAnnotationId}.
  */
-// TODO(burdon): Rename SchemaAnnotation?
+// TODO(burdon): Rename TypeAnnotation?
 // TODO(dmaretskyi): Rename getTypeAnnotation to represent commonality between objects and relations (e.g. `entity`).
 export const ObjectAnnotation = S.Struct({
   kind: S.Enums(EntityKind),
@@ -83,7 +83,7 @@ export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
   )(schema.ast);
 
 export const EchoObject: {
-  ({ typename, version }: TypeMeta): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
+  (meta: TypeMeta): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
 } = ({ typename, version }) => {
   return <Self extends S.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
     if (!AST.isTypeLiteral(self.ast)) {
@@ -133,15 +133,13 @@ const makeEchoObjectSchemaClass = <Self extends S.Schema.Any>(
 type EchoObjectSchemaData<T> = Simplify<HasId & ToMutable<T>>;
 
 export interface EchoObjectSchema<Self extends S.Schema.Any>
-  extends S.AnnotableClass<
-    EchoObjectSchema<Self>,
-    EchoObjectSchemaData<S.Schema.Type<Self>>,
-    EchoObjectSchemaData<S.Schema.Encoded<Self>>,
-    S.Schema.Context<Self>
-  > {
-  readonly typename: string;
-  readonly version: string;
-}
+  extends TypeMeta,
+    S.AnnotableClass<
+      EchoObjectSchema<Self>,
+      EchoObjectSchemaData<S.Schema.Type<Self>>,
+      EchoObjectSchemaData<S.Schema.Encoded<Self>>,
+      S.Schema.Context<Self>
+    > {}
 
 /**
  * PropertyMeta (metadata for dynamic schema properties).
@@ -189,15 +187,7 @@ export const getReferenceAnnotation = (schema: S.Schema.AnyNoContext) =>
 
 export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 
-// TODO(burdon): Factor out.
-// TODO(burdon): Reconcile with ObjectAnnotation above.
-export type SchemaMeta = {
-  id: string;
-  typename: string;
-  version: string;
-};
-
-// TODO(burdon): Factor out when JSON schema parser allows extensions.
+export type SchemaMeta = TypeMeta & { id: string };
 
 /**
  * Identifies label property or JSON path expression.

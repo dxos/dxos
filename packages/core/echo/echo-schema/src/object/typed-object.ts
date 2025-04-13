@@ -24,7 +24,7 @@ import {
  *
  * In contrast to {@link EchoSchema} this definition is not recorded in the database.
  */
-export interface TypedObject<A = any, I = any> extends S.Schema<A, I>, TypeMeta {}
+export interface TypedObject<A = any, I = any> extends TypeMeta, S.Schema<A, I> {}
 
 /**
  * Typed object that could be used as a prototype in class definitions.
