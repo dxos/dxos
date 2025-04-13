@@ -56,7 +56,7 @@ export const InvocationTraceStartEvent = S.Struct({
    * Present for automatic invocations.
    */
   trigger: S.optional(Ref(FunctionTrigger)),
-}).pipe(EchoObject('dxos.org/type/InvocationTraceStart', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
 
 export type InvocationTraceStartEvent = S.Schema.Type<typeof InvocationTraceStartEvent>;
 
@@ -76,7 +76,7 @@ export const InvocationTraceEndEvent = S.Struct({
   timestampMs: S.Number,
   outcome: S.Enums(InvocationOutcome),
   exception: S.optional(TraceEventException),
-}).pipe(EchoObject('dxos.org/type/InvocationTraceEnd', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
 
 export type InvocationTraceEndEvent = S.Schema.Type<typeof InvocationTraceEndEvent>;
 
@@ -99,7 +99,7 @@ export const TraceEvent = S.Struct({
   ingestionTimestampMs: S.Number,
   logs: S.Array(TraceEventLog),
   exceptions: S.Array(TraceEventException),
-}).pipe(EchoObject('dxos.org/type/TraceEvent', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
 
 export type TraceEvent = S.Schema.Type<typeof TraceEvent>;
 

@@ -16,5 +16,5 @@ export const TableSchema = S.Struct({
   [LabelAnnotationId]: 'name',
 });
 
-export const TableType = TableSchema.pipe(EchoObject('dxos.org/type/Table', '0.1.0'));
+export const TableType = TableSchema.pipe(EchoObject({ typename: 'dxos.org/type/Table', version: '0.1.0' }));
 export type TableType = S.Schema.Type<typeof TableType>;

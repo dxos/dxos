@@ -16,7 +16,7 @@ export const DocumentSchema = S.Struct({
   [LabelAnnotationId]: ['name', 'fallbackName'],
 });
 
-export const DocumentType = DocumentSchema.pipe(EchoObject('dxos.org/type/Document', '0.1.0'));
+export const DocumentType = DocumentSchema.pipe(EchoObject({ typename: 'dxos.org/type/Document', version: '0.1.0' }));
 export type DocumentType = S.Schema.Type<typeof DocumentType>;
 
 /**

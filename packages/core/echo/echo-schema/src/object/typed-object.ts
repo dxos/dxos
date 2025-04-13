@@ -12,6 +12,7 @@ import {
   type HasId,
   type ObjectAnnotation,
   ObjectAnnotationId,
+  type TypeMeta,
   TYPENAME_REGEX,
   VERSION_REGEX,
 } from '../ast';
@@ -23,21 +24,7 @@ import {
  *
  * In contrast to {@link EchoSchema} this definition is not recorded in the database.
  */
-export interface TypedObject<A = any, I = any> extends S.Schema<A, I> {
-  /**
-   * Schema global typename.
-   *
-   * @example example.com/type/Test
-   */
-  readonly typename: string;
-
-  /**
-   * Schema version in semver format.
-   *
-   * @example 0.1.0
-   */
-  readonly version: string;
-}
+export interface TypedObject<A = any, I = any> extends S.Schema<A, I>, TypeMeta {}
 
 /**
  * Typed object that could be used as a prototype in class definitions.
@@ -49,10 +36,7 @@ export interface TypedObjectPrototype<A = any, I = any> extends TypedObject<A, I
   new (): HasId & A;
 }
 
-export type TypedObjectProps = {
-  typename: string;
-  version: string;
-
+export type TypedObjectProps = TypeMeta & {
   // TODO(dmaretskyi): Remove after all legacy types has been removed. (burdon): Can do this now (after 0.7).
   skipTypenameFormatCheck?: boolean;
 };

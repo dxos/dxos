@@ -30,6 +30,7 @@ export namespace Echo {
   export type Ref<T> = Ref$<T>;
   export type JsonSchema = JsonSchemaType;
 
-  export const Type = ({ typename, version }: { typename: string; version: string }) => EchoObject(typename, version);
+  export const Type = ({ typename, version }: { typename: string; version: string }) =>
+    EchoObject({ typename, version });
   export const Ref = <S extends Schema.Schema.AnyNoContext>(schema: S) => Ref$<Schema.Schema.Type<S>>(schema);
 }

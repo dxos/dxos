@@ -22,7 +22,9 @@ const Shape = S.Union(Circle, Square);
 
 const TestNestedSchema = S.mutable(S.Struct({ field: S.String }));
 export type TestNestedSchema = S.Schema.Type<typeof TestNestedSchema>;
-export const TestNestedType = TestNestedSchema.pipe(EchoObject('example.com/type/TestNested', '0.1.0'));
+export const TestNestedType = TestNestedSchema.pipe(
+  EchoObject({ typename: 'example.com/type/TestNested', version: '0.1.0' }),
+);
 
 //
 // Complex types
@@ -57,7 +59,7 @@ export class TestSchemaType extends TypedObject({
 })(fields, { partial: true }) {}
 
 // TODO(burdon): Why do we use need this rather then TestSchemaType?
-export const TestType = TestSchema.pipe(EchoObject('example.com/type/Test', '0.1.0'));
+export const TestType = TestSchema.pipe(EchoObject({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
 export class TestClass {
   field = 'value';
@@ -99,7 +101,9 @@ export class Contact extends TypedObject({
       }),
     }),
   },
-  { partial: true },
+  {
+    partial: true,
+  },
 ) {}
 
 export class Task extends TypedObject({
@@ -110,7 +114,6 @@ export class Task extends TypedObject({
   completed: S.optional(S.Boolean),
   assignee: S.optional(Contact),
   previous: S.optional(S.suspend((): Ref$<Task> => Ref(Task))),
-  // TODO(burdon): Document S.suspend.
   subTasks: S.optional(S.mutable(S.Array(S.suspend((): Ref$<Task> => Ref(Task))))),
   description: S.optional(S.String),
 }) {}
@@ -140,9 +143,13 @@ export class Container extends TypedObject({
       ),
     ),
   },
-  { partial: true },
+  // TODO(burdon): If using pipe(Echo.Type)?
+  {
+    partial: true,
+  },
 ) {}
 
+// TODO(burdon): Convert to pipe?
 export class HasManager extends TypedRelation({ typename: 'example.org/relation/HasManager', version: '0.1.0' })({
   since: S.optional(S.String),
 }) {}

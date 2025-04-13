@@ -117,7 +117,7 @@ describe('without database', () => {
       arr: S.optional(S.Array(S.String).pipe(S.mutable)),
       ref: S.optional(S.suspend((): Ref$<TestSchema> => Ref(TestSchema))),
     }).pipe(S.mutable),
-  }).pipe(EchoObject('example.com/type/Test', '0.1.0'));
+  }).pipe(EchoObject({ typename: 'example.com/type/Test', version: '0.1.0' }));
   interface TestSchema extends S.Schema.Type<typeof TestSchema> {}
 
   test('get schema on object', () => {
@@ -370,13 +370,13 @@ describe('Reactive Object with ECHO database', () => {
   describe('references', () => {
     const Org = S.Struct({
       name: S.String,
-    }).pipe(EchoObject('example.Org', '0.1.0'));
+    }).pipe(EchoObject({ typename: 'example.Org', version: '0.1.0' }));
 
     const Person = S.Struct({
       name: S.String,
       worksAt: Ref(Org),
       previousEmployment: S.optional(S.Array(Ref(Org))),
-    }).pipe(EchoObject('example.Person', '0.1.0'));
+    }).pipe(EchoObject({ typename: 'example.Person', version: '0.1.0' }));
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();

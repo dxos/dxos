@@ -10,7 +10,9 @@ import { type BaseObject } from '../types';
 
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
 export type TypedObjectOptions = {
+  // TODO(burdon): Document.
   partial?: true;
+  // TODO(burdon): Document.
   record?: true;
 };
 

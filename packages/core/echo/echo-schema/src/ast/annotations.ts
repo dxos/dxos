@@ -40,6 +40,8 @@ export const ObjectAnnotation = S.Struct({
 
 export interface ObjectAnnotation extends S.Schema.Type<typeof ObjectAnnotation> {}
 
+export type TypeMeta = Pick<ObjectAnnotation, 'typename' | 'version'>;
+
 /**
  * @returns {@link ObjectAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
@@ -80,10 +82,9 @@ export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
     Option.getOrElse(() => undefined),
   )(schema.ast);
 
-// TODO(burdon): Pass in object ({ typename, version }).
 export const EchoObject: {
-  (typename: string, version: string): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
-} = (typename: string, version: string) => {
+  ({ typename, version }: TypeMeta): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
+} = ({ typename, version }) => {
   return <Self extends S.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
     if (!AST.isTypeLiteral(self.ast)) {
       throw new Error('EchoObject can only be applied to an S.Struct type.');
@@ -138,16 +139,7 @@ export interface EchoObjectSchema<Self extends S.Schema.Any>
     EchoObjectSchemaData<S.Schema.Encoded<Self>>,
     S.Schema.Context<Self>
   > {
-  /**
-   * Fully qualified type name.
-   * @example `dxos.org/type/Contact`
-   **/
   readonly typename: string;
-
-  /**
-   * Semver schema version.
-   * @example `0.1.0`
-   */
   readonly version: string;
 }
 
@@ -211,6 +203,7 @@ export type SchemaMeta = {
  * Identifies label property or JSON path expression.
  * Either a string or an array of strings representing field accessors each matched in priority order.
  */
+// TODO(burdon): Move to property.
 export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 
 /**

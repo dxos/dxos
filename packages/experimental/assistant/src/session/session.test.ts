@@ -28,7 +28,7 @@ const CalendarEventSchema = S.Struct({
   startTime: S.String,
   endTime: S.String,
   description: S.String,
-}).pipe(EchoObject('example.com/type/CalendarEvent', '0.1.0'));
+}).pipe(EchoObject({ typename: 'example.com/type/CalendarEvent', version: '0.1.0' }));
 
 type CalendarEvent = S.Schema.Type<typeof CalendarEventSchema>;
 

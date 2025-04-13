@@ -25,9 +25,7 @@ export const TaskType = S.Struct({
   // TODO(burdon): Generic tags.
   // tags: [String],
 })
-  .pipe(EchoObject('dxos.org/type/Task', '0.1.0'))
-  .annotations({
-    [LabelAnnotationId]: 'text',
-  });
+  .pipe(EchoObject({ typename: 'dxos.org/type/Task', version: '0.1.0' }))
+  .annotations({ [LabelAnnotationId]: 'text' });
 
 export interface TaskType extends S.Schema.Type<typeof TaskType> {}

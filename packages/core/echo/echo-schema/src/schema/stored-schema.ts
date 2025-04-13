@@ -13,6 +13,6 @@ export const StoredSchema = S.Struct({
   typename: S.String,
   version: S.String,
   jsonSchema: JsonSchemaType,
-}).pipe(EchoObject('dxos.org/type/Schema', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/Schema', version: '0.1.0' }));
 
 export type StoredSchema = S.Schema.Type<typeof StoredSchema>;
