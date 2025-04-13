@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Completion } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
@@ -22,8 +23,8 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, Input, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
+import { baseSurface, defaultTx, getSize, mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace } from './defaults';
@@ -49,6 +50,7 @@ import {
   linkTooltip,
   listener,
   mention,
+  multiselect,
   selectionState,
   table,
   typewriter,
@@ -202,7 +204,14 @@ const text = str(
   '=== LAST LINE ===',
 );
 
-const links = [
+const items: Completion[] = [
+  { label: 'DXOS', apply: '[DXOS](#1)' },
+  { label: 'Blue Yard', apply: '[Blue Yard](#2)' },
+  { label: 'Effect', apply: '[Effect](#3)' },
+  { label: 'Socket Supply', apply: '[Socket Supply](#4)' },
+];
+
+const links: Completion[] = [
   { label: 'DXOS', apply: '[DXOS](https://dxos.org)' },
   { label: 'GitHub', apply: '[DXOS GitHub](https://github.com/dxos)' },
   { label: 'Automerge', apply: '[Automerge](https://automerge.org/)' },
@@ -214,6 +223,14 @@ const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', '
 
 const hover =
   'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+
+const renderIconButton = (el: Element, icon: string, cb: () => void) => {
+  createRoot(el).render(
+    <ThemeProvider tx={defaultTx}>
+      <Icon icon={icon} classNames='inline-block p-0' size={3} onClick={cb} />
+    </ThemeProvider>,
+  );
+};
 
 const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
@@ -343,18 +360,12 @@ export default {
 };
 
 const defaultExtensions: Extension[] = [
-  autocomplete({
-    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-  }),
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
   linkTooltip(renderLinkTooltip),
 ];
 
 const allExtensions: Extension[] = [
-  autocomplete({
-    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-  }),
   decorateMarkdown({ numberedHeadings: { from: 2, to: 4 }, renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
   linkTooltip(renderLinkTooltip),
@@ -538,6 +549,22 @@ export const Typescript = {
 // Custom
 //
 
+export const Multiselect = {
+  render: () => (
+    <DefaultStory
+      text={str('# Multiselect', '', content.footer)}
+      extensions={[
+        multiselect({
+          renderIconButton,
+          onSearch: (text) => {
+            return items.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
+          },
+        }),
+      ]}
+    />
+  ),
+};
+
 export const Autocomplete = {
   render: () => (
     <DefaultStory
@@ -545,7 +572,9 @@ export const Autocomplete = {
       extensions={[
         decorateMarkdown({ renderLinkButton }),
         autocomplete({
-          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+          onSearch: (text) => {
+            return links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
+          },
         }),
       ]}
     />
