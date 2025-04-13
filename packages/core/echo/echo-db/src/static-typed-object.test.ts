@@ -6,6 +6,7 @@ import { Schema, type SchemaAST } from 'effect';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 // This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.
 interface _Live {}
@@ -150,12 +151,12 @@ describe('Statically generated live object', () => {
         enumerable: true,
       },
     });
-    console.log(obj);
-    console.log(obj.foo);
+
+    log('obj', { obj });
   });
 
   test('test', () => {
     const obj = live(Contact, { name: 'Bob' });
-    console.log(Object.keys(obj));
+    log('keys', { keys: Object.keys(obj) });
   });
 });

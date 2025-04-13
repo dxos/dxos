@@ -45,8 +45,6 @@ const Contact = Echo.Type({
 })(
   S.Struct({
     name: S.String,
-    // TODO(burdon): Support S.Date, etc.
-    // TODO(burdon): Support defaults.
     dob: S.optional(S.String),
     email: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email })),
     // email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
@@ -55,6 +53,24 @@ const Contact = Echo.Type({
 );
 
 interface Contact extends S.Schema.Type<typeof Contact> {}
+
+// const Message = Echo.Type({
+//   typename: 'example.com/type/Message',
+//   version: '0.1.0',
+// })(
+//   S.Struct({
+//     // TODO(burdon): Support S.Date, etc.
+//     // TODO(burdon): Support defaults (update create and createStatic).
+//     timestamp: S.optional(S.String).pipe(
+//       S.withDefaults({
+//         constructor: () => new Date().toISOString(),
+//         decoding: () => new Date().toISOString(),
+//       }),
+//     ),
+//   }),
+// );
+
+// interface Message extends S.Schema.Type<typeof Message> {}
 
 describe('Experimental API review', () => {
   test('basic', ({ expect }) => {
@@ -79,4 +95,9 @@ describe('Experimental API review', () => {
     expect(getSchemaDXN(type)?.typename).to.eq(Contact.typename);
     expect(isInstanceOf(Contact, contact)).to.be.true;
   });
+
+  // test('defaults', ({ expect }) => {
+  //   const message = create(Message);
+  //   expect(message.timestamp).to.exist;
+  // });
 });

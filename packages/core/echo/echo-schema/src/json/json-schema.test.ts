@@ -6,6 +6,7 @@ import { Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { type JsonProp } from '@dxos/effect';
+import { log } from '@dxos/log';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import {
@@ -58,7 +59,7 @@ describe('effect-to-json', () => {
       name: Ref(Nested),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-    // console.log(JSON.stringify(jsonSchema, null, 2));
+    log('schema', { jsonSchema });
     const nested = jsonSchema.properties!.name;
     expectReferenceAnnotation(nested);
   });
@@ -197,7 +198,7 @@ describe('effect-to-json', () => {
 
     // TODO(dmaretskyi): Currently unable to deserialize.
     // const effectSchema = toEffectSchema(jsonSchema);
-    // console.log(JSON.stringify(jsonSchema, null, 2));
+    log('schema', { jsonSchema });
   });
 
   test('tuple schema with description', () => {
@@ -208,8 +209,8 @@ describe('effect-to-json', () => {
       ),
     });
     const jsonSchema = toJsonSchema(schema);
+    log('schema', { jsonSchema });
 
-    // console.log(JSON.stringify(jsonSchema, null, 2));
     (S.asserts(JsonSchemaType) as any)(jsonSchema);
   });
 
@@ -263,7 +264,8 @@ describe('json-to-effect', () => {
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
-      // console.log(JSON.stringify(jsonSchema, null, 2));
+      log('schema', { jsonSchema });
+
       const schema = toEffectSchema(jsonSchema);
 
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
