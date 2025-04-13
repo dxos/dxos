@@ -23,11 +23,13 @@ import { create, makeRef } from '@dxos/live-object';
 //  RB: Let's get the main schema types cleanup up first since that has the biggest impact.
 import { Echo } from './api';
 
+// RB: Commented out since lint error (is this just for debugging?)
 // This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.
 // interface _Live<T> {}
 // type Live<T> = _Live<T> & T;
 // const create = create_ as <T>(schema: S.Schema<T>, obj: T, meta?: ObjectMeta) => Live<T>;
 
+// RB: I prefer this format since it seems like the most natural extension to the default effect API; and therefore, the most incremental.
 const Org = S.Struct({
   name: S.String,
 }).pipe(
@@ -43,7 +45,7 @@ interface Org extends S.Schema.Type<typeof Org> {}
 const Contact = S.Struct({
   name: S.String,
   dob: S.optional(S.String),
-  email: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email })),
+  email: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.Email })), // TODO(burdon): Better way?
   // email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
   org: S.optional(Echo.Ref(Org)),
 }).pipe(
@@ -70,19 +72,8 @@ const Message = S.Struct({
 //   }),
 // );
 
-// class Message2 extends S.Struct({
-//   timestamp: S.String.pipe(
-//     S.propertySignature,
-//     S.withConstructorDefault(() => new Date().toISOString()),
-//   ),
-// }).pipe(
-//   Echo.Type({
-//     typename: 'example.com/type/Message',
-//     version: '0.1.0',
-//   }),
-// ) {}
-
 interface Message extends S.Schema.Type<typeof Message> {}
+
 describe('Experimental API review', () => {
   test('basic', ({ expect }) => {
     const org = create(Org, { name: 'DXOS' });
@@ -109,6 +100,7 @@ describe('Experimental API review', () => {
 
   test('defaults', ({ expect }) => {
     {
+      // TODO(burdon): Doesn't work after pipe(Echo.Type).
       // Property 'make' does not exist on type 'EchoObjectSchema<Struct<{ timestamp: PropertySignature<":", string, never, ":", string, true, never>; }>>'.ts(2339)
       const message = create(Message, Message.make({}));
       expect(message.timestamp).to.exist;
