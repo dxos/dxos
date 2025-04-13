@@ -35,7 +35,8 @@
     "@dxos/util": "workspace:*",
     "@emoji-mart/data": "^1.1.2",
     "@emoji-mart/react": "^1.1.1",
-    "@radix-ui/react-use-controllable-state": "1.1.0"
+    "@radix-ui/react-use-controllable-state": "1.1.0",
+    "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

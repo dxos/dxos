@@ -36,7 +36,7 @@ const meta: Meta<typeof Multiselect> = {
       <div className='flex flex-col w-[20rem] max-w-[20rem] gap-4'>
         <div className='flex border border-separator max-w-[20rem]'>
           <Multiselect
-            classNames='flex pis-1 pie-1'
+            classNames='pis-1 pie-1'
             items={items}
             onSelect={(id) => {
               log.info('select', { id });

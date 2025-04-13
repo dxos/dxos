@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React, { type CSSProperties, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { Icon, type ThemedClassName, ThemeProvider, useDynamicRef, useThemeContext } from '@dxos/react-ui';
 import {
@@ -22,6 +23,7 @@ export type MultiselectProps = ThemedClassName<
 
 export const Multiselect = ({ items, classNames, onUpdate, ...props }: MultiselectProps) => {
   const { themeMode } = useThemeContext();
+  const { ref, width } = useResizeDetector();
 
   const itemsRef = useDynamicRef(items);
   const handleUpdate = (ids: string[]) => {
@@ -39,24 +41,35 @@ export const Multiselect = ({ items, classNames, onUpdate, ...props }: Multisele
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
-          // slots: {
-          //   editor: {
-          //     className: 'overflow-x-auto',
-          //   },
-          // },
+          slots: {
+            editor: {
+              className: mx(classNames),
+            },
+          },
         }),
-        multiselect({ renderIcon, onUpdate: handleUpdate, ...props }),
+        multiselect({ debug: true, renderIcon, onUpdate: handleUpdate, ...props }),
       ],
     }),
     [themeMode],
   );
 
-  // TODO(burdon): This will cancel current autocomplete; need CRDT?
   useEffect(() => {
-    view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: createLinks(items) } });
+    const text = createLinks(items);
+    if (text !== view?.state.doc.toString()) {
+      // TODO(burdon): This will cancel any current autocomplete; need to merge?
+      view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+    }
   }, [view, items]);
 
-  return <div ref={parentRef} className={mx('w-full', classNames)} />;
+  return (
+    <div ref={ref} className='w-full'>
+      <div
+        ref={parentRef}
+        style={{ width, '--dx-multiselectWidth': `${width}px` } as CSSProperties}
+        className='w-full'
+      />
+    </div>
+  );
 };
 
 const createLinks = (items: MultiselectItem[]) => {

@@ -32,6 +32,18 @@ export const multiselectApply = (view: EditorView, completion: Completion, from:
   const id = (completion as MultiselectItem).id;
   const label = completion.label;
   view.dispatch({ changes: { from, to, insert: `[${label}](${id})` } });
+  scrollToCursor(view);
+};
+
+const scrollToCursor = (view: EditorView) => {
+  const { from } = view.state.selection.main;
+  const rect = view.coordsAtPos(from);
+  if (rect) {
+    const editorDom = view.scrollDOM;
+    const offsetLeft = rect.left - editorDom.offsetLeft;
+    const scrollMargin = 20; // Margin to show before/after caret.
+    editorDom.scrollLeft = offsetLeft - scrollMargin;
+  }
 };
 
 export type MultiselectOptions = {
@@ -72,7 +84,8 @@ export const multiselect = ({
     autocompletion({
       activateOnTyping: true,
       closeOnBlur: !debug,
-      tooltipClass: () => 'shadow rounded',
+      tooltipClass: () => 'border border-separator',
+      optionClass: () => '!p-1',
     }),
 
     // Update when modified (either by editing or external updates).
@@ -216,6 +229,17 @@ class ItemWidget extends WidgetType {
 }
 
 const styles = EditorView.theme({
+  // Constrain max width to editor.
+  '.cm-tooltip.cm-tooltip-autocomplete': {
+    left: '3px !important',
+    width: 'var(--dx-multiselectWidth)',
+    marginTop: '6.5px',
+  },
+  '.cm-completionLabel': {},
+  '.cm-tooltip-autocomplete ul li[aria-selected]': {
+    backgroundColor: 'var(--dx-hoverSurface)',
+  },
+
   // Hide scrollbar.
   '.cm-scroller': {
     scrollbarWidth: 'none', // Firefox.
@@ -223,6 +247,7 @@ const styles = EditorView.theme({
   '.cm-scroller::-webkit-scrollbar': {
     display: 'none', // WebKit.
   },
+
   '.cm-line': {
     lineHeight: '2 !important',
   },
