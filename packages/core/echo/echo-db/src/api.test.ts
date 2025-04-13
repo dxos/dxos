@@ -20,6 +20,7 @@ import {
 import { create, makeRef } from '@dxos/live-object';
 
 // TODO(dmaretskyi): Do all ECHO api's go into `Echo` or do some things like `create` and `Ref` stay separate?
+//  RB: Let's get the main schema types cleanup up first since that has the biggest impact.
 import { Echo } from './api';
 
 // This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.
@@ -55,26 +56,33 @@ const Contact = S.Struct({
 interface Contact extends S.Schema.Type<typeof Contact> {}
 
 const Message = S.Struct({
-  // TODO(burdon): Support S.Date, etc.
+  // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
   // TODO(burdon): Support defaults (update create and createStatic).
-  timestamp: S.optional(S.String),
-  // .pipe(
-  // S.annotations({}),
-  // S.withDefaults({
-  //   constructor: () => new Date().toISOString(),
-  //   decoding: () => new Date().toISOString(),
-  // }),
-  // ),
-}).pipe(
-  // Error: EchoObject can only be applied to an S.Struct type.
-  Echo.Type({
-    typename: 'example.com/type/Message',
-    version: '0.1.0',
-  }),
-);
+  timestamp: S.String.pipe(
+    S.propertySignature,
+    S.withConstructorDefault(() => new Date().toISOString()),
+  ),
+});
+// .pipe(
+//   Echo.Type({
+//     typename: 'example.com/type/Message',
+//     version: '0.1.0',
+//   }),
+// );
 
-// interface Message extends S.Schema.Type<typeof Message> {}
+// class Message2 extends S.Struct({
+//   timestamp: S.String.pipe(
+//     S.propertySignature,
+//     S.withConstructorDefault(() => new Date().toISOString()),
+//   ),
+// }).pipe(
+//   Echo.Type({
+//     typename: 'example.com/type/Message',
+//     version: '0.1.0',
+//   }),
+// ) {}
 
+interface Message extends S.Schema.Type<typeof Message> {}
 describe('Experimental API review', () => {
   test('basic', ({ expect }) => {
     const org = create(Org, { name: 'DXOS' });
@@ -99,8 +107,15 @@ describe('Experimental API review', () => {
     expect(isInstanceOf(Contact, contact)).to.be.true;
   });
 
-  // test('defaults', ({ expect }) => {
-  //   const message = create(Message);
-  //   expect(message.timestamp).to.exist;
-  // });
+  test('defaults', ({ expect }) => {
+    {
+      // Property 'make' does not exist on type 'EchoObjectSchema<Struct<{ timestamp: PropertySignature<":", string, never, ":", string, true, never>; }>>'.ts(2339)
+      const message = create(Message, Message.make({}));
+      expect(message.timestamp).to.exist;
+    }
+    // {
+    //   const message = new Message2({});
+    //   expect(message.timestamp).to.exist;
+    // }
+  });
 });
