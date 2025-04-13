@@ -138,13 +138,9 @@ export class DXN {
     return this.#parts;
   }
 
-  get typename() {
+  toTypename() {
     invariant(this.#kind === DXN.kind.TYPE);
     return this.#parts[0];
-  }
-
-  toString(): DXN.String {
-    return `dxn:${this.#kind}:${this.#parts.join(':')}` as DXN.String;
   }
 
   hasTypenameOf(typename: string) {
@@ -195,6 +191,10 @@ export class DXN {
 
   isLocalObjectId() {
     return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
+  }
+
+  toString(): DXN.String {
+    return `dxn:${this.#kind}:${this.#parts.join(':')}` as DXN.String;
   }
 
   /**

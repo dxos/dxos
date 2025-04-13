@@ -269,7 +269,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
-    if (database && S.is(StoredSchema)(object)) {
+    if (object != null && database && object instanceof StoredSchema) {
       return database.schemaRegistry._registerSchema(object);
     }
 

@@ -27,7 +27,6 @@ import { Echo } from './api';
 // type Live<T> = _Live<T> & T;
 // const create = create_ as <T>(schema: S.Schema<T>, obj: T, meta?: ObjectMeta) => Live<T>;
 
-interface Org extends S.Schema.Type<typeof Org> {}
 const Org = Echo.Type({
   typename: 'example.com/type/Org',
   version: '0.1.0',
@@ -36,10 +35,10 @@ const Org = Echo.Type({
     name: S.String,
   }),
 );
+interface Org extends S.Schema.Type<typeof Org> {}
 
 // TODO(burdon): Remove Schema/Type suffix in Composer?
 
-interface Contact extends S.Schema.Type<typeof Contact> {}
 const Contact = Echo.Type({
   typename: 'example.com/type/Contact',
   version: '0.1.0',
@@ -53,6 +52,7 @@ const Contact = Echo.Type({
     org: S.optional(Echo.Ref(Org)),
   }),
 );
+interface Contact extends S.Schema.Type<typeof Contact> {}
 
 describe('Experimental API review', () => {
   test('basic', ({ expect }) => {

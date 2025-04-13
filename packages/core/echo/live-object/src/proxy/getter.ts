@@ -12,8 +12,6 @@ export const isDeleted = <T extends BaseObject>(obj: T): boolean => {
   return getProxyHandler(obj).isDeleted(obj) ?? false;
 };
 
-// TODO(burdon): Move to echo-schema?
-
 /**
  * @deprecated Use `getTypename` instead.
  */

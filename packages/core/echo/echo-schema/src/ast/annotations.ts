@@ -22,23 +22,20 @@ type ToMutable<T> = T extends BaseObject
  */
 export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
-/** @internal */
 export const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
-/** @internal */
 export const VERSION_REGEX = /^\d+.\d+.\d+$/;
 
 /**
  * Payload stored under {@link ObjectAnnotationId}.
  */
-// TODO(burdon): Reconcile with other types; Rename SchemaAnnotation?
-// TODO(dmaretskyi): Rename getTypeAnnotation to represent commonality between objects and relations (e.g. `entity`).
-export const ObjectAnnotation = S.Struct({
-  kind: S.Enums(EntityKind),
-  typename: S.String.pipe(S.pattern(TYPENAME_REGEX)),
-  version: S.String.pipe(S.pattern(VERSION_REGEX)),
-});
-
-export interface ObjectAnnotation extends S.Schema.Type<typeof ObjectAnnotation> {}
+// TODO(burdon): Reconcile with other types.
+// TODO(burdon): Define as schema with regex patterns above.
+// TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
+export type ObjectAnnotation = {
+  kind: EntityKind;
+  typename: string;
+  version: string;
+};
 
 /**
  * @returns {@link ObjectAnnotation} from a schema.
@@ -73,12 +70,16 @@ export const getSchemaVersion = (schema: S.Schema.All): string | undefined => ge
 // TODO(burdon): Rename/remove ECHO prefix. Create namespace.
 export const ObjectIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/ObjectIdentifier');
 
+// TODO(burdon): Remove ECHO prefix OR use consistently (e.g., re getObjectAnnotation above).
 export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
   flow(
     AST.getAnnotation<string>(ObjectIdentifierAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
 
+// TODO(burdon): Rename DB.Object (with namespace).
+// TODO(burdon): Pass in object ({ typename, version }).
+// TODO(dmaretskyi): Add `id` property to the schema type.
 export const EchoObject: {
   (typename: string, version: string): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
 } = (typename: string, version: string) => {

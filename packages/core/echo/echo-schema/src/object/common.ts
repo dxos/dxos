@@ -45,6 +45,7 @@ export const makeTypedEntityClass = (
   return class {
     // Implement TypedObject properties.
     static readonly typename = typename;
+
     static readonly version = version;
 
     // Implement S.Schema properties.

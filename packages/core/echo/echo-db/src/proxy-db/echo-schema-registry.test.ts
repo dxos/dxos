@@ -15,7 +15,6 @@ import {
   type ObjectAnnotation,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/live-object';
-import { log } from '@dxos/log';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -68,7 +67,8 @@ describe('schema registry', () => {
       } satisfies ObjectAnnotation,
       [ObjectIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
-    log('schema', { schema: echoSchema.ast, expected: expectedSchema.ast });
+    console.log(echoSchema.ast);
+    console.log(expectedSchema.ast);
     expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
     expect(registry.hasSchema(echoSchema)).to.be.true;
     expect(registry.getSchemaById(echoSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
@@ -86,7 +86,8 @@ describe('schema registry', () => {
       } satisfies ObjectAnnotation,
       [ObjectIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
-    log('schema', { schema: echoSchema.ast, expected: expectedSchema.ast });
+    console.log(echoSchema.ast);
+    console.log(expectedSchema.ast);
     expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
     expect(registry.hasSchema(echoSchema)).to.be.true;
     expect(registry.getSchemaById(echoSchema.id)?.ast).to.deep.eq(expectedSchema.ast);

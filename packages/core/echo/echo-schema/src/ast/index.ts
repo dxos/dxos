@@ -10,4 +10,3 @@ export * from './ref';
 export * from './schema';
 export * from './schema-validator';
 export * from './types';
-export * from './annotation-helper';

@@ -3,15 +3,16 @@
 //
 
 import {
+  AST,
   S,
   Format,
   TypedObject,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
   LabelAnnotationId,
-  AST,
   Ref,
   EchoObject,
+  ObjectId,
 } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
@@ -33,6 +34,7 @@ export namespace Testing {
       }),
     ),
   }).annotations({
+    [AST.TitleAnnotationId]: 'Organization',
     [LabelAnnotationId]: 'name',
     // TODO(dmaretskyi): Use combinator.
     [IconAnnotationId]: 'building',
@@ -89,6 +91,7 @@ export namespace Testing {
 
   export const ContactType = ContactSchema.pipe(EchoObject('example.com/type/Contact', '0.1.0'));
   export type ContactType = S.Schema.Type<typeof ContactType>;
+
   //
   // Project
   // TODO(burdon): Use with concrete Task type.
@@ -110,6 +113,7 @@ export namespace Testing {
 
   export const ProjectType = ProjectSchema.pipe(EchoObject('example.com/type/Project', '0.1.0'));
   export type ProjectType = S.Schema.Type<typeof ProjectType>;
+
   //
   // Email
   //
