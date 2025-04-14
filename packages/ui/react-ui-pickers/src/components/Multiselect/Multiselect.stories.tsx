@@ -7,7 +7,6 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
-import { log } from '@dxos/log';
 import { IconButton } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
@@ -39,16 +38,14 @@ const meta: Meta<typeof Multiselect> = {
             classNames='pis-0.5 pie-0.5'
             items={items}
             onSelect={(id) => {
-              log.info('select', { id });
               setSelected(id);
             }}
             onUpdate={(ids) => {
-              log.info('update', { ids: Array.from(ids) });
               setItems(ids.map((id) => allItems.find(({ id: itemId }) => itemId === id)!));
             }}
             onSearch={(text, ids) => {
               return allItems.filter(
-                ({ id, label }) => !ids.has(id) && label.toLowerCase().includes(text.toLowerCase()),
+                ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
               );
             }}
           />
@@ -68,7 +65,6 @@ const meta: Meta<typeof Multiselect> = {
             readonly
             items={items}
             onSelect={(id) => {
-              log.info('select', { id });
               setSelected(id);
             }}
           />

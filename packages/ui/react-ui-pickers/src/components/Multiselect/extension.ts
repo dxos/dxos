@@ -62,7 +62,7 @@ export type MultiselectOptions = {
   render: (el: HTMLElement, props: PillProps) => void;
   debug?: boolean;
   onSelect?: (id: string) => void;
-  onSearch?: (text: string, ids: Set<string>) => MultiselectItem[];
+  onSearch?: (text: string, ids: string[]) => MultiselectItem[];
   onUpdate?: (ids: string[]) => void;
 };
 
@@ -70,8 +70,10 @@ export type MultiselectOptions = {
  * Uses the markdown parser to parse links, which are decorated as pill buttons.
  */
 export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: MultiselectOptions): Extension => {
+  /** Ordered list of ids. */
   const ids: string[] = [];
-  const currentIds = new Set<string>();
+  /** Range spans for each id. */
+  const itemSpan = new Map<string, { from: number; to: number }>();
 
   const extensions: Extension[] = [
     keymap.of(completionKeymap),
@@ -116,6 +118,7 @@ export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: Mul
 
         buildDecorations(view: EditorView) {
           ids.length = 0;
+          itemSpan.clear();
           const builder = new RangeSetBuilder<Decoration>();
           syntaxTree(view.state).iterate({
             enter: (node) => {
@@ -128,16 +131,26 @@ export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: Mul
                   const text = view.state.doc.sliceString(from + 1, urlNode.from - 2);
                   const item: MultiselectItem = { id, label: text };
                   ids.push(id);
+                  itemSpan.set(id, { from, to });
                   builder.add(
                     from,
                     to,
                     Decoration.replace({
                       widget: new ItemWidget(render, {
                         item,
-                        onSelect: (item) => onSelect?.(item.id),
+                        onSelect: (item) => {
+                          onSelect?.(item.id);
+                          const span = itemSpan.get(item.id);
+                          if (span) {
+                            view.dispatch({ selection: { anchor: span.to } });
+                          }
+                        },
                         onDelete: () => {
-                          view.dispatch({ changes: { from, to, insert: '' } });
-                          view.focus();
+                          const span = itemSpan.get(item.id);
+                          if (span) {
+                            view.dispatch({ changes: { from: span.from, to: span.to, insert: '' } });
+                            view.focus();
+                          }
                         },
                       }),
                     }),
@@ -147,10 +160,6 @@ export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: Mul
             },
           });
 
-          currentIds.clear();
-          for (const id of ids) {
-            currentIds.add(id);
-          }
           return builder.finish();
         }
       },
@@ -177,7 +186,7 @@ export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: Mul
 
           return {
             from: match.from,
-            options: onSearch(match.text.toLowerCase(), currentIds).map(({ id, label }) => ({
+            options: onSearch(match.text.toLowerCase(), ids).map(({ id, label }) => ({
               id,
               label,
               apply: multiselectApply,
