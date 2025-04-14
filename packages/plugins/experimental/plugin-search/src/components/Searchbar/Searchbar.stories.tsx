@@ -19,10 +19,10 @@ const meta: Meta<SearchbarProps> = {
   },
 };
 
+export default meta;
+
 export const Default = {
   args: {
     placeholder: 'Search...',
   },
 };
-
-export default meta;
