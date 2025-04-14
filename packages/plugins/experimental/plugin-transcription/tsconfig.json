@@ -114,10 +114,13 @@
       "path": "../../plugin-client"
     },
     {
+      "path": "../../plugin-deck"
+    },
+    {
       "path": "../../plugin-graph"
     },
     {
-      "path": "../../plugin-markdown"
+      "path": "../../plugin-meeting"
     },
     {
       "path": "../../plugin-space"

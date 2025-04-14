@@ -13,7 +13,7 @@ import { isTranscript, type TranscriptType } from '../types';
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: TRANSCRIPTION_PLUGIN,
+      id: `${TRANSCRIPTION_PLUGIN}/article/transcript`,
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: TranscriptType } => isTranscript(data.subject),
       component: ({ data, role }) => <TranscriptionContainer transcript={data.subject} role={role} />,
