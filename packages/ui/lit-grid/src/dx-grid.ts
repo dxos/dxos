@@ -58,6 +58,7 @@ import {
   resolveColPlane,
   resolveFrozenPlane,
   isSameCell,
+  isReadonly,
 } from './util';
 
 @customElement('dx-grid')
@@ -1226,17 +1227,17 @@ export class DxGrid extends LitElement {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
 
+    // Check cell-specific setting first.
     const cellReadonly = this.cell(col, row, plane)?.readonly;
     if (cellReadonly !== undefined) {
-      // Convert the possible string values to boolean
-      return cellReadonly === 'no-text-select' || cellReadonly === 'text-select' || cellReadonly === true;
+      return isReadonly(cellReadonly);
     }
 
-    const colDefault = this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly;
-    const rowDefault = this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly;
+    // Check column/row defaults.
+    const colReadOnly = this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly;
+    const rowReadOnly = this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly;
 
-    // Ensure we return a boolean by checking if either value is truthy
-    return !!colDefault || !!rowDefault;
+    return isReadonly(colReadOnly) || isReadonly(rowReadOnly);
   }
 
   /**
@@ -1250,23 +1251,13 @@ export class DxGrid extends LitElement {
     // Check cell-specific setting first.
     const cellReadonly = this.cell(col, row, plane)?.readonly;
     if (cellReadonly !== undefined) {
-      return cellReadonly === 'text-select' || cellReadonly === false;
+      return cellReadonly === 'text-select';
     }
 
     // Check column/row defaults.
-    const colDefault = this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly;
-    const rowDefault = this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly;
-    if (colDefault === 'text-select' || rowDefault === 'text-select') {
-      return true;
-    }
-    if (colDefault === true || colDefault === 'no-text-select') {
-      return false;
-    }
-    if (rowDefault === true || rowDefault === 'no-text-select') {
-      return false;
-    }
-
-    return !this.cellReadonly(col, row, plane);
+    const colReadonly = this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly;
+    const rowReadonly = this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly;
+    return colReadonly === 'text-select' || rowReadonly === 'text-select';
   }
 
   private renderCell(col: number, row: number, plane: DxGridPlane, selected?: boolean, visCol = col, visRow = row) {

@@ -45,7 +45,7 @@ export type DxGridPointer =
   | { state: 'maybeSelecting'; pageX: number; pageY: number }
   | { state: 'selecting' };
 
-export type DxGridReadonlyValue = false | 'no-text-select' | 'text-select';
+export type DxGridReadonlyValue = boolean | 'no-text-select' | 'text-select';
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
@@ -82,14 +82,14 @@ export type DxGridCellValue = {
   /**
    * Controls the read-only state of the cell.
    */
-  readonly?: DxGridReadonlyValue | boolean;
+  readonly?: DxGridReadonlyValue;
 };
 
 export type DxGridAxisMetaProps = {
   size: number;
   description?: string;
   resizeable?: boolean;
-  readonly?: DxGridReadonlyValue | boolean;
+  readonly?: DxGridReadonlyValue;
 };
 
 export type DxGridAxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
