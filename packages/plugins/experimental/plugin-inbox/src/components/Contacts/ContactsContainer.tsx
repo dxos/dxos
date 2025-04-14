@@ -10,7 +10,6 @@ import { ContactType } from '@dxos/schema';
 
 import { ContactList } from './ContactList';
 import { type ContactsType } from '../../types';
-import { MasterDetail } from '../MasterDetail';
 
 // TODO(burdon): Master detail (same as Inbox); incl. selection, cursor navigation, scrolling.
 // TODO(burdon): Nav from inbox.
@@ -42,9 +41,7 @@ export const ContactsContainer = ({ contacts }: ContactsContainerProps) => {
 
   return (
     <StackItem.Content toolbar={false}>
-      <MasterDetail>
-        <ContactList contacts={objects} selected={selected?.id} onSelect={setSelected} />
-      </MasterDetail>
+      <ContactList contacts={objects} selected={selected?.id} onSelect={setSelected} />
     </StackItem.Content>
   );
 };

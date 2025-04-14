@@ -1,100 +1,78 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { Schema as S } from 'effect';
 import { describe, test } from 'vitest';
 
-import { Format } from './formats';
+import { log } from '@dxos/log';
 
-// TODO(burdon): EchoSchema should preserve the order of properties.
-// TODO(burdon): Type issue with Contact.employer ref (see Form.stories.tsx).
-// TODO(burdon): Handle defaults.
+import { EchoObject, type JsonSchemaType, Ref as Ref$ } from './ast';
+import { FormatEnum, FormatAnnotationId } from './formats/types';
+import { createStatic, type Expando as Expando$, type ObjectId as ObjectId$ } from './object';
+import { type BaseSchema, type EchoSchema, type ImmutableSchema } from './schema';
+import { type WithId } from './types';
 
-const ObjectId = S.String;
+/**
+ * ECHO API.
+ */
+export namespace Echo {
+  export type ObjectId = ObjectId$;
+  export type Expando = Expando$;
 
-const StoredObjectConfig = S.Struct({
-  typename: S.String,
-  version: S.String,
-});
+  // TODO(burdon): Type or Schema? (Type matches effect and typename "example.com/type/Foo").
+  export type Type<T = any> = BaseSchema<T>;
+  export type MutableType<T> = EchoSchema<T>;
+  export type ImmutableType<T> = ImmutableSchema<T>;
 
-type StoredObjectConfig = S.Schema.Type<typeof StoredObjectConfig>;
+  export type Ref<T> = Ref$<T>;
+  export type JsonSchema = JsonSchemaType;
 
-// TODO(burdon): Replace TypedObject (just use annotations) on standard effect schema; Check HasId.
-const StoredObject =
-  <A>(config: StoredObjectConfig) =>
-  (self: A) =>
-    self;
-
-const _create = <A, I, R>(schema: S.Schema<A, I, R>, values: Partial<A>): A => values as A;
-
-class ObjectRef<T> {
-  constructor(private readonly id: string) {}
-
-  get obj(): T | undefined {
-    return {} as T;
-  }
-
-  // TODO(burdon): follow link.
-  async resolve(): Promise<T> {
-    return {} as T;
-  }
+  export const Type = ({ typename, version }: { typename: string; version: string }) => EchoObject(typename, version);
+  export const Ref = (schema: any) => Ref$(schema);
 }
 
-// TODO(burdon): Consider arrays of references.
-const _r = <T>(obj: T | undefined) => new ObjectRef<T>(''); // Just simulates a ref.
+const getType = (obj: object): Echo.Type => null as any; // TODO(burdon): Remove getTypename, etc.
+const createRef = <T extends WithId>(obj: T): Echo.Ref<T> => null as any; // TODO(burdon): Replace makeRef.
 
-describe.skip('experimental', () => {
-  test('basic', async () => {
-    const _OrgSchema = S.Struct({
-      id: ObjectId, // TODO(burdon): Basic type defines optional ID. Low-level def: no dep on ech-schema.
-      name: S.String,
-      website: S.optional(Format.URL),
-    }).pipe(
-      StoredObject({
-        typename: 'example.com/type/Org',
-        version: '0.1.0',
-      }),
-      S.annotations({
-        [AST.DescriptionAnnotationId]: 'An organization',
-      }),
-    );
+const Org = S.Struct({
+  name: S.String,
+}).pipe(
+  Echo.Type({
+    typename: 'example.com/type/Org',
+    version: '0.1.0',
+  }),
+);
 
-    // const ContactSchema = S.Struct({
-    //   id: ObjectId,
-    //   name: S.String,
-    //   email: S.optional(Format.Email),
-    //   employer: S.optional(ref(OrgSchema)),
-    // }).pipe(
-    //   StoredObject({
-    //     typename: 'example.com/type/Contact',
-    //     version: '0.1.0',
-    //   }),
-    //   S.annotations({
-    //     [AST.DescriptionAnnotationId]: 'A person',
-    //   }),
-    // );
+// TODO(burdon): Remove Type suffix in Composer?
+interface Org extends S.Schema.Type<typeof Org> {}
 
-    // type ContactType = S.Schema.Type<typeof ContactSchema>;
-    // type OrgType = S.Schema.Type<typeof OrgSchema>;
+const Contact = S.Struct({
+  name: S.String,
+  email: S.optional(
+    S.String.annotations({
+      // TODO(burdon): Rename TypeAnnotationId?
+      [FormatAnnotationId]: FormatEnum.Email,
+    }),
+  ),
+  org: S.optional(Echo.Ref(Org)),
+}).pipe(
+  Echo.Type({
+    typename: 'example.com/type/Contact',
+    version: '0.1.0',
+  }),
+);
 
-    // const org = create(OrgSchema, { name: 'DXOS' });
-    // const contact = create(ContactSchema, { name: 'Bot', employer: org });
+interface Contact extends S.Schema.Type<typeof Contact> {}
 
-    // const ref = contact.employer;
-    // const ref = r(contact.employer);
+// TODO(burdon): Support S.Date, etc.
 
-    // contact.employer.obj?.name
-    // {
-    //   const name = ref.obj?.name;
-    //   log.info('result', { name });
-    // }
-    // {
-    //   const name = (await ref.resolve()).name;
-    //   log.info('result', { name });
-    // }
-
-    // TODO(burdon): Queries.
-    // db.query(ContactSchema).where({ employer: { name: 'DXOS' } }).run()
+describe('Experimental API review', () => {
+  test.skip('basic', () => {
+    const org: Org = createStatic(Org, { name: 'DXOS' });
+    const contact: Contact = createStatic(Contact, { name: 'Test', org: createRef(org) });
+    const type: Echo.Type<Contact> = getType(contact);
+    const { typename, version } = type;
+    log.info('obj', { id: contact.id, typename, version });
   });
 });

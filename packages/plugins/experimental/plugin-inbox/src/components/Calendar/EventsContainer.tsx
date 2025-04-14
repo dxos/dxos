@@ -9,7 +9,6 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { EventList } from './EventtList';
 import { type CalendarType, EventType } from '../../types';
-import { MasterDetail } from '../MasterDetail';
 
 const byDate =
   (direction = -1) =>
@@ -28,9 +27,7 @@ export const EventsContainer = ({ calendar }: EventsContainerProps) => {
 
   return (
     <StackItem.Content toolbar={false}>
-      <MasterDetail>
-        <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
-      </MasterDetail>
+      <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
     </StackItem.Content>
   );
 };

@@ -30,13 +30,13 @@ import {
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
-import { arrayMove } from '@dxos/util';
+import { arrayMove, getFirstTwoRenderableChars } from '@dxos/util';
 
 import { useNavTreeContext } from './NavTreeContext';
 import { NotchStart } from './NotchStart';
 import { useLoadDescendents } from '../hooks';
 import { NAVTREE_PLUGIN } from '../meta';
-import { getFirstTwoRenderableChars, l0ItemType } from '../util';
+import { l0ItemType } from '../util';
 
 type L0ItemData = { id: L0ItemProps['item']['id']; type: 'l0Item' };
 

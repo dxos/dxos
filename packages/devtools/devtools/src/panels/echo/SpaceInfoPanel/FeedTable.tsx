@@ -39,7 +39,7 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
       { name: 'feedKey', format: FormatEnum.DID },
-      { name: 'progress', format: FormatEnum.String, size: 420 },
+      { name: 'progress', format: FormatEnum.String, size: 600 },
     ],
     [],
   );

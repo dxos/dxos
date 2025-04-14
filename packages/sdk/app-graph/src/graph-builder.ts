@@ -4,7 +4,7 @@
 
 import { effect, type Signal, signal, untracked } from '@preact/signals-core';
 
-import { Trigger, type UnsubscribeCallback } from '@dxos/async';
+import { Trigger, type CleanupFn } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -202,8 +202,8 @@ export const flattenExtensions = (extension: ExtensionArg, acc: BuilderExtension
 export class GraphBuilder {
   private readonly _dispatcher = new Dispatcher();
   private readonly _extensions = create<Record<string, BuilderExtension>>({});
-  private readonly _resolverSubscriptions = new Map<string, UnsubscribeCallback>();
-  private readonly _connectorSubscriptions = new Map<string, UnsubscribeCallback>();
+  private readonly _resolverSubscriptions = new Map<string, CleanupFn>();
+  private readonly _connectorSubscriptions = new Map<string, CleanupFn>();
   private readonly _nodeChanged: Record<string, Signal<{}>> = {};
   private readonly _initialized: Record<string, Trigger> = {};
   private _graph: Graph;

@@ -16,7 +16,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
-import { appKey } from './constants';
+import { APP_KEY } from './constants';
 import { core, defaults, plugins, type PluginConfig } from './plugins';
 import translations from './translations';
 import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
@@ -31,7 +31,7 @@ const main = async () => {
   const { Migrations } = await import('@dxos/migrations');
   const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
 
-  Migrations.define(appKey, __COMPOSER_MIGRATIONS__);
+  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
 
   // Namespace for global Composer test & debug hooks.
   (window as any).composer = {};
@@ -51,9 +51,13 @@ const main = async () => {
 
   // Intentionally do not await; i.e., don't block app startup for telemetry.
   // The namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
-  const observability = initializeAppObservability({ namespace: appKey, config, replayEnable: true });
-  const observabilityDisabled = await isObservabilityDisabled(appKey);
-  const observabilityGroup = await getObservabilityGroup(appKey);
+  const observability = initializeAppObservability({
+    namespace: APP_KEY,
+    config,
+    replayEnable: true,
+  });
+  const observabilityDisabled = await isObservabilityDisabled(APP_KEY);
+  const observabilityGroup = await getObservabilityGroup(APP_KEY);
 
   const disableSharedWorker = config.values.runtime?.app?.env?.DX_HOST;
   const services = await createClientServices(
@@ -70,7 +74,7 @@ const main = async () => {
   );
 
   const conf: PluginConfig = {
-    appKey,
+    appKey: APP_KEY,
     config,
     services,
     observability,

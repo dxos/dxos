@@ -19,6 +19,7 @@ type TestObject = S.Schema.Type<typeof TestObject>;
 
 const TestEchoSchema = TestObject.pipe(EchoObject('dxos.org/type/Test', '0.1.0'));
 type TestEchoSchema = S.Schema.Type<typeof TestEchoSchema>;
+
 describe('annotations', () => {
   describe('getLabel', () => {
     test('should return first available label value', ({ expect }) => {

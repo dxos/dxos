@@ -489,11 +489,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-excalidraw/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -560,6 +555,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-deck/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-excalidraw/package.json",
           "jsonpath": "$.version"
         },
         {

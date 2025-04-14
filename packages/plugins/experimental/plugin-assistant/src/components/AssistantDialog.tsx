@@ -15,7 +15,7 @@ import { type AssistantSettingsProps, type AIChatType } from '../types';
 
 export const AssistantDialog: FC<{ chat?: AIChatType }> = ({ chat }) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
-  const transcription = useCapabilities(TranscriptionCapabilities.Transcription).length > 0;
+  const transcription = useCapabilities(TranscriptionCapabilities.Transcriber).length > 0;
   const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)?.value;
 
   // TODO(burdon): Refocus when open.
