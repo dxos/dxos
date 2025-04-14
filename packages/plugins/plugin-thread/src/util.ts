@@ -14,7 +14,7 @@ export const getMessageMetadata = (id: string, identity?: Identity): MessageMeta
   const fallback = hexToFallback(identity?.identityKey.toHex() ?? '0');
   return {
     id,
-    authorId: identity?.identityKey.toHex(),
+    authorId: identity?.did,
     authorName:
       identity?.profile?.displayName ??
       (identity?.identityKey ? generateName(identity.identityKey.toHex()) : undefined),
