@@ -6,7 +6,7 @@ import React, { type CSSProperties, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { Icon, type ThemedClassName, ThemeProvider, useDynamicRef, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, ThemeProvider, useDynamicRef, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -15,13 +15,34 @@ import {
 } from '@dxos/react-ui-editor';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
-import { multiselect, type MultiselectItem, type MultiselectOptions } from './extension';
+import { Pill } from './Pill';
+import { createLinks, multiselect, type MultiselectItem, type MultiselectOptions } from './extension';
 
 export type MultiselectProps = ThemedClassName<
-  { items: MultiselectItem[] } & Pick<MultiselectOptions, 'onSelect' | 'onSearch' | 'onUpdate'>
+  { items: MultiselectItem[]; readonly?: boolean } & Pick<MultiselectOptions, 'onSelect' | 'onSearch' | 'onUpdate'>
 >;
 
-export const Multiselect = ({ items, classNames, onUpdate, ...props }: MultiselectProps) => {
+export const Multiselect = ({ readonly, ...props }: MultiselectProps) => {
+  if (readonly) {
+    return <ReadonlyMultiselect {...props} />;
+  } else {
+    return <EditableMultiselect {...props} />;
+  }
+};
+
+const ReadonlyMultiselect = ({ classNames, items, onSelect }: MultiselectProps) => {
+  return (
+    <div className={mx('flex h-[2rem] items-center', classNames)}>
+      {items.map((item) => (
+        <span key={item.id} className='px-[2px]'>
+          <Pill item={item} onSelect={(item) => onSelect?.(item.id)} />
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const EditableMultiselect = ({ classNames, items, readonly, onUpdate, ...props }: MultiselectProps) => {
   const { themeMode } = useThemeContext();
   const { ref, width } = useResizeDetector();
 
@@ -47,7 +68,18 @@ export const Multiselect = ({ items, classNames, onUpdate, ...props }: Multisele
             },
           },
         }),
-        multiselect({ debug: true, renderIcon, onUpdate: handleUpdate, ...props }),
+        multiselect({
+          debug: true,
+          render: (el, props) => {
+            createRoot(el).render(
+              <ThemeProvider tx={defaultTx}>
+                <Pill {...props} />
+              </ThemeProvider>,
+            );
+          },
+          onUpdate: handleUpdate,
+          ...props,
+        }),
       ],
     }),
     [themeMode],
@@ -69,17 +101,5 @@ export const Multiselect = ({ items, classNames, onUpdate, ...props }: Multisele
         className='w-full'
       />
     </div>
-  );
-};
-
-const createLinks = (items: MultiselectItem[]) => {
-  return items.map(({ id, label }) => `[${label}](${id})`).join('');
-};
-
-const renderIcon = (el: Element, icon: string, onClick: () => void) => {
-  createRoot(el).render(
-    <ThemeProvider tx={defaultTx}>
-      <Icon icon={icon} classNames='inline-block p-0' size={3} onClick={onClick} />
-    </ThemeProvider>,
   );
 };
