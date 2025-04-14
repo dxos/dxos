@@ -45,6 +45,14 @@ export type DxGridPointer =
   | { state: 'maybeSelecting'; pageX: number; pageY: number }
   | { state: 'selecting' };
 
+/**
+ * Readonly values for grid cells:
+ * - false: Cell is editable
+ * - 'no-text-select': Cell is readonly and text cannot be selected (default behavior when true is provided)
+ * - 'text-select': Cell is readonly but text can be selected
+ */
+export type DxGridReadonlyValue = false | 'no-text-select' | 'text-select';
+
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
@@ -78,16 +86,16 @@ export type DxGridCellValue = {
    */
   resizeHandle?: DxGridAxis;
   /**
-   * Whether this cell is read-only.
+   * Controls the read-only state of the cell.
    */
-  readonly?: boolean;
+  readonly?: DxGridReadonlyValue | boolean;
 };
 
 export type DxGridAxisMetaProps = {
   size: number;
   description?: string;
   resizeable?: boolean;
-  readonly?: boolean;
+  readonly?: DxGridReadonlyValue | boolean;
 };
 
 export type DxGridAxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;

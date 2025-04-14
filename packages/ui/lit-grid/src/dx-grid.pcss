@@ -78,7 +78,17 @@
       cursor: pointer;
 
       &[aria-readonly='true'] {
+        /* Default cursor for readonly cells that don't allow text selection */
+        cursor: default;
+      }
+
+      &[aria-readonly='true'][data-text-selectable='true'] {
+        /* Text cursor for readonly cells that allow text selection */
         cursor: text;
+      }
+
+      &[data-text-selectable='true'] {
+        user-select: text;
       }
 
       &:focus:not([aria-readonly='true']),
