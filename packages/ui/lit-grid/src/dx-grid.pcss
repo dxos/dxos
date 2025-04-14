@@ -77,17 +77,14 @@
       white-space: nowrap;
       cursor: pointer;
 
-      /* Enable text selection for any cell that has data-text-selectable='true' */
       &[data-text-selectable='true'] {
         user-select: text;
       }
 
-      /* Default cursor for readonly cells with no text selection */
       &[aria-readonly='true'] {
         cursor: default;
       }
 
-      /* Text cursor for readonly cells that allow text selection */
       &[aria-readonly='true'][data-text-selectable='true'] {
         cursor: text;
       }
