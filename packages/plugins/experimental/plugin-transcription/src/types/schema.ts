@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EchoObject, S, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 
 /**
  * Root transcript object created when the user starts a transcription.
@@ -18,7 +18,7 @@ export const TranscriptSchema = S.Struct({
    * Queue containing TranscriptBlock objects.
    */
   // TODO(wittjosiah): Should be a ref to a queue.
-  queue: S.optional(S.String),
+  queue: Ref(Expando),
 });
 
 export class TranscriptType extends TypedObject({

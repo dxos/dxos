@@ -124,3 +124,5 @@ export const ChatContainer = ({ space, dxn, context, current, autoFocusTextbox }
     </Thread>
   );
 };
+
+export default ChatContainer;
