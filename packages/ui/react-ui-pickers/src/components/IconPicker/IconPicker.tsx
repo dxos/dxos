@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type ButtonProps, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { ToolbarPickerButton, type ToolbarPickerProps } from './ToolbarPicker';
+import { ToolbarPickerButton, type ToolbarPickerProps } from '../ToolbarPicker';
 
 export type IconPickerProps = {
   disabled?: boolean;

@@ -34,11 +34,11 @@ export type EmojiPickerProps = {
  * A toolbar button for picking an emoji. Use only in `role=toolbar` elements. Unable to unset the value.
  */
 export const EmojiPickerToolbarButton = ({
+  classNames,
+  emoji,
   disabled,
   defaultEmoji,
-  emoji,
   onChangeEmoji,
-  classNames,
 }: ThemedClassName<Omit<EmojiPickerProps, 'onClickClear'>>) => {
   const { t } = useTranslation('os');
   const { themeMode } = useThemeContext();
