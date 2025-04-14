@@ -30,7 +30,6 @@ export type TableRowAction = {
   translationKey: string;
 };
 
-// TODO(ZaymonFC): There should be a separate concept for immutable schemata.
 export type TableFeatures = {
   selection: boolean;
   dataEditable: boolean;
