@@ -9,8 +9,9 @@ export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnno
 /**
  * Add an icon to a schema.
  *
- * @param icon string icon name from phosphor-icons (e.g., 'user')
+ * @param icon string icon name from phosphor-icons (e.g., 'ph--user--regular')
  */
+// TODO(burdon): Probably best not to include in type system? Instead incl. in plugin metadata.
 export const withIcon =
   (icon: string) =>
   <Self extends Schema.Schema.All>(schema: Self) =>

@@ -4,7 +4,7 @@
 
 import { SchemaAST as AST, Schema as S } from 'effect';
 
-import { FormatAnnotationId, FormatEnum } from './types';
+import { FormatAnnotation, FormatEnum } from './types';
 
 /**
  * Datetime values should be stored as ISO strings or unix numbers (ms) in UTC.
@@ -100,11 +100,13 @@ export const DateOnly = /* S.transformOrFail(S.String, SimpleDate, {
       ].join('-'),
     );
   },
-}) */ S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.Date,
-  [AST.TitleAnnotationId]: 'Date',
-  [AST.DescriptionAnnotationId]: 'Valid date in ISO format',
-});
+}) */ S.String.pipe(
+  FormatAnnotation.set(FormatEnum.Date),
+  S.annotations({
+    [AST.TitleAnnotationId]: 'Date',
+    [AST.DescriptionAnnotationId]: 'Valid date in ISO format',
+  }),
+);
 
 /**
  * Format: 20:20:39+00:00
@@ -128,11 +130,13 @@ export const TimeOnly = /* S.transformOrFail(S.String, SimpleTime, {
       ].join(':'),
     );
   },
-}) */ S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.Date,
-  [AST.TitleAnnotationId]: 'Time',
-  [AST.DescriptionAnnotationId]: 'Valid time in ISO format',
-});
+}) */ S.String.pipe(
+  FormatAnnotation.set(FormatEnum.Time),
+  S.annotations({
+    [AST.TitleAnnotationId]: 'Time',
+    [AST.DescriptionAnnotationId]: 'Valid time in ISO format',
+  }),
+);
 
 /**
  * Format: 2018-11-13T20:20:39+00:00
@@ -171,18 +175,26 @@ export const DateTime = /* S.transformOrFail(S.String, SimpleDateTime, {
       ].join('T'),
     );
   },
-}) */ S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.DateTime,
-  [AST.TitleAnnotationId]: 'DateTime',
-});
+}) */ S.String.pipe(
+  FormatAnnotation.set(FormatEnum.DateTime),
+  S.annotations({
+    [AST.TitleAnnotationId]: 'DateTime',
+    [AST.DescriptionAnnotationId]: 'Valid date and time in ISO format',
+  }),
+);
 
 /**
  * https://datatracker.ietf.org/doc/html/rfc3339#appendix-A
  */
 // TODO(burdon): Define duration type.
-export const Duration = S.String.annotations({
-  examples: ['1h', '3D'],
-});
+export const Duration = S.String.pipe(
+  FormatAnnotation.set(FormatEnum.Duration),
+  S.annotations({
+    [AST.TitleAnnotationId]: 'Duration',
+    [AST.DescriptionAnnotationId]: 'Duration in ISO 8601 format',
+    [AST.ExamplesAnnotationId]: ['1h', '3D'],
+  }),
+);
 
 //
 // Utils

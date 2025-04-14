@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
 import {
+  Echo,
   EntityKind,
   FormatEnum,
   FormatAnnotation,
@@ -21,7 +22,6 @@ import { create, makeRef } from '@dxos/live-object';
 
 // TODO(dmaretskyi): Do all ECHO api's go into `Echo` or do some things like `create` and `Ref` stay separate?
 //  RB: Let's get the main schema types cleanup up first since that has the biggest impact.
-import { Echo } from './api';
 
 // RB: Commented out since lint error (is this just for debugging?)
 // This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.

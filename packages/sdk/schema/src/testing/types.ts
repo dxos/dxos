@@ -5,13 +5,13 @@
 import {
   AST,
   S,
+  Echo,
   Format,
   TypedObject,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
   LabelAnnotationId,
   Ref,
-  EchoObject,
   ObjectId,
 } from '@dxos/echo-schema';
 
@@ -36,13 +36,12 @@ export namespace Testing {
   }).annotations({
     [AST.TitleAnnotationId]: 'Organization',
     [LabelAnnotationId]: 'name',
-    // TODO(dmaretskyi): Use combinator.
-    [IconAnnotationId]: 'building',
+    [IconAnnotationId]: 'ph--building--regular',
   });
 
   export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
-  export const OrgType = OrgSchema.pipe(EchoObject({ typename: 'example.com/type/Org', version: '0.1.0' }));
+  export const OrgType = OrgSchema.pipe(Echo.Type({ typename: 'example.com/type/Org', version: '0.1.0' }));
   export type OrgType = S.Schema.Type<typeof OrgType>;
 
   //
@@ -83,13 +82,12 @@ export namespace Testing {
     // address: S.optional(AddressSchema),
   }).annotations({
     [LabelAnnotationId]: ['label', 'name'],
-    // TODO(dmaretskyi): Use combinator.
-    [IconAnnotationId]: 'user',
+    [IconAnnotationId]: 'ph--user--regular',
   });
 
   export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
-  export const ContactType = ContactSchema.pipe(EchoObject({ typename: 'example.com/type/Contact', version: '0.1.0' }));
+  export const ContactType = ContactSchema.pipe(Echo.Type({ typename: 'example.com/type/Contact', version: '0.1.0' }));
   export type ContactType = S.Schema.Type<typeof ContactType>;
 
   //
@@ -105,13 +103,12 @@ export namespace Testing {
     description: S.optional(S.String),
   }).annotations({
     [LabelAnnotationId]: 'name',
-    // TODO(dmaretskyi): Use combinator.
-    [IconAnnotationId]: 'kanban',
+    [IconAnnotationId]: 'ph--kanban--regular',
   });
 
   export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
 
-  export const ProjectType = ProjectSchema.pipe(EchoObject({ typename: 'example.com/type/Project', version: '0.1.0' }));
+  export const ProjectType = ProjectSchema.pipe(Echo.Type({ typename: 'example.com/type/Project', version: '0.1.0' }));
   export type ProjectType = S.Schema.Type<typeof ProjectType>;
 
   //

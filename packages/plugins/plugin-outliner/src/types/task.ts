@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EchoObject, FormatAnnotationId, FormatEnum, LabelAnnotationId, S } from '@dxos/echo-schema';
+import { EchoObject, FormatAnnotation, FormatEnum, LabelAnnotationId, S } from '@dxos/echo-schema';
 
 // TOOD(burdon): Move to plugin-task.
 
@@ -19,7 +19,7 @@ export const TaskType = S.Struct({
   status: S.optional(S.Enums(TaskStatus)),
   priority: S.optional(S.Number),
   estimate: S.optional(S.Number),
-  assigned: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.DID })),
+  assigned: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.DID))),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.
