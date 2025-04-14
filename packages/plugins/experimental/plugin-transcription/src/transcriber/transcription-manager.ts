@@ -11,7 +11,8 @@ import { DXN } from '@dxos/keys';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { type HuePalette } from '@dxos/react-ui-theme';
 
-import { MediaStreamRecorder, Transcriber } from '.';
+import { MediaStreamRecorder } from './media-stream-recorder';
+import { Transcriber } from './transcriber';
 import { TranscriptBlock, type TranscriptSegment } from '../types';
 
 /**

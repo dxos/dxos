@@ -5,7 +5,6 @@
 import React, { useCallback, useEffect, type FC } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
-import { invariant } from '@dxos/invariant';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -23,10 +22,9 @@ export type CallContainerProps = {
 export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId }) => {
   const call = useCapability(MeetingCapabilities.CallManager);
   const roomId = meeting ? fullyQualifiedId(meeting) : _roomId;
-  invariant(roomId);
 
   useEffect(() => {
-    if (!call.joined) {
+    if (!call.joined && roomId) {
       call.setRoomId(roomId);
     }
   }, [roomId, call.joined, call.roomId]);
@@ -37,6 +35,10 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
       companion.properties.onJoin?.(roomId);
     });
   }, [companions, roomId]);
+
+  if (!roomId) {
+    return null;
+  }
 
   return (
     <StackItem.Content toolbar={false}>

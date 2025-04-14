@@ -15,6 +15,8 @@ import { MEETING_PLUGIN } from '../../meta';
 import { MediaButtons, VideoObject } from '../Media';
 import { ResponsiveContainer } from '../ResponsiveGrid';
 
+const SWARM_PEEK_INTERVAL = 1_000;
+
 type LobbyProps = ThemedClassName & {
   roomId: string;
   onJoin?: () => void;
@@ -44,7 +46,7 @@ export const Lobby: FC<LobbyProps> = ({ classNames, roomId, onJoin }) => {
     void call.peek(roomId).then((count) => setCount(count));
     const interval = setInterval(() => {
       void call.peek(roomId).then((count) => setCount(count));
-    }, 1000);
+    }, SWARM_PEEK_INTERVAL);
     return () => clearInterval(interval);
   }, [call, roomId]);
 
