@@ -215,6 +215,8 @@ export class Client {
 
   /**
    * EDGE client.
+   *
+   * This API is experimental and subject to change.
    */
   get edge(): EdgeHttpClient {
     invariant(this._edgeClient, 'Client not initialized.');

@@ -41,7 +41,9 @@ message Activity {
 }
 
 /**
- * Transcription activity payload.
+ * Transcription state.
+ *
+ * Used to encode/decode the Any payload of a call activity for the transcription plugin.
  */
  message TranscriptionPayload {
   bool enabled = 1;
