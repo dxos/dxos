@@ -77,18 +77,19 @@
       white-space: nowrap;
       cursor: pointer;
 
+      /* Enable text selection for any cell that has data-text-selectable='true' */
+      &[data-text-selectable='true'] {
+        user-select: text;
+      }
+
+      /* Default cursor for readonly cells with no text selection */
       &[aria-readonly='true'] {
-        /* Default cursor for readonly cells that don't allow text selection */
         cursor: default;
       }
 
+      /* Text cursor for readonly cells that allow text selection */
       &[aria-readonly='true'][data-text-selectable='true'] {
-        /* Text cursor for readonly cells that allow text selection */
         cursor: text;
-      }
-
-      &[data-text-selectable='true'] {
-        user-select: text;
       }
 
       &:focus:not([aria-readonly='true']),

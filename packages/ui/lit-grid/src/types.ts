@@ -45,12 +45,6 @@ export type DxGridPointer =
   | { state: 'maybeSelecting'; pageX: number; pageY: number }
   | { state: 'selecting' };
 
-/**
- * Readonly values for grid cells:
- * - false: Cell is editable
- * - 'no-text-select': Cell is readonly and text cannot be selected (default behavior when true is provided)
- * - 'text-select': Cell is readonly but text can be selected
- */
 export type DxGridReadonlyValue = false | 'no-text-select' | 'text-select';
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
