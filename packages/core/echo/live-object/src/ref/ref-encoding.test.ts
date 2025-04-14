@@ -5,25 +5,33 @@
 import { describe, expect, test } from 'vitest';
 
 import { encodeReference, Reference } from '@dxos/echo-protocol';
-import { createStatic, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, createStatic, Ref, S } from '@dxos/echo-schema';
 
 import { makeRef } from './ref';
 
-class Task extends TypedObject({
-  typename: 'example.com/type/Task',
-  version: '0.1.0',
-})({
+const Task = S.Struct({
   title: S.optional(S.String),
-}) {}
+}).pipe(
+  EchoObject({
+    typename: 'example.com/type/Task',
+    version: '0.1.0',
+  }),
+);
 
-class Contact extends TypedObject({
-  typename: 'example.com/type/Contact',
-  version: '0.1.0',
-})({
+type Task = S.Schema.Type<typeof Task>;
+
+const Contact = S.Struct({
   name: S.String,
   email: S.optional(S.String),
   tasks: S.mutable(S.Array(Ref(Task))),
-}) {}
+}).pipe(
+  EchoObject({
+    typename: 'example.com/type/Contact',
+    version: '0.1.0',
+  }),
+);
+
+type Contact = S.Schema.Type<typeof Contact>;
 
 describe('ref encoding', () => {
   test('static object', () => {
