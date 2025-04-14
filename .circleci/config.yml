@@ -200,7 +200,7 @@ jobs:
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --browser=all --parallel=1
           # TODO(wittjosiah): Playwright tests not outputting as they run currently only after they finish.
-          no_output_timeout: 20m
+          no_output_timeout: 30m
       # TODO(wittjosiah): Disabled because it was not working and we weren't using it.
       # - run:
       #     command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
