@@ -23,7 +23,13 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
+import { type PillProps } from './Pill';
+
 export type MultiselectItem = { id: string; label: string };
+
+export const createLinks = (items: MultiselectItem[]) => {
+  return items.map(({ id, label }) => `[${label}](${id})`).join('');
+};
 
 /**
  * Apply function formats item as link.
@@ -32,7 +38,13 @@ export const multiselectApply = (view: EditorView, completion: Completion, from:
   const id = (completion as MultiselectItem).id;
   const label = completion.label;
   view.dispatch({ changes: { from, to, insert: `[${label}](${id})` } });
-  scrollToCursor(view);
+
+  // TODO(burdon): Hack.
+  // Since renders async, need to wait for DOM to update.
+  setTimeout(() => {
+    view.dispatch({ selection: { anchor: view.state.doc.length } });
+    scrollToCursor(view);
+  }, 100);
 };
 
 const scrollToCursor = (view: EditorView) => {
@@ -47,9 +59,8 @@ const scrollToCursor = (view: EditorView) => {
 };
 
 export type MultiselectOptions = {
+  render: (el: HTMLElement, props: PillProps) => void;
   debug?: boolean;
-  // TODO(burdon): Generalize.
-  renderIcon?: (el: HTMLElement, icon: string, cb: () => void) => void;
   onSelect?: (id: string) => void;
   onSearch?: (text: string, ids: Set<string>) => MultiselectItem[];
   onUpdate?: (ids: string[]) => void;
@@ -58,13 +69,7 @@ export type MultiselectOptions = {
 /**
  * Uses the markdown parser to parse links, which are decorated as pill buttons.
  */
-export const multiselect = ({
-  debug,
-  renderIcon,
-  onSelect,
-  onSearch,
-  onUpdate,
-}: MultiselectOptions = {}): Extension => {
+export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: MultiselectOptions): Extension => {
   const ids: string[] = [];
   const currentIds = new Set<string>();
 
@@ -119,23 +124,22 @@ export const multiselect = ({
                 if (urlNode) {
                   const from = node.from;
                   const to = node.to;
-                  const text = view.state.doc.sliceString(from + 1, urlNode.from - 2);
                   const id = view.state.sliceDoc(urlNode.from, urlNode.to);
+                  const text = view.state.doc.sliceString(from + 1, urlNode.from - 2);
+                  const item: MultiselectItem = { id, label: text };
                   ids.push(id);
                   builder.add(
                     from,
                     to,
                     Decoration.replace({
-                      widget: new ItemWidget(
-                        renderIcon,
-                        text,
-                        id,
-                        (id) => onSelect?.(id),
-                        (_id) => {
+                      widget: new ItemWidget(render, {
+                        item,
+                        onSelect: (item) => onSelect?.(item.id),
+                        onDelete: () => {
                           view.dispatch({ changes: { from, to, insert: '' } });
                           view.focus();
                         },
-                      ),
+                      }),
                     }),
                   );
                 }
@@ -189,41 +193,21 @@ export const multiselect = ({
 
 class ItemWidget extends WidgetType {
   constructor(
-    private readonly renderIcon: MultiselectOptions['renderIcon'],
-    private readonly text: string,
-    private readonly id: string,
-    private readonly onSelect: (id: string) => void,
-    private readonly onDelete: (id: string) => void,
+    private readonly render: MultiselectOptions['render'],
+    private readonly props: PillProps,
   ) {
     super();
   }
 
   // Prevents re-rendering.
   override eq(widget: this) {
-    return widget.id === this.id;
+    return widget.props.item.id === this.props.item.id;
   }
 
   toDOM() {
-    const main = document.createElement('span');
-    main.className = 'cm-item';
-
-    const link = document.createElement('span');
-    link.className = 'cm-item-text';
-    link.textContent = this.text;
-    link.addEventListener('click', () => this.onSelect(this.id));
-    main.appendChild(link);
-
-    const button = document.createElement('span');
-    button.className = 'cm-item-button';
-    this.renderIcon?.(button, 'ph--x--regular', () => this.onDelete(this.id));
-    main.appendChild(button);
-
-    const space = document.createElement('span');
-    space.textContent = ' ';
-
     const el = document.createElement('span');
-    el.appendChild(main);
-    el.appendChild(space);
+    el.className = 'cm-item';
+    this.render(el, this.props);
     return el;
   }
 }
@@ -252,26 +236,6 @@ const styles = EditorView.theme({
     lineHeight: '2 !important',
   },
   '.cm-item': {
-    border: '1px solid var(--dx-separator)',
-    borderRadius: '4px',
-    padding: '2px 3px',
-    marginLeft: '2px',
-    textDecoration: 'none',
-  },
-  '.cm-item:hover': {
-    backgroundColor: 'var(--dx-hoverSurface)',
-  },
-  '.cm-item-text': {
-    cursor: 'pointer',
-  },
-  '.cm-item-button': {
-    display: 'inline-block',
-    width: '0.75rem',
-    marginLeft: '4px',
-    cursor: 'pointer',
-    opacity: 0.5,
-  },
-  '.cm-item-button:hover': {
-    opacity: 1,
+    padding: '0 2px',
   },
 });

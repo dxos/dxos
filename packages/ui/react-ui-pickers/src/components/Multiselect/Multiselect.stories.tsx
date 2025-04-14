@@ -34,9 +34,9 @@ const meta: Meta<typeof Multiselect> = {
     // TODO(burdon): Wrap option.
     return (
       <div className='flex flex-col w-[20rem] max-w-[20rem] gap-4'>
-        <div className='flex border border-separator max-w-[20rem]'>
+        <div className='flex border border-separator'>
           <Multiselect
-            classNames='pis-1 pie-1'
+            classNames='pis-0.5 pie-0.5'
             items={items}
             onSelect={(id) => {
               log.info('select', { id });
@@ -59,6 +59,17 @@ const meta: Meta<typeof Multiselect> = {
             onClick={() => {
               setItems([]);
               setSelected(undefined);
+            }}
+          />
+        </div>
+        <div className='flex border border-separator'>
+          <Multiselect
+            classNames='pis-0.5 pie-0.5'
+            readonly
+            items={items}
+            onSelect={(id) => {
+              log.info('select', { id });
+              setSelected(id);
             }}
           />
         </div>
