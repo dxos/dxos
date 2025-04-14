@@ -32,6 +32,7 @@ describe('ref encoding', () => {
     expect(json).toEqual({
       id: contact.id,
       '@type': `dxn:type:${Contact.typename}:${Contact.version}`,
+      name: 'John Doe',
       tasks: [
         {
           ...encodeReference(Reference.fromDXN(makeRef(task).dxn)),
