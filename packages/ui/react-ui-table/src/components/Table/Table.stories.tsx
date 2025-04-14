@@ -49,7 +49,7 @@ const DefaultStory = () => {
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {
-      return new ViewProjection(schema, table.view.target);
+      return new ViewProjection(schema.jsonSchema, table.view.target);
     }
   }, [schema, table?.view?.target]);
 

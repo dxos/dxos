@@ -25,18 +25,18 @@ export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<Propert
 
 export const makeDynamicTable = (typename: string, properties: TablePropertyDefinition[]) => {
   const table = create(TableType, { name: 'dynamic-table' });
-  const echoSchema = echoSchemaFromPropertyDefinitions(typename, properties);
+  const schema = echoSchemaFromPropertyDefinitions(typename, properties);
   const propertyNames = properties.map((property) => property.name);
 
   const view = createView({
     name: 'dynamic-table',
-    typename: echoSchema.typename,
-    jsonSchema: echoSchema.jsonSchema,
+    typename: schema.typename,
+    jsonSchema: schema.jsonSchema,
     fields: propertyNames,
   });
 
   table.view = makeRef(view);
-  const viewProjection = new ViewProjection(echoSchema, view);
+  const viewProjection = new ViewProjection(schema.jsonSchema, view);
 
   for (const property of properties) {
     if (!view.fields) {
@@ -66,7 +66,7 @@ export const makeDynamicTable = (typename: string, properties: TablePropertyDefi
 
   return {
     table,
-    schema: echoSchema,
+    schema,
     view,
     viewProjection,
   };

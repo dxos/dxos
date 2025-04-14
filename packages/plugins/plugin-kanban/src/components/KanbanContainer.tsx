@@ -38,7 +38,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   useEffect(() => {
     if (kanban.cardView?.target && cardSchema) {
-      setProjection(new ViewProjection(cardSchema, kanban.cardView.target));
+      setProjection(new ViewProjection(cardSchema.jsonSchema, kanban.cardView.target));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
   }, [kanban.cardView?.target, cardSchema, JSON.stringify(cardSchema?.jsonSchema)]);

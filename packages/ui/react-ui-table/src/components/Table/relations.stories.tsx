@@ -25,7 +25,6 @@ import { TableType } from '../../types';
 faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
-// TODO(burdon): View vs. ViewProjection?
 // TODO(burdon): Many-to-many relations.
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
@@ -34,10 +33,9 @@ const generator: ValueGenerator = faker as any;
 const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count: number) => {
   const table = useMemo(() => {
     // const { typename } = pipe(schema.ast, AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId), Option.getOrThrow);
-    const jsonSchema = schema.jsonSchema;
     const typename = schema.typename;
     const name = getAnnotation<string>(AST.TitleAnnotationId)(schema.ast) ?? typename;
-    const view = createView({ name, typename, jsonSchema });
+    const view = createView({ name, typename, jsonSchema: schema.jsonSchema });
     return create(TableType, { view: makeRef(view) });
   }, [schema]);
 
@@ -46,8 +44,8 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
       return undefined;
     }
 
-    // TODO(burdon): Get schema from view inside of ViewProjection?
-    return new ViewProjection(schema, table.view.target);
+    // TODO(burdon): Just pass in view?
+    return new ViewProjection(schema.jsonSchema, table.view.target);
   }, [schema, table]);
 
   const model = useTableModel({ table, projection, objects: [] });

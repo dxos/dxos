@@ -29,7 +29,7 @@ export default () =>
           getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.target.query.typename);
         invariant(schema);
         invariant(kanban.cardView.target);
-        const projection = new ViewProjection(schema, kanban.cardView.target);
+        const projection = new ViewProjection(schema.jsonSchema, kanban.cardView.target);
 
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
