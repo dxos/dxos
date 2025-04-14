@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { useQueue } from '@dxos/react-client/echo';
-import { Status } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import type { MessageType } from '@dxos/schema';
 
 import { ContactsContainer, EventsContainer, MailboxContainer, MessageContainer } from '../components';
@@ -26,10 +26,9 @@ export default () =>
     createSurface({
       id: `${INBOX_PLUGIN}/message`,
       role: 'article',
-      filter: (data): data is { subject: MailboxType; variant: `message-${string}` } =>
-        isInstanceOf(MailboxType, data.subject) &&
-        ((data.variant as string | undefined)?.startsWith('message-') ?? false),
-      component: ({ data: { subject, variant } }) => {
+      filter: (data): data is { subject: MailboxType; variant: 'message'; variantId?: string } =>
+        isInstanceOf(MailboxType, data.subject) && data.variant === 'message',
+      component: ({ data: { subject, variantId } }) => {
         // TODO(thure): This is terrible but, as of the time of this writing, necessary. Planks firmly belong to Deck,
         //  which have no business trying to keep track of actual objects, so they reasonably rely on managing state
         //  using IDs, particularly so Deck state can be serialized. We therefore need an O(1) way of getting objects
@@ -37,13 +36,17 @@ export default () =>
         //  perhaps to `fullyQualifiedId`, messages could be addressed as {spaceId}:{mailboxId}:{messageId}, and any
         //  type which carries a queue should also implement a way of fetching specific items that are present on
         //  that queue.
-        const [_, messageId] = variant.split('message-');
         const queue = useQueue<MessageType>(subject.queue.dxn);
         const message = useMemo(
-          () => [...(queue?.items ?? [])].find((message) => message.id === messageId),
-          [queue?.items, messageId],
+          () => (variantId ? [...(queue?.items ?? [])].find((message) => message.id === variantId) : undefined),
+          [queue?.items, variantId],
         );
-        return message ? <MessageContainer message={message} /> : <Status indeterminate aria-label='Loading…' />;
+        const { t } = useTranslation(INBOX_PLUGIN);
+        return message ? (
+          <MessageContainer message={message} />
+        ) : (
+          <p className='p-8 text-center text-description'>{t('no message message')}</p>
+        );
       },
     }),
     createSurface({

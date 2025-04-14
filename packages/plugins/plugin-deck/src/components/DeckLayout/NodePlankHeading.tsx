@@ -171,7 +171,7 @@ export const NodePlankHeading = memo(
         </TextTooltip>
         {node && part !== 'complementary' && <Surface role='navbar-end' data={{ subject: node.data }} />}
         {companioned === 'companion' ? (
-          <PlankCompanionControls primary={surfaceVariant ? id : primaryId} />
+          <PlankCompanionControls primary={primaryId} />
         ) : (
           <PlankControls
             capabilities={capabilities}
