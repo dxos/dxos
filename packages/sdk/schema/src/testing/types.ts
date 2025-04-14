@@ -7,12 +7,11 @@ import {
   S,
   Echo,
   Format,
-  TypedObject,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
   LabelAnnotationId,
-  Ref,
   ObjectId,
+  TypedObject,
 } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
@@ -46,7 +45,7 @@ export namespace Testing {
 
   //
   // Contact
-  // TODO(burdon): Array of emails.
+  // TODO(burdon): Array of email addresses.
   // TODO(burdon): Materialize link for Role (Org => [Role] => Contact).
   // TODO(burdon): Use with concrete Message type.
   // TODO(burdon): Address sub type with geo location.
@@ -74,7 +73,7 @@ export namespace Testing {
       }),
     ),
     employer: S.optional(
-      Ref(OrgType).annotations({
+      Echo.Ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
@@ -115,6 +114,7 @@ export namespace Testing {
   // Email
   //
 
+  // TODO(burdon): Disambiguate from Message.
   export const EmailSchema = S.Struct({
     from: S.String,
     to: S.String,

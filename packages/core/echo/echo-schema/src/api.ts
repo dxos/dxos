@@ -13,7 +13,7 @@ import {
   type JsonSchemaType,
   type ObjectId as ObjectId$,
   Ref as Ref$,
-} from '.';
+} from '.'; // TODO(burdon): Import directly once API is stable.
 
 /**
  * ECHO API.
