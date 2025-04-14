@@ -117,9 +117,6 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../experimental/plugin-transcription"
-    },
-    {
       "path": "../plugin-client"
     },
     {
@@ -132,13 +129,7 @@
       "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-outliner"
-    },
-    {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-thread"
     }
   ]
 }
