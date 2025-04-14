@@ -29,14 +29,6 @@ export namespace TranscriptionAction {
       object: TranscriptType,
     }),
   }) {}
-
-  export class Summarize extends S.TaggedClass<Summarize>()(`${TRANSCRIPTION_ACTION}/summarize`, {
-    input: S.Struct({
-      transcript: TranscriptType,
-      context: S.optional(S.String),
-    }),
-    output: S.String,
-  }) {}
 }
 
 export const isTranscript = (object: unknown): object is typeof TranscriptType => {
