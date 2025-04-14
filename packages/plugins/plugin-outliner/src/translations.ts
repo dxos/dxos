@@ -23,6 +23,8 @@ export default [
         'text placeholder': 'Enter text...',
         'menu label': 'Menu',
 
+        'meeting notes label': 'Notes',
+
         // TODO(burdon): Move to plugin-task.
         'task action': 'Convert to task',
       },

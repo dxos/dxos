@@ -10,6 +10,8 @@ import { type Position } from '@dxos/util';
 
 import { DECK_PLUGIN } from './meta';
 
+export const COMPANION_TYPE = 'dxos.org/plugin/deck/companion';
+
 // TODO(Zan): In the future we should consider adding new planks adjacent to the attended plank.
 export const NewPlankPositions = ['start', 'end'] as const;
 export type NewPlankPositioning = (typeof NewPlankPositions)[number];
@@ -26,7 +28,7 @@ export type Panel = {
   icon: string;
   position?: Position;
   /**
-   * If true, the panel will now be wrapped in a scroll area.
+   * If true, the panel will not be wrapped in a scroll area.
    */
   fixed?: boolean;
   filter?: (node: Node) => boolean;

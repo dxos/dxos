@@ -45,8 +45,8 @@ export class PluginManager {
   readonly activation = new Event<{ event: string; state: 'activating' | 'activated' | 'error'; error?: any }>();
 
   readonly context = new PluginsContext({
-    activate: (event) => this.activate(event),
-    reset: (id) => this.reset(id),
+    activate: (event) => this._activate(event),
+    reset: (id) => this._reset(id),
   });
 
   private readonly _state: ReactiveObject<PluginManagerState>;

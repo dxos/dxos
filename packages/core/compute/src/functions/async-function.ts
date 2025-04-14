@@ -8,7 +8,7 @@ import { type InterpreterValue } from 'hyperformula/typings/interpreter/Interpre
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { debounce, type UnsubscribeCallback } from '@dxos/async';
+import { debounce, type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
@@ -66,7 +66,7 @@ export class FunctionContext {
   private readonly _pending = new Map<string, number>();
 
   // Query subscriptions.
-  private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
+  private readonly _subscriptions = new Map<string, CleanupFn>();
 
   // Invocation count.
   private _invocations: Record<string, number> = {};
@@ -109,7 +109,7 @@ export class FunctionContext {
     this._subscriptions.clear();
   }
 
-  createSubscription(name: string, unsubscribe: UnsubscribeCallback) {
+  createSubscription(name: string, unsubscribe: CleanupFn) {
     this._subscriptions.get(name)?.();
     this._subscriptions.set(name, unsubscribe);
   }

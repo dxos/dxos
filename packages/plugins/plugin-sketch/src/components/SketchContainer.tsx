@@ -14,23 +14,23 @@ import { Sketch } from './Sketch';
 import { type DiagramType, type SketchSettingsProps } from '../types';
 
 export type SketchContainerProps = {
-  sketch: DiagramType;
   role: string;
+  sketch: DiagramType;
   settings: SketchSettingsProps;
 };
 
-export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps) => {
-  const props = {
-    readonly: role === 'slide',
-    maxZoom: role === 'slide' ? 1.5 : undefined,
-    autoZoom: role === 'section',
-    grid: settings.gridType,
-  };
+export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps) => {
   const id = fullyQualifiedId(sketch);
   const { hasAttention } = useAttention(id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  const onThreadCreate = useCallback(() => {
+  const props = {
+    readonly: role === 'slide',
+    autoZoom: role === 'section' ? true : undefined,
+    maxZoom: role === 'slide' ? 1.5 : undefined,
+  };
+
+  const handleThreadCreate = useCallback(() => {
     // TODO(Zan): Consider a more appropriate anchor format.
     void dispatch(createIntent(ThreadAction.Create, { subject: sketch, cursor: Date.now().toString() }));
   }, [dispatch, sketch]);
@@ -41,10 +41,11 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
       <Sketch
         // Force instance per sketch object. Otherwise, sketch shares the same instance.
         key={id}
+        classNames='attention-surface'
         sketch={sketch}
         hideUi={!hasAttention}
-        classNames='attention-surface'
-        onThreadCreate={onThreadCreate}
+        settings={settings}
+        onThreadCreate={handleThreadCreate}
         {...props}
       />
     </StackItem.Content>

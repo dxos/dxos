@@ -4,13 +4,13 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react';
 import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -22,7 +22,7 @@ import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
 const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
   return createObject(
     create(DiagramType, {
-      canvas: createObject(create(CanvasType, { schema: TLDRAW_SCHEMA, content })),
+      canvas: makeRef(create(CanvasType, { schema: TLDRAW_SCHEMA, content })),
     }),
   );
 };
@@ -66,8 +66,6 @@ const DefaultStory = () => {
   );
 };
 
-export const Default = {};
-
 const meta: Meta<typeof Sketch> = {
   title: 'plugins/plugin-sketch/Sketch',
   component: Sketch,
@@ -79,3 +77,7 @@ const meta: Meta<typeof Sketch> = {
 };
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

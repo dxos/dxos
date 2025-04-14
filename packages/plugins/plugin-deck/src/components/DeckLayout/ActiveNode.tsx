@@ -5,9 +5,10 @@
 import React from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework';
+import { useNode } from '@dxos/plugin-graph';
 import { useAttended } from '@dxos/react-ui-attention';
 
-import { useNode, useNodeActionExpander } from '../../hooks';
+import { useNodeActionExpander } from '../../hooks';
 
 // TODO(burdon): Factor out to effect in plugin set document title.
 export const ActiveNode = () => {
