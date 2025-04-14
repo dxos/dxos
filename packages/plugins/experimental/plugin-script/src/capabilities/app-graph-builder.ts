@@ -19,6 +19,7 @@ export default (context: PluginsContext) =>
         {
           id: `${node.id}/logs`,
           type: COMPANION_TYPE,
+          data: node.data,
           properties: {
             label: ['script logs label', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--clock-countdown--regular',

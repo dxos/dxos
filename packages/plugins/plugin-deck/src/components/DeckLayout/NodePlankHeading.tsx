@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, memo, useCallback, useEffect, useMemo } from 'react';
+import { untracked } from '@preact/signals-core';
+import React, { Fragment, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, LayoutAction, Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { type Node } from '@dxos/plugin-graph';
+import { isActionLike, type Node } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
-import { DeckAction, type ResolvedPart, SLUG_PATH_SEPARATOR } from '../../types';
+import { COMPANION_TYPE, DeckAction, type ResolvedPart, SLUG_PATH_SEPARATOR } from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
@@ -29,6 +30,11 @@ export type NodePlankHeadingProps = {
   primaryId?: string;
   surfaceVariant?: string;
 };
+
+const companionSiblingsFilter = (node: Node): node is Node =>
+  untracked(() => {
+    return !isActionLike(node) && node.type === COMPANION_TYPE;
+  });
 
 export const NodePlankHeading = memo(
   ({
@@ -61,19 +67,27 @@ export const NodePlankHeading = memo(
           t,
         );
     const { dispatchPromise: dispatch } = useIntentDispatcher();
-    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
+    const [tabs, setTabs] = useState<Node[] | null>(null);
+
+    const isCompanionNode = node?.type === COMPANION_TYPE;
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
         // Load actions for the node.
         node && graph.actions(node);
+        // Load siblings if this is a companion type
+        if (isCompanionNode) {
+          const primary = graph.nodes(node, { relation: 'inbound' });
+          const siblings = primary[0] ? graph.nodes(primary[0], { filter: companionSiblingsFilter }) : [];
+          setTabs(siblings.length > 1 ? siblings : null);
+        }
       });
 
       return () => cancelAnimationFrame(frame);
     }, [node]);
 
     // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
-    const attendableId = id.split(SLUG_PATH_SEPARATOR).at(0);
+    const attendableId = primaryId ?? id.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
         solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
@@ -114,6 +128,8 @@ export const NodePlankHeading = memo(
       },
       [dispatch, id, part],
     );
+
+    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
 
     return (
       <StackItem.Heading

@@ -15,7 +15,7 @@ export type ViewActionProperties = { type: 'view'; value: ViewType };
 const views: Record<ViewType, string> = {
   // editor: 'ph--code--regular',
   // split: 'ph--square-split-vertical--regular',
-  logs: 'ph--clock-counter-clockwise--regular',
+  logs: 'ph--clock-countdown--regular',
 };
 
 const createViewActions = (state: Partial<ViewState>) => {

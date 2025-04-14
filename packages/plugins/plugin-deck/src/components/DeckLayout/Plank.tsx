@@ -32,7 +32,14 @@ import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { DeckCapabilities } from '../../capabilities';
 import { useMainSize } from '../../hooks';
-import { DeckAction, type LayoutMode, type Part, type ResolvedPart, surfaceVariantSeparator } from '../../types';
+import {
+  COMPANION_TYPE,
+  DeckAction,
+  type LayoutMode,
+  type Part,
+  type ResolvedPart,
+  SLUG_PATH_SEPARATOR,
+} from '../../types';
 
 const UNKNOWN_ID = 'unknown_id';
 
@@ -48,23 +55,12 @@ export type PlankProps = {
 
 type PlankImplProps = Omit<PlankProps, 'companionId' | 'part'> & {
   part: ResolvedPart;
-  surfaceVariant?: string;
   companioned?: 'primary' | 'companion';
   primaryId?: string;
 };
 
 const PlankImpl = memo(
-  ({
-    id = UNKNOWN_ID,
-    part,
-    path,
-    order,
-    active,
-    layoutMode,
-    surfaceVariant,
-    companioned,
-    primaryId,
-  }: PlankImplProps) => {
+  ({ id = UNKNOWN_ID, part, path, order, active, layoutMode, companioned, primaryId }: PlankImplProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
     const { graph } = useAppGraph();
@@ -73,13 +69,15 @@ const PlankImpl = memo(
     const canResize = layoutMode === 'deck';
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
 
-    const attendableAttrs = useAttendableAttributes(id);
+    const attendableAttrs = useAttendableAttributes(primaryId ?? id);
     const index = active ? active.findIndex((entryId) => entryId === id) : 0;
     const length = active?.length ?? 1;
     const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
     const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
-    const sizeKey = `${id.split('+')[0]}${surfaceVariant ? `${surfaceVariantSeparator}${surfaceVariant}` : ''}`;
+    const surfaceVariant = node?.type === COMPANION_TYPE ? node?.id.split('/').pop() : undefined;
+
+    const sizeKey = `${id.split('+')[0]}${surfaceVariant ? `${SLUG_PATH_SEPARATOR}${surfaceVariant}` : ''}`;
     const size = deck.plankSizing[sizeKey] as number | undefined;
     const setSize = useCallback(
       debounce((nextSize: number) => {
@@ -118,6 +116,7 @@ const PlankImpl = memo(
         node && {
           subject: node.data,
           variant: surfaceVariant,
+          variantId: node.properties.variantId,
           path,
           popoverAnchorId,
         },
@@ -208,10 +207,9 @@ export const Plank = (props: PlankProps) => {
         <PlankImpl {...props} {...(props.part === 'solo' ? { part: 'solo-primary' } : {})} companioned='primary' />
         <PlankImpl
           {...props}
-          {...(props.companionId.startsWith(surfaceVariantSeparator)
-            ? { surfaceVariant: props.companionId.substring(2) }
-            : { id: props.companionId, primaryId: props.id })}
           {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: props.order! + 1 })}
+          id={props.companionId}
+          primaryId={props.id}
           companioned='companion'
         />
       </Root>

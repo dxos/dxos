@@ -79,10 +79,6 @@ export const defaultDeck = {
   companionFrameSizing: {},
 } satisfies Deck;
 
-export const surfaceVariantSeparator = '--';
-
-export const surfaceVariant = (id: string) => `${surfaceVariantSeparator}${id}`;
-
 export const DeckState = S.mutable(
   S.Struct({
     sidebarState: S.Literal('closed', 'collapsed', 'expanded'),
