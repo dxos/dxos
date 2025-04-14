@@ -5,7 +5,7 @@
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions';
-import { DECK_PLUGIN } from '@dxos/plugin-deck';
+import { COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { SCRIPT_PLUGIN } from '../meta';
@@ -18,7 +18,7 @@ export default (context: PluginsContext) =>
       connector: ({ node }) => [
         {
           id: `${node.id}/logs`,
-          type: `${DECK_PLUGIN}/companion`,
+          type: COMPANION_TYPE,
           properties: {
             label: ['script logs label', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--clock-countdown--regular',
