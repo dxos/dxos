@@ -9,12 +9,14 @@ import { createStatic, Ref, S, TypedObject } from '@dxos/echo-schema';
 
 import { makeRef } from './ref';
 
-export class Task extends TypedObject({
+class Task extends TypedObject({
   typename: 'example.com/type/Task',
   version: '0.1.0',
-})({ title: S.optional(S.String) }) {}
+})({
+  title: S.optional(S.String),
+}) {}
 
-export class Contact extends TypedObject({
+class Contact extends TypedObject({
   typename: 'example.com/type/Contact',
   version: '0.1.0',
 })({
