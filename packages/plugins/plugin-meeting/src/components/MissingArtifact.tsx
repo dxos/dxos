@@ -4,20 +4,23 @@
 
 import { useEffect } from 'react';
 
-import { type AnyIntentChain, useIntentDispatcher } from '@dxos/app-framework';
+import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { getSpace, makeRef, type Space } from '@dxos/react-client/echo';
+import { SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
 
 import { type MeetingType } from '../types';
 
 type MissingArtifactProps = {
   meeting: MeetingType;
-  getIntent: (options: { space: Space; meeting: MeetingType }) => AnyIntentChain;
   typename: string;
 };
 
-export const MissingArtifact = ({ meeting, getIntent, typename }: MissingArtifactProps) => {
+export const MissingArtifact = ({ meeting, typename }: MissingArtifactProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { graph } = useAppGraph();
+  const companionNode = graph.findNode(`${fullyQualifiedId(meeting)}${SLUG_PATH_SEPARATOR}${typename}`);
+  const getIntent = companionNode?.properties.getIntent;
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
@@ -31,3 +34,5 @@ export const MissingArtifact = ({ meeting, getIntent, typename }: MissingArtifac
 
   return null;
 };
+
+export default MissingArtifact;

@@ -15,7 +15,6 @@ import {
   createDeploy,
   createFormat,
   createTemplateSelect,
-  createView,
   useToolbarAction,
 } from '../../hooks';
 
@@ -30,10 +29,9 @@ const createToolbar = (state: ScriptToolbarState) => {
   const format = createFormat();
   const gap = createGapSeparator();
   const deploy = createDeploy(state);
-  const view = createView(state);
   return {
-    nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes, ...view.nodes],
-    edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges, ...view.edges],
+    nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
+    edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
   };
 };
 
