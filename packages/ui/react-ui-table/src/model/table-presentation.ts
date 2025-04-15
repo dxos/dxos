@@ -62,7 +62,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
     if (plane === 'grid' && this.model.features.dataEditable === false) {
       Object.values(cells).forEach((cell) => {
-        cell.readonly = true;
+        cell.readonly = 'text-select';
       });
     }
 
@@ -133,7 +133,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           rowIndex: displayIndex,
           checked: value ?? false,
         });
-        cell.readonly = true;
+        cell.readonly = 'no-text-select';
       }
 
       if (props.format === FormatEnum.SingleSelect) {
@@ -196,7 +196,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const classes = cellClassesForRowSelection(isSelected);
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
-        readonly: true,
+        readonly: 'no-text-select',
         className: classes ? mx(classes) : undefined,
         accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: isSelected }),
       };
