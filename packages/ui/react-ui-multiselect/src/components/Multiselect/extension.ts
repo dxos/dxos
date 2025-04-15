@@ -60,6 +60,7 @@ const scrollToCursor = (view: EditorView) => {
 
 export type MultiselectOptions = {
   debug?: boolean;
+  removeLabel?: string;
   onSelect?: (id: string) => void;
   onSearch?: (text: string, ids: string[]) => MultiselectItem[];
   onUpdate?: (ids: string[]) => void;
@@ -68,7 +69,7 @@ export type MultiselectOptions = {
 /**
  * Uses the markdown parser to parse links, which are decorated as pill buttons.
  */
-export const multiselect = ({ debug, onSelect, onSearch, onUpdate }: MultiselectOptions): Extension => {
+export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }: MultiselectOptions): Extension => {
   /** Ordered list of ids. */
   const ids: string[] = [];
   /** Range spans for each id. */
@@ -138,6 +139,7 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate }: Multiselect
                       widget: new ItemWidget({
                         itemId: item.id,
                         label: item.label,
+                        removeLabel,
                         onItemClick: ({ action, itemId }) => {
                           const span = itemSpan.get(itemId);
                           switch (action) {
@@ -209,10 +211,12 @@ class ItemWidget extends WidgetType {
   private itemId: PillProps['itemId'] = 'never';
   private label: PillProps['label'] = 'never';
   private onItemClick: PillProps['onItemClick'];
-  constructor(props: Pick<PillProps, 'itemId' | 'label' | 'onItemClick'>) {
+  private removeLabel: PillProps['removeLabel'];
+  constructor(props: Pick<PillProps, 'itemId' | 'label' | 'onItemClick' | 'removeLabel'>) {
     super();
     this.itemId = props.itemId ?? 'never';
     this.label = props.label ?? 'never';
+    this.removeLabel = props.removeLabel;
     this.onItemClick = props.onItemClick;
   }
 
@@ -225,6 +229,10 @@ class ItemWidget extends WidgetType {
     const el = document.createElement('dx-tag-picker-item');
     el.setAttribute('itemId', this.itemId ?? 'never');
     el.setAttribute('label', this.label ?? 'never');
+    if (this.removeLabel) {
+      el.setAttribute('removeLabel', this.removeLabel);
+    }
+    el.setAttribute('rootClassName', 'mie-1');
     if (this.onItemClick) {
       el.addEventListener('dx-tag-picker-item-click', this.onItemClick as any);
     }
@@ -254,8 +262,5 @@ const styles = EditorView.theme({
 
   '.cm-line': {
     lineHeight: '2 !important',
-  },
-  '.cm-item': {
-    padding: '0 2px',
   },
 });

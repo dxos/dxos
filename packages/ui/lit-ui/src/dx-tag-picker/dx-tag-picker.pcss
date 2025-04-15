@@ -1,0 +1,23 @@
+@layer dx-components {
+  dx-tag-picker-item {
+    display: contents;
+  }
+
+  .dx-tag-picker-item.dx-tag {
+    @apply p-0 inline-flex;
+
+    button {
+      @apply pli-2 plb-1;
+    }
+
+    &[data-remove="true"] {
+      button:first-child {
+        @apply pie-0.5;
+      }
+      button:last-child {
+        @apply pis-0.5;
+      }
+    }
+
+  }
+}

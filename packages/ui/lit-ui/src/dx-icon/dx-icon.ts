@@ -23,6 +23,11 @@ export class DxIcon extends LitElement {
 
   override render() {
     const url = this.noCache ? `${ICONS_URL}?nocache=${new Date().getMinutes()}` : ICONS_URL;
-    return svg`<svg class="dx-icon" data-size=${this.size}><use href=${url} /></svg>`;
+    const href = `${url}#${this.icon}`;
+    return svg`<svg class="dx-icon" data-size=${this.size}><use href=${href} /></svg>`;
+  }
+
+  override createRenderRoot() {
+    return this;
   }
 }

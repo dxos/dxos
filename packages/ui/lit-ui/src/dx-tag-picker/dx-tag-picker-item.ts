@@ -30,6 +30,9 @@ export class DxTagPickerItem extends LitElement {
   label: string = 'never';
 
   @property({ type: String })
+  rootClassName: string | undefined = undefined;
+
+  @property({ type: String })
   removeLabel: string | undefined = undefined;
 
   private handleClickActivate() {
@@ -41,11 +44,16 @@ export class DxTagPickerItem extends LitElement {
   }
 
   override render() {
-    return html`<span class="dx-tag" data-hue=${this.hue} id=${this.id}
-      ><button @click=${this.handleClickActivate}>${this.label}</button>${this.removeLabel &&
-      html`<button aria-label=${this.removeLabel} @click=${this.handleClickRemove}>
+    const className = `dx-tag dx-tag-picker-item${this.rootClassName ? ` ${this.rootClassName}` : ''}`;
+    return html`<span class=${className} data-remove=${!!this.removeLabel} data-hue=${this.hue} id=${this.id}
+      ><button class="dx-focus-ring" @click=${this.handleClickActivate}>${this.label}</button>${this.removeLabel &&
+      html`<button class="dx-focus-ring" aria-label=${this.removeLabel} @click=${this.handleClickRemove}>
         <dx-icon icon="ph--x--regular" />
       </button>`}</span
     >`;
+  }
+
+  override createRenderRoot() {
+    return this;
   }
 }

@@ -32,6 +32,7 @@
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@radix-ui/react-compose-refs": "1.1.1",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {

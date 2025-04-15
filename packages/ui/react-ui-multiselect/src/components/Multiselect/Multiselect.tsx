@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { type CSSProperties, useCallback, useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
-import { type ThemedClassName, useDynamicRef, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -17,6 +19,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Pill } from './Pill';
 import { createLinks, multiselect, type MultiselectItem, type MultiselectOptions } from './extension';
+import { translationKey } from '../../translations';
 
 export type MultiselectProps = ThemedClassName<
   { items: MultiselectItem[]; readonly?: boolean } & Pick<MultiselectOptions, 'onSelect' | 'onSearch' | 'onUpdate'>
@@ -30,7 +33,7 @@ export const Multiselect = ({ readonly, ...props }: MultiselectProps) => {
   }
 };
 
-const ReadonlyMultiselect = ({ classNames, items, onSelect }: MultiselectProps) => {
+const ReadonlyMultiselect = ({ items, onSelect }: MultiselectProps) => {
   const handleItemClick = useCallback(
     ({ itemId, action }: DxTagPickerItemClick) => {
       if (action === 'activate') {
@@ -40,17 +43,18 @@ const ReadonlyMultiselect = ({ classNames, items, onSelect }: MultiselectProps) 
     [onSelect],
   );
   return (
-    <div className={mx('flex h-[2rem] items-center', classNames)}>
+    <>
       {items.map((item) => (
-        <Pill key={item.id} itemId={item.id} label={item.label} onItemClick={handleItemClick} />
+        <Pill key={item.id} itemId={item.id} label={item.label} onItemClick={handleItemClick} rootClassName='mie-1' />
       ))}
-    </div>
+    </>
   );
 };
 
 const EditableMultiselect = ({ classNames, items, readonly, onUpdate, ...props }: MultiselectProps) => {
   const { themeMode } = useThemeContext();
-  const { ref, width } = useResizeDetector();
+  const { ref: resizeRef, width } = useResizeDetector();
+  const { t } = useTranslation(translationKey);
 
   const itemsRef = useDynamicRef(items);
   const handleUpdate = (ids: string[]) => {
@@ -77,12 +81,15 @@ const EditableMultiselect = ({ classNames, items, readonly, onUpdate, ...props }
         multiselect({
           debug: true,
           onUpdate: handleUpdate,
+          removeLabel: t('remove label'),
           ...props,
         }),
       ],
     }),
     [themeMode],
   );
+
+  const ref = useComposedRefs(resizeRef, parentRef);
 
   useEffect(() => {
     const text = createLinks(items);
@@ -93,12 +100,6 @@ const EditableMultiselect = ({ classNames, items, readonly, onUpdate, ...props }
   }, [view, items]);
 
   return (
-    <div ref={ref} className='w-full'>
-      <div
-        ref={parentRef}
-        style={{ width, '--dx-multiselectWidth': `${width}px` } as CSSProperties}
-        className='w-full'
-      />
-    </div>
+    <div ref={ref} className='min-is-0 flex-1' style={{ '--dx-multiselectWidth': `${width}px` } as CSSProperties} />
   );
 };
