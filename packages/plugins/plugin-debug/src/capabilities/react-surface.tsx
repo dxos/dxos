@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
 import React, { useCallback } from 'react';
 
 import {
   Capabilities,
+  chain,
   contributes,
   createIntent,
   createSurface,
@@ -40,8 +42,10 @@ import {
   TestingPanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
+import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import {
   SpaceState,
@@ -346,10 +350,26 @@ export default (context: PluginsContext) =>
           async (space: Space) => {
             await space.waitUntilReady();
             await dispatch(createIntent(SpaceAction.Migrate, { space }));
+            await space.db.flush();
           },
           [dispatch],
         );
-        const onScriptPluginOpen = useCallback(async () => {}, [dispatch]);
+        const onScriptPluginOpen = useCallback(
+          async (space: Space) => {
+            await space.waitUntilReady();
+            const target = space.properties[CollectionType.typename]?.target;
+            if (!(target instanceof CollectionType)) {
+              log.warn('no root collection', { properties: space.properties.toJSON() });
+              return;
+            }
+            const result = await dispatch(
+              pipe(createIntent(ScriptAction.Create, { space }), chain(SpaceAction.AddObject, { target })),
+            );
+            log.info('script created', { result });
+            await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [result.data?.object.id] }));
+          },
+          [dispatch],
+        );
         return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
       },
     }),

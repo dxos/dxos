@@ -25,11 +25,12 @@ export const TestingPanel = ({
   onScriptPluginOpen,
 }: {
   onSpaceCreate?: (space: Space) => Promise<void>;
-  onScriptPluginOpen?: () => Promise<void>;
+  onScriptPluginOpen?: (space: Space) => Promise<void>;
 }) => {
   const client = useClient();
   // TODO(mykola): Use ToolbarMenu from @dxos/react-ui-menu.
   const [createState, setCreateState] = useState<CreationState>(CreationState.IDLE);
+  const [lastSpace, setLastSpace] = useState<Space>();
 
   const handleSpaceCreate = async () => {
     setCreateState(CreationState.PENDING);
@@ -54,6 +55,7 @@ export const TestingPanel = ({
         log.warn('space not found', { spaceId: response.spaceId });
         return;
       }
+      setLastSpace(space);
       await onSpaceCreate?.(space);
     } catch (error) {
       setCreateState(CreationState.ERROR);
@@ -62,7 +64,11 @@ export const TestingPanel = ({
   };
 
   const handleScriptPluginOpen = async () => {
-    await onScriptPluginOpen?.();
+    if (!lastSpace) {
+      log.warn('no space');
+      return;
+    }
+    await onScriptPluginOpen?.(lastSpace);
   };
 
   return (
@@ -79,7 +85,6 @@ export const TestingPanel = ({
         {createState === CreationState.ERROR && <Icon icon='ph--warning-circle--regular' />}
       </div>
 
-      {/* Open script plugin plank */}
       <IconButton icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
     </PanelContainer>
   );

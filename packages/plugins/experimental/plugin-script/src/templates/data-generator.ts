@@ -34,14 +34,14 @@ export type DocumentType = S.Schema.Type<typeof DocumentType>;
 
 export default defineFunction({
   inputSchema: S.Struct({
-    documentAmount: S.Number,
-    textSize: S.Number,
-    mutationAmount: S.Number,
+    documentAmount: S.optional(S.Number),
+    textSize: S.optional(S.Number),
+    mutationAmount: S.optional(S.Number),
   }),
 
   outputSchema: S.Struct({}),
 
-  handler: async ({ event: { documentAmount, textSize, mutationAmount }, context: { space } }: any) => {
+  handler: async ({ event: { documentAmount = 10, textSize = 100, mutationAmount = 0 }, context: { space } }: any) => {
     await space.db.graph.schemaRegistry.addSchema([Expando]);
 
     const objects = [];
@@ -61,5 +61,6 @@ export default defineFunction({
     }
 
     await space.db.flush();
+    return 'OK';
   },
 });
