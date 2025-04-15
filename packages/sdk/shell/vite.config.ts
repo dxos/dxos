@@ -5,6 +5,7 @@
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
+import WasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -52,6 +53,7 @@ export default defineConfig({
     }),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),
+    WasmPlugin(),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',
