@@ -21,7 +21,7 @@ export default () =>
         {
           id: `${fullyQualifiedId(meeting)}${SLUG_PATH_SEPARATOR}${getSchemaTypename(OutlineType)}`,
           type: COMPANION_TYPE,
-          data: meeting.artifacts[getSchemaTypename(OutlineType)!]?.target ?? meeting,
+          data: meeting.artifacts[getSchemaTypename(OutlineType)!]?.target,
           properties: {
             label: ['meeting notes label', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--note--regular',

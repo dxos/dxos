@@ -9,13 +9,21 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { MessageType } from '@dxos/schema';
 
-import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, ArtifactDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 import { CalendarType, ContactsType, EventType, InboxAction, MailboxType } from './types';
 
 export const InboxPlugin = () =>
   definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/state`,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
+      activate: InboxState,
+    }),
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,

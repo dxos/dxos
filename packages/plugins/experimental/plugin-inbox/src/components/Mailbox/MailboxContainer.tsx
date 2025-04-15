@@ -4,9 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { createIntent, useAppGraph, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckAction, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -14,8 +13,9 @@ import { StackItem } from '@dxos/react-ui-stack';
 import type { MessageType } from '@dxos/schema';
 
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
+import { InboxCapabilities } from '../../capabilities/capabilities';
 import { INBOX_PLUGIN } from '../../meta';
-import { type MailboxType, MessageState } from '../../types';
+import { InboxAction, type MailboxType, MessageState } from '../../types';
 
 export type MailboxContainerProps = {
   mailbox: MailboxType;
@@ -29,15 +29,9 @@ const byDate =
 export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const id = fullyQualifiedId(mailbox);
   const { t } = useTranslation(INBOX_PLUGIN);
-  const { graph } = useAppGraph();
-
+  const state = useCapability(InboxCapabilities.MailboxState);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-
-  const {
-    deck: { activeCompanions },
-  } = useCapability(DeckCapabilities.MutableDeckState);
-  const currentMessageId =
-    activeCompanions?.[id] && graph.findNode(`${id}${SLUG_PATH_SEPARATOR}message`)?.properties?.variantId;
+  const currentMessageId = state[id]?.id;
 
   const queue = useQueue<MessageType>(mailbox.queue.dxn, { pollInterval: 1_000 });
 
@@ -60,13 +54,17 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           break;
         }
         case 'current': {
-          const companionId = `${id}${SLUG_PATH_SEPARATOR}message`;
-          const companionNode = graph.findNode(companionId);
-          (companionNode!.properties as { variantId: string }).variantId = messageId;
+          const message = queue?.items?.find((message) => message.id === messageId);
+          void dispatch(
+            createIntent(InboxAction.SelectMessage, {
+              mailboxId: id,
+              message,
+            }),
+          );
           void dispatch(
             createIntent(DeckAction.ChangeCompanion, {
               primary: id,
-              companion: companionId,
+              companion: `${id}${SLUG_PATH_SEPARATOR}message`,
             }),
           );
           break;

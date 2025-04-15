@@ -101,7 +101,7 @@ export default (context: PluginsContext) =>
           {
             id: `${fullyQualifiedId(meeting)}${SLUG_PATH_SEPARATOR}${getSchemaTypename(TranscriptType)}`,
             type: COMPANION_TYPE,
-            data: meeting.artifacts[getSchemaTypename(TranscriptType)!]?.target ?? meeting,
+            data: meeting.artifacts[getSchemaTypename(TranscriptType)!]?.target,
             properties: {
               label: ['transcript companion label', { ns: TRANSCRIPTION_PLUGIN }],
               icon: 'ph--subtitles--regular',

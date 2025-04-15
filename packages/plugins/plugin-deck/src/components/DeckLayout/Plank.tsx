@@ -52,26 +52,26 @@ export type PlankProps = {
   order?: number;
   active?: string[];
   layoutMode: LayoutMode;
+};
+
+type PlankImplProps = Omit<PlankProps, 'id' | 'companionId' | 'part'> & {
+  id: string;
+  part: ResolvedPart;
+  node?: Node;
+  companioned?: 'primary' | 'companion';
+  primary?: Node;
   companions?: Node[];
 };
 
-type PlankImplProps = Omit<PlankProps, 'companionId' | 'part'> & {
-  part: ResolvedPart;
-  companioned?: 'primary' | 'companion';
-  primaryId?: string;
-};
-
 const PlankImpl = memo(
-  ({ id = UNKNOWN_ID, part, path, order, active, layoutMode, companioned, primaryId, companions }: PlankImplProps) => {
+  ({ id, node, part, path, order, active, layoutMode, companioned, primary, companions }: PlankImplProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
-    const { graph } = useAppGraph();
-    const node = useNode(graph, id);
     const rootElement = useRef<HTMLDivElement | null>(null);
     const canResize = layoutMode === 'deck';
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
 
-    const attendableAttrs = useAttendableAttributes(primaryId ?? id);
+    const attendableAttrs = useAttendableAttributes(primary?.id ?? id);
     const index = active ? active.findIndex((entryId) => entryId === id) : 0;
     const length = active?.length ?? 1;
     const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
@@ -117,12 +117,12 @@ const PlankImpl = memo(
       () =>
         node && {
           subject: node.data,
+          companionTo: primary?.data,
           variant: surfaceVariant,
-          variantId: node.properties.variantId,
           path,
           popoverAnchorId,
         },
-      [node, node?.data, node?.properties.variantId, path, popoverAnchorId, surfaceVariant],
+      [node, node?.data, path, popoverAnchorId, surfaceVariant, primary?.data],
     );
 
     // TODO(wittjosiah): Change prop to accept a component.
@@ -167,7 +167,7 @@ const PlankImpl = memo(
               canIncrementEnd={canIncrementEnd}
               popoverAnchorId={popoverAnchorId}
               companioned={companioned}
-              primaryId={primaryId}
+              primaryId={primary?.id}
               surfaceVariant={surfaceVariant}
               companions={companions}
             />
@@ -202,25 +202,35 @@ const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
   );
 };
 
-export const Plank = (props: PlankProps) => {
-  const companions = useCompanions(props.id);
+export const Plank = ({ id = UNKNOWN_ID, ...props }: PlankProps) => {
+  const { graph } = useAppGraph();
+  const node = useNode(graph, id);
+  const companions = useCompanions(id);
+  const currentCompanion = companions.find(({ id }) => id === props.companionId);
 
   if (props.companionId) {
     const Root = props.part === 'solo' ? SplitFrame : Fragment;
     return (
       <Root>
-        <PlankImpl {...props} {...(props.part === 'solo' ? { part: 'solo-primary' } : {})} companioned='primary' />
         <PlankImpl
+          id={id}
+          node={node}
+          companioned='primary'
+          {...props}
+          {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
+        />
+        <PlankImpl
+          id={props.companionId}
+          node={currentCompanion}
+          companioned='companion'
+          primary={node}
+          companions={companions}
           {...props}
           {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: props.order! + 1 })}
-          id={props.companionId}
-          primaryId={props.id}
-          companioned='companion'
-          companions={companions}
         />
       </Root>
     );
   } else {
-    return <PlankImpl {...props} companions={companions} />;
+    return <PlankImpl id={id} node={node} companions={companions} {...props} />;
   }
 };
