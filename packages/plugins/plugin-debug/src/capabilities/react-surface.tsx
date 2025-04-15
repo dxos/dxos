@@ -37,6 +37,7 @@ import {
   WorkflowPanel,
   QueuesPanel,
   InvocationTracePanel,
+  TestingPanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -333,6 +334,23 @@ export default (context: PluginsContext) =>
       component: () => {
         const space = useCurrentSpace();
         return <InvocationTracePanel space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/edge/testing`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Edge.Testing,
+      component: () => {
+        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const onSpaceCreate = useCallback(
+          async (space: Space) => {
+            await space.waitUntilReady();
+            await dispatch(createIntent(SpaceAction.Migrate, { space }));
+          },
+          [dispatch],
+        );
+        const onScriptPluginOpen = useCallback(async () => {}, [dispatch]);
+        return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
       },
     }),
   ]);
