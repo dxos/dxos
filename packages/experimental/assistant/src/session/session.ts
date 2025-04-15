@@ -157,7 +157,7 @@ export class AISession {
 
               const stepResults: any[] = [];
               for (const step of steps) {
-                log.info('executing step', { action: step.action });
+                log('executing step', { action: step.action });
                 const session = new AISession({ operationModel: 'immediate' });
                 session.message.on((ev) => this.message.emit(ev));
                 session.block.on((ev) => this.block.emit(ev));
