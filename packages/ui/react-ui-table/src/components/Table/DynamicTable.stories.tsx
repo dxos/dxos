@@ -9,7 +9,11 @@ import React, { useMemo, useState } from 'react';
 
 import { FormatEnum, type JsonSchemaType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+import { useClient } from '@dxos/react-client';
+import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
+import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DynamicTable } from './DynamicTable';
@@ -85,7 +89,6 @@ export const WithRowClicks: StoryObj = {
 
 export const WithJsonSchema: StoryObj = {
   render: () => {
-    // Define a JSON schema for the data
     const schema = useMemo<JsonSchemaType>(
       () => ({
         type: 'object',
@@ -100,7 +103,6 @@ export const WithJsonSchema: StoryObj = {
       [],
     );
 
-    // Generate sample data with the schema properties
     const [objects, _setObjects] = useState<any[]>(
       Array.from({ length: 15 }, () => ({
         name: faker.person.fullName(),
@@ -112,4 +114,36 @@ export const WithJsonSchema: StoryObj = {
 
     return <DynamicTable schema={schema} data={objects} tableName='com.example/json_schema_table' />;
   },
+};
+
+export const WithEchoSchema: StoryObj = {
+  render: () => {
+    const client = useClient();
+    const { space } = useClientProvider();
+    const schema = useSchema(client, space, Testing.ContactType.typename);
+    const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+
+    if (!schema) {
+      return <div>Loading schema...</div>;
+    }
+
+    return <DynamicTable schema={schema.jsonSchema} data={objects} tableName='contact-table' />;
+  },
+  decorators: [
+    withClientProvider({
+      types: [Testing.ContactType],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: async ({ space }) => {
+        Array.from({ length: 10 }).forEach(() => {
+          space.db.add(
+            create(Testing.ContactType, {
+              name: faker.person.fullName(),
+              email: faker.internet.email(),
+            }),
+          );
+        });
+      },
+    }),
+  ],
 };
