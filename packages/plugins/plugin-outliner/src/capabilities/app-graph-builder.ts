@@ -17,11 +17,11 @@ export default () =>
     createExtension({
       id: `${OUTLINER_PLUGIN}/meeting-notes`,
       filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data) && node.type !== COMPANION_TYPE,
-      connector: ({ node }) => [
+      connector: ({ node: { data: meeting } }) => [
         {
-          id: `${fullyQualifiedId(node.data)}${SLUG_PATH_SEPARATOR}${getSchemaTypename(OutlineType)}`,
+          id: `${fullyQualifiedId(meeting)}${SLUG_PATH_SEPARATOR}${getSchemaTypename(OutlineType)}`,
           type: COMPANION_TYPE,
-          data: node.data,
+          data: meeting.artifacts[getSchemaTypename(OutlineType)!]?.target ?? meeting,
           properties: {
             label: ['meeting notes label', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--note--regular',

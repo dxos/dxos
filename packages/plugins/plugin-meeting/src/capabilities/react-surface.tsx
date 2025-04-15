@@ -27,6 +27,10 @@ export default () =>
       position: 'fallback',
       filter: (data): data is { subject: MeetingType; variant: string } =>
         isInstanceOf(MeetingType, data.subject) && !!data.variant,
+      // TODO(wittjosiah): The plank should pass the data from the primary to the companion as `companionTo`.
+      //   This will prevent the companion graph nodes from needing to also point to the primary from data.
+      // filter: (data): data is { companionTo: MeetingType; subject: null } =>
+      //   isInstanceOf(MeetingType, data.companionTo) && !data.subject,
       component: ({ data }) => <MissingArtifact meeting={data.subject} typename={data.variant} />,
     }),
     createSurface({

@@ -17,8 +17,6 @@ import { type MeetingType } from '../types';
 export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
   const { t } = useTranslation(MEETING_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  // TODO(wittjosiah): The tabpanels can be blank if plugins are disabled.
-  //  Add placeholder with one click to enable required plugins.
   return (
     <StackItem.Content toolbar={true} classNames='relative'>
       {/* TODO(thure): This should provide a more usable experience out of the box. */}
@@ -29,6 +27,7 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
           label={t('open meeting companions label')}
           onClick={() => {
             const id = fullyQualifiedId(meeting);
+            // TODO(wittjosiah): This should not default to the summary companion but the first companion.
             return dispatch(
               createIntent(DeckAction.ChangeCompanion, {
                 primary: id,
