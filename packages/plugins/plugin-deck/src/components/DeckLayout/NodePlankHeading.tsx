@@ -2,15 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { untracked } from '@preact/signals-core';
-import React, { Fragment, memo, useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
+import React, { Fragment, memo, useCallback, useEffect, useMemo, type MouseEvent } from 'react';
 
 import { createIntent, LayoutAction, Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { isActionLike, type Node } from '@dxos/plugin-graph';
+import { type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
-import { byPosition } from '@dxos/util';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
@@ -30,12 +28,8 @@ export type NodePlankHeadingProps = {
   companioned?: 'primary' | 'companion';
   primaryId?: string;
   surfaceVariant?: string;
+  companions?: Node[];
 };
-
-const companionSiblingsFilter = (node: Node): node is Node =>
-  untracked(() => {
-    return !isActionLike(node) && node.type === COMPANION_TYPE;
-  });
 
 export const NodePlankHeading = memo(
   ({
@@ -50,6 +44,7 @@ export const NodePlankHeading = memo(
     companioned,
     primaryId,
     surfaceVariant,
+    companions,
   }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
     const { graph } = useAppGraph();
@@ -66,7 +61,6 @@ export const NodePlankHeading = memo(
           t,
         );
     const { dispatchPromise: dispatch } = useIntentDispatcher();
-    const [tabs, setTabs] = useState<Node[] | null>(null);
 
     const isCompanionNode = node?.type === COMPANION_TYPE;
 
@@ -74,16 +68,6 @@ export const NodePlankHeading = memo(
       const frame = requestAnimationFrame(() => {
         // Load actions for the node.
         node && graph.actions(node);
-        // Load siblings if this is a companion type
-        if (isCompanionNode) {
-          const primary = graph.nodes(node, { relation: 'inbound' });
-          const siblings = primary[0]
-            ? graph
-                .nodes(primary[0], { filter: companionSiblingsFilter })
-                .toSorted((a, b) => byPosition(a.properties, b.properties))
-            : [];
-          setTabs(siblings.length > 1 ? siblings : null);
-        }
       });
 
       return () => cancelAnimationFrame(frame);
@@ -96,8 +80,9 @@ export const NodePlankHeading = memo(
         solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
+        companion: !isCompanionNode && companions && companions.length > 0,
       }),
-      [breakpoint, part, canIncrementStart, canIncrementEnd],
+      [breakpoint, part, canIncrementStart, canIncrementEnd, isCompanionNode, companions],
     );
 
     const sigilActions = useMemo(
@@ -161,9 +146,9 @@ export const NodePlankHeading = memo(
           surfaceVariant && 'pis-3',
         ]}
       >
-        {tabs ? (
+        {companions && isCompanionNode ? (
           <div role='none' className='plb-1 flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-2'>
-            {tabs.map(({ id, properties: { icon, label } }) => (
+            {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}
                 data-id={id}

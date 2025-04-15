@@ -22,7 +22,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
-import { useNode } from '@dxos/plugin-graph';
+import { useNode, type Node } from '@dxos/plugin-graph';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
@@ -40,6 +40,7 @@ import {
   type ResolvedPart,
   SLUG_PATH_SEPARATOR,
 } from '../../types';
+import { useCompanions } from '../../util';
 
 const UNKNOWN_ID = 'unknown_id';
 
@@ -51,6 +52,7 @@ export type PlankProps = {
   order?: number;
   active?: string[];
   layoutMode: LayoutMode;
+  companions?: Node[];
 };
 
 type PlankImplProps = Omit<PlankProps, 'companionId' | 'part'> & {
@@ -60,7 +62,7 @@ type PlankImplProps = Omit<PlankProps, 'companionId' | 'part'> & {
 };
 
 const PlankImpl = memo(
-  ({ id = UNKNOWN_ID, part, path, order, active, layoutMode, companioned, primaryId }: PlankImplProps) => {
+  ({ id = UNKNOWN_ID, part, path, order, active, layoutMode, companioned, primaryId, companions }: PlankImplProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
     const { graph } = useAppGraph();
@@ -167,6 +169,7 @@ const PlankImpl = memo(
               companioned={companioned}
               primaryId={primaryId}
               surfaceVariant={surfaceVariant}
+              companions={companions}
             />
             <Surface
               key={node.id}
@@ -200,6 +203,8 @@ const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const Plank = (props: PlankProps) => {
+  const companions = useCompanions(props.id);
+
   if (props.companionId) {
     const Root = props.part === 'solo' ? SplitFrame : Fragment;
     return (
@@ -211,10 +216,11 @@ export const Plank = (props: PlankProps) => {
           id={props.companionId}
           primaryId={props.id}
           companioned='companion'
+          companions={companions}
         />
       </Root>
     );
   } else {
-    return <PlankImpl {...props} />;
+    return <PlankImpl {...props} companions={companions} />;
   }
 };

@@ -29,7 +29,7 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
     }
   }, [roomId, call.joined, call.roomId]);
 
-  const companions = useCompanions(meeting);
+  const companions = useCompanions(meeting && fullyQualifiedId(meeting));
   const handleJoin = useCallback(() => {
     companions.forEach((companion) => {
       companion.properties.onJoin?.(roomId);
