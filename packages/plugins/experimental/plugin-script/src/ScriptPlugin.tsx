@@ -14,7 +14,14 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { ArtifactDefinition, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
+import {
+  ArtifactDefinition,
+  Compiler,
+  IntentResolver,
+  ReactSurface,
+  ScriptSettings,
+  AppGraphBuilder,
+} from './capabilities';
 import { ScriptEvents } from './events';
 import { meta, SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
@@ -49,6 +56,11 @@ export const ScriptPlugin = () =>
             loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),
           },
         }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panels`,
