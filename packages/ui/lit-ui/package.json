@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
+    "@lit/react": "^1.0.5",
     "lit": "^3.2.0"
   },
   "devDependencies": {

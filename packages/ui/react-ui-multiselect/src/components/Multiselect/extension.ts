@@ -59,7 +59,6 @@ const scrollToCursor = (view: EditorView) => {
 };
 
 export type MultiselectOptions = {
-  render: (el: HTMLElement, props: PillProps) => void;
   debug?: boolean;
   onSelect?: (id: string) => void;
   onSearch?: (text: string, ids: string[]) => MultiselectItem[];
@@ -69,7 +68,7 @@ export type MultiselectOptions = {
 /**
  * Uses the markdown parser to parse links, which are decorated as pill buttons.
  */
-export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: MultiselectOptions): Extension => {
+export const multiselect = ({ debug, onSelect, onSearch, onUpdate }: MultiselectOptions): Extension => {
   /** Ordered list of ids. */
   const ids: string[] = [];
   /** Range spans for each id. */
@@ -136,20 +135,26 @@ export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: Mul
                     from,
                     to,
                     Decoration.replace({
-                      widget: new ItemWidget(render, {
-                        item,
-                        onSelect: (item) => {
-                          onSelect?.(item.id);
-                          const span = itemSpan.get(item.id);
-                          if (span) {
-                            view.dispatch({ selection: { anchor: span.to } });
-                          }
-                        },
-                        onDelete: () => {
-                          const span = itemSpan.get(item.id);
-                          if (span) {
-                            view.dispatch({ changes: { from: span.from, to: span.to, insert: '' } });
-                            view.focus();
+                      widget: new ItemWidget({
+                        itemId: item.id,
+                        label: item.label,
+                        onItemClick: ({ action, itemId }) => {
+                          const span = itemSpan.get(itemId);
+                          switch (action) {
+                            case 'activate': {
+                              onSelect?.(itemId);
+                              if (span) {
+                                view.dispatch({ selection: { anchor: span.to } });
+                              }
+                              break;
+                            }
+                            case 'remove': {
+                              if (span) {
+                                view.dispatch({ changes: { from: span.from, to: span.to, insert: '' } });
+                                view.focus();
+                              }
+                              break;
+                            }
                           }
                         },
                       }),
@@ -201,22 +206,28 @@ export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: Mul
 };
 
 class ItemWidget extends WidgetType {
-  constructor(
-    private readonly render: MultiselectOptions['render'],
-    private readonly props: PillProps,
-  ) {
+  private itemId: PillProps['itemId'] = 'never';
+  private label: PillProps['label'] = 'never';
+  private onItemClick: PillProps['onItemClick'];
+  constructor(props: Pick<PillProps, 'itemId' | 'label' | 'onItemClick'>) {
     super();
+    this.itemId = props.itemId ?? 'never';
+    this.label = props.label ?? 'never';
+    this.onItemClick = props.onItemClick;
   }
 
   // Prevents re-rendering.
   override eq(widget: this) {
-    return widget.props.item.id === this.props.item.id;
+    return widget.itemId === this.itemId;
   }
 
   toDOM() {
-    const el = document.createElement('span');
-    el.className = 'cm-item';
-    this.render(el, this.props);
+    const el = document.createElement('dx-tag-picker-item');
+    el.setAttribute('itemId', this.itemId ?? 'never');
+    el.setAttribute('label', this.label ?? 'never');
+    if (this.onItemClick) {
+      el.addEventListener('dx-tag-picker-item-click', this.onItemClick as any);
+    }
     return el;
   }
 }

@@ -10816,6 +10816,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../primitives/react-hooks
+      '@lit/react':
+        specifier: ^1.0.5
+        version: 1.0.5(@types/react@18.2.79)
       lit:
         specifier: ^3.2.0
         version: 3.2.0
@@ -12441,6 +12444,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.34.1
         version: 6.34.1
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

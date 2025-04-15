@@ -29,6 +29,7 @@
     "@codemirror/search": "^6.5.6",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.34.1",
+    "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "react-resize-detector": "^11.0.1"

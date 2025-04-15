@@ -2,33 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { type ComponentPropsWithRef } from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { createComponent, type EventName, DxTagPickerItem, type DxTagPickerItemClick } from '@dxos/lit-ui';
 
-import { type MultiselectItem } from './extension';
+export const Pill = createComponent({
+  tagName: 'dx-tag-picker-item',
+  elementClass: DxTagPickerItem,
+  react: React,
+  events: {
+    onItemClick: 'dx-tag-picker-item-click' as EventName<DxTagPickerItemClick>,
+  },
+});
 
-export type PillProps = ThemedClassName<{
-  item: MultiselectItem;
-  onSelect: (item: MultiselectItem) => void;
-  onDelete?: (item: MultiselectItem) => void;
-}>;
-
-export const Pill: FC<PillProps> = ({ classNames, item, onSelect, onDelete }) => {
-  return (
-    <span
-      className={mx('border border-separator rounded-md px-1 py-0.5 cursor-pointer hover:bg-hoverSurface', classNames)}
-    >
-      {/* TODO(burdon): Truncate max width. */}
-      <span onClick={() => onSelect(item)}>{item.label}</span>
-      {onDelete && (
-        <Icon
-          icon='ph--x--regular'
-          classNames='inline-block mis-0.5 p-0 opacity-50 hover:opacity-100 cursor-pointer'
-          onClick={() => onDelete(item)}
-        />
-      )}
-    </span>
-  );
-};
+export type PillProps = ComponentPropsWithRef<typeof Pill>;
