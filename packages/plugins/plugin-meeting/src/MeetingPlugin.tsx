@@ -42,7 +42,7 @@ export const MeetingPlugin = () =>
           metadata: {
             label: (object: any) =>
               isInstanceOf(MeetingType, object) ? object.name || new Date(object.created).toLocaleString() : undefined,
-            icon: 'ph--video-conference--regular',
+            icon: 'ph--phone--regular',
           },
         }),
       ],

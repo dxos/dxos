@@ -3,11 +3,11 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import React, { Fragment, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, memo, useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
 
 import { createIntent, LayoutAction, Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { isActionLike, type Node } from '@dxos/plugin-graph';
-import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
@@ -127,46 +127,81 @@ export const NodePlankHeading = memo(
       [dispatch, id, part],
     );
 
-    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot =
+      node && !surfaceVariant && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}`
+        ? Popover.Anchor
+        : Fragment;
+
+    const handleTabClick = useCallback(
+      (event: MouseEvent) => {
+        const target = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
+        const tabId = target?.dataset?.id;
+        if (primaryId && tabId) {
+          void dispatch(
+            createIntent(DeckAction.ChangeCompanion, {
+              primary: primaryId,
+              companion: tabId,
+            }),
+          );
+        }
+      },
+      [primaryId],
+    );
 
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag',
+          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 layout-contain',
           part === 'solo' ? soloInlinePadding : 'pli-1',
           surfaceVariant && 'pis-3',
         ]}
       >
-        {!surfaceVariant && (
-          <ActionRoot>
-            {node && sigilActions ? (
-              <StackItem.Sigil
+        {tabs ? (
+          <div role='none' className='plb-1 flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-2'>
+            {tabs.map(({ id, properties: { icon, label } }) => (
+              <IconButton
+                key={id}
+                data-id={id}
                 icon={icon}
-                related={part === 'complementary'}
+                label={toLocalizedString(label, t)}
+                size={5}
+                variant={node?.id === id ? 'primary' : 'default'}
+                onClick={handleTabClick}
+              />
+            ))}
+          </div>
+        ) : (
+          <>
+            <ActionRoot>
+              {node && sigilActions ? (
+                <StackItem.Sigil
+                  icon={icon}
+                  related={part === 'complementary'}
+                  attendableId={attendableId}
+                  triggerLabel={t('actions menu label')}
+                  actions={sigilActions}
+                  onAction={handleAction}
+                >
+                  <Surface role='menu-footer' data={{ subject: node.data }} />
+                </StackItem.Sigil>
+              ) : (
+                <StackItem.SigilButton>
+                  <span className='sr-only'>{label}</span>
+                  <Icon icon={icon} size={5} />
+                </StackItem.SigilButton>
+              )}
+            </ActionRoot>
+            <TextTooltip text={label} onlyWhenTruncating>
+              <StackItem.HeadingLabel
                 attendableId={attendableId}
-                triggerLabel={t('actions menu label')}
-                actions={sigilActions}
-                onAction={handleAction}
+                related={part === 'complementary'}
+                {...(pending && { classNames: 'text-description' })}
               >
-                <Surface role='menu-footer' data={{ subject: node.data }} />
-              </StackItem.Sigil>
-            ) : (
-              <StackItem.SigilButton>
-                <span className='sr-only'>{label}</span>
-                <Icon icon={icon} size={5} />
-              </StackItem.SigilButton>
-            )}
-          </ActionRoot>
+                {label}
+              </StackItem.HeadingLabel>
+            </TextTooltip>
+          </>
         )}
-        <TextTooltip text={label} onlyWhenTruncating>
-          <StackItem.HeadingLabel
-            attendableId={attendableId}
-            related={part === 'complementary'}
-            {...(pending && { classNames: 'text-description' })}
-          >
-            {label}
-          </StackItem.HeadingLabel>
-        </TextTooltip>
         {node && part !== 'complementary' && <Surface role='navbar-end' data={{ subject: node.data }} />}
         {companioned === 'companion' ? (
           <PlankCompanionControls primary={primaryId} />

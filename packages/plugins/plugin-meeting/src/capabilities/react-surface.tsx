@@ -22,23 +22,30 @@ export default () =>
       component: ({ data }) => <MeetingContainer meeting={data.subject} />,
     }),
     createSurface({
-      id: `${MEETING_PLUGIN}/meeting-summary`,
-      role: 'article',
-      filter: (data): data is { subject: MeetingType; variant: 'summary' } =>
-        isInstanceOf(MeetingType, data.subject) &&
-        data.variant === 'summary' &&
-        isInstanceOf(DocumentType, data.subject.artifacts[getSchemaTypename(DocumentType)!]?.target),
-      component: ({ data }) => (
-        <Surface subject={data.subject.artifacts[getSchemaTypename(DocumentType)!].target} role='article' limit={1} />
-      ),
-    }),
-    createSurface({
       id: `${MEETING_PLUGIN}/missing-companion`,
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: MeetingType; variant: string } =>
         isInstanceOf(MeetingType, data.subject) && !!data.variant,
       component: ({ data }) => <MissingArtifact meeting={data.subject} typename={data.variant} />,
+    }),
+    createSurface({
+      id: `${MEETING_PLUGIN}/meeting-summary`,
+      role: 'article',
+      filter: (data): data is { subject: MeetingType; variant: 'summary' } =>
+        isInstanceOf(MeetingType, data.subject) &&
+        data.variant === 'summary' &&
+        isInstanceOf(DocumentType, data.subject.artifacts[getSchemaTypename(DocumentType)!]?.target),
+      component: ({ data }) => {
+        console.log(
+          '[meeting summary]',
+          data.subject.artifacts[getSchemaTypename(DocumentType)!].target,
+          '(why doesn’t this render?)',
+        );
+        return (
+          <Surface subject={data.subject.artifacts[getSchemaTypename(DocumentType)!].target} role='article' limit={1} />
+        );
+      },
     }),
     createSurface({
       id: `${MEETING_PLUGIN}/assistant`,

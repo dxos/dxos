@@ -23,6 +23,7 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
     <StackItem.Content toolbar={true} classNames='relative'>
       {/* TODO(thure): This should provide a more usable experience out of the box. */}
       <Toolbar.Root>
+        <Toolbar.Separator variant='gap' />
         <Toolbar.IconButton
           icon='ph--book-open-text--regular'
           label={t('open meeting companions label')}
