@@ -21,6 +21,9 @@ export default defineConfig({
     },
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
+      output: {
+        format: 'es',
+      },
       external: [
         '@dxos/client',
         '@dxos/client/echo',
