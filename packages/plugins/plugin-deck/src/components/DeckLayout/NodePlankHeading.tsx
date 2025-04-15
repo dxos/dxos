@@ -10,6 +10,7 @@ import { isActionLike, type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
+import { byPosition } from '@dxos/util';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
@@ -76,7 +77,11 @@ export const NodePlankHeading = memo(
         // Load siblings if this is a companion type
         if (isCompanionNode) {
           const primary = graph.nodes(node, { relation: 'inbound' });
-          const siblings = primary[0] ? graph.nodes(primary[0], { filter: companionSiblingsFilter }) : [];
+          const siblings = primary[0]
+            ? graph
+                .nodes(primary[0], { filter: companionSiblingsFilter })
+                .toSorted((a, b) => byPosition(a.properties, b.properties))
+            : [];
           setTabs(siblings.length > 1 ? siblings : null);
         }
       });
