@@ -79,10 +79,6 @@ export const defaultDeck = {
   companionFrameSizing: {},
 } satisfies Deck;
 
-export const surfaceVariantSeparator = '--';
-
-export const surfaceVariant = (id: string) => `${surfaceVariantSeparator}${id}`;
-
 export const DeckState = S.mutable(
   S.Struct({
     sidebarState: S.Literal('closed', 'collapsed', 'expanded'),
@@ -139,6 +135,7 @@ export const DECK_ACTION = `${DECK_PLUGIN}/action`;
 export namespace DeckAction {
   const PartAdjustmentSchema = S.Union(
     S.Literal('close').annotations({ description: 'Close the plank.' }),
+    S.Literal('companion').annotations({ description: 'Open the companion plank.' }),
     S.Literal('solo').annotations({ description: 'Solo the plank.' }),
     S.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
     S.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
