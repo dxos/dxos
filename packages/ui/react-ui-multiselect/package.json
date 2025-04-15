@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui-pickers",
+  "name": "@dxos/react-ui-multiselect",
   "version": "0.8.0",
-  "description": "A collection of picker components.",
+  "description": "A multiselect component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -23,12 +23,14 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "^6.18.1",
+    "@codemirror/lang-markdown": "^6.3.0",
+    "@codemirror/language": "^6.10.3",
+    "@codemirror/search": "^6.5.6",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.34.1",
     "@dxos/log": "workspace:*",
-    "@dxos/react-ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@emoji-mart/data": "^1.1.2",
-    "@emoji-mart/react": "^1.1.1",
-    "@radix-ui/react-use-controllable-state": "1.1.0",
+    "@dxos/react-ui-editor": "workspace:*",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
