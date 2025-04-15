@@ -27,7 +27,7 @@ export default () =>
       filter: (data): data is { subject: MeetingType; variant: 'summary' } =>
         isInstanceOf(MeetingType, data.subject) &&
         data.variant === 'summary' &&
-        isInstanceOf(DocumentType, data.subject.artifacts[getSchemaTypename(DocumentType)!].target),
+        isInstanceOf(DocumentType, data.subject.artifacts[getSchemaTypename(DocumentType)!]?.target),
       component: ({ data }) => (
         <Surface subject={data.subject.artifacts[getSchemaTypename(DocumentType)!].target} role='article' limit={1} />
       ),

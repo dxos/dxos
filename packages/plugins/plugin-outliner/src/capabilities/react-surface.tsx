@@ -37,7 +37,7 @@ export default () => [
       filter: (data): data is { subject: MeetingType } =>
         isInstanceOf(MeetingType, data.subject) &&
         data.variant === outlineTypename &&
-        isInstanceOf(OutlineType, data.subject.artifacts[outlineTypename].target),
+        isInstanceOf(OutlineType, data.subject.artifacts[outlineTypename]?.target),
       component: ({ data, role }) => {
         const outline = data.subject.artifacts[outlineTypename].target as OutlineType;
         return outline.tree.target ? <OutlinerContainer tree={outline.tree.target} role={role} /> : null;

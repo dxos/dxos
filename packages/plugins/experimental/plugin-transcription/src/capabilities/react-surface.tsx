@@ -28,7 +28,7 @@ export default () =>
       filter: (data): data is { subject: MeetingType } =>
         isInstanceOf(MeetingType, data.subject) &&
         data.variant === transcriptTypename &&
-        isTranscript(data.subject.artifacts[transcriptTypename].target),
+        isTranscript(data.subject.artifacts[transcriptTypename]?.target),
       component: ({ data, role }) => (
         <TranscriptionContainer
           transcript={data.subject.artifacts[transcriptTypename].target as TranscriptType}
