@@ -28,8 +28,7 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Many-to-many relations.
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
-// TODO(burdon): This util hook shouldn't be needed (move into API).
-// TODO(burdon): Base type (with id).
+// TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count: number) => {
   const table = useMemo(() => {
     // const { typename } = pipe(schema.ast, AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId), Option.getOrThrow);
@@ -44,7 +43,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
       return undefined;
     }
 
-    // TODO(burdon): Just pass in view?
+    // TODO(burdon): Just pass in view? Reuse same jsonSchema instance? View determines if mutable, etc.
     return new ViewProjection(schema.jsonSchema, table.view.target);
   }, [schema, table]);
 
