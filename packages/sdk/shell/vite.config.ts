@@ -18,6 +18,7 @@ export default defineConfig({
       name: 'Shell',
       fileName: 'shell',
     },
+    target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
       external: [
         '@dxos/client',
