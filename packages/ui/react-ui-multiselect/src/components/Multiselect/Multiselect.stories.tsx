@@ -24,7 +24,7 @@ const allItems: MultiselectItem[] = [
 ];
 
 const meta: Meta<typeof Multiselect> = {
-  title: 'ui/react-ui-pickers/Multiselect',
+  title: 'ui/react-ui-multiselect/Multiselect',
   component: Multiselect,
   render: ({ items: initialItems }) => {
     const [items, setItems] = useState(initialItems);
