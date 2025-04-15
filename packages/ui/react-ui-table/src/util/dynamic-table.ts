@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type JsonSchemaType, type SortDirectionType } from '@dxos/echo-schema';
+import type { BaseSchema, JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create, makeRef } from '@dxos/live-object';
 import {
@@ -28,16 +28,22 @@ type MakeDynamicTableProps = {
   typename: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchemaType;
+  echoSchema?: BaseSchema;
 };
 
-export const makeDynamicTable = ({ typename, properties, jsonSchema }: MakeDynamicTableProps) => {
+export const makeDynamicTable = ({ typename, properties, jsonSchema, echoSchema }: MakeDynamicTableProps) => {
   // TODO(ZaymonFC): It might be better to return undefined instead of throwing here.
-  invariant(properties || jsonSchema, 'Either properties or jsonSchema must be provided');
+  invariant(properties || jsonSchema || echoSchema);
 
   const table = create(TableType, { name: 'dynamic-table' });
-  const schema = properties
-    ? echoSchemaFromPropertyDefinitions(typename, properties)
-    : { typename, jsonSchema: jsonSchema! };
+  let schema;
+  if (properties) {
+    schema = echoSchemaFromPropertyDefinitions(typename, properties);
+  } else if (echoSchema) {
+    schema = echoSchema;
+  } else {
+    schema = { typename, jsonSchema: jsonSchema! };
+  }
 
   const view = createView({
     name: 'dynamic-table',

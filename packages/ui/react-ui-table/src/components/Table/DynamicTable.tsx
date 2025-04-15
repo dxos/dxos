@@ -4,7 +4,7 @@
 
 import React, { useRef, useMemo, useCallback } from 'react';
 
-import { type JsonSchemaType } from '@dxos/echo-schema';
+import { type BaseSchema, type JsonSchemaType } from '@dxos/echo-schema';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Table, type TableController } from './Table';
@@ -15,7 +15,8 @@ import { makeDynamicTable, type TablePropertyDefinition } from '../../util';
 type DynamicTableProps = {
   data: any[];
   properties?: TablePropertyDefinition[];
-  schema?: JsonSchemaType;
+  jsonSchema?: JsonSchemaType;
+  echoSchema?: BaseSchema;
   tableName?: string;
   classNames?: string;
   rowActions?: TableRowAction[];
@@ -30,7 +31,8 @@ type DynamicTableProps = {
 export const DynamicTable = ({
   data,
   properties,
-  schema,
+  jsonSchema,
+  echoSchema,
   classNames,
   tableName = 'com.example/dynamic_table',
   rowActions,
@@ -38,8 +40,8 @@ export const DynamicTable = ({
   onRowAction,
 }: DynamicTableProps) => {
   const { table, viewProjection } = useMemo(() => {
-    return makeDynamicTable({ typename: tableName, properties, jsonSchema: schema });
-  }, [tableName, properties, schema]);
+    return makeDynamicTable({ typename: tableName, properties, jsonSchema, echoSchema });
+  }, [tableName, properties, jsonSchema]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {

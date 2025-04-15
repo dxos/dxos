@@ -112,7 +112,7 @@ export const WithJsonSchema: StoryObj = {
       })),
     );
 
-    return <DynamicTable schema={schema} data={objects} tableName='com.example/json_schema_table' />;
+    return <DynamicTable jsonSchema={schema} data={objects} tableName='com.example/json_schema_table' />;
   },
 };
 
@@ -127,7 +127,8 @@ export const WithEchoSchema: StoryObj = {
       return <div>Loading schema...</div>;
     }
 
-    return <DynamicTable schema={schema.jsonSchema} data={objects} tableName='contact-table' />;
+    // Pass the Echo schema directly instead of extracting jsonSchema
+    return <DynamicTable echoSchema={schema} data={objects} tableName='contact-table' />;
   },
   decorators: [
     withClientProvider({
