@@ -21,7 +21,7 @@ export default () => [
     }),
     createSurface({
       id: `${OUTLINER_PLUGIN}/article/outline`,
-      role: ['article', 'section', 'tabpanel'],
+      role: ['article', 'section'],
       filter: (data): data is { subject: OutlineType } => isInstanceOf(OutlineType, data.subject),
       component: ({ data, role }) => {
         const outline = data.subject;
