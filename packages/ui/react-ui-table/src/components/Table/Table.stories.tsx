@@ -5,9 +5,9 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
-import { FormatEnum, ImmutableSchema } from '@dxos/echo-schema';
+import { ImmutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -17,11 +17,10 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type SchemaPropertyDefinition, ViewProjection, ViewType } from '@dxos/schema';
+import { ViewProjection, ViewType } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { DynamicTable as DynamicTableComponent } from './DynamicTable';
 import { Table, type TableController } from './Table';
 import { useTableModel, type UseTableModelParams } from '../../hooks';
 import { TablePresentation } from '../../model';
@@ -174,26 +173,6 @@ const DefaultStory = () => {
   );
 };
 
-// TODO(burdon): Move to separate story.
-const DynamicTableStory = () => {
-  const properties = useMemo<SchemaPropertyDefinition[]>(
-    () => [
-      { name: 'name', format: FormatEnum.String },
-      { name: 'age', format: FormatEnum.Number },
-    ],
-    [],
-  );
-
-  const [objects, _setObjects] = useState<any[]>(
-    Array.from({ length: 100 }, () => ({
-      name: faker.person.fullName(),
-      age: faker.number.int({ min: 18, max: 80 }),
-    })),
-  );
-
-  return <DynamicTableComponent properties={properties} data={objects} />;
-};
-
 type StoryProps = {
   rows?: number;
 } & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
@@ -297,10 +276,6 @@ export const StaticSchema: StoryObj = {
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
   ],
-};
-
-export const DynamicTable: StoryObj = {
-  render: DynamicTableStory,
 };
 
 // TODO(ZaymonFC): Restore the performance stories.
