@@ -9,5 +9,6 @@ export const IntentResolver = lazy(() => import('./intent-resolver'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 export const ScriptSettings = lazy(() => import('./settings'));
 export const ArtifactDefinition = lazy(() => import('./artifact-definition'));
+export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
 
 export * from './capabilities';

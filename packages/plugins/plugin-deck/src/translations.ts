@@ -47,6 +47,7 @@ export default [
         'show solo plank label': 'Maximize',
         'close label': 'Close',
         'minify label': 'Minify',
+        'companion label': 'Open companion',
         'settings overscroll label': 'Plank scrolling',
         'select overscroll placeholder': 'Select plank scrolling behavior',
         'settings overscroll centering label': 'Centering',

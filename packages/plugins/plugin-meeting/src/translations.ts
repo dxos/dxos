@@ -18,6 +18,7 @@ export default [
         'meeting panel label': 'Active Meeting',
         'meeting activity label': 'Meeting',
         'meetings label': 'All Meetings',
+        'open meeting companions label': 'Meeting tools',
 
         'call tab label': 'Call',
 

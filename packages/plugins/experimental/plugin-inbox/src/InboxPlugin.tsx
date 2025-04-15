@@ -9,13 +9,21 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { MessageType } from '@dxos/schema';
 
-import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
-import { INBOX_PLUGIN, meta } from './meta';
+import { AppGraphBuilder, ArtifactDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
+import { meta } from './meta';
 import translations from './translations';
 import { CalendarType, ContactsType, EventType, InboxAction, MailboxType } from './types';
 
 export const InboxPlugin = () =>
   definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/state`,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
+      activate: InboxState,
+    }),
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
@@ -28,14 +36,7 @@ export const InboxPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: MailboxType.typename,
           metadata: {
-            icon: 'ph--envelope--regular',
-            graphProps: {
-              startsWithCompanionSurfaceVariant: 'firstMessage',
-              surfaceVariantLabel: (surfaceVariant: string = '') => {
-                const [variant, _] = surfaceVariant.split('-');
-                return [`${variant} plank heading`, { ns: INBOX_PLUGIN }];
-              },
-            },
+            icon: 'ph--tray--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -91,6 +92,11 @@ export const InboxPlugin = () =>
           }),
         ),
       ],
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

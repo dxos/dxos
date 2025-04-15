@@ -30,6 +30,7 @@ export const CallToolbar = ({ meeting }: CallToolbarProps) => {
   const actions = node ? graph.actions(node).filter((action) => action.properties.disposition === 'toolbar') : [];
   const companions = node ? graph.nodes(node, { type: COMPANION_TYPE }) : [];
 
+  // TODO(thure): Should these be intents rather than callbacks?
   useEffect(() => {
     const unsubscribeLeft = call.left.on((roomId) => {
       companions.forEach((companion) => {

@@ -3,6 +3,7 @@
 //
 
 import { S } from '@dxos/echo-schema';
+import { MessageType } from '@dxos/schema';
 
 import { CalendarType } from './calendar';
 import { ContactsType } from './contacts';
@@ -22,6 +23,7 @@ export namespace InboxAction {
     }),
   }) {}
 
+  // TODO(wittjosiah): Remove.
   export class CreateContacts extends S.TaggedClass<CreateContacts>()(`${INBOX_ACTION}/create-contacts`, {
     input: S.Struct({
       name: S.optional(S.String),
@@ -38,5 +40,13 @@ export namespace InboxAction {
     output: S.Struct({
       object: CalendarType,
     }),
+  }) {}
+
+  export class SelectMessage extends S.TaggedClass<SelectMessage>()(`${INBOX_ACTION}/select-message`, {
+    input: S.Struct({
+      mailboxId: S.String,
+      message: S.optional(MessageType),
+    }),
+    output: S.Void,
   }) {}
 }
