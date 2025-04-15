@@ -5,13 +5,13 @@
 import React, { useCallback, useEffect, type FC } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
+import { useCompanions } from '@dxos/plugin-deck';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Call } from './Call';
 import { Lobby } from './Lobby';
 import { MeetingCapabilities } from '../capabilities';
-import { useCompanions } from '../hooks';
 import { type MeetingType } from '../types';
 
 export type CallContainerProps = {
