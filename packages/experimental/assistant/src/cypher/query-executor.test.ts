@@ -12,10 +12,10 @@ import { createTestData } from '../testing';
 test.skip('run', async ({ expect }) => {
   const dataSource = createTestData();
   // for (const node of dataSource.nodes) {
-  //   log.info('node', { id: node.id, label: node.label, name: node.properties.name });
+  //   log('node', { id: node.id, label: node.label, name: node.properties.name });
   // }
   // for (const relationship of dataSource.relationships) {
-  //   log.info('relationship', {
+  //   log('relationship', {
   //     source: relationship.source.id,
   //     target: relationship.target.id,
   //     label: relationship.label,
@@ -43,5 +43,5 @@ test.skip('run', async ({ expect }) => {
     },
   ]);
 
-  log.info('result', { result });
+  log('result', { result });
 });

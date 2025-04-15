@@ -179,7 +179,7 @@ export class OllamaClient implements AIServiceClient {
       }
     }
 
-    log.info('generate request', { history: request.history, prompt: request.prompt, ollamaRequest });
+    log('generate request', { history: request.history, prompt: request.prompt, ollamaRequest });
 
     const response = await fetch(`${this._endpoint}/api/chat`, {
       method: 'POST',

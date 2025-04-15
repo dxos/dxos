@@ -37,7 +37,7 @@ const FileContainer = ({ file, role }: { file: FileType; role: string }) => {
   }
 
   return (
-    <StackItem.Content role={role} toolbar={false}>
+    <StackItem.Content role={role}>
       <FilePreview type={file.type} url={blobUrl} />
     </StackItem.Content>
   );

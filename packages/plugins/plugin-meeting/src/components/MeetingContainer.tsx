@@ -11,7 +11,7 @@ import { type MeetingType } from '../types';
 
 export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
   return (
-    <StackItem.Content toolbar={false} classNames='relative'>
+    <StackItem.Content classNames='relative'>
       <CallContainer meeting={meeting} />
     </StackItem.Content>
   );

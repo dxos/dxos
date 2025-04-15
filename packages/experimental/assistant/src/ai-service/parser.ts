@@ -83,7 +83,7 @@ export class MixedStreamParser {
       log('streamEvent', { event });
       this.streamEvent.emit(event);
 
-      // log.info('event', { type: event.type, event });
+      // log('event', { type: event.type, event });
       switch (event.type) {
         //
         // Messages.

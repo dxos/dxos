@@ -116,9 +116,6 @@
       "path": "../../ui/react-ui-types"
     },
     {
-      "path": "../experimental/plugin-script"
-    },
-    {
       "path": "../plugin-attention"
     },
     {
@@ -129,6 +126,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-script"
     },
     {
       "path": "../plugin-space"
