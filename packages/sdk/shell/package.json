@@ -10,8 +10,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/bundle/shell.js",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/bundle/shell.js"
     },
     "./style.css": "./dist/bundle/style.css",
     "./react": {
@@ -87,8 +87,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "5.4.7",
-    "vite-plugin-wasm": "^3.3.0"
+    "vite": "5.4.7"
   },
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",

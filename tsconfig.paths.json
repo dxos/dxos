@@ -319,6 +319,9 @@
       "@dxos/react-ui-menu": [
         "packages/ui/react-ui-menu/src/index.ts"
       ],
+      "@dxos/react-ui-multiselect": [
+        "packages/ui/react-ui-multiselect/src/index.ts"
+      ],
       "@dxos/react-ui-pickers": [
         "packages/ui/react-ui-pickers/src/index.ts"
       ],
