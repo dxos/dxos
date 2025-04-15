@@ -37,13 +37,12 @@ export default () =>
         data.variant === 'summary' &&
         isInstanceOf(DocumentType, data.subject.artifacts[getSchemaTypename(DocumentType)!]?.target),
       component: ({ data }) => {
-        console.log(
-          '[meeting summary]',
-          data.subject.artifacts[getSchemaTypename(DocumentType)!].target,
-          '(why doesn’t this render?)',
-        );
         return (
-          <Surface subject={data.subject.artifacts[getSchemaTypename(DocumentType)!].target} role='article' limit={1} />
+          <Surface
+            data={{ subject: data.subject.artifacts[getSchemaTypename(DocumentType)!].target }}
+            role='article'
+            limit={1}
+          />
         );
       },
     }),
