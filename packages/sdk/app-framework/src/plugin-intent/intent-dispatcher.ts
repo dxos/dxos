@@ -83,7 +83,9 @@ export type IntentDispatcherResult<Input, Output> = Pick<IntentEffectResult<Inpu
 export type IntentEffectDefinition<Input, Output> = (
   data: Input,
   undo: boolean,
-) => MaybePromise<IntentEffectResult<Input, Output> | void> | Effect.Effect<IntentEffectResult<Input, Output> | void>;
+) =>
+  | MaybePromise<IntentEffectResult<Input, Output> | void>
+  | Effect.Effect<IntentEffectResult<Input, Output> | void, Error>;
 
 /**
  * Intent resolver to match intents to their effects.

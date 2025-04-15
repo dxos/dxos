@@ -22,6 +22,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
+import { useNode } from '@dxos/plugin-graph';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
@@ -30,7 +31,7 @@ import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { DeckCapabilities } from '../../capabilities';
-import { useNode, useMainSize } from '../../hooks';
+import { useMainSize } from '../../hooks';
 import { DeckAction, type LayoutMode, type Part, type ResolvedPart, surfaceVariantSeparator } from '../../types';
 
 const UNKNOWN_ID = 'unknown_id';

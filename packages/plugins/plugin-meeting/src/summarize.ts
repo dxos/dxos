@@ -4,34 +4,30 @@
 
 import { Message } from '@dxos/artifact';
 import { DEFAULT_EDGE_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
-import { QueueImpl } from '@dxos/echo-db';
-import { createStatic, isInstanceOf } from '@dxos/echo-schema';
+import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type EdgeHttpClient } from '@dxos/react-edge-client';
+import { isNonNullable } from '@dxos/util';
 
-import { TranscriptBlock, type TranscriptType } from '../types';
+import { type MeetingType } from './types';
 
-export const summarizeTranscript = async (
-  edge: EdgeHttpClient,
-  ai: AIServiceClient,
-  transcript: TranscriptType,
-  // TODO(wittjosiah): Add additional context into the prompt.
-  context?: string,
-): Promise<string> => {
-  invariant(transcript.queue, 'No queue for transcript');
+export const getMeetingContent = async (meeting: MeetingType, resolve: (typename: string) => Record<string, any>) => {
+  const serializedArtifacts = await Promise.all(
+    Object.entries(meeting.artifacts).map(async ([typename, ref]) => {
+      const { getTextContent } = resolve(typename);
+      const artifact = await ref.load();
+      const content = await getTextContent?.(artifact);
+      return content;
+    }),
+  );
+  const content = serializedArtifacts.filter(isNonNullable).join('\n\n');
+  return content;
+};
 
-  const queue = new QueueImpl(edge, DXN.parse(transcript.queue));
-  await queue.refresh();
-  const content = queue.items
-    .filter((block) => isInstanceOf(TranscriptBlock, block))
-    .map((block) => `${block.authorName}: ${block.segments.map((segment) => segment.text).join('\n')}`)
-    .join('\n\n');
+export const summarizeTranscript = async (ai: AIServiceClient, content: string): Promise<string> => {
+  log.info('summarizing meeting', { contentLength: content.length });
 
   const parser = new MixedStreamParser();
-
-  log.info('summarizing transcript', { blockCount: queue.items.length });
   const output = await parser.parse(
     await ai.exec({
       model: DEFAULT_EDGE_MODEL,

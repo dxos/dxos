@@ -4,7 +4,7 @@
 
 import { buf } from '@dxos/protocols/buf';
 import {
-  type TranscriptionSchema,
+  type ActivitySchema,
   UserStateSchema,
   type UserState as UserStateProto,
 } from '@dxos/protocols/buf/dxos/edge/calls_pb';
@@ -16,7 +16,7 @@ export const CALLS_URL = 'https://calls-service.dxos.workers.dev';
 
 export type UserState = buf.MessageInitShape<typeof UserStateSchema>;
 
-export type TranscriptionState = buf.MessageInitShape<typeof TranscriptionSchema>;
+export type ActivityState = buf.MessageInitShape<typeof ActivitySchema>;
 
 export const codec = {
   encode: (message: UserState): Uint8Array => {

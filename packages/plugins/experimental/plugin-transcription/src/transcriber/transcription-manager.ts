@@ -11,8 +11,9 @@ import { DXN } from '@dxos/keys';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { type HuePalette } from '@dxos/react-ui-theme';
 
-import { MediaStreamRecorder, Transcriber } from './transcriber';
-import { TranscriptBlock, type TranscriptSegment } from './types';
+import { MediaStreamRecorder } from './media-stream-recorder';
+import { Transcriber } from './transcriber';
+import { TranscriptBlock, type TranscriptSegment } from '../types';
 
 /**
  * Length of the chunk in ms.
@@ -31,9 +32,9 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
 /**
- * Manages transcription state.
+ * Manages transcription state for a meeting.
  */
-// TODO(mykola): Reconcile with useTranscriber hook.
+// TODO(mykola): Reconcile with transcriber capability.
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private _audioStreamTrack?: MediaStreamTrack = undefined;

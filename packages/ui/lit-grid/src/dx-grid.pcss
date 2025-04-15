@@ -78,7 +78,12 @@
       cursor: pointer;
 
       &[aria-readonly='true'] {
+        cursor: default;
+      }
+
+      &[aria-readonly='true'][data-text-selectable='true'] {
         cursor: text;
+        user-select: text;
       }
 
       &:focus:not([aria-readonly='true']),

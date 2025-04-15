@@ -242,7 +242,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
         icon: 'ph--database--regular',
-        disposition: 'toolbar',
+        disposition: 'list-item-primary',
         disabled: migrating || Migrations.running(space),
       },
     });
@@ -277,7 +277,7 @@ export const constructSpaceActions = ({
           label: ['share space label', { ns: SPACE_PLUGIN }],
           icon: 'ph--users--regular',
           disabled: locked,
-          disposition: 'toolbar',
+          disposition: 'list-item-primary',
           iconOnly: false,
           variant: 'default',
           testId: 'spacePlugin.shareSpace',
@@ -357,7 +357,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['open space label', { ns: SPACE_PLUGIN }],
         icon: 'ph--clock-counter-clockwise--regular',
-        disposition: 'toolbar',
+        disposition: 'list-item-primary',
       },
     });
   }
@@ -433,7 +433,7 @@ export const constructObjectActions = ({
             properties: {
               label: ['create object in collection label', { ns: SPACE_PLUGIN }],
               icon: 'ph--plus--regular',
-              disposition: 'toolbar',
+              disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
             },
           },

@@ -19,7 +19,7 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${MARKDOWN_PLUGIN}/document`,
-      role: ['article', 'section'],
+      role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
       component: ({ data, role }) => {
         const settingsStore = useCapability(Capabilities.SettingsStore);

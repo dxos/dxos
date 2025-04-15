@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Completion } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
@@ -24,7 +25,7 @@ import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, getSize, mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace } from './defaults';
 import {
@@ -202,7 +203,7 @@ const text = str(
   '=== LAST LINE ===',
 );
 
-const links = [
+const links: Completion[] = [
   { label: 'DXOS', apply: '[DXOS](https://dxos.org)' },
   { label: 'GitHub', apply: '[DXOS GitHub](https://github.com/dxos)' },
   { label: 'Automerge', apply: '[Automerge](https://automerge.org/)' },
@@ -335,26 +336,22 @@ const DefaultStory = ({
   );
 };
 
-export default {
+const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-editor/TextEditor',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: DefaultStory,
   parameters: { translations, layout: 'fullscreen' },
 };
 
+export default meta;
+
 const defaultExtensions: Extension[] = [
-  autocomplete({
-    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-  }),
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
   linkTooltip(renderLinkTooltip),
 ];
 
 const allExtensions: Extension[] = [
-  autocomplete({
-    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-  }),
   decorateMarkdown({ numberedHeadings: { from: 2, to: 4 }, renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
   linkTooltip(renderLinkTooltip),
@@ -545,7 +542,9 @@ export const Autocomplete = {
       extensions={[
         decorateMarkdown({ renderLinkButton }),
         autocomplete({
-          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+          onSearch: (text) => {
+            return links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
+          },
         }),
       ]}
     />
@@ -618,10 +617,10 @@ export const Command = {
       text={str('# Command', '')}
       extensions={[
         command({
+          onHint: () => 'Press / for commands.',
           onRender: (el, onClose) => {
             renderRoot(el, <CommandDialog onClose={onClose} />);
           },
-          onHint: () => 'Press / for commands.',
         }),
       ]}
     />

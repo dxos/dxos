@@ -17,6 +17,7 @@ import {
   type DxGridAxis,
   type DxGridPlanePosition,
   separator,
+  type DxGridReadonlyValue,
 } from './types';
 
 export const toPlaneCellIndex = (cellCoords: Partial<DxGridPosition> & DxGridPlanePosition): DxGridPlaneCellIndex =>
@@ -204,3 +205,7 @@ export const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable)
   Number.isFinite(a.row) &&
   a.col === b.col &&
   a.row === b.row;
+
+export const isReadonly = (cellReadonly?: DxGridReadonlyValue) => {
+  return !(cellReadonly === false || cellReadonly === undefined);
+};

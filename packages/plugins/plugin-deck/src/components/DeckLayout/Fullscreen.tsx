@@ -5,11 +5,11 @@
 import React from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework';
+import { useNode } from '@dxos/plugin-graph';
 import { fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { Fallback } from './Fallback';
 import { SURFACE_PREFIX } from './constants';
-import { useNode } from '../../hooks';
 
 export const Fullscreen = ({ id }: { id?: string }) => {
   const { graph } = useAppGraph();

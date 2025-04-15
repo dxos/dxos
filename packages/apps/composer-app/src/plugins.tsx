@@ -19,7 +19,7 @@ import { FilesPlugin, FILES_PLUGIN } from '@dxos/plugin-files';
 import { GraphPlugin, GRAPH_PLUGIN } from '@dxos/plugin-graph';
 import { HelpPlugin, HELP_PLUGIN } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
-import { KanbanPlugin } from '@dxos/plugin-kanban';
+import { KanbanPlugin, KANBAN_PLUGIN } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin, MARKDOWN_PLUGIN } from '@dxos/plugin-markdown';
 import { MeetingPlugin, MEETING_PLUGIN } from '@dxos/plugin-meeting';
@@ -92,21 +92,26 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
 
 export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
-    isDev && DEBUG_PLUGIN,
-
     // Default
+    KANBAN_PLUGIN,
     MARKDOWN_PLUGIN,
-    MEETING_PLUGIN,
-    OUTLINER_PLUGIN,
     SHEET_PLUGIN,
     SKETCH_PLUGIN,
     TABLE_PLUGIN,
     THREAD_PLUGIN,
-    TRANSCRIPTION_PLUGIN,
     WNFS_PLUGIN,
 
+    // Dev
+    isDev && DEBUG_PLUGIN,
+
     // Labs
-    isLabs && [ASSISTANT_PLUGIN],
+    (isDev || isLabs) && [
+      // prettier-ignore
+      ASSISTANT_PLUGIN,
+      MEETING_PLUGIN,
+      OUTLINER_PLUGIN,
+      TRANSCRIPTION_PLUGIN,
+    ],
   ]
     .filter(isNotFalsy)
     .flat();

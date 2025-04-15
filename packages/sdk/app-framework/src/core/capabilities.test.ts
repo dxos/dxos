@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Effect } from 'effect';
 import { describe, expect, it } from 'vitest';
 
 import { updateCounter } from '@dxos/echo-schema/testing';
@@ -12,8 +13,8 @@ import { defineCapability, PluginsContext } from './capabilities';
 registerSignalsRuntime();
 
 const defaultOptions = {
-  activate: () => Promise.resolve(false),
-  reset: () => Promise.resolve(false),
+  activate: () => Effect.succeed(false),
+  reset: () => Effect.succeed(false),
 };
 
 describe('PluginsContext', () => {

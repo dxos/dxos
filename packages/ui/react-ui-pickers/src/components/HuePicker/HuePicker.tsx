@@ -7,7 +7,7 @@ import React from 'react';
 import { type ButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { hues } from '@dxos/react-ui-theme';
 
-import { ToolbarPickerButton, type ToolbarPickerProps } from './ToolbarPicker';
+import { ToolbarPickerButton, type ToolbarPickerProps } from '../ToolbarPicker';
 
 export type HuePickerProps = {
   disabled?: boolean;
