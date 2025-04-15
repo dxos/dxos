@@ -68,7 +68,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
   const selected = useSelectedItems(map?.view?.target?.query.typename);
 
   return (
-    <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
+    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
       {type === 'map' && (
         <MapControl markers={markers} selected={Array.from(selected)} onToggle={() => setType('globe')} {...props} />
       )}

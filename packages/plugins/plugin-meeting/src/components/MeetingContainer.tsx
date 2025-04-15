@@ -23,7 +23,7 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
   // TODO(wittjosiah): The tabpanels can be blank if plugins are disabled.
   //  Add placeholder with one click to enable required plugins.
   return (
-    <StackItem.Content toolbar={false} classNames='relative'>
+    <StackItem.Content classNames='relative'>
       <Tabs.Root
         orientation='horizontal'
         value={activeTab}

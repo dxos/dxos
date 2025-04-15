@@ -20,7 +20,7 @@ const JournalContainer = ({ role, journal }: { role: string; journal: JournalTyp
   }
 
   return (
-    <StackItem.Content role={role} toolbar={false} classNames='container-max-width'>
+    <StackItem.Content role={role} classNames='container-max-width'>
       <Journal.Root classNames={mx(attentionSurface, 'pbs-2')} journal={journal} {...handlers} />
     </StackItem.Content>
   );

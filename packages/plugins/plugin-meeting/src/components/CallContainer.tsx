@@ -41,7 +41,7 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
   }
 
   return (
-    <StackItem.Content toolbar={false}>
+    <StackItem.Content>
       {call.joined && call.roomId === roomId ? (
         <>
           <Call.Room />
