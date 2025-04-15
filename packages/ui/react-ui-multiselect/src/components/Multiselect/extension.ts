@@ -142,6 +142,7 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
                         removeLabel,
                         onItemClick: ({ action, itemId }) => {
                           const span = itemSpan.get(itemId);
+                          view.focus();
                           switch (action) {
                             case 'activate': {
                               onSelect?.(itemId);
@@ -153,11 +154,11 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
                             case 'remove': {
                               if (span) {
                                 view.dispatch({ changes: { from: span.from, to: span.to, insert: '' } });
-                                view.focus();
                               }
                               break;
                             }
                           }
+                          scrollToCursor(view);
                         },
                       }),
                     }),
@@ -232,7 +233,8 @@ class ItemWidget extends WidgetType {
     if (this.removeLabel) {
       el.setAttribute('removeLabel', this.removeLabel);
     }
-    el.setAttribute('rootClassName', 'mie-1');
+    el.classList.add('inline-block');
+    el.classList.add('pli-0.5');
     if (this.onItemClick) {
       el.addEventListener('dx-tag-picker-item-click', this.onItemClick as any);
     }
