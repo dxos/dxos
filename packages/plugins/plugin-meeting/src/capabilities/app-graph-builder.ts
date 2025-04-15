@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -70,7 +71,7 @@ export default (context: PluginsContext) =>
 
     createExtension({
       id: `${MEETING_PLUGIN}/meeting-summary`,
-      filter: (node): node is Node<MeetingType> => node.data instanceof MeetingType,
+      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data) && node.type !== COMPANION_TYPE,
       // TODO(wittjosiah): Only show the summarize action if the meeting plausibly completed.
       actions: ({ node }) => [
         {

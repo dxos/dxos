@@ -5,7 +5,7 @@
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { fullyQualifiedId, getSpace, makeRef, type Space } from '@dxos/client/echo';
 import { generateName } from '@dxos/display-name';
-import { getSchemaTypename } from '@dxos/echo-schema';
+import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -60,7 +60,7 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${TRANSCRIPTION_PLUGIN}/meeting-transcript`,
-      filter: (node): node is Node<MeetingType> => node.data instanceof MeetingType,
+      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data) && node.type !== COMPANION_TYPE,
       actions: ({ node }) => {
         const meeting = node.data;
         const state = context.requestCapability(TranscriptionCapabilities.MeetingTranscriptionState);
