@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { AISession } from './session';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
-// Define a calendar event artifact schema
+// Define a calendar event artifact schema.
 const CalendarEventSchema = S.Struct({
   title: S.String,
   startTime: S.String,
