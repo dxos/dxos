@@ -75,7 +75,7 @@ const PlankImpl = memo(
     const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
     const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
-    const surfaceVariant = node?.type === COMPANION_TYPE ? node?.id.split('/').pop() : undefined;
+    const surfaceVariant = node?.type === COMPANION_TYPE ? node?.id.split(SLUG_PATH_SEPARATOR).pop() : undefined;
 
     const sizeKey = `${id.split('+')[0]}${surfaceVariant ? `${SLUG_PATH_SEPARATOR}${surfaceVariant}` : ''}`;
     const size = deck.plankSizing[sizeKey] as number | undefined;

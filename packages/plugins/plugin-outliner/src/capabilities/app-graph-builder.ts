@@ -3,7 +3,8 @@
 //
 
 import { Capabilities, contributes, createIntent } from '@dxos/app-framework';
-import { COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { getSchemaTypename } from '@dxos/echo-schema';
+import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { MeetingType } from '@dxos/plugin-meeting/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
@@ -18,9 +19,9 @@ export default () =>
       filter: (node): node is Node<MeetingType> => node.data instanceof MeetingType,
       connector: ({ node }) => [
         {
-          id: `${fullyQualifiedId(node.data)}/companion/notes`,
+          id: `${fullyQualifiedId(node.data)}${SLUG_PATH_SEPARATOR}${getSchemaTypename(OutlineType)}`,
           type: COMPANION_TYPE,
-          data: node.id,
+          data: node.data,
           properties: {
             label: ['meeting notes label', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--note--regular',

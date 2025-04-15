@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { createIntent, useAppGraph, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { DeckAction } from '@dxos/plugin-deck/types';
+import { DeckAction, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -36,7 +36,8 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const {
     deck: { activeCompanions },
   } = useCapability(DeckCapabilities.MutableDeckState);
-  const currentMessageId = activeCompanions?.[id] && graph.findNode(`${id}/message`)?.properties?.variantId;
+  const currentMessageId =
+    activeCompanions?.[id] && graph.findNode(`${id}${SLUG_PATH_SEPARATOR}message`)?.properties?.variantId;
 
   const queue = useQueue<MessageType>(mailbox.queue.dxn, { pollInterval: 1_000 });
 
@@ -59,7 +60,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           break;
         }
         case 'current': {
-          const companionId = `${id}/message`;
+          const companionId = `${id}${SLUG_PATH_SEPARATOR}message`;
           const companionNode = graph.findNode(companionId);
           (companionNode!.properties as { variantId: string }).variantId = messageId;
           void dispatch(

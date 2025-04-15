@@ -5,7 +5,7 @@
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions';
-import { COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { SCRIPT_PLUGIN } from '../meta';
@@ -17,7 +17,7 @@ export default (context: PluginsContext) =>
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          id: `${node.id}/logs`,
+          id: `${node.id}${SLUG_PATH_SEPARATOR}logs`,
           type: COMPANION_TYPE,
           data: node.data,
           properties: {

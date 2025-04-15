@@ -46,7 +46,7 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
             {subject ? (
               <Surface role='tabpanel' data={{ subject }} />
             ) : (
-              <MissingArtifact meeting={meeting} getIntent={getIntent} typename={typename} />
+              <MissingArtifact meeting={meeting} typename={typename} />
             )}
           </Tabs.Tabpanel>
         ))}
