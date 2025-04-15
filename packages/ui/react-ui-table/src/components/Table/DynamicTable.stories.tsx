@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum, type JsonSchemaType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -80,5 +80,36 @@ export const WithRowClicks: StoryObj = {
     };
 
     return <DynamicTable properties={properties} data={objects} onRowClicked={handleRowClicked} />;
+  },
+};
+
+export const WithJsonSchema: StoryObj = {
+  render: () => {
+    // Define a JSON schema for the data
+    const schema = useMemo<JsonSchemaType>(
+      () => ({
+        type: 'object',
+        properties: {
+          name: { type: 'string', title: 'Full Name' },
+          age: { type: 'number', title: 'Age (Years)' },
+          email: { type: 'string', format: 'email', title: 'Email Address' },
+          active: { type: 'boolean', title: 'Active Status' },
+        },
+        required: ['name', 'email'],
+      }),
+      [],
+    );
+
+    // Generate sample data with the schema properties
+    const [objects, _setObjects] = useState<any[]>(
+      Array.from({ length: 15 }, () => ({
+        name: faker.person.fullName(),
+        age: faker.number.int({ min: 18, max: 80 }),
+        email: faker.internet.email(),
+        active: faker.datatype.boolean(),
+      })),
+    );
+
+    return <DynamicTable schema={schema} data={objects} tableName='com.example/json_schema_table' />;
   },
 };
