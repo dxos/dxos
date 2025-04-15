@@ -143,10 +143,10 @@ describe('Artifacts', () => {
       tools: [custodian],
     });
     for await (const event of stream) {
-      log.info('event', event);
+      log('event', event);
     }
     const [message] = await stream.complete();
-    log.info('full message', {
+    log('full message', {
       message,
     });
     await client.appendMessages([message]);
@@ -171,10 +171,10 @@ describe('Artifacts', () => {
       tools: [custodian],
     });
     for await (const event of stream2) {
-      log.info('event', event);
+      log('event', event);
     }
     const [message2] = await stream2.complete();
-    log.info('full message', {
+    log('full message', {
       message: message2,
     });
   });
