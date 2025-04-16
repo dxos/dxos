@@ -2,42 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import { waitForCondition } from '@dxos/async';
 import { type SpaceId, type Space } from '@dxos/client/echo';
 import { DeviceType } from '@dxos/client/halo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Icon, IconButton } from '@dxos/react-ui';
+import { Icon, IconButton, Toolbar } from '@dxos/react-ui';
 
 import { PanelContainer } from '../../../components';
+import { DataSpaceSelector } from '../../../containers';
+import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks';
+import { SyncStateInfo } from '../../echo';
 
-enum CreationState {
-  IDLE = 'idle',
-  PENDING = 'pending',
-  SUCCESS = 'success',
-  ERROR = 'error',
-}
-
-export const TestingPanel = ({
-  onSpaceCreate,
-  onScriptPluginOpen,
-}: {
+export type TestingPanelProps = {
   onSpaceCreate?: (space: Space) => Promise<void>;
   onScriptPluginOpen?: (space: Space) => Promise<void>;
-}) => {
+};
+
+export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanelProps) => {
   const client = useClient();
-  // TODO(mykola): Use ToolbarMenu from @dxos/react-ui-menu.
-  const [createState, setCreateState] = useState<CreationState>(CreationState.IDLE);
-  const [lastSpace, setLastSpace] = useState<Space>();
+  const { space } = useDevtoolsState();
+  const dispatch = useDevtoolsDispatch();
 
   const handleSpaceCreate = async () => {
-    setCreateState(CreationState.PENDING);
     const agentDevice = client.halo.devices.get().find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
     const agentKey = agentDevice?.deviceKey.toHex();
     if (!agentKey) {
-      setCreateState(CreationState.ERROR);
       log.warn('no agent key');
       return;
     }
@@ -45,7 +37,6 @@ export const TestingPanel = ({
     try {
       const response = await client.edge.createSpace({ agentKey });
       log.info('space created', { response });
-      setCreateState(CreationState.SUCCESS);
       const space = await waitForCondition({
         condition: () => client.spaces.get(response.spaceId as SpaceId),
         timeout: 10000,
@@ -55,37 +46,39 @@ export const TestingPanel = ({
         log.warn('space not found', { spaceId: response.spaceId });
         return;
       }
-      setLastSpace(space);
+
       await onSpaceCreate?.(space);
+      dispatch((state) => ({ ...state, space }));
     } catch (error) {
-      setCreateState(CreationState.ERROR);
       log.warn('space creation failed', { error });
     }
   };
 
   const handleScriptPluginOpen = async () => {
-    if (!lastSpace) {
+    if (!space) {
       log.warn('no space');
       return;
     }
-    await onScriptPluginOpen?.(lastSpace);
+    await onScriptPluginOpen?.(space);
   };
 
   return (
-    <PanelContainer classNames='flex flex-col gap-4 p-4'>
-      <div className='flex flex-row items-center gap-3'>
-        <IconButton
-          disabled={createState === CreationState.PENDING}
-          icon='ph--plus'
-          label='Create Space'
-          onClick={handleSpaceCreate}
-        />
-        {createState === CreationState.PENDING && <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />}
-        {createState === CreationState.SUCCESS && <Icon icon='ph--check--regular' />}
-        {createState === CreationState.ERROR && <Icon icon='ph--warning-circle--regular' />}
-      </div>
-
+    <PanelContainer
+      classNames='flex flex-col gap-4 p-4'
+      toolbar={
+        <Toolbar.Root>
+          <DataSpaceSelector />
+          <Toolbar.Button onClick={handleSpaceCreate}>
+            <Icon icon='ph--plus' />
+            Create Space
+          </Toolbar.Button>
+        </Toolbar.Root>
+      }
+    >
       <IconButton icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
+      <div className='border-t border-separator'>
+        <SyncStateInfo />
+      </div>
     </PanelContainer>
   );
 };

@@ -357,16 +357,13 @@ export default (context: PluginsContext) =>
         const onScriptPluginOpen = useCallback(
           async (space: Space) => {
             await space.waitUntilReady();
-            const target = space.properties[CollectionType.typename]?.target;
-            if (!(target instanceof CollectionType)) {
-              log.warn('no root collection', { properties: space.properties.toJSON() });
-              return;
-            }
             const result = await dispatch(
-              pipe(createIntent(ScriptAction.Create, { space }), chain(SpaceAction.AddObject, { target })),
+              pipe(createIntent(ScriptAction.Create, { space }), chain(SpaceAction.AddObject, { target: space })),
             );
             log.info('script created', { result });
-            await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [result.data?.object.id] }));
+            await dispatch(
+              createIntent(LayoutAction.Open, { part: 'main', subject: [`${space.id}:${result.data?.object.id}`] }),
+            );
           },
           [dispatch],
         );

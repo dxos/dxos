@@ -41,10 +41,11 @@ export default defineFunction({
 
   outputSchema: S.Struct({}),
 
-  handler: async ({ event: { documentAmount = 10, textSize = 100, mutationAmount = 0 }, context: { space } }: any) => {
+  handler: async ({ event: { documentAmount = 10, textSize = 10, mutationAmount = 0 }, context: { space } }: any) => {
     await space.db.graph.schemaRegistry.addSchema([Expando]);
 
     const objects = [];
+    // const rootCollection = await space.properties[COLLECTION_TYPENAME]?.load();
     for (let i = 0; i < documentAmount; i++) {
       const obj = space.db.add(
         createStatic(Expando, {
@@ -52,6 +53,7 @@ export default defineFunction({
           content: randParagraph({ length: textSize }),
         }),
       );
+      // rootCollection.objects.push(obj);
       objects.push(obj);
     }
 
@@ -61,6 +63,11 @@ export default defineFunction({
     }
 
     await space.db.flush();
+    // TODO(mykola): This seems to halp with propagating data to space.
+    for (const obj of objects) {
+      await space.db.query({ id: obj.id }).first();
+      console.log('obj', obj.id);
+    }
     return 'OK';
   },
 });
