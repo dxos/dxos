@@ -23,7 +23,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${SKETCH_PLUGIN}/settings`,
+      id: `${SKETCH_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<SketchSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === SKETCH_PLUGIN,

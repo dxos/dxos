@@ -10,6 +10,7 @@ import { type ObjectForm, type PluginState } from '../types';
 
 export namespace SpaceCapabilities {
   export const State = defineCapability<DeepReadonly<PluginState>>(`${SPACE_PLUGIN}/capability/state`);
+
   export const MutableState = defineCapability<PluginState>(`${SPACE_PLUGIN}/capability/state`);
 
   export type SpaceSettingsPanel = { id: string; label: Label };

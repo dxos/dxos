@@ -59,19 +59,6 @@ export const ScriptPlugin = () =>
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
     }),
-    // TODO(burdon): Move to companion.
-    // defineModule({
-    //   id: `${meta.id}/module/complementary-panels`,
-    //   activatesOn: DeckEvents.SetupComplementaryPanels,
-    //   activate: () =>
-    //     contributes(DeckCapabilities.ComplementaryPanel, {
-    //       id: 'function',
-    //       label: ['function panel label', { ns: SCRIPT_PLUGIN }],
-    //       icon: 'ph--terminal--regular',
-    //       fixed: true,
-    //       filter: (node) => isInstanceOf(ScriptType, node.data) && !!getSpace(node.data),
-    //     }),
-    // }),
     defineModule({
       id: `${meta.id}/module/object-form`,
       activatesOn: ClientEvents.SetupSchema,

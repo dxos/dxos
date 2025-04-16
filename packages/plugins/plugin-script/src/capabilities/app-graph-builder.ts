@@ -8,36 +8,52 @@ import { ScriptType } from '@dxos/functions';
 import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
-import { SCRIPT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    // TOOD(burdon): Factor out: make generic?
     createExtension({
-      id: `${SCRIPT_PLUGIN}/execute`,
+      id: `${meta.id}/settings`,
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          // TODO(burdon): Return [node.id, SLUG_PATH_SEPARATOR, 'execute'].
-          id: `${node.id}${SLUG_PATH_SEPARATOR}execute`,
+          // TODO(burdon): Return [node.id, SLUG_PATH_SEPARATOR, 'settings'].
+          id: [node.id, SLUG_PATH_SEPARATOR, 'settings'].join(),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
-            label: ['script execute label', { ns: SCRIPT_PLUGIN }],
+            label: ['script settings label', { ns: meta.id }],
+            icon: 'ph--sliders--regular',
+          },
+        },
+      ],
+    }),
+    createExtension({
+      id: `${meta.id}/execute`,
+      filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
+      connector: ({ node }) => [
+        {
+          id: [node.id, SLUG_PATH_SEPARATOR, 'execute'].join(),
+          type: COMPANION_TYPE,
+          data: node.data,
+          properties: {
+            label: ['script execute label', { ns: meta.id }],
             icon: 'ph--terminal--regular',
           },
         },
       ],
     }),
     createExtension({
-      id: `${SCRIPT_PLUGIN}/logs`,
+      id: `${meta.id}/logs`,
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          id: `${node.id}${SLUG_PATH_SEPARATOR}logs`,
+          id: [node.id, SLUG_PATH_SEPARATOR, 'logs'].join(),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
-            label: ['script logs label', { ns: SCRIPT_PLUGIN }],
+            label: ['script logs label', { ns: meta.id }],
             icon: 'ph--clock-countdown--regular',
           },
         },

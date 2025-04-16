@@ -164,7 +164,7 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
       <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
 
       {/* TODO(burdon): Replace with Form. */}
-      <Toolbar.Root classNames='p-1'>
+      <Toolbar.Root classNames='p-2'>
         <Input.Root>
           <Input.TextInput
             ref={inputRef}

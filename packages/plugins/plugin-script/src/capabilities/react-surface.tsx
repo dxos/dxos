@@ -10,37 +10,56 @@ import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
-import { Clipboard } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { ScriptCapabilities } from './capabilities';
 import { ScriptSettings, ScriptContainer, ScriptSettingsPanel, TestPanel } from '../components';
 import { useDeployState, useToolbarState } from '../hooks';
-import { SCRIPT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type ScriptSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${SCRIPT_PLUGIN}/settings`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<ScriptSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === SCRIPT_PLUGIN,
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <ScriptSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${SCRIPT_PLUGIN}/article`,
+      id: `${meta.id}/article`,
       role: 'article',
       filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject) && !data.variant,
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
         // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
-        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)?.value;
+        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(meta.id)?.value;
         return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
       },
     }),
+    // TODO(burdon): Move to companion.
+    // createSurface({
+    //   id: `${meta.id}/companion/settings`,
+    //   role: 'complementary--settings',
+    //   filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject),
+    //   component: ({ data }) => <ScriptSettingsPanel script={data.subject} />,
+    // }),
     createSurface({
-      id: `${SCRIPT_PLUGIN}/article/execute`,
+      id: `${meta.id}/companion/settings`,
+      role: 'article',
+      filter: (data): data is { subject: ScriptType } =>
+        isInstanceOf(ScriptType, data.subject) && data.variant === 'settings',
+      component: ({ data, role }) => {
+        return (
+          <StackItem.Content role={role}>
+            <ScriptSettingsPanel script={data.subject} />
+          </StackItem.Content>
+        );
+      },
+    }),
+    createSurface({
+      id: `${meta.id}/companion/execute`,
       role: 'article',
       filter: (data): data is { subject: ScriptType } =>
         isInstanceOf(ScriptType, data.subject) && data.variant === 'execute',
@@ -56,7 +75,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${SCRIPT_PLUGIN}/article/logs`,
+      id: `${meta.id}/companion/logs`,
       role: 'article',
       filter: (data): data is { subject: ScriptType } =>
         isInstanceOf(ScriptType, data.subject) && data.variant === 'logs',
@@ -68,16 +87,5 @@ export default () =>
           </StackItem.Content>
         );
       },
-    }),
-    // TODO(burdon): Move to companion.
-    createSurface({
-      id: `${SCRIPT_PLUGIN}/settings-panel`,
-      role: 'complementary--settings',
-      filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject),
-      component: ({ data }) => (
-        <Clipboard.Provider>
-          <ScriptSettingsPanel script={data.subject} />
-        </Clipboard.Provider>
-      ),
     }),
   ]);

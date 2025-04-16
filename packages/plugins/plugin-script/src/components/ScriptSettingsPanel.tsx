@@ -113,7 +113,7 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
   }, [script, githubToken]);
 
   return (
-    <>
+    <Clipboard.Provider>
       <div role='form' className='flex flex-col w-full p-2 gap-4'>
         <Input.Root>
           <div role='none' className='flex flex-col gap-1'>
@@ -183,6 +183,6 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
           </div>
         )}
       </div>
-    </>
+    </Clipboard.Provider>
   );
 };

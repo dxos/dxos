@@ -80,7 +80,7 @@ const useCurrentSpace = () => {
 export default (context: PluginsContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${DEBUG_PLUGIN}/settings`,
+      id: `${DEBUG_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<DebugSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === DEBUG_PLUGIN,
