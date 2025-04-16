@@ -28,7 +28,7 @@ export default (context: PluginsContext) =>
                 data: null,
                 properties: {
                   label: ['meetings label', { ns: MEETING_PLUGIN }],
-                  icon: 'ph--phone-list--regular',
+                  icon: 'ph--video-conference--regular',
                   space: node.data,
                 },
               },
