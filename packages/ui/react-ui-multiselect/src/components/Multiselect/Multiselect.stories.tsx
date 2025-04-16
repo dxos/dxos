@@ -14,13 +14,13 @@ import { Multiselect } from './Multiselect';
 import { type MultiselectItem } from './extension';
 
 const allItems: MultiselectItem[] = [
-  { id: 'cloudflare', label: 'Cloudflare' },
+  { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
   { id: 'cursor', label: 'Cursor' },
-  { id: 'dxos', label: 'DXOS' },
-  { id: 'blue-yard', label: 'Blue Yard' },
+  { id: 'dxos', label: 'DXOS', hue: 'green' },
+  { id: 'blue-yard', label: 'Blue Yard', hue: 'blue' },
   { id: 'effect', label: 'Effect' },
   { id: 'github', label: 'GitHub' },
-  { id: 'socket-supply', label: 'Socket Supply' },
+  { id: 'socket-supply', label: 'Socket Supply', hue: 'indigo' },
 ];
 
 const meta: Meta<typeof Multiselect> = {

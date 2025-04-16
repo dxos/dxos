@@ -49,6 +49,7 @@ const ReadonlyMultiselect = ({ items, onSelect }: MultiselectProps) => {
           key={item.id}
           itemId={item.id}
           label={item.label}
+          {...(item.hue ? { hue: item.hue } : {})}
           onItemClick={handleItemClick}
           rootClassName='mie-1'
         />

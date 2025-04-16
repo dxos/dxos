@@ -25,9 +25,11 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
+import { type ChromaticPalette } from '@dxos/react-ui';
+
 import { type TagPickerItemProps } from './TagPickerItem';
 
-export type MultiselectItem = { id: string; label: string };
+export type MultiselectItem = { id: string; label: string; hue?: ChromaticPalette };
 
 export const createLinks = (items: MultiselectItem[]) => {
   return items.map(({ id, label }) => `[${label}](${id})`).join('');
@@ -146,7 +148,12 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
                   const to = node.to;
                   const id = view.state.sliceDoc(urlNode.from, urlNode.to);
                   const text = view.state.doc.sliceString(from + 1, urlNode.from - 2);
-                  const item: MultiselectItem = { id, label: text };
+                  const originalItem = onSearch?.('', []).find((item) => item.id === id);
+                  const item: MultiselectItem = {
+                    id,
+                    label: text,
+                    hue: originalItem?.hue,
+                  };
                   ids.push(id);
                   itemSpan.set(id, { from, to });
                   builder.add(
@@ -156,6 +163,7 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
                       widget: new ItemWidget({
                         itemId: item.id,
                         label: item.label,
+                        hue: item.hue,
                         removeLabel,
                         onItemClick: ({ action, itemId }) => {
                           const span = itemSpan.get(itemId);
@@ -211,9 +219,10 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
 
           return {
             from: match.from,
-            options: onSearch(match.text.toLowerCase(), ids).map(({ id, label }) => ({
+            options: onSearch(match.text.toLowerCase(), ids).map(({ id, label, hue }) => ({
               id,
               label,
+              hue,
               apply: multiselectApply,
             })),
           };
@@ -240,15 +249,12 @@ class ItemWidget extends WidgetType {
 
   toDOM() {
     const el = document.createElement('dx-tag-picker-item');
+    el.classList.add('inline-block', 'pli-0.5');
     el.setAttribute('itemId', this.props.itemId ?? 'never');
     el.setAttribute('label', this.props.label ?? 'never');
-    if (this.props.removeLabel) {
-      el.setAttribute('removeLabel', this.props.removeLabel);
-    }
-    el.classList.add('inline-block', 'pli-0.5');
-    if (this.props.onItemClick) {
-      el.addEventListener('dx-tag-picker-item-click', this.props.onItemClick as any);
-    }
+    this.props.hue && el.setAttribute('hue', this.props.hue);
+    this.props.removeLabel && el.setAttribute('removeLabel', this.props.removeLabel);
+    this.props.onItemClick && el.addEventListener('dx-tag-picker-item-click', this.props.onItemClick as any);
     return el;
   }
 }
