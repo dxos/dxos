@@ -134,6 +134,16 @@ export type UploadFunctionResponseBody = {
   };
 };
 
+export type CreateSpaceRequest = {
+  agentKey: string;
+};
+
+export type CreateSpaceResponseBody = {
+  spaceKey: string;
+  spaceId: string;
+  automergeRoot: string;
+};
+
 export enum EdgeAgentStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',

@@ -4,6 +4,7 @@
 
 import chat from './chat.ts?raw';
 import chess from './chess.ts?raw';
+import dataGenerator from './data-generator.ts?raw';
 import discord from './discord.ts?raw';
 import echo from './echo.ts?raw';
 import email from './email.ts?raw';
@@ -65,5 +66,11 @@ export const templates: Template[] = [
     name: 'Gmail',
     source: removeHeader(gmail),
     presetId: 'dxos.org/function/gmail',
+  },
+  {
+    id: 'dxos.org/script/data-generator',
+    name: 'Data Generator',
+    source: removeHeader(dataGenerator),
+    presetId: 'dxos.org/function/data-generator',
   },
 ];
