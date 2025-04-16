@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
 import React, { useCallback } from 'react';
 
 import {
   Capabilities,
+  chain,
   contributes,
   createIntent,
   createSurface,
@@ -37,10 +39,13 @@ import {
   WorkflowPanel,
   QueuesPanel,
   InvocationTracePanel,
+  TestingPanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
+import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import {
   SpaceState,
@@ -333,6 +338,36 @@ export default (context: PluginsContext) =>
       component: () => {
         const space = useCurrentSpace();
         return <InvocationTracePanel space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/edge/testing`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Edge.Testing,
+      component: () => {
+        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const onSpaceCreate = useCallback(
+          async (space: Space) => {
+            await space.waitUntilReady();
+            await dispatch(createIntent(SpaceAction.Migrate, { space }));
+            await space.db.flush();
+          },
+          [dispatch],
+        );
+        const onScriptPluginOpen = useCallback(
+          async (space: Space) => {
+            await space.waitUntilReady();
+            const result = await dispatch(
+              pipe(createIntent(ScriptAction.Create, { space }), chain(SpaceAction.AddObject, { target: space })),
+            );
+            log.info('script created', { result });
+            await dispatch(
+              createIntent(LayoutAction.Open, { part: 'main', subject: [`${space.id}:${result.data?.object.id}`] }),
+            );
+          },
+          [dispatch],
+        );
+        return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
       },
     }),
   ]);
