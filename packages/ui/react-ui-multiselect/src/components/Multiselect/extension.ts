@@ -8,6 +8,8 @@ import {
   type Completion,
   type CompletionResult,
   type CompletionContext,
+  startCompletion,
+  acceptCompletion,
 } from '@codemirror/autocomplete';
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { syntaxTree } from '@codemirror/language';
@@ -75,13 +77,28 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
   /** Range spans for each id. */
   const itemSpan = new Map<string, { from: number; to: number }>();
 
+  const handleCompletion = (view: EditorView) => {
+    // Try to accept the current completion if one is active.
+    if (acceptCompletion(view)) {
+      return true;
+    }
+    // If no completion is active, start one.
+    startCompletion(view);
+    return true;
+  };
+
   const extensions: Extension[] = [
     keymap.of(completionKeymap),
     Prec.highest(
       keymap.of([
         {
           key: 'Tab',
-          run: () => true,
+          run: handleCompletion,
+          preventDefault: true,
+        },
+        {
+          key: 'Enter',
+          run: handleCompletion,
           preventDefault: true,
         },
       ]),
