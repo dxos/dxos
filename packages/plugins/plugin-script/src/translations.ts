@@ -16,7 +16,7 @@ export default [
       [SCRIPT_PLUGIN]: {
         'plugin name': 'Scripts',
         'description label': 'Description',
-        'description placeholder': '',
+        'description placeholder': 'Enter description...',
         'binding placeholder': 'Function name',
         'function request placeholder': 'Function request',
         'deploy label': 'Deploy',
