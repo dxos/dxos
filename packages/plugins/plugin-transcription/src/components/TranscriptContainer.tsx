@@ -16,10 +16,8 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType; role: stri
   const queue = useQueue<TranscriptBlock>(transcript.queue.dxn, { pollInterval: 1_000 });
 
   return (
-    <StackItem.Content toolbar={false} classNames='pli-2'>
-      <div role='none' className='container-max-width relative min-bs-0'>
-        <Transcript blocks={queue?.items} attendableId={attendableId} />
-      </div>
+    <StackItem.Content toolbar={false} classNames='container-max-width pli-2'>
+      <Transcript blocks={queue?.items} attendableId={attendableId} />
     </StackItem.Content>
   );
 };
