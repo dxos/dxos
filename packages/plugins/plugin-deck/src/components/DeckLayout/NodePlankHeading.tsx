@@ -146,7 +146,7 @@ export const NodePlankHeading = memo(
         ]}
       >
         {companions && isCompanionNode ? (
-          <div role='none' className='_pis-1 _plb-1 flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-2'>
+          <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}
