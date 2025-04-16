@@ -4,7 +4,6 @@
 
 import React, { useMemo } from 'react';
 
-import { InvocationTracePanel } from '@dxos/devtools';
 import { type ScriptType } from '@dxos/functions/types';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -18,24 +17,25 @@ import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor
 import { useDeployState, useToolbarState } from '../hooks';
 import { type ScriptSettingsProps } from '../types';
 
-export type ScriptEditorProps = ThemedClassName<{
-  script: ScriptType;
-  variant?: 'logs';
-  settings?: ScriptSettingsProps;
-  role?: string;
-}> &
-  Pick<TypescriptEditorProps, 'env'>;
+export type ScriptEditorProps = ThemedClassName<
+  {
+    script: ScriptType;
+    settings?: ScriptSettingsProps;
+    role?: string;
+  } & Pick<TypescriptEditorProps, 'env'>
+>;
 
 export const ScriptContainer = ({
   role,
   classNames,
   script,
-  variant,
   settings = { editorInputMode: 'vscode' },
   env,
 }: ScriptEditorProps) => {
   const identity = useIdentity();
   const space = getSpace(script);
+  const state = useToolbarState();
+  useDeployState({ state, script });
 
   const extensions = useMemo(
     () => [
@@ -56,31 +56,22 @@ export const ScriptContainer = ({
     [script, script.source.target, space, identity],
   );
 
-  const state = useToolbarState();
-  useDeployState({ state, script });
-
   if (!space) {
     return null;
   }
 
   return (
-    <StackItem.Content toolbar={variant !== 'logs'}>
-      {variant === 'logs' ? (
-        <InvocationTracePanel space={space} script={script} detailAxis='block' />
-      ) : (
-        <>
-          <ScriptToolbar state={state} role={role} script={script} />
-          <TypescriptEditor
-            id={script.id}
-            env={env}
-            initialValue={script.source?.target?.content}
-            extensions={extensions}
-            className={mx(stackItemContentEditorClassNames(role), 'grow')}
-            inputMode={settings.editorInputMode}
-            toolbar
-          />
-        </>
-      )}
+    <StackItem.Content toolbar>
+      <ScriptToolbar state={state} role={role} script={script} />
+      <TypescriptEditor
+        id={script.id}
+        env={env}
+        initialValue={script.source?.target?.content}
+        extensions={extensions}
+        className={mx(stackItemContentEditorClassNames(role))}
+        inputMode={settings.editorInputMode}
+        toolbar
+      />
     </StackItem.Content>
   );
 };

@@ -143,11 +143,10 @@ export const NodePlankHeading = memo(
         classNames={[
           'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 layout-contain',
           part === 'solo' ? soloInlinePadding : 'pli-1',
-          surfaceVariant && '_pis-3', // TODO(burdon): ???
         ]}
       >
         {companions && isCompanionNode ? (
-          <div role='none' className='_plb-1 flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-2'>
+          <div role='none' className='_pis-1 _plb-1 flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-2'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}

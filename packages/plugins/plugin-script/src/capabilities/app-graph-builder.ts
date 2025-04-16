@@ -13,7 +13,23 @@ import { SCRIPT_PLUGIN } from '../meta';
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${SCRIPT_PLUGIN}/script-logs`,
+      id: `${SCRIPT_PLUGIN}/execute`,
+      filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
+      connector: ({ node }) => [
+        {
+          // TODO(burdon): Return [node.id, SLUG_PATH_SEPARATOR, 'execute'].
+          id: `${node.id}${SLUG_PATH_SEPARATOR}execute`,
+          type: COMPANION_TYPE,
+          data: node.data,
+          properties: {
+            label: ['script execute label', { ns: SCRIPT_PLUGIN }],
+            icon: 'ph--terminal--regular',
+          },
+        },
+      ],
+    }),
+    createExtension({
+      id: `${SCRIPT_PLUGIN}/logs`,
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
