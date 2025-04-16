@@ -209,34 +209,28 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
 };
 
 class ItemWidget extends WidgetType {
-  private itemId: PillProps['itemId'] = 'never';
-  private label: PillProps['label'] = 'never';
-  private onItemClick: PillProps['onItemClick'];
-  private removeLabel: PillProps['removeLabel'];
-  constructor(props: Pick<PillProps, 'itemId' | 'label' | 'onItemClick' | 'removeLabel'>) {
+  private props: PillProps;
+
+  constructor(props: PillProps) {
     super();
-    this.itemId = props.itemId ?? 'never';
-    this.label = props.label ?? 'never';
-    this.removeLabel = props.removeLabel;
-    this.onItemClick = props.onItemClick;
+    this.props = props;
   }
 
   // Prevents re-rendering.
   override eq(widget: this) {
-    return widget.itemId === this.itemId;
+    return widget.props.itemId === this.props.itemId;
   }
 
   toDOM() {
     const el = document.createElement('dx-tag-picker-item');
-    el.setAttribute('itemId', this.itemId ?? 'never');
-    el.setAttribute('label', this.label ?? 'never');
-    if (this.removeLabel) {
-      el.setAttribute('removeLabel', this.removeLabel);
+    el.setAttribute('itemId', this.props.itemId ?? 'never');
+    el.setAttribute('label', this.props.label ?? 'never');
+    if (this.props.removeLabel) {
+      el.setAttribute('removeLabel', this.props.removeLabel);
     }
-    el.classList.add('inline-block');
-    el.classList.add('pli-0.5');
-    if (this.onItemClick) {
-      el.addEventListener('dx-tag-picker-item-click', this.onItemClick as any);
+    el.classList.add('inline-block', 'pli-0.5');
+    if (this.props.onItemClick) {
+      el.addEventListener('dx-tag-picker-item-click', this.props.onItemClick as any);
     }
     return el;
   }
