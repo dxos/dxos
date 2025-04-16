@@ -17,7 +17,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Pill } from './Pill';
+import { TagPickerItem } from './TagPickerItem';
 import { createLinks, multiselect, type MultiselectItem, type MultiselectOptions } from './extension';
 import { translationKey } from '../../translations';
 
@@ -45,7 +45,13 @@ const ReadonlyMultiselect = ({ items, onSelect }: MultiselectProps) => {
   return (
     <>
       {items.map((item) => (
-        <Pill key={item.id} itemId={item.id} label={item.label} onItemClick={handleItemClick} rootClassName='mie-1' />
+        <TagPickerItem
+          key={item.id}
+          itemId={item.id}
+          label={item.label}
+          onItemClick={handleItemClick}
+          rootClassName='mie-1'
+        />
       ))}
     </>
   );

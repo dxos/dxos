@@ -25,7 +25,7 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
-import { type PillProps } from './Pill';
+import { type TagPickerItemProps } from './TagPickerItem';
 
 export type MultiselectItem = { id: string; label: string };
 
@@ -226,9 +226,9 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
 };
 
 class ItemWidget extends WidgetType {
-  private props: PillProps;
+  private props: TagPickerItemProps;
 
-  constructor(props: PillProps) {
+  constructor(props: TagPickerItemProps) {
     super();
     this.props = props;
   }

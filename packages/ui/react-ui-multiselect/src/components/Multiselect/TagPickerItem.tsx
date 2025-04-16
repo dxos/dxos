@@ -6,7 +6,7 @@ import React, { type ComponentPropsWithRef } from 'react';
 
 import { createComponent, type EventName, DxTagPickerItem, type DxTagPickerItemClick } from '@dxos/lit-ui';
 
-export const Pill = createComponent({
+export const TagPickerItem = createComponent({
   tagName: 'dx-tag-picker-item',
   elementClass: DxTagPickerItem,
   react: React,
@@ -15,4 +15,4 @@ export const Pill = createComponent({
   },
 });
 
-export type PillProps = ComponentPropsWithRef<typeof Pill>;
+export type TagPickerItemProps = ComponentPropsWithRef<typeof TagPickerItem>;
