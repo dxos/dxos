@@ -16,11 +16,12 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType; role: stri
   const queue = useQueue<TranscriptBlock>(transcript.queue.dxn, { pollInterval: 1_000 });
 
   const Root = role === 'article' ? StackItem.Content : Fragment;
-  const rootProps = role === 'article' ? { toolbar: false } : {};
 
   return (
-    <Root {...(rootProps as any)} classNames='container-max-width'>
-      <Transcript blocks={queue?.items} attendableId={attendableId} />
+    <Root classNames='container-max-width pis-2 pie-2'>
+      <div className='grow relative overflow-hidden'>
+        <Transcript blocks={queue?.items} attendableId={attendableId} />
+      </div>
     </Root>
   );
 };
