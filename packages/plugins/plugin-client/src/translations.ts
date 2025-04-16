@@ -8,7 +8,18 @@ export default [
   {
     'en-US': {
       [CLIENT_PLUGIN]: {
-        'open shell label': 'Open HALO',
+        'account label': 'User Account',
+        'profile label': 'Profile',
+        'devices label': 'Devices',
+        'passkeys label': 'Passkeys',
+
+        'display name label': 'Name',
+        'display name input placeholder': 'Enter your name',
+        'icon label': 'Avatar',
+        'hue label': 'Avatar Background',
+        'did label': 'DID',
+
+        'open user account label': 'Open user account',
         'manage credentials dialog title': 'Manage Account Recovery',
         'recovery setup dialog title': 'Account Recovery',
         'recovery setup dialog description':

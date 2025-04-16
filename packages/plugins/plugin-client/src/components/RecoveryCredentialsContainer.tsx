@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useCredentials } from '@dxos/react-client/halo';
-import { Dialog, Icon, List, ListItem, useTranslation } from '@dxos/react-ui';
+import { Icon, List, ListItem, useTranslation } from '@dxos/react-ui';
 import { BifurcatedAction, type ActionMenuItem } from '@dxos/shell/react';
 
 import { CLIENT_PLUGIN } from '../meta';
@@ -15,8 +15,7 @@ import { ClientAction } from '../types';
 
 export const MANAGE_CREDENTIALS_DIALOG = `${CLIENT_PLUGIN}/ManageCredentialsDialog`;
 
-// TODO(wittjosiah): Factor panel out to @dxos/shell.
-export const ManageCredentialsDialog = () => {
+export const RecoveryCredentialsContainer = () => {
   const { t } = useTranslation(CLIENT_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const credentials = useCredentials();
@@ -24,7 +23,7 @@ export const ManageCredentialsDialog = () => {
     (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
   );
 
-  // TODO(wittjosiah): Reconsile w/ RecoverySetupDialog actions.
+  // TODO(wittjosiah): Reconcile w/ RecoverySetupDialog actions.
   const actions: Record<string, ActionMenuItem> = useMemo(
     () => ({
       createPasskey: {
@@ -45,9 +44,11 @@ export const ManageCredentialsDialog = () => {
   );
 
   return (
-    <Dialog.Content classNames='bs-content min-bs-[15rem] max-bs-full md:max-is-[25rem] overflow-hidden'>
-      <Dialog.Title>{t('manage credentials dialog title')}</Dialog.Title>
-      <List classNames='py-4'>
+    <div className='p-4'>
+      <div className='flex justify-end'>
+        <BifurcatedAction actions={actions} isFull={false} />
+      </div>
+      <List>
         {recoveryCredentials.map((credential) => (
           <ListItem.Root key={credential.id?.toHex()}>
             <ListItem.Endcap>
@@ -57,8 +58,6 @@ export const ManageCredentialsDialog = () => {
           </ListItem.Root>
         ))}
       </List>
-      <div className='grow' />
-      <BifurcatedAction actions={actions} />
-    </Dialog.Content>
+    </div>
   );
 };

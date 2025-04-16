@@ -84,7 +84,7 @@ export class AppManager {
 
   isAuthenticated({ timeout = 5_000 } = {}) {
     return this.page
-      .getByTestId('treeView.haloButton')
+      .getByTestId('treeview.userAccount')
       .waitFor({ timeout })
       .then(() => true)
       .catch(() => false);
@@ -252,7 +252,7 @@ export class AppManager {
   async enablePlugin(plugin: string) {
     await this.getPluginToggle(plugin).click();
     await this.page.goto(INITIAL_URL);
-    await this.page.getByTestId('treeView.haloButton').waitFor();
+    await this.page.getByTestId('treeview.userAccount').waitFor();
   }
 
   async changeStorageVersionInMetadata(version: number) {

@@ -5854,6 +5854,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -5881,6 +5884,12 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/react-ui-pickers':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-pickers
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
@@ -5890,6 +5899,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      react-qr-rounded:
+        specifier: ^1.0.0
+        version: 1.0.0(react@18.2.0)
     devDependencies:
       '@dxos/live-object':
         specifier: workspace:*
@@ -5912,6 +5924,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.13.3
+        version: 3.13.3
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9770,9 +9785,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      effect:
-        specifier: 3.13.3
-        version: 3.13.3
     devDependencies:
       '@dxos/echo-schema':
         specifier: workspace:*
@@ -9798,6 +9810,9 @@ importers:
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
+      effect:
+        specifier: 3.13.3
+        version: 3.13.3
       react:
         specifier: ~18.2.0
         version: 18.2.0

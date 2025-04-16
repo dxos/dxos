@@ -5,32 +5,46 @@
 import React from 'react';
 
 import { createSurface, Capabilities, contributes } from '@dxos/app-framework';
-import { type IdentityPanelProps, type JoinPanelProps } from '@dxos/shell/react';
+import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
-  IDENTITY_DIALOG,
-  IdentityDialog,
+  DevicesContainer,
   JOIN_DIALOG,
   JoinDialog,
-  RECOVER_CODE_DIALOG,
-  RECOVER_SETUP_DIALOG,
+  ProfileContainer,
+  RECOVERY_CODE_DIALOG,
   RecoveryCodeDialog,
-  RecoverySetupDialog,
+  RecoveryCredentialsContainer,
+  RESET_DIALOG,
+  ResetDialog,
+  type ResetDialogProps,
   type RecoveryCodeDialogProps,
 } from '../components';
-import { MANAGE_CREDENTIALS_DIALOG, ManageCredentialsDialog } from '../components/ManageCredentialsDialog';
+import { Account, type ClientPluginOptions } from '../types';
 
-type ReactSurfaceOptions = {
+type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
+export default ({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: IDENTITY_DIALOG,
-      role: 'dialog',
-      filter: (data): data is { props: IdentityPanelProps } => data.component === IDENTITY_DIALOG,
-      component: ({ data }) => <IdentityDialog {...data.props} createInvitationUrl={createInvitationUrl} />,
+      id: Account.Profile,
+      role: 'article',
+      filter: (data): data is any => data.subject === Account.Profile,
+      component: () => <ProfileContainer />,
+    }),
+    createSurface({
+      id: Account.Devices,
+      role: 'article',
+      filter: (data): data is any => data.subject === Account.Devices,
+      component: ({ data }) => <DevicesContainer createInvitationUrl={createInvitationUrl} />,
+    }),
+    createSurface({
+      id: Account.Passkeys,
+      role: 'article',
+      filter: (data): data is any => data.subject === Account.Passkeys,
+      component: () => <RecoveryCredentialsContainer />,
     }),
     createSurface({
       id: JOIN_DIALOG,
@@ -39,21 +53,15 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <JoinDialog {...data.props} />,
     }),
     createSurface({
-      id: RECOVER_CODE_DIALOG,
+      id: RECOVERY_CODE_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: RecoveryCodeDialogProps } => data.component === RECOVER_CODE_DIALOG,
+      filter: (data): data is { props: RecoveryCodeDialogProps } => data.component === RECOVERY_CODE_DIALOG,
       component: ({ data }) => <RecoveryCodeDialog {...data.props} />,
     }),
     createSurface({
-      id: RECOVER_SETUP_DIALOG,
+      id: RESET_DIALOG,
       role: 'dialog',
-      filter: (data): data is any => data.component === RECOVER_SETUP_DIALOG,
-      component: () => <RecoverySetupDialog />,
-    }),
-    createSurface({
-      id: MANAGE_CREDENTIALS_DIALOG,
-      role: 'dialog',
-      filter: (data): data is any => data.component === MANAGE_CREDENTIALS_DIALOG,
-      component: () => <ManageCredentialsDialog />,
+      filter: (data): data is { props: ResetDialogProps } => data.component === RESET_DIALOG,
+      component: ({ data }) => <ResetDialog {...data.props} onReset={onReset} />,
     }),
   ]);

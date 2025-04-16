@@ -50,7 +50,7 @@ export namespace ClientAction {
 
   export class ResetStorage extends S.TaggedClass<ResetStorage>()(`${CLIENT_ACTION}/reset-storage`, {
     input: S.Struct({
-      target: S.optional(S.String),
+      mode: S.optional(S.String),
     }),
     output: S.Void,
   }) {}
@@ -97,3 +97,15 @@ export type ClientPluginOptions = ClientOptions & {
    */
   onReset?: (params: { target?: string }) => MaybePromise<void>;
 };
+
+export namespace Account {
+  // TODO(wittjosiah): Cannot use slashes in ids until we have a router which decouples ids from url paths.
+  const _id = 'dxos.org.plugin.client.account';
+  // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
+  //  Ideally this should be worked into the data model in a generic way.
+  export const id = `!${_id}`;
+
+  export const Profile = `${_id}.profile`;
+  export const Devices = `${_id}.devices`;
+  export const Passkeys = `${_id}.passkeys`;
+}

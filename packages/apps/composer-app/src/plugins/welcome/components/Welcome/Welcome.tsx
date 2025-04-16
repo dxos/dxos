@@ -5,12 +5,12 @@
 import '@fontsource/poiret-one';
 
 import { CaretRight, Key, Planet, QrCode, Receipt } from '@phosphor-icons/react';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, Input, useTranslation, Dialog } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { CompoundButton } from '@dxos/shell/react';
+import { type ActionMenuItem, BifurcatedAction, CompoundButton } from '@dxos/shell/react';
 
 import { hero } from './hero-image';
 import { WelcomeState, type WelcomeScreenProps, validEmail } from './types';
@@ -31,14 +31,64 @@ export const Welcome = ({
   const { t } = useTranslation(WELCOME_PLUGIN);
   const emailRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState('');
+  const [pending, setPending] = useState(false);
 
-  const handleSignup = useCallback(() => {
+  const handleSignup = useCallback(async () => {
     if (validEmail(email)) {
-      onSignup?.(email);
+      setPending(true);
+      try {
+        await onSignup?.(email);
+      } finally {
+        setPending(false);
+      }
     } else {
       emailRef.current?.focus();
     }
-  }, [email]);
+  }, [email, onSignup]);
+
+  const handleEmailKeyDown = useCallback(
+    (ev: React.KeyboardEvent<HTMLInputElement>) => {
+      if (ev.key === 'Enter') {
+        void handleSignup();
+      }
+    },
+    [handleSignup],
+  );
+
+  const handleEmailChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(ev.target.value.trim());
+  }, []);
+
+  const actions: Record<string, ActionMenuItem> = useMemo(
+    () => ({
+      ...(supportsPasskeys &&
+        onPasskey && {
+          passkey: {
+            label: t('redeem passkey button label'),
+            description: t('redeem passkey button description'),
+            icon: Key,
+            onClick: onPasskey,
+          },
+        }),
+      ...(onJoinIdentity && {
+        deviceInvitation: {
+          label: t('join device button label'),
+          description: t('join device button description'),
+          icon: QrCode,
+          onClick: onJoinIdentity,
+        },
+      }),
+      ...(onRecoverIdentity && {
+        recoveryCode: {
+          label: t('recover identity button label'),
+          description: t('recover identity button description'),
+          icon: Receipt,
+          onClick: onRecoverIdentity,
+        },
+      }),
+    }),
+    [t, supportsPasskeys, onPasskey, onJoinIdentity, onRecoverIdentity],
+  );
 
   return (
     <Dialog.Root defaultOpen>
@@ -60,6 +110,18 @@ export const Welcome = ({
               composer
             </h1>
 
+            {state === WelcomeState.INIT && Object.keys(actions).length > 0 && (
+              <div role='none' className='flex flex-col gap-8'>
+                <div className='flex flex-col gap-2'>
+                  <h1 className='text-2xl'>{t('existing users title')}</h1>
+                  <p className='text-subdued'>{t('existing users description')}</p>
+                </div>
+                <div className='flex flex-col gap-2'>
+                  <BifurcatedAction actions={actions} />
+                </div>
+              </div>
+            )}
+
             {state === WelcomeState.INIT && !onSpaceInvitation && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
@@ -75,7 +137,8 @@ export const Welcome = ({
                         classNames='!bg-black'
                         placeholder={t('email input placeholder')}
                         value={email}
-                        onChange={(ev) => setEmail(ev.target.value.trim())}
+                        onChange={handleEmailChange}
+                        onKeyDown={handleEmailKeyDown}
                       />
                       <Input.DescriptionAndValidation>
                         <Input.Validation classNames='flex h-4 px-2 py-1 text-rose-550'>
@@ -87,11 +150,11 @@ export const Welcome = ({
                   <div>
                     <Button
                       variant='primary'
-                      disabled={!validEmail(email)}
+                      disabled={!validEmail(email) || pending}
                       onClick={handleSignup}
                       data-testid='welcome.login'
                     >
-                      {t('login button label')}
+                      {t('signup button label')}
                     </Button>
                   </div>
                 </div>
@@ -101,8 +164,8 @@ export const Welcome = ({
             {state === WelcomeState.INIT && onSpaceInvitation && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
-                  <h1 className='text-2xl'>{t(identity ? 'welcome back title' : 'welcome title')}</h1>
-                  <p className='text-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
+                  <h1 className='text-2xl'>{t('space invitation welcome title')}</h1>
+                  <p className='text-subdued'>{t('space invitation welcome description')}</p>
                 </div>
                 <CompoundButton
                   slots={{ root: { className: 'is-full' } }}
@@ -115,55 +178,11 @@ export const Welcome = ({
               </div>
             )}
 
-            {state === WelcomeState.INIT && (onJoinIdentity || onRecoverIdentity) && (
-              <div role='none' className='flex flex-col gap-8'>
-                <div className='flex flex-col gap-2'>
-                  <h1 className='text-2xl'>{t('new device')}</h1>
-                  <p className='text-subdued'>{t('new device description')}</p>
-                </div>
-                <div className='flex flex-col gap-2'>
-                  {supportsPasskeys && onPasskey && (
-                    <CompoundButton
-                      slots={{ label: { className: 'text-sm' } }}
-                      after={<CaretRight className={getSize(4)} weight='bold' />}
-                      before={<Key className={getSize(6)} />}
-                      onClick={onPasskey}
-                      data-testid='welcome.redeem-passkey'
-                    >
-                      {t('redeem passkey button label')}
-                    </CompoundButton>
-                  )}
-                  {onJoinIdentity && (
-                    <CompoundButton
-                      slots={{ label: { className: 'text-sm' } }}
-                      after={<CaretRight className={getSize(4)} weight='bold' />}
-                      before={<QrCode className={getSize(6)} />}
-                      onClick={onJoinIdentity}
-                      data-testid='welcome.join-identity'
-                    >
-                      {t('join device button label')}
-                    </CompoundButton>
-                  )}
-                  {onRecoverIdentity && (
-                    <CompoundButton
-                      slots={{ label: { className: 'text-sm' } }}
-                      after={<CaretRight className={getSize(4)} weight='bold' />}
-                      before={<Receipt className={getSize(6)} />}
-                      onClick={onRecoverIdentity}
-                      data-testid='welcome.recover-identity'
-                    >
-                      {t('recover identity button label')}
-                    </CompoundButton>
-                  )}
-                </div>
-              </div>
-            )}
-
             {state === WelcomeState.EMAIL_SENT && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{t('welcome title')}</h1>
-                  <p className='text-subdued'>{identity ? t('check email for access') : t('check email to confirm')}</p>
+                  <p className='text-subdued'>{t('check email for access')}</p>
                 </div>
               </div>
             )}

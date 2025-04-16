@@ -3,6 +3,7 @@
 //
 
 import type { Identity } from '@dxos/client/halo';
+import { type MaybePromise } from '@dxos/util';
 
 export enum WelcomeState {
   INIT = 0,
@@ -13,11 +14,11 @@ export type WelcomeScreenProps = {
   state: WelcomeState;
   identity?: Identity | null;
   error?: boolean;
-  onSignup?: (email: string) => void;
-  onPasskey?: () => void;
-  onJoinIdentity?: () => void;
-  onRecoverIdentity?: () => void;
-  onSpaceInvitation?: () => void;
+  onSignup?: (email: string) => MaybePromise<void>;
+  onPasskey?: () => MaybePromise<void>;
+  onJoinIdentity?: () => MaybePromise<void>;
+  onRecoverIdentity?: () => MaybePromise<void>;
+  onSpaceInvitation?: () => MaybePromise<void>;
 };
 
 export const validEmail = (email: string) => !!email.match(/.+@.+\..+/);

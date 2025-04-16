@@ -47,7 +47,7 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-joyride="welcome/halo"]',
+    target: '[data-joyride="welcome/account"]',
     title: 'Profile',
     content: 'Manage your profile and devices.',
   },

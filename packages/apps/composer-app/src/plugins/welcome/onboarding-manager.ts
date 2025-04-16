@@ -2,13 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createIntent, LayoutAction, type PluginsContext, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { pipe } from 'effect';
+
+import {
+  chain,
+  createIntent,
+  LayoutAction,
+  type PluginsContext,
+  type PromiseIntentDispatcher,
+} from '@dxos/app-framework';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { CLIENT_PLUGIN } from '@dxos/plugin-client';
-import { ClientAction } from '@dxos/plugin-client/types';
+import { Account, ClientAction } from '@dxos/plugin-client/types';
 import { HelpAction } from '@dxos/plugin-help/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
@@ -16,6 +23,7 @@ import { type Credential, type Identity } from '@dxos/react-client/halo';
 
 import { WELCOME_SCREEN } from './components';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
+import { WELCOME_PLUGIN } from './meta';
 import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 
 export type OnboardingManagerParams = {
@@ -128,11 +136,25 @@ export class OnboardingManager {
     }
 
     await this._dispatch(
-      // TODO(wittjosiah): Factor out to client plugin.
-      createIntent(LayoutAction.UpdateDialog, {
-        part: 'dialog',
-        subject: `${CLIENT_PLUGIN}/RecoverySetupDialog`,
-        options: { state: true, type: 'alert' },
+      createIntent(LayoutAction.AddToast, {
+        part: 'toast',
+        subject: {
+          id: 'passkey-setup-toast',
+          title: ['passkey setup toast title', { ns: WELCOME_PLUGIN }],
+          description: ['passkey setup toast description', { ns: WELCOME_PLUGIN }],
+          duration: Infinity,
+          icon: 'ph--key--regular',
+          closeLabel: ['close label', { ns: 'os' }],
+          actionLabel: ['passkey setup toast action label', { ns: WELCOME_PLUGIN }],
+          actionAlt: ['passkey setup toast action alt', { ns: WELCOME_PLUGIN }],
+          onAction: () => {
+            const intent = pipe(
+              createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
+              chain(LayoutAction.Open, { part: 'main', subject: [Account.Passkeys] }),
+            );
+            void this._dispatch(intent);
+          },
+        },
       }),
     );
   }

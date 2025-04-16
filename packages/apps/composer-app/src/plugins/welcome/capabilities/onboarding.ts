@@ -19,12 +19,13 @@ export default async (context: PluginsContext) => {
   const searchParams = new URLSearchParams(window.location.search);
   const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
 
+  const token = searchParams.get('token') ?? undefined;
   const manager = new OnboardingManager({
     dispatch,
     client,
     context: pluginManager.context,
     hubUrl,
-    token: searchParams.get('token') ?? undefined,
+    token,
     recoverIdentity: searchParams.get('recoverIdentity') === 'true',
     deviceInvitationCode: searchParams.get('deviceInvitationCode') ?? undefined,
     spaceInvitationCode: searchParams.get('spaceInvitationCode') ?? undefined,
@@ -38,7 +39,7 @@ export default async (context: PluginsContext) => {
   const recoveryCredential = credentials.find(
     (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
   );
-  if (identity && !recoveryCredential) {
+  if (identity && !recoveryCredential && !token) {
     await manager.setupRecovery();
   }
 
@@ -46,7 +47,7 @@ export default async (context: PluginsContext) => {
   const edgeAgent = devices.find(
     (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
   );
-  if (identity && !edgeAgent) {
+  if (identity && !edgeAgent && !token) {
     await dispatch(createIntent(ClientAction.CreateAgent));
   }
 
