@@ -8,6 +8,7 @@ import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react
 import { createIntent, SettingsAction, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions/types';
 import { log } from '@dxos/log';
+import { BaseObjectSettings } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
@@ -34,20 +35,24 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
 const Properties = ({ script }: ScriptSettingsPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   return (
-    <div role='form' className='flex flex-col p-2 gap-4'>
-      <Input.Root>
-        <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('description label')}</Input.Label>
-          <Input.TextInput
-            placeholder={t('description placeholder')}
-            value={script.description ?? ''}
-            onChange={(event) => {
-              script.description = event.target.value;
-            }}
-          />
-        </div>
-      </Input.Root>
-    </div>
+    <>
+      {/* TODO(burdon): Figure out how to standardize this. */}
+      <BaseObjectSettings object={script} />
+      <div role='form' className='flex flex-col p-2 gap-4'>
+        <Input.Root>
+          <div role='none' className='flex flex-col gap-1'>
+            <Input.Label>{t('description label')}</Input.Label>
+            <Input.TextInput
+              placeholder={t('description placeholder')}
+              value={script.description ?? ''}
+              onChange={(event) => {
+                script.description = event.target.value;
+              }}
+            />
+          </div>
+        </Input.Root>
+      </div>
+    </>
   );
 };
 
@@ -82,7 +87,7 @@ const Binding = ({ script }: ScriptSettingsPanelProps) => {
 
   // TODO(burdon): Use form.
   return (
-    <div role='form' className='flex flex-col w-full p-2 gap-4'>
+    <div role='form' className='flex flex-col p-2 gap-4'>
       <h2>{t('remote function settings heading')}</h2>
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
@@ -185,7 +190,7 @@ const Publishing = ({ script }: ScriptSettingsPanelProps) => {
   }, [script, githubToken]);
 
   return (
-    <div className='flex flex-col w-full p-2 gap-4'>
+    <div className='flex flex-col p-2 gap-4'>
       <div>
         <h2>{t('script publish settings label')}</h2>
         <p className='text-description text-sm'>{t('script publish settings description')}</p>
