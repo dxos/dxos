@@ -63,14 +63,6 @@ export const createDeploy = (state: Partial<DeployState>) => {
   };
 };
 
-export const useDeployDeps = ({ script }: { script: ScriptType }) => {
-  const space = getSpace(script);
-  const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
-  const client = useClient();
-  const existingFunctionUrl = useMemo(() => fn && getUserFunctionUrlInMetadata(getMeta(fn)), [fn]);
-  return { space, fn, client, existingFunctionUrl };
-};
-
 export const useDeployState = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
   const { space, client, existingFunctionUrl } = useDeployDeps({ script });
   useEffect(() => {
@@ -88,6 +80,17 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
   }, [script.changed, existingFunctionUrl]);
 };
 
+export const useDeployDeps = ({ script }: { script: ScriptType }) => {
+  const space = getSpace(script);
+  const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
+  const client = useClient();
+  const existingFunctionUrl = useMemo(() => fn && getUserFunctionUrlInMetadata(getMeta(fn)), [fn]);
+  return { space, fn, client, existingFunctionUrl };
+};
+
+/**
+ * Managed EDGE deployment of function.
+ */
 export const useDeployHandler = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
   const { space, fn, client, existingFunctionUrl } = useDeployDeps({ script });
   const { t } = useTranslation(SCRIPT_PLUGIN);
@@ -117,39 +120,44 @@ export const useDeployHandler = ({ state, script }: { state: Partial<DeployState
         source: buildResult.bundle,
       });
       if (functionId === undefined || version === undefined) {
-        throw new Error(`Upload didn't return expected data: functionId=${functionId}, version=${version}`);
+        throw new Error(`Upload didn't return expected data: ${JSON.stringify({ functionId, version })}`);
       }
 
-      log.info('function uploaded', { functionId, version });
-      if (fn) {
-        fn.version = version;
+      let storedFunction = fn;
+      if (storedFunction) {
+        storedFunction.version = version;
+      } else {
+        storedFunction = space.db.add(
+          create(FunctionType, {
+            name: functionId,
+            version,
+            source: makeRef(script),
+          }),
+        );
       }
-
-      const deployedFunction =
-        fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: makeRef(script) }));
 
       script.changed = false;
       if (script.description !== undefined && script.description.trim() !== '') {
-        deployedFunction.description = script.description;
+        storedFunction.description = script.description;
       } else if (meta.description) {
-        deployedFunction.description = meta.description;
+        storedFunction.description = meta.description;
       } else {
         log.verbose('no description in function metadata', { functionId });
       }
 
       if (meta.inputSchema) {
-        deployedFunction.inputSchema = meta.inputSchema;
+        storedFunction.inputSchema = meta.inputSchema;
       } else {
         log.verbose('no input schema in function metadata', { functionId });
       }
 
       if (meta.outputSchema) {
-        deployedFunction.outputSchema = meta.outputSchema;
+        storedFunction.outputSchema = meta.outputSchema;
       } else {
         log.verbose('no output schema in function metadata', { functionId });
       }
 
-      setUserFunctionUrlInMetadata(getMeta(deployedFunction), `/${space.id}/${functionId}`);
+      setUserFunctionUrlInMetadata(getMeta(storedFunction), `/${space.id}/${functionId}`);
     } catch (err: any) {
       log.catch(err);
       state.error = t('upload failed label');
