@@ -18,22 +18,22 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { TagPickerItem } from './TagPickerItem';
-import { createLinks, multiselect, type MultiselectItem, type MultiselectOptions } from './extension';
-import { translationKey } from '../../translations';
+import { createLinks, tagPickerExtension, type TagPickerItemData, type TagPickerOptions } from './extension';
+import { translationKey } from '../translations';
 
 export type MultiselectProps = ThemedClassName<
-  { items: MultiselectItem[]; readonly?: boolean } & Pick<MultiselectOptions, 'onSelect' | 'onSearch' | 'onUpdate'>
+  { items: TagPickerItemData[]; readonly?: boolean } & Pick<TagPickerOptions, 'onSelect' | 'onSearch' | 'onUpdate'>
 >;
 
-export const Multiselect = ({ readonly, ...props }: MultiselectProps) => {
+export const TagPicker = ({ readonly, ...props }: MultiselectProps) => {
   if (readonly) {
-    return <ReadonlyMultiselect {...props} />;
+    return <ReadonlyTagPicker {...props} />;
   } else {
-    return <EditableMultiselect {...props} />;
+    return <EditableTagPicker {...props} />;
   }
 };
 
-const ReadonlyMultiselect = ({ items, onSelect }: MultiselectProps) => {
+const ReadonlyTagPicker = ({ items, onSelect }: MultiselectProps) => {
   const handleItemClick = useCallback(
     ({ itemId, action }: DxTagPickerItemClick) => {
       if (action === 'activate') {
@@ -58,7 +58,7 @@ const ReadonlyMultiselect = ({ items, onSelect }: MultiselectProps) => {
   );
 };
 
-const EditableMultiselect = ({ classNames, items, readonly, onUpdate, ...props }: MultiselectProps) => {
+const EditableTagPicker = ({ classNames, items, readonly, onUpdate, ...props }: MultiselectProps) => {
   const { themeMode } = useThemeContext();
   const { ref: resizeRef, width } = useResizeDetector();
   const { t } = useTranslation(translationKey);
@@ -85,7 +85,7 @@ const EditableMultiselect = ({ classNames, items, readonly, onUpdate, ...props }
             },
           },
         }),
-        multiselect({
+        tagPickerExtension({
           debug: true,
           onUpdate: handleUpdate,
           removeLabel: t('remove label'),

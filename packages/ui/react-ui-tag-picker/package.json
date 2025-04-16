@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui-multiselect",
+  "name": "@dxos/react-ui-tag-picker",
   "version": "0.8.0",
-  "description": "A multiselect component.",
+  "description": "A tag picker component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

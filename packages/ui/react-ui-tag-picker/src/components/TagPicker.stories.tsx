@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import '@dxos-theme';
@@ -10,10 +10,10 @@ import React, { useState } from 'react';
 import { IconButton } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { Multiselect } from './Multiselect';
-import { type MultiselectItem } from './extension';
+import { TagPicker } from './TagPicker';
+import { type TagPickerItemData } from './extension';
 
-const allItems: MultiselectItem[] = [
+const allItems: TagPickerItemData[] = [
   { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
   { id: 'cursor', label: 'Cursor' },
   { id: 'dxos', label: 'DXOS', hue: 'green' },
@@ -23,9 +23,9 @@ const allItems: MultiselectItem[] = [
   { id: 'socket-supply', label: 'Socket Supply', hue: 'indigo' },
 ];
 
-const meta: Meta<typeof Multiselect> = {
-  title: 'ui/react-ui-multiselect/Multiselect',
-  component: Multiselect,
+const meta: Meta<typeof TagPicker> = {
+  title: 'ui/react-ui-tag-picker/TagPicker',
+  component: TagPicker,
   render: ({ items: initialItems }) => {
     const [items, setItems] = useState(initialItems);
     const [selected, setSelected] = useState<string>();
@@ -34,7 +34,7 @@ const meta: Meta<typeof Multiselect> = {
     return (
       <div className='w-[20rem] space-y-2'>
         <div className='flex border p-1 border-separator'>
-          <Multiselect
+          <TagPicker
             items={items}
             onSelect={(id) => {
               setSelected(id);
@@ -59,7 +59,7 @@ const meta: Meta<typeof Multiselect> = {
           />
         </div>
         <div className='flex border p-1 border-separator'>
-          <Multiselect
+          <TagPicker
             readonly
             items={items}
             onSelect={(id) => {
@@ -79,7 +79,7 @@ const meta: Meta<typeof Multiselect> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Multiselect>;
+type Story = StoryObj<typeof TagPicker>;
 
 export const Default: Story = {
   args: {

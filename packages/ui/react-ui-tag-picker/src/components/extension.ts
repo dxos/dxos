@@ -29,17 +29,17 @@ import { type ChromaticPalette } from '@dxos/react-ui';
 
 import { type TagPickerItemProps } from './TagPickerItem';
 
-export type MultiselectItem = { id: string; label: string; hue?: ChromaticPalette };
+export type TagPickerItemData = { id: string; label: string; hue?: ChromaticPalette };
 
-export const createLinks = (items: MultiselectItem[]) => {
+export const createLinks = (items: TagPickerItemData[]) => {
   return items.map(({ id, label }) => `[${label}](${id})`).join('');
 };
 
 /**
  * Apply function formats item as link.
  */
-export const multiselectApply = (view: EditorView, completion: Completion, from: number, to: number) => {
-  const id = (completion as MultiselectItem).id;
+export const tagPickerApply = (view: EditorView, completion: Completion, from: number, to: number) => {
+  const id = (completion as TagPickerItemData).id;
   const label = completion.label;
   view.dispatch({ changes: { from, to, insert: `[${label}](${id})` } });
 
@@ -62,18 +62,24 @@ const scrollToCursor = (view: EditorView) => {
   }
 };
 
-export type MultiselectOptions = {
+export type TagPickerOptions = {
   debug?: boolean;
   removeLabel?: string;
   onSelect?: (id: string) => void;
-  onSearch?: (text: string, ids: string[]) => MultiselectItem[];
+  onSearch?: (text: string, ids: string[]) => TagPickerItemData[];
   onUpdate?: (ids: string[]) => void;
 };
 
 /**
  * Uses the markdown parser to parse links, which are decorated as pill buttons.
  */
-export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }: MultiselectOptions): Extension => {
+export const tagPickerExtension = ({
+  debug,
+  onSelect,
+  onSearch,
+  onUpdate,
+  removeLabel,
+}: TagPickerOptions): Extension => {
   /** Ordered list of ids. */
   const ids: string[] = [];
   /** Range spans for each id. */
@@ -149,7 +155,7 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
                   const id = view.state.sliceDoc(urlNode.from, urlNode.to);
                   const text = view.state.doc.sliceString(from + 1, urlNode.from - 2);
                   const originalItem = onSearch?.('', []).find((item) => item.id === id);
-                  const item: MultiselectItem = {
+                  const item: TagPickerItemData = {
                     id,
                     label: text,
                     hue: originalItem?.hue,
@@ -223,7 +229,7 @@ export const multiselect = ({ debug, onSelect, onSearch, onUpdate, removeLabel }
               id,
               label,
               hue,
-              apply: multiselectApply,
+              apply: tagPickerApply,
             })),
           };
         },
