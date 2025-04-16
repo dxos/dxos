@@ -5,8 +5,8 @@
 import { defineCapability } from '@dxos/app-framework';
 
 import { type Compiler } from '../compiler';
-import { SCRIPT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export namespace ScriptCapabilities {
-  export const Compiler = defineCapability<Compiler>(`${SCRIPT_PLUGIN}/capability/compiler`);
+  export const Compiler = defineCapability<Compiler>(`${meta.id}/capability/compiler`);
 }
