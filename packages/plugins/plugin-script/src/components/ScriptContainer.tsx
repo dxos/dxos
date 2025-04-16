@@ -56,10 +56,6 @@ export const ScriptContainer = ({
     [script, script.source.target, space, identity],
   );
 
-  if (!space) {
-    return null;
-  }
-
   return (
     <StackItem.Content toolbar>
       <ScriptToolbar state={state} role={role} script={script} />
