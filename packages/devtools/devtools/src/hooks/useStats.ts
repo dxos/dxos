@@ -118,7 +118,9 @@ export const useStats = (): [Stats, () => void] => {
         // https://developer.mozilla.org/en-US/docs/Web/API/Performance/measureUserAgentSpecificMemory
         // const { bytes } = (await (window.performance as any).measureUserAgentSpecificMemory()) as { bytes: number };
       }
-      memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      if ('usedJSHeapSize' in memory) {
+        memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      }
 
       log('collected stats', { elapsed: performance.now() - begin });
       if (isMounted()) {

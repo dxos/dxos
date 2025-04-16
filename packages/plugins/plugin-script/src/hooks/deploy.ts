@@ -89,7 +89,7 @@ export const useDeployDeps = ({ script }: { script: ScriptType }) => {
 };
 
 /**
- * Managed EDGE deployment of function.
+ * Manage EDGE function deployment.
  */
 export const useDeployHandler = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
   const { space, fn, client, existingFunctionUrl } = useDeployDeps({ script });
