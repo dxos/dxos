@@ -18,7 +18,7 @@ const ChessContainer = ({ game }: { game: ChessType; role?: string }) => {
   }
 
   return (
-    <StackItem.Content toolbar={false}>
+    <StackItem.Content>
       <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
         <div />
 

@@ -8,7 +8,6 @@ import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum } from '@d
 import { faker } from '@dxos/random';
 import { create, makeRef } from '@dxos/react-client/echo';
 import { createView, type ViewProjection } from '@dxos/schema';
-import {} from '@dxos/schema';
 
 import { TableType } from '../types';
 

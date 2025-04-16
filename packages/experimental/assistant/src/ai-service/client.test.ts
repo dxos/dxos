@@ -198,7 +198,7 @@ describe.skip('Ollama Client', () => {
       }),
     );
 
-    log.info('messages', { messages });
+    log('messages', { messages });
   });
 
   test('tool calls', async (ctx) => {
@@ -221,7 +221,7 @@ describe.skip('Ollama Client', () => {
     });
     const parser = new MixedStreamParser();
     parser.streamEvent.on((event) => {
-      // log.info('event', { event });
+      // log('event', { event });
     });
 
     const messages = await parser.parse(
@@ -233,7 +233,7 @@ describe.skip('Ollama Client', () => {
       }),
     );
 
-    log.info('messages', { messages });
+    log('messages', { messages });
   });
 
   test('text-to-image', async (ctx) => {
@@ -260,6 +260,6 @@ describe.skip('Ollama Client', () => {
       }),
     );
 
-    log.info('messages', { messages });
+    log('messages', { messages });
   });
 });

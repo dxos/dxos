@@ -16,7 +16,7 @@ import { ManageCredentialsDialog } from './ManageCredentialsDialog';
 import { ClientPlugin } from '../ClientPlugin';
 import translations from '../translations';
 
-const Render = () => {
+const DefaultStory = () => {
   return (
     <AlertDialog.Root open>
       <AlertDialog.Overlay>
@@ -29,7 +29,7 @@ const Render = () => {
 const meta: Meta = {
   title: 'plugins/plugin-client/ManageCredentialsDialog',
   component: ManageCredentialsDialog,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withPluginManager({
       plugins: [

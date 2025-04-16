@@ -4,6 +4,8 @@
 
 import { lazy } from 'react';
 
+export * from './SpaceInfoPanel';
+
 export const AutomergePanel = lazy(() => import('./AutomergePanel'));
 export const FeedsPanel = lazy(() => import('./FeedsPanel'));
 export const MembersPanel = lazy(() => import('./MembersPanel'));

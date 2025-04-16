@@ -29,6 +29,7 @@ import {
   Cloud,
   Function,
   LineSegments,
+  Flask,
 } from '@phosphor-icons/react';
 
 export type SectionItem = {
@@ -207,6 +208,11 @@ export const useSections = (): SectionItem[] => {
           id: '/edge/traces',
           title: 'Traces',
           Icon: LineSegments,
+        },
+        {
+          id: '/edge/testing',
+          title: 'Testing',
+          Icon: Flask,
         },
       ],
     },
