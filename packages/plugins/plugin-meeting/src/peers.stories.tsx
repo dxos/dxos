@@ -130,7 +130,7 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
 };
 
 const meta: Meta<typeof Render> = {
-  title: 'plugins/plugin-calls/peers',
+  title: 'plugins/plugin-meeting/peers',
   render: Render,
   decorators: [
     withClientProvider({

@@ -124,7 +124,7 @@ export const Default: Story = {
 
 export const Images: Story = {
   args: {
-    random: true,
+    debug: true,
     items: Array.from({ length: 8 }, (_, i) => createItem('image')),
   },
 };
