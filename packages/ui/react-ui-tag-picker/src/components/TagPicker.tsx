@@ -18,14 +18,24 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { TagPickerItem } from './TagPickerItem';
-import { createLinks, tagPickerExtension, type TagPickerItemData, type TagPickerOptions } from './extension';
+import {
+  createLinks,
+  tagPickerExtension,
+  type TagPickerItemData,
+  type TagPickerMode,
+  type TagPickerOptions,
+} from './extension';
 import { translationKey } from '../translations';
 
-export type MultiselectProps = ThemedClassName<
-  { items: TagPickerItemData[]; readonly?: boolean } & Pick<TagPickerOptions, 'onSelect' | 'onSearch' | 'onUpdate'>
+export type TagPickerProps = ThemedClassName<
+  {
+    items: TagPickerItemData[];
+    readonly?: boolean;
+    mode?: TagPickerMode;
+  } & Pick<TagPickerOptions, 'onSelect' | 'onSearch' | 'onUpdate'>
 >;
 
-export const TagPicker = ({ readonly, ...props }: MultiselectProps) => {
+export const TagPicker = ({ readonly, ...props }: TagPickerProps) => {
   if (readonly) {
     return <ReadonlyTagPicker {...props} />;
   } else {
@@ -33,7 +43,7 @@ export const TagPicker = ({ readonly, ...props }: MultiselectProps) => {
   }
 };
 
-const ReadonlyTagPicker = ({ items, onSelect }: MultiselectProps) => {
+const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
   const handleItemClick = useCallback(
     ({ itemId, action }: DxTagPickerItemClick) => {
       if (action === 'activate') {
@@ -58,7 +68,7 @@ const ReadonlyTagPicker = ({ items, onSelect }: MultiselectProps) => {
   );
 };
 
-const EditableTagPicker = ({ classNames, items, readonly, onUpdate, ...props }: MultiselectProps) => {
+const EditableTagPicker = ({ classNames, items, readonly, mode, onUpdate, ...props }: TagPickerProps) => {
   const { themeMode } = useThemeContext();
   const { ref: resizeRef, width } = useResizeDetector();
   const { t } = useTranslation(translationKey);
@@ -89,11 +99,12 @@ const EditableTagPicker = ({ classNames, items, readonly, onUpdate, ...props }: 
           debug: true,
           onUpdate: handleUpdate,
           removeLabel: t('remove label'),
+          mode,
           ...props,
         }),
       ],
     }),
-    [themeMode],
+    [themeMode, mode],
   );
 
   const ref = useComposedRefs(resizeRef, parentRef);

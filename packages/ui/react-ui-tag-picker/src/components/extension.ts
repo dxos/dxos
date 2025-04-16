@@ -38,10 +38,23 @@ export const createLinks = (items: TagPickerItemData[]) => {
 /**
  * Apply function formats item as link.
  */
-export const tagPickerApply = (view: EditorView, completion: Completion, from: number, to: number) => {
+export const tagPickerApply = (
+  view: EditorView,
+  completion: Completion,
+  from: number,
+  to: number,
+  mode?: TagPickerMode,
+) => {
   const id = (completion as TagPickerItemData).id;
   const label = completion.label;
-  view.dispatch({ changes: { from, to, insert: `[${label}](${id})` } });
+
+  if (mode === 'single-select') {
+    // Clear the entire document and replace with just this tag
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: `[${label}](${id})` } });
+  } else {
+    // Multi-select: just add the tag at cursor
+    view.dispatch({ changes: { from, to, insert: `[${label}](${id})` } });
+  }
 
   // TODO(burdon): Hack.
   // Since renders async, need to wait for DOM to update.
@@ -62,9 +75,12 @@ const scrollToCursor = (view: EditorView) => {
   }
 };
 
+export type TagPickerMode = 'single-select' | 'multi-select';
+
 export type TagPickerOptions = {
   debug?: boolean;
   removeLabel?: string;
+  mode?: TagPickerMode;
   onSelect?: (id: string) => void;
   onSearch?: (text: string, ids: string[]) => TagPickerItemData[];
   onUpdate?: (ids: string[]) => void;
@@ -79,6 +95,7 @@ export const tagPickerExtension = ({
   onSearch,
   onUpdate,
   removeLabel,
+  mode = 'multi-select',
 }: TagPickerOptions): Extension => {
   /** Ordered list of ids. */
   const ids: string[] = [];
@@ -229,7 +246,7 @@ export const tagPickerExtension = ({
               id,
               label,
               hue,
-              apply: tagPickerApply,
+              apply: (view, completion, from, to) => tagPickerApply(view, completion, from, to, mode),
             })),
           };
         },

@@ -13,7 +13,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { TagPicker } from './TagPicker';
 import { type TagPickerItemData } from './extension';
 
-const allItems: TagPickerItemData[] = [
+const items: TagPickerItemData[] = [
   { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
   { id: 'cursor', label: 'Cursor' },
   { id: 'dxos', label: 'DXOS', hue: 'green' },
@@ -26,7 +26,7 @@ const allItems: TagPickerItemData[] = [
 const meta: Meta<typeof TagPicker> = {
   title: 'ui/react-ui-tag-picker/TagPicker',
   component: TagPicker,
-  render: ({ items: initialItems }) => {
+  render: ({ items: initialItems, mode }) => {
     const [items, setItems] = useState(initialItems);
     const [selected, setSelected] = useState<string>();
     // TODO(burdon): Line height.
@@ -36,14 +36,15 @@ const meta: Meta<typeof TagPicker> = {
         <div className='flex border p-1 border-separator'>
           <TagPicker
             items={items}
+            mode={mode}
             onSelect={(id) => {
               setSelected(id);
             }}
             onUpdate={(ids) => {
-              setItems(ids.map((id) => allItems.find(({ id: itemId }) => itemId === id)!));
+              setItems(ids.map((id) => items.find(({ id: itemId }) => itemId === id)!));
             }}
             onSearch={(text, ids) => {
-              return allItems.filter(
+              return items.filter(
                 ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
               );
             }}
@@ -81,8 +82,15 @@ export default meta;
 
 type Story = StoryObj<typeof TagPicker>;
 
-export const Default: Story = {
+export const MultiSelect: Story = {
   args: {
-    items: [allItems[0], allItems[1]],
+    items: [items[0], items[1]],
+  },
+};
+
+export const SingleSelect: Story = {
+  args: {
+    mode: 'single-select',
+    items: [items[0]],
   },
 };
