@@ -37,7 +37,7 @@ type RenderProps = EditorRootProps &
     computeGraph?: CanvasGraphModel;
   }>;
 
-const Render = ({ id = 'test', init, sidebar, children, ...props }: RenderProps) => {
+const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
   const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
@@ -102,7 +102,7 @@ const Render = ({ id = 'test', init, sidebar, children, ...props }: RenderProps)
 const meta: Meta<EditorRootProps> = {
   title: 'ui/react-ui-canvas-editor/Editor',
   component: Editor.Root,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withClientProvider({
       createIdentity: true,

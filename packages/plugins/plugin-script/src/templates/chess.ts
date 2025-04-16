@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 // @ts-ignore
 import { defineFunction, S } from 'dxos:functions';
 // @ts-ignore

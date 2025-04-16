@@ -49,7 +49,7 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    projection: new ViewProjection(createEchoSchema(TestSchema), testView),
+    projection: new ViewProjection(createEchoSchema(TestSchema).jsonSchema, testView),
     view: testView,
     field: testView.fields[0],
   },
