@@ -19,7 +19,7 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType; role: stri
 
   return (
     <Root classNames='container-max-width pis-2 pie-2'>
-      <div className='grow relative overflow-hidden'>
+      <div className='relative'>
         <Transcript blocks={queue?.items} attendableId={attendableId} />
       </div>
     </Root>
