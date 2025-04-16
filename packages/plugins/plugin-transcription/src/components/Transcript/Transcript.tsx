@@ -7,7 +7,7 @@ import { yieldOrContinue } from 'main-thread-scheduling';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
-import { IconButton, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellValue,
@@ -92,7 +92,7 @@ export type TranscriptProps = ThemedClassName<{
   ignoreAttention?: boolean;
 }>;
 
-export const Transcript: FC<TranscriptProps> = ({ classNames,blocks, attendableId, ignoreAttention }) => {
+export const Transcript: FC<TranscriptProps> = ({ classNames, blocks, attendableId, ignoreAttention }) => {
   const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
   const { hasAttention } = useAttention(attendableId);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
@@ -220,6 +220,6 @@ export const Transcript: FC<TranscriptProps> = ({ classNames,blocks, attendableI
         ]}
         onClick={handleScrollToEnd}
       />
-    </>
+    </div>
   );
 };
