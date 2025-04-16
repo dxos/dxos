@@ -19,7 +19,7 @@ import { getUserMediaTrack } from '../../util';
 import { ResponsiveContainer } from '../ResponsiveGrid';
 
 const meta: Meta<typeof VideoObject> = {
-  title: 'plugins/plugin-calls/VideoObject',
+  title: 'plugins/plugin-meeting/VideoObject',
   component: VideoObject,
   render: (args) => {
     log.info('render');

@@ -50,7 +50,7 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
 type StoryProps = ResponsiveGridProps<TestItem> & { random?: boolean };
 
 const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-calls/ResponsiveGrid',
+  title: 'plugins/plugin-meeting/ResponsiveGrid',
   component: ResponsiveGrid,
   render: (args) => {
     const [pinned, setPinned] = useState<string | undefined>(
@@ -124,7 +124,7 @@ export const Default: Story = {
 
 export const Images: Story = {
   args: {
-    random: true,
+    debug: true,
     items: Array.from({ length: 8 }, (_, i) => createItem('image')),
   },
 };

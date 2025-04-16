@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useLayoutEffect, useState, useEffect, useMemo, type ComponentType, useCallback } from 'react';
+import React, { useLayoutEffect, useState, useEffect, useMemo, type ComponentType, useCallback, type FC } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
 import { resizeAttributes, ResizeHandle, sizeStyle, type Size } from '@dxos/react-ui-dnd';
+import { mx } from '@dxos/react-ui-theme';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
@@ -42,6 +43,8 @@ export type ResponsiveGridProps<T extends object = any> = {
 
 const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
 
+// TODO(burdon): Start with pinned; Resize to bottom; Unpin; Pin.
+
 /**
  * A responsive grid component that automatically adjusts its layout to optimize space usage.
  * Maintains aspect ratio of items while ensuring uniform gaps between them.
@@ -52,6 +55,7 @@ export const ResponsiveGrid = <T extends object = any>({
   getId = defaultGetId,
   items,
   pinned,
+  debug,
   onPinnedChange,
 }: ResponsiveGridProps<T>) => {
   const { height: containerHeight = 0, ref: containerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
@@ -66,14 +70,16 @@ export const ResponsiveGrid = <T extends object = any>({
   const pinnedItem = useMemo(() => items.find((item) => getId(item) === pinned), [items, pinned]);
   const mainItems = useMemo(() => items.filter((item) => getId(item) !== pinned), [items, pinned]);
 
-  // Recalculate optimal columns when container size or items change.
-  const [{ columns, cellWidth }, setOptimalColumns] = useState<OptimalColumns>({ columns: 0, cellWidth: 0 });
+  //
+  // Recalculate optimal layout when container size or items change.
+  //
+  const [{ columns, cellWidth }, setLayout] = useState<Layout>({ columns: 0, cellWidth: 0 });
   const { width = 0, height = 0, ref: gridContainerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
   useEffect(() => {
     if (width > 0 && height > 0) {
-      setOptimalColumns(calculateOptimalColumns(width, height, mainItems.length, gap));
+      setLayout(calculateLayout(width, height, mainItems.length, gap));
     }
-  }, [width, height, mainItems.length, gap]);
+  }, [width, height, mainItems.length, gap, pinned]);
 
   // Absolutely positioned items.
   const [bounds, setBounds] = useState<[T, DOMRectBounds][]>([]);
@@ -98,65 +104,53 @@ export const ResponsiveGrid = <T extends object = any>({
           .filter((item): item is [T, DOMRectBounds] => item !== null),
       );
     });
+
     return () => clearTimeout(t);
-  }, [mainItems, width, height]);
+  }, [mainItems, columns, cellWidth, width, height]);
 
   const handleClick = useCallback(
     (item: T) => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item)),
     [pinned, onPinnedChange],
   );
 
-  const SoloItem = ({ item }: { item: T }) => {
-    return (
-      <ResponsiveContainer>
-        <div {...{ 'data-grid-item': getId(item) }} className='aspect-video overflow-hidden'>
-          {/* Placeholder image. */}
-          <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
-        </div>
-      </ResponsiveContainer>
-    );
-  };
-
   return (
     <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
       {pinnedItem && (
-        <>
+        <div
+          {...resizeAttributes}
+          className='relative flex shrink-0 w-full overflow-hidden border-be border-separator'
+          style={{
+            ...sizeStyle(dividerHeight, 'vertical'),
+            paddingTop: gap,
+            paddingBottom: gap,
+          }}
+        >
           {/* Pinned item. */}
-          <div
-            {...resizeAttributes}
-            className='relative flex shrink-0 w-full overflow-hidden border-be border-separator'
-            style={{
-              ...sizeStyle(dividerHeight, 'vertical'),
-              paddingTop: gap,
-              paddingBottom: gap,
-            }}
-          >
-            <SoloItem item={pinnedItem} />
+          <SoloItem id={getId(pinnedItem)} debug={debug} />
 
-            <ResizeHandle
-              side='block-end'
-              classNames='z-10'
-              defaultSize='min-content'
-              minSize={MIN_HEIGHT_REM}
-              maxSize={maxDividerHeight}
-              fallbackSize={DEFAULT_HEIGHT_REM}
-              iconPosition='center'
-              onSizeChange={setDividerHeight}
-            />
-          </div>
-        </>
+          <ResizeHandle
+            side='block-end'
+            classNames='z-10'
+            defaultSize='min-content'
+            minSize={MIN_HEIGHT_REM}
+            maxSize={maxDividerHeight}
+            fallbackSize={DEFAULT_HEIGHT_REM}
+            iconPosition='center'
+            onSizeChange={setDividerHeight}
+          />
+        </div>
       )}
 
       {/* Placeholder grid. */}
       <div
         ref={gridContainerRef}
-        className='flex w-full grow overflow-hidden items-center'
+        className='flex w-full grow overflow-hidden justify-center items-center'
         style={{
           paddingTop: gap,
           paddingBottom: gap,
         }}
       >
-        {mainItems.length === 1 && <SoloItem item={mainItems[0]} />}
+        {mainItems.length === 1 && <SoloItem id={getId(mainItems[0])} debug={debug} />}
         {mainItems.length > 1 && columns > 0 && (
           <div
             role='grid'
@@ -170,7 +164,7 @@ export const ResponsiveGrid = <T extends object = any>({
               <div
                 key={getId(item)}
                 {...{ 'data-grid-item': getId(item) }}
-                className='aspect-video max-h-full max-w-full w-auto h-auto'
+                className={mx('aspect-video max-h-full max-w-full w-auto h-auto', debug && 'border border-primary-500')}
               />
             ))}
           </div>
@@ -178,7 +172,7 @@ export const ResponsiveGrid = <T extends object = any>({
       </div>
 
       {/* Absolutely positioned items. */}
-      <div>
+      <div className={mx(debug && 'opacity-50')}>
         {bounds.map(([item, bounds]) => (
           <Cell
             key={getId(item)}
@@ -191,6 +185,20 @@ export const ResponsiveGrid = <T extends object = any>({
         ))}
       </div>
     </div>
+  );
+};
+
+const SoloItem: FC<Pick<ResponsiveGridProps, 'debug'> & { id: string }> = ({ debug, id }) => {
+  return (
+    <ResponsiveContainer>
+      <div
+        {...{ 'data-grid-item': id }}
+        className={mx('aspect-video overflow-hidden', debug && 'z-20 border-2 border-primary-500')}
+      >
+        {/* Maximum size placeholder image forces aspect ratio. */}
+        <img alt='placeholder video' className='w-[1280px] h-[720px] opacity-0' />
+      </div>
+    </ResponsiveContainer>
   );
 };
 
@@ -208,7 +216,7 @@ const getRelativeBounds = (container: HTMLElement, el: HTMLElement): DOMRectBoun
   };
 };
 
-type OptimalColumns = {
+type Layout = {
   columns: number;
   cellWidth: number;
 };
@@ -222,13 +230,13 @@ type OptimalColumns = {
  * @param aspectRatio - Desired aspect ratio of items (width/height).
  * @returns The optimal number of columns.
  */
-const calculateOptimalColumns = (
+const calculateLayout = (
   containerWidth: number,
   containerHeight: number,
   count: number,
   gap: number,
   aspectRatio = 16 / 9,
-): OptimalColumns => {
+): Layout => {
   if (count === 0) {
     return { columns: 1, cellWidth: 1 };
   }
