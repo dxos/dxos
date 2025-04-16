@@ -17,7 +17,7 @@ import { Button } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type TrackData, CALLS_URL } from './types';
+import { type TrackObject, CALLS_URL } from './types';
 import { CallsServicePeer } from './util';
 // @ts-ignore
 import video from '../testing/video.mp4';
@@ -63,7 +63,7 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
   // Get video stream track.
   const videoStreamTrack = useVideoStreamTrack(pushVideoElement.current);
   const pullCtx = useRef<Context | undefined>(undefined);
-  const trackInfo = useRef<TrackData | undefined>(undefined);
+  const trackInfo = useRef<TrackObject | undefined>(undefined);
   const hadRun = useRef(false);
 
   // Push/pull video stream track to cloudflare.
