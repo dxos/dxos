@@ -18,8 +18,7 @@ export default (context: PluginsContext) =>
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          // TODO(burdon): Return [node.id, SLUG_PATH_SEPARATOR, 'settings'].
-          id: [node.id, SLUG_PATH_SEPARATOR, 'settings'].join(),
+          id: [node.id, 'settings'].join(SLUG_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
@@ -34,7 +33,7 @@ export default (context: PluginsContext) =>
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          id: [node.id, SLUG_PATH_SEPARATOR, 'execute'].join(),
+          id: [node.id, 'execute'].join(SLUG_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
@@ -49,7 +48,7 @@ export default (context: PluginsContext) =>
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          id: [node.id, SLUG_PATH_SEPARATOR, 'logs'].join(),
+          id: [node.id, 'logs'].join(SLUG_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
