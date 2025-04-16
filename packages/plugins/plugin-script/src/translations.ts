@@ -16,7 +16,7 @@ export default [
       [SCRIPT_PLUGIN]: {
         'plugin name': 'Scripts',
         'description label': 'Description',
-        'description placeholder': 'Enter description...',
+        'description placeholder': 'Enter description',
         'binding placeholder': 'Function name',
         'function request placeholder': 'Function request',
         'deploy label': 'Deploy',
@@ -31,7 +31,7 @@ export default [
         'remote function settings heading': 'Remote Function',
         'function url label': 'Invocation URL',
         'function binding label': 'Function binding',
-        'function binding placeholder': 'BINDING',
+        'function binding placeholder': 'Enter binding name (e.g., NAME)',
         'script publish settings label': 'Publishing',
         'script publish settings description': 'Scripts can be shared publicly as Github gists.',
         'no github token label': 'This space has no Github access token available.',
