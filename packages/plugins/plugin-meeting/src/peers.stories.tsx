@@ -16,7 +16,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CALLS_URL } from './types';
+import { type TrackData, CALLS_URL } from './types';
 import { CallsServicePeer } from './util';
 // @ts-ignore
 import video from '../testing/video.mp4';
@@ -131,7 +131,6 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
 
 const meta: Meta<typeof Render> = {
   title: 'plugins/plugin-meeting/peers',
-  render: Render,
   decorators: [
     withClientProvider({
       config: new Config({ runtime: { services: { iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }] } } }),
@@ -149,6 +148,97 @@ export default meta;
 type Story = StoryObj<typeof Render>;
 
 export const Default: Story = {
+  render: Render,
+  args: {
+    videoSrc: video,
+  },
+};
+
+export const RePull: Story = {
+  render: (args) => {
+    const config = useConfig();
+    const callsConfig = {
+      iceServers: config.get('runtime.services.ice'),
+      apiBase: `${CALLS_URL}/api/calls`,
+    };
+    const peerPush = useMemo(() => new CallsServicePeer(callsConfig), []);
+    const peerPull = useMemo(() => new CallsServicePeer(callsConfig), []);
+    const pushVideoElement = useRef<HTMLVideoElement>(null);
+    const pullVideoElement = useRef<HTMLVideoElement>(null);
+    const videoStreamTrack = useVideoStreamTrack(pushVideoElement.current);
+    const hadRun = useRef(false);
+    const pullCtx = useRef<Context | undefined>(undefined);
+    const trackInfo = useRef<TrackData | undefined>(undefined);
+
+    // Push/pull video stream track to cloudflare.
+    useEffect(() => {
+      if (hadRun.current || !videoStreamTrack || !peerPush || !peerPull) {
+        return;
+      }
+      hadRun.current = true;
+
+      const ctx = new Context();
+      scheduleTask(ctx, async () => {
+        log.info('starting push/pull', { videoStreamTrack });
+
+        await peerPush.open();
+        await peerPull.open();
+        ctx.onDispose(() => {
+          void peerPush.close();
+          void peerPull.close();
+        });
+
+        // Push track to cloudflare.
+        const pushedTrack = await peerPush.pushTrack({ track: videoStreamTrack });
+        trackInfo.current = pushedTrack;
+        // Wait for cloudflare to process the track.
+        await sleep(500);
+
+        // Pull track from cloudflare.
+        invariant(pullVideoElement.current);
+        pullVideoElement.current.srcObject = new MediaStream();
+        pullCtx.current = new Context();
+        const pulledTrack = await peerPull.pullTrack({
+          trackData: { ...pushedTrack, mid: undefined },
+          ctx: pullCtx.current,
+        });
+        invariant(pulledTrack);
+        pullVideoElement.current.srcObject.addTrack(pulledTrack);
+        await pullVideoElement.current.play();
+        log.info('pulled track', { pulledTrack, stream: pullVideoElement.current.srcObject });
+      });
+
+      return () => {
+        void ctx.dispose();
+      };
+    }, [videoStreamTrack, peerPush, peerPull]);
+
+    const handleRePullVideo = async () => {
+      invariant(pullVideoElement.current);
+      invariant(pullVideoElement.current.srcObject instanceof MediaStream);
+      const pulledTrack = pullVideoElement.current.srcObject.getTracks()[0];
+      invariant(pulledTrack);
+      pullVideoElement.current.srcObject.removeTrack(pulledTrack);
+      await pullCtx.current!.dispose();
+      pulledTrack.stop();
+
+      pullCtx.current = new Context();
+      const newPulledTrack = await peerPull.pullTrack({
+        trackData: { ...trackInfo.current!, mid: undefined },
+        ctx: pullCtx.current,
+      });
+      invariant(newPulledTrack);
+      pullVideoElement.current.srcObject.addTrack(newPulledTrack);
+    };
+
+    return (
+      <div className='grid grid-cols-3 gap-4 items-center'>
+        <video ref={pushVideoElement} muted autoPlay src={video} loop />
+        <video ref={pullVideoElement} muted />
+        <button onClick={handleRePullVideo}>Repull video</button>
+      </div>
+    );
+  },
   args: {
     videoSrc: video,
   },
