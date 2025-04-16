@@ -66,7 +66,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
       return;
     }
 
-    return new ViewProjection(schema, table.view.target!);
+    return new ViewProjection(schema.jsonSchema, table.view.target!);
   }, [schema, table.view?.target]);
 
   const features = useMemo(

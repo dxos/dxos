@@ -6,10 +6,10 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 
 import { Resource } from '@dxos/context';
 
-import { type BaseTableRow } from './table-model';
+import { type TableRow } from './table-model';
 import { touch } from '../util';
 
-export class SelectionModel<T extends BaseTableRow> extends Resource {
+export class SelectionModel<T extends TableRow> extends Resource {
   private readonly _selection = signal<Set<string>>(new Set());
 
   private readonly _validSelectedIds = computed<Set<string>>(() => {

@@ -128,7 +128,6 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     'version',
 
     'type',
-
     'enum',
 
     'properties',
