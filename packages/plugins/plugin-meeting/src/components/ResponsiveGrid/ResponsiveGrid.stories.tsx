@@ -50,7 +50,7 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
 type StoryProps = ResponsiveGridProps<TestItem> & { random?: boolean };
 
 const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-calls/ResponsiveGrid',
+  title: 'plugins/plugin-meeting/ResponsiveGrid',
   component: ResponsiveGrid,
   render: (args) => {
     const [pinned, setPinned] = useState<string | undefined>(
