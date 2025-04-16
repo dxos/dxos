@@ -50,7 +50,7 @@ test.skip('cypher query', async () => {
     logger: createLogger({ stream: false }),
   });
 
-  log.info('DONE', { result: result.result });
+  log('DONE', { result: result.result });
 });
 
 test.skip('query ECHO', async () => {
@@ -87,5 +87,5 @@ test.skip('query ECHO', async () => {
     logger: createLogger({ stream: false }),
   });
 
-  log.info('DONE', { result: result.result });
+  log('DONE', { result: result.result });
 });

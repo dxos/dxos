@@ -93,7 +93,6 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
   return (
     // NOTE: Min 500px height (for tools palette to be visible).
     <StackItem.Content
-      toolbar={false}
       size={role === 'section' ? 'square' : 'intrinsic'}
       classNames='min-bs-[32rem]'
       ref={containerRef}

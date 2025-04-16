@@ -20,7 +20,7 @@ const OutlinerContainer = ({ role, tree }: { role: string; tree: TreeType }) => 
   }
 
   return (
-    <StackItem.Content role={role} toolbar={false} classNames='container-max-width'>
+    <StackItem.Content role={role} classNames='container-max-width'>
       <Outliner.Root classNames={mx(attentionSurface, 'pbs-2')} tree={tree} {...handlers} />
     </StackItem.Content>
   );
