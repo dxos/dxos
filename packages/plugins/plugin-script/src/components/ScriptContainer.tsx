@@ -53,7 +53,7 @@ export const ScriptContainer = ({
         identity,
       }),
     ],
-    [script, script.source.target, space, identity],
+    [identity, space, script, script.source.target],
   );
 
   return (
