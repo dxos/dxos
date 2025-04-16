@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Waveform, type WaveformProps } from './Waveform';
 
-const Render = ({ active: _active }: WaveformProps) => {
+const DefaultStory = ({ active: _active }: WaveformProps) => {
   const [active, setActive] = useState(_active);
 
   return (
@@ -65,7 +65,7 @@ const Render = ({ active: _active }: WaveformProps) => {
 const meta: Meta<WaveformProps> = {
   title: 'ui/react-ui-sfx/Waveform',
   component: Waveform,
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
 };
 

@@ -26,7 +26,7 @@ const TEMPLATE = [
   '{{input}}',
 ].join('\n');
 
-const Render = () => {
+const DefaultStory = () => {
   const client = useClient();
   const [template] = useState(() => {
     const space = client.spaces.default;
@@ -43,7 +43,7 @@ const Render = () => {
 const meta: Meta<typeof TemplateForm> = {
   title: 'plugins/plugin-automation/TemplateForm',
   component: TemplateForm,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withClientProvider({
       createIdentity: true,

@@ -34,7 +34,7 @@ const TEMPLATE = [
   '',
 ].join('\n');
 
-const Render = ({ text }: TemplateEditorProps & { text: string }) => {
+const DefaultStory = ({ text }: TemplateEditorProps & { text: string }) => {
   const client = useClient();
   const [template] = useState(() => {
     const space = client.spaces.default;
@@ -48,10 +48,10 @@ const Render = ({ text }: TemplateEditorProps & { text: string }) => {
   );
 };
 
-const meta: Meta<typeof Render> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-automation/TemplateEditor',
   component: TemplateEditor,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withClientProvider({
       createIdentity: true,
@@ -68,7 +68,7 @@ const meta: Meta<typeof Render> = {
 
 export default meta;
 
-type Story = Meta<typeof Render>;
+type Story = Meta<typeof DefaultStory>;
 
 export const Default: Story = {
   args: {
