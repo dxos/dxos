@@ -49,7 +49,7 @@ const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
   return videoStreamTrack;
 };
 
-const Render = ({ videoSrc }: { videoSrc: string }) => {
+const DefaultStory = ({ videoSrc }: { videoSrc: string }) => {
   const config = useConfig();
   const callsConfig = {
     iceServers: config.get('runtime.services.ice'),
@@ -164,8 +164,9 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
   );
 };
 
-const meta: Meta<typeof Render> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-meeting/peers',
+  render: DefaultStory,
   decorators: [
     withClientProvider({
       config: new Config({ runtime: { services: { iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }] } } }),
@@ -180,10 +181,9 @@ const meta: Meta<typeof Render> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Render>;
+type Story = StoryObj<typeof DefaultStory>;
 
 export const Default: Story = {
-  render: Render,
   args: {
     videoSrc: video,
   },

@@ -62,7 +62,7 @@ export const initializeKanban = async ({
 
     const kanban = create(KanbanType, { cardView: makeRef(view), columnFieldId: undefined });
     if (initialPivotColumn) {
-      const viewProjection = new ViewProjection(schema, view);
+      const viewProjection = new ViewProjection(schema.jsonSchema, view);
       const fieldId = viewProjection.getFieldId(initialPivotColumn);
       if (fieldId) {
         kanban.columnFieldId = fieldId;
@@ -80,7 +80,7 @@ export const initializeKanban = async ({
       fields: ['title', 'description'],
     });
 
-    const viewProjection = new ViewProjection(schema, view);
+    const viewProjection = new ViewProjection(schema.jsonSchema, view);
 
     // Set description field to Markdown format.
     const descriptionFieldId = viewProjection.getFieldId('description');

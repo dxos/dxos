@@ -21,7 +21,7 @@ import { CallContainer, type CallContainerProps } from './CallContainer';
 import { MeetingPlugin } from '../MeetingPlugin';
 import translations from '../translations';
 
-const Render = (props: CallContainerProps) => {
+const DefaultStory = (props: CallContainerProps) => {
   const client = useClient();
   const space = client.spaces.get().at(-1);
 
@@ -41,7 +41,7 @@ const Render = (props: CallContainerProps) => {
 const meta: Meta<CallContainerProps> = {
   title: 'plugins/plugin-meeting/CallContainer',
   component: CallContainer,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withPluginManager({
       plugins: [
