@@ -13,7 +13,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { TagPicker } from './TagPicker';
 import { type TagPickerItemData } from './extension';
 
-const items: TagPickerItemData[] = [
+const allItems: TagPickerItemData[] = [
   { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
   { id: 'cursor', label: 'Cursor' },
   { id: 'dxos', label: 'DXOS', hue: 'green' },
@@ -37,17 +37,13 @@ const meta: Meta<typeof TagPicker> = {
           <TagPicker
             items={items}
             mode={mode}
-            onSelect={(id) => {
-              setSelected(id);
-            }}
-            onUpdate={(ids) => {
-              setItems(ids.map((id) => items.find(({ id: itemId }) => itemId === id)!));
-            }}
-            onSearch={(text, ids) => {
-              return items.filter(
+            onSelect={(id) => setSelected(id)}
+            onUpdate={(ids) => setItems(ids.map((id) => allItems.find(({ id: itemId }) => itemId === id)!))}
+            onSearch={(text, ids) =>
+              allItems.filter(
                 ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
-              );
-            }}
+              )
+            }
           />
           <IconButton
             icon='ph--x--regular'
@@ -84,13 +80,13 @@ type Story = StoryObj<typeof TagPicker>;
 
 export const MultiSelect: Story = {
   args: {
-    items: [items[0], items[1]],
+    items: [allItems[0], allItems[1]],
   },
 };
 
 export const SingleSelect: Story = {
   args: {
     mode: 'single-select',
-    items: [items[0]],
+    items: [allItems[0]],
   },
 };

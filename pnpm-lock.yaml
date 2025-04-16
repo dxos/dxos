@@ -12782,6 +12782,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../react-ui-form
@@ -12800,6 +12803,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
+      '@dxos/react-ui-tag-picker':
+        specifier: workspace:*
+        version: link:../react-ui-tag-picker
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types

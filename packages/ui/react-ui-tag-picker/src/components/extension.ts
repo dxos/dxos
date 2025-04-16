@@ -80,6 +80,8 @@ export type TagPickerMode = 'single-select' | 'multi-select';
 export type TagPickerOptions = {
   debug?: boolean;
   removeLabel?: string;
+  // TODO(ZaymonFC): Think of a better name for this?
+  inGrid?: boolean;
   mode?: TagPickerMode;
   onSelect?: (id: string) => void;
   onSearch?: (text: string, ids: string[]) => TagPickerItemData[];
@@ -91,11 +93,12 @@ export type TagPickerOptions = {
  */
 export const tagPickerExtension = ({
   debug,
+  inGrid,
+  mode = 'multi-select',
   onSelect,
   onSearch,
   onUpdate,
   removeLabel,
-  mode = 'multi-select',
 }: TagPickerOptions): Extension => {
   /** Ordered list of ids. */
   const ids: string[] = [];
@@ -112,22 +115,27 @@ export const tagPickerExtension = ({
     return true;
   };
 
+  const getKeymap = () => {
+    if (inGrid) {
+      return [];
+    }
+    return [
+      {
+        key: 'Tab',
+        run: handleCompletion,
+        preventDefault: true,
+      },
+      {
+        key: 'Enter',
+        run: handleCompletion,
+        preventDefault: true,
+      },
+    ];
+  };
+
   const extensions: Extension[] = [
     keymap.of(completionKeymap),
-    Prec.highest(
-      keymap.of([
-        {
-          key: 'Tab',
-          run: handleCompletion,
-          preventDefault: true,
-        },
-        {
-          key: 'Enter',
-          run: handleCompletion,
-          preventDefault: true,
-        },
-      ]),
-    ),
+    Prec.highest(keymap.of(getKeymap())),
 
     // Autocomplete.
     autocompletion({
@@ -286,7 +294,7 @@ const styles = EditorView.theme({
   // Constrain max width to editor.
   '.cm-tooltip.cm-tooltip-autocomplete': {
     left: '3px !important',
-    width: 'var(--dx-multiselectWidth)',
+    width: 'var(--dx-tag-picker-width)',
     marginTop: '6.5px',
   },
   '.cm-completionLabel': {},

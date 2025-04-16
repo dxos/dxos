@@ -118,6 +118,6 @@ const EditableTagPicker = ({ classNames, items, readonly, mode, onUpdate, ...pro
   }, [view, items]);
 
   return (
-    <div ref={ref} className='min-is-0 flex-1' style={{ '--dx-multiselectWidth': `${width}px` } as CSSProperties} />
+    <div ref={ref} className='min-is-0 flex-1' style={{ '--dx-tag-picker-width': `${width}px` } as CSSProperties} />
   );
 };

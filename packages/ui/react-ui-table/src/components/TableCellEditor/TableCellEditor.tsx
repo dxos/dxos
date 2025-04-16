@@ -8,6 +8,8 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
+import { useThemeContext } from '@dxos/react-ui';
+import { createMarkdownExtensions } from '@dxos/react-ui-editor';
 import {
   cellQuery,
   editorKeys,
@@ -21,6 +23,7 @@ import {
   type GridCellEditorProps,
   type GridScopedProps,
 } from '@dxos/react-ui-grid';
+import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
 import { completion } from './extension';
@@ -55,6 +58,7 @@ export const TableCellEditor = ({
 }: GridScopedProps<TableCellEditorProps>) => {
   const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
+  const { themeMode } = useThemeContext();
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -80,7 +84,7 @@ export const TableCellEditor = ({
       onFocus?.();
       setEditing(null);
     },
-    [model, editing],
+    [model, editing, onEnter, onFocus, setEditing],
   );
 
   const handleBlur = useCallback<EditorBlurHandler>(
@@ -113,7 +117,7 @@ export const TableCellEditor = ({
         onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
       }
     },
-    [model, editing, onFocus, onEnter, fieldProjection, determineNavigationAxis, determineNavigationDelta],
+    [model, editing, onFocus, onEnter, fieldProjection],
   );
 
   const extension = useMemo(() => {
@@ -127,6 +131,47 @@ export const TableCellEditor = ({
         ...(editing?.initialContent && { onNav: handleClose }),
       }),
     ];
+
+    // Handle SingleSelect format
+    if (fieldProjection.props.format === FormatEnum.SingleSelect) {
+      // Add markdown extensions needed by tag picker
+      extension.push(createMarkdownExtensions({ themeMode }));
+
+      const options = fieldProjection.props.options || [];
+
+      // Add tag picker extension
+      extension.push(
+        tagPickerExtension({
+          // Set mode to single
+          mode: 'single-select',
+          inGrid: true,
+          onSearch: (text, selectedIds) => {
+            // Convert options to TagPickerItemData format
+            return options
+              .filter(
+                (option) =>
+                  selectedIds.indexOf(option.id) === -1 &&
+                  (text.length === 0 || option.title.toLowerCase().includes(text.toLowerCase())),
+              )
+              .map((option) => ({
+                id: option.id,
+                label: option.title,
+                hue: option.color as any,
+              }));
+          },
+          onUpdate: (ids) => {
+            if (model && editing) {
+              const cell = parseCellIndex(editing.index);
+              // For single select, use the first tag id or undefined if empty
+              const value = ids.length > 0 ? ids[0] : undefined;
+
+              // Update the cell with the selected id
+              model.setCellData(cell, value);
+            }
+          },
+        }),
+      );
+    }
 
     if (onQuery) {
       switch (fieldProjection.props.format) {
@@ -164,11 +209,41 @@ export const TableCellEditor = ({
     }
 
     return extension;
-  }, [model, modals, editing, fieldProjection, handleClose]);
+  }, [model, modals, editing, fieldProjection, handleClose, themeMode]);
 
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
-      const value = model.getCellData(parseCellIndex(editing.index));
+      const cell = parseCellIndex(editing.index);
+      const { col } = cell;
+      const field = model.projection.view.fields[col];
+      const fieldProjection = model.projection.getFieldProjection(field.id);
+
+      if (fieldProjection?.props.format === FormatEnum.SingleSelect) {
+        // Get the current value (option id)
+        const value = model.getCellData(cell);
+
+        if (value !== undefined) {
+          // Get the option details from the field projection
+          const options = fieldProjection.props.options || [];
+          const option = options.find((o) => o.id === value);
+
+          if (option) {
+            const tagItem = {
+              id: value,
+              label: option.title,
+              hue: option.color as any,
+            };
+
+            return createLinks([tagItem]);
+          }
+        }
+
+        // Return empty string if no value
+        return '';
+      }
+
+      // Default behavior for other formats
+      const value = model.getCellData(cell);
       return value !== undefined ? String(value) : '';
     }
   }, [model, editing]);

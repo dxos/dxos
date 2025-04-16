@@ -11,6 +11,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import {
   type UseTextEditorProps,
   createBasicExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
   preventNewline,
   useTextEditor,
