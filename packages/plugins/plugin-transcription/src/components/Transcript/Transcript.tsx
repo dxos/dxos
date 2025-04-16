@@ -7,7 +7,7 @@ import { yieldOrContinue } from 'main-thread-scheduling';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellValue,
@@ -37,12 +37,6 @@ const measureClasses = mx(
   'pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block] leading-[20px]',
   segmentTextClasses,
 );
-
-export type TranscriptProps = {
-  blocks?: TranscriptBlock[];
-  attendableId?: string;
-  ignoreAttention?: boolean;
-};
 
 const rowDefault = {
   grid: { size: lineHeight + cellSpacing },
@@ -92,7 +86,13 @@ const measureRows = async (
   return result;
 };
 
-export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAttention }) => {
+export type TranscriptProps = ThemedClassName<{
+  blocks?: TranscriptBlock[];
+  attendableId?: string;
+  ignoreAttention?: boolean;
+}>;
+
+export const Transcript: FC<TranscriptProps> = ({ classNames,blocks, attendableId, ignoreAttention }) => {
   const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
   const { hasAttention } = useAttention(attendableId);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
@@ -194,7 +194,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   }, [dxGrid, autoScroll]);
 
   return (
-    <>
+    <div role='none' className={mx('relative min-bs-0', classNames)}>
       <Grid.Root id={`${attendableId}--transcript`}>
         <Grid.Content
           limitColumns={2}
