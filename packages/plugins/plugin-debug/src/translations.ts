@@ -61,6 +61,7 @@ export default [
         'edge label': 'EDGE',
         'workflows label': 'Workflows',
         'traces label': 'Traces',
+        'testing label': 'Testing',
       },
     },
   },
