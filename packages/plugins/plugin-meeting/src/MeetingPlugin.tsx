@@ -90,7 +90,7 @@ export const MeetingPlugin = () =>
           contributes(DeckCapabilities.ComplementaryPanel, {
             id: 'meeting',
             label: ['meeting panel label', { ns: MEETING_PLUGIN }],
-            icon: 'ph--phone-call--regular',
+            icon: 'ph--video-conference--regular',
             position: 'hoist',
             fixed: true,
             filter: () => call.joined,
