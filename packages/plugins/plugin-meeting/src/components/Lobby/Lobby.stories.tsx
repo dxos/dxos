@@ -16,7 +16,7 @@ import { MeetingPlugin } from '../../MeetingPlugin';
 import translations from '../../translations';
 
 const meta: Meta<typeof Lobby> = {
-  title: 'plugins/plugin-calls/Lobby',
+  title: 'plugins/plugin-meeting/Lobby',
   component: Lobby,
   render: () => {
     return (
