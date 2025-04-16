@@ -63,7 +63,7 @@
 //     backend,
 //   });
 
-//   log.info('result', { result });
+//   log('result', { result });
 // });
 
 // const backend = new AnthropicBackend({

@@ -51,7 +51,7 @@
       "path": "../../core/echo/live-object"
     },
     {
-      "path": "../../plugins/experimental/plugin-search"
+      "path": "../../plugins/plugin-search"
     },
     {
       "path": "../../plugins/plugin-space"

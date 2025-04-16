@@ -23,70 +23,16 @@
         "packages/experimental/assistant/src/testing/index.ts"
       ],
       "@dxos/plugin-assistant": [
-        "packages/plugins/experimental/plugin-assistant/src/index.ts"
+        "packages/plugins/plugin-assistant/src/index.ts"
       ],
       "@dxos/plugin-assistant/types": [
-        "packages/plugins/experimental/plugin-assistant/src/types/index.ts"
-      ],
-      "@dxos/plugin-automation": [
-        "packages/plugins/experimental/plugin-automation/src/index.ts"
-      ],
-      "@dxos/plugin-conductor": [
-        "packages/plugins/experimental/plugin-conductor/src/index.ts"
-      ],
-      "@dxos/plugin-conductor/types": [
-        "packages/plugins/experimental/plugin-conductor/src/types.ts"
-      ],
-      "@dxos/plugin-explorer": [
-        "packages/plugins/experimental/plugin-explorer/src/index.ts"
-      ],
-      "@dxos/plugin-explorer/meta": [
-        "packages/plugins/experimental/plugin-explorer/src/meta.ts"
-      ],
-      "@dxos/plugin-explorer/types": [
-        "packages/plugins/experimental/plugin-explorer/src/types/index.ts"
-      ],
-      "@dxos/plugin-inbox": [
-        "packages/plugins/experimental/plugin-inbox/src/index.ts"
-      ],
-      "@dxos/plugin-inbox/types": [
-        "packages/plugins/experimental/plugin-inbox/src/types/index.ts"
-      ],
-      "@dxos/plugin-native": [
-        "packages/plugins/experimental/plugin-native/src/index.ts"
-      ],
-      "@dxos/plugin-script": [
-        "packages/plugins/experimental/plugin-script/src/index.ts"
-      ],
-      "@dxos/plugin-script/types": [
-        "packages/plugins/experimental/plugin-script/src/types.ts"
-      ],
-      "@dxos/plugin-search": [
-        "packages/plugins/experimental/plugin-search/src/index.ts"
-      ],
-      "@dxos/plugin-template": [
-        "packages/plugins/experimental/plugin-template/src/index.ts"
-      ],
-      "@dxos/plugin-template/types": [
-        "packages/plugins/experimental/plugin-template/src/types.ts"
-      ],
-      "@dxos/plugin-theme-editor": [
-        "packages/plugins/experimental/plugin-theme-editor/src/index.ts"
-      ],
-      "@dxos/plugin-transcription": [
-        "packages/plugins/experimental/plugin-transcription/src/index.ts"
-      ],
-      "@dxos/plugin-transcription/types": [
-        "packages/plugins/experimental/plugin-transcription/src/types/index.ts"
-      ],
-      "@dxos/plugin-transformer": [
-        "packages/plugins/experimental/plugin-transformer/src/index.ts"
-      ],
-      "@dxos/plugin-transformer/types": [
-        "packages/plugins/experimental/plugin-transformer/src/types/index.ts"
+        "packages/plugins/plugin-assistant/src/types/index.ts"
       ],
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
+      ],
+      "@dxos/plugin-automation": [
+        "packages/plugins/plugin-automation/src/index.ts"
       ],
       "@dxos/plugin-chess": [
         "packages/plugins/plugin-chess/src/index.ts"
@@ -100,6 +46,12 @@
       "@dxos/plugin-client/types": [
         "packages/plugins/plugin-client/src/types.ts"
       ],
+      "@dxos/plugin-conductor": [
+        "packages/plugins/plugin-conductor/src/index.ts"
+      ],
+      "@dxos/plugin-conductor/types": [
+        "packages/plugins/plugin-conductor/src/types.ts"
+      ],
       "@dxos/plugin-debug": [
         "packages/plugins/plugin-debug/src/index.ts"
       ],
@@ -111,6 +63,15 @@
       ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/plugin-excalidraw/src/index.ts"
+      ],
+      "@dxos/plugin-explorer": [
+        "packages/plugins/plugin-explorer/src/index.ts"
+      ],
+      "@dxos/plugin-explorer/meta": [
+        "packages/plugins/plugin-explorer/src/meta.ts"
+      ],
+      "@dxos/plugin-explorer/types": [
+        "packages/plugins/plugin-explorer/src/types/index.ts"
       ],
       "@dxos/plugin-files": [
         "packages/plugins/plugin-files/src/index.ts"
@@ -126,6 +87,12 @@
       ],
       "@dxos/plugin-help/types": [
         "packages/plugins/plugin-help/src/types.ts"
+      ],
+      "@dxos/plugin-inbox": [
+        "packages/plugins/plugin-inbox/src/index.ts"
+      ],
+      "@dxos/plugin-inbox/types": [
+        "packages/plugins/plugin-inbox/src/types/index.ts"
       ],
       "@dxos/plugin-kanban": [
         "packages/plugins/plugin-kanban/src/index.ts"
@@ -154,6 +121,9 @@
       "@dxos/plugin-mermaid": [
         "packages/plugins/plugin-mermaid/src/index.ts"
       ],
+      "@dxos/plugin-native": [
+        "packages/plugins/plugin-native/src/index.ts"
+      ],
       "@dxos/plugin-navtree": [
         "packages/plugins/plugin-navtree/src/index.ts"
       ],
@@ -177,6 +147,15 @@
       ],
       "@dxos/plugin-registry": [
         "packages/plugins/plugin-registry/src/index.ts"
+      ],
+      "@dxos/plugin-script": [
+        "packages/plugins/plugin-script/src/index.ts"
+      ],
+      "@dxos/plugin-script/types": [
+        "packages/plugins/plugin-script/src/types.ts"
+      ],
+      "@dxos/plugin-search": [
+        "packages/plugins/plugin-search/src/index.ts"
       ],
       "@dxos/plugin-sheet": [
         "packages/plugins/plugin-sheet/src/index.ts"
@@ -214,11 +193,20 @@
       "@dxos/plugin-table/types": [
         "packages/plugins/plugin-table/src/types/index.ts"
       ],
+      "@dxos/plugin-template": [
+        "packages/plugins/plugin-template/src/index.ts"
+      ],
+      "@dxos/plugin-template/types": [
+        "packages/plugins/plugin-template/src/types.ts"
+      ],
       "@dxos/plugin-theme": [
         "packages/plugins/plugin-theme/src/index.ts"
       ],
       "@dxos/plugin-theme/meta": [
         "packages/plugins/plugin-theme/src/meta.ts"
+      ],
+      "@dxos/plugin-theme-editor": [
+        "packages/plugins/plugin-theme-editor/src/index.ts"
       ],
       "@dxos/plugin-thread": [
         "packages/plugins/plugin-thread/src/index.ts"
@@ -228,6 +216,18 @@
       ],
       "@dxos/plugin-token-manager": [
         "packages/plugins/plugin-token-manager/src/index.ts"
+      ],
+      "@dxos/plugin-transcription": [
+        "packages/plugins/plugin-transcription/src/index.ts"
+      ],
+      "@dxos/plugin-transcription/types": [
+        "packages/plugins/plugin-transcription/src/types/index.ts"
+      ],
+      "@dxos/plugin-transformer": [
+        "packages/plugins/plugin-transformer/src/index.ts"
+      ],
+      "@dxos/plugin-transformer/types": [
+        "packages/plugins/plugin-transformer/src/types/index.ts"
       ],
       "@dxos/plugin-wnfs": [
         "packages/plugins/plugin-wnfs/src/index.ts"

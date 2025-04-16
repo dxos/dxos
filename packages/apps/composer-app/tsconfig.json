@@ -76,46 +76,22 @@
       "path": "../../devtools/devtools"
     },
     {
-      "path": "../../plugins/experimental/plugin-assistant"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-automation"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-conductor"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-explorer"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-inbox"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-native"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-script"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-search"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-template"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-theme-editor"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-transcription"
+      "path": "../../plugins/plugin-assistant"
     },
     {
       "path": "../../plugins/plugin-attention"
+    },
+    {
+      "path": "../../plugins/plugin-automation"
     },
     {
       "path": "../../plugins/plugin-chess"
     },
     {
       "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-conductor"
     },
     {
       "path": "../../plugins/plugin-debug"
@@ -127,6 +103,9 @@
       "path": "../../plugins/plugin-excalidraw"
     },
     {
+      "path": "../../plugins/plugin-explorer"
+    },
+    {
       "path": "../../plugins/plugin-files"
     },
     {
@@ -134,6 +113,9 @@
     },
     {
       "path": "../../plugins/plugin-help"
+    },
+    {
+      "path": "../../plugins/plugin-inbox"
     },
     {
       "path": "../../plugins/plugin-kanban"
@@ -149,6 +131,9 @@
     },
     {
       "path": "../../plugins/plugin-mermaid"
+    },
+    {
+      "path": "../../plugins/plugin-native"
     },
     {
       "path": "../../plugins/plugin-navtree"
@@ -169,6 +154,12 @@
       "path": "../../plugins/plugin-registry"
     },
     {
+      "path": "../../plugins/plugin-script"
+    },
+    {
+      "path": "../../plugins/plugin-search"
+    },
+    {
       "path": "../../plugins/plugin-sheet"
     },
     {
@@ -187,13 +178,22 @@
       "path": "../../plugins/plugin-table"
     },
     {
+      "path": "../../plugins/plugin-template"
+    },
+    {
       "path": "../../plugins/plugin-theme"
+    },
+    {
+      "path": "../../plugins/plugin-theme-editor"
     },
     {
       "path": "../../plugins/plugin-thread"
     },
     {
       "path": "../../plugins/plugin-token-manager"
+    },
+    {
+      "path": "../../plugins/plugin-transcription"
     },
     {
       "path": "../../plugins/plugin-wnfs"
