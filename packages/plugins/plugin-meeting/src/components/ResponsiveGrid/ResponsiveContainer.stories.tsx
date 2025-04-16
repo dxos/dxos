@@ -12,7 +12,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { ResponsiveContainer } from './ResponsiveContainer';
 
 const meta: Meta<typeof ResponsiveContainer> = {
-  title: 'plugins/plugin-calls/ResponsiveContainer',
+  title: 'plugins/plugin-meeting/ResponsiveContainer',
   component: ResponsiveContainer,
   decorators: [
     withTheme,
