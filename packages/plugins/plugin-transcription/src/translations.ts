@@ -14,7 +14,7 @@ export default [
       },
       [TRANSCRIPTION_PLUGIN]: {
         'plugin name': 'Transcription',
-        'transcript companion label': 'Transcription',
+        'transcript companion label': 'Transcript',
 
         'start transcription label': 'Start transcription',
         'stop transcription label': 'Stop transcription',

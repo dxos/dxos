@@ -11,13 +11,13 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Transcript } from './Transcript';
 import { type TranscriptBlock, type TranscriptType } from '../types';
 
-export const TranscriptionContainer: FC<{ transcript: TranscriptType; role: string }> = ({ transcript, role }) => {
+export const TranscriptionContainer: FC<{ role: string; transcript: TranscriptType }> = ({ role, transcript }) => {
   const attendableId = fullyQualifiedId(transcript);
   const queue = useQueue<TranscriptBlock>(transcript.queue.dxn, { pollInterval: 1_000 });
 
   return (
-    <StackItem.Content toolbar={false} classNames='container-max-width pli-2'>
-      <Transcript blocks={queue?.items} attendableId={attendableId} />
+    <StackItem.Content role={role} classNames='container-max-width pli-2'>
+      <Transcript attendableId={attendableId} blocks={queue?.items} />
     </StackItem.Content>
   );
 };
