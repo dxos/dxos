@@ -33,7 +33,7 @@ const meta: Meta<typeof TagPicker> = {
     // TODO(burdon): Wrap option.
     return (
       <div className='w-[20rem] space-y-2'>
-        <div className='flex border p-1 border-separator'>
+        <div className='flex px-1 border items-center border-separator'>
           <TagPicker
             items={items}
             mode={mode}

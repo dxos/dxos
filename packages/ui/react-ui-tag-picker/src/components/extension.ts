@@ -311,6 +311,6 @@ const styles = EditorView.theme({
   },
 
   '.cm-line': {
-    lineHeight: '2 !important',
+    lineHeight: '1 !important',
   },
 });
