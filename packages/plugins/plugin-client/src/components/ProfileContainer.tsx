@@ -1,24 +1,25 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
+import { Schema as S } from 'effect';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { Clipboard, Input, Toolbar, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
+import { DeprecatedFormInput, Form, type InputComponent } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToHue, hexToEmoji } from '@dxos/util';
 
 import { CLIENT_PLUGIN } from '../meta';
 
 // TODO(thure): Factor out?
-const getHueValue = (identity: Identity | null) =>
-  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity: Identity | null) =>
-  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+const getDefaultHueValue = (identity: Identity | null) => hexToHue(identity?.identityKey.toHex() ?? '0');
+const getDefaultEmojiValue = (identity: Identity | null) => hexToEmoji(identity?.identityKey.toHex() ?? '0');
+const getHueValue = (identity: Identity | null) => identity?.profile?.data?.hue || getDefaultHueValue(identity);
+const getEmojiValue = (identity: Identity | null) => identity?.profile?.data?.emoji || getDefaultEmojiValue(identity);
 
 export const ProfileContainer = () => {
   const { t } = useTranslation(CLIENT_PLUGIN);
@@ -28,73 +29,97 @@ export const ProfileContainer = () => {
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
 
-  const updateDisplayName = useMemo(
+  const updateProfile = useMemo(
     () =>
       debounce(
-        (nextDisplayName: string) => client.halo.updateProfile({ ...identity?.profile, displayName: nextDisplayName }),
-        3_000,
+        (profile: Partial<Profile>) =>
+          client.halo.updateProfile({
+            displayName: profile.displayName,
+            data: {
+              emoji: profile.emoji,
+              hue: profile.hue,
+            },
+          }),
+        2_000,
       ),
+    [],
+  );
+
+  const handleSave = useCallback(
+    (profile: Profile) => {
+      setDisplayNameDirectly(profile.displayName);
+      setEmojiDirectly(profile.emoji);
+      setHueDirectly(profile.hue);
+      updateProfile(profile);
+    },
     [identity],
   );
 
-  const setDisplayName = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const nextDisplayName = event.target.value;
-      setDisplayNameDirectly(nextDisplayName);
-      updateDisplayName(nextDisplayName);
-    },
-    [updateDisplayName],
+  const values = useMemo(
+    () => ({
+      displayName,
+      emoji,
+      hue,
+      did: identity?.did,
+    }),
+    [identity, displayName, emoji, hue],
   );
 
-  const setEmoji = useCallback(
-    (nextEmoji: string | undefined) => {
-      setEmojiDirectly(nextEmoji ?? hexToEmoji(identity?.identityKey.toHex() ?? '0'));
-      void client.halo.updateProfile({ ...identity?.profile, data: { ...identity?.profile?.data, emoji: nextEmoji } });
-    },
-    [client, identity],
+  const customElements: Partial<Record<string, InputComponent>> = useMemo(
+    () => ({
+      emoji: ({ type, label, getValue, onValueChange }) => {
+        const handleChange = useCallback((nextEmoji: string) => onValueChange(type, nextEmoji), [onValueChange, type]);
+        const handleEmojiReset = useCallback(
+          () => onValueChange(type, getDefaultEmojiValue(identity)),
+          [onValueChange, type],
+        );
+        return (
+          <DeprecatedFormInput label={label ?? ''}>
+            <Toolbar.Root>
+              {/* TODO(wittjosiah): This isn't working. */}
+              <EmojiPickerBlock emoji={getValue()} onChangeEmoji={handleChange} onClickClear={handleEmojiReset} />
+            </Toolbar.Root>
+          </DeprecatedFormInput>
+        );
+      },
+      hue: ({ type, label, getValue, onValueChange }) => {
+        const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
+        const handleHueReset = useCallback(
+          () => onValueChange(type, getDefaultHueValue(identity)),
+          [onValueChange, type],
+        );
+        return (
+          <DeprecatedFormInput label={label ?? ''}>
+            <Toolbar.Root>
+              <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
+            </Toolbar.Root>
+          </DeprecatedFormInput>
+        );
+      },
+      // TODO(wittjosiah): We need text input annotations for disabled and copyable.
+      did: ({ getValue }) => {
+        return (
+          <DeprecatedFormInput label={t('did label')}>
+            <Input.TextInput value={getValue()} disabled />
+            <Clipboard.IconButton value={getValue() ?? ''} />
+          </DeprecatedFormInput>
+        );
+      },
+    }),
+    [t],
   );
 
-  const handleEmojiReset = useCallback(() => setEmoji(undefined), [setEmoji]);
-
-  const setHue = useCallback(
-    (nextHue: string | undefined) => {
-      setHueDirectly(nextHue ?? hexToHue(identity?.identityKey.toHex() ?? '0'));
-      void client.halo.updateProfile({ ...identity?.profile, data: { ...identity?.profile?.data, hue: nextHue } });
-    },
-    [client, identity],
-  );
-
-  const handleHueReset = useCallback(() => setHue(undefined), [setHue]);
-
-  // TODO(wittjosiah): Ideally this should use `Form`.
-  //   However there's no existing schema for the profile data and `Form` does not yet have wide screen styling.
-  //   Aligning with how the forms are implemented on settings pages as a stopgap to replacing them all with `Form`.
   return (
     <Clipboard.Provider>
-      <DeprecatedFormContainer>
-        <DeprecatedFormInput label={t('display name label')}>
-          <Input.TextInput
-            placeholder={t('display name input placeholder')}
-            value={displayName}
-            onChange={setDisplayName}
-          />
-        </DeprecatedFormInput>
-        <DeprecatedFormInput label={t('icon label')}>
-          <Toolbar.Root>
-            {/* TODO(wittjosiah): This isn't working. */}
-            <EmojiPickerBlock emoji={emoji} onChangeEmoji={setEmoji} onClickClear={handleEmojiReset} />
-          </Toolbar.Root>
-        </DeprecatedFormInput>
-        <DeprecatedFormInput label={t('hue label')}>
-          <Toolbar.Root>
-            <HuePicker value={hue} onChange={setHue} onReset={handleHueReset} />
-          </Toolbar.Root>
-        </DeprecatedFormInput>
-        <DeprecatedFormInput label={t('did label')}>
-          <Input.TextInput value={identity?.did} disabled />
-          <Clipboard.IconButton value={identity?.did ?? ''} />
-        </DeprecatedFormInput>
-      </DeprecatedFormContainer>
+      <Form schema={ProfileSchema} values={values} autoSave onSave={handleSave} Custom={customElements} />
     </Clipboard.Provider>
   );
 };
+
+const ProfileSchema = S.Struct({
+  displayName: S.String.annotations({ title: 'Display Name' }),
+  emoji: S.String.annotations({ title: 'Avatar' }),
+  hue: S.String.annotations({ title: 'Avatar Background' }),
+  did: S.String.annotations({ title: 'DID' }),
+});
+type Profile = S.Schema.Type<typeof ProfileSchema>;
