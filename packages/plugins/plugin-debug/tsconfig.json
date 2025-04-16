@@ -120,9 +120,6 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../experimental/plugin-script"
-    },
-    {
       "path": "../plugin-client"
     },
     {
@@ -133,6 +130,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-script"
     },
     {
       "path": "../plugin-sheet"
