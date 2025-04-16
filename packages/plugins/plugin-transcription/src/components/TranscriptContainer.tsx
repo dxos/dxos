@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, Fragment } from 'react';
+import React, { type FC } from 'react';
 
 import { fullyQualifiedId } from '@dxos/client/echo';
 import { useQueue } from '@dxos/react-client/echo';
@@ -15,13 +15,12 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType; role: stri
   const attendableId = fullyQualifiedId(transcript);
   const queue = useQueue<TranscriptBlock>(transcript.queue.dxn, { pollInterval: 1_000 });
 
-  const Root = role === 'article' ? StackItem.Content : Fragment;
-  const rootProps = role === 'article' ? { toolbar: false } : {};
-
   return (
-    <Root {...(rootProps as any)} classNames='container-max-width'>
-      <Transcript blocks={queue?.items} attendableId={attendableId} />
-    </Root>
+    <StackItem.Content toolbar={false} classNames='pli-2'>
+      <div role='none' className='container-max-width relative min-bs-0'>
+        <Transcript blocks={queue?.items} attendableId={attendableId} />
+      </div>
+    </StackItem.Content>
   );
 };
 
