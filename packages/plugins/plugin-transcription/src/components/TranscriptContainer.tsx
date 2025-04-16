@@ -11,7 +11,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Transcript } from './Transcript';
 import { type TranscriptBlock, type TranscriptType } from '../types';
 
-export const TranscriptionContainer: FC<{ transcript: TranscriptType; role: string }> = ({ transcript, role }) => {
+export const TranscriptionContainer: FC<{ role: string; transcript: TranscriptType }> = ({ role, transcript }) => {
   const attendableId = fullyQualifiedId(transcript);
   const queue = useQueue<TranscriptBlock>(transcript.queue.dxn, { pollInterval: 1_000 });
 
