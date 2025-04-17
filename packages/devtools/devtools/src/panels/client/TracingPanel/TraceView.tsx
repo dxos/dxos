@@ -16,6 +16,7 @@ import { FlameChart } from '../../../components/FlameChart';
 export const TraceView: FC<{ state: State; resourceId?: number }> = ({ state, resourceId }) => {
   const [selectedFlameIndex, setSelectedFlameIndex] = useState(0);
   const [showThreads, setShowThreads] = useState(true);
+  const [groupByResource, setGroupByResource] = useState(true);
 
   const selectedResource = resourceId !== undefined ? state.resources.get(resourceId) : undefined;
 
@@ -28,14 +29,41 @@ export const TraceView: FC<{ state: State; resourceId?: number }> = ({ state, re
   };
 
   const graphs = useMemo(() => {
-    const spans =
+    let spans =
       resourceId === undefined
         ? [...state.spans.values()].filter((s) => s.parentId === undefined)
         : selectedResource?.spans ?? [];
 
+    if (!groupByResource) {
+      // Group all spans by resource
+      const resourceSpans = new Map<number | undefined, typeof spans>();
+      for (const span of state.spans.values()) {
+        const resId = span.resourceId;
+        if (!resourceSpans.has(resId)) {
+          resourceSpans.set(resId, []);
+        }
+        resourceSpans.get(resId)!.push(span);
+      }
+
+      // Create root nodes for each resource group
+      spans = Array.from(resourceSpans.entries()).map(([resId, spans]) => {
+        const resource = resId !== undefined ? state.resources.get(resId)?.resource : undefined;
+        const minStart = Math.min(...spans.map((s) => +s.startTs));
+        const maxEnd = Math.max(...spans.map((s) => +(s.endTs ?? s.startTs)));
+        return {
+          id: spans[0].id,
+          startTs: minStart.toString(),
+          endTs: maxEnd.toString(),
+          methodName: resource ? `${sanitizeClassName(resource.className)}#${resource.instanceId}` : 'Unknown Resource',
+          resourceId: resId,
+          parentId: undefined,
+        };
+      });
+    }
+
     const rootIds = spans.map((s) => s.id);
     return showThreads ? buildMultiFlameGraph(state, rootIds) : [rootIds.flatMap((id) => buildFlameGraph(state, id))];
-  }, [selectedResource, state.spans.size, showThreads]);
+  }, [selectedResource, state.spans.size, showThreads, groupByResource]);
 
   const flameGraph = graphs[Math.min(selectedFlameIndex, graphs.length - 1)];
 
@@ -44,8 +72,15 @@ export const TraceView: FC<{ state: State; resourceId?: number }> = ({ state, re
       <div className='flex items-center p-2'>
         <div className='flex items-center gap-2'>
           <Input.Root>
-            <Input.Checkbox checked={showThreads} onCheckedChange={(showThreads) => setShowThreads(!!showThreads)} />
             <Input.Label>Separate Threads</Input.Label>
+            <Input.Checkbox checked={showThreads} onCheckedChange={(showThreads) => setShowThreads(!!showThreads)} />
+          </Input.Root>
+          <Input.Root>
+            <Input.Label>Group by Resource</Input.Label>
+            <Input.Checkbox
+              checked={groupByResource}
+              onCheckedChange={(groupByResource) => setGroupByResource(!!groupByResource)}
+            />
           </Input.Root>
         </div>
         {showThreads && graphs.length > 1 && (
