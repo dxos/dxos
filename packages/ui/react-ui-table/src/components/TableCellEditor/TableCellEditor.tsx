@@ -132,21 +132,22 @@ export const TableCellEditor = ({
       }),
     ];
 
-    // Handle SingleSelect format
-    if (fieldProjection.props.format === FormatEnum.SingleSelect) {
+    const format = fieldProjection.props.format;
+
+    if (format === FormatEnum.SingleSelect || format === FormatEnum.MultiSelect) {
+      // TODO(ZaymonFC): Reconcile this with the TagPicker component?
       // Add markdown extensions needed by tag picker.
       extension.push(createMarkdownExtensions({ themeMode }));
 
       const options = fieldProjection.props.options || [];
 
-      // Add tag picker extension
+      const mode = format === FormatEnum.SingleSelect ? ('single-select' as const) : ('multi-select' as const);
+
       extension.push(
         tagPickerExtension({
-          // Set mode to single
-          mode: 'single-select',
+          mode,
           inGrid: true,
           onSearch: (text, selectedIds) => {
-            // Convert options to TagPickerItemData format
             return options
               .filter(
                 (option) =>
@@ -164,7 +165,11 @@ export const TableCellEditor = ({
               if (ids.length === 0) {
                 return;
               }
-              handleEnter(ids[0]);
+              if (mode === 'single-select') {
+                handleEnter(ids[0]);
+              } else {
+                handleEnter(ids);
+              }
             }
           },
         }),
@@ -216,23 +221,43 @@ export const TableCellEditor = ({
       const field = model.projection.view.fields[col];
       const fieldProjection = model.projection.getFieldProjection(field.id);
 
-      if (fieldProjection?.props.format === FormatEnum.SingleSelect) {
-        // Get the current value (option id)
+      if (
+        fieldProjection?.props.format === FormatEnum.SingleSelect ||
+        fieldProjection?.props.format === FormatEnum.MultiSelect
+      ) {
         const value = model.getCellData(cell);
 
         if (value !== undefined) {
-          // Get the option details from the field projection
           const options = fieldProjection.props.options || [];
-          const option = options.find((o) => o.id === value);
 
-          if (option) {
-            const tagItem = {
-              id: value,
-              label: option.title,
-              hue: option.color as any,
-            };
+          if (fieldProjection.props.format === FormatEnum.MultiSelect && Array.isArray(value)) {
+            const tagItems = value
+              .map((id) => {
+                const option = options.find((o) => o.id === id);
+                if (option) {
+                  return {
+                    id,
+                    label: option.title,
+                    hue: option.color as any,
+                  };
+                }
+                return undefined;
+              })
+              .filter((item): item is { id: any; label: string; hue: any } => item !== undefined);
 
-            return createLinks([tagItem]);
+            return createLinks(tagItems);
+          } else {
+            const option = options.find((o) => o.id === value);
+
+            if (option) {
+              const tagItem = {
+                id: value,
+                label: option.title,
+                hue: option.color as any,
+              };
+
+              return createLinks([tagItem]);
+            }
           }
         }
 
