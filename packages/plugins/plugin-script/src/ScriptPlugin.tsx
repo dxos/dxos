@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-// @ts-ignore
-
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions/types';
 import { RefArray } from '@dxos/live-object';
