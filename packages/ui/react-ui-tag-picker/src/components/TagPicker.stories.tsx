@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import '@dxos-theme';
@@ -10,44 +10,40 @@ import React, { useState } from 'react';
 import { IconButton } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { Multiselect } from './Multiselect';
-import { type MultiselectItem } from './extension';
+import { TagPicker } from './TagPicker';
+import { type TagPickerItemData } from './extension';
 
-const allItems: MultiselectItem[] = [
-  { id: 'cloudflare', label: 'Cloudflare' },
+const allItems: TagPickerItemData[] = [
+  { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
   { id: 'cursor', label: 'Cursor' },
-  { id: 'dxos', label: 'DXOS' },
-  { id: 'blue-yard', label: 'Blue Yard' },
+  { id: 'dxos', label: 'DXOS', hue: 'green' },
+  { id: 'blue-yard', label: 'Blue Yard', hue: 'blue' },
   { id: 'effect', label: 'Effect' },
   { id: 'github', label: 'GitHub' },
-  { id: 'socket-supply', label: 'Socket Supply' },
+  { id: 'socket-supply', label: 'Socket Supply', hue: 'indigo' },
 ];
 
-const meta: Meta<typeof Multiselect> = {
-  title: 'ui/react-ui-multiselect/Multiselect',
-  component: Multiselect,
-  render: ({ items: initialItems }) => {
+const meta: Meta<typeof TagPicker> = {
+  title: 'ui/react-ui-tag-picker/TagPicker',
+  component: TagPicker,
+  render: ({ items: initialItems, mode }) => {
     const [items, setItems] = useState(initialItems);
     const [selected, setSelected] = useState<string>();
     // TODO(burdon): Line height.
     // TODO(burdon): Wrap option.
     return (
-      <div className='flex flex-col w-[20rem] max-w-[20rem] gap-4'>
-        <div className='flex border border-separator'>
-          <Multiselect
-            classNames='pis-0.5 pie-0.5'
+      <div className='w-[20rem] space-y-2'>
+        <div className='flex px-1 border items-center border-separator'>
+          <TagPicker
             items={items}
-            onSelect={(id) => {
-              setSelected(id);
-            }}
-            onUpdate={(ids) => {
-              setItems(ids.map((id) => allItems.find(({ id: itemId }) => itemId === id)!));
-            }}
-            onSearch={(text, ids) => {
-              return allItems.filter(
+            mode={mode}
+            onSelect={(id) => setSelected(id)}
+            onUpdate={(ids) => setItems(ids.map((id) => allItems.find(({ id: itemId }) => itemId === id)!))}
+            onSearch={(text, ids) =>
+              allItems.filter(
                 ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
-              );
-            }}
+              )
+            }
           />
           <IconButton
             icon='ph--x--regular'
@@ -59,15 +55,8 @@ const meta: Meta<typeof Multiselect> = {
             }}
           />
         </div>
-        <div className='flex border border-separator'>
-          <Multiselect
-            classNames='pis-0.5 pie-0.5'
-            readonly
-            items={items}
-            onSelect={(id) => {
-              setSelected(id);
-            }}
-          />
+        <div className='flex border p-1 border-separator'>
+          <TagPicker readonly items={items} onSelect={(id) => setSelected(id)} />
         </div>
         <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
           <pre>{JSON.stringify({ items: items.map(({ id }) => id), selected }, null, 2)}</pre>
@@ -81,10 +70,17 @@ const meta: Meta<typeof Multiselect> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Multiselect>;
+type Story = StoryObj<typeof TagPicker>;
 
-export const Default: Story = {
+export const MultiSelect: Story = {
   args: {
     items: [allItems[0], allItems[1]],
+  },
+};
+
+export const SingleSelect: Story = {
+  args: {
+    mode: 'single-select',
+    items: [allItems[0]],
   },
 };

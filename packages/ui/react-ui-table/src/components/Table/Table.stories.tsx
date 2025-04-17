@@ -7,37 +7,35 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { ImmutableSchema } from '@dxos/echo-schema';
+import { FormatEnum, ImmutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { ViewProjection, ViewType } from '@dxos/schema';
+import { echoSchemaFromPropertyDefinitions, ViewProjection, ViewType } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table, type TableController } from './Table';
-import { useTableModel, type UseTableModelParams } from '../../hooks';
+import { useTableModel } from '../../hooks';
 import { TablePresentation } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';
-import { createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
 // NOTE(ZaymonFC): We rely on this seed being 0 in the smoke tests.
 faker.seed(0);
 
-//
-// Story components.
-//
-
-const DefaultStory = () => {
+/**
+ * Custom hook to create and manage a test table model for storybook demonstrations.
+ * Provides table data, schema, and handlers for table operations.
+ */
+const useTestTableModel = () => {
   const client = useClient();
   const { space } = useClientProvider();
 
@@ -60,6 +58,15 @@ const DefaultStory = () => {
   const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
+  const tableRef = useRef<TableController>(null);
+  const handleCellUpdate = useCallback((cell: any) => {
+    tableRef.current?.update?.(cell);
+  }, []);
+
+  const handleRowOrderChanged = useCallback(() => {
+    tableRef.current?.update?.();
+  }, []);
+
   const handleInsertRow = useCallback(() => {
     if (space && schema) {
       space.db.add(create(schema, {}));
@@ -81,17 +88,8 @@ const DefaultStory = () => {
         projection.deleteFieldProjection(fieldId);
       }
     },
-    [table, projection],
+    [projection],
   );
-
-  const tableRef = useRef<TableController>(null);
-  const handleCellUpdate = useCallback((cell: any) => {
-    tableRef.current?.update?.(cell);
-  }, []);
-
-  const handleRowOrderChanged = useCallback(() => {
-    tableRef.current?.update?.();
-  }, []);
 
   const model = useTableModel({
     table,
@@ -111,7 +109,7 @@ const DefaultStory = () => {
     }
   }, [model]);
 
-  const handleAction = useCallback(
+  const handleToolbarAction = useCallback(
     (action: { type: string }) => {
       switch (action.type) {
         case 'on-thread-create': {
@@ -131,6 +129,25 @@ const DefaultStory = () => {
     [table, model],
   );
 
+  return {
+    schema,
+    table,
+    tableRef,
+    model,
+    presentation,
+    space,
+    handleToolbarAction,
+    handleDeleteRows,
+    handleDeleteColumn,
+  };
+};
+
+const StoryViewEditor = () => {
+  const { table, space, schema, handleDeleteColumn } = useTestTableModel();
+  if (!table || !schema || !table.view?.target) {
+    return null;
+  }
+
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       if (table?.view?.target) {
@@ -142,6 +159,24 @@ const DefaultStory = () => {
     [schema, table?.view?.target],
   );
 
+  return (
+    <ViewEditor
+      registry={space?.db.schemaRegistry}
+      schema={schema}
+      view={table.view.target!}
+      onTypenameChanged={handleTypenameChanged}
+      onDelete={handleDeleteColumn}
+    />
+  );
+};
+
+//
+// Story components.
+//
+
+const DefaultStory = () => {
+  const { schema, table, tableRef, model, presentation, handleToolbarAction } = useTestTableModel();
+
   if (!schema || !table) {
     return <div />;
   }
@@ -149,22 +184,13 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-separator' onAction={handleAction} />
+        <TableToolbar classNames='border-be border-separator' onAction={handleToolbarAction} />
         <Table.Root>
           <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
-        {table.view?.target && (
-          <ViewEditor
-            registry={space?.db.schemaRegistry}
-            schema={schema}
-            view={table.view.target!}
-            onTypenameChanged={handleTypenameChanged}
-            onDelete={handleDeleteColumn}
-          />
-        )}
-
+        <StoryViewEditor />
         <SyntaxHighlighter language='json' className='w-full text-xs'>
           {JSON.stringify({ view: table.view?.target, schema }, null, 2)}
         </SyntaxHighlighter>
@@ -173,50 +199,7 @@ const DefaultStory = () => {
   );
 };
 
-type StoryProps = {
-  rows?: number;
-} & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
-
-// TODO(burdon): Restore.
-const _TablePerformanceStory = (props: StoryProps) => {
-  const getDefaultRows = useCallback(() => 10, []);
-  const rows = useDefaultValue(props.rows, getDefaultRows);
-  const table = useMemo(() => createTable(), []);
-  const objects = useMemo(() => createItems(rows), [rows]);
-  const objectsRef = useRef(objects);
-  const simulatorProps = useMemo(() => ({ table, items: objects, ...props }), [table, objects, props]);
-  useSimulator(simulatorProps);
-
-  const handleDeleteRows = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRows']>>((row) => {
-    objectsRef.current.splice(row, 1);
-  }, []);
-
-  const handleDeleteColumn = useCallback<NonNullable<UseTableModelParams<any>['onDeleteColumn']>>(
-    (fieldId) => {
-      if (table && table.view?.target) {
-        const fieldPosition = table.view.target!.fields.findIndex((field) => field.id === fieldId);
-        table.view.target!.fields.splice(fieldPosition, 1);
-      }
-    },
-    [table],
-  );
-
-  const tableRef = useRef<TableController>(null);
-  const model = useTableModel({
-    table,
-    objects,
-    onDeleteRows: handleDeleteRows,
-    onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChanged: () => tableRef.current?.update?.(),
-  });
-
-  return (
-    <Table.Root>
-      <Table.Main ref={tableRef} model={model} />
-    </Table.Root>
-  );
-};
+type StoryProps = { rows?: number };
 
 //
 // Story definitions.
@@ -278,20 +261,49 @@ export const StaticSchema: StoryObj = {
   ],
 };
 
-// TODO(ZaymonFC): Restore the performance stories.
-// type Story = StoryObj<StoryProps>;
-// export const Mutations: Story = {
-//   render: TablePerformanceStory,
-//   args: {
-//     rows: 1000,
-//     updateInterval: 1,
-//   },
-// };
+export const SingleSelect: Meta<StoryProps> = {
+  title: 'ui/react-ui-table/Table',
+  render: DefaultStory,
+  parameters: { translations },
+  decorators: [
+    withClientProvider({
+      types: [TableType, ViewType],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: async ({ client, space }) => {
+        // Configure schema.
+        const typename = 'example.com/SingleSelect';
+        const singleSelectOptions = [
+          { id: 'one', title: 'One', color: 'emerald' },
+          { id: 'two', title: 'Two', color: 'blue' },
+          { id: 'three', title: 'Three', color: 'indigo' },
+          { id: 'four', title: 'Four', color: 'red' },
+          { id: 'longer_option', title: 'LONGER OPTION', color: 'amber' },
+        ];
+        const schema = echoSchemaFromPropertyDefinitions(typename, [
+          {
+            name: 'status',
+            format: FormatEnum.SingleSelect,
+            config: { options: singleSelectOptions },
+          },
+        ]);
+        const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
-// export const RapidInsertions: Story = {
-//   render: TablePerformanceStory,
-//   args: {
-//     rows: 0,
-//     insertInterval: 100,
-//   },
-// };
+        // Initialize table.
+        const table = space.db.add(create(TableType, {}));
+        await initializeTable({ client, space, table, initialRow: false, typename });
+
+        // Populate.
+        Array.from({ length: 10 }).map(() => {
+          return space.db.add(
+            create(storedSchema, {
+              status: faker.helpers.arrayElement([...singleSelectOptions.map((o) => o.id), undefined]),
+            }),
+          );
+        });
+      },
+    }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+  ],
+};
