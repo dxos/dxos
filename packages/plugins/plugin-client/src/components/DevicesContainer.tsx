@@ -12,10 +12,13 @@ import { type Device, useDevices } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
+import { StackItem } from '@dxos/react-ui-stack';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
-import { AuthCode, Centered, DeviceListItem, Emoji, Label } from '@dxos/shell/react';
+import { AuthCode, Centered, DeviceListItem, Emoji, Label, Viewport } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
+import { ControlGroup, ControlItem, ControlSection } from './ControlSection';
+import { CLIENT_PLUGIN } from '../meta';
 import { ClientAction } from '../types';
 
 export const DevicesContainer = ({
@@ -25,19 +28,8 @@ export const DevicesContainer = ({
 }) => {
   const { t } = useTranslation('os');
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const client = useClient();
-  const [invitation, setInvitation] = useState<CancellableInvitationObservable>();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
-
-  const handleAddDevice = useCallback(() => {
-    const invitation = client.halo.share();
-    setInvitation(invitation);
-  }, []);
-
-  const handleCancelInvitation = useCallback(() => {
-    setInvitation(undefined);
-  }, []);
 
   const handleResetStorage = useCallback(() => dispatch(createIntent(ClientAction.ResetStorage)), [dispatch]);
 
@@ -52,59 +44,68 @@ export const DevicesContainer = ({
   );
 
   return (
-    <div className='p-4'>
-      <div className='flex justify-end'>
-        <IconButton
-          icon='ph--plus--regular'
-          label={t('choose add device label')}
-          disabled={!!invitation}
-          onClick={handleAddDevice}
-        />
-      </div>
-      {invitation && (
-        <InvitationComponent
-          invitation={invitation}
-          createInvitationUrl={createInvitationUrl}
-          onInvitationDone={handleCancelInvitation}
-        />
-      )}
-      {!invitation && (
-        <List>
+    <StackItem.Content classNames='p-2 block overflow-y-auto'>
+      <ControlSection
+        title={t('devices label', { ns: CLIENT_PLUGIN })}
+        description={t('devices description', { ns: CLIENT_PLUGIN })}
+      >
+        <List classNames='container-max-width pli-4'>
           {devices.map((device: Device) => {
             return <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />;
           })}
         </List>
-      )}
-      {!invitation && (
-        <>
-          <h2>{t('danger zone title')}</h2>
-          <div className='flex gap-2'>
-            <Button variant='ghost' onClick={handleResetStorage}>
-              {t('reset storage label')}
-            </Button>
-            <Button variant='ghost' onClick={handleRecover}>
-              {t('recover identity label')}
-            </Button>
-            <Button variant='ghost' onClick={handleJoinNewIdentity}>
-              {t('join new identity label')}
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
+        <DeviceInvitation createInvitationUrl={createInvitationUrl} />
+      </ControlSection>
+      <ControlSection title={t('danger zone title')}>
+        <ControlGroup>
+          <ControlItem title={t('reset storage label')}>
+            <Button onClick={handleResetStorage}>{t('reset storage label')}</Button>
+          </ControlItem>
+          <ControlItem title={t('recover identity label')}>
+            <Button onClick={handleRecover}>{t('recover identity label')}</Button>
+          </ControlItem>
+          <ControlItem title={t('join new identity label')}>
+            <Button onClick={handleJoinNewIdentity}>{t('join new identity label')}</Button>
+          </ControlItem>
+        </ControlGroup>
+      </ControlSection>
+    </StackItem.Content>
   );
 };
 
-const InvitationComponent = ({
-  invitation: _invitation,
-  createInvitationUrl,
-  onInvitationDone,
-}: {
-  invitation: CancellableInvitationObservable;
+type DeviceInvitationProps = {
+  invitation?: CancellableInvitationObservable;
   createInvitationUrl: (invitationCode: string) => string;
   onInvitationDone: () => void;
-}) => {
-  const invitation = useMulticastObservable(_invitation);
+  onInvitationCreate: () => void;
+};
+
+const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUrl'>) => {
+  const client = useClient();
+  const [invitation, setInvitation] = useState<CancellableInvitationObservable>();
+  const onInvitationCreate = useCallback(() => {
+    const invitation = client.halo.share();
+    setInvitation(invitation);
+  }, []);
+
+  const onInvitationDone = useCallback(() => {
+    setInvitation(undefined);
+  }, []);
+
+  if (invitation) {
+    return <DeviceInvitationImpl {...props} {...{ invitation, onInvitationCreate, onInvitationDone }} />;
+  } else {
+    return <InvitationSection {...props} {...{ onInvitationCreate, onInvitationDone }} />;
+  }
+};
+
+const DeviceInvitationImpl = ({
+  invitation: invitationObservable,
+  createInvitationUrl,
+  onInvitationDone,
+  onInvitationCreate,
+}: DeviceInvitationProps) => {
+  const invitation = useMulticastObservable(invitationObservable!);
   const url = createInvitationUrl(InvitationEncoder.encode(invitation));
 
   useEffect(() => {
@@ -113,12 +114,56 @@ const InvitationComponent = ({
     }
   }, [invitation.state]);
 
-  return invitation.state >= Invitation.State.CANCELLED ? (
-    <InvitationComplete statusValue={invitation.state} />
-  ) : invitation.state >= Invitation.State.READY_FOR_AUTHENTICATION && invitation.authCode ? (
-    <InvitationAuthCode id={invitation.invitationId} code={invitation.authCode} />
-  ) : (
-    <InvitationQR id={invitation.invitationId} url={url} onCancel={onInvitationDone} />
+  return <InvitationSection {...invitation} {...{ url, onInvitationDone, onInvitationCreate }} />;
+};
+
+type InvitationComponentProps = Partial<
+  Pick<Invitation, 'authCode' | 'invitationId'> &
+    Pick<DeviceInvitationProps, 'onInvitationDone' | 'onInvitationCreate'> & {
+      state: number;
+      url: string;
+    }
+>;
+
+const InvitationSection = ({
+  state = -1,
+  authCode,
+  invitationId = 'never',
+  url = 'never',
+  onInvitationDone = () => {},
+  onInvitationCreate = () => {},
+}: InvitationComponentProps) => {
+  const { t } = useTranslation(CLIENT_PLUGIN);
+  const activeView =
+    state < 0
+      ? 'init'
+      : state >= Invitation.State.CANCELLED
+        ? 'complete'
+        : state >= Invitation.State.READY_FOR_AUTHENTICATION && authCode
+          ? 'auth-code'
+          : 'qr-code';
+  return (
+    <Viewport.Root activeView={activeView} classNames='container-max-width pli-4'>
+      <Viewport.Views>
+        <Viewport.View id='init'>
+          <IconButton
+            icon='ph--plus--regular'
+            label={t('choose add device label', { ns: 'os' })}
+            disabled={state >= 0}
+            onClick={onInvitationCreate}
+          />
+        </Viewport.View>
+        <Viewport.View id='complete'>
+          <InvitationComplete statusValue={state} />
+        </Viewport.View>
+        <Viewport.View id='auth-code'>
+          <InvitationAuthCode id={invitationId} code={authCode ?? 'never'} />
+        </Viewport.View>
+        <Viewport.View id='qr-code'>
+          <InvitationQR id={invitationId} url={url} onCancel={onInvitationDone} />
+        </Viewport.View>
+      </Viewport.Views>
+    </Viewport.Root>
   );
 };
 
@@ -148,7 +193,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         {t('qr label')}
       </span>
       <Clipboard.Button variant='ghost' value={url ?? 'never'} />
-      <IconButton icon='ph--x--regular' label={t('cancel invitation label')} onClick={onCancel} />
+      <Button onClick={onCancel}>{t('cancel label')}</Button>
     </Clipboard.Provider>
   );
 };

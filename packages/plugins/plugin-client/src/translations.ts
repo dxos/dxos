@@ -11,6 +11,7 @@ export default [
         'account label': 'User Account',
         'profile label': 'Profile',
         'devices label': 'Devices',
+        'devices description': 'These are the devices associated with your identity.',
         'passkeys label': 'Passkeys',
 
         'display name label': 'Name',
