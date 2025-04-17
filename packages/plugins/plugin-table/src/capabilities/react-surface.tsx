@@ -12,29 +12,43 @@ import { type CollectionType } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
 import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
+import { StackItem } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
 import { ViewType } from '@dxos/schema';
 
 import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
-import { TABLE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { TypenameAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${TABLE_PLUGIN}/table`,
+      id: `${meta.id}/table`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
+      filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject) && !data.variant,
       component: ({ data, role }) => <TableContainer table={data.subject} role={role} />,
     }),
     createSurface({
-      id: `${TABLE_PLUGIN}/settings`,
-      role: 'complementary--settings',
-      filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
-      component: ({ data }) => <TableViewEditor table={data.subject} />,
+      id: `${meta.id}/companion/schema`,
+      role: 'article',
+      filter: (data): data is { subject: TableType } =>
+        isInstanceOf(TableType, data.subject) && data.variant === 'schema',
+      component: ({ data, role }) => {
+        return (
+          <StackItem.Content role={role}>
+            <TableViewEditor table={data.subject} />
+          </StackItem.Content>
+        );
+      },
     }),
+    // createSurface({
+    //   id: `${meta.id}/settings`,
+    //   role: 'complementary--settings',
+    //   filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
+    //   component: ({ data }) => <TableViewEditor table={data.subject} />,
+    // }),
     createSurface({
-      id: `${TABLE_PLUGIN}/complementary`,
+      id: `${meta.id}/complementary`,
       role: 'complementary--selected-objects',
       filter: (
         data,
@@ -63,7 +77,7 @@ export default () =>
     }),
     // TODO(burdon): Factor out from Table, Kanban, and Map.
     createSurface({
-      id: `${TABLE_PLUGIN}/create-initial-schema-form`,
+      id: `${meta.id}/create-initial-schema-form`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
         if (data.prop !== 'typename') {
