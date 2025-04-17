@@ -50,7 +50,7 @@ export const FlameChart = (props: FlameChartProps) => {
     targetRef: boxRef,
     onResize: ({ width = 0, height = 0 }) => {
       if (width && height) {
-        flameChart.current?.resize(width, height - 3);
+        flameChart.current?.resize(width, height);
       }
     },
   });
