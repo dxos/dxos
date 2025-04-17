@@ -13,7 +13,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
 import { ViewType, ViewTypeV1, ViewTypeV1ToV2 } from '@dxos/schema';
 
-import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta, TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
@@ -64,6 +64,11 @@ export const TablePlugin = () =>
             return hasValidView || hasValidCardView;
           },
         }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/object-form`,
