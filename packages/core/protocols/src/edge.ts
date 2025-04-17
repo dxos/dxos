@@ -71,6 +71,11 @@ export type JoinSpaceResponseBody = {
   spaceGenesisFeedKey: string;
 };
 
+export type EmailSpaceInvitationRequest = {
+  email: string;
+  invitationUrl: string;
+};
+
 export type RecoverIdentitySignature =
   | string
   // This is the format of the signature from the WebAuthn authenticator.
