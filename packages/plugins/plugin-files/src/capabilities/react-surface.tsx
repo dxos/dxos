@@ -21,7 +21,7 @@ export default (context: PluginsContext) =>
       component: ({ data }) => <LocalFileContainer file={data.subject} />,
     }),
     createSurface({
-      id: `${FILES_PLUGIN}/settings`,
+      id: `${FILES_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<FilesSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === FILES_PLUGIN,

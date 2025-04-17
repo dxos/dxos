@@ -16,7 +16,7 @@ export default [
       [SCRIPT_PLUGIN]: {
         'plugin name': 'Scripts',
         'description label': 'Description',
-        'description placeholder': 'Describe what the script does.',
+        'description placeholder': 'Enter description',
         'binding placeholder': 'Function name',
         'function request placeholder': 'Function request',
         'deploy label': 'Deploy',
@@ -31,7 +31,7 @@ export default [
         'remote function settings heading': 'Remote Function',
         'function url label': 'Invocation URL',
         'function binding label': 'Function binding',
-        'function binding placeholder': 'BINDING',
+        'function binding placeholder': 'Enter binding name (e.g., NAME)',
         'script publish settings label': 'Publishing',
         'script publish settings description': 'Scripts can be shared publicly as Github gists.',
         'no github token label': 'This space has no Github access token available.',
@@ -45,7 +45,10 @@ export default [
         'settings editor input mode vscode label': 'VS Code',
         'template select group label': 'Select template',
         'function panel label': 'Debug Function',
+        'script execute label': 'Test',
         'script logs label': 'Logs',
+
+        'script settings label': 'Settings',
       },
     },
   },

@@ -8,20 +8,52 @@ import { ScriptType } from '@dxos/functions';
 import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
-import { SCRIPT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    // TOOD(burdon): Factor out: make generic?
     createExtension({
-      id: `${SCRIPT_PLUGIN}/script-logs`,
+      id: `${meta.id}/settings`,
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          id: `${node.id}${SLUG_PATH_SEPARATOR}logs`,
+          id: [node.id, 'settings'].join(SLUG_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
-            label: ['script logs label', { ns: SCRIPT_PLUGIN }],
+            label: ['script settings label', { ns: meta.id }],
+            icon: 'ph--sliders--regular',
+          },
+        },
+      ],
+    }),
+    createExtension({
+      id: `${meta.id}/execute`,
+      filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
+      connector: ({ node }) => [
+        {
+          id: [node.id, 'execute'].join(SLUG_PATH_SEPARATOR),
+          type: COMPANION_TYPE,
+          // TODO(burdon): Shouldn't require the primary node data.
+          data: node.data,
+          properties: {
+            label: ['script execute label', { ns: meta.id }],
+            icon: 'ph--terminal--regular',
+          },
+        },
+      ],
+    }),
+    createExtension({
+      id: `${meta.id}/logs`,
+      filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
+      connector: ({ node }) => [
+        {
+          id: [node.id, 'logs'].join(SLUG_PATH_SEPARATOR),
+          type: COMPANION_TYPE,
+          data: node.data,
+          properties: {
+            label: ['script logs label', { ns: meta.id }],
             icon: 'ph--clock-countdown--regular',
           },
         },

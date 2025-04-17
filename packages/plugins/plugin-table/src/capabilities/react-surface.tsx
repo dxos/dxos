@@ -28,7 +28,7 @@ export default () =>
       component: ({ data, role }) => <TableContainer table={data.subject} role={role} />,
     }),
     createSurface({
-      id: `${TABLE_PLUGIN}/settings-panel`,
+      id: `${TABLE_PLUGIN}/settings`,
       role: 'complementary--settings',
       filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
       component: ({ data }) => <TableViewEditor table={data.subject} />,

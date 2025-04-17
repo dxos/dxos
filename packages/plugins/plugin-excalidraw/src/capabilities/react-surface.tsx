@@ -35,7 +35,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${EXCALIDRAW_PLUGIN}/settings`,
+      id: `${EXCALIDRAW_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<SketchSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === EXCALIDRAW_PLUGIN,

@@ -88,7 +88,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MARKDOWN_PLUGIN}/settings`,
+      id: `${MARKDOWN_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<MarkdownSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === MARKDOWN_PLUGIN,
