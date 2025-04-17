@@ -38,13 +38,6 @@ export default () =>
         return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
       },
     }),
-    // TODO(burdon): Move to companion.
-    // createSurface({
-    //   id: `${meta.id}/companion/settings`,
-    //   role: 'complementary--settings',
-    //   filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject),
-    //   component: ({ data }) => <ScriptSettingsPanel script={data.subject} />,
-    // }),
     createSurface({
       id: `${meta.id}/companion/settings`,
       role: 'article',

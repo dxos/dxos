@@ -47,6 +47,8 @@ export default [
         'function panel label': 'Debug Function',
         'script execute label': 'Test',
         'script logs label': 'Logs',
+
+        'script settings label': 'Settings',
       },
     },
   },

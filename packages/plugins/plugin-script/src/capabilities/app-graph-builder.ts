@@ -35,6 +35,7 @@ export default (context: PluginsContext) =>
         {
           id: [node.id, 'execute'].join(SLUG_PATH_SEPARATOR),
           type: COMPANION_TYPE,
+          // TODO(burdon): Shouldn't require the primary node data.
           data: node.data,
           properties: {
             label: ['script execute label', { ns: meta.id }],

@@ -162,8 +162,7 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
     <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
       {/* TODO(burdon): Replace with Thread. */}
       <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
-
-      {/* TODO(burdon): Replace with Form. */}
+      {/* TODO(burdon): Replace with Form based on the function's input schema. */}
       <Toolbar.Root classNames='p-2'>
         <Input.Root>
           <Input.TextInput
