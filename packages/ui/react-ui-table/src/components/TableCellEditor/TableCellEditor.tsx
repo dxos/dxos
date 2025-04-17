@@ -134,7 +134,7 @@ export const TableCellEditor = ({
 
     // Handle SingleSelect format
     if (fieldProjection.props.format === FormatEnum.SingleSelect) {
-      // Add markdown extensions needed by tag picker
+      // Add markdown extensions needed by tag picker.
       extension.push(createMarkdownExtensions({ themeMode }));
 
       const options = fieldProjection.props.options || [];

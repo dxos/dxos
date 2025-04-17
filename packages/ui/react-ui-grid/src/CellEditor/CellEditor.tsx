@@ -127,7 +127,6 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
       initialValue: value,
       selection: { anchor: value?.length ?? 0 },
       extensions: [
-        extension ?? [],
         preventNewline,
         EditorView.focusChangeEffect.of((state, focusing) => {
           if (!focusing) {
@@ -148,6 +147,7 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
             },
           },
         }),
+        extension ?? [],
       ],
     };
   }, [extension, autoFocus, value, onBlur]);

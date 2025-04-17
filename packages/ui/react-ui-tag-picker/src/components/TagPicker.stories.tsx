@@ -56,13 +56,7 @@ const meta: Meta<typeof TagPicker> = {
           />
         </div>
         <div className='flex border p-1 border-separator'>
-          <TagPicker
-            readonly
-            items={items}
-            onSelect={(id) => {
-              setSelected(id);
-            }}
-          />
+          <TagPicker readonly items={items} onSelect={(id) => setSelected(id)} />
         </div>
         <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
           <pre>{JSON.stringify({ items: items.map(({ id }) => id), selected }, null, 2)}</pre>

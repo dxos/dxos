@@ -109,7 +109,7 @@ const useTestTableModel = () => {
     }
   }, [model]);
 
-  const handleAction = useCallback(
+  const handleToolbarAction = useCallback(
     (action: { type: string }) => {
       switch (action.type) {
         case 'on-thread-create': {
@@ -129,6 +129,25 @@ const useTestTableModel = () => {
     [table, model],
   );
 
+  return {
+    schema,
+    table,
+    tableRef,
+    model,
+    presentation,
+    space,
+    handleToolbarAction,
+    handleDeleteRows,
+    handleDeleteColumn,
+  };
+};
+
+const StoryViewEditor = () => {
+  const { table, space, schema, handleDeleteColumn } = useTestTableModel();
+  if (!table || !schema || !table.view?.target) {
+    return null;
+  }
+
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       if (table?.view?.target) {
@@ -139,26 +158,6 @@ const useTestTableModel = () => {
     },
     [schema, table?.view?.target],
   );
-
-  return {
-    schema,
-    table,
-    tableRef,
-    model,
-    presentation,
-    space,
-    handleAction,
-    handleTypenameChanged,
-    handleDeleteRows,
-    handleDeleteColumn,
-  };
-};
-
-const StoryViewEditor = () => {
-  const { table, space, schema, handleTypenameChanged, handleDeleteColumn } = useTestTableModel();
-  if (!table || !schema || !table.view?.target) {
-    return null;
-  }
 
   return (
     <ViewEditor
@@ -176,7 +175,7 @@ const StoryViewEditor = () => {
 //
 
 const DefaultStory = () => {
-  const { schema, table, tableRef, model, presentation, handleAction } = useTestTableModel();
+  const { schema, table, tableRef, model, presentation, handleToolbarAction } = useTestTableModel();
 
   if (!schema || !table) {
     return <div />;
@@ -185,7 +184,7 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-separator' onAction={handleAction} />
+        <TableToolbar classNames='border-be border-separator' onAction={handleToolbarAction} />
         <Table.Root>
           <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
         </Table.Root>
