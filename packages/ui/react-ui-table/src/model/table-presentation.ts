@@ -85,7 +85,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
           switch (props.format) {
             case FormatEnum.Boolean:
-            case FormatEnum.SingleSelect: {
+            case FormatEnum.SingleSelect:
+            case FormatEnum.MultiSelect: {
               return '';
             }
             case FormatEnum.Ref: {
@@ -143,6 +144,27 @@ export class TablePresentation<T extends TableRow = TableRow> {
           const option = options.find((o) => o.id === value);
           if (option) {
             cell.accessoryHtml = `<span class="dx-tag" data-hue="${option.color}">${option.title}</span>`;
+          }
+        }
+      }
+
+      if (props.format === FormatEnum.MultiSelect) {
+        const values = getValue(obj, field.path) as string[] | undefined;
+        const options = this.model.projection.getFieldProjection(field.id).props.options;
+        if (options && values && values.length > 0) {
+          const tags = values
+            .map((value) => {
+              const option = options.find((o) => o.id === value);
+              if (option) {
+                return `<span class="dx-tag" data-hue="${option.color}">${option.title}</span>`;
+              }
+              return null;
+            })
+            .filter(Boolean)
+            .join(' ');
+
+          if (tags) {
+            cell.accessoryHtml = tags;
           }
         }
       }
