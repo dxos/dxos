@@ -18,7 +18,9 @@ export const ControlSection = ({ title, description, children }: ControlSectionP
   return (
     <>
       <h2 className='pli-4 container-max-width text-xl mbs-6 mbe-4'>{toLocalizedString(title, t)}</h2>
-      {description && <p className='pli-4 mlb-4 container-max-width'>{toLocalizedString(description, t)}</p>}
+      {description && (
+        <p className='pli-4 mlb-4 container-max-width text-description'>{toLocalizedString(description, t)}</p>
+      )}
       {children}
     </>
   );
@@ -44,7 +46,7 @@ export const ControlItem = ({ title, description, children }: ControlItemProps) 
     <div className='p-4 border border-separator rounded-lg container-max-width grid md:col-span-2 grid-cols-subgrid items-center'>
       <div role='none'>
         <h3 className='text-lg mbe-2'>{toLocalizedString(title, t)}</h3>
-        {description && <p className='mlb-2 md:mbe-0'>{toLocalizedString(description, t)}</p>}
+        {description && <p className='mlb-2 md:mbe-0 text-description'>{toLocalizedString(description, t)}</p>}
       </div>
       {children}
     </div>
