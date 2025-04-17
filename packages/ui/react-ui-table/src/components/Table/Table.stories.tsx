@@ -144,9 +144,6 @@ const useTestTableModel = () => {
 
 const StoryViewEditor = () => {
   const { table, space, schema, handleDeleteColumn } = useTestTableModel();
-  if (!table || !schema || !table.view?.target) {
-    return null;
-  }
 
   const handleTypenameChanged = useCallback(
     (typename: string) => {
@@ -158,6 +155,10 @@ const StoryViewEditor = () => {
     },
     [schema, table?.view?.target],
   );
+
+  if (!table || !schema || !table.view?.target) {
+    return null;
+  }
 
   return (
     <ViewEditor
