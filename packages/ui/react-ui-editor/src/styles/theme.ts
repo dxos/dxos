@@ -86,7 +86,9 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-gutterElement': {
     alignItems: 'center',
-    fontSize: '16px',
+    fontSize: '12px',
+    paddingRight: '4px',
+    borderRight: '1px solid var(--dx-separator)',
   },
 
   /**
