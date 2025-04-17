@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
 import { PropertySchema, type PropertyType } from './format';
-import { makeSingleSelectAnnotations } from './util';
+import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';
 import { type ViewType, type FieldType } from './view';
 
 export const VIEW_FIELD_LIMIT = 32;
@@ -209,7 +209,8 @@ export class ViewProjection {
     untracked(() => {
       const sourcePropertyName = field?.path;
       const targetPropertyName = props?.property;
-      const isRename = !!(sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName);
+      const hasSourceAndTarget = !!sourcePropertyName && !!targetPropertyName;
+      const isRename = hasSourceAndTarget && sourcePropertyName !== targetPropertyName;
 
       if (targetPropertyName && this._view.hiddenFields) {
         const hiddenIndex = this._view.hiddenFields.findIndex((field) => field.path === targetPropertyName);
@@ -256,8 +257,14 @@ export class ViewProjection {
           type = formatToType[format];
         }
 
-        if (format === FormatEnum.SingleSelect && options) {
-          makeSingleSelectAnnotations(jsonProperty, options);
+        if (options) {
+          if (format === FormatEnum.SingleSelect) {
+            makeSingleSelectAnnotations(jsonProperty, options);
+          }
+
+          if (format === FormatEnum.MultiSelect) {
+            makeMultiSelectAnnotations(jsonProperty, options);
+          }
         }
 
         invariant(type !== TypeEnum.Ref);

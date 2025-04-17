@@ -101,3 +101,25 @@ export const makeSingleSelectAnnotations = (
 
   return jsonProperty;
 };
+
+/**
+ * Creates or updates echo annotations for MultiSelect options in a JSON Schema property.
+ */
+export const makeMultiSelectAnnotations = (
+  jsonProperty: JsonSchemaType,
+  options: Array<{ id: string; title?: string; color?: string }>,
+) => {
+  // TODO(ZaymonFC): Is this how do we encode an array of enums?
+  jsonProperty.type = 'array';
+  jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };
+  jsonProperty.format = FormatEnum.MultiSelect;
+  jsonProperty.echo = {
+    annotations: {
+      multiSelect: {
+        options: options.map(({ id, title, color }) => ({ id, title, color })),
+      },
+    },
+  };
+
+  return jsonProperty;
+};
