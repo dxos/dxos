@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef } from 'react';
+import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export type BaseObjectSettingsProps = {
+export type BaseObjectSettingsProps = PropsWithChildren<{
   object: ReactiveEchoObject<any>;
-};
+}>;
 
-export const BaseObjectSettings = ({ object }: BaseObjectSettingsProps) => {
+export const BaseObjectSettings = ({ children, object }: BaseObjectSettingsProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -21,7 +21,7 @@ export const BaseObjectSettings = ({ object }: BaseObjectSettingsProps) => {
   //  The form should only include fields with a specific settings annotation.
   //  Perhaps also including the field of the title annotation as well.
   return (
-    <div role='form' className='flex flex-col p-2 gap-4'>
+    <div role='form' className='flex flex-col p-2 gap-2'>
       <Input.Root>
         <Input.Label>{t('name label')}</Input.Label>
         <Input.TextInput
@@ -38,6 +38,7 @@ export const BaseObjectSettings = ({ object }: BaseObjectSettingsProps) => {
           }}
         />
       </Input.Root>
+      {children}
     </div>
   );
 };
