@@ -88,6 +88,7 @@ export type RecoverIdentitySignature =
 export type RecoverIdentityRequest = {
   deviceKey: string;
   controlFeedKey: string;
+  token?: string;
   lookupKey?: string;
   signature?: RecoverIdentitySignature;
 };
