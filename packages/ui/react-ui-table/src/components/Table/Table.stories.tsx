@@ -262,7 +262,7 @@ export const StaticSchema: StoryObj = {
   ],
 };
 
-export const SingleSelect: Meta<StoryProps> = {
+export const Tags: Meta<StoryProps> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   parameters: { translations },
@@ -274,18 +274,26 @@ export const SingleSelect: Meta<StoryProps> = {
       onSpaceCreated: async ({ client, space }) => {
         // Configure schema.
         const typename = 'example.com/SingleSelect';
-        const singleSelectOptions = [
+        const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },
           { id: 'three', title: 'Three', color: 'indigo' },
           { id: 'four', title: 'Four', color: 'red' },
           { id: 'longer_option', title: 'LONGER OPTION', color: 'amber' },
         ];
+
+        const selectOptionIds = selectOptions.map((o) => o.id);
+
         const schema = echoSchemaFromPropertyDefinitions(typename, [
           {
-            name: 'status',
+            name: 'single',
             format: FormatEnum.SingleSelect,
-            config: { options: singleSelectOptions },
+            config: { options: selectOptions },
+          },
+          {
+            name: 'multiple',
+            format: FormatEnum.MultiSelect,
+            config: { options: selectOptions },
           },
         ]);
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
@@ -298,7 +306,8 @@ export const SingleSelect: Meta<StoryProps> = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             create(storedSchema, {
-              status: faker.helpers.arrayElement([...singleSelectOptions.map((o) => o.id), undefined]),
+              single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
+              multiple: faker.helpers.randomSubset(selectOptionIds),
             }),
           );
         });
