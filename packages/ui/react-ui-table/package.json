@@ -47,6 +47,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
@@ -71,8 +72,6 @@
     "@radix-ui/react-primitive": "2.0.2",
     "@radix-ui/react-slot": "1.1.2",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "@tanstack/react-table": "^8.13.2",
-    "@tanstack/react-virtual": "^3.9.0",
     "date-fns": "^3.3.1",
     "lodash.orderby": "^4.6.0"
   },

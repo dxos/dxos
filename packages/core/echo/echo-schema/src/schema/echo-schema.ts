@@ -103,6 +103,7 @@ export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
     return this._schema;
   }
 
+  // TODO(burdon): Change from getter since this is expensive.
   get jsonSchema(): JsonSchemaType {
     return toJsonSchema(this._schema);
   }

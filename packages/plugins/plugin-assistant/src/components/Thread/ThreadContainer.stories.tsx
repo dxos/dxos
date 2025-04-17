@@ -49,7 +49,7 @@ type RenderProps = {
 } & Pick<ThreadProps, 'debug'>;
 
 // TODO(burdon): Use ChatContainer.
-const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
+const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const space = useSpace();
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useMemo<Tool[]>(() => [...genericTools], []);
@@ -204,9 +204,9 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
 const randomQueueDxn = () =>
   new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
 
-const meta: Meta<typeof Render> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-automation/ThreadContainer',
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withSignals,
     withClientProvider({
@@ -242,7 +242,7 @@ const meta: Meta<typeof Render> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Render>;
+type Story = StoryObj<typeof DefaultStory>;
 
 export const Default: Story = {
   args: {

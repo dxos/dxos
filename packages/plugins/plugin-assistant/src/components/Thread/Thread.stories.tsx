@@ -20,7 +20,7 @@ import translations from '../../translations';
 
 faker.seed(1);
 
-const Render = ({ messages: _messages, ...props }: ThreadProps) => {
+const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
   const [processing, setProcessing] = useState(false);
   const [messages, setMessages] = useState<Message[]>(_messages ?? []);
   useEffect(() => {
@@ -70,7 +70,7 @@ const Render = ({ messages: _messages, ...props }: ThreadProps) => {
 
 const meta: Meta<ThreadProps> = {
   title: 'plugins/plugin-automation/Thread',
-  render: Render,
+  render: DefaultStory,
   component: Thread,
   decorators: [
     withSignals,
@@ -207,6 +207,6 @@ export const Incremental: Story = {
       return () => clearInterval(interval);
     }, []);
 
-    return <Render messages={messages} collapse />;
+    return <DefaultStory messages={messages} collapse />;
   },
 };

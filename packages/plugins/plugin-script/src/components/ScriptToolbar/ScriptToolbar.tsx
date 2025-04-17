@@ -39,6 +39,7 @@ export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbar
   const handleAction = useToolbarAction({ state, script });
   const toolbarCreator = useCallback(() => createToolbar(state), [state]);
   const menu = useMenuActions(toolbarCreator);
+
   return (
     <div role='none' className={stackItemContentToolbarClassNames(role)}>
       <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>

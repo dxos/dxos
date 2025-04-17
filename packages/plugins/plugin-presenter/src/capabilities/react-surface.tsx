@@ -52,7 +52,7 @@ export default () =>
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
     createSurface({
-      id: `${PRESENTER_PLUGIN}/settings`,
+      id: `${PRESENTER_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<PresenterSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === PRESENTER_PLUGIN,

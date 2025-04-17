@@ -25,7 +25,7 @@ export default () =>
       component: ({ data, role }) => <KanbanContainer kanban={data.subject} role={role} />,
     }),
     createSurface({
-      id: `${KANBAN_PLUGIN}/settings`,
+      id: `${KANBAN_PLUGIN}/plugin-settings`,
       role: 'complementary--settings',
       filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
       component: ({ data }) => <KanbanViewEditor kanban={data.subject} />,

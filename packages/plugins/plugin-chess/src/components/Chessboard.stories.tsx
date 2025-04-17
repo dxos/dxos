@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChessPanel } from './ChessPanel';
 
-const Render = () => {
+const DefaultStory = () => {
   const model = useMemo(() => new ChessModel(), []);
 
   return (
@@ -28,7 +28,7 @@ const Render = () => {
 const meta: Meta<typeof Chessboard> = {
   title: 'plugins/plugin-chess/Chessboard',
   component: Chessboard,
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

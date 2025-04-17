@@ -53,7 +53,7 @@ export default () =>
       component: ({ data }) => <ThreadComplementary subject={data.subject} />,
     }),
     createSurface({
-      id: `${THREAD_PLUGIN}/settings`,
+      id: `${THREAD_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<ThreadSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === THREAD_PLUGIN,

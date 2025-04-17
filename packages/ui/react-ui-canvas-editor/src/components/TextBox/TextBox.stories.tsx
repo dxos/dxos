@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TextBox, type TextBoxProps } from './TextBox';
 
-const Render = (props: TextBoxProps) => {
+const DefaultStory = (props: TextBoxProps) => {
   return (
     <div className='flex w-[300px] rounded border border-primary-500'>
       <TextBox {...props} onEnter={console.log} />
@@ -22,7 +22,7 @@ const Render = (props: TextBoxProps) => {
 const meta: Meta<TextBoxProps> = {
   title: 'ui/react-ui-canvas-editor/TextBox',
   component: TextBox,
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',

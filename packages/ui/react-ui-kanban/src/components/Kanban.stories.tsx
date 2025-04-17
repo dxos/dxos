@@ -46,7 +46,7 @@ const StorybookKanban = () => {
 
   useEffect(() => {
     if (kanban?.cardView?.target && schema) {
-      setProjection(new ViewProjection(schema, kanban.cardView.target));
+      setProjection(new ViewProjection(schema.jsonSchema, kanban.cardView.target));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
   }, [kanban?.cardView?.target, schema, JSON.stringify(schema?.jsonSchema)]);

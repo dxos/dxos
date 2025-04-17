@@ -4,9 +4,8 @@
 
 import { lazy } from 'react';
 
-export * from './DebugPanel';
 export * from './LogsPanel';
-export * from './ScriptSettings';
-export * from './ScriptSettingsPanel';
+export * from './Settings';
+export * from './TestPanel';
 
 export const ScriptContainer = lazy(() => import('./ScriptContainer'));

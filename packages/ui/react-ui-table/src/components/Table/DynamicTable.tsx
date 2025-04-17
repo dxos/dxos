@@ -4,6 +4,7 @@
 
 import React, { useRef, useMemo, useCallback } from 'react';
 
+import { type BaseSchema, type JsonSchemaType } from '@dxos/echo-schema';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Table, type TableController } from './Table';
@@ -13,11 +14,13 @@ import { makeDynamicTable, type TablePropertyDefinition } from '../../util';
 
 type DynamicTableProps = {
   data: any[];
-  properties: TablePropertyDefinition[];
+  properties?: TablePropertyDefinition[];
+  jsonSchema?: JsonSchemaType;
+  echoSchema?: BaseSchema;
   tableName?: string;
   classNames?: string;
-  onRowClicked?: (row: any) => void;
   rowActions?: TableRowAction[];
+  onRowClicked?: (row: any) => void;
   onRowAction?: (actionId: string, datum: any) => void;
 };
 
@@ -28,17 +31,17 @@ type DynamicTableProps = {
 export const DynamicTable = ({
   data,
   properties,
+  jsonSchema,
+  echoSchema,
   classNames,
   tableName = 'com.example/dynamic_table',
-  onRowClicked,
   rowActions,
+  onRowClicked,
   onRowAction,
 }: DynamicTableProps) => {
-  // TODO(ZaymonFC): Consider allowing the user to supply a schema directly instead of deriving it from
-  //  the properties array. (Both should be viable).
   const { table, viewProjection } = useMemo(() => {
-    return makeDynamicTable(tableName, properties);
-  }, [tableName, properties]);
+    return makeDynamicTable({ typename: tableName, properties, jsonSchema, echoSchema });
+  }, [tableName, properties, jsonSchema]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {

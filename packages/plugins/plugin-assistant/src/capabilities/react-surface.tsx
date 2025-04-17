@@ -16,7 +16,7 @@ import { AIChatType, type AssistantSettingsProps, TemplateType } from '../types'
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/settings`,
+      id: `${ASSISTANT_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<AssistantSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === ASSISTANT_PLUGIN,

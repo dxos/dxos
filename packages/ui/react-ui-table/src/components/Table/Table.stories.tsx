@@ -5,9 +5,9 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
-import { FormatEnum, ImmutableSchema } from '@dxos/echo-schema';
+import { ImmutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -17,11 +17,10 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type SchemaPropertyDefinition, ViewProjection, ViewType } from '@dxos/schema';
+import { ViewProjection, ViewType } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { DynamicTable as DynamicTableComponent } from './DynamicTable';
 import { Table, type TableController } from './Table';
 import { useTableModel, type UseTableModelParams } from '../../hooks';
 import { TablePresentation } from '../../model';
@@ -49,7 +48,7 @@ const DefaultStory = () => {
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {
-      return new ViewProjection(schema, table.view.target);
+      return new ViewProjection(schema.jsonSchema, table.view.target);
     }
   }, [schema, table?.view?.target]);
 
@@ -132,7 +131,7 @@ const DefaultStory = () => {
     [table, model],
   );
 
-  const onTypenameChanged = useCallback(
+  const handleTypenameChanged = useCallback(
     (typename: string) => {
       if (table?.view?.target) {
         invariant(schema);
@@ -161,7 +160,7 @@ const DefaultStory = () => {
             registry={space?.db.schemaRegistry}
             schema={schema}
             view={table.view.target!}
-            onTypenameChanged={onTypenameChanged}
+            onTypenameChanged={handleTypenameChanged}
             onDelete={handleDeleteColumn}
           />
         )}
@@ -174,40 +173,22 @@ const DefaultStory = () => {
   );
 };
 
-const DynamicTableStory = () => {
-  const properties = useMemo<SchemaPropertyDefinition[]>(
-    () => [
-      { name: 'name', format: FormatEnum.String },
-      { name: 'age', format: FormatEnum.Number },
-    ],
-    [],
-  );
-
-  const [objects, _setObjects] = useState<any[]>(
-    Array.from({ length: 100 }, () => ({
-      name: faker.person.fullName(),
-      age: faker.number.int({ min: 18, max: 80 }),
-    })),
-  );
-
-  return <DynamicTableComponent properties={properties} data={objects} />;
-};
-
 type StoryProps = {
   rows?: number;
 } & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
 
+// TODO(burdon): Restore.
 const _TablePerformanceStory = (props: StoryProps) => {
   const getDefaultRows = useCallback(() => 10, []);
   const rows = useDefaultValue(props.rows, getDefaultRows);
   const table = useMemo(() => createTable(), []);
-  const items = useMemo(() => createItems(rows), [rows]);
-  const itemsRef = useRef(items);
-  const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
+  const objects = useMemo(() => createItems(rows), [rows]);
+  const objectsRef = useRef(objects);
+  const simulatorProps = useMemo(() => ({ table, items: objects, ...props }), [table, objects, props]);
   useSimulator(simulatorProps);
 
   const handleDeleteRows = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRows']>>((row) => {
-    itemsRef.current.splice(row, 1);
+    objectsRef.current.splice(row, 1);
   }, []);
 
   const handleDeleteColumn = useCallback<NonNullable<UseTableModelParams<any>['onDeleteColumn']>>(
@@ -223,7 +204,7 @@ const _TablePerformanceStory = (props: StoryProps) => {
   const tableRef = useRef<TableController>(null);
   const model = useTableModel({
     table,
-    objects: items as any[],
+    objects,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
@@ -241,9 +222,10 @@ const _TablePerformanceStory = (props: StoryProps) => {
 // Story definitions.
 //
 
+// TODO(burdon): Need super simple story.
+
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-table/Table',
-  component: Table.Main as any,
   render: DefaultStory,
   parameters: { translations },
   decorators: [
@@ -294,10 +276,6 @@ export const StaticSchema: StoryObj = {
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
   ],
-};
-
-export const DynamicTable: StoryObj = {
-  render: DynamicTableStory,
 };
 
 // TODO(ZaymonFC): Restore the performance stories.

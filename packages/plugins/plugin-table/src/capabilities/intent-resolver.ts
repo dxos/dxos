@@ -41,7 +41,7 @@ export default (context: PluginsContext) =>
         invariant(table.view);
         const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.target!.query.typename!);
         invariant(schema);
-        const projection = new ViewProjection(schema, table.view.target!);
+        const projection = new ViewProjection(schema.jsonSchema, table.view.target!);
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {

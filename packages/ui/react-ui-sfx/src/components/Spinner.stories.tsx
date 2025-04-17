@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Spinner, type SpinnerProps } from './Spinner';
 
-const Render = ({ active: _active }: SpinnerProps) => {
+const DefaultStory = ({ active: _active }: SpinnerProps) => {
   const [active, setActive] = useState(_active);
 
   return (
@@ -32,7 +32,7 @@ const Render = ({ active: _active }: SpinnerProps) => {
 const meta: Meta<SpinnerProps> = {
   title: 'ui/react-ui-sfx/Spinner',
   component: Spinner,
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

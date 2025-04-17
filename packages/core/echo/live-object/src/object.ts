@@ -24,6 +24,7 @@ import { UntypedReactiveHandler } from './untyped-handler';
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
+// TODO(burdon): WithId.
 // TODO(dmaretskyi): Rename LiveObject.
 export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
 

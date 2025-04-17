@@ -18,11 +18,12 @@ type State = 'pending' | 'responding';
  */
 type Message = { type: 'request' | 'response'; text?: string; data?: any; error?: Error };
 
-export type DebugPanelProps = ThemedClassName<{
+export type TestPanelProps = ThemedClassName<{
   functionUrl?: string;
 }>;
 
-export const DebugPanel = ({ classNames, functionUrl }: DebugPanelProps) => {
+// TODO(burdon): Need persistent history (currently lost when switching tabs)..
+export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +31,7 @@ export const DebugPanel = ({ classNames, functionUrl }: DebugPanelProps) => {
   const [result, setResult] = useState('');
   const [state, setState] = useState<State | null>(null);
 
-  // TODO(burdon): Persistent history -- at least for session (non-space ECHO data?)
+  // TODO(burdon): Persistent history (thread).
   const [history, setHistory] = useState<Message[]>([]);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -161,8 +162,8 @@ export const DebugPanel = ({ classNames, functionUrl }: DebugPanelProps) => {
     <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
       {/* TODO(burdon): Replace with Thread. */}
       <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
-
-      <Toolbar.Root classNames='p-1'>
+      {/* TODO(burdon): Replace with Form based on the function's input schema. */}
+      <Toolbar.Root classNames='p-2'>
         <Input.Root>
           <Input.TextInput
             ref={inputRef}
@@ -185,7 +186,6 @@ export const DebugPanel = ({ classNames, functionUrl }: DebugPanelProps) => {
 };
 
 // TODO(burdon): Replace with thread?
-// TODO(burdon): Button to delete individual messages.
 // TODO(burdon): Button to edit/re-run question.
 type MessageThreadProps = {
   state: State | null;
@@ -195,10 +195,6 @@ type MessageThreadProps = {
 
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history, result }: MessageThreadProps, forwardedRef) => {
-    if (!history.length && !result.length) {
-      return null;
-    }
-
     return (
       <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
         {history.map((message, i) => (

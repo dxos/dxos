@@ -31,7 +31,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${SHEET_PLUGIN}/settings`,
+      id: `${SHEET_PLUGIN}/plugin-settings`,
       role: 'complementary--settings',
       filter: (data): data is { subject: SheetType } => isInstanceOf(SheetType, data.subject),
       component: ({ data }) => <RangeList sheet={data.subject} />,

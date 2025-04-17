@@ -32,6 +32,7 @@ export default () =>
         return message ? (
           <MessageContainer message={message} />
         ) : (
+          // TODO(burdon): Move into message container.
           <p className='p-8 text-center text-description'>{t('no message message')}</p>
         );
       },

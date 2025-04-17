@@ -19,7 +19,7 @@ type RenderProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'>
   fen: string;
 };
 
-const Render = ({ fen, orientation: _orientation, ...props }: RenderProps) => {
+const DefaultStory = ({ fen, orientation: _orientation, ...props }: RenderProps) => {
   const model = useMemo(() => new ChessModel(fen), [fen]);
   const [orientation, setOrientation] = useState<Player | undefined>(_orientation);
 
@@ -75,16 +75,16 @@ const Grid = (props: RenderProps) => {
   );
 };
 
-const meta: Meta<typeof Render> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-gameboard/Chessboard',
   component: Chessboard,
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: '' })],
 };
 
 export default meta;
 
-type Story = StoryObj<typeof Render>;
+type Story = StoryObj<typeof DefaultStory>;
 
 export const Default: Story = {};
 

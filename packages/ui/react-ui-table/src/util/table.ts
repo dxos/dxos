@@ -94,7 +94,7 @@ const ContactSchema = TypedObject({
 const ContactFields = ['name', 'email', 'salary', 'active'];
 
 const createProjection = (schema: EchoSchema, view: ViewType): ViewProjection => {
-  const projection = new ViewProjection(schema, view);
+  const projection = new ViewProjection(schema.jsonSchema, view);
   projection.setFieldProjection({
     field: {
       id: view.fields.find((f) => f.path === 'salary')!.id,

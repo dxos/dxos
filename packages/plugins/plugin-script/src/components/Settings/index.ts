@@ -3,3 +3,4 @@
 //
 
 export * from './ScriptSettings';
+export * from './ScriptSettingsPanel';

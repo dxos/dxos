@@ -211,8 +211,11 @@ export class MediaManager extends Resource {
 
     log('reconciling tracks', {
       trackNames,
-      pulledAudioTracks: Object.keys(this._state.pulledAudioTracks),
-      pulledVideoStreams: Object.keys(this._state.pulledVideoStreams),
+      tracksToPull,
+      videoStreamsToClose,
+      audioTracksToClose,
+      currentAudioTracks: Object.keys(this._state.pulledAudioTracks),
+      currentVideoStreams: Object.keys(this._state.pulledVideoStreams),
     });
 
     // Pull new tracks.
@@ -222,8 +225,8 @@ export class MediaManager extends Resource {
     await Promise.all([...audioTracksToClose, ...videoStreamsToClose].map(([_, { ctx }]) => ctx.dispose()));
 
     log('reconciled tracks', {
-      audioTracks: Object.keys(this._state.pulledAudioTracks),
-      videoStreams: Object.keys(this._state.pulledVideoStreams),
+      currentAudioTracks: Object.keys(this._state.pulledAudioTracks),
+      currentVideoStreams: Object.keys(this._state.pulledVideoStreams),
     });
     this.stateUpdated.emit(this._state);
   }
@@ -279,6 +282,7 @@ export class MediaManager extends Resource {
           this._state.pulledVideoStreams[name] = { stream: mediaStream, ctx };
           ctx.onDispose(() => {
             mediaStream.removeTrack(track);
+            track.stop();
             delete this._state.pulledVideoStreams[name];
           });
           break;

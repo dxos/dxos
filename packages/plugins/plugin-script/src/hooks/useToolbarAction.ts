@@ -17,14 +17,17 @@ export type ScriptToolbarActionProperties = TemplateActionProperties | FormatAct
 
 export type ScriptToolbarAction = MenuAction<ScriptToolbarActionProperties>;
 
-export const useToolbarAction = (props: { state: ScriptToolbarState; script: ScriptType }) => {
+export const useToolbarAction = (props: {
+  state: ScriptToolbarState;
+  script: ScriptType;
+}): MenuActionHandler<ScriptToolbarAction> => {
   const handleTemplateSelect = useTemplateSelectHandler(props);
   const handleFormat = useFormatHandler(props);
   const handleDeploy = useDeployHandler(props);
   const handleCopy = useCopyHandler(props);
 
-  return useCallback(
-    ((action: ScriptToolbarAction) => {
+  return useCallback<MenuActionHandler<ScriptToolbarAction>>(
+    (action: ScriptToolbarAction) => {
       switch (action.properties.type) {
         case 'template':
           handleTemplateSelect(action.properties.value);
@@ -41,7 +44,7 @@ export const useToolbarAction = (props: { state: ScriptToolbarState; script: Scr
         default:
           log.error('Unknown action type', action);
       }
-    }) as MenuActionHandler,
+    },
     [handleTemplateSelect, handleFormat, handleDeploy, handleCopy],
   );
 };

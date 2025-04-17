@@ -5,14 +5,11 @@
 // @ts-ignore
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { RefArray } from '@dxos/live-object';
 import { ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { getSpace } from '@dxos/react-client/echo';
 
 import {
   ArtifactDefinition,
@@ -23,7 +20,7 @@ import {
   AppGraphBuilder,
 } from './capabilities';
 import { ScriptEvents } from './events';
-import { meta, SCRIPT_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { ScriptAction } from './types';
 
@@ -61,18 +58,6 @@ export const ScriptPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panels`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'function',
-          label: ['function panel label', { ns: SCRIPT_PLUGIN }],
-          icon: 'ph--terminal--regular',
-          fixed: true,
-          filter: (node) => isInstanceOf(ScriptType, node.data) && !!getSpace(node.data),
-        }),
     }),
     defineModule({
       id: `${meta.id}/module/object-form`,

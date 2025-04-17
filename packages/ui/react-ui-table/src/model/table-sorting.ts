@@ -9,7 +9,7 @@ import { getValue, FormatEnum, TypeEnum, type SortDirectionType, type FieldSortT
 import { formatForDisplay } from '@dxos/react-ui-form';
 import type { PropertyType, FieldType, ViewProjection, ViewType } from '@dxos/schema';
 
-import { type BaseTableRow } from './table-model';
+import { type TableRow } from './table-model';
 
 /**
  * Represents the local sort state.
@@ -40,7 +40,7 @@ type LocalSort = { type: 'cleared' } | { type: 'active'; sort: FieldSortType } |
  * │ 2: "Cherry"  │  =>  │ 2: "Cherry"  │  =>  │ 2 => 2 │
  * └──────────────┘      └──────────────┘      └────────┘
  */
-export class TableSorting<T extends BaseTableRow> {
+export class TableSorting<T extends TableRow> {
   private readonly _displayToDataIndex = new Map<number, number>();
   private readonly _rows: Signal<T[]>;
   private readonly _localSort = signal<LocalSort>(undefined);

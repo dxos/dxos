@@ -50,7 +50,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   const projection = useMemo(() => {
     if (kanban?.cardView?.target && schema) {
-      return new ViewProjection(schema, kanban.cardView.target);
+      return new ViewProjection(schema.jsonSchema, kanban.cardView.target);
     }
   }, [kanban?.cardView?.target, schema, JSON.stringify(schema)]);
 

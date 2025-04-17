@@ -22,14 +22,14 @@ import { SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
 import { touch } from '../util';
 
-export type BaseTableRow = Record<JsonProp, any> & { id: string };
+// TODO(burdon): Use schema types.
+export type TableRow = Record<JsonProp, any> & { id: string };
 
 export type TableRowAction = {
   id: string;
   translationKey: string;
 };
 
-// TODO(ZaymonFC): There should be a separate concept for immutable schemata.
 export type TableFeatures = {
   selection: boolean;
   dataEditable: boolean;
@@ -42,7 +42,7 @@ const defaultFeatures: TableFeatures = {
   schemaEditable: false,
 };
 
-export type TableModelProps<T extends BaseTableRow = { id: string }> = {
+export type TableModelProps<T extends TableRow = TableRow> = {
   id?: string;
   space?: Space;
   view?: ViewType;
@@ -50,16 +50,16 @@ export type TableModelProps<T extends BaseTableRow = { id: string }> = {
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
   pinnedRows?: { top: number[]; bottom: number[] };
+  rowActions?: TableRowAction[];
   onInsertRow?: (index?: number) => void;
   onDeleteRows?: (index: number, obj: T[]) => void;
   onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: DxGridPosition) => void;
   onRowOrderChanged?: () => void;
-  rowActions?: TableRowAction[];
   onRowAction?: (actionId: string, data: T) => void;
 };
 
-export class TableModel<T extends BaseTableRow = { id: string }> extends Resource {
+export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _id: string | undefined;
   private readonly _space: Space | undefined;
   private readonly _view: ViewType | undefined;
@@ -75,8 +75,8 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
   private readonly _onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
-  private readonly _rowActions: TableRowAction[];
   private readonly _onRowAction?: TableModelProps<T>['onRowAction'];
+  private readonly _rowActions: TableRowAction[];
   private readonly _features: TableFeatures;
 
   private readonly _rows = signal<T[]>([]);
@@ -94,12 +94,12 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     features = {},
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
+    rowActions = [],
     onCellUpdate,
     onDeleteColumn,
     onDeleteRows,
     onInsertRow,
     onRowOrderChanged,
-    rowActions = [],
     onRowAction,
   }: TableModelProps<T>) {
     super();

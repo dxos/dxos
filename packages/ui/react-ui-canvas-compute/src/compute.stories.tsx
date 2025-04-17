@@ -50,7 +50,7 @@ type RenderProps = EditorRootProps<ComputeShape> &
     controller?: ComputeGraphController | null;
   }>;
 
-const Render = ({
+const DefaultStory = ({
   id = 'test',
   children,
   graph,
@@ -172,7 +172,7 @@ const Render = ({
 const meta: Meta<RenderProps> = {
   title: 'ui/react-ui-canvas-compute/compute',
   component: Editor.Root,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true }),
     withTheme,

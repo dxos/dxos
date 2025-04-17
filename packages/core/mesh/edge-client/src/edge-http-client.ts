@@ -27,6 +27,8 @@ import {
   type QueryResult,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
+  type CreateSpaceRequest,
+  type CreateSpaceResponseBody,
 } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -180,6 +182,10 @@ export class EdgeHttpClient {
       query: { ids: objectIds.join(',') },
       method: 'DELETE',
     });
+  }
+
+  async createSpace(body: CreateSpaceRequest, args?: EdgeHttpGetArgs): Promise<CreateSpaceResponseBody> {
+    return this._call('/spaces/create', { ...args, body, method: 'POST' });
   }
 
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {

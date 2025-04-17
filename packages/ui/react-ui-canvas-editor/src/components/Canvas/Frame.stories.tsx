@@ -14,7 +14,7 @@ import { Shapes, type ShapesProps } from './Shapes';
 import { createRectangle } from '../../shapes';
 import { Editor } from '../Editor';
 
-const Render = ({ layout }: ShapesProps) => {
+const DefaultStory = ({ layout }: ShapesProps) => {
   return (
     <Editor.Root id='test'>
       <Canvas>
@@ -26,7 +26,7 @@ const Render = ({ layout }: ShapesProps) => {
 
 const meta: Meta<ShapesProps> = {
   title: 'ui/react-ui-canvas-editor/Frame',
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

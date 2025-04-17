@@ -63,7 +63,7 @@ describe('ViewProjection', () => {
     const [mutable] = await registry.register([schema]);
 
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
     expect(view.fields).to.have.length(3);
 
     {
@@ -159,7 +159,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     projection.setFieldProjection({
       field: {
@@ -213,7 +213,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Initial state.
     expect(view.fields).to.have.length(2);
@@ -245,7 +245,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Capture initial states.
     const initialFieldsOrder = view.fields.map((f) => f.path);
@@ -291,7 +291,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Capture initial state.
     const initialFieldsOrder = view.fields.map((f) => f.path);
@@ -337,7 +337,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
     const fieldId = projection.getFieldId('status');
     invariant(fieldId);
 
@@ -460,7 +460,7 @@ describe('ViewProjection', () => {
       ],
     });
 
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
     const initialSchema = mutable.snapshot;
 
     // Verify only the included fields are in the view.
@@ -561,7 +561,7 @@ describe('ViewProjection', () => {
     });
 
     // Create projection.
-    void new ViewProjection(mutable, view);
+    void new ViewProjection(mutable.jsonSchema, view);
 
     // Verify all schema fields were added to hiddenFields.
     expect(view.hiddenFields).to.exist;
@@ -597,7 +597,7 @@ describe('ViewProjection', () => {
     });
 
     // Initialize projection.
-    void new ViewProjection(mutable, view);
+    void new ViewProjection(mutable.jsonSchema, view);
 
     // Verify title is in hiddenFields.
     expect(view.hiddenFields).to.have.length(1);
@@ -607,7 +607,7 @@ describe('ViewProjection', () => {
     mutable.jsonSchema.properties!.status = { type: 'string' };
 
     // Create new projection to trigger normalization.
-    void new ViewProjection(mutable, view);
+    void new ViewProjection(mutable.jsonSchema, view);
 
     // Verify status was added to hiddenFields.
     expect(view.hiddenFields).to.have.length(2);
@@ -633,7 +633,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    let projection = new ViewProjection(mutable, view);
+    let projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Initial state
     expect(view.fields).to.have.length(3);
@@ -652,7 +652,7 @@ describe('ViewProjection', () => {
     expect(hiddenProps).to.not.include('email');
 
     // Reinitialize projection to trigger normalization
-    projection = new ViewProjection(mutable, view);
+    projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Verify field is still deleted and not in hidden properties
     expect(view.fields).to.have.length(2);

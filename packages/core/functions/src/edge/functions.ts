@@ -14,19 +14,19 @@ import { type UploadFunctionResponseBody } from '@dxos/protocols';
 
 export type UploadWorkerArgs = {
   client: Client;
-  name?: string;
+  spaceId: SpaceId;
   source: string;
   version: string;
+  name?: string;
   functionId?: string;
-  spaceId: SpaceId;
 };
 
 export const uploadWorkerFunction = async ({
   client,
-  name,
+  spaceId,
   version,
   source,
-  spaceId,
+  name,
   functionId,
 }: UploadWorkerArgs): Promise<UploadFunctionResponseBody> => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
@@ -36,11 +36,12 @@ export const uploadWorkerFunction = async ({
   edgeClient.setIdentity(edgeIdentity);
   const response = await edgeClient.uploadFunction({ spaceId, functionId }, { name, version, script: source });
 
-  log('Uploaded', {
-    functionId,
-    source,
-    name,
+  // TODO(burdon): Edge service log.
+  log.info('Uploaded', {
     identityKey: edgeIdentity.identityKey,
+    functionId,
+    name,
+    source: source.length,
     response,
   });
 
@@ -50,10 +51,11 @@ export const uploadWorkerFunction = async ({
 export const incrementSemverPatch = (version: string): string => {
   const [major, minor, patch] = version.split('.');
   const patchNum = Number(patch);
-  invariant(!Number.isNaN(patchNum), 'Unexpected function version format.');
+  invariant(!Number.isNaN(patchNum), `Unexpected function version format: ${version}`);
   return [major, minor, String(patchNum + 1)].join('.');
 };
 
+// TODO(burdon): Factor out.
 export const publicKeyToDid = (key: PublicKey): DID => {
   return `did:key:${key.toHex()}`;
 };

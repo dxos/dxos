@@ -342,6 +342,15 @@ export default (context: PluginsContext) =>
                       icon: 'ph--line-segments--regular',
                     },
                   },
+                  {
+                    id: `${node.id}-${Devtools.Edge.Testing}`,
+                    data: Devtools.Edge.Testing,
+                    type: DEVTOOLS_TYPE,
+                    properties: {
+                      label: ['testing label', { ns: DEBUG_PLUGIN }],
+                      icon: 'ph--flask--regular',
+                    },
+                  },
                 ],
               },
             ],

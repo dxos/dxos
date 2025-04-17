@@ -100,7 +100,7 @@ export const LoggingPanel = () => {
       { value: 'warn', label: 'Warn' },
       { value: 'error', label: 'Error' },
 
-      // TOOD(burdon): Factor out.
+      // TOOD(burdon): Factor out. Move to separate pull down.
       { value: 'info,echo-edge-replicator:debug', label: 'EDGE Replication' },
     ],
     [],
