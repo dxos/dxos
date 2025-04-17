@@ -13,6 +13,7 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
   /**
    * Globally unique ID.
    */
+  // TODO(burdon): Allow string array, which is concatenated.
   id: string;
 
   /**
