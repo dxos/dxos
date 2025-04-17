@@ -79,7 +79,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/settings-panel`,
+      id: `${SPACE_PLUGIN}/settings`,
       // TODO(burdon): Add role name syntax to minimal plugin docs.
       role: 'complementary--settings',
       filter: (data): data is { subject: Space } => isSpace(data.subject),
@@ -191,7 +191,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <CollectionSection collection={data.subject} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/settings`,
+      id: `${SPACE_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<SpaceSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === SPACE_PLUGIN,

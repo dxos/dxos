@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { type ForeignKey, ForeignKeySchema } from '@dxos/echo-schema';
 import { getMeta, type ReactiveEchoObject } from '@dxos/react-client/echo';
-import { IconButton, useTranslation, Separator } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { ForeignKeys } from './ForeignKeys';
@@ -51,7 +51,6 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
   // TODO(wittjosiah): This should be wrapped in an "Advanced" accordion.
   return (
     <>
-      <Separator />
       <div className='p-2 flex flex-col gap-4'>
         <h2>{t('advanced settings label')}</h2>
         <div className='flex items-center'>
@@ -66,6 +65,7 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
         </div>
         {!adding && <ForeignKeys keys={keys} onDelete={handleDelete} />}
       </div>
+
       {adding && <Form schema={ForeignKeySchema} values={initialValues} onSave={handleSave} onCancel={handleCancel} />}
     </>
   );
