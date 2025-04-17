@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Receipt, Key } from '@phosphor-icons/react';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useCredentials } from '@dxos/react-client/halo';
-import { Icon, List, ListItem, useTranslation } from '@dxos/react-ui';
-import { BifurcatedAction, type ActionMenuItem } from '@dxos/shell/react';
+import { Icon, IconButton, List, ListItem, useTranslation, Message } from '@dxos/react-ui';
+import { StackItem } from '@dxos/react-ui-stack';
 
+import { ControlGroup, ControlItem, ControlSection } from './ControlSection';
 import { CLIENT_PLUGIN } from '../meta';
 import { ClientAction } from '../types';
 
@@ -23,41 +23,52 @@ export const RecoveryCredentialsContainer = () => {
     (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
   );
 
-  // TODO(wittjosiah): Reconcile w/ RecoverySetupDialog actions.
-  const actions: Record<string, ActionMenuItem> = useMemo(
-    () => ({
-      createPasskey: {
-        label: t('create passkey label'),
-        description: t('create passkey description'),
-        // TODO(wittjosiah): Ideally this would be a `user-key` icon.
-        icon: Key,
-        onClick: () => dispatch(createIntent(ClientAction.CreatePasskey)),
-      },
-      createRecoveryCode: {
-        label: t('create recovery code label'),
-        description: t('create recovery code description'),
-        icon: Receipt,
-        onClick: () => dispatch(createIntent(ClientAction.CreateRecoveryCode)),
-      },
-    }),
-    [t],
-  );
-
   return (
-    <div className='p-4'>
-      <div className='flex justify-end'>
-        <BifurcatedAction actions={actions} isFull={false} />
-      </div>
-      <List>
-        {recoveryCredentials.map((credential) => (
-          <ListItem.Root key={credential.id?.toHex()}>
-            <ListItem.Endcap>
-              <Icon icon='ph--key--regular' size={5} />
-            </ListItem.Endcap>
-            <ListItem.Heading>{credential.issuanceDate.toLocaleString()}</ListItem.Heading>
-          </ListItem.Root>
-        ))}
-      </List>
-    </div>
+    <StackItem.Content classNames='p-2 block overflow-y-auto'>
+      <ControlSection title={t('recovery setup dialog title')} description={t('recovery setup dialog description')}>
+        <ControlGroup>
+          <ControlItem title={t('create passkey label')} description={t('create passkey description')}>
+            <IconButton
+              label={t('create passkey label')}
+              icon='ph--key--duotone'
+              variant='primary'
+              size={5}
+              onClick={() => dispatch(createIntent(ClientAction.CreatePasskey))}
+            />
+          </ControlItem>
+          <ControlItem title={t('create recovery code label')} description={t('create recovery code description')}>
+            <IconButton
+              label={t('create recovery code label')}
+              icon='ph--receipt--duotone'
+              variant='default'
+              size={5}
+              onClick={() => dispatch(createIntent(ClientAction.CreateRecoveryCode))}
+            />
+          </ControlItem>
+        </ControlGroup>
+      </ControlSection>
+      <ControlSection title={t('credentials list label')}>
+        {recoveryCredentials.length < 1 ? (
+          <Message.Root valence='error' className='container-max-width'>
+            <Message.Title>
+              <Icon icon='ph--shield-warning--duotone' size={5} classNames='inline-block align-top mbs-px mie-1' />
+              {t('no credentials title')}
+            </Message.Title>
+            <Message.Body>{t('no credentials message')}</Message.Body>
+          </Message.Root>
+        ) : (
+          <List classNames='container-max-width pli-2'>
+            {recoveryCredentials.map((credential) => (
+              <ListItem.Root key={credential.id?.toHex()}>
+                <ListItem.Endcap>
+                  <Icon icon='ph--key--regular' size={5} />
+                </ListItem.Endcap>
+                <ListItem.Heading>{credential.issuanceDate.toLocaleString()}</ListItem.Heading>
+              </ListItem.Root>
+            ))}
+          </List>
+        )}
+      </ControlSection>
+    </StackItem.Content>
   );
 };

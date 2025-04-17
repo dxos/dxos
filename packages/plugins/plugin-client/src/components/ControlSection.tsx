@@ -1,0 +1,52 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { type PropsWithChildren } from 'react';
+
+import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
+
+import { CLIENT_PLUGIN } from '../meta';
+
+export type ControlSectionProps = PropsWithChildren<{
+  title: Label;
+  description?: Label;
+}>;
+
+export const ControlSection = ({ title, description, children }: ControlSectionProps) => {
+  const { t } = useTranslation(CLIENT_PLUGIN);
+  return (
+    <>
+      <h2 className='pli-4 container-max-width text-xl mbs-6 mbe-4'>{toLocalizedString(title, t)}</h2>
+      {description && <p className='pli-4 mlb-4 container-max-width'>{toLocalizedString(description, t)}</p>}
+      {children}
+    </>
+  );
+};
+
+export type ControlGroupProps = PropsWithChildren<{}>;
+
+export const ControlGroup = ({ children }: ControlGroupProps) => (
+  <div role='none' className='group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-2'>
+    {children}
+  </div>
+);
+
+export type ControlItemProps = PropsWithChildren<{
+  title: Label;
+  description?: Label;
+}>;
+
+export const ControlItem = ({ title, description, children }: ControlItemProps) => {
+  const { t } = useTranslation(CLIENT_PLUGIN);
+
+  return (
+    <div className='p-4 border border-separator rounded-lg container-max-width grid md:col-span-2 grid-cols-subgrid items-center'>
+      <div role='none'>
+        <h3 className='text-lg mbe-2'>{toLocalizedString(title, t)}</h3>
+        {description && <p className='mlb-2 md:mbe-0'>{toLocalizedString(description, t)}</p>}
+      </div>
+      {children}
+    </div>
+  );
+};
