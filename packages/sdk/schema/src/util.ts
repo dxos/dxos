@@ -110,7 +110,7 @@ export const makeMultiSelectAnnotations = (
   options: Array<{ id: string; title?: string; color?: string }>,
 ) => {
   // TODO(ZaymonFC): Is this how do we encode an array of enums?
-  jsonProperty.type = 'array';
+  jsonProperty.type = 'object';
   jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };
   jsonProperty.format = FormatEnum.MultiSelect;
   jsonProperty.echo = {

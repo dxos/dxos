@@ -98,10 +98,16 @@ export class ViewProjection {
         ? typeToFormat[type]!
         : (schemaFormat as FormatEnum);
 
-    const options =
-      format === FormatEnum.SingleSelect && echo?.annotations?.singleSelect?.options
-        ? echo.annotations.singleSelect.options
-        : undefined;
+    const getOptions = () => {
+      if (format === FormatEnum.SingleSelect) {
+        return echo?.annotations?.singleSelect?.options;
+      }
+      if (format === FormatEnum.MultiSelect) {
+        return echo?.annotations?.multiSelect?.options;
+      }
+    };
+
+    const options = getOptions();
 
     const values = {
       type,

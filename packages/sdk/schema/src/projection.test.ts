@@ -448,12 +448,11 @@ describe('ViewProjection', () => {
     const fieldId = projection.getFieldId('tags');
     invariant(fieldId);
 
-    // Set single select format with options.
     projection.setFieldProjection({
-      field: { id: fieldId, path: 'tgs' as JsonPath },
+      field: { id: fieldId, path: 'tags' as JsonPath },
       props: {
         property: 'tags' as JsonProp,
-        type: TypeEnum.String,
+        type: TypeEnum.Object,
         format: FormatEnum.MultiSelect,
         options: [
           { id: 'feature', title: 'Feature', color: 'emerald' },
@@ -463,11 +462,9 @@ describe('ViewProjection', () => {
       },
     });
 
-    // Verify JSON Schema.
-    expect(mutable.jsonSchema.properties?.status).to.deep.include({
-      type: 'string',
+    expect(mutable.jsonSchema.properties?.tags).to.deep.include({
+      type: 'object',
       format: 'multi-select',
-      enum: ['draft', 'published'],
       echo: {
         annotations: {
           multiSelect: {
@@ -481,7 +478,6 @@ describe('ViewProjection', () => {
       },
     });
 
-    // Verify projection.
     const { props } = projection.getFieldProjection(fieldId);
 
     expect(props.format).to.equal(FormatEnum.MultiSelect);
@@ -491,11 +487,11 @@ describe('ViewProjection', () => {
       { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
     ]);
 
-    // Update options.
     projection.setFieldProjection({
-      field: { id: fieldId, path: 'status' as JsonPath },
+      field: { id: fieldId, path: 'tags' as JsonPath },
       props: {
         ...props,
+        property: 'tags' as JsonProp,
         options: [
           { id: 'draft', title: 'Draft', color: 'indigo' },
           { id: 'published', title: 'Published', color: 'blue' },
@@ -504,40 +500,60 @@ describe('ViewProjection', () => {
       },
     });
 
-    // TODO(ZaymonFC): Verify updates and effect schema generation.
+    const updatedProjection = projection.getFieldProjection(fieldId);
+    expect(updatedProjection.props.options).to.deep.equal([
+      { id: 'draft', title: 'Draft', color: 'indigo' },
+      { id: 'published', title: 'Published', color: 'blue' },
+      { id: 'archived', title: 'Archived', color: 'amber' },
+    ]);
 
-    // // Verify updated JSON Schema.
-    // expect(mutable.jsonSchema.properties?.status?.echo).to.deep.include({
-    //   annotations: {
-    //     singleSelect: {
-    //       options: [
-    //         { id: 'draft', title: 'Draft', color: 'indigo' },
-    //         { id: 'published', title: 'Published', color: 'blue' },
-    //         { id: 'archived', title: 'Archived', color: 'amber' },
-    //       ],
-    //     },
-    //   },
-    // });
+    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
+      annotations: {
+        multiSelect: {
+          options: [
+            { id: 'draft', title: 'Draft', color: 'indigo' },
+            { id: 'published', title: 'Published', color: 'blue' },
+            { id: 'archived', title: 'Archived', color: 'amber' },
+          ],
+        },
+      },
+    });
 
-    // const effectSchema = mutable.snapshot;
-    // expect(() => S.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
-    // expect(() => S.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
-    // expect(() => S.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
-    // expect(() => S.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
+    // Verify updated JSON Schema.
+    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
+      annotations: {
+        multiSelect: {
+          options: [
+            { id: 'draft', title: 'Draft', color: 'indigo' },
+            { id: 'published', title: 'Published', color: 'blue' },
+            { id: 'archived', title: 'Archived', color: 'amber' },
+          ],
+        },
+      },
+    });
 
-    // const properties = getPropertySignatures(effectSchema.ast);
-    // const statusProperty = properties.find((p) => p.name === 'status');
-    // invariant(statusProperty);
-    // const statusPropertyMeta = getPropertyMetaAnnotation(statusProperty, 'singleSelect');
+    const effectSchema = mutable.snapshot;
+    expect(effectSchema).not.toBeUndefined;
+    expect(() => S.validateSync(effectSchema)({ tags: ['draft'] })).not.to.throw();
+    expect(() => S.validateSync(effectSchema)({ tags: ['published'] })).not.to.throw();
 
-    // // Ensure that the materialized schema contains option annotations.
-    // expect(statusPropertyMeta).to.deep.equal({
-    //   options: [
-    //     { id: 'draft', title: 'Draft', color: 'indigo' },
-    //     { id: 'published', title: 'Published', color: 'blue' },
-    //     { id: 'archived', title: 'Archived', color: 'amber' },
-    //   ],
-    // });
+    // TODO(ZaymonFC): Get validation working.
+    // expect(() => S.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
+    // expect(() => S.validateSync(effectSchema)({ tags: 'invalid-status' })).to.throw();
+
+    const properties = getPropertySignatures(effectSchema.ast);
+    const statusProperty = properties.find((p) => p.name === 'tags');
+    invariant(statusProperty);
+    const statusPropertyMeta = getPropertyMetaAnnotation(statusProperty, 'multiSelect');
+
+    // Ensure that the materialized schema contains option annotations.
+    expect(statusPropertyMeta).to.deep.equal({
+      options: [
+        { id: 'draft', title: 'Draft', color: 'indigo' },
+        { id: 'published', title: 'Published', color: 'blue' },
+        { id: 'archived', title: 'Archived', color: 'amber' },
+      ],
+    });
   });
 
   // TODO(burdon): Test changing format.
