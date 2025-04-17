@@ -19,6 +19,7 @@ import { createFieldId, createView, getSchemaProperties, ViewProjection, type Vi
 
 import { type TableType } from '../types';
 
+// TODO(ZaymonFC): We don't need the client anymore.
 type InitialiseTableProps = {
   client: Client;
   space: Space;

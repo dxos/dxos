@@ -161,12 +161,10 @@ export const TableCellEditor = ({
           },
           onUpdate: (ids) => {
             if (model && editing) {
-              const cell = parseCellIndex(editing.index);
-              // For single select, use the first tag id or undefined if empty
-              const value = ids.length > 0 ? ids[0] : undefined;
-
-              // Update the cell with the selected id
-              model.setCellData(cell, value);
+              if (ids.length === 0) {
+                return;
+              }
+              handleEnter(ids[0]);
             }
           },
         }),

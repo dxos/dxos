@@ -141,8 +141,8 @@ export const tagPickerExtension = ({
     autocompletion({
       activateOnTyping: true,
       closeOnBlur: !debug,
-      tooltipClass: () => 'border border-separator',
-      optionClass: () => '!p-1',
+      // tooltipClass: () => 'border border-separator',
+      // optionClass: () => '!p-1',
     }),
 
     // Update when modified (either by editing or external updates).
@@ -280,7 +280,7 @@ class ItemWidget extends WidgetType {
 
   toDOM() {
     const el = document.createElement('dx-tag-picker-item');
-    el.classList.add('inline-block', 'pli-0.5');
+    el.classList.add('inline-block', 'pie-0.5');
     el.setAttribute('itemId', this.props.itemId ?? 'never');
     el.setAttribute('label', this.props.label ?? 'never');
     this.props.hue && el.setAttribute('hue', this.props.hue);
@@ -301,7 +301,6 @@ const styles = EditorView.theme({
   '.cm-tooltip-autocomplete ul li[aria-selected]': {
     backgroundColor: 'var(--dx-hoverSurface)',
   },
-
   // Hide scrollbar.
   '.cm-scroller': {
     scrollbarWidth: 'none', // Firefox.
@@ -309,8 +308,7 @@ const styles = EditorView.theme({
   '.cm-scroller::-webkit-scrollbar': {
     display: 'none', // WebKit.
   },
-
   '.cm-line': {
-    lineHeight: '1 !important',
+    lineHeight: '1.125rem !important',
   },
 });
