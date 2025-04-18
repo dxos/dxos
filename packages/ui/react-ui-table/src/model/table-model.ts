@@ -111,6 +111,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     // TODO(ZaymonFC): Use our more robust config merging module?
     this._features = { ...defaultFeatures, ...features };
 
+    invariant(
+      !this._features.dataEditable && this._features.selection.enabled && this._features.selection.mode === 'single',
+      'Single selection is not yet compatible with editable tables.',
+    );
+
     this._sorting = new TableSorting(this._rows, this._view, projection);
 
     if (sorting.length > 0) {

@@ -33,6 +33,7 @@ const useTestPropertiesAndObjects = () => {
 
   const [objects, _setObjects] = useState<any[]>(
     Array.from({ length: 10 }, () => ({
+      id: faker.string.uuid(),
       name: faker.person.fullName(),
       age: faker.number.int({ min: 18, max: 80 }),
     })),
