@@ -59,7 +59,6 @@ export const NavTreePlugin = () =>
       activate: async (context) => {
         const layout = context.requestCapability(Capabilities.Layout);
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-
         if (dispatch && layout.active.length === 1) {
           await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] }));
         }
