@@ -51,8 +51,15 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
         yield { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 };
       }
 
+      //
       yield* [
-        { name: 'time', title: 'Started', format: FormatEnum.DateTime, sort: 'desc' as const, size: 194 },
+        {
+          name: 'time',
+          title: 'Started',
+          format: FormatEnum.DateTime,
+          sort: 'desc' as const,
+          size: 194,
+        },
         {
           name: 'status',
           title: 'Status',
@@ -80,6 +87,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
       const status = invocation.outcome;
       const targetDxn = decodeReference(invocation.invocationTarget).dxn;
 
+      // TODO(burdon): Use InvocationTraceStartEvent.
       return {
         id: invocation.id,
         target: resolver(targetDxn),
