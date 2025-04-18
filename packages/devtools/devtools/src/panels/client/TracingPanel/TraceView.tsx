@@ -48,10 +48,6 @@ export const TraceView: FC<{
 
   const flameGraph = showThreads ? graphs[Math.min(selectedFlameIndex, graphs.length - 1)] : graphs.flat();
 
-  useEffect(() => {
-    log.info('flameGraph', { flameGraph });
-  }, [flameGraph]);
-
   return (
     <div className='h-full'>
       <div className='flex items-center p-2'>
