@@ -46,7 +46,7 @@ export default [
         'template select group label': 'Select template',
         'function panel label': 'Debug Function',
         'script settings label': 'Settings',
-        'script execute label': 'Test',
+        'script test label': 'Test',
         'script automation label': 'Automation',
         'script logs label': 'Logs',
       },
