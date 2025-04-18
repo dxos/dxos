@@ -21,7 +21,7 @@ export const BaseObjectSettings = ({ object }: BaseObjectSettingsProps) => {
   //  The form should only include fields with a specific settings annotation.
   //  Perhaps also including the field of the title annotation as well.
   return (
-    <div role='form' className='flex flex-col p-2 gap-4'>
+    <form className='flex flex-col p-2 gap-4'>
       <Input.Root>
         <Input.Label>{t('name label')}</Input.Label>
         <Input.TextInput
@@ -38,6 +38,6 @@ export const BaseObjectSettings = ({ object }: BaseObjectSettingsProps) => {
           }}
         />
       </Input.Root>
-    </div>
+    </form>
   );
 };
