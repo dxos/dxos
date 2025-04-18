@@ -101,7 +101,6 @@ const getCollectionGraphNodePartials = ({
   resolve: (typename: string) => Record<string, any>;
 }) => {
   return {
-    disabled: !navigable,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',

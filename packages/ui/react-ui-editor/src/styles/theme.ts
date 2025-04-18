@@ -77,6 +77,10 @@ export const defaultTheme: ThemeStyles = {
     background: 'transparent',
   },
   '.cm-gutter': {},
+  '.cm-gutter.cm-lineNumbers': {
+    paddingRight: '4px',
+    borderRight: '1px solid var(--dx-separator)',
+  },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
     minWidth: '40px',
     alignContent: 'center',
@@ -87,8 +91,6 @@ export const defaultTheme: ThemeStyles = {
   '.cm-gutterElement': {
     alignItems: 'center',
     fontSize: '12px',
-    paddingRight: '4px',
-    borderRight: '1px solid var(--dx-separator)',
   },
 
   /**
