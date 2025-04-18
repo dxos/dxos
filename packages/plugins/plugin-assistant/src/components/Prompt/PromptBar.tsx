@@ -7,7 +7,7 @@ import React, { useRef, useState } from 'react';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { Icon, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
-import { errorText, mx } from '@dxos/react-ui-theme';
+import { errorMessageColors, errorText, mx } from '@dxos/react-ui-theme';
 
 import { Prompt, type PromptController, type PromptProps } from './Prompt';
 import { ASSISTANT_PLUGIN } from '../../meta';
@@ -60,7 +60,7 @@ export const PromptBar = ({
             </Tooltip.Trigger>
             <Tooltip.Portal>
               <Tooltip.Content>
-                <div className='text-sm text-error-500'>{error.message}</div>
+                <div className={mx('text-sm', errorMessageColors)}>{error.message}</div>
                 <Tooltip.Arrow />
               </Tooltip.Content>
             </Tooltip.Portal>
