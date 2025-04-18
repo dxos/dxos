@@ -35,7 +35,6 @@ export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
 const Properties = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   return (
-    /* TODO(burdon): Replace with form using schema. */
     <BaseObjectSettings object={object}>
       <Input.Root>
         <Input.Label>{t('description label')}</Input.Label>

@@ -9,6 +9,7 @@ import { InvocationTracePanel } from '@dxos/devtools';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { SettingsStore } from '@dxos/local-storage';
+import { AutomationPanel } from '@dxos/plugin-automation';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -77,6 +78,20 @@ export default () =>
         return (
           <StackItem.Content role={role}>
             <InvocationTracePanel space={space} script={data.subject} detailAxis='block' />
+          </StackItem.Content>
+        );
+      },
+    }),
+    // TODO(burdon): Move to automation plugin.
+    createSurface({
+      id: `${meta.id}/companion/automation`,
+      role: 'article',
+      filter: (data): data is { subject: ScriptType } =>
+        isInstanceOf(ScriptType, data.subject) && data.variant === 'automation',
+      component: ({ data, role }) => {
+        return (
+          <StackItem.Content role={role}>
+            <AutomationPanel space={getSpace(data.subject)!} object={data.subject} />
           </StackItem.Content>
         );
       },

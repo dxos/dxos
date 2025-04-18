@@ -300,7 +300,7 @@ export const cellClassesForRowSelection = (selected: boolean, selectionMode: Sel
   switch (selectionMode) {
     case 'single':
       // TODO(ZaymonFC): @thure, do we need a grid version of 'currentRelated'?
-      return ['!bg-currentRelated', '!cursor-pointer'];
+      return ['!bg-currentRelated hover:bg-hoverSurface', '!cursor-pointer'];
     case 'multiple':
       return ['!bg-gridCellSelected'];
   }
