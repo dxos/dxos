@@ -19,7 +19,7 @@ import { LogPanel } from './LogPanel';
 import { RawDataPanel } from './RawDataPanel';
 import { useScriptNameResolver, useInvocationSpans } from './hooks';
 import { formatDuration } from './utils';
-import { PanelContainer, Placeholder } from '../../../components';
+import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
@@ -32,7 +32,7 @@ export type InvocationTracePanelProps = {
 export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: InvocationTracePanelProps) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-
+  const resolver = useScriptNameResolver({ space });
   const invocationSpans = useInvocationSpans({ space, script: props.script });
 
   const [selectedId, setSelectedId] = useState<string>();
@@ -40,10 +40,9 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
     if (!selectedId) {
       return undefined;
     }
+
     return invocationSpans.find((span) => selectedId === span.id);
   }, [selectedId, invocationSpans]);
-
-  const resolver = useScriptNameResolver({ space });
 
   const invocationProperties: TablePropertyDefinition[] = useMemo(() => {
     function* generateProperties() {
@@ -83,7 +82,8 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
           name: 'queue',
           title: 'Queue',
           format: FormatEnum.String,
-          formatter: (value: string) => value.split(':').pop(),
+          // TODO(burdon): Add formatter.
+          // formatter: (value: string) => value.split(':').pop(),
           size: 400,
         },
       ];
@@ -158,6 +158,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
   const data = useMemo(() => parseJsonString((span?.input as any)?.bodyText), [span]);
+  console.log(JSON.stringify(span, null, 2));
 
   return (
     <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator'>
@@ -180,10 +181,10 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           <LogPanel span={span} />
         </Tabs.Tabpanel>
         <Tabs.Tabpanel value='exceptions'>
-          {span ? <ExceptionPanel span={span} /> : <Placeholder label='Select an invocation to see exceptions' />}
+          <ExceptionPanel span={span} />
         </Tabs.Tabpanel>
         <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
-          <div className='text-xs'>{span ? <RawDataPanel span={span} /> : <Placeholder label='Contents' />}</div>
+          <RawDataPanel classNames='text-xs' span={span} />
         </Tabs.Tabpanel>
       </Tabs.Root>
     </div>
