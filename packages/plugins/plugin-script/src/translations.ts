@@ -45,10 +45,10 @@ export default [
         'settings editor input mode vscode label': 'VS Code',
         'template select group label': 'Select template',
         'function panel label': 'Debug Function',
-        'script execute label': 'Test',
-        'script logs label': 'Logs',
-
         'script settings label': 'Settings',
+        'script execute label': 'Test',
+        'script automation label': 'Automation',
+        'script logs label': 'Logs',
       },
     },
   },

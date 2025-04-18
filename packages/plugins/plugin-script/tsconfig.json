@@ -124,6 +124,9 @@
       "path": "../../ui/react-ui-theme"
     },
     {
+      "path": "../plugin-automation"
+    },
+    {
       "path": "../plugin-client"
     },
     {
