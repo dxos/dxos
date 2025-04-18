@@ -13,11 +13,11 @@ import { type CancellableInvitationObservable, Invitation, InvitationEncoder } f
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
-import { AuthCode, Centered, DeviceListItem, Emoji, Label, Viewport } from '@dxos/shell/react';
+import { getSize, mx } from '@dxos/react-ui-theme';
+import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
-import { ControlGroup, ControlItem, ControlSection } from './ControlSection';
+import { ControlFrame, ControlFrameItem, ControlGroup, ControlItem, ControlSection } from './ControlSection';
 import { CLIENT_PLUGIN } from '../meta';
 import { ClientAction } from '../types';
 
@@ -46,15 +46,23 @@ export const DevicesContainer = ({
   return (
     <StackItem.Content classNames='p-2 block overflow-y-auto'>
       <ControlSection
-        title={t('devices label', { ns: CLIENT_PLUGIN })}
+        title={t('devices verbose label', { ns: CLIENT_PLUGIN })}
         description={t('devices description', { ns: CLIENT_PLUGIN })}
       >
-        <List classNames='container-max-width pli-4'>
-          {devices.map((device: Device) => {
-            return <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />;
-          })}
-        </List>
-        <DeviceInvitation createInvitationUrl={createInvitationUrl} />
+        <ControlFrame>
+          <ControlFrameItem title={t('devices label', { ns: CLIENT_PLUGIN })}>
+            <List>
+              {devices.map((device: Device) => {
+                return (
+                  <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
+                );
+              })}
+            </List>
+          </ControlFrameItem>
+          <ControlFrameItem title='Add device'>
+            <DeviceInvitation createInvitationUrl={createInvitationUrl} />
+          </ControlFrameItem>
+        </ControlFrame>
       </ControlSection>
       <ControlSection title={t('danger zone title')}>
         <ControlGroup>
@@ -142,22 +150,28 @@ const InvitationSection = ({
         : state >= Invitation.State.READY_FOR_AUTHENTICATION && authCode
           ? 'auth-code'
           : 'qr-code';
-  return (
-    <Viewport.Root activeView={activeView} classNames='container-max-width pli-4'>
+  return activeView === 'init' ? (
+    <>
+      <p className='text-description mbe-2'>{t('add device description')}</p>
+      <IconButton
+        icon='ph--plus--regular'
+        label={t('create device invitation label')}
+        disabled={state >= 0}
+        onClick={onInvitationCreate}
+        classNames='is-full'
+      />
+    </>
+  ) : (
+    <Viewport.Root activeView={activeView}>
       <Viewport.Views>
         <Viewport.View id='init'>
-          <IconButton
-            icon='ph--plus--regular'
-            label={t('choose add device label', { ns: 'os' })}
-            disabled={state >= 0}
-            onClick={onInvitationCreate}
-          />
+          {/* This view intentionally left blank while conditionally rendering the viewport. */}
         </Viewport.View>
         <Viewport.View id='complete'>
           <InvitationComplete statusValue={state} />
         </Viewport.View>
         <Viewport.View id='auth-code'>
-          <InvitationAuthCode id={invitationId} code={authCode ?? 'never'} />
+          <InvitationAuthCode id={invitationId} code={authCode ?? 'never'} onCancel={onInvitationDone} />
         </Viewport.View>
         <Viewport.View id='qr-code'>
           <InvitationQR id={invitationId} url={url} onCancel={onInvitationDone} />
@@ -173,41 +187,48 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <Clipboard.Provider>
-      <div role='none' className={mx(descriptionText, 'is-full max-is-[14rem] relative')}>
-        <QR
-          rounding={100}
-          backgroundColor='transparent'
-          color='currentColor'
-          className={mx('is-full bs-full p-2')}
-          aria-labelledby={qrLabel}
-          errorCorrectionLevel='Q'
-          cutout={true}
-        >
-          {url ?? 'never'}
-        </QR>
-        <Centered>
-          <Emoji text={emoji} />
-        </Centered>
+      <p className='text-description'>{t('qr code description', { ns: CLIENT_PLUGIN })}</p>
+      <div role='group' className='grid grid-cols-[1fr_min-content] mlb-2 gap-2'>
+        <div role='none' className='is-full aspect-square relative text-description'>
+          <QR
+            rounding={100}
+            backgroundColor='transparent'
+            color='currentColor'
+            aria-labelledby={qrLabel}
+            errorCorrectionLevel='Q'
+            cutout={true}
+          >
+            {url ?? 'never'}
+          </QR>
+          <Centered>
+            <Emoji text={emoji} />
+          </Centered>
+        </div>
+        <span id={qrLabel} className='sr-only'>
+          {t('qr label')}
+        </span>
+        <Clipboard.Button value={url ?? 'never'} />
       </div>
-      <span id={qrLabel} className='sr-only'>
-        {t('qr label')}
-      </span>
-      <Clipboard.Button variant='ghost' value={url ?? 'never'} />
-      <Button onClick={onCancel}>{t('cancel label')}</Button>
+      <Button variant='ghost' onClick={onCancel}>
+        {t('cancel label')}
+      </Button>
     </Clipboard.Provider>
   );
 };
 
-const InvitationAuthCode = ({ id, code }: { id: string; code: string }) => {
+const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel: () => void }) => {
   const { t } = useTranslation('os');
   const emoji = hexToEmoji(id);
 
   return (
     <>
-      <Label>{t('auth code message')}</Label>
-      <AuthCode code={code} large classNames='text-black dark:text-white' />
-      <Label>{t('auth other device emoji message')}</Label>
-      {emoji && <Emoji text={emoji} />}
+      <p className='text-description'>{t('auth other device emoji message')}</p>
+      {emoji && <Emoji text={emoji} className='mli-auto mlb-2 text-center' />}
+      <p className='text-description'>{t('auth code message')}</p>
+      <AuthCode code={code} large classNames='mli-auto mlb-2 text-center grow' />
+      <Button variant='ghost' onClick={onCancel}>
+        {t('cancel label')}
+      </Button>
     </>
   );
 };

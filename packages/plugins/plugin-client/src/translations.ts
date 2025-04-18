@@ -11,7 +11,14 @@ export default [
         'account label': 'User Account',
         'profile label': 'Profile',
         'devices label': 'Devices',
-        'devices description': 'These are the devices associated with your identity.',
+        'devices verbose label': 'Manage devices',
+        'add device description':
+          'Authenticating another device is a two-step process. To get started, create a code using the button below.',
+        'devices description':
+          'You can add and remove devices, configure your agent in the cloud, reset this device, or log in as a different identity here.',
+        'create device invitation label': 'Create code',
+        'qr code description':
+          'Scan this QR code using the device you want to log in to, or copy the URL and share it with the new device.',
         'passkeys label': 'Passkeys',
 
         'display name label': 'Name',
@@ -19,7 +26,6 @@ export default [
         'icon label': 'Avatar',
         'hue label': 'Avatar Background',
         'did label': 'DID',
-
         'open user account label': 'Open user account',
         'manage credentials dialog title': 'Manage Account Recovery',
         'credentials list label': 'Recovery credentials',

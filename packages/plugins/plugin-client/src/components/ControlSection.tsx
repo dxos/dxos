@@ -34,6 +34,15 @@ export const ControlGroup = ({ children }: ControlGroupProps) => (
   </div>
 );
 
+export const ControlFrame = ({ children }: ControlGroupProps) => (
+  <div
+    role='none'
+    className='p-4 border border-separator rounded-lg container-max-width grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8'
+  >
+    {children}
+  </div>
+);
+
 export type ControlItemProps = PropsWithChildren<{
   title: Label;
   description?: Label;
@@ -48,6 +57,18 @@ export const ControlItem = ({ title, description, children }: ControlItemProps) 
         <h3 className='text-lg mbe-2'>{toLocalizedString(title, t)}</h3>
         {description && <p className='mlb-2 md:mbe-0 text-description'>{toLocalizedString(description, t)}</p>}
       </div>
+      {children}
+    </div>
+  );
+};
+
+export const ControlFrameItem = ({ title, description, children }: ControlItemProps) => {
+  const { t } = useTranslation(CLIENT_PLUGIN);
+
+  return (
+    <div role='group' className='min-is-0'>
+      <h3 className='text-lg mbe-2'>{toLocalizedString(title, t)}</h3>
+      {description && <p className='mlb-2 md:mbe-0 text-description'>{toLocalizedString(description, t)}</p>}
       {children}
     </div>
   );
