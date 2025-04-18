@@ -5,11 +5,12 @@
 import React, { useRef, useMemo, useCallback } from 'react';
 
 import { type BaseSchema, type JsonSchemaType } from '@dxos/echo-schema';
+import { useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
-import { TablePresentation, type TableRowAction } from '../../model';
+import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
 import { makeDynamicTable, type TablePropertyDefinition } from '../../util';
 
 type DynamicTableProps = {
@@ -22,6 +23,7 @@ type DynamicTableProps = {
   rowActions?: TableRowAction[];
   onRowClicked?: (row: any) => void;
   onRowAction?: (actionId: string, datum: any) => void;
+  features?: Partial<TableFeatures>;
 };
 
 /**
@@ -38,6 +40,7 @@ export const DynamicTable = ({
   rowActions,
   onRowClicked,
   onRowAction,
+  ...props
 }: DynamicTableProps) => {
   const { table, viewProjection } = useMemo(() => {
     return makeDynamicTable({ typename: tableName, properties, jsonSchema, echoSchema });
@@ -52,7 +55,14 @@ export const DynamicTable = ({
     tableRef.current?.update?.();
   }, []);
 
-  const features = useMemo(() => ({ selection: false, dataEditable: false }), []);
+  const features = useDefaultValue(
+    props.features,
+    () =>
+      ({
+        selection: { enabled: false },
+        dataEditable: false,
+      }) as const,
+  );
 
   const model = useTableModel({
     table,
