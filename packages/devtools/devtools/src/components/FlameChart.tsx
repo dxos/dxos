@@ -124,7 +124,7 @@ export const FlameChart = (props: FlameChartProps) => {
   useEffect(() => {
     if (props.settings && flameChart.current) {
       flameChart.current.setSettings(props.settings);
-      flameChart.current.renderEngine.recalcChildrenSizes();
+      flameChart.current.renderEngine.recalcChildrenLayout();
       flameChart.current.render();
     }
   }, [props.settings]);
