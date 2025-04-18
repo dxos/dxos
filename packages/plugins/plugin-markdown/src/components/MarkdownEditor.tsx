@@ -10,8 +10,8 @@ import { useDropzone } from 'react-dropzone';
 import { createIntent, type FileInfo, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type EditorAction,
   type DNDOptions,
+  type EditorAction,
   type EditorViewMode,
   type EditorInputMode,
   type EditorSelectionState,
@@ -19,20 +19,20 @@ import {
   EditorToolbar,
   type UseTextEditorProps,
   createBasicExtensions,
+  createEditorAction,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
   editorContent,
   editorGutter,
   processEditorPayload,
+  stackItemContentEditorClassNames,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
-  stackItemContentEditorClassNames,
   useEditorToolbarState,
-  createEditorAction,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
