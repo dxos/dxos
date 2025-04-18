@@ -19,6 +19,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, create, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
+import { errorMessageColors } from '@dxos/react-ui-theme';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
@@ -36,6 +37,7 @@ export const createDeploy = (state: Partial<DeployState>) => {
     label: state.error ?? ['no error label', { ns: SCRIPT_PLUGIN }],
     icon: 'ph--warning-circle--regular',
     hidden: !state.error,
+    classNames: state.error && errorMessageColors,
   });
 
   const deployAction = createMenuAction<DeployActionProperties>('deploy', {
