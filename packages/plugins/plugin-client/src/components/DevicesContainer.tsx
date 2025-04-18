@@ -64,16 +64,34 @@ export const DevicesContainer = ({
           </ControlFrameItem>
         </ControlFrame>
       </ControlSection>
-      <ControlSection title={t('danger zone title')}>
+      <ControlSection
+        title={t('danger zone title', { ns: CLIENT_PLUGIN })}
+        description={t('danger zone description', { ns: CLIENT_PLUGIN })}
+      >
         <ControlGroup>
-          <ControlItem title={t('reset storage label')}>
-            <Button onClick={handleResetStorage}>{t('reset storage label')}</Button>
+          <ControlItem
+            title={t('reset device label')}
+            description={t('reset device description', { ns: CLIENT_PLUGIN })}
+          >
+            <Button variant='destructive' onClick={handleResetStorage}>
+              {t('reset device label')}
+            </Button>
           </ControlItem>
-          <ControlItem title={t('recover identity label')}>
-            <Button onClick={handleRecover}>{t('recover identity label')}</Button>
+          <ControlItem
+            title={t('recover identity label')}
+            description={t('recover identity description', { ns: CLIENT_PLUGIN })}
+          >
+            <Button variant='destructive' onClick={handleRecover}>
+              {t('recover identity label')}
+            </Button>
           </ControlItem>
-          <ControlItem title={t('join new identity label')}>
-            <Button onClick={handleJoinNewIdentity}>{t('join new identity label')}</Button>
+          <ControlItem
+            title={t('join new identity label')}
+            description={t('join new identity description', { ns: CLIENT_PLUGIN })}
+          >
+            <Button variant='destructive' onClick={handleJoinNewIdentity}>
+              {t('join new identity label')}
+            </Button>
           </ControlItem>
         </ControlGroup>
       </ControlSection>

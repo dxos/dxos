@@ -111,7 +111,7 @@ export const os = {
   'confirmation placeholder': 'Enter {{confirmationValue}} to continue.',
   'sign out chooser title': 'Danger zone',
   'sign out chooser message': 'Proceeding with the action below will erase all data on this device.',
-  'join new identity label': 'Join a new identity',
+  'join new identity label': 'Join an existing identity',
   'reset device label': 'Reset storage',
   'reset device confirm message': 'Are you sure you want to reset your device? All data will be lost.',
   'emoji and color label': 'Emoji and color',

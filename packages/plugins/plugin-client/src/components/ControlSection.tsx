@@ -29,7 +29,7 @@ export const ControlSection = ({ title, description, children }: ControlSectionP
 export type ControlGroupProps = PropsWithChildren<{}>;
 
 export const ControlGroup = ({ children }: ControlGroupProps) => (
-  <div role='none' className='group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-2'>
+  <div role='none' className='group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'>
     {children}
   </div>
 );

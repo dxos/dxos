@@ -20,7 +20,14 @@ export default [
         'qr code description':
           'Scan this QR code using the device you want to log in to, or copy the URL and share it with the new device.',
         'passkeys label': 'Passkeys',
-
+        'reset device description': 'Log out from this device, erasing all the data on this device.',
+        'join new identity description':
+          'Log out from this device, erasing all the data currently on this device, and use a QR code or URL to log in.',
+        'recover identity description':
+          'Log out from this device, erasing all the data currently on this device, and use a passkey or recovery code to log in.',
+        'danger zone title': 'Log out',
+        'danger zone description':
+          'Because Composer is decentralized, logging out entails erasing all the data on this device. If you have any data on this device that you’d like to keep, you can log in on a separate device using the ‘Add device’ process above, or you can create recovery credentials for later use.',
         'display name label': 'Name',
         'display name input placeholder': 'Enter your name',
         'icon label': 'Avatar',
