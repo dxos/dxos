@@ -35,24 +35,18 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
 const Properties = ({ script }: ScriptSettingsPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   return (
-    <>
-      {/* TODO(burdon): Figure out how to standardize this. */}
-      <BaseObjectSettings object={script} />
-      <div role='form' className='flex flex-col p-2 gap-4'>
-        <Input.Root>
-          <div role='none' className='flex flex-col gap-1'>
-            <Input.Label>{t('description label')}</Input.Label>
-            <Input.TextInput
-              placeholder={t('description placeholder')}
-              value={script.description ?? ''}
-              onChange={(event) => {
-                script.description = event.target.value;
-              }}
-            />
-          </div>
-        </Input.Root>
-      </div>
-    </>
+    <BaseObjectSettings object={script}>
+      <Input.Root>
+        <Input.Label>{t('description label')}</Input.Label>
+        <Input.TextInput
+          placeholder={t('description placeholder')}
+          value={script.description ?? ''}
+          onChange={(event) => {
+            script.description = event.target.value;
+          }}
+        />
+      </Input.Root>
+    </BaseObjectSettings>
   );
 };
 
