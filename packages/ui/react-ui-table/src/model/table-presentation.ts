@@ -244,6 +244,16 @@ export class TablePresentation<T extends TableRow = TableRow> {
   }
 
   private getSelectAllCell(): DxGridPlaneCells {
+    if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
+      return {
+        [toPlaneCellIndex({ col: 0, row: 0 })]: {
+          className: '!bg-gridHeader',
+          readonly: true,
+          value: '',
+        },
+      };
+    }
+
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         accessoryHtml: tableControls.checkbox.render({
