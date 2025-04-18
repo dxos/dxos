@@ -51,7 +51,11 @@ const useTestTableModel = () => {
   }, [schema, table?.view?.target]);
 
   const features = useMemo(
-    () => ({ selection: true, dataEditable: true, schemaEditable: !(schema instanceof ImmutableSchema) }),
+    () => ({
+      selection: { enabled: true, mode: 'multiple' as const },
+      dataEditable: true,
+      schemaEditable: !(schema instanceof ImmutableSchema),
+    }),
     [schema],
   );
 

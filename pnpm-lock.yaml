@@ -4394,8 +4394,8 @@ importers:
         specifier: 3.13.3
         version: 3.13.3
       flame-chart-js:
-        specifier: ^2.3.1
-        version: 2.3.1
+        specifier: ^3.3.0
+        version: 3.3.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.14.2)
@@ -25780,8 +25780,12 @@ packages:
     resolution: {integrity: sha512-MzwXju70AuyflbgeOhzvQWAvvQdo1XL0A9bVvlXsYcFEBM87WR4OakL4OfZq+QRmr+duJubio+UtNQCPsVESzQ==}
     engines: {node: '>= 10.13.0'}
 
-  flame-chart-js@2.3.1:
-    resolution: {integrity: sha512-wi3g+BEYEWcxnFrakPt7A/oXVfMnun6Uvjve3kfscXXCrgP6f1O8o5LOseXfHnVI1jxTWOINnzdXPN/NLw9guQ==}
+  flame-chart-js@3.3.0:
+    resolution: {integrity: sha512-bjgRBK7o/479BTt1t3piu+UIT0ctxVUkiJblMeIba5mMxc+7rk+/cv9fvEiCmuv+e+86aKm61r5wwza5myDGSw==}
+    peerDependencies:
+      react: ~18.2.0
+      react-dom: ~18.2.0
+      use-resize-observer: ^9.1.0
 
   flat-cache@3.0.4:
     resolution: {integrity: sha512-dm9s5Pw7Jc0GvMYbshN6zchCA9RgQlzzEZX3vylR9IqFfS8XciblUXOKfW6SiuJ0e13eDYZoZV5wdrev7P3Nwg==}
@@ -50424,10 +50428,12 @@ snapshots:
       micromatch: 4.0.8
       resolve-dir: 1.0.1
 
-  flame-chart-js@2.3.1:
+  flame-chart-js@3.3.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
       color: 3.2.1
       events: 3.3.0
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
 
   flat-cache@3.0.4:
     dependencies:

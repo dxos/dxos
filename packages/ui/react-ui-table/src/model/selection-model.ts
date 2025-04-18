@@ -9,6 +9,8 @@ import { Resource } from '@dxos/context';
 import { type TableRow } from './table-model';
 import { touch } from '../util';
 
+export type SelectionMode = 'single' | 'multiple';
+
 export class SelectionModel<T extends TableRow> extends Resource {
   private readonly _selection = signal<Set<string>>(new Set());
 
@@ -35,6 +37,7 @@ export class SelectionModel<T extends TableRow> extends Resource {
 
   constructor(
     private readonly _rows: ReadonlySignal<T[]>,
+    private readonly _selectionMode: SelectionMode,
     private readonly _onSelectionChanged?: () => void,
   ) {
     super();
@@ -64,6 +67,10 @@ export class SelectionModel<T extends TableRow> extends Resource {
     return this._allSelected;
   }
 
+  public get selectionMode(): SelectionMode {
+    return this._selectionMode;
+  }
+
   public getSelectedRows = (): T[] => {
     const selectedIds = this._validSelectedIds.value;
     return this._rows.value.filter((row) => selectedIds.has(row.id));
@@ -89,6 +96,9 @@ export class SelectionModel<T extends TableRow> extends Resource {
     if (newSelection.has(row.id)) {
       newSelection.delete(row.id);
     } else {
+      if (this._selectionMode === 'single') {
+        newSelection.clear();
+      }
       newSelection.add(row.id);
     }
 
