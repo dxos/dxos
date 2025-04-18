@@ -186,7 +186,6 @@ export const RawTreeItem = <T = any,>({
 
   const handleSelect = useCallback(
     (option = false) => {
-      console.log('!!!');
       if (isBranch) {
         handleOpenChange();
       } else {
