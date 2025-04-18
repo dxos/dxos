@@ -68,20 +68,6 @@ export default () =>
         );
       },
     }),
-    // TODO(burdon): Move to automation plugin.
-    createSurface({
-      id: `${meta.id}/companion/automation`,
-      role: 'article',
-      filter: (data): data is { subject: ScriptType } =>
-        isInstanceOf(ScriptType, data.subject) && data.variant === 'automation',
-      component: ({ data, role }) => {
-        return (
-          <StackItem.Content role={role}>
-            <AutomationPanel space={getSpace(data.subject)!} object={data.subject} />
-          </StackItem.Content>
-        );
-      },
-    }),
     createSurface({
       id: `${meta.id}/companion/logs`,
       role: 'article',
@@ -92,6 +78,20 @@ export default () =>
         return (
           <StackItem.Content role={role}>
             <InvocationTracePanel space={space} script={data.subject} detailAxis='block' />
+          </StackItem.Content>
+        );
+      },
+    }),
+    // TODO(burdon): Move to automation plugin.
+    createSurface({
+      id: `${meta.id}/companion/automation`,
+      role: 'article',
+      filter: (data): data is { subject: ScriptType } =>
+        isInstanceOf(ScriptType, data.subject) && data.variant === 'automation',
+      component: ({ data, role }) => {
+        return (
+          <StackItem.Content role={role}>
+            <AutomationPanel space={getSpace(data.subject)!} object={data.subject} />
           </StackItem.Content>
         );
       },
