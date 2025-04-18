@@ -3,7 +3,7 @@
 //
 
 import { Schema as S } from 'effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
@@ -71,7 +71,10 @@ export const ProfileContainer = () => {
     () => ({
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       displayName: ({ type, getValue, onValueChange }) => {
-        const handleChange = useCallback(({ target: { value } }) => onValueChange(type, value), [onValueChange, type]);
+        const handleChange = useCallback(
+          ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
+          [onValueChange, type],
+        );
         return (
           <ControlItemInput title={t('display name label')} description={t('display name description')}>
             <Input.TextInput
