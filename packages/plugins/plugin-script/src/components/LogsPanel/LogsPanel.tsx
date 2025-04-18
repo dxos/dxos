@@ -17,14 +17,14 @@ import { Icon, List, ListItem, useTranslation, type ThemedClassName } from '@dxo
 import { mx } from '@dxos/react-ui-theme';
 
 import { useDeployDeps } from '../../hooks';
-import { SCRIPT_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 export type LogsPanelProps = ThemedClassName<{
   script: ScriptType;
 }>;
 
 export const LogsPanel = ({ script, classNames }: LogsPanelProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   // TODO(wittjosiah): Refactor these hooks.
   const { space, existingFunctionUrl } = useDeployDeps({ script });
   const invocationTraceQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
