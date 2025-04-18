@@ -5,7 +5,7 @@
 import { signal } from '@preact/signals-core';
 
 import { FormatEnum, getValue } from '@dxos/echo-schema';
-import { cellClassesForFieldType, cellClassesForRowSelection, formatForDisplay } from '@dxos/react-ui-form';
+import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridPlane,
   type DxGridPlaneCells,
@@ -16,6 +16,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { VIEW_FIELD_LIMIT, type FieldType } from '@dxos/schema';
 
+import { type SelectionMode } from './selection-model';
 import { type TableRow, type TableModel } from './table-model';
 import { tableButtons, tableControls } from '../util';
 
@@ -109,7 +110,10 @@ export class TablePresentation<T extends TableRow = TableRow> {
       if (formatClasses) {
         classes.push(formatClasses);
       }
-      const rowSelectionClasses = cellClassesForRowSelection(this.model.selection.isObjectSelected(obj));
+      const rowSelectionClasses = cellClassesForRowSelection(
+        this.model.selection.isObjectSelected(obj),
+        this.model.selection.selectionMode,
+      );
       if (rowSelectionClasses) {
         classes.push(rowSelectionClasses);
       }
@@ -215,7 +219,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const cells: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       const isSelected = this.model.selection.isRowIndexSelected(row);
-      const classes = cellClassesForRowSelection(isSelected);
+      const classes = cellClassesForRowSelection(isSelected, this.model.selection.selectionMode);
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: 'no-text-select',
@@ -231,7 +235,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const cells: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       const isSelected = this.model.selection.isRowIndexSelected(row);
-      const classes = cellClassesForRowSelection(isSelected);
+      const classes = cellClassesForRowSelection(isSelected, this.model.selection.selectionMode);
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: true,
@@ -283,3 +287,17 @@ export class TablePresentation<T extends TableRow = TableRow> {
     };
   }
 }
+
+export const cellClassesForRowSelection = (selected: boolean, selectionMode: SelectionMode) => {
+  if (!selected) {
+    return undefined;
+  }
+
+  switch (selectionMode) {
+    case 'single':
+      // TODO(ZaymonFC): @thure, do we need a grid version of 'currentRelated'?
+      return ['!bg-currentRelated'];
+    case 'multiple':
+      return ['!bg-gridCellSelected'];
+  }
+};
