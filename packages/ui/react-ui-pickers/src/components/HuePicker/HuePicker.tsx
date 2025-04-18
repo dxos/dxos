@@ -35,7 +35,10 @@ const HuePreview = ({ value }: { value: string }) => {
   const size = 16;
   return (
     <div className='flex p-[2px] justify-center items-center'>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg
+        viewBox={`0 0 ${size} ${size}`}
+        className='is-[var(--hue-preview-size,1rem)] bs-[var(--hue-preview-size,1rem)]'
+      >
         <rect x={0} y={0} width={size} height={size} fill={`var(--dx-${value}Fill)`} strokeWidth={4} />
       </svg>
     </div>

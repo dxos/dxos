@@ -29,7 +29,8 @@ export default [
         'danger zone title': 'Log out',
         'danger zone description':
           'Because Composer is decentralized, logging out entails erasing all the data on this device. If you have any data on this device that you’d like to keep, you can log in on a separate device using the ‘Add device’ process above, or you can create recovery credentials for later use.',
-        'display name label': 'Name',
+        'display name label': 'Display name',
+        'display name description': 'Your name as it appears in the app.',
         'display name input placeholder': 'Enter a name',
         'icon label': 'Avatar',
         'icon description': 'The emoji used to represent you in the app.',
@@ -37,6 +38,7 @@ export default [
         'hue description':
           'The color used to represent you in the app, including as your avatar’s background, your cursor as it appears to others, and the messages you send in group threads.',
         'did label': 'DID',
+        'did description': 'Your unique ID.',
         'open user account label': 'Open user account',
         'manage credentials dialog title': 'Manage Account Recovery',
         'credentials list label': 'Recovery credentials',

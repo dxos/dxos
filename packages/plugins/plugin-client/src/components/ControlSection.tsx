@@ -52,6 +52,7 @@ const controlItemClasses =
   'p-4 border border-separator rounded-lg container-max-width grid md:col-span-2 grid-cols-subgrid items-center';
 
 const controlItemTitleClasses = 'text-lg mbe-2';
+const controlItemDescriptionClasses = 'text-base mlb-2 md:mbe-0 text-description';
 
 export const ControlItem = ({ title, description, children }: ControlItemProps) => {
   const { t } = useTranslation(CLIENT_PLUGIN);
@@ -60,7 +61,7 @@ export const ControlItem = ({ title, description, children }: ControlItemProps) 
     <div className={controlItemClasses}>
       <div role='none'>
         <h3 className={controlItemTitleClasses}>{toLocalizedString(title, t)}</h3>
-        {description && <p className='mlb-2 md:mbe-0 text-description'>{toLocalizedString(description, t)}</p>}
+        {description && <p className={controlItemDescriptionClasses}>{toLocalizedString(description, t)}</p>}
       </div>
       {children}
     </div>
@@ -77,7 +78,9 @@ export const ControlItemInput = ({ title, description, children }: ControlItemPr
           <Input.Label classNames={controlItemTitleClasses}>{toLocalizedString(title, t)}</Input.Label>
           {description && (
             <Input.DescriptionAndValidation>
-              <Input.Description>{toLocalizedString(description, t)}</Input.Description>
+              <Input.Description classNames={controlItemDescriptionClasses}>
+                {toLocalizedString(description, t)}
+              </Input.Description>
             </Input.DescriptionAndValidation>
           )}
         </div>

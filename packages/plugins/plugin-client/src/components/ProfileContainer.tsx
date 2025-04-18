@@ -71,13 +71,14 @@ export const ProfileContainer = () => {
     () => ({
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       displayName: ({ type, getValue, onValueChange }) => {
-        const handleChange = useCallback((nextValue: string) => onValueChange(type, nextValue), [onValueChange, type]);
+        const handleChange = useCallback(({ target: { value } }) => onValueChange(type, value), [onValueChange, type]);
         return (
-          <ControlItemInput title={t('display name label')}>
+          <ControlItemInput title={t('display name label')} description={t('display name description')}>
             <Input.TextInput
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display name input placeholder')}
+              classNames='min-is-64'
             />
           </ControlItemInput>
         );
@@ -107,16 +108,21 @@ export const ProfileContainer = () => {
         );
         return (
           <ControlItem title={t('hue label')} description={t('hue description')}>
-            <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
+            <HuePicker
+              value={getValue()}
+              onChange={handleChange}
+              onReset={handleHueReset}
+              classNames='[--hue-preview-size:1.5rem]'
+            />
           </ControlItem>
         );
       },
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       did: ({ getValue }) => {
         return (
-          <ControlItemInput title={t('did label')}>
+          <ControlItemInput title={t('did label')} description={t('did description')}>
             <ButtonGroup>
-              <Input.TextInput value={getValue()} disabled />
+              <Input.TextInput value={getValue()} disabled classNames='min-is-64' />
               <Clipboard.IconButton value={getValue() ?? ''} />
             </ButtonGroup>
           </ControlItemInput>

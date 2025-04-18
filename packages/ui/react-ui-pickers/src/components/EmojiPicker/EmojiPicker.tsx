@@ -23,14 +23,14 @@ import {
 
 import './emoji.css';
 
-export type EmojiPickerProps = {
+export type EmojiPickerProps = ThemedClassName<{
   disabled?: boolean;
   defaultEmoji?: string;
   emoji?: string;
   onChangeEmoji?: (nextEmoji: string) => void;
   onClickClear?: ButtonProps['onClick'];
   triggerVariant?: ButtonProps['variant'];
-};
+}>;
 
 /**
  * A toolbar button for picking an emoji. Use only in `role=toolbar` elements. Unable to unset the value.
@@ -41,7 +41,7 @@ export const EmojiPickerToolbarButton = ({
   disabled,
   defaultEmoji,
   onChangeEmoji,
-}: ThemedClassName<Omit<EmojiPickerProps, 'onClickClear'>>) => {
+}: Omit<EmojiPickerProps, 'onClickClear'>) => {
   const { t } = useTranslation('os');
   const { themeMode } = useThemeContext();
 
@@ -131,6 +131,7 @@ export const EmojiPickerBlock = ({
   onChangeEmoji,
   onClickClear,
   triggerVariant = 'ghost',
+  classNames,
 }: EmojiPickerProps) => {
   const { t } = useTranslation('os');
   const [isMd] = useMediaQuery('md', { ssr: false });
@@ -144,13 +145,13 @@ export const EmojiPickerBlock = ({
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
 
   return (
-    <ButtonGroup>
+    <ButtonGroup classNames={classNames}>
       <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
         <Popover.Trigger asChild>
-          <Button variant={triggerVariant} classNames='gap-2 text-2xl plb-1' disabled={disabled}>
+          <Button variant={triggerVariant} classNames='grow gap-2 text-2xl plb-1' disabled={disabled}>
             <span className='sr-only'>{t('select emoji label')}</span>
-            <span className='grow'>{emojiValue}</span>
-            <Icon icon='ph--caret-down--regular' size={4} />
+            <span>{emojiValue}</span>
+            <Icon icon='ph--caret-down--bold' size={3} />
           </Button>
         </Popover.Trigger>
         <Popover.Content
