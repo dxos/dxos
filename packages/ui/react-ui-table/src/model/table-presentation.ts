@@ -290,13 +290,17 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
 export const cellClassesForRowSelection = (selected: boolean, selectionMode: SelectionMode) => {
   if (!selected) {
-    return undefined;
+    if (selectionMode === 'single') {
+      return ['!cursor-pointer'];
+    } else {
+      return undefined;
+    }
   }
 
   switch (selectionMode) {
     case 'single':
       // TODO(ZaymonFC): @thure, do we need a grid version of 'currentRelated'?
-      return ['!bg-currentRelated'];
+      return ['!bg-currentRelated', '!cursor-pointer'];
     case 'multiple':
       return ['!bg-gridCellSelected'];
   }

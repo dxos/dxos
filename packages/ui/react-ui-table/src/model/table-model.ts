@@ -112,7 +112,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._features = { ...defaultFeatures, ...features };
 
     invariant(
-      !this._features.dataEditable && this._features.selection.enabled && this._features.selection.mode === 'single',
+      !(this._features.dataEditable && this._features.selection.enabled && this._features.selection.mode === 'single'),
       'Single selection is not yet compatible with editable tables.',
     );
 
