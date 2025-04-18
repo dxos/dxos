@@ -77,19 +77,19 @@ export const TraceView: FC<{
       <div className='flex items-center p-2'>
         <div className='flex items-center gap-2'>
           <Input.Root>
-            <Input.Label>Separate Threads</Input.Label>
             <Input.Checkbox checked={showThreads} onCheckedChange={(showThreads) => setShowThreads(!!showThreads)} />
+            <Input.Label>Separate Threads</Input.Label>
           </Input.Root>
           <Input.Root>
-            <Input.Label>Group by Resource</Input.Label>
             <Input.Checkbox
               checked={groupByResource}
               onCheckedChange={(groupByResource) => setGroupByResource(!!groupByResource)}
             />
+            <Input.Label>Group by Resource</Input.Label>
           </Input.Root>
           <Input.Root>
-            <Input.Label>Live</Input.Label>
             <Input.Checkbox checked={live} onCheckedChange={(live) => onLiveChanged?.(!!live)} />
+            <Input.Label>Live</Input.Label>
           </Input.Root>
         </div>
         {showThreads && graphs.length > 1 && (
