@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
+import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -12,7 +13,7 @@ import { TraceView } from './TraceView';
 import { type State } from './types';
 
 const meta: Meta = {
-  title: 'devtools/devtools/TracingPanel',
+  title: 'devtools/devtools/TraceView',
   component: TraceView,
   decorators: [withTheme],
 };

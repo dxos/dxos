@@ -13,7 +13,12 @@ import { Input } from '@dxos/react-ui';
 import { type State } from './types';
 import { FlameChart } from '../../../components/FlameChart';
 
-export const TraceView: FC<{ state: State; resourceId?: number }> = ({ state, resourceId }) => {
+export const TraceView: FC<{
+  state: State;
+  resourceId?: number;
+  live?: boolean;
+  onLiveChanged?: (live: boolean) => void;
+}> = ({ state, resourceId, live, onLiveChanged }) => {
   const [selectedFlameIndex, setSelectedFlameIndex] = useState(0);
   const [showThreads, setShowThreads] = useState(true);
   const [groupByResource, setGroupByResource] = useState(true);
@@ -81,6 +86,10 @@ export const TraceView: FC<{ state: State; resourceId?: number }> = ({ state, re
               checked={groupByResource}
               onCheckedChange={(groupByResource) => setGroupByResource(!!groupByResource)}
             />
+          </Input.Root>
+          <Input.Root>
+            <Input.Label>Live</Input.Label>
+            <Input.Checkbox checked={live} onCheckedChange={(live) => onLiveChanged?.(!!live)} />
           </Input.Root>
         </div>
         {showThreads && graphs.length > 1 && (

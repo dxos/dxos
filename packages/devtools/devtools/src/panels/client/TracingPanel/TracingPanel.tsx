@@ -26,6 +26,7 @@ export const TracingPanel = () => {
     resources: new Map<number, ResourceState>(),
     spans: new Map<number, Span>(),
   });
+  const [live, setLive] = useState(true);
 
   const [selectedResourceId, setSelectedResourceId] = useState<number>();
   const selectedResource: ResourceState | undefined =
@@ -35,6 +36,9 @@ export const TracingPanel = () => {
     const stream = client.services.services.TracingService!.streamTrace();
     stream.subscribe(
       (data) => {
+        if (!live) {
+          return;
+        }
         setState((prevState) => {
           // Create new map references to trigger re-render
           const newResources = new Map(prevState.resources);
@@ -85,7 +89,7 @@ export const TracingPanel = () => {
     return () => {
       void stream.close();
     };
-  }, [client.services.services.TracingService]);
+  }, [client.services.services.TracingService, live]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -146,7 +150,7 @@ export const TracingPanel = () => {
         </Tabs.Content>
 
         <Tabs.Content value='spans' className='grow overflow-hidden'>
-          <TraceView state={state} resourceId={selectedResourceId} />
+          <TraceView state={state} resourceId={selectedResourceId} live={live} onLiveChanged={setLive} />
         </Tabs.Content>
       </Tabs.Root>
     </PanelContainer>
