@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { type TraceEvent, type InvocationSpan } from '@dxos/functions/types';
 import { useQueue } from '@dxos/react-client/echo';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -14,7 +15,7 @@ type RawDataPanelProps = {
   span: InvocationSpan;
 };
 
-export const RawDataPanel: React.FC<RawDataPanelProps> = ({ span }) => {
+export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ classNames, span }) => {
   const traceQueueDxn = useMemo(() => {
     return span.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;
   }, [span.invocationTraceQueue]);
@@ -55,10 +56,12 @@ export const RawDataPanel: React.FC<RawDataPanelProps> = ({ span }) => {
   };
 
   return (
-    <div className={mx('p-1', '[&_pre]:!overflow-visible')}>
-      <SyntaxHighlighter language='json' renderer={rowRenderer}>
-        {JSON.stringify(combinedData, null, 2)}
-      </SyntaxHighlighter>
-    </div>
+    <SyntaxHighlighter
+      className={mx('p-1 [&_pre]:!overflow-visible', classNames)}
+      language='json'
+      renderer={rowRenderer}
+    >
+      {JSON.stringify(combinedData, null, 2)}
+    </SyntaxHighlighter>
   );
 };
