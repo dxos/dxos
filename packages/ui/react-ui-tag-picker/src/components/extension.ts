@@ -8,6 +8,8 @@ import {
   type Completion,
   type CompletionResult,
   type CompletionContext,
+  startCompletion,
+  acceptCompletion,
 } from '@codemirror/autocomplete';
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { syntaxTree } from '@codemirror/language';
@@ -23,21 +25,36 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
-import { type PillProps } from './Pill';
+import { type ChromaticPalette } from '@dxos/react-ui';
 
-export type MultiselectItem = { id: string; label: string };
+import { type TagPickerItemProps } from './TagPickerItem';
 
-export const createLinks = (items: MultiselectItem[]) => {
+export type TagPickerItemData = { id: string; label: string; hue?: ChromaticPalette };
+
+export const createLinks = (items: TagPickerItemData[]) => {
   return items.map(({ id, label }) => `[${label}](${id})`).join('');
 };
 
 /**
  * Apply function formats item as link.
  */
-export const multiselectApply = (view: EditorView, completion: Completion, from: number, to: number) => {
-  const id = (completion as MultiselectItem).id;
+export const tagPickerApply = (
+  view: EditorView,
+  completion: Completion,
+  from: number,
+  to: number,
+  mode?: TagPickerMode,
+) => {
+  const id = (completion as TagPickerItemData).id;
   const label = completion.label;
-  view.dispatch({ changes: { from, to, insert: `[${label}](${id})` } });
+
+  if (mode === 'single-select') {
+    // Clear the entire document and replace with just this tag
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: `[${label}](${id})` } });
+  } else {
+    // Multi-select: just add the tag at cursor
+    view.dispatch({ changes: { from, to, insert: `[${label}](${id})` } });
+  }
 
   // TODO(burdon): Hack.
   // Since renders async, need to wait for DOM to update.
@@ -58,41 +75,74 @@ const scrollToCursor = (view: EditorView) => {
   }
 };
 
-export type MultiselectOptions = {
-  render: (el: HTMLElement, props: PillProps) => void;
+export type TagPickerMode = 'single-select' | 'multi-select';
+
+export type TagPickerOptions = {
   debug?: boolean;
+  removeLabel?: string;
+  // TODO(ZaymonFC): Think of a better name for this?
+  inGrid?: boolean;
+  mode?: TagPickerMode;
   onSelect?: (id: string) => void;
-  onSearch?: (text: string, ids: string[]) => MultiselectItem[];
+  onSearch?: (text: string, ids: string[]) => TagPickerItemData[];
   onUpdate?: (ids: string[]) => void;
 };
 
 /**
  * Uses the markdown parser to parse links, which are decorated as pill buttons.
  */
-export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: MultiselectOptions): Extension => {
+export const tagPickerExtension = ({
+  debug,
+  inGrid,
+  mode = 'multi-select',
+  onSelect,
+  onSearch,
+  onUpdate,
+  removeLabel,
+}: TagPickerOptions): Extension => {
   /** Ordered list of ids. */
   const ids: string[] = [];
   /** Range spans for each id. */
   const itemSpan = new Map<string, { from: number; to: number }>();
 
+  const handleCompletion = (view: EditorView) => {
+    // Try to accept the current completion if one is active.
+    if (acceptCompletion(view)) {
+      return true;
+    }
+    // If no completion is active, start one.
+    startCompletion(view);
+    return true;
+  };
+
+  const getKeymap = () => {
+    if (inGrid) {
+      return [];
+    }
+    return [
+      {
+        key: 'Tab',
+        run: handleCompletion,
+        preventDefault: true,
+      },
+      {
+        key: 'Enter',
+        run: handleCompletion,
+        preventDefault: true,
+      },
+    ];
+  };
+
   const extensions: Extension[] = [
     keymap.of(completionKeymap),
-    Prec.highest(
-      keymap.of([
-        {
-          key: 'Tab',
-          run: () => true,
-          preventDefault: true,
-        },
-      ]),
-    ),
+    Prec.highest(keymap.of(getKeymap())),
 
     // Autocomplete.
     autocompletion({
       activateOnTyping: true,
       closeOnBlur: !debug,
-      tooltipClass: () => 'border border-separator',
-      optionClass: () => '!p-1',
+      // tooltipClass: () => 'border border-separator',
+      // optionClass: () => '!p-1',
     }),
 
     // Update when modified (either by editing or external updates).
@@ -129,28 +179,42 @@ export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: Mul
                   const to = node.to;
                   const id = view.state.sliceDoc(urlNode.from, urlNode.to);
                   const text = view.state.doc.sliceString(from + 1, urlNode.from - 2);
-                  const item: MultiselectItem = { id, label: text };
+                  const originalItem = onSearch?.('', []).find((item) => item.id === id);
+                  const item: TagPickerItemData = {
+                    id,
+                    label: text,
+                    hue: originalItem?.hue,
+                  };
                   ids.push(id);
                   itemSpan.set(id, { from, to });
                   builder.add(
                     from,
                     to,
                     Decoration.replace({
-                      widget: new ItemWidget(render, {
-                        item,
-                        onSelect: (item) => {
-                          onSelect?.(item.id);
-                          const span = itemSpan.get(item.id);
-                          if (span) {
-                            view.dispatch({ selection: { anchor: span.to } });
+                      widget: new ItemWidget({
+                        itemId: item.id,
+                        label: item.label,
+                        hue: item.hue,
+                        removeLabel,
+                        onItemClick: ({ action, itemId }) => {
+                          const span = itemSpan.get(itemId);
+                          view.focus();
+                          switch (action) {
+                            case 'activate': {
+                              onSelect?.(itemId);
+                              if (span) {
+                                view.dispatch({ selection: { anchor: span.to } });
+                              }
+                              break;
+                            }
+                            case 'remove': {
+                              if (span) {
+                                view.dispatch({ changes: { from: span.from, to: span.to, insert: '' } });
+                              }
+                              break;
+                            }
                           }
-                        },
-                        onDelete: () => {
-                          const span = itemSpan.get(item.id);
-                          if (span) {
-                            view.dispatch({ changes: { from: span.from, to: span.to, insert: '' } });
-                            view.focus();
-                          }
+                          scrollToCursor(view);
                         },
                       }),
                     }),
@@ -186,10 +250,11 @@ export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: Mul
 
           return {
             from: match.from,
-            options: onSearch(match.text.toLowerCase(), ids).map(({ id, label }) => ({
+            options: onSearch(match.text.toLowerCase(), ids).map(({ id, label, hue }) => ({
               id,
               label,
-              apply: multiselectApply,
+              hue,
+              apply: (view, completion, from, to) => tagPickerApply(view, completion, from, to, mode),
             })),
           };
         },
@@ -201,22 +266,26 @@ export const multiselect = ({ debug, render, onSelect, onSearch, onUpdate }: Mul
 };
 
 class ItemWidget extends WidgetType {
-  constructor(
-    private readonly render: MultiselectOptions['render'],
-    private readonly props: PillProps,
-  ) {
+  private props: TagPickerItemProps;
+
+  constructor(props: TagPickerItemProps) {
     super();
+    this.props = props;
   }
 
   // Prevents re-rendering.
   override eq(widget: this) {
-    return widget.props.item.id === this.props.item.id;
+    return widget.props.itemId === this.props.itemId;
   }
 
   toDOM() {
-    const el = document.createElement('span');
-    el.className = 'cm-item';
-    this.render(el, this.props);
+    const el = document.createElement('dx-tag-picker-item');
+    el.classList.add('inline-block', 'pie-0.5');
+    el.setAttribute('itemId', this.props.itemId ?? 'never');
+    el.setAttribute('label', this.props.label ?? 'never');
+    this.props.hue && el.setAttribute('hue', this.props.hue);
+    this.props.removeLabel && el.setAttribute('removeLabel', this.props.removeLabel);
+    this.props.onItemClick && el.addEventListener('dx-tag-picker-item-click', this.props.onItemClick as any);
     return el;
   }
 }
@@ -225,14 +294,13 @@ const styles = EditorView.theme({
   // Constrain max width to editor.
   '.cm-tooltip.cm-tooltip-autocomplete': {
     left: '3px !important',
-    width: 'var(--dx-multiselectWidth)',
+    width: 'var(--dx-tag-picker-width)',
     marginTop: '6.5px',
   },
   '.cm-completionLabel': {},
   '.cm-tooltip-autocomplete ul li[aria-selected]': {
     backgroundColor: 'var(--dx-hoverSurface)',
   },
-
   // Hide scrollbar.
   '.cm-scroller': {
     scrollbarWidth: 'none', // Firefox.
@@ -240,11 +308,7 @@ const styles = EditorView.theme({
   '.cm-scroller::-webkit-scrollbar': {
     display: 'none', // WebKit.
   },
-
   '.cm-line': {
-    lineHeight: '2 !important',
-  },
-  '.cm-item': {
-    padding: '0 2px',
+    lineHeight: '1.125rem !important',
   },
 });

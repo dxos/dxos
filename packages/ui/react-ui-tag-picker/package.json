@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui-multiselect",
+  "name": "@dxos/react-ui-tag-picker",
   "version": "0.8.0",
-  "description": "A multiselect component.",
+  "description": "A tag picker component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -29,8 +29,10 @@
     "@codemirror/search": "^6.5.6",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.34.1",
+    "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@radix-ui/react-compose-refs": "1.1.1",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {

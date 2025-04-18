@@ -1,6 +1,13 @@
+@layer tokens {
+  :root {
+    --dx-tag-padding-block: 0.2rem;
+  }
+}
+
 @layer dx-components {
   .dx-tag {
-    @apply inline-block text-xs font-semibold pli-2 plb-0.5 rounded cursor-default truncate;
+    @apply inline-block text-xs font-semibold pli-2 rounded cursor-default truncate;
+    padding-block: var(--dx-tag-padding-block);
     user-select: none;
   }
 
