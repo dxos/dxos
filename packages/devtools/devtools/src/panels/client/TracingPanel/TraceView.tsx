@@ -4,8 +4,9 @@
 
 import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import type { FlameChartNodes } from 'flame-chart-js';
-import React, { type FC, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { Input } from '@dxos/react-ui';
 
 // Deliberately not using the common components export to aid in code-splitting.
@@ -34,43 +35,22 @@ export const TraceView: FC<{
   };
 
   const graphs = useMemo(() => {
-    let spans =
-      resourceId === undefined
+    const spans =
+      resourceId === undefined || !groupByResource
         ? [...state.spans.values()].filter((s) => s.parentId === undefined)
         : selectedResource?.spans ?? [];
 
-    if (!groupByResource) {
-      // Group all spans by resource
-      const resourceSpans = new Map<number | undefined, typeof spans>();
-      for (const span of state.spans.values()) {
-        const resId = span.resourceId;
-        if (!resourceSpans.has(resId)) {
-          resourceSpans.set(resId, []);
-        }
-        resourceSpans.get(resId)!.push(span);
-      }
+    return buildMultiFlameGraph(
+      state,
+      spans.map((s) => s.id),
+    );
+  }, [selectedResource, state.spans.size]);
 
-      // Create root nodes for each resource group
-      spans = Array.from(resourceSpans.entries()).map(([resId, spans]) => {
-        const resource = resId !== undefined ? state.resources.get(resId)?.resource : undefined;
-        const minStart = Math.min(...spans.map((s) => +s.startTs));
-        const maxEnd = Math.max(...spans.map((s) => +(s.endTs ?? s.startTs)));
-        return {
-          id: spans[0].id,
-          startTs: minStart.toString(),
-          endTs: maxEnd.toString(),
-          methodName: resource ? `${sanitizeClassName(resource.className)}#${resource.instanceId}` : 'Unknown Resource',
-          resourceId: resId,
-          parentId: undefined,
-        };
-      });
-    }
+  const flameGraph = showThreads ? graphs[Math.min(selectedFlameIndex, graphs.length - 1)] : graphs.flat();
 
-    const rootIds = spans.map((s) => s.id);
-    return showThreads ? buildMultiFlameGraph(state, rootIds) : [rootIds.flatMap((id) => buildFlameGraph(state, id))];
-  }, [selectedResource, state.spans.size, showThreads, groupByResource]);
-
-  const flameGraph = graphs[Math.min(selectedFlameIndex, graphs.length - 1)];
+  useEffect(() => {
+    log.info('flameGraph', { flameGraph });
+  }, [flameGraph]);
 
   return (
     <div className='h-full'>
