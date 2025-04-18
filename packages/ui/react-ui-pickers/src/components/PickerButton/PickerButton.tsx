@@ -5,10 +5,9 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { DropdownMenu, Icon, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Button, DropdownMenu, Icon, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
 
-export type ToolbarPickerProps = {
+export type PickerButtonProps = ThemedClassName<{
   Component: FC<{ value: string }>;
   label: string;
   icon: string;
@@ -18,9 +17,10 @@ export type ToolbarPickerProps = {
   value?: string;
   onChange?: (value: string) => void;
   onReset?: () => void;
-};
+  rootVariant?: 'button' | 'toolbar-button';
+}>;
 
-export const ToolbarPickerButton = ({
+export const PickerButton = ({
   Component,
   disabled,
   classNames,
@@ -31,7 +31,8 @@ export const ToolbarPickerButton = ({
   icon,
   onChange,
   onReset,
-}: ThemedClassName<ToolbarPickerProps>) => {
+  rootVariant = 'button',
+}: PickerButtonProps) => {
   const [value, setValue] = useControllableState<string>({
     prop: _value,
     defaultProp: _defaultValue,
@@ -44,6 +45,8 @@ export const ToolbarPickerButton = ({
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
+
+  const TriggerRoot = rootVariant === 'toolbar-button' ? Toolbar.Button : Button;
 
   return (
     <Tooltip.Root
@@ -67,10 +70,10 @@ export const ToolbarPickerButton = ({
       >
         <Tooltip.Trigger asChild>
           <DropdownMenu.Trigger asChild>
-            <Toolbar.Button classNames={mx('gap-2 plb-1', classNames)} disabled={disabled}>
+            <TriggerRoot classNames={['gap-2 plb-1', classNames]} disabled={disabled}>
               <span className='sr-only'>{label}</span>
               {(value && <Component value={value} />) || <Icon icon={icon} size={5} />}
-            </Toolbar.Button>
+            </TriggerRoot>
           </DropdownMenu.Trigger>
         </Tooltip.Trigger>
         <Tooltip.Portal>

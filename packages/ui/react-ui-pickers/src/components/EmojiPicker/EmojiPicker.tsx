@@ -18,6 +18,7 @@ import {
   useThemeContext,
   useTranslation,
   Icon,
+  ButtonGroup,
 } from '@dxos/react-ui';
 
 import './emoji.css';
@@ -28,6 +29,7 @@ export type EmojiPickerProps = {
   emoji?: string;
   onChangeEmoji?: (nextEmoji: string) => void;
   onClickClear?: ButtonProps['onClick'];
+  triggerVariant?: ButtonProps['variant'];
 };
 
 /**
@@ -121,9 +123,15 @@ export const EmojiPickerToolbarButton = ({
 
 /**
  * A button for picking an emoji alongside a button for unsetting it.
- * @deprecated
  */
-export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji, onClickClear }: EmojiPickerProps) => {
+export const EmojiPickerBlock = ({
+  disabled,
+  defaultEmoji,
+  emoji,
+  onChangeEmoji,
+  onClickClear,
+  triggerVariant = 'ghost',
+}: EmojiPickerProps) => {
   const { t } = useTranslation('os');
   const [isMd] = useMediaQuery('md', { ssr: false });
 
@@ -136,12 +144,12 @@ export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji,
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
 
   return (
-    <>
+    <ButtonGroup>
       <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
         <Popover.Trigger asChild>
-          <Button variant='ghost' classNames='gap-2 text-2xl plb-1' disabled={disabled}>
+          <Button variant={triggerVariant} classNames='gap-2 text-2xl plb-1' disabled={disabled}>
             <span className='sr-only'>{t('select emoji label')}</span>
-            <span className='grow pis-14'>{emojiValue}</span>
+            <span className='grow'>{emojiValue}</span>
             <Icon icon='ph--caret-down--regular' size={4} />
           </Button>
         </Popover.Trigger>
@@ -172,7 +180,7 @@ export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji,
       </Popover.Root>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <Button variant='ghost' onClick={onClickClear} disabled={disabled}>
+          <Button variant={triggerVariant} onClick={onClickClear} disabled={disabled}>
             <span className='sr-only'>{t('clear label')}</span>
             <Icon icon='ph--arrow-counter-clockwise--regular' size={5} />
           </Button>
@@ -184,6 +192,6 @@ export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji,
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>
-    </>
+    </ButtonGroup>
   );
 };

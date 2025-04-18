@@ -8,11 +8,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
-import { Clipboard, Input, Toolbar, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput, Form, type InputComponent } from '@dxos/react-ui-form';
+import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
+import { Form, type InputComponent } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
+import { StackItem } from '@dxos/react-ui-stack';
 import { hexToHue, hexToEmoji } from '@dxos/util';
 
+import { ControlItem, ControlItemInput, ControlSection } from './ControlSection';
 import { CLIENT_PLUGIN } from '../meta';
 
 // TODO(thure): Factor out?
@@ -67,42 +69,57 @@ export const ProfileContainer = () => {
 
   const customElements: Partial<Record<string, InputComponent>> = useMemo(
     () => ({
-      emoji: ({ type, label, getValue, onValueChange }) => {
+      // TODO(wittjosiah): We need text input annotations for disabled and copyable.
+      displayName: ({ type, getValue, onValueChange }) => {
+        const handleChange = useCallback((nextValue: string) => onValueChange(type, nextValue), [onValueChange, type]);
+        return (
+          <ControlItemInput title={t('display name label')}>
+            <Input.TextInput
+              value={getValue()}
+              onChange={handleChange}
+              placeholder={t('display name input placeholder')}
+            />
+          </ControlItemInput>
+        );
+      },
+      emoji: ({ type, getValue, onValueChange }) => {
         const handleChange = useCallback((nextEmoji: string) => onValueChange(type, nextEmoji), [onValueChange, type]);
         const handleEmojiReset = useCallback(
           () => onValueChange(type, getDefaultEmojiValue(identity)),
           [onValueChange, type],
         );
         return (
-          <DeprecatedFormInput label={label ?? ''}>
-            <Toolbar.Root>
-              {/* TODO(wittjosiah): This isn't working. */}
-              <EmojiPickerBlock emoji={getValue()} onChangeEmoji={handleChange} onClickClear={handleEmojiReset} />
-            </Toolbar.Root>
-          </DeprecatedFormInput>
+          <ControlItem title={t('icon label')} description={t('icon description')}>
+            <EmojiPickerBlock
+              triggerVariant='default'
+              emoji={getValue()}
+              onChangeEmoji={handleChange}
+              onClickClear={handleEmojiReset}
+            />
+          </ControlItem>
         );
       },
-      hue: ({ type, label, getValue, onValueChange }) => {
+      hue: ({ type, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleHueReset = useCallback(
           () => onValueChange(type, getDefaultHueValue(identity)),
           [onValueChange, type],
         );
         return (
-          <DeprecatedFormInput label={label ?? ''}>
-            <Toolbar.Root>
-              <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
-            </Toolbar.Root>
-          </DeprecatedFormInput>
+          <ControlItem title={t('hue label')} description={t('hue description')}>
+            <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
+          </ControlItem>
         );
       },
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       did: ({ getValue }) => {
         return (
-          <DeprecatedFormInput label={t('did label')}>
-            <Input.TextInput value={getValue()} disabled />
-            <Clipboard.IconButton value={getValue() ?? ''} />
-          </DeprecatedFormInput>
+          <ControlItemInput title={t('did label')}>
+            <ButtonGroup>
+              <Input.TextInput value={getValue()} disabled />
+              <Clipboard.IconButton value={getValue() ?? ''} />
+            </ButtonGroup>
+          </ControlItemInput>
         );
       },
     }),
@@ -110,9 +127,20 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <Clipboard.Provider>
-      <Form schema={ProfileSchema} values={values} autoSave onSave={handleSave} Custom={customElements} />
-    </Clipboard.Provider>
+    <StackItem.Content classNames='plb-2 block overflow-y-auto'>
+      <Clipboard.Provider>
+        <ControlSection title={t('profile label')} description={t('profile description')}>
+          <Form
+            schema={ProfileSchema}
+            values={values}
+            autoSave
+            onSave={handleSave}
+            Custom={customElements}
+            classNames='container-max-width [&_[role="form"]]:grid [&_[role="form"]]:grid-cols-1 md:[&_[role="form"]]:grid-cols-[1fr_min-content] [&_[role="form"]]:gap-4'
+          />
+        </ControlSection>
+      </Clipboard.Provider>
+    </StackItem.Content>
   );
 };
 

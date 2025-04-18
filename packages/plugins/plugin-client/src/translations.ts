@@ -10,6 +10,7 @@ export default [
       [CLIENT_PLUGIN]: {
         'account label': 'User Account',
         'profile label': 'Profile',
+        'profile description': 'You can adjust how you’re represented in Composer here.',
         'devices label': 'Devices',
         'devices verbose label': 'Manage devices',
         'add device description':
@@ -29,9 +30,12 @@ export default [
         'danger zone description':
           'Because Composer is decentralized, logging out entails erasing all the data on this device. If you have any data on this device that you’d like to keep, you can log in on a separate device using the ‘Add device’ process above, or you can create recovery credentials for later use.',
         'display name label': 'Name',
-        'display name input placeholder': 'Enter your name',
+        'display name input placeholder': 'Enter a name',
         'icon label': 'Avatar',
-        'hue label': 'Avatar Background',
+        'icon description': 'The emoji used to represent you in the app.',
+        'hue label': 'Color',
+        'hue description':
+          'The color used to represent you in the app, including as your avatar’s background, your cursor as it appears to others, and the messages you send in group threads.',
         'did label': 'DID',
         'open user account label': 'Open user account',
         'manage credentials dialog title': 'Manage Account Recovery',
