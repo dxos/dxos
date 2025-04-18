@@ -158,7 +158,6 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
   const data = useMemo(() => parseJsonString((span?.input as any)?.bodyText), [span]);
-  console.log(JSON.stringify(span, null, 2));
 
   return (
     <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator'>
