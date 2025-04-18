@@ -9,6 +9,7 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { type ScriptType } from '@dxos/functions/types';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
@@ -16,7 +17,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { ExceptionPanel } from './ExceptionPanel';
 import { LogPanel } from './LogPanel';
 import { RawDataPanel } from './RawDataPanel';
-import { SpanSummary } from './SpanSummary';
 import { useScriptNameResolver, useInvocationSpans } from './hooks';
 import { formatDuration } from './utils';
 import { PanelContainer, Placeholder } from '../../../components';
@@ -146,7 +146,6 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
               detailAxis === 'block' && 'border-bs',
             )}
           >
-            <SpanSummary span={selectedInvocation} space={space} onClose={() => setSelectedId(undefined)} />
             <Tabs.Root
               orientation='horizontal'
               value={activeTab}
@@ -154,10 +153,14 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
               classNames='grid grid-rows-[min-content_1fr] min-bs-0 [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid border-bs border-separator'
             >
               <Tabs.Tablist classNames='border-be border-separator'>
+                <Tabs.Tab value='input'>Input</Tabs.Tab>
                 <Tabs.Tab value='logs'>Logs</Tabs.Tab>
                 <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>
                 <Tabs.Tab value='raw'>Raw</Tabs.Tab>
               </Tabs.Tablist>
+              <Tabs.Tabpanel value='input'>
+                <SyntaxHighlighter language='json' data={selectedInvocation?.input} />
+              </Tabs.Tabpanel>
               <Tabs.Tabpanel value='logs'>
                 <LogPanel span={selectedInvocation} />
               </Tabs.Tabpanel>
