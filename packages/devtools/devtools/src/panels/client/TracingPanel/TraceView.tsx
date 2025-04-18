@@ -4,9 +4,8 @@
 
 import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import type { FlameChartNodes } from 'flame-chart-js';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useMemo, useState } from 'react';
 
-import { log } from '@dxos/log';
 import { Input } from '@dxos/react-ui';
 
 // Deliberately not using the common components export to aid in code-splitting.

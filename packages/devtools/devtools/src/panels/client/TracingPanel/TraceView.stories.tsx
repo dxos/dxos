@@ -5,7 +5,6 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
