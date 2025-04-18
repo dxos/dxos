@@ -7,7 +7,7 @@ import React, { type FC, useMemo } from 'react';
 import { FormatEnum } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks';
 import { createTextBitbar } from '../../../util';
@@ -60,5 +60,7 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
     }
   };
 
-  return <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClick} />;
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
+  return <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClick} features={features} />;
 };

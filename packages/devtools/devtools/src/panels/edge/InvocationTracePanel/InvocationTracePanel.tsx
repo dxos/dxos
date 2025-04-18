@@ -9,7 +9,7 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { type ScriptType } from '@dxos/functions/types';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -114,6 +114,8 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
     return 'grid grid-cols-1';
   }, [selectedInvocation, detailAxis]);
 
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
   return (
     <PanelContainer
       toolbar={
@@ -129,6 +131,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
           properties={invocationProperties}
           data={invocationData}
           onRowClicked={handleInvocationRowClicked}
+          features={features}
         />
         {selectedInvocation && (
           <div
