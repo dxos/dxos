@@ -192,8 +192,8 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           <DynamicTable
             data={tableData}
             properties={objectProperties}
-            onRowClicked={handleObjectRowClicked}
             features={features}
+            onRowClicked={handleObjectRowClicked}
           />
           <div
             className={mx(
@@ -216,7 +216,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           </div>
           <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
             {selected ? (
-              <DynamicTable data={historyData} properties={historyProperties} onRowClicked={handleHistoryRowClicked} />
+              <DynamicTable properties={historyProperties} data={historyData} onRowClicked={handleHistoryRowClicked} />
             ) : (
               <Placeholder label='History' />
             )}

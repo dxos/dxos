@@ -173,14 +173,14 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       <DynamicTable
         properties={properties}
         data={tableData}
-        onRowClicked={handleRowClicked}
+        features={features}
         rowActions={[
           { id: 'toggleOpen', translationKey: 'toggle space open closed label' },
           { id: 'backup', translationKey: 'download space backup label' },
           { id: 'archive', translationKey: 'download space archive label' },
         ]}
+        onRowClicked={handleRowClicked}
         onRowAction={handleRowAction}
-        features={features}
       />
     </PanelContainer>
   );

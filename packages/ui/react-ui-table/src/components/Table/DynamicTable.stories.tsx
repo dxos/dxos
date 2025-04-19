@@ -119,7 +119,7 @@ export const WithJsonSchema: StoryObj = {
       })),
     );
 
-    return <DynamicTable jsonSchema={schema} data={objects} tableName='com.example/json_schema_table' />;
+    return <DynamicTable jsonSchema={schema} data={objects} name='json-schema-table' />;
   },
 };
 
@@ -129,12 +129,11 @@ export const WithEchoSchema: StoryObj = {
     const { space } = useClientProvider();
     const schema = useSchema(client, space, Testing.ContactType.typename);
     const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
-
     if (!schema) {
       return <div>Loading schema...</div>;
     }
 
-    return <DynamicTable echoSchema={schema} data={objects} tableName='contact-table' />;
+    return <DynamicTable schema={schema} data={objects} name='contact-table' />;
   },
   decorators: [
     withClientProvider({

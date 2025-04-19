@@ -146,8 +146,8 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
         <DynamicTable
           properties={invocationProperties}
           data={invocationData}
-          onRowClicked={handleInvocationRowClicked}
           features={features}
+          onRowClicked={handleInvocationRowClicked}
         />
         {selectedInvocation && <Selected span={selectedInvocation} />}
       </div>

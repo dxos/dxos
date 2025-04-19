@@ -41,7 +41,7 @@ const blockEndLine =
   '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
 
 //
-// Root
+// Table.Root
 //
 
 export type TableRootProps = PropsWithChildren<{ role?: string }>;
@@ -63,7 +63,7 @@ const TableRoot = ({ children, role }: TableRootProps) => {
 };
 
 //
-// Main
+// Table.Main
 //
 
 export type TableController = {
@@ -356,32 +356,28 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onQuery={handleQuery}
         />
         <Grid.Content
-          onWheelCapture={handleWheel}
           className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
           frozen={frozen}
           // getCells={getCells}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}
           limitColumns={model.view?.fields?.length ?? 0}
+          overscroll='trap'
           onAxisResize={handleAxisResize}
           onClick={handleGridClick}
           onKeyDown={handleKeyDown}
-          overscroll='trap'
+          onWheelCapture={handleWheel}
           ref={setDxGrid}
         />
         <RowActionsMenu model={model} modals={modals} />
         <ColumnActionsMenu model={model} modals={modals} />
         <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
-        <RefPanel model={model} modals={modals} />
         <CreateRefPanel model={model} modals={modals} />
+        <RefPanel model={model} modals={modals} />
       </Grid.Root>
     );
   },
 );
-
-//
-// CellEditor
-//
 
 export const Table = {
   Root: TableRoot,

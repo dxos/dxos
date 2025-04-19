@@ -11,14 +11,14 @@ import { mx } from '@dxos/react-ui-theme';
 import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
-import { makeDynamicTable, type TablePropertyDefinition } from '../../util';
+import { getBaseSchems, makeDynamicTable, type TablePropertyDefinition } from '../../util';
 
 type DynamicTableProps = ThemedClassName<{
-  tableName?: string;
+  name?: string;
   data: any[];
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchemaType;
-  echoSchema?: BaseSchema;
+  schema?: BaseSchema;
   features?: Partial<TableFeatures>;
   rowActions?: TableRowAction[];
   onRowClicked?: (row: any) => void;
@@ -29,22 +29,23 @@ type DynamicTableProps = ThemedClassName<{
  * A dynamic table component that renders data using the specified properties.
  * Properties define both the schema and display characteristics of the table columns.
  */
+// TODO(burdon): Remove variance from the props (should be normalized externally).
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
 export const DynamicTable = ({
   classNames,
-  tableName = 'com.example/dynamic_table',
-  data,
+  name = 'example.com/dynamic-table',
+  data, // TOOD(burdon): Rename objects.
   properties,
   jsonSchema,
-  echoSchema,
+  schema,
   rowActions,
   onRowClicked,
   onRowAction,
   ...props
 }: DynamicTableProps) => {
-  const { table, viewProjection } = useMemo(() => {
-    return makeDynamicTable({ typename: tableName, properties, jsonSchema, echoSchema });
-  }, [tableName, properties, jsonSchema]);
+  const { table, projection } = useMemo(() => {
+    return makeDynamicTable({ ...getBaseSchems({ typename: name, properties, jsonSchema, schema }), properties });
+  }, [name, properties, schema, jsonSchema]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {
@@ -67,7 +68,7 @@ export const DynamicTable = ({
   const model = useTableModel({
     table,
     objects: data,
-    projection: viewProjection,
+    projection,
     features,
     rowActions,
     onCellUpdate: handleCellUpdate,
@@ -90,8 +91,8 @@ export const DynamicTable = ({
             ref={tableRef}
             model={model}
             presentation={presentation}
-            onRowClicked={onRowClicked}
             ignoreAttention
+            onRowClicked={onRowClicked}
           />
         </Table.Root>
       </div>

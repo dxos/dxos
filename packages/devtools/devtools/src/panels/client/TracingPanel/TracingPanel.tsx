@@ -132,8 +132,8 @@ export const TracingPanel = () => {
       <DynamicTable
         data={resourceData}
         properties={resourceProperties}
-        onRowClicked={handleRowClicked}
         features={features}
+        onRowClicked={handleRowClicked}
       />
       <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
         <Tabs.List className='flex divide-x divide-separator border-b border-separator'>
