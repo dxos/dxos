@@ -26,14 +26,14 @@ export const ECHO_ATTR_META = '@meta';
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
 // TODO(dmaretskyi): Rename AnyProperties.
-export type BaseObject = { [key: string]: any };
+export type BaseObject = Record<string, any>;
+
+// TODO(burdon): Reconcile with ReactiveEchoObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
+export type WithId = BaseObject & HasId;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
-
-// TODO(burdon): Reconcile with ReactiveEchoObject.
-export type WithId = HasId & BaseObject;
 
 export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
@@ -152,6 +152,7 @@ export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
   return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };
 
+// TODO(burdon): Can we use `S.is`?
 export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   object: any,
@@ -165,20 +166,20 @@ export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
     throw new Error('Schema must have an object annotation.');
   }
 
-  const objectTypename = getTypename(object);
-  if (!objectTypename) {
+  const typename = getTypename(object);
+  if (!typename) {
     return false;
   }
 
-  if (objectTypename.startsWith('dxn:')) {
-    return schemaDXN.toString() === objectTypename;
+  if (typename.startsWith('dxn:')) {
+    return schemaDXN.toString() === typename;
   } else {
     const typeDXN = schemaDXN.asTypeDXN();
     if (!typeDXN) {
       return false;
     }
 
-    return typeDXN.type === objectTypename;
+    return typeDXN.type === typename;
   }
 };
 

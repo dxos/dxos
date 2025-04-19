@@ -138,7 +138,7 @@ export class DXN {
     return this.#parts;
   }
 
-  toTypename() {
+  get typename() {
     invariant(this.#kind === DXN.kind.TYPE);
     return this.#parts[0];
   }

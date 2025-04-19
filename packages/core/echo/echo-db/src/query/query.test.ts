@@ -8,7 +8,7 @@ import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { Expando, RelationSourceId, RelationTargetId, S, TypedObject, type Ref } from '@dxos/echo-schema';
-import { Contact, HasManager } from '@dxos/echo-schema/testing';
+import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { create, getMeta, makeRef } from '@dxos/live-object';
@@ -358,27 +358,27 @@ describe('Queries', () => {
   describe('Relations', () => {
     test('query by type', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Contact, HasManager]);
+      graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
 
       const alice = db.add(
-        create(Contact, {
+        create(Testing.Contact, {
           name: 'Alice',
         }),
       );
       const bob = db.add(
-        create(Contact, {
+        create(Testing.Contact, {
           name: 'Bob',
         }),
       );
       const hasManager = db.add(
-        create(HasManager, {
+        create(Testing.HasManager, {
           [RelationSourceId]: bob,
           [RelationTargetId]: alice,
           since: '2022',
         }),
       );
 
-      const { objects } = await db.query(Filter.schema(HasManager)).run();
+      const { objects } = await db.query(Filter.schema(Testing.HasManager)).run();
       expect(objects).toEqual([hasManager]);
     });
   });
@@ -497,11 +497,11 @@ describe('Queries with types', () => {
     await openAndClose(testBuilder);
     const { graph, db } = await testBuilder.createDatabase();
 
-    graph.schemaRegistry.addSchema([Contact]);
-    const contact = db.add(create(Contact, {}));
+    graph.schemaRegistry.addSchema([Testing.Contact]);
+    const contact = db.add(create(Testing.Contact, {}));
     const name = 'DXOS User';
 
-    const query = db.query(Filter.typename(Contact.typename));
+    const query = db.query(Filter.typename(Testing.Contact.typename));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);
@@ -519,7 +519,7 @@ describe('Queries with types', () => {
     onTestFinished(() => unsub());
 
     contact.name = name;
-    db.add(create(Contact, {}));
+    db.add(create(Testing.Contact, {}));
 
     await asyncTimeout(nameUpdate.wait(), 1000);
     await asyncTimeout(anotherContactAdded.wait(), 1000);
@@ -530,7 +530,7 @@ describe('Queries with types', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    const [schema] = await db.schemaRegistry.register([Contact]);
+    const [schema] = await db.schemaRegistry.register([Testing.Contact]);
     const contact = db.add(create(schema, {}));
 
     // NOTE: Must use `Filter.schema` with EchoSchema instance since matching is done by the object ID of the mutable schema.
@@ -545,17 +545,17 @@ describe('Queries with types', () => {
     await openAndClose(testBuilder);
     const { graph, db } = await testBuilder.createDatabase();
 
-    graph.schemaRegistry.addSchema([Contact]);
+    graph.schemaRegistry.addSchema([Testing.Contact]);
     const name = 'DXOS User';
-    const contact = create(Contact, { name });
+    const contact = create(Testing.Contact, { name });
     db.add(contact);
-    expect(contact instanceof Contact).to.be.true;
+    expect(contact instanceof Testing.Contact).to.be.true;
 
     // query
     {
-      const contact = (await db.query(Filter.schema(Contact)).run()).objects[0];
+      const contact = (await db.query(Filter.schema(Testing.Contact)).run()).objects[0];
       expect(contact.name).to.eq(name);
-      expect(contact instanceof Contact).to.be.true;
+      expect(contact instanceof Testing.Contact).to.be.true;
     }
   });
 });

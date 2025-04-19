@@ -10,13 +10,13 @@ import { imports, type Imports } from './util/imports';
 import { error } from './util/logger';
 import { pretty } from './util/pretty';
 import {
+  results,
+  renderSlots,
+  getOutputNameFromTemplateName,
   type Context,
   type Template,
   type Options,
   type Slots,
-  results,
-  renderSlots,
-  getOutputNameFromTemplateName,
   type SlotValues,
   type ResultOf,
   type Slot,

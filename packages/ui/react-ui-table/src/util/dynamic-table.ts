@@ -12,7 +12,7 @@ import {
   type SchemaPropertyDefinition,
 } from '@dxos/schema';
 
-import { TableType } from '..';
+import { TableType } from '../types';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance
 //   schema-tools schema creation.

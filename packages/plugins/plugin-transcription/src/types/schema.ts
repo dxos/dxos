@@ -57,6 +57,6 @@ export const TranscriptBlock = S.Struct({
   authorName: S.optional(S.String), // TODO(burdon): IdentityDid.
   authorHue: S.optional(S.String),
   segments: S.Array(TranscriptSegment),
-}).pipe(EchoObject('dxos.org/type/TranscriptBlock', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/TranscriptBlock', version: '0.1.0' }));
 
 export type TranscriptBlock = S.Schema.Type<typeof TranscriptBlock>;

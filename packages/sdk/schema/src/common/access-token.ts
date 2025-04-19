@@ -34,5 +34,7 @@ export const AccessTokenSchema = S.Struct({
 });
 
 // TODO(wittjosiah): This is a temporary solution, long term these should be stored in HALO.
-export const AccessTokenType = AccessTokenSchema.pipe(EchoObject('dxos.org/type/AccessToken', '0.1.0'));
+export const AccessTokenType = AccessTokenSchema.pipe(
+  EchoObject({ typename: 'dxos.org/type/AccessToken', version: '0.1.0' }),
+);
 export type AccessTokenType = S.Schema.Type<typeof AccessTokenType>;

@@ -22,7 +22,7 @@ import {
   TypedObject,
   type ObjectId,
 } from '@dxos/echo-schema';
-import { Contact, HasManager, updateCounter } from '@dxos/echo-schema/testing';
+import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { create, getSchema, makeRef } from '@dxos/live-object';
@@ -392,22 +392,22 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      db.graph.schemaRegistry.addSchema([Contact, HasManager]);
+      db.graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
 
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          create(Contact, {
+          create(Testing.Contact, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          create(Contact, {
+          create(Testing.Contact, {
             name: 'Bob',
           }),
         );
         const hasManager = db.add(
-          create(HasManager, {
+          create(Testing.HasManager, {
             [RelationSourceId]: bob,
             [RelationTargetId]: alice,
             since: '2022',
@@ -498,7 +498,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [schema] = await db.schemaRegistry.register([Contact]);
+      const [schema] = await db.schemaRegistry.register([Testing.Contact]);
       typeDXN = getTypeReference(schema)!.toDXN();
       db.add(create(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
@@ -512,7 +512,7 @@ describe('Integration tests', () => {
       } = await db.query(Filter.typeDXN(typeDXN.toString())).run();
       log.info('xxx', { typeDXN, obj });
       expect(getSchema(obj)).toBeDefined();
-      expect(getSchemaTypename(getSchema(obj)!)).toEqual(Contact.typename);
+      expect(getSchemaTypename(getSchema(obj)!)).toEqual(Testing.Contact.typename);
     }
   });
 });
