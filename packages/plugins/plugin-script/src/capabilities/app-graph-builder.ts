@@ -44,22 +44,6 @@ export default (context: PluginsContext) =>
         },
       ],
     }),
-    // TODO(burdon): Move to automation plugin; or merge with functions.
-    createExtension({
-      id: `${meta.id}/automation`,
-      filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
-      connector: ({ node }) => [
-        {
-          id: [node.id, 'automation'].join(SLUG_PATH_SEPARATOR),
-          type: COMPANION_TYPE,
-          data: node.data,
-          properties: {
-            label: ['script automation label', { ns: meta.id }],
-            icon: 'ph--lightning--regular',
-          },
-        },
-      ],
-    }),
     createExtension({
       id: `${meta.id}/logs`,
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
