@@ -29,6 +29,7 @@ import {
   type InitiateOAuthFlowResponse,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
+  type EmailSpaceInvitationRequest,
 } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -93,6 +94,14 @@ export class EdgeHttpClient {
     args?: EdgeHttpGetArgs,
   ): Promise<JoinSpaceResponseBody> {
     return this._call(`/spaces/${spaceId}/join`, { ...args, body, method: 'POST' });
+  }
+
+  public async inviteToSpaceByEmail(
+    spaceId: SpaceId,
+    body: EmailSpaceInvitationRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(`/spaces/${spaceId}/invitation/email`, { ...args, body, method: 'POST' });
   }
 
   public async recoverIdentity(
