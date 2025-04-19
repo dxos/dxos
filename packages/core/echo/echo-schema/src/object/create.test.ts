@@ -16,7 +16,7 @@ describe('create (static version)', () => {
     const contact = createStatic(Testing.Contact, {
       name: 'John',
       email: 'john@example.com',
-    } as any); // TODO(burdon): Support defaults.
+    });
 
     expect(contact.id).toBeDefined();
     expect(contact.name).toBe('John');
@@ -30,7 +30,7 @@ describe('create (static version)', () => {
     const contact = createStatic(Testing.Contact, {
       name: 'John',
       email: 'john@example.com',
-    } as any); // TODO(burdon): Support defaults.
+    });
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
@@ -46,7 +46,7 @@ describe('create (static version)', () => {
     const contact = createStatic(Testing.Contact, {
       name: 'John',
       email: 'john@example.com',
-    } as any); // TODO(burdon): Support defaults.
+    });
 
     expect(getSchema(contact)).toBe(Testing.Contact);
   });

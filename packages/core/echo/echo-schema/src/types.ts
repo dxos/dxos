@@ -15,10 +15,6 @@ import { ObjectId, type ObjectMeta, getTypename } from './object';
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_META = '@meta';
 
-//
-// Objects
-//
-
 /**
  * Base type for all data objects (reactive, ECHO, and other raw objects).
  * NOTE: This describes the base type for all database objects.

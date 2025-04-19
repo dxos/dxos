@@ -5,12 +5,12 @@
 import { type Schema as S } from 'effect';
 
 import {
-  type BaseObject,
   createObjectId,
   defineHiddenProperty,
+  getObjectAnnotation,
+  type BaseObject,
   type ExcludeId,
   Expando,
-  getObjectAnnotation,
   type ObjectMeta,
   ObjectMetaSchema,
 } from '@dxos/echo-schema';
@@ -43,6 +43,7 @@ export const create: {
   ): ReactiveObject<T>;
 } = <T extends BaseObject>(
   objOrSchema: S.Schema<T, any> | T,
+  // TODO(burdon): Handle defaults.
   obj?: ExcludeId<T>,
   meta?: ObjectMeta,
 ): ReactiveObject<T> => {
