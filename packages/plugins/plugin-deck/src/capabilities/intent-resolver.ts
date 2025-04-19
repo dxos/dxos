@@ -20,13 +20,22 @@ import { invariant } from '@dxos/invariant';
 import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { isNonNullable } from '@dxos/util';
+import { byPosition, isNonNullable } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
 import { closeEntry, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
-import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode, defaultDeck } from '../types';
+import {
+  DeckAction,
+  type LayoutMode,
+  type DeckSettingsProps,
+  isLayoutMode,
+  getMode,
+  defaultDeck,
+  COMPANION_TYPE,
+} from '../types';
 import { setActive } from '../util';
 
 export default (context: PluginsContext) =>
@@ -352,6 +361,7 @@ export default (context: PluginsContext) =>
       resolve: (adjustment) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
+        const { graph } = context.requestCapability(Capabilities.AppGraph);
 
         return batch(() => {
           if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
@@ -360,6 +370,23 @@ export default (context: PluginsContext) =>
               state,
               attention,
             });
+          }
+
+          if (adjustment.type === 'companion') {
+            const node = graph.findNode(adjustment.id);
+            const [companion] = node
+              ? graph
+                  .nodes(node, { filter: (n): n is Node<any> => n.type === COMPANION_TYPE })
+                  .toSorted((a, b) => byPosition(a.properties, b.properties))
+              : [];
+            if (companion) {
+              return {
+                intents: [
+                  // TODO(wittjosiah): This should remember the previously selected companion.
+                  createIntent(DeckAction.ChangeCompanion, { primary: adjustment.id, companion: companion.id }),
+                ],
+              };
+            }
           }
 
           if (adjustment.type === 'solo') {

@@ -81,7 +81,7 @@ export default () =>
         );
 
         return (
-          <StackItem.Content role='article' toolbar={false}>
+          <StackItem.Content role='article'>
             <PluginDetail plugin={subject} enabled={enabled} onEnable={handleEnable} />
           </StackItem.Content>
         );

@@ -3,14 +3,15 @@
 //
 
 import React, {
-  forwardRef,
+  type MouseEvent,
   type PropsWithChildren,
+  type WheelEvent,
+  forwardRef,
   useCallback,
   useImperativeHandle,
   useState,
-  type WheelEvent,
-  type MouseEvent,
   useMemo,
+  useEffect,
 } from 'react';
 
 import { getValue } from '@dxos/echo-schema';
@@ -18,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { Filter } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type DxGridElement, Grid, type GridContentProps, closestCell, type DxGridPosition } from '@dxos/react-ui-grid';
+import { closestCell, type DxGridElement, type DxGridPosition, type GridContentProps, Grid } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy, safeParseInt } from '@dxos/util';
 
@@ -72,6 +73,7 @@ export type TableController = {
 export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
+  // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
   onRowClicked?: (row: any) => void;
 };
@@ -91,10 +93,25 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
       return {
         frozenRowsStart: 1,
-        frozenColsStart: model?.features.selection ? 1 : 0,
+        frozenColsStart: model?.features.selection.enabled ? 1 : 0,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };
     }, [model]);
+
+    // TODO(burdon): Replace useEffect below.
+    // const getCells = useCallback<GridContentProps['getCells']>(
+    //   (range: DxGridRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
+    //   [presentation],
+    // );
+
+    useEffect(() => {
+      if (!presentation || !dxGrid) {
+        return;
+      }
+
+      // TODO(burdon): Pass to Grid.Content?
+      dxGrid.getCells = (range, plane) => presentation.getCells(range, plane);
+    }, [presentation, dxGrid]);
 
     /**
      * Provides an external controller that can be called to repaint the table.
@@ -106,7 +123,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           return {};
         }
 
-        dxGrid.getCells = (range, plane) => presentation.getCells(range, plane);
         return {
           update: (cell) => {
             if (cell) {
@@ -123,11 +139,15 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
-        if (onRowClicked) {
-          const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
-          if (rowIndex != null) {
+        const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
+        if (rowIndex != null) {
+          if (onRowClicked) {
             const row = model?.getRowAt(rowIndex);
             row && onRowClicked(row);
+          }
+
+          if (model?.features.selection.enabled && model?.selection.selectionMode === 'single') {
+            model.selection.toggleSelectionForRowIndex(rowIndex);
           }
         }
 
@@ -339,6 +359,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onWheelCapture={handleWheel}
           className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
           frozen={frozen}
+          // getCells={getCells}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}
           limitColumns={model.view?.fields?.length ?? 0}

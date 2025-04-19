@@ -19,7 +19,7 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${MARKDOWN_PLUGIN}/document`,
-      role: ['article', 'section'],
+      role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
       component: ({ data, role }) => {
         const settingsStore = useCapability(Capabilities.SettingsStore);
@@ -88,7 +88,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MARKDOWN_PLUGIN}/settings`,
+      id: `${MARKDOWN_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<MarkdownSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === MARKDOWN_PLUGIN,

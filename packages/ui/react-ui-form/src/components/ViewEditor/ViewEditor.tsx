@@ -53,7 +53,7 @@ export const ViewEditor = ({
   onDelete,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
+  const projection = useMemo(() => new ViewProjection(schema.jsonSchema, view), [schema, view]);
   const [field, setField] = useState<FieldType>();
 
   // TODO(burdon): Should be reactive.

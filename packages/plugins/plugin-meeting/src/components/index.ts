@@ -4,6 +4,6 @@
 
 import React from 'react';
 
-export const ActivityContainer = React.lazy(() => import('./ActivityContainer'));
 export const MeetingContainer = React.lazy(() => import('./MeetingContainer'));
+export const MissingArtifact = React.lazy(() => import('./MissingArtifact'));
 export const CallSidebar = React.lazy(() => import('./CallSidebar'));

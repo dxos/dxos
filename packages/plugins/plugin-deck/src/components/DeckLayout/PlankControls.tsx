@@ -25,6 +25,7 @@ export type PlankCapabilities = {
   incrementStart?: boolean;
   incrementEnd?: boolean;
   solo?: boolean;
+  companion?: boolean;
 };
 
 export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
@@ -71,7 +72,8 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
         <PlankControl
           label={t('close companion label')}
           variant='ghost'
-          icon='ph--minus--regular'
+          // icon='ph--minus--regular'
+          icon='ph--caret-left--regular'
           onClick={handleCloseCompanion}
           classNames={plankControlSpacing}
         />
@@ -154,6 +156,16 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                   ? 'ph--caret-line-right--regular'
                   : 'ph--x--regular'
             }
+          />
+        )}
+
+        {can.companion && (
+          <PlankControl
+            label={t('open companion label')}
+            classNames={buttonClassNames}
+            onClick={() => onClick?.('companion')}
+            data-testid='plankHeading.companion'
+            icon='ph--square-split-horizontal--regular'
           />
         )}
         {children}

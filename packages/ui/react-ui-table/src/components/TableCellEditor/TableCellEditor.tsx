@@ -8,6 +8,8 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
+import { useThemeContext } from '@dxos/react-ui';
+import { createMarkdownExtensions } from '@dxos/react-ui-editor';
 import {
   cellQuery,
   editorKeys,
@@ -21,6 +23,7 @@ import {
   type GridCellEditorProps,
   type GridScopedProps,
 } from '@dxos/react-ui-grid';
+import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
 import { completion } from './extension';
@@ -55,6 +58,7 @@ export const TableCellEditor = ({
 }: GridScopedProps<TableCellEditorProps>) => {
   const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
+  const { themeMode } = useThemeContext();
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -80,7 +84,7 @@ export const TableCellEditor = ({
       onFocus?.();
       setEditing(null);
     },
-    [model, editing],
+    [model, editing, onEnter, onFocus, setEditing],
   );
 
   const handleBlur = useCallback<EditorBlurHandler>(
@@ -113,7 +117,7 @@ export const TableCellEditor = ({
         onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
       }
     },
-    [model, editing, onFocus, onEnter, fieldProjection, determineNavigationAxis, determineNavigationDelta],
+    [model, editing, onFocus, onEnter, fieldProjection],
   );
 
   const extension = useMemo(() => {
@@ -127,6 +131,50 @@ export const TableCellEditor = ({
         ...(editing?.initialContent && { onNav: handleClose }),
       }),
     ];
+
+    const format = fieldProjection.props.format;
+
+    if (format === FormatEnum.SingleSelect || format === FormatEnum.MultiSelect) {
+      // TODO(ZaymonFC): Reconcile this with the TagPicker component?
+      // Add markdown extensions needed by tag picker.
+      extension.push(createMarkdownExtensions({ themeMode }));
+
+      const options = fieldProjection.props.options || [];
+
+      const mode = format === FormatEnum.SingleSelect ? ('single-select' as const) : ('multi-select' as const);
+
+      extension.push(
+        tagPickerExtension({
+          mode,
+          inGrid: true,
+          onSearch: (text, selectedIds) => {
+            return options
+              .filter(
+                (option) =>
+                  selectedIds.indexOf(option.id) === -1 &&
+                  (text.length === 0 || option.title.toLowerCase().includes(text.toLowerCase())),
+              )
+              .map((option) => ({
+                id: option.id,
+                label: option.title,
+                hue: option.color as any,
+              }));
+          },
+          onUpdate: (ids) => {
+            if (model && editing) {
+              if (ids.length === 0) {
+                return;
+              }
+              if (mode === 'single-select') {
+                handleEnter(ids[0]);
+              } else {
+                handleEnter(ids);
+              }
+            }
+          },
+        }),
+      );
+    }
 
     if (onQuery) {
       switch (fieldProjection.props.format) {
@@ -164,11 +212,61 @@ export const TableCellEditor = ({
     }
 
     return extension;
-  }, [model, modals, editing, fieldProjection, handleClose]);
+  }, [model, modals, editing, fieldProjection, handleClose, themeMode]);
 
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
-      const value = model.getCellData(parseCellIndex(editing.index));
+      const cell = parseCellIndex(editing.index);
+      const { col } = cell;
+      const field = model.projection.view.fields[col];
+      const fieldProjection = model.projection.getFieldProjection(field.id);
+
+      if (
+        fieldProjection?.props.format === FormatEnum.SingleSelect ||
+        fieldProjection?.props.format === FormatEnum.MultiSelect
+      ) {
+        const value = model.getCellData(cell);
+
+        if (value !== undefined) {
+          const options = fieldProjection.props.options || [];
+
+          if (fieldProjection.props.format === FormatEnum.MultiSelect && Array.isArray(value)) {
+            const tagItems = value
+              .map((id) => {
+                const option = options.find((o) => o.id === id);
+                if (option) {
+                  return {
+                    id,
+                    label: option.title,
+                    hue: option.color as any,
+                  };
+                }
+                return undefined;
+              })
+              .filter((item): item is { id: any; label: string; hue: any } => item !== undefined);
+
+            return createLinks(tagItems);
+          } else {
+            const option = options.find((o) => o.id === value);
+
+            if (option) {
+              const tagItem = {
+                id: value,
+                label: option.title,
+                hue: option.color as any,
+              };
+
+              return createLinks([tagItem]);
+            }
+          }
+        }
+
+        // Return empty string if no value
+        return '';
+      }
+
+      // Default behavior for other formats
+      const value = model.getCellData(cell);
       return value !== undefined ? String(value) : '';
     }
   }, [model, editing]);

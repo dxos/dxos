@@ -9,7 +9,7 @@ import { isInstanceOf } from '@dxos/echo-schema';
 
 import { JournalContainer, OutlinerContainer } from '../components';
 import { OUTLINER_PLUGIN } from '../meta';
-import { JournalType, OutlineType, TreeType } from '../types';
+import { JournalType, OutlineType } from '../types';
 
 export default () => [
   contributes(Capabilities.ReactSurface, [
@@ -27,12 +27,6 @@ export default () => [
         const outline = data.subject;
         return outline.tree.target ? <OutlinerContainer tree={outline.tree.target} role={role} /> : null;
       },
-    }),
-    createSurface({
-      id: `${OUTLINER_PLUGIN}/tabpanel`,
-      role: 'tabpanel',
-      filter: (data): data is { subject: TreeType } => isInstanceOf(TreeType, data.subject),
-      component: ({ data, role }) => <OutlinerContainer tree={data.subject} role={role} />,
     }),
   ]),
 ];

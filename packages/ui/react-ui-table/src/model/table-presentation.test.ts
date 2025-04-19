@@ -96,7 +96,7 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
-  const projection = new ViewProjection(schema, view);
+  const projection = new ViewProjection(schema.jsonSchema, view);
   const table = create(TableType, { view: makeRef(view) });
   return new TableModel({ id: table.id, view, projection, ...props });
 };

@@ -65,6 +65,7 @@ export enum FormatEnum {
   Markdown = 'markdown',
   Regex = 'regex',
   SingleSelect = 'single-select',
+  MultiSelect = 'multi-select',
   URL = 'url',
   UUID = 'uuid',
 
@@ -132,6 +133,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.URL]: TypeEnum.String,
   [FormatEnum.UUID]: TypeEnum.String,
   [FormatEnum.SingleSelect]: TypeEnum.String,
+  [FormatEnum.MultiSelect]: TypeEnum.Object,
 
   // Dates
   [FormatEnum.Date]: TypeEnum.String,

@@ -78,7 +78,7 @@ describe('GenerationStream', () => {
       await parser.parse(stream);
 
       for (const block of message?.content ?? []) {
-        log.info('block', { block });
+        log('block', { block });
       }
       expect(message?.content.map((block) => block.type)).to.deep.eq([
         //

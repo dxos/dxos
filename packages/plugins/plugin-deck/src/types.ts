@@ -10,6 +10,8 @@ import { type Position } from '@dxos/util';
 
 import { DECK_PLUGIN } from './meta';
 
+export const COMPANION_TYPE = 'dxos.org/plugin/deck/companion';
+
 // TODO(Zan): In the future we should consider adding new planks adjacent to the attended plank.
 export const NewPlankPositions = ['start', 'end'] as const;
 export type NewPlankPositioning = (typeof NewPlankPositions)[number];
@@ -26,7 +28,7 @@ export type Panel = {
   icon: string;
   position?: Position;
   /**
-   * If true, the panel will now be wrapped in a scroll area.
+   * If true, the panel will not be wrapped in a scroll area.
    */
   fixed?: boolean;
   filter?: (node: Node) => boolean;
@@ -76,10 +78,6 @@ export const defaultDeck = {
   plankSizing: {},
   companionFrameSizing: {},
 } satisfies Deck;
-
-export const surfaceVariantSeparator = '--';
-
-export const surfaceVariant = (id: string) => `${surfaceVariantSeparator}${id}`;
 
 export const DeckState = S.mutable(
   S.Struct({
@@ -137,6 +135,7 @@ export const DECK_ACTION = `${DECK_PLUGIN}/action`;
 export namespace DeckAction {
   const PartAdjustmentSchema = S.Union(
     S.Literal('close').annotations({ description: 'Close the plank.' }),
+    S.Literal('companion').annotations({ description: 'Open the companion plank.' }),
     S.Literal('solo').annotations({ description: 'Solo the plank.' }),
     S.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
     S.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),

@@ -1,6 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
+
 import { type Node, type Action, type ActionGroup, ACTION_GROUP_TYPE } from '@dxos/app-graph';
 import { type ToolbarSeparatorProps, type Label, type IconButtonProps, type ClassNameValue } from '@dxos/react-ui';
 

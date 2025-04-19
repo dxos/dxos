@@ -15,7 +15,7 @@ import { type DeckSettingsProps } from '../types';
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${DECK_PLUGIN}/settings`,
+      id: `${DECK_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<DeckSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === DECK_PLUGIN,
