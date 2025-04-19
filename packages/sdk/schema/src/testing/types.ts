@@ -79,7 +79,8 @@ export namespace Testing {
     // TODO(burdon): This breaks the table view.
     // address: S.optional(AddressSchema),
   }).annotations({
-    [LabelAnnotationId]: ['label', 'name'],
+    [AST.TitleAnnotationId]: 'Contact',
+    [LabelAnnotationId]: 'name',
     [IconAnnotationId]: 'ph--user--regular',
   });
 
@@ -100,6 +101,7 @@ export namespace Testing {
     }),
     description: S.optional(S.String),
   }).annotations({
+    [AST.TitleAnnotationId]: 'Project',
     [LabelAnnotationId]: 'name',
     [IconAnnotationId]: 'ph--kanban--regular',
   });
@@ -116,9 +118,11 @@ export namespace Testing {
   export const MessageSchema = S.Struct({
     from: S.String,
     created: S.String,
+    title: S.String,
     content: S.String,
   }).annotations({
-    [LabelAnnotationId]: 'message',
+    [AST.TitleAnnotationId]: 'Message',
+    [LabelAnnotationId]: 'title',
   });
 
   export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
