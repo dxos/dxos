@@ -17,14 +17,14 @@ import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
 import {
   getObjectAnnotation,
-  type ObjectAnnotation,
-  SchemaMetaSymbol,
   schemaVariance,
   type JsonSchemaType,
+  type ObjectAnnotation,
   type SchemaMeta,
+  SchemaMetaSymbol,
 } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
-import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../object';
+import { type ObjectId, type TypedObject, type TypedObjectPrototype } from '../object';
 
 /**
  * Base schema type.
