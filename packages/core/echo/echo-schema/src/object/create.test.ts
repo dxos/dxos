@@ -25,7 +25,7 @@ describe('create (static version)', () => {
     });
 
     const obj = Contact.make({});
-    console.log(JSON.stringify(obj, null, 2));
+    expect(obj.name).toBe('Anonymous');
   });
 
   test('create static object', () => {
@@ -42,7 +42,7 @@ describe('create (static version)', () => {
     expect(isInstanceOf(Testing.Contact, contact)).toBe(true);
   });
 
-  test('json encoding', () => {
+  test('JSON encoding', () => {
     const contact = createStatic(Testing.Contact, {
       name: 'Bot',
       email: 'bot@example.com',

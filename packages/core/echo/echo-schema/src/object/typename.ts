@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 
 import { type BaseObject } from '../types';
 
-// TODO(burdon): Change to @typename.
+// TODO(burdon): Change to `@typename`.
 export const ECHO_ATTR_TYPE = '@type';
 
 /**

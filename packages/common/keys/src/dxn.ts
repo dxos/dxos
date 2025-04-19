@@ -35,11 +35,15 @@ export class DXN {
      * dxn:type:<type name>[:<version>]
      */
     TYPE: 'type',
+
     /**
      * dxn:echo:<space id>:<echo id>
      * dxn:echo:@:<echo id>
      */
+    // TODO(burdon): Rename to OBJECT?
+    // TODO(burdon): Add separate Kind for space.
     ECHO: 'echo',
+
     /**
      * The subspace tag enables us to partition queues by usage within the context of a space.
      * dxn:queue:<subspace_tag>:<space_id>:<queue_id>[:object_id]
@@ -53,6 +57,7 @@ export class DXN {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
   }
 
+  // TODO(burdon): Rename isValid.
   static isDXNString(dxn: string) {
     return dxn.startsWith('dxn:');
   }
@@ -86,8 +91,8 @@ export class DXN {
   /**
    * @example `dxn:type:example.com/type/Contact`
    */
-  static fromTypename(type: string) {
-    return new DXN(DXN.kind.TYPE, [type]);
+  static fromTypename(typename: string) {
+    return new DXN(DXN.kind.TYPE, [typename]);
   }
 
   /**
@@ -147,6 +152,10 @@ export class DXN {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
   }
 
+  isLocalObjectId() {
+    return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
+  }
+
   asTypeDXN(): DXN.TypeDXN | undefined {
     if (this.kind !== DXN.kind.TYPE) {
       return undefined;
@@ -187,10 +196,6 @@ export class DXN {
       queueId,
       objectId: objectId as string | undefined,
     };
-  }
-
-  isLocalObjectId() {
-    return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
   }
 
   toString(): DXN.String {
