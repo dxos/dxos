@@ -103,7 +103,7 @@ export const TracingPanel = () => {
     [],
   );
 
-  const resourceData = useMemo(() => {
+  const objects = useMemo(() => {
     return Array.from(state.resources.values()).map((resourceState) => ({
       id: String(resourceState.resource.id),
       name: resourceState.resource.className,
@@ -130,7 +130,7 @@ export const TracingPanel = () => {
   return (
     <PanelContainer classNames={mx('grid grid-rows-[1fr_1fr] divide-y divide-separator')}>
       <DynamicTable
-        data={resourceData}
+        objects={objects}
         properties={resourceProperties}
         features={features}
         onRowClicked={handleRowClicked}

@@ -17,7 +17,7 @@ export const ItemTable = <T extends ReactiveObject<any>>({ schema, objects = [] 
   const jsonSchema = useMemo(() => toJsonSchema(schema), [schema]);
   return (
     <div role='none' className='is-full bs-full'>
-      <DynamicTable data={objects} jsonSchema={jsonSchema} />
+      <DynamicTable jsonSchema={jsonSchema} objects={objects} />
     </div>
   );
 };

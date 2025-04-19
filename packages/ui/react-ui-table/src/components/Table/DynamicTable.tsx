@@ -15,7 +15,7 @@ import { getBaseSchems, makeDynamicTable, type TablePropertyDefinition } from '.
 
 type DynamicTableProps = ThemedClassName<{
   name?: string;
-  data: any[];
+  objects: any[];
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchemaType;
   schema?: BaseSchema;
@@ -29,12 +29,11 @@ type DynamicTableProps = ThemedClassName<{
  * A dynamic table component that renders data using the specified properties.
  * Properties define both the schema and display characteristics of the table columns.
  */
-// TODO(burdon): Remove variance from the props (should be normalized externally).
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
 export const DynamicTable = ({
   classNames,
   name = 'example.com/dynamic-table',
-  data, // TOOD(burdon): Rename objects.
+  objects,
   properties,
   jsonSchema,
   schema,
@@ -44,6 +43,7 @@ export const DynamicTable = ({
   ...props
 }: DynamicTableProps) => {
   const { table, projection } = useMemo(() => {
+    // TODO(burdon): Remove variance from the props (should be normalized externally).
     return makeDynamicTable({ ...getBaseSchems({ typename: name, properties, jsonSchema, schema }), properties });
   }, [name, properties, schema, jsonSchema]);
 
@@ -67,7 +67,7 @@ export const DynamicTable = ({
 
   const model = useTableModel({
     table,
-    objects: data,
+    objects,
     projection,
     features,
     rowActions,
