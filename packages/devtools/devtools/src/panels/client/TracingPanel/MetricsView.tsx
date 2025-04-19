@@ -39,7 +39,7 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
     );
   }
 
-  // https://react-charts.tanstack.com/docs/api
+  // TODO(burdon): Consider using https://react-charts.tanstack.com/docs/api
   if (metric.timeSeries) {
     const primaryAxis: AxisOptions<any> = useMemo(
       () => ({ scaleType: 'linear', getValue: (point: any) => point.idx as number }),

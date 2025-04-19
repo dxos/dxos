@@ -63,7 +63,7 @@ describe('ViewProjection', () => {
     const [mutable] = await registry.register([schema]);
 
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
     expect(view.fields).to.have.length(3);
 
     {
@@ -159,7 +159,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     projection.setFieldProjection({
       field: {
@@ -213,7 +213,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Initial state.
     expect(view.fields).to.have.length(2);
@@ -245,7 +245,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Capture initial states.
     const initialFieldsOrder = view.fields.map((f) => f.path);
@@ -291,7 +291,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Capture initial state.
     const initialFieldsOrder = view.fields.map((f) => f.path);
@@ -337,7 +337,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
     const fieldId = projection.getFieldId('status');
     invariant(fieldId);
 
@@ -428,6 +428,134 @@ describe('ViewProjection', () => {
     });
   });
 
+  test('multi select format', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    const schema = S.Struct({
+      tags: S.String,
+    }).annotations({
+      [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Task',
+        version: '0.1.0',
+      },
+    });
+
+    const [mutable] = await registry.register([schema]);
+    const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = new ViewProjection(mutable.jsonSchema, view);
+    const fieldId = projection.getFieldId('tags');
+    invariant(fieldId);
+
+    projection.setFieldProjection({
+      field: { id: fieldId, path: 'tags' as JsonPath },
+      props: {
+        property: 'tags' as JsonProp,
+        type: TypeEnum.Object,
+        format: FormatEnum.MultiSelect,
+        options: [
+          { id: 'feature', title: 'Feature', color: 'emerald' },
+          { id: 'bug', title: 'Bug', color: 'red' },
+          { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
+        ],
+      },
+    });
+
+    expect(mutable.jsonSchema.properties?.tags).to.deep.include({
+      type: 'object',
+      format: 'multi-select',
+      echo: {
+        annotations: {
+          multiSelect: {
+            options: [
+              { id: 'feature', title: 'Feature', color: 'emerald' },
+              { id: 'bug', title: 'Bug', color: 'red' },
+              { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
+            ],
+          },
+        },
+      },
+    });
+
+    const { props } = projection.getFieldProjection(fieldId);
+
+    expect(props.format).to.equal(FormatEnum.MultiSelect);
+    expect(props.options).to.deep.equal([
+      { id: 'feature', title: 'Feature', color: 'emerald' },
+      { id: 'bug', title: 'Bug', color: 'red' },
+      { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
+    ]);
+
+    projection.setFieldProjection({
+      field: { id: fieldId, path: 'tags' as JsonPath },
+      props: {
+        ...props,
+        property: 'tags' as JsonProp,
+        options: [
+          { id: 'draft', title: 'Draft', color: 'indigo' },
+          { id: 'published', title: 'Published', color: 'blue' },
+          { id: 'archived', title: 'Archived', color: 'amber' },
+        ],
+      },
+    });
+
+    const updatedProjection = projection.getFieldProjection(fieldId);
+    expect(updatedProjection.props.options).to.deep.equal([
+      { id: 'draft', title: 'Draft', color: 'indigo' },
+      { id: 'published', title: 'Published', color: 'blue' },
+      { id: 'archived', title: 'Archived', color: 'amber' },
+    ]);
+
+    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
+      annotations: {
+        multiSelect: {
+          options: [
+            { id: 'draft', title: 'Draft', color: 'indigo' },
+            { id: 'published', title: 'Published', color: 'blue' },
+            { id: 'archived', title: 'Archived', color: 'amber' },
+          ],
+        },
+      },
+    });
+
+    // Verify updated JSON Schema.
+    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
+      annotations: {
+        multiSelect: {
+          options: [
+            { id: 'draft', title: 'Draft', color: 'indigo' },
+            { id: 'published', title: 'Published', color: 'blue' },
+            { id: 'archived', title: 'Archived', color: 'amber' },
+          ],
+        },
+      },
+    });
+
+    const effectSchema = mutable.snapshot;
+    expect(effectSchema).not.toBeUndefined;
+    expect(() => S.validateSync(effectSchema)({ tags: ['draft'] })).not.to.throw();
+    expect(() => S.validateSync(effectSchema)({ tags: ['published'] })).not.to.throw();
+
+    // TODO(ZaymonFC): Get validation working.
+    // expect(() => S.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
+    // expect(() => S.validateSync(effectSchema)({ tags: 'invalid-status' })).to.throw();
+
+    const properties = getPropertySignatures(effectSchema.ast);
+    const statusProperty = properties.find((p) => p.name === 'tags');
+    invariant(statusProperty);
+    const statusPropertyMeta = getPropertyMetaAnnotation(statusProperty, 'multiSelect');
+
+    // Ensure that the materialized schema contains option annotations.
+    expect(statusPropertyMeta).to.deep.equal({
+      options: [
+        { id: 'draft', title: 'Draft', color: 'indigo' },
+        { id: 'published', title: 'Published', color: 'blue' },
+        { id: 'archived', title: 'Archived', color: 'amber' },
+      ],
+    });
+  });
+
   // TODO(burdon): Test changing format.
 
   test('hidden fields are tracked in hiddenFields', async ({ expect }) => {
@@ -460,7 +588,7 @@ describe('ViewProjection', () => {
       ],
     });
 
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
     const initialSchema = mutable.snapshot;
 
     // Verify only the included fields are in the view.
@@ -561,7 +689,7 @@ describe('ViewProjection', () => {
     });
 
     // Create projection.
-    void new ViewProjection(mutable, view);
+    void new ViewProjection(mutable.jsonSchema, view);
 
     // Verify all schema fields were added to hiddenFields.
     expect(view.hiddenFields).to.exist;
@@ -597,7 +725,7 @@ describe('ViewProjection', () => {
     });
 
     // Initialize projection.
-    void new ViewProjection(mutable, view);
+    void new ViewProjection(mutable.jsonSchema, view);
 
     // Verify title is in hiddenFields.
     expect(view.hiddenFields).to.have.length(1);
@@ -607,7 +735,7 @@ describe('ViewProjection', () => {
     mutable.jsonSchema.properties!.status = { type: 'string' };
 
     // Create new projection to trigger normalization.
-    void new ViewProjection(mutable, view);
+    void new ViewProjection(mutable.jsonSchema, view);
 
     // Verify status was added to hiddenFields.
     expect(view.hiddenFields).to.have.length(2);
@@ -633,7 +761,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    let projection = new ViewProjection(mutable, view);
+    let projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Initial state
     expect(view.fields).to.have.length(3);
@@ -652,7 +780,7 @@ describe('ViewProjection', () => {
     expect(hiddenProps).to.not.include('email');
 
     // Reinitialize projection to trigger normalization
-    projection = new ViewProjection(mutable, view);
+    projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Verify field is still deleted and not in hidden properties
     expect(view.fields).to.have.length(2);

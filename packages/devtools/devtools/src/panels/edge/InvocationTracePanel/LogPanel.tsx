@@ -70,9 +70,5 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
     return <div className={mx('flex items-center justify-center')}>Loading trace data...</div>;
   }
 
-  return (
-    <div className={mx('h-full')}>
-      <DynamicTable properties={logProperties} data={logData} />
-    </div>
-  );
+  return <DynamicTable properties={logProperties} data={logData} />;
 };

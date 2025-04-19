@@ -112,13 +112,15 @@ export const useStats = (): [Stats, () => void] => {
         documentsToReconcile: 0,
       };
 
-      const memory: MemoryInfo = (window.performance as any).memory;
       if ('measureUserAgentSpecificMemory' in window.performance) {
         // TODO(burdon): Breakdown.
         // https://developer.mozilla.org/en-US/docs/Web/API/Performance/measureUserAgentSpecificMemory
         // const { bytes } = (await (window.performance as any).measureUserAgentSpecificMemory()) as { bytes: number };
       }
-      memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      const memory: MemoryInfo = (window.performance as any).memory;
+      if (memory && typeof memory === 'object' && 'usedJSHeapSize' in memory) {
+        memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      }
 
       log('collected stats', { elapsed: performance.now() - begin });
       if (isMounted()) {

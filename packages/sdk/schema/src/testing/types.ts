@@ -4,14 +4,13 @@
 
 import {
   AST,
-  S,
   Echo,
   Format,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
   LabelAnnotationId,
   ObjectId,
-  TypedObject,
+  S,
 } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
@@ -111,29 +110,6 @@ export namespace Testing {
   export type ProjectType = S.Schema.Type<typeof ProjectType>;
 
   //
-  // Email
-  //
-
-  // TODO(burdon): Disambiguate from Message.
-  export const EmailSchema = S.Struct({
-    from: S.String,
-    to: S.String,
-    subject: S.String,
-    created: S.String,
-    body: S.String,
-    category: S.String,
-  }).annotations({
-    [LabelAnnotationId]: 'subject',
-  });
-
-  export type EmailSchemaType = S.Schema.Type<typeof EmailSchema>;
-
-  export class EmailType extends TypedObject({
-    typename: 'example.com/type/Email',
-    version: '0.1.0',
-  })(EmailSchema.fields, { partial: true }) {}
-
-  //
   // Message
   //
 
@@ -142,13 +118,11 @@ export namespace Testing {
     created: S.String,
     content: S.String,
   }).annotations({
-    [LabelAnnotationId]: 'content',
+    [LabelAnnotationId]: 'message',
   });
 
   export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
 
-  export class MessageType extends TypedObject({
-    typename: 'example.com/type/Message',
-    version: '0.1.0',
-  })(MessageSchema.fields, { partial: true }) {}
+  export const MessageType = MessageSchema.pipe(Echo.Type({ typename: 'example.com/type/Message', version: '0.1.0' }));
+  export type MessageType = S.Schema.Type<typeof MessageType>;
 }

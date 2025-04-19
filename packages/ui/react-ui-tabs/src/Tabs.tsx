@@ -143,7 +143,8 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
       {...props}
       className={mx(
         'max-bs-full is-full',
-        orientation === 'vertical' ? 'overflow-y-auto' : 'flex items-stretch justify-start gap-2 overflow-x-auto p-2',
+        // NOTE: Padding should be common to Toolbar.
+        orientation === 'vertical' ? 'overflow-y-auto' : 'flex items-stretch justify-start overflow-x-auto p-1 gap-1',
         orientation === 'vertical' && verticalVariant === 'stateful' && 'place-self-start p-1',
         classNames,
       )}

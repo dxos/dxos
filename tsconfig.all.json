@@ -271,49 +271,22 @@
       "path": "packages/gravity/proto-guard/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-assistant/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-automation/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-conductor/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-explorer/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-inbox/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-native/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-script/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-search/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-template/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-theme-editor/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-transcription/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-transformer/tsconfig.json"
+      "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-attention/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-automation/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-chess/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-client/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-debug/tsconfig.json"
@@ -325,6 +298,9 @@
       "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-explorer/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-files/tsconfig.json"
     },
     {
@@ -332,6 +308,9 @@
     },
     {
       "path": "packages/plugins/plugin-help/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-inbox/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
@@ -347,6 +326,9 @@
     },
     {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-native/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-navtree/tsconfig.json"
@@ -367,6 +349,12 @@
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-script/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-search/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
     },
     {
@@ -385,13 +373,25 @@
       "path": "packages/plugins/plugin-table/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-template/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-theme/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-theme-editor/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-thread/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-token-manager/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-transcription/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-transformer/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
@@ -521,6 +521,9 @@
     },
     {
       "path": "packages/ui/react-ui-tabs/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-tag-picker/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-text-tooltip/tsconfig.json"

@@ -18,6 +18,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 import { useTableModel } from '../../hooks';
+import { type TableFeatures } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
@@ -44,12 +45,16 @@ const DefaultStory = ({ editing }: StoryProps) => {
 
   const projection = useMemo(() => {
     if (schema && table?.view) {
-      return new ViewProjection(schema, table.view.target!);
+      return new ViewProjection(schema.jsonSchema, table.view.target!);
     }
   }, [schema, table?.view]);
 
-  const features = useMemo(
-    () => ({ selection: true, dataEditable: true, schemaEditable: !(schema instanceof ImmutableSchema) }),
+  const features: Partial<TableFeatures> = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'multiple' },
+      dataEditable: true,
+      schemaEditable: !(schema instanceof ImmutableSchema),
+    }),
     [],
   );
 

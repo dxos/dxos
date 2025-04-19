@@ -86,13 +86,11 @@ export class RefImpl<T> implements Ref<T> {
    */
   get target(): T | undefined {
     this.#signal.notifyRead();
-
     if (this.#target) {
       return this.#target;
     }
 
     invariant(this.#resolver, 'Resolver is not set');
-
     return this.#resolver.resolveSync(this.#dxn, true, this.#resolverCallback) as T | undefined;
   }
 

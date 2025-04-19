@@ -6,12 +6,22 @@ import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import type { FlameChartNodes } from 'flame-chart-js';
 import React, { type FC, useMemo, useState } from 'react';
 
+import { Input } from '@dxos/react-ui';
+
 // Deliberately not using the common components export to aid in code-splitting.
+
 import { type State } from './types';
 import { FlameChart } from '../../../components/FlameChart';
 
-export const TraceView: FC<{ state: State; resourceId?: number }> = ({ state, resourceId }) => {
+export const TraceView: FC<{
+  state: State;
+  resourceId?: number;
+  live?: boolean;
+  onLiveChanged?: (live: boolean) => void;
+}> = ({ state, resourceId, live, onLiveChanged }) => {
   const [selectedFlameIndex, setSelectedFlameIndex] = useState(0);
+  const [showThreads, setShowThreads] = useState(true);
+  const [groupByResource, setGroupByResource] = useState(true);
 
   const selectedResource = resourceId !== undefined ? state.resources.get(resourceId) : undefined;
 
@@ -25,7 +35,7 @@ export const TraceView: FC<{ state: State; resourceId?: number }> = ({ state, re
 
   const graphs = useMemo(() => {
     const spans =
-      resourceId === undefined
+      resourceId === undefined || !groupByResource
         ? [...state.spans.values()].filter((s) => s.parentId === undefined)
         : selectedResource?.spans ?? [];
 
@@ -35,16 +45,37 @@ export const TraceView: FC<{ state: State; resourceId?: number }> = ({ state, re
     );
   }, [selectedResource, state.spans.size]);
 
-  const flameGraph = graphs[Math.min(selectedFlameIndex, graphs.length - 1)];
+  const flameGraph = showThreads ? graphs[Math.min(selectedFlameIndex, graphs.length - 1)] : graphs.flat();
 
   return (
     <div className='h-full'>
       <div className='flex items-center p-2'>
-        <ArrowLeft className='cursor-pointer' onClick={handleBack} />
-        <div className='flex-1 text-center'>
-          Thread {selectedFlameIndex + 1} / {graphs.length}
+        <div className='flex items-center gap-2'>
+          <Input.Root>
+            <Input.Checkbox checked={showThreads} onCheckedChange={(showThreads) => setShowThreads(!!showThreads)} />
+            <Input.Label>Separate Threads</Input.Label>
+          </Input.Root>
+          <Input.Root>
+            <Input.Checkbox
+              checked={groupByResource}
+              onCheckedChange={(groupByResource) => setGroupByResource(!!groupByResource)}
+            />
+            <Input.Label>Group by Resource</Input.Label>
+          </Input.Root>
+          <Input.Root>
+            <Input.Checkbox checked={live} onCheckedChange={(live) => onLiveChanged?.(!!live)} />
+            <Input.Label>Live</Input.Label>
+          </Input.Root>
         </div>
-        <ArrowRight className='cursor-pointer' onClick={handleForward} />
+        {showThreads && graphs.length > 1 && (
+          <>
+            <ArrowLeft className='cursor-pointer ml-4' onClick={handleBack} />
+            <div className='flex-1 text-center'>
+              Thread {selectedFlameIndex + 1} / {graphs.length}
+            </div>
+            <ArrowRight className='cursor-pointer' onClick={handleForward} />
+          </>
+        )}
       </div>
 
       <div className='h-full'>{flameGraph && <FlameChart className='h-full' data={flameGraph} />}</div>
@@ -92,6 +123,41 @@ const buildFlameGraph = (state: State, rootId: number): FlameChartNodes => {
   ];
 };
 
+/**
+ * Organizes trace data into multiple flame charts by distributing root spans across different threads/tracks.
+ * This function is used to visualize concurrent or parallel execution spans in a way that minimizes
+ * visual overlap and maximizes readability.
+ *
+ * The function implements a simple scheduling algorithm:
+ * 1. For each root span, it tries to find an existing thread/track where it can fit
+ *    (i.e., where the start time is after the end time of all spans in that track)
+ * 2. If no existing track can accommodate the span, a new track is created
+ *
+ * This approach ensures that:
+ * - Temporally overlapping spans are displayed in different tracks
+ * - The number of tracks is minimized while maintaining clear visualization
+ * - The temporal relationship between spans is preserved
+ *
+ * @param {State} state - The current tracing state containing all spans and resources
+ * @param {number[]} roots - Array of root span IDs to be organized into flame charts
+ * @returns {FlameChartNodes[]} An array of flame chart data structures, where each element
+ *                             represents a separate track/thread of execution. Each track
+ *                             contains non-overlapping spans in temporal order.
+ *
+ * @example
+ * // Example state with two root spans that overlap in time
+ * const state = {
+ *   spans: new Map([
+ *     [1, { id: 1, startTs: 0, endTs: 100, methodName: 'root1' }],
+ *     [2, { id: 2, startTs: 50, endTs: 150, methodName: 'root2' }]
+ *   ])
+ * };
+ * const roots = [1, 2];
+ * const result = buildMultiFlameGraph(state, roots);
+ * // Returns two separate tracks since the spans overlap
+ * // result[0] = [{ name: 'root1', start: 0, duration: 100 }]
+ * // result[1] = [{ name: 'root2', start: 50, duration: 100 }]
+ */
 const buildMultiFlameGraph = (state: State, roots: number[]): FlameChartNodes[] => {
   const endTimes: number[] = [];
   const graphs: FlameChartNodes[] = [];

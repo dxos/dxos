@@ -42,7 +42,7 @@ export const MeetingPlugin = () =>
           metadata: {
             label: (object: any) =>
               isInstanceOf(MeetingType, object) ? object.name || new Date(object.created).toLocaleString() : undefined,
-            icon: 'ph--video-camera--regular',
+            icon: 'ph--video-conference--regular',
           },
         }),
       ],
@@ -90,7 +90,7 @@ export const MeetingPlugin = () =>
           contributes(DeckCapabilities.ComplementaryPanel, {
             id: 'meeting',
             label: ['meeting panel label', { ns: MEETING_PLUGIN }],
-            icon: 'ph--phone-call--regular',
+            icon: 'ph--video-conference--regular',
             position: 'hoist',
             fixed: true,
             filter: () => call.joined,

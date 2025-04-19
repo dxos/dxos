@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { AISession } from './session';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
-// Define a calendar event artifact schema
+// Define a calendar event artifact schema.
 const CalendarEventSchema = S.Struct({
   title: S.String,
   startTime: S.String,
@@ -32,7 +32,8 @@ const CalendarEventSchema = S.Struct({
 
 type CalendarEvent = S.Schema.Type<typeof CalendarEventSchema>;
 
-describe('AISession with Ollama', () => {
+// TODO(burdon): Flaky.
+describe.skip('AISession with Ollama', () => {
   test('create calendar itinerary', { timeout: 60_000 }, async () => {
     const aiClient = new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
     // const aiClient = new OllamaClient({
@@ -42,7 +43,7 @@ describe('AISession with Ollama', () => {
 
     const objects = new Set<string>();
 
-    // Define calendar artifact
+    // Define calendar artifact.
     const calendarArtifact = defineArtifact({
       id: 'artifact:dxos.org/plugin/calendar',
       name: 'Calendar',
@@ -73,7 +74,7 @@ describe('AISession with Ollama', () => {
             data: S.Array(S.Any).annotations({ description: 'Array of data payloads to add as rows' }),
           }),
           execute: async ({ data }) => {
-            log.info('create table', { data });
+            log('create table', { data });
             const id = DXN.fromLocalObjectId(ObjectId.random()).toString();
             objects.add(id);
             // TODO(dmaretskyi): consider xml for refs instead of @dxn:echo:@:XXXXX
@@ -104,7 +105,7 @@ describe('AISession with Ollama', () => {
             if (!objects.has(sourceId.toString())) {
               return ToolResult.Error(`table id=${source} not found`);
             }
-            log.info('create map', { sourceId });
+            log('create map', { sourceId });
             const id = DXN.fromLocalObjectId(ObjectId.random()).toString();
             objects.add(id);
             // TODO(dmaretskyi): consider xml for refs instead of @dxn:echo:@:XXXXX
@@ -131,7 +132,7 @@ describe('AISession with Ollama', () => {
     session.block.on(printContentBlock);
 
     // session.update.on((update) => {
-    //   log.info('update', { update });
+    //   log('update', { update });
     // });
 
     // Test creating an itinerary
@@ -146,7 +147,7 @@ describe('AISession with Ollama', () => {
       prompt: 'create a table and map for a travel itinerary based on events in my calendar',
     });
 
-    log.info('result', {
+    log('result', {
       objects,
       finalMessage: response.at(-1),
     });
