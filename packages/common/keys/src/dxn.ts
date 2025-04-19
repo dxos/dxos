@@ -75,7 +75,7 @@ export class DXN {
     return new DXN(kind, parts);
   }
 
-  static tryParse(dxn: string) {
+  static tryParse(dxn: string): DXN | undefined {
     try {
       return DXN.parse(dxn);
     } catch (error) {
@@ -94,8 +94,8 @@ export class DXN {
    * @example `dxn:type:example.com/type/Contact:0.1.0`
    */
   // TODO(dmaretskyi): Consider using @ as the version separator.
-  static fromTypenameAndVersion(type: string, version: string) {
-    return new DXN(DXN.kind.TYPE, [type, version]);
+  static fromTypenameAndVersion(typename: string, version: string) {
+    return new DXN(DXN.kind.TYPE, [typename, version]);
   }
 
   /**
@@ -211,6 +211,9 @@ export class DXN {
   }
 }
 
+/**
+ * API namespace.
+ */
 export declare namespace DXN {
   export type TypeDXN = {
     type: string;
@@ -219,6 +222,7 @@ export declare namespace DXN {
 
   export type EchoDXN = {
     spaceId?: SpaceId;
+    // TODO(burdon): Rename objectId.
     echoId: string; // TODO(dmaretskyi): ObjectId.
   };
 

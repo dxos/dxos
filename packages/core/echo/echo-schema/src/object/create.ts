@@ -10,10 +10,10 @@ import { attachTypedJsonSerializer } from './json-serializer';
 import { ObjectId } from './object-id';
 import { setTypename } from './typename';
 import { setSchema, getObjectAnnotation } from '../ast';
-import { type ExcludeId, getSchemaDXN } from '../types';
+import { getSchemaDXN } from '../types';
 
 // Make `id` optional.
-type CreateData<T> = T extends { id: string } ? ExcludeId<T> & { id?: string } : T;
+type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.
@@ -43,6 +43,7 @@ type CreateData<T> = T extends { id: string } ? ExcludeId<T> & { id?: string } :
  * })
  * ```
  */
+// TODO(burdon): Handle defaults (see S.make).
 // TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
 export const createStatic = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
@@ -56,7 +57,7 @@ export const createStatic = <Schema extends S.Schema.AnyNoContext>(
     throw new TypeError('@type is not allowed');
   }
 
-  const obj = { id: data.id ?? ObjectId.random(), ...data };
+  const obj = { ...data, id: data.id ?? ObjectId.random() };
   setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Missing schema DXN'));
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
