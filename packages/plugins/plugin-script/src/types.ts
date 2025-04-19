@@ -11,6 +11,9 @@ import { EditorInputMode } from '@dxos/react-ui-editor';
 
 import { SCRIPT_PLUGIN } from './meta';
 
+// TODO(burdon): Standardize export (e.g., @dxos/plugin-script/meta)?
+export { SCRIPT_PLUGIN };
+
 export namespace ScriptAction {
   const SCRIPT_ACTION = `${SCRIPT_PLUGIN}/action`;
 
