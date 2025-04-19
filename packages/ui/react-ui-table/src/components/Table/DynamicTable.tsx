@@ -29,6 +29,7 @@ type DynamicTableProps = ThemedClassName<{
  * A dynamic table component that renders data using the specified properties.
  * Properties define both the schema and display characteristics of the table columns.
  */
+// TODO(burdon): Instead of creating table variants, create different hooks that normalize the props.
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
 export const DynamicTable = ({
   classNames,
