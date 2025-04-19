@@ -7,7 +7,7 @@ import { FunctionType, FunctionTrigger } from '@dxos/functions/types';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckEvents } from '@dxos/plugin-deck';
 
-import { ComplementaryPanel, ReactSurface } from './capabilities';
+import { AppGraphBuilder, ComplementaryPanel, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 
@@ -22,6 +22,11 @@ export const AutomationPlugin = () =>
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
       activate: () => contributes(ClientCapabilities.Schema, [FunctionType, FunctionTrigger]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panels`,

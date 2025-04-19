@@ -4,7 +4,6 @@
 
 import { lazy } from 'react';
 
-export * from './LogsPanel';
 export * from './Settings';
 export * from './TestPanel';
 
