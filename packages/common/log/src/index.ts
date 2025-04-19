@@ -17,3 +17,4 @@ export * from './scope';
 export * from './meta';
 
 export { getCurrentOwnershipScope } from './experimental/ownership';
+export * from './instance-id';
