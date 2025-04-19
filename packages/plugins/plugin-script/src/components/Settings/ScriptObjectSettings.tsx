@@ -16,51 +16,45 @@ import { AccessTokenType } from '@dxos/schema';
 
 import { SCRIPT_PLUGIN } from '../../meta';
 
-export type ScriptSettingsPanelProps = {
-  script: ScriptType;
+export type ScriptObjectSettingsProps = {
+  object: ScriptType;
 };
 
-export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
+export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
   return (
     <Clipboard.Provider>
       <div className='flex flex-col overflow-y-auto divide-y divide-separator'>
-        <Properties script={script} />
-        <Binding script={script} />
-        <Publishing script={script} />
+        <Properties object={object} />
+        <Binding object={object} />
+        <Publishing object={object} />
       </div>
     </Clipboard.Provider>
   );
 };
 
-const Properties = ({ script }: ScriptSettingsPanelProps) => {
+const Properties = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   return (
-    <>
-      {/* TODO(burdon): Figure out how to standardize this. */}
-      <BaseObjectSettings object={script} />
-      <div role='form' className='flex flex-col p-2 gap-4'>
-        <Input.Root>
-          <div role='none' className='flex flex-col gap-1'>
-            <Input.Label>{t('description label')}</Input.Label>
-            <Input.TextInput
-              placeholder={t('description placeholder')}
-              value={script.description ?? ''}
-              onChange={(event) => {
-                script.description = event.target.value;
-              }}
-            />
-          </div>
-        </Input.Root>
-      </div>
-    </>
+    <BaseObjectSettings object={object}>
+      <Input.Root>
+        <Input.Label>{t('description label')}</Input.Label>
+        <Input.TextInput
+          placeholder={t('description placeholder')}
+          value={object.description ?? ''}
+          onChange={(event) => {
+            object.description = event.target.value;
+          }}
+        />
+      </Input.Root>
+    </BaseObjectSettings>
   );
 };
 
-const Binding = ({ script }: ScriptSettingsPanelProps) => {
+const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const client = useClient();
-  const space = getSpace(script);
-  const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
+  const space = getSpace(object);
+  const [fn] = useQuery(space, Filter.schema(FunctionType, { source: object }));
 
   const functionPath = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   const functionUrl =
@@ -87,7 +81,7 @@ const Binding = ({ script }: ScriptSettingsPanelProps) => {
 
   // TODO(burdon): Use form.
   return (
-    <div role='form' className='flex flex-col p-2 gap-4'>
+    <div role='form' className='flex flex-col p-2 gap-2'>
       <h2>{t('remote function settings heading')}</h2>
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
@@ -120,12 +114,12 @@ const Binding = ({ script }: ScriptSettingsPanelProps) => {
 };
 
 // TODO(burdon): Move to separate tab?
-const Publishing = ({ script }: ScriptSettingsPanelProps) => {
+const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = getSpace(script);
+  const space = getSpace(object);
   const [githubToken] = useQuery(space, Filter.schema(AccessTokenType, { source: 'github.com' }));
-  const gistKey = getMeta(script).keys.find(({ source }) => source === 'github.com');
+  const gistKey = getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
 
   useEffect(() => {
@@ -161,13 +155,13 @@ const Publishing = ({ script }: ScriptSettingsPanelProps) => {
   const handlePublish = useCallback(async () => {
     setPublishing(true);
     const octokit = new Octokit({ auth: githubToken.token });
-    const source = await script.source.load();
-    const filename = script.name ? kebabize(script.name) : 'composer-script';
+    const source = await object.source.load();
+    const filename = object.name ? kebabize(object.name) : 'composer-script';
     const files = { [`${filename}.ts`]: { content: source.content } };
 
     try {
       // TODO(wittjosiah): Factor out to intent.
-      const meta = getMeta(script);
+      const meta = getMeta(object);
       const githubKey = meta.keys.find(({ source }) => source === 'github.com');
       const gistId = githubKey?.id;
       if (gistId) {
@@ -187,7 +181,7 @@ const Publishing = ({ script }: ScriptSettingsPanelProps) => {
     } finally {
       setPublishing(false);
     }
-  }, [script, githubToken]);
+  }, [object, githubToken]);
 
   return (
     <div className='flex flex-col p-2 gap-4'>

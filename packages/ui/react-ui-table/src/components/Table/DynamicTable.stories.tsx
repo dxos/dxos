@@ -17,15 +17,12 @@ import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DynamicTable } from './DynamicTable';
+import { type TableFeatures } from '../../model';
 import translations from '../../translations';
 
 faker.seed(0);
 
-//
-// Story components.
-//
-
-const DynamicTableStory = () => {
+const useTestPropertiesAndObjects = () => {
   const properties = useMemo<SchemaPropertyDefinition[]>(
     () => [
       { name: 'name', format: FormatEnum.String },
@@ -35,12 +32,22 @@ const DynamicTableStory = () => {
   );
 
   const [objects, _setObjects] = useState<any[]>(
-    Array.from({ length: 100 }, () => ({
+    Array.from({ length: 10 }, () => ({
+      id: faker.string.uuid(),
       name: faker.person.fullName(),
       age: faker.number.int({ min: 18, max: 80 }),
     })),
   );
 
+  return { properties, objects };
+};
+
+//
+// Story components.
+//
+
+const DynamicTableStory = () => {
+  const { properties, objects } = useTestPropertiesAndObjects();
   return <DynamicTable properties={properties} data={objects} />;
 };
 
@@ -63,20 +70,7 @@ export const Default: StoryObj = {
 
 export const WithRowClicks: StoryObj = {
   render: () => {
-    const properties = useMemo<SchemaPropertyDefinition[]>(
-      () => [
-        { name: 'name', format: FormatEnum.String },
-        { name: 'age', format: FormatEnum.Number },
-      ],
-      [],
-    );
-
-    const [objects, _setObjects] = useState<any[]>(
-      Array.from({ length: 10 }, () => ({
-        name: faker.person.fullName(),
-        age: faker.number.int({ min: 18, max: 80 }),
-      })),
-    );
+    const { properties, objects } = useTestPropertiesAndObjects();
 
     const handleRowClicked = (row: any) => {
       console.log('Row clicked:', row);
@@ -84,6 +78,19 @@ export const WithRowClicks: StoryObj = {
     };
 
     return <DynamicTable properties={properties} data={objects} onRowClicked={handleRowClicked} />;
+  },
+};
+
+export const WithClickToSelect: StoryObj = {
+  render: () => {
+    const { properties, objects } = useTestPropertiesAndObjects();
+
+    const features = useMemo<Partial<TableFeatures>>(
+      () => ({ selection: { enabled: true, mode: 'single' as const }, dataEditable: false }),
+      [],
+    );
+
+    return <DynamicTable properties={properties} data={objects} features={features} />;
   },
 };
 
@@ -127,7 +134,6 @@ export const WithEchoSchema: StoryObj = {
       return <div>Loading schema...</div>;
     }
 
-    // Pass the Echo schema directly instead of extracting jsonSchema
     return <DynamicTable echoSchema={schema} data={objects} tableName='contact-table' />;
   },
   decorators: [

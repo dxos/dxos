@@ -9,7 +9,7 @@ import { DXN } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { PanelContainer, Searchbar } from '../../../components';
@@ -55,6 +55,8 @@ export const QueuesPanel = () => {
     }
   };
 
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
   return (
     <PanelContainer
       toolbar={
@@ -66,7 +68,7 @@ export const QueuesPanel = () => {
     >
       {/* TODO(burdon): Convert to MasterDetailTable. */}
       <div className={mx('flex grow flex-col divide-y divide-separator overflow-hidden', styles.border)}>
-        <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClicked} />
+        <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClicked} features={features} />
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
         </div>

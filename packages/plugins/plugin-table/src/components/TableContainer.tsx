@@ -15,6 +15,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
   type TableController,
+  type TableFeatures,
   TablePresentation,
   TableToolbar,
   type TableToolbarAction,
@@ -69,8 +70,12 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     return new ViewProjection(schema.jsonSchema, table.view.target!);
   }, [schema, table.view?.target]);
 
-  const features = useMemo(
-    () => ({ selection: true, dataEditable: true, schemaEditable: !(schema instanceof ImmutableSchema) }),
+  const features: Partial<TableFeatures> = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'multiple' },
+      dataEditable: true,
+      schemaEditable: !(schema instanceof ImmutableSchema),
+    }),
     [],
   );
 

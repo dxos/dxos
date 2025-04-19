@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './ScriptSettings';
-export * from './ScriptSettingsPanel';
+export * from './ScriptObjectSettings';
+export * from './ScriptPluginSettings';

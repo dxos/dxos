@@ -12,7 +12,7 @@ import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
 import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { PanelContainer, Placeholder, Searchbar } from '../../../components';
@@ -176,6 +176,8 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     [history, onVersionClick, selected],
   );
 
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
   return (
     <PanelContainer
       toolbar={
@@ -187,7 +189,12 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     >
       <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
         <div className='flex flex-col w-full overflow-hidden'>
-          <DynamicTable data={tableData} properties={objectProperties} onRowClicked={handleObjectRowClicked} />
+          <DynamicTable
+            data={tableData}
+            properties={objectProperties}
+            onRowClicked={handleObjectRowClicked}
+            features={features}
+          />
           <div
             className={mx(
               'bs-[--statusbar-size]',

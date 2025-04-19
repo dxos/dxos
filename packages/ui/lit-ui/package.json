@@ -14,7 +14,8 @@
       "browser": "./dist/src/index.js",
       "node": "./dist/src/index.js"
     },
-    "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss"
+    "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss",
+    "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss"
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -24,6 +25,7 @@
   ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
+    "@lit/react": "^1.0.5",
     "lit": "^3.2.0"
   },
   "devDependencies": {

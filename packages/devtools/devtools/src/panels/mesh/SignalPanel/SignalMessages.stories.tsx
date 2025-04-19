@@ -11,6 +11,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { SignalMessageTable } from './SignalMessageTable';
 
 export default {
+  title: 'devtools/devtools/SignalMessages',
   component: SignalMessageTable,
   decorators: [withTheme],
 };

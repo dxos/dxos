@@ -4,9 +4,11 @@
 
 import { mx } from '@dxos/react-ui-theme';
 
+// TODO(burdon): Move this to a common plugin.
+
 export const stackItemContentEditorClassNames = (role?: string) =>
   mx(
-    'dx-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface',
+    'attention-surface dx-focus-ring-inset data-[toolbar=disabled]:pbs-2',
     role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24' : 'min-bs-0',
   );
 

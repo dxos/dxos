@@ -120,7 +120,12 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
     }),
   }),
 
-  // TODO(ZaymonFC): Add multi-select.
+  [FormatEnum.MultiSelect]: extend(FormatEnum.MultiSelect, TypeEnum.Object, {
+    options: S.Array(SelectOptionSchema).annotations({
+      [AST.TitleAnnotationId]: 'Options',
+      [AST.DescriptionAnnotationId]: 'Available choices',
+    }),
+  }),
 
   //
   // Numbers
@@ -183,6 +188,7 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.URL],
   formatToSchema[FormatEnum.UUID],
   formatToSchema[FormatEnum.SingleSelect],
+  formatToSchema[FormatEnum.MultiSelect],
 
   //
   // Numbers

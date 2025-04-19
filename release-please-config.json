@@ -859,11 +859,6 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-multiselect/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-pickers/package.json",
           "jsonpath": "$.version"
         },
@@ -895,6 +890,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-tabs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-tag-picker/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -38,7 +38,7 @@ export default (context: PluginsContext) =>
           // TODO(burdon): Shouldn't require the primary node data.
           data: node.data,
           properties: {
-            label: ['script execute label', { ns: meta.id }],
+            label: ['script test label', { ns: meta.id }],
             icon: 'ph--terminal--regular',
           },
         },

@@ -10,11 +10,11 @@ import { Button, Select, useTranslation } from '@dxos/react-ui';
 import { type EditorInputMode, EditorInputModes } from '@dxos/react-ui-editor';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { SCRIPT_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type ScriptSettingsProps } from '../../types';
 
-export const ScriptSettings = ({ settings }: { settings: ScriptSettingsProps }) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
+export const ScriptPluginSettings = ({ settings }: { settings: ScriptSettingsProps }) => {
+  const { t } = useTranslation(meta.id);
   const client = useClient();
 
   // TODO(burdon): Check token.

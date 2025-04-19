@@ -186,10 +186,14 @@ export const RawTreeItem = <T = any,>({
 
   const handleSelect = useCallback(
     (option = false) => {
-      rowRef.current?.focus();
-      onSelect?.({ item, path, current: !current, option });
+      if (isBranch) {
+        handleOpenChange();
+      } else {
+        rowRef.current?.focus();
+        onSelect?.({ item, path, current: !current, option });
+      }
     },
-    [onSelect, item, path, current],
+    [item, path, current, isBranch, handleOpenChange, onSelect],
   );
 
   const handleKeyDown = useCallback(
@@ -244,7 +248,7 @@ export const RawTreeItem = <T = any,>({
           style={paddingIndentation(level)}
         >
           <div role='none' className='flex items-center'>
-            <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />
+            <TreeItemToggle isBranch={isBranch} open={open} onToggle={handleOpenChange} />
             <TreeItemHeading
               ref={buttonRef}
               label={label}

@@ -10,12 +10,12 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import {
+  AppGraphBuilder,
   ArtifactDefinition,
   Compiler,
   IntentResolver,
   ReactSurface,
   ScriptSettings,
-  AppGraphBuilder,
 } from './capabilities';
 import { ScriptEvents } from './events';
 import { meta } from './meta';

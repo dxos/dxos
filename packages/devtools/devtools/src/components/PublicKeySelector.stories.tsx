@@ -14,6 +14,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { PublicKeySelector } from './PublicKeySelector';
 
 const meta: Meta = {
+  title: 'devtools/devtools/PublicKeySelector',
   component: PublicKeySelector,
   decorators: [withTheme],
 };

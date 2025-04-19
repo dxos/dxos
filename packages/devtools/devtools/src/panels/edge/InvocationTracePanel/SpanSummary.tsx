@@ -19,9 +19,9 @@ const InvocationColor: Record<InvocationOutcome, ChromaticPalette> = {
   [InvocationOutcome.FAILURE]: 'red',
 };
 
-type SpanSummaryProps = { span: InvocationSpan; space?: Space; onClose: () => void };
+type SpanSummaryProps = { space?: Space; span: InvocationSpan; onClose: () => void };
 
-export const SpanSummary: FC<SpanSummaryProps> = ({ span, space, onClose }) => {
+export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
   const [currentDuration, setCurrentDuration] = useState<number | undefined>(undefined);
 
   useEffect(() => {

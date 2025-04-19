@@ -47,6 +47,7 @@ const TestStory = () => {
 };
 
 export default {
+  title: 'devtools/devtools/PropertiesTable',
   component: TestStory,
   decorators: [withTheme],
 };

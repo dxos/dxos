@@ -72,6 +72,9 @@
       "path": "../react-ui-attention"
     },
     {
+      "path": "../react-ui-editor"
+    },
+    {
       "path": "../react-ui-form"
     },
     {
@@ -88,6 +91,9 @@
     },
     {
       "path": "../react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../react-ui-tag-picker"
     },
     {
       "path": "../react-ui-theme"

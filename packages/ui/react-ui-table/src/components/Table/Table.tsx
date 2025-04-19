@@ -93,7 +93,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
       return {
         frozenRowsStart: 1,
-        frozenColsStart: model?.features.selection ? 1 : 0,
+        frozenColsStart: model?.features.selection.enabled ? 1 : 0,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };
     }, [model]);
@@ -139,11 +139,15 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
-        if (onRowClicked) {
-          const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
-          if (rowIndex != null) {
+        const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
+        if (rowIndex != null) {
+          if (onRowClicked) {
             const row = model?.getRowAt(rowIndex);
             row && onRowClicked(row);
+          }
+
+          if (model?.features.selection.enabled && model?.selection.selectionMode === 'single') {
+            model.selection.toggleSelectionForRowIndex(rowIndex);
           }
         }
 

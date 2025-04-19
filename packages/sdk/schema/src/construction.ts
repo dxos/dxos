@@ -5,7 +5,7 @@
 import { FormatEnum, formatToType, S, TypedObject, TypeEnum, type SelectOptionSchema } from '@dxos/echo-schema';
 import { createEchoSchema } from '@dxos/live-object/testing';
 
-import { makeSingleSelectAnnotations } from './util';
+import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';
 
 export type SelectOptionType = typeof SelectOptionSchema.Type;
 
@@ -33,8 +33,13 @@ export const echoSchemaFromPropertyDefinitions = (typename: string, properties: 
   const schema = createEchoSchema(TypedObject({ typename, version: '0.1.0' })(fields));
 
   for (const prop of properties) {
-    if (prop.format === FormatEnum.SingleSelect && prop.config?.options) {
-      makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+    if (prop.config?.options) {
+      if (prop.format === FormatEnum.SingleSelect) {
+        makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+      }
+      if (prop.format === FormatEnum.MultiSelect) {
+        makeMultiSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+      }
     }
 
     if (prop.format === FormatEnum.GeoPoint) {

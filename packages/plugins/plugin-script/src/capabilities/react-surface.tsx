@@ -13,7 +13,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { ScriptCapabilities } from './capabilities';
-import { ScriptSettings, ScriptContainer, ScriptSettingsPanel, TestPanel } from '../components';
+import { ScriptContainer, ScriptPluginSettings, ScriptObjectSettings, TestPanel } from '../components';
 import { useDeployState, useToolbarState } from '../hooks';
 import { meta } from '../meta';
 import { type ScriptSettingsProps } from '../types';
@@ -25,7 +25,7 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: SettingsStore<ScriptSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-      component: ({ data: { subject } }) => <ScriptSettings settings={subject.value} />,
+      component: ({ data: { subject } }) => <ScriptPluginSettings settings={subject.value} />,
     }),
     createSurface({
       id: `${meta.id}/article`,
@@ -46,7 +46,7 @@ export default () =>
       component: ({ data, role }) => {
         return (
           <StackItem.Content role={role}>
-            <ScriptSettingsPanel script={data.subject} />
+            <ScriptObjectSettings object={data.subject} />
           </StackItem.Content>
         );
       },

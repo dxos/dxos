@@ -33,9 +33,10 @@ export default defineFunction({
         HttpClient.execute,
         Effect.flatMap((res: any) => res.json),
         Effect.timeout('1 second'),
-        Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
+        Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
         Effect.scoped,
       );
+
       return res.data.rates[to].toString();
     }).pipe(Effect.provide(FetchHttpClient.layer)),
 });

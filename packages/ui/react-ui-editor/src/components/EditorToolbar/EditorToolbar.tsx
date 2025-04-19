@@ -7,11 +7,11 @@ import React, { useCallback } from 'react';
 import { type NodeArg } from '@dxos/app-graph';
 import { ElevationProvider } from '@dxos/react-ui';
 import {
-  ToolbarMenu,
-  MenuProvider,
   type MenuActionHandler,
-  useMenuActions,
+  MenuProvider,
+  ToolbarMenu,
   createGapSeparator,
+  useMenuActions,
 } from '@dxos/react-ui-menu';
 import { textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -27,7 +27,7 @@ import {
   editorToolbarSearch,
 } from './util';
 import { createViewMode } from './viewMode';
-import { stackItemContentToolbarClassNames } from '../../styles/stack-item-content-class-names';
+import { stackItemContentToolbarClassNames } from '../../fragments';
 
 const createToolbar = ({
   state,
@@ -86,7 +86,6 @@ const createToolbar = ({
 
 const useEditorToolbarActionGraph = ({ onAction, ...props }: EditorToolbarProps) => {
   const menuCreator = useCallback(() => createToolbar(props), [props]);
-
   const { resolveGroupItems } = useMenuActions(menuCreator);
 
   return { resolveGroupItems, onAction: onAction as MenuActionHandler };
