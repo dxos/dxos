@@ -22,6 +22,7 @@ import {
   getSchemaTypename,
   isInstanceOf,
 } from '@dxos/echo-schema';
+import { create as create$, makeRef } from '@dxos/live-object';
 
 // NOTES:
 // - New Echo package and namespaces allow for incremental migration; vastly simplifies imports.
@@ -63,6 +64,9 @@ export declare namespace Type {
 //
 // Combinators
 //
+
+export const ref = makeRef;
+export const create = create$;
 
 /**
  * Defines an ECHO type.

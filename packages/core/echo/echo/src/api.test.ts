@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
 import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
-import { create, makeRef } from '@dxos/live-object';
 
 // Deliberately testing top-level import as if external consumer for @dxos/echo.
 import { Type } from '.';
@@ -68,14 +67,20 @@ interface Message extends S.Schema.Type<typeof Message> {}
 
 describe('Experimental API review', () => {
   test('basic', ({ expect }) => {
-    const org = create(Org, { name: 'DXOS' });
+    const org = Type.create(Org, { name: 'DXOS' });
 
     // TODO(burdon): Change makeRef to Ref.create?
-    const contact = create(Contact, { name: 'Test', org: makeRef(org) });
+    const contact = Type.create(Contact, { name: 'Test', org: Type.ref(org) });
+    // TODO(burdon): Implement.
+    // const contact = Contact.create({ name: 'Test', org: Type.ref(org) });
 
     // TODO(burdon): Rename getType; remove getType, getTypename, etc.
     const type: S.Schema<Contact> = Type.getSchema(contact) ?? raise(new Error('No schema found'));
     expect(type).to.eq(Contact);
+    // TODO(burdon): Implement.
+    // expect(Contact.instanceOf(contact)).to.be.true;
+    expect(Type.instanceOf(Contact, contact)).to.be.true;
+    expect(Type.getDXN(type)?.typename).to.eq(Contact.typename);
     expect(Type.getTypename(type)).to.eq('example.com/type/Contact');
     expect(Type.getVersion(type)).to.eq('0.1.0');
     expect(Type.getMeta(type)).to.deep.eq({
@@ -83,17 +88,13 @@ describe('Experimental API review', () => {
       typename: 'example.com/type/Contact',
       version: '0.1.0',
     });
-
-    expect(Type.getDXN(type)?.typename).to.eq(Contact.typename);
-    // TODO(burdon): Replace with Contact.instanceOf(contact).
-    expect(Type.instanceOf(Contact, contact)).to.be.true;
   });
 
   test('defaults', ({ expect }) => {
     {
       // TODO(burdon): Doesn't work after pipe(Type.def).
       // Property 'make' does not exist on type 'EchoObjectSchema<Struct<{ timestamp: PropertySignature<":", string, never, ":", string, true, never>; }>>'.ts(2339)
-      const message = create(Message, Message.make({}));
+      const message = Type.create(Message, Message.make({}));
       expect(message.timestamp).to.exist;
     }
     // {
