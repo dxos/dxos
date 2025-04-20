@@ -3,19 +3,18 @@
 //
 
 import type { BaseSchema, JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { create, makeRef } from '@dxos/live-object';
 import {
   createView,
-  echoSchemaFromPropertyDefinitions,
+  getSchemaFromPropertyDefinitions,
   ViewProjection,
+  type ViewType,
   type SchemaPropertyDefinition,
 } from '@dxos/schema';
 
-import { TableType } from '..';
+import { TableType } from '../types';
 
-// TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance
-//   schema-tools schema creation.
+// TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {
   size: number;
   title: string;
@@ -24,65 +23,80 @@ type PropertyDisplayProps = {
 
 export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<PropertyDisplayProps>;
 
-type MakeDynamicTableProps = {
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove variance.
+export const getBaseSchems = ({
+  typename,
+  properties,
+  jsonSchema,
+  schema,
+}: {
   typename: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchemaType;
-  echoSchema?: BaseSchema;
+  schema?: BaseSchema;
+}): { typename: string; jsonSchema: JsonSchemaType } => {
+  if (properties) {
+    return getSchemaFromPropertyDefinitions(typename, properties);
+  } else if (schema) {
+    return schema;
+  } else if (jsonSchema) {
+    return { typename, jsonSchema };
+  } else {
+    throw new Error('invalid properties');
+  }
 };
 
-export const makeDynamicTable = ({ typename, properties, jsonSchema, echoSchema }: MakeDynamicTableProps) => {
-  // TODO(ZaymonFC): It might be better to return undefined instead of throwing here.
-  invariant(properties || jsonSchema || echoSchema);
-
-  const table = create(TableType, { name: 'dynamic-table' });
-  let schema;
-  if (properties) {
-    schema = echoSchemaFromPropertyDefinitions(typename, properties);
-  } else if (echoSchema) {
-    schema = echoSchema;
-  } else {
-    schema = { typename, jsonSchema: jsonSchema! };
-  }
-
+export const makeDynamicTable = ({
+  typename,
+  jsonSchema,
+  properties,
+}: {
+  typename: string;
+  jsonSchema: JsonSchemaType;
+  properties?: TablePropertyDefinition[];
+}): { table: TableType; projection: ViewProjection } => {
   const view = createView({
     name: 'dynamic-table',
-    typename: schema.typename,
-    jsonSchema: schema.jsonSchema,
+    typename,
+    jsonSchema,
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
 
-  table.view = makeRef(view);
-  const viewProjection = new ViewProjection(schema.jsonSchema, view);
-
+  const table = create(TableType, { name: 'dynamic-table', view: makeRef(view) });
+  const projection = new ViewProjection(jsonSchema, view);
   if (properties && view.fields) {
-    for (const property of properties) {
-      const field = view.fields.find((field) => field.path === property.name);
-      if (field) {
-        if (property.size !== undefined) {
-          field.size = property.size;
-        }
-
-        if (property.title !== undefined) {
-          const fieldProjection = viewProjection.getFieldProjection(field.id);
-          viewProjection.setFieldProjection({
-            ...fieldProjection,
-            props: { ...fieldProjection.props, title: property.title },
-          });
-        }
-
-        if (property.sort) {
-          const fieldId = field.id;
-          view.query.sort = [{ fieldId, direction: property.sort }];
-        }
-      }
-    }
+    setProperties(view, projection, properties);
   }
 
   return {
     table,
-    schema,
-    view,
-    viewProjection,
+    projection,
   };
+};
+
+const setProperties = (view: ViewType, projection: ViewProjection, properties: TablePropertyDefinition[]) => {
+  for (const property of properties) {
+    const field = view.fields.find((field) => field.path === property.name);
+    if (field) {
+      if (property.size !== undefined) {
+        field.size = property.size;
+      }
+
+      if (property.title !== undefined) {
+        const fieldProjection = projection.getFieldProjection(field.id);
+        projection.setFieldProjection({
+          ...fieldProjection,
+          props: { ...fieldProjection.props, title: property.title },
+        });
+      }
+
+      if (property.sort) {
+        const fieldId = field.id;
+        view.query.sort = [{ fieldId, direction: property.sort }];
+      }
+    }
+  }
 };

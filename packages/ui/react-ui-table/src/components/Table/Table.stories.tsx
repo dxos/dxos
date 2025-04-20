@@ -16,7 +16,7 @@ import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { echoSchemaFromPropertyDefinitions, ViewProjection, ViewType } from '@dxos/schema';
+import { getSchemaFromPropertyDefinitions, ViewProjection, ViewType } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -288,7 +288,7 @@ export const Tags: Meta<StoryProps> = {
 
         const selectOptionIds = selectOptions.map((o) => o.id);
 
-        const schema = echoSchemaFromPropertyDefinitions(typename, [
+        const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
             format: FormatEnum.SingleSelect,

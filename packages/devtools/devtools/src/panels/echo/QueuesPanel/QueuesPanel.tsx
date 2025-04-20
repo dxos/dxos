@@ -33,7 +33,7 @@ export const QueuesPanel = () => {
     [],
   );
 
-  const tableData = useMemo(() => {
+  const objects = useMemo(() => {
     return (queue?.items ?? []).map((item: any) => ({
       id: item.id,
       type: item['@type'],
@@ -68,7 +68,7 @@ export const QueuesPanel = () => {
     >
       {/* TODO(burdon): Convert to MasterDetailTable. */}
       <div className={mx('flex grow flex-col divide-y divide-separator overflow-hidden', styles.border)}>
-        <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClicked} features={features} />
+        <DynamicTable objects={objects} properties={properties} onRowClicked={handleRowClicked} features={features} />
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
         </div>
