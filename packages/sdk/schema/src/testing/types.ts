@@ -37,7 +37,7 @@ export namespace Testing {
     [IconAnnotationId]: 'ph--building--regular',
   });
 
-  export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
+  // export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
   export const OrgType = OrgSchema.pipe(
     Type.define({
@@ -68,14 +68,8 @@ export namespace Testing {
 
   export const ContactSchema = S.Struct({
     id: ObjectId,
-    name: S.String.annotations({
-      [GeneratorAnnotationId]: 'person.fullName',
-    }),
-    email: S.optional(
-      Format.Email.annotations({
-        [GeneratorAnnotationId]: 'internet.email',
-      }),
-    ),
+    name: S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName' }),
+    email: S.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
     employer: S.optional(
       Type.Ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',
@@ -89,7 +83,7 @@ export namespace Testing {
     [IconAnnotationId]: 'ph--user--regular',
   });
 
-  export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
+  // export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
   export const ContactType = ContactSchema.pipe(
     Type.define({
@@ -106,9 +100,7 @@ export namespace Testing {
 
   export const ProjectSchema = S.Struct({
     id: ObjectId,
-    name: S.String.annotations({
-      [GeneratorAnnotationId]: 'commerce.productName',
-    }),
+    name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
     description: S.optional(S.String),
   }).annotations({
     [AST.TitleAnnotationId]: 'Project',
@@ -116,7 +108,7 @@ export namespace Testing {
     [IconAnnotationId]: 'ph--kanban--regular',
   });
 
-  export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
+  // export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
 
   export const ProjectType = ProjectSchema.pipe(
     Type.define({
@@ -140,7 +132,7 @@ export namespace Testing {
     [LabelAnnotationId]: 'title',
   });
 
-  export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
+  // export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
 
   export const MessageType = MessageSchema.pipe(
     Type.define({
