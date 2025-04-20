@@ -3,6 +3,7 @@
 ## 0.9.0
 
 - [ ] Database, Queue, Space, Type, namespaces.
+- [ ] Support class variant for types.
 - [ ] Support defaults.
 - [ ] Support effect Date, Timestamp formats.
 - [ ] Metadata for created, updated timestamps.

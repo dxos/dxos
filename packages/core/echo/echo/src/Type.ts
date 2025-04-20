@@ -62,11 +62,15 @@ export declare namespace Type {
 }
 
 //
-// Combinators
+// Constructors
 //
 
 export const ref = makeRef;
 export const create = create$;
+
+//
+// Combinators
+//
 
 /**
  * Defines an ECHO type.
