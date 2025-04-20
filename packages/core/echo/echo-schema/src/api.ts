@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 
 import { type DXN as DXN$ } from '@dxos/keys';
 
@@ -11,7 +11,8 @@ import { type Expando as Expando$, type ObjectId as ObjectId$ } from './object';
 import { type BaseSchema, type EchoSchema, type ImmutableSchema } from './schema';
 
 // NOTES:
-// - Split into separate ECHO namespaces: Database, Type, Query, Queue.
+// - Split into separate ECHO namespaces: Database, Space, Type, Query, Queue.
+//  - Example; import { Database, Type, Query, Queue } from '@dxos/echo';
 // - Use `declare namespace` for types (no code is generated). See Effect pattern, where Schema is a namespace, interface, and function.
 // - Pay attention to type bookkeeping (e.g., Schema.Variance).
 // - Use @category annotations to group types in the API.
@@ -22,7 +23,8 @@ import { type BaseSchema, type EchoSchema, type ImmutableSchema } from './schema
  * @category api namespace
  * @since 0.9.0
  */
-export declare namespace Echo {
+// TODO(burdon): Rename Type.
+export declare namespace Type {
   /**
    * A globally unique decentralized name or identifier.
    */
@@ -55,27 +57,35 @@ export declare namespace Echo {
   export type Ref<T> = Ref$<T>;
 }
 
-/**
- * Defines an ECHO schema.
- *
- * @example
- * ```ts
- * const Org = S.Struct({
- *   name: S.String,
- * }).pipe(Echo.Type({ typename: 'example.com/type/Org', version: '1.0.0' }));
- * ```
- */
-export const Type = ({ typename, version }: TypeMeta) => EchoObject({ typename, version });
+//
+// Combinators
+//
 
-/**
- * Defines a reference to an ECHO object.
- *
- * @example
- * ```ts
- * const Contact = S.Struct({
- *   name: S.String,
- *   employer: Echo.Ref(Org),
- * }).pipe(Echo.Type({ typename: 'example.com/type/Contact', version: '1.0.0' }));
- * ```
- */
-export const Ref = <Schema extends S.Schema.AnyNoContext>(schema: Schema) => Ref$<S.Schema.Type<Schema>>(schema);
+// NOTE: This would just be exported at the top level of this package.
+export namespace Type {
+  /**
+   * Defines a reference to an ECHO object.
+   *
+   * @example
+   * ```ts
+   * import { Type } from '@dxos/echo';
+   * const Contact = S.Struct({
+   *   name: S.String,
+   *   employer: Type.Ref(Org),
+   * }).pipe(Type.define({ typename: 'example.com/type/Contact', version: '1.0.0' }));
+   * ```
+   */
+  export const Ref = <S extends Schema.Schema.AnyNoContext>(self: S) => Ref$<Schema.Schema.Type<S>>(self);
+
+  /**
+   * Defines an ECHO type.
+   *
+   * @example
+   * ```ts
+   * const Org = S.Struct({
+   *   name: S.String,
+   * }).pipe(Type.define({ typename: 'example.com/type/Org', version: '1.0.0' }));
+   * ```
+   */
+  export const define = ({ typename, version }: TypeMeta) => EchoObject({ typename, version });
+}

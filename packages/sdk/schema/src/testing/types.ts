@@ -4,7 +4,7 @@
 
 import {
   AST,
-  Echo,
+  Type,
   Format,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
@@ -39,7 +39,12 @@ export namespace Testing {
 
   export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
-  export const OrgType = OrgSchema.pipe(Echo.Type({ typename: 'example.com/type/Org', version: '0.1.0' }));
+  export const OrgType = OrgSchema.pipe(
+    Type.define({
+      typename: 'example.com/type/Org',
+      version: '0.1.0',
+    }),
+  );
   export type OrgType = S.Schema.Type<typeof OrgType>;
 
   //
@@ -72,7 +77,7 @@ export namespace Testing {
       }),
     ),
     employer: S.optional(
-      Echo.Ref(OrgType).annotations({
+      Type.Ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
@@ -86,7 +91,12 @@ export namespace Testing {
 
   export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
-  export const ContactType = ContactSchema.pipe(Echo.Type({ typename: 'example.com/type/Contact', version: '0.1.0' }));
+  export const ContactType = ContactSchema.pipe(
+    Type.define({
+      typename: 'example.com/type/Contact',
+      version: '0.1.0',
+    }),
+  );
   export type ContactType = S.Schema.Type<typeof ContactType>;
 
   //
@@ -108,7 +118,12 @@ export namespace Testing {
 
   export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
 
-  export const ProjectType = ProjectSchema.pipe(Echo.Type({ typename: 'example.com/type/Project', version: '0.1.0' }));
+  export const ProjectType = ProjectSchema.pipe(
+    Type.define({
+      typename: 'example.com/type/Project',
+      version: '0.1.0',
+    }),
+  );
   export type ProjectType = S.Schema.Type<typeof ProjectType>;
 
   //
@@ -127,6 +142,11 @@ export namespace Testing {
 
   export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
 
-  export const MessageType = MessageSchema.pipe(Echo.Type({ typename: 'example.com/type/Message', version: '0.1.0' }));
+  export const MessageType = MessageSchema.pipe(
+    Type.define({
+      typename: 'example.com/type/Message',
+      version: '0.1.0',
+    }),
+  );
   export type MessageType = S.Schema.Type<typeof MessageType>;
 }

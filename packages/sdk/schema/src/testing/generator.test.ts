@@ -35,21 +35,21 @@ describe('Generator', () => {
   // TODO(burdon): Type error: https://github.com/dxos/dxos/issues/8324
   test('create object', async ({ expect }) => {
     {
-      const schema: S.Schema<Testing.OrgType> = Testing.OrgType as any;
+      const schema: S.Schema<Testing.OrgType> = Testing.OrgType;
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
 
     {
-      const schema: S.Schema<Testing.ProjectType> = Testing.ProjectType as any;
+      const schema: S.Schema<Testing.ProjectType> = Testing.ProjectType;
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
 
     {
-      const schema: S.Schema<Testing.ContactType> = Testing.ContactType as any;
+      const schema: S.Schema<Testing.ContactType> = Testing.ContactType as any; // TODO(burdon): Fix.
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;

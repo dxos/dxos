@@ -26,4 +26,4 @@ export * from './schema/snapshot';
 export * from './schema/stored-schema';
 
 // TOOD(burond): Reduce other exports once API is stable.
-export { Echo } from './api';
+export { Type } from './api';
