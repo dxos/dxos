@@ -10,7 +10,7 @@ import { type Space } from '@dxos/client/echo';
 import { FormatEnum, FormatEnums, S, SelectOptionSchema, GeoPoint, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
-import { echoSchemaFromPropertyDefinitions } from '@dxos/schema';
+import { getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -115,7 +115,7 @@ export default () =>
         invariant(extensions?.space, 'No space.');
         const space = extensions.space;
 
-        const schema = echoSchemaFromPropertyDefinitions(typename, properties);
+        const schema = getSchemaFromPropertyDefinitions(typename, properties);
         const [registeredSchema] = await space.db.schemaRegistry.register([schema]);
 
         return ToolResult.Success(registeredSchema);

@@ -92,7 +92,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
     return [...generateProperties()];
   }, [props.script]);
 
-  const invocationData = useMemo(() => {
+  const invocationObjects = useMemo(() => {
     return invocationSpans.map((invocation) => {
       const status = invocation.outcome;
       const targetDxn = decodeReference(invocation.invocationTarget).dxn;
@@ -145,9 +145,9 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
       <div className={mx('bs-full', gridLayout)}>
         <DynamicTable
           properties={invocationProperties}
-          data={invocationData}
-          onRowClicked={handleInvocationRowClicked}
+          objects={invocationObjects}
           features={features}
+          onRowClicked={handleInvocationRowClicked}
         />
         {selectedInvocation && <Selected span={selectedInvocation} />}
       </div>

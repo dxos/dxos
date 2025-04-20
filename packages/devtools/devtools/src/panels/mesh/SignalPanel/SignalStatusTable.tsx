@@ -102,8 +102,7 @@ export const SignalStatusTable = () => {
   }
 
   const properties = useMemo(() => tableProperties, []);
-
-  const tableData = useMemo(() => {
+  const objects = useMemo(() => {
     return status.map((s, index) => ({
       id: `${index}-${s.host}`,
       host: new URL(s.host).origin,
@@ -118,5 +117,5 @@ export const SignalStatusTable = () => {
     }));
   }, [status, time]);
 
-  return <DynamicTable properties={properties} data={tableData} />;
+  return <DynamicTable properties={properties} objects={objects} />;
 };

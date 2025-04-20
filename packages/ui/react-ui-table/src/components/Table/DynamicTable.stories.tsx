@@ -31,7 +31,7 @@ const useTestPropertiesAndObjects = () => {
     [],
   );
 
-  const [objects, _setObjects] = useState<any[]>(
+  const [objects] = useState<any[]>(
     Array.from({ length: 10 }, () => ({
       id: faker.string.uuid(),
       name: faker.person.fullName(),
@@ -48,7 +48,7 @@ const useTestPropertiesAndObjects = () => {
 
 const DynamicTableStory = () => {
   const { properties, objects } = useTestPropertiesAndObjects();
-  return <DynamicTable properties={properties} data={objects} />;
+  return <DynamicTable properties={properties} objects={objects} />;
 };
 
 //
@@ -77,7 +77,7 @@ export const WithRowClicks: StoryObj = {
       alert(`Row clicked: ${row.name}, age: ${row.age}`);
     };
 
-    return <DynamicTable properties={properties} data={objects} onRowClicked={handleRowClicked} />;
+    return <DynamicTable properties={properties} objects={objects} onRowClicked={handleRowClicked} />;
   },
 };
 
@@ -90,7 +90,7 @@ export const WithClickToSelect: StoryObj = {
       [],
     );
 
-    return <DynamicTable properties={properties} data={objects} features={features} />;
+    return <DynamicTable properties={properties} objects={objects} features={features} />;
   },
 };
 
@@ -119,7 +119,7 @@ export const WithJsonSchema: StoryObj = {
       })),
     );
 
-    return <DynamicTable jsonSchema={schema} data={objects} tableName='com.example/json_schema_table' />;
+    return <DynamicTable jsonSchema={schema} objects={objects} name='json-schema-table' />;
   },
 };
 
@@ -129,12 +129,11 @@ export const WithEchoSchema: StoryObj = {
     const { space } = useClientProvider();
     const schema = useSchema(client, space, Testing.ContactType.typename);
     const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
-
     if (!schema) {
       return <div>Loading schema...</div>;
     }
 
-    return <DynamicTable echoSchema={schema} data={objects} tableName='contact-table' />;
+    return <DynamicTable schema={schema} objects={objects} name='contact-table' />;
   },
   decorators: [
     withClientProvider({
