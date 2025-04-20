@@ -19,6 +19,7 @@ import {
 } from '@dxos/echo-schema';
 import { create, makeRef } from '@dxos/live-object';
 
+// Deliberately testing top-level import as if external consumer for @dxos/echo.
 import { Type } from '.';
 
 // TODO(dmaretskyi): Do all ECHO api's go into `Echo` or do some things like `create` and `Ref` stay separate?
