@@ -6,17 +6,7 @@ import { Schema as S } from 'effect';
 import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
-import {
-  EntityKind,
-  FormatEnum,
-  FormatAnnotation,
-  getObjectAnnotation,
-  getSchema,
-  getSchemaDXN,
-  getSchemaTypename,
-  getSchemaVersion,
-  isInstanceOf,
-} from '@dxos/echo-schema';
+import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
 import { create, makeRef } from '@dxos/live-object';
 
 // Deliberately testing top-level import as if external consumer for @dxos/echo.
@@ -33,6 +23,7 @@ import { Type } from '.';
 
 // RB: I prefer this format since it seems like the most natural extension to the default effect API; and therefore, the most incremental.
 const Org = S.Struct({
+  id: Type.ObjectId,
   name: S.String,
 }).pipe(
   Type.def({
@@ -41,7 +32,6 @@ const Org = S.Struct({
   }),
 );
 
-// TODO(burdon): Remove Schema/Type suffix in Composer.
 interface Org extends S.Schema.Type<typeof Org> {}
 
 const Contact = S.Struct({
@@ -66,7 +56,8 @@ const Message = S.Struct({
     S.withConstructorDefault(() => new Date().toISOString()),
   ),
 });
-// .pipe(
+// TODO(burdon): Fix.
+// }).pipe(
 //   Type.def({
 //     typename: 'example.com/type/Message',
 //     version: '0.1.0',
@@ -83,20 +74,19 @@ describe('Experimental API review', () => {
     const contact = create(Contact, { name: 'Test', org: makeRef(org) });
 
     // TODO(burdon): Rename getType; remove getType, getTypename, etc.
-    const type: S.Schema<Contact> = getSchema(contact) ?? raise(new Error('No schema found'));
+    const type: S.Schema<Contact> = Type.getSchema(contact) ?? raise(new Error('No schema found'));
     expect(type).to.eq(Contact);
-    expect(getSchemaTypename(type)).to.eq('example.com/type/Contact');
-    expect(getSchemaVersion(type)).to.eq('0.1.0');
-
-    // TODO(burdon): Rename getTypeAnnotation.
-    expect(getObjectAnnotation(type)).to.deep.eq({
-      kind: EntityKind.Object,
+    expect(Type.getTypename(type)).to.eq('example.com/type/Contact');
+    expect(Type.getVersion(type)).to.eq('0.1.0');
+    expect(Type.getMeta(type)).to.deep.eq({
+      kind: Type.Kind.Object,
       typename: 'example.com/type/Contact',
       version: '0.1.0',
     });
 
-    expect(getSchemaDXN(type)?.typename).to.eq(Contact.typename);
-    expect(isInstanceOf(Contact, contact)).to.be.true;
+    expect(Type.getDXN(type)?.typename).to.eq(Contact.typename);
+    // TODO(burdon): Replace with Contact.instanceOf(contact).
+    expect(Type.instanceOf(Contact, contact)).to.be.true;
   });
 
   test('defaults', ({ expect }) => {

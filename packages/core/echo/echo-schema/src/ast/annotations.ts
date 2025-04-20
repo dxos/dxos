@@ -21,12 +21,16 @@ type ToMutable<T> = T extends BaseObject
 /**
  * ECHO object.
  */
+// TODO(burdon): Rename to TypeAnnotation?
 export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
 /** @internal */
 export const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
 /** @internal */
 export const VERSION_REGEX = /^\d+.\d+.\d+$/;
+
+export const Typename = S.String.pipe(S.pattern(TYPENAME_REGEX));
+export const Version = S.String.pipe(S.pattern(VERSION_REGEX));
 
 /**
  * Payload stored under {@link ObjectAnnotationId}.
@@ -35,8 +39,8 @@ export const VERSION_REGEX = /^\d+.\d+.\d+$/;
 // TODO(dmaretskyi): Rename getTypeAnnotation to represent commonality between objects and relations (e.g. `entity`).
 export const ObjectAnnotation = S.Struct({
   kind: S.Enums(EntityKind),
-  typename: S.String.pipe(S.pattern(TYPENAME_REGEX)),
-  version: S.String.pipe(S.pattern(VERSION_REGEX)),
+  typename: Typename,
+  version: Version,
 });
 
 export interface ObjectAnnotation extends S.Schema.Type<typeof ObjectAnnotation> {}

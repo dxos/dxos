@@ -48,6 +48,7 @@ export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotat
 export const getFormatAnnotation = (node: AST.AST): FormatEnum | undefined =>
   pipe(AST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
 
+// TODO(burdon): Rename Format.
 export enum FormatEnum {
   None = 'none',
   String = 'string',

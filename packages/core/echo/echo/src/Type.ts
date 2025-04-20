@@ -5,26 +5,43 @@
 import { type Schema } from 'effect';
 
 import {
-  EchoObject,
   type BaseSchema,
+  EchoObject,
+  EntityKind,
   type EchoSchema,
   type Expando as Expando$,
   type ImmutableSchema,
   type JsonSchemaType,
+  ObjectId,
   Ref as Ref$,
-  type ObjectId as ObjectId$,
   type TypeMeta,
+  getObjectAnnotation,
+  getSchema,
+  getSchemaDXN,
+  getSchemaVersion,
+  getSchemaTypename,
+  isInstanceOf,
 } from '@dxos/echo-schema';
 
 // NOTES:
 // - New Echo package and namespaces allow for incremental migration; vastly simplifies imports.
-// - Define types in namespace (e.g., of plugin) and drop Type suffix.
 // - Split into separate ECHO namespaces: Database, Space, Type, Query, Queue.
 //  - Example; import { Database, Type, Query, Queue } from '@dxos/echo';
 // - Use `declare namespace` for types (no code is generated). See Effect pattern, where Schema is a namespace, interface, and function.
-// - Pay attention to type bookkeeping (e.g., Schema.Variance).
-// - Use @category annotations to group types in the API.
 // - Test with @dxos/schema/testing types.
+// - Define user (Composer) types in namespace (e.g., of plugin) and drop Type suffix; remove all deprecated Braneframe types.
+
+export type { TypeMeta as Meta, JsonSchemaType as JsonSchema };
+export {
+  EntityKind as Kind,
+  ObjectId,
+  isInstanceOf as instanceOf,
+  getObjectAnnotation as getMeta,
+  getSchema,
+  getSchemaDXN as getDXN,
+  getSchemaVersion as getVersion,
+  getSchemaTypename as getTypename,
+};
 
 /**
  * Type API.
@@ -34,29 +51,13 @@ import {
  */
 export declare namespace Type {
   /**
-   * A globally unique identifier for an object.
-   */
-  export type ObjectId = ObjectId$;
-
-  /**
    * A schema that can be extended with arbitrary properties.
    */
   export type Expando = Expando$;
 
-  // TODO(burdon): Just Type and Immutable?
-  export type Type<T = any> = BaseSchema<T>;
+  export type Abstract<T = any> = BaseSchema<T>;
   export type ImmutableType<T> = ImmutableSchema<T>;
   export type MutableType<T> = EchoSchema<T>;
-
-  /**
-   * A persistable JSON Schema.
-   */
-  export type JsonSchema = JsonSchemaType;
-
-  /**
-   * A reference to an ECHO object.
-   */
-  export type Ref<T> = Ref$<T>;
 }
 
 //
