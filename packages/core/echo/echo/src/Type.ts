@@ -6,20 +6,20 @@ import { type Schema } from 'effect';
 
 import {
   type BaseSchema,
-  EchoObject,
-  EntityKind,
   type EchoSchema,
   type Expando as Expando$,
   type ImmutableSchema,
   type JsonSchemaType,
+  type TypeMeta,
+  EchoObject,
+  EntityKind,
   ObjectId,
   Ref as Ref$,
-  type TypeMeta,
   getObjectAnnotation,
   getSchema,
   getSchemaDXN,
-  getSchemaVersion,
   getSchemaTypename,
+  getSchemaVersion,
   isInstanceOf,
 } from '@dxos/echo-schema';
 import { create as create$, makeRef } from '@dxos/live-object';
@@ -36,12 +36,12 @@ export type { TypeMeta as Meta, JsonSchemaType as JsonSchema };
 export {
   EntityKind as Kind,
   ObjectId,
-  isInstanceOf as instanceOf,
   getObjectAnnotation as getMeta,
   getSchema,
   getSchemaDXN as getDXN,
-  getSchemaVersion as getVersion,
   getSchemaTypename as getTypename,
+  getSchemaVersion as getVersion,
+  isInstanceOf as instanceOf,
 };
 
 /**

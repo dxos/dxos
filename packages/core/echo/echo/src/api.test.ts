@@ -38,12 +38,6 @@ namespace Testing {
 
   export interface Contact extends S.Schema.Type<typeof Contact> {}
 
-  // TODO(burdon): Remove.
-  const noop =
-    <S extends S.Schema.Any>(a: any) =>
-    (self: S) =>
-      self;
-
   export const Message = S.Struct({
     // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
     // TODO(burdon): Support defaults (update create and createStatic).
@@ -51,7 +45,7 @@ namespace Testing {
       S.propertySignature,
       S.withConstructorDefault(() => new Date().toISOString()),
     ),
-  }).pipe(noop({}));
+  });
 
   // TODO(burdon): Fix (Type.def should return TypeLiteral to implement make function)..
   // }).pipe(
@@ -86,8 +80,7 @@ describe('Experimental API review', () => {
     const contact = Type.create(Testing.Contact, { name: 'Test', org: Type.ref(org) });
 
     expect(S.is(Testing.Contact)(contact)).to.be.true;
-    // TODO(burdon): Implement.
-    // expect(Contact.instanceOf(contact)).to.be.true;
+    expect(Testing.Contact.is(contact)).to.be.true;
     expect(Type.instanceOf(Testing.Contact, contact)).to.be.true;
     expect(Type.instanceOf(Testing.Org, contact.org?.target)).to.be.true;
   });
