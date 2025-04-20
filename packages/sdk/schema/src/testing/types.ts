@@ -40,7 +40,7 @@ export namespace Testing {
   // export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
   export const OrgType = OrgSchema.pipe(
-    Type.define({
+    Type.def({
       typename: 'example.com/type/Org',
       version: '0.1.0',
     }),
@@ -86,7 +86,7 @@ export namespace Testing {
   // export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
   export const ContactType = ContactSchema.pipe(
-    Type.define({
+    Type.def({
       typename: 'example.com/type/Contact',
       version: '0.1.0',
     }),
@@ -111,7 +111,7 @@ export namespace Testing {
   // export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
 
   export const ProjectType = ProjectSchema.pipe(
-    Type.define({
+    Type.def({
       typename: 'example.com/type/Project',
       version: '0.1.0',
     }),
@@ -135,7 +135,7 @@ export namespace Testing {
   // export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
 
   export const MessageType = MessageSchema.pipe(
-    Type.define({
+    Type.def({
       typename: 'example.com/type/Message',
       version: '0.1.0',
     }),

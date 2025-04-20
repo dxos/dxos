@@ -16,6 +16,7 @@ import { type BaseSchema, type EchoSchema, type ImmutableSchema } from './schema
 // - Use `declare namespace` for types (no code is generated). See Effect pattern, where Schema is a namespace, interface, and function.
 // - Pay attention to type bookkeeping (e.g., Schema.Variance).
 // - Use @category annotations to group types in the API.
+// - Test with @dxos/schema/testing types.
 
 /**
  * ECHO API.
@@ -64,6 +65,18 @@ export declare namespace Type {
 // NOTE: This would just be exported at the top level of this package.
 export namespace Type {
   /**
+   * Defines an ECHO type.
+   *
+   * @example
+   * ```ts
+   * const Org = S.Struct({
+   *   name: S.String,
+   * }).pipe(Type.def({ typename: 'example.com/type/Org', version: '1.0.0' }));
+   * ```
+   */
+  export const def = ({ typename, version }: TypeMeta) => EchoObject({ typename, version });
+
+  /**
    * Defines a reference to an ECHO object.
    *
    * @example
@@ -72,20 +85,8 @@ export namespace Type {
    * const Contact = S.Struct({
    *   name: S.String,
    *   employer: Type.Ref(Org),
-   * }).pipe(Type.define({ typename: 'example.com/type/Contact', version: '1.0.0' }));
+   * }).pipe(Type.def({ typename: 'example.com/type/Contact', version: '1.0.0' }));
    * ```
    */
   export const Ref = <S extends Schema.Schema.AnyNoContext>(self: S) => Ref$<Schema.Schema.Type<S>>(self);
-
-  /**
-   * Defines an ECHO type.
-   *
-   * @example
-   * ```ts
-   * const Org = S.Struct({
-   *   name: S.String,
-   * }).pipe(Type.define({ typename: 'example.com/type/Org', version: '1.0.0' }));
-   * ```
-   */
-  export const define = ({ typename, version }: TypeMeta) => EchoObject({ typename, version });
 }
