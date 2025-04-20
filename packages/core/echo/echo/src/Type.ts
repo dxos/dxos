@@ -82,7 +82,7 @@ export const create = create$;
  * }).pipe(Type.def({ typename: 'example.com/type/Org', version: '1.0.0' }));
  * ```
  */
-export const def = ({ typename, version }: TypeMeta) => EchoObject({ typename, version });
+export const def = (meta: TypeMeta) => EchoObject(meta);
 
 /**
  * Defines a reference to an ECHO object.

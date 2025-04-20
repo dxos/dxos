@@ -140,6 +140,7 @@ const makeEchoObjectSchemaClass = <Self extends S.Schema.Any>(
 type EchoObjectSchemaData<T> = Simplify<HasId & ToMutable<T>>;
 
 export interface EchoObjectSchema<Self extends S.Schema.Any>
+  // TODO(burdon): Should extend TypeLiteral in order to provide `make` function to handle defaults.
   extends TypeMeta,
     S.AnnotableClass<
       EchoObjectSchema<Self>,
