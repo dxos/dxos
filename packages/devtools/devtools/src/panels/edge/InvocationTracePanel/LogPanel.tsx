@@ -49,7 +49,7 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
     [],
   );
 
-  const logData = useMemo(() => {
+  const objects = useMemo(() => {
     if (!eventQueue?.items?.length) {
       return [];
     }
@@ -70,5 +70,5 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
     return <div className={mx('flex items-center justify-center')}>Loading trace data...</div>;
   }
 
-  return <DynamicTable properties={logProperties} data={logData} />;
+  return <DynamicTable objects={objects} properties={logProperties} />;
 };

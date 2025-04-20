@@ -95,9 +95,8 @@ export const SwarmPanel = () => {
 
   const connectionMap = useMemo(() => new ComplexMap<PublicKey, ConnectionInfo>(PublicKey.hash), []);
 
-  // The state options order determines the sorting priority
-
-  const data = useMemo(() => {
+  // The state options order determines the sorting priority.
+  const objects = useMemo(() => {
     const connections: TableSwarmConnection[] = [];
 
     for (const swarm of swarms) {
@@ -150,7 +149,7 @@ export const SwarmPanel = () => {
 
   return (
     <PanelContainer>
-      <DynamicTable properties={properties} data={data} />
+      <DynamicTable properties={properties} objects={objects} />
     </PanelContainer>
   );
 };
