@@ -78,7 +78,7 @@ export const Default: Story<TestType> = {
   },
 };
 
-export const Org: Story<Testing.OrgType> = {
+export const Org: Story<Testing.Org> = {
   args: {
     schema: Testing.OrgSchema,
     values: {
@@ -88,7 +88,7 @@ export const Org: Story<Testing.OrgType> = {
   },
 };
 
-export const OrgAutoSave: Story<Testing.OrgType> = {
+export const OrgAutoSave: Story<Testing.Org> = {
   args: {
     schema: Testing.OrgSchema,
     values: {

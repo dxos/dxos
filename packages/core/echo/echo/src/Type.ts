@@ -6,19 +6,19 @@ import { type Schema } from 'effect';
 
 import {
   EchoObject,
-  type JsonSchemaType,
-  Ref as Ref$,
-  type TypeMeta,
-  type Expando as Expando$,
-  type ObjectId as ObjectId$,
   type BaseSchema,
   type EchoSchema,
+  type Expando as Expando$,
   type ImmutableSchema,
+  type JsonSchemaType,
+  Ref as Ref$,
+  type ObjectId as ObjectId$,
+  type TypeMeta,
 } from '@dxos/echo-schema';
 
 // NOTES:
-// - New Echo package and namespaces allow for incremental migration.
-// - Define types in namespace and drop Type suffix.
+// - New Echo package and namespaces allow for incremental migration; vastly simplifies imports.
+// - Define types in namespace (e.g., of plugin) and drop Type suffix.
 // - Split into separate ECHO namespaces: Database, Space, Type, Query, Queue.
 //  - Example; import { Database, Type, Query, Queue } from '@dxos/echo';
 // - Use `declare namespace` for types (no code is generated). See Effect pattern, where Schema is a namespace, interface, and function.
