@@ -81,7 +81,10 @@ export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
     Option.getOrElse(() => undefined),
   )(schema.ast);
 
-// TODO(burdon): Rename EchoType.
+/**
+ * Pipeable function to add ECHO object annotations to a schema.
+ */
+// TODO(burdon): Reconcile EchoObject/EchoSchema; rename EchoType.
 export const EchoObject: {
   (meta: TypeMeta): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
 } = ({ typename, version }) => {

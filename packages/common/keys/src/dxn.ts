@@ -10,6 +10,17 @@ import { invariant } from '@dxos/invariant';
 import type { SpaceId } from './space-id';
 
 /**
+ * Tags for ECHO DXNs that should resolve the object ID in the local space.
+ */
+export const LOCAL_SPACE_TAG = '@';
+
+// TODO(burdon): Namespace for.
+export const QueueSubspaceTags = Object.freeze({
+  DATA: 'data',
+  TRACE: 'trace',
+});
+
+/**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
  * Each DXN starts with a dxn prefix, followed by a resource kind.
  * Colon Symbol : is used a delimiter between parts.
@@ -17,7 +28,6 @@ import type { SpaceId } from './space-id';
  * '@' in the place of the space id is used to denote that the DXN should be resolved in the local space.
  *
  * @example
- *
  * ```
  * dxn:echo:<space key>:<echo id>
  * dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
@@ -242,14 +252,7 @@ export declare namespace DXN {
    * DXN represented as a javascript string.
    */
   export type String = string & { __DXNString: never };
+  // TODO(burdon): Make brand.
+  // export const String = S.String.pipe(S.brand('DXN'));
+  // export type String = S.To(typoeof String);
 }
-
-/**
- * Tags for ECHO DXNs that should resolve the object ID in the local space.
- */
-export const LOCAL_SPACE_TAG = '@';
-
-export const QueueSubspaceTags = Object.freeze({
-  DATA: 'data',
-  TRACE: 'trace',
-});
