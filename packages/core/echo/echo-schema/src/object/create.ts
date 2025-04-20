@@ -31,7 +31,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  * const Contact = S.Struct({
  *   name: S.String,
  *   email: S.String,
- * }).pipe(Echo.Type({
+ * }).pipe(Type.def({
  *   typename: 'example.com/type/Contact',
  *   version: '0.1.0',
  * }))

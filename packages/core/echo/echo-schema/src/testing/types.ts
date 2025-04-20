@@ -29,7 +29,7 @@ export namespace Testing {
 
   //
   // Complex types
-  // TODO(burdon): Change to Echo.Type.
+  // TODO(burdon): Change to Type.def.
   //
 
   export class EmptySchemaType extends TypedObject({

@@ -133,6 +133,9 @@
       "path": "packages/core/echo/automerge/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-db/tsconfig.json"
     },
     {

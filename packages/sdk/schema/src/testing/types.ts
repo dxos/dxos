@@ -2,16 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  AST,
-  Type,
-  Format,
-  FieldLookupAnnotationId,
-  GeneratorAnnotationId,
-  LabelAnnotationId,
-  ObjectId,
-  S,
-} from '@dxos/echo-schema';
+import { SchemaAST as AST, Schema as S } from 'effect';
+
+import { Type } from '@dxos/echo';
+import { Format, FieldLookupAnnotationId, GeneratorAnnotationId, LabelAnnotationId, ObjectId } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
@@ -39,13 +33,13 @@ export namespace Testing {
 
   // export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
-  export const OrgType = OrgSchema.pipe(
+  export const Org = OrgSchema.pipe(
     Type.def({
       typename: 'example.com/type/Org',
       version: '0.1.0',
     }),
   );
-  export type OrgType = S.Schema.Type<typeof OrgType>;
+  export type Org = S.Schema.Type<typeof Org>;
 
   //
   // Contact
@@ -71,7 +65,7 @@ export namespace Testing {
     name: S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName' }),
     email: S.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
     employer: S.optional(
-      Type.Ref(OrgType).annotations({
+      Type.Ref(Org).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
@@ -85,13 +79,13 @@ export namespace Testing {
 
   // export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
-  export const ContactType = ContactSchema.pipe(
+  export const Contact = ContactSchema.pipe(
     Type.def({
       typename: 'example.com/type/Contact',
       version: '0.1.0',
     }),
   );
-  export type ContactType = S.Schema.Type<typeof ContactType>;
+  export type Contact = S.Schema.Type<typeof Contact>;
 
   //
   // Project
@@ -110,13 +104,13 @@ export namespace Testing {
 
   // export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
 
-  export const ProjectType = ProjectSchema.pipe(
+  export const Project = ProjectSchema.pipe(
     Type.def({
       typename: 'example.com/type/Project',
       version: '0.1.0',
     }),
   );
-  export type ProjectType = S.Schema.Type<typeof ProjectType>;
+  export type Project = S.Schema.Type<typeof Project>;
 
   //
   // Message
@@ -134,11 +128,11 @@ export namespace Testing {
 
   // export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
 
-  export const MessageType = MessageSchema.pipe(
+  export const Message = MessageSchema.pipe(
     Type.def({
       typename: 'example.com/type/Message',
       version: '0.1.0',
     }),
   );
-  export type MessageType = S.Schema.Type<typeof MessageType>;
+  export type Message = S.Schema.Type<typeof Message>;
 }

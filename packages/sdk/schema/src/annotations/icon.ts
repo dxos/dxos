@@ -4,6 +4,10 @@
 
 import { Option, SchemaAST, type Schema } from 'effect';
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnnotationId');
 
 /**

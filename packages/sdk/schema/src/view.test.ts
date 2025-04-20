@@ -27,7 +27,7 @@ describe('View', () => {
   });
 
   test('create view from TypedObject', async ({ expect }) => {
-    const schema = Testing.ContactType;
+    const schema = Testing.Contact;
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(schema) });
     expect(view.query.typename).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq([
@@ -48,12 +48,12 @@ describe('View', () => {
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const org = create(Testing.OrgType, { name: 'DXOS', website: 'https://dxos.org' });
-    const contact = create(Testing.ContactType, { name: 'Alice', email: 'alice@example.com', employer: makeRef(org) });
-    log('schema', { org: toJsonSchema(Testing.OrgType), person: toJsonSchema(Testing.ContactType) });
+    const org = create(Testing.Org, { name: 'DXOS', website: 'https://dxos.org' });
+    const contact = create(Testing.Contact, { name: 'Alice', email: 'alice@example.com', employer: makeRef(org) });
+    log('schema', { org: toJsonSchema(Testing.Org), person: toJsonSchema(Testing.Contact) });
     log('objects', { org, person: contact });
-    expect(getTypename(org)).to.eq(Testing.OrgType.typename);
-    expect(getTypename(contact)).to.eq(Testing.ContactType.typename);
+    expect(getTypename(org)).to.eq(Testing.Org.typename);
+    expect(getTypename(contact)).to.eq(Testing.Contact.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {

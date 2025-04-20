@@ -24,6 +24,3 @@ export * from './schema/manipulation';
 export * from './schema/runtime-schema-registry';
 export * from './schema/snapshot';
 export * from './schema/stored-schema';
-
-// TOOD(burond): Reduce other exports once API is stable.
-export { Type } from './api';

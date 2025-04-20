@@ -43,7 +43,7 @@ export type TypedObjectProps = TypeMeta & {
 
 /**
  * Base class factory for typed objects.
- * @deprecated Use pipe(Echo.Type) instead.
+ * @deprecated Use pipe(Type.def) instead.
  */
 export const TypedObject = ({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
   if (!skipTypenameFormatCheck) {
