@@ -96,7 +96,7 @@ export const EchoObject: {
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
     });
 
-    return makeEchoObjectSchema<Self>(typename, version, ast);
+    return makeEchoObjectSchema<Self>(ast, typename, version);
   };
 };
 
@@ -114,9 +114,9 @@ export interface EchoObjectSchema<Self extends S.Schema.Any>
 }
 
 const makeEchoObjectSchema = <Self extends S.Schema.Any>(
+  ast: AST.AST,
   typename: string,
   version: string,
-  ast: AST.AST,
 ): EchoObjectSchema<Self> => {
   return class EchoObjectSchemaClass extends S.make<
     EchoObjectSchemaType<S.Schema.Type<Self>>,
@@ -130,7 +130,7 @@ const makeEchoObjectSchema = <Self extends S.Schema.Any>(
       annotations: S.Annotations.GenericSchema<EchoObjectSchemaType<S.Schema.Type<Self>>>,
     ): EchoObjectSchema<Self> {
       const schema = S.make<EchoObjectSchemaType<S.Schema.Type<Self>>>(ast).annotations(annotations);
-      return makeEchoObjectSchema<Self>(typename, version, schema.ast);
+      return makeEchoObjectSchema<Self>(schema.ast, typename, version);
     }
 
     static instanceOf(value: unknown): boolean {
