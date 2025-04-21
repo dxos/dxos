@@ -116,7 +116,7 @@ type MakeOptions =
 const _ownKeys = (o: object): Array<PropertyKey> =>
   (Object.keys(o) as Array<PropertyKey>).concat(Object.getOwnPropertySymbols(o));
 
-const lazilyMergeDefaults = (
+const _lazilyMergeDefaults = (
   fields: S.Struct.Fields,
   out: Record<PropertyKey, unknown>,
 ): { [x: string | symbol]: unknown } => {
@@ -134,7 +134,7 @@ const lazilyMergeDefaults = (
   return out;
 };
 
-const getDisableValidationMakeOption = (options: MakeOptions | undefined): boolean =>
+const _getDisableValidationMakeOption = (options: MakeOptions | undefined): boolean =>
   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
 
 export interface EchoObjectSchema<Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>
@@ -145,7 +145,6 @@ export interface EchoObjectSchema<Self extends S.Struct<Fields>, Fields extends 
       EchoObjectSchemaType<S.Schema.Encoded<Self>>,
       S.Schema.Context<Self>
     > {
-  // TODO(burdon): Need Fields, Records type.
   make(
     props: RequiredKeys<S.TypeLiteral.Constructor<Fields, []>> extends never
       ? void | Simplify<S.TypeLiteral.Constructor<Fields, []>>
@@ -183,8 +182,8 @@ const makeEchoObjectSchema = <Self extends S.Struct<Fields>, Fields extends S.St
         : Simplify<S.TypeLiteral.Constructor<Fields, []>>,
       options?: MakeOptions,
     ): Simplify<S.TypeLiteral.Type<Fields, []>> {
-      const propsWithDefaults: any = lazilyMergeDefaults(fields, { ...(props as any) });
-      return getDisableValidationMakeOption(options)
+      const propsWithDefaults: any = _lazilyMergeDefaults(fields, { ...(props as any) });
+      return _getDisableValidationMakeOption(options)
         ? propsWithDefaults
         : ParseResult.validateSync(this)(propsWithDefaults);
     }
