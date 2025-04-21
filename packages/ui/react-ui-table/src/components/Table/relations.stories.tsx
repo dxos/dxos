@@ -47,7 +47,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     return new ViewProjection(schema.jsonSchema, table.view.target);
   }, [schema, table]);
 
-  const model = useTableModel({ table, projection, objects: [] });
+  const model = useTableModel({ table, projection, rows: [] });
   useEffect(() => {
     if (!model) {
       return;

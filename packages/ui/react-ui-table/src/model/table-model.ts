@@ -55,7 +55,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   onDeleteRows?: (index: number, obj: T[]) => void;
   onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: DxGridPosition) => void;
-  onRowOrderChanged?: () => void;
+  onRowOrderChange?: () => void;
   onRowAction?: (actionId: string, data: T) => void;
 };
 
@@ -74,7 +74,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _onDeleteRows?: TableModelProps<T>['onDeleteRows'];
   private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
-  private readonly _onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
+  private readonly _onRowOrderChange?: TableModelProps<T>['onRowOrderChange'];
   private readonly _onRowAction?: TableModelProps<T>['onRowAction'];
   private readonly _rowActions: TableRowAction[];
   private readonly _features: TableFeatures;
@@ -99,7 +99,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     onDeleteColumn,
     onDeleteRows,
     onInsertRow,
-    onRowOrderChanged,
+    onRowOrderChange,
     onRowAction,
   }: TableModelProps<T>) {
     super();
@@ -113,7 +113,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     invariant(
       !(this._features.dataEditable && this._features.selection.enabled && this._features.selection.mode === 'single'),
-      'Single selection is not yet compatible with editable tables.',
+      'Single selection is not compatible with editable tables.',
     );
 
     this._sorting = new TableSorting(this._rows, this._view, projection);
@@ -124,12 +124,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     this._pinnedRows = pinnedRows;
+    this._rowActions = rowActions;
     this._onInsertRow = onInsertRow;
     this._onDeleteRows = onDeleteRows;
     this._onDeleteColumn = onDeleteColumn;
     this._onCellUpdate = onCellUpdate;
-    this._onRowOrderChanged = onRowOrderChanged;
-    this._rowActions = rowActions;
+    this._onRowOrderChange = onRowOrderChange;
     this._onRowAction = onRowAction;
   }
 
@@ -205,7 +205,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this.initializeColumnMeta();
     this.initializeEffects();
     this._selection = new SelectionModel(this._sorting.sortedRows, this._features.selection.mode ?? 'multiple', () =>
-      this._onRowOrderChanged?.(),
+      this._onRowOrderChange?.(),
     );
     await this._selection.open(this._ctx);
   }
@@ -228,7 +228,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private initializeEffects(): void {
     const rowOrderWatcher = effect(() => {
       touch(this._sorting.sortedRows.value);
-      this._onRowOrderChanged?.();
+      this._onRowOrderChange?.();
     });
     this._ctx.onDispose(rowOrderWatcher);
 

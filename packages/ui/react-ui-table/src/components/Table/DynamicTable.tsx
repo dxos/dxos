@@ -55,7 +55,7 @@ export const DynamicTable = ({
     tableRef.current?.update?.(cell);
   }, []);
 
-  const handleRowOrderChanged = useCallback(() => {
+  const handleRowOrderChange = useCallback(() => {
     tableRef.current?.update?.();
   }, []);
 
@@ -75,7 +75,7 @@ export const DynamicTable = ({
     features,
     rowActions,
     onCellUpdate: handleCellUpdate,
-    onRowOrderChanged: handleRowOrderChanged,
+    onRowOrderChange: handleRowOrderChange,
     onRowAction,
   });
 
