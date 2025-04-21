@@ -186,6 +186,9 @@ export const getReferenceAnnotation = (schema: S.Schema.AnyNoContext) =>
     Option.getOrElse(() => undefined),
   );
 
+/**
+ * SchemaMeta.
+ */
 export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 
 export type SchemaMeta = TypeMeta & { id: string };
