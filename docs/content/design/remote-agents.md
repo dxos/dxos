@@ -101,7 +101,7 @@
 - **DMG**:
   - Federated registry that enables publishing and discover of functions.
   - Content-addressable graph database; contains dependency graph.
-  - Allows for isolated (private) registration, and federation across DXOS ecosystem (via DXN URIs: e.g., `org.dxos/function/universal-indexer`, `com.example/function/llama-training`, `com.example/function/proton-mail-bridge`)
+  - Allows for isolated (private) registration, and federation across DXOS ecosystem (via DXN URIs: e.g., `dxos.org/function/universal-indexer`, `example.com/function/llama-training`, `example.com/function/proton-mail-bridge`)
 
 ### Schematic
 

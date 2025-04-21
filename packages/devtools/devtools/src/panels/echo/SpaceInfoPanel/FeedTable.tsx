@@ -44,7 +44,7 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
     [],
   );
 
-  const tableData = useMemo(() => {
+  const rows = useMemo(() => {
     return feeds.map((feed) => ({
       id: feed.feedKey.toString(),
       feedKey: feed.feedKey.toString(),
@@ -62,5 +62,5 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
 
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
-  return <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClick} features={features} />;
+  return <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />;
 };

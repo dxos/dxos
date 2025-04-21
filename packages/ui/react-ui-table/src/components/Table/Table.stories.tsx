@@ -16,7 +16,7 @@ import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { echoSchemaFromPropertyDefinitions, ViewProjection, ViewType } from '@dxos/schema';
+import { getSchemaFromPropertyDefinitions, ViewProjection, ViewType } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -67,7 +67,7 @@ const useTestTableModel = () => {
     tableRef.current?.update?.(cell);
   }, []);
 
-  const handleRowOrderChanged = useCallback(() => {
+  const handleRowOrderChange = useCallback(() => {
     tableRef.current?.update?.();
   }, []);
 
@@ -99,12 +99,12 @@ const useTestTableModel = () => {
     table,
     projection,
     features,
-    objects: filteredObjects,
+    rows: filteredObjects,
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: handleCellUpdate,
-    onRowOrderChanged: handleRowOrderChanged,
+    onRowOrderChange: handleRowOrderChange,
   });
 
   const presentation = useMemo(() => {
@@ -247,17 +247,17 @@ export const StaticSchema: StoryObj = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.ContactType, Testing.OrgType],
+      types: [TableType, ViewType, Testing.Contact, Testing.Org],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
         const table = space.db.add(create(TableType, {}));
-        await initializeTable({ client, space, table, typename: Testing.ContactType.typename });
+        await initializeTable({ client, space, table, typename: Testing.Contact.typename });
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          { type: Testing.ContactType, count: 10 },
-          { type: Testing.OrgType, count: 1 },
+          { type: Testing.Contact, count: 10 },
+          { type: Testing.Org, count: 1 },
         ]);
       },
     }),
@@ -288,7 +288,7 @@ export const Tags: Meta<StoryProps> = {
 
         const selectOptionIds = selectOptions.map((o) => o.id);
 
-        const schema = echoSchemaFromPropertyDefinitions(typename, [
+        const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
             format: FormatEnum.SingleSelect,

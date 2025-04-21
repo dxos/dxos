@@ -47,7 +47,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     return new ViewProjection(schema.jsonSchema, table.view.target);
   }, [schema, table]);
 
-  const model = useTableModel({ table, projection, objects: [] });
+  const model = useTableModel({ table, projection, rows: [] });
   useEffect(() => {
     if (!model) {
       return;
@@ -71,15 +71,12 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 
 const DefaultStory = () => {
   // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
-  const orgSchema = useMemo(() => new ImmutableSchema(Testing.OrgType), []);
-  const { model: orgModel, presentation: orgPresentation } = useTestModel<Testing.OrgType>(orgSchema, 50);
+  const orgSchema = useMemo(() => new ImmutableSchema(Testing.Org), []);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel<Testing.Org>(orgSchema, 50);
 
   // TODO(burdon): Generate links with references.
-  const contactSchema = useMemo(() => new ImmutableSchema(Testing.ContactType), []);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel<Testing.ContactType>(
-    contactSchema,
-    50,
-  );
+  const contactSchema = useMemo(() => new ImmutableSchema(Testing.Contact), []);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel<Testing.Contact>(contactSchema, 50);
 
   // TODO(burdon): Scrolling isn't working.
   return (
@@ -100,7 +97,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.OrgType, Testing.ContactType],
+      types: [TableType, ViewType, Testing.Org, Testing.Contact],
       createIdentity: true,
       createSpace: true,
     }),

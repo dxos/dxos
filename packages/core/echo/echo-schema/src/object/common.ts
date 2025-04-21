@@ -6,10 +6,13 @@ import { Schema as S } from 'effect';
 
 import { getTypename } from './typename';
 import { schemaVariance } from '../ast';
+import { type BaseObject } from '../types';
 
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
 export type TypedObjectOptions = {
+  // TODO(burdon): Document.
   partial?: true;
+  // TODO(burdon): Document.
   record?: true;
 };
 
@@ -45,7 +48,6 @@ export const makeTypedEntityClass = (
   return class {
     // Implement TypedObject properties.
     static readonly typename = typename;
-
     static readonly version = version;
 
     // Implement S.Schema properties.
@@ -56,7 +58,7 @@ export const makeTypedEntityClass = (
     static readonly pipe = baseSchema.pipe.bind(baseSchema);
 
     // TODO(burdon): Comment required.
-    static [Symbol.hasInstance](obj: unknown) {
+    static [Symbol.hasInstance](obj: BaseObject) {
       return obj != null && getTypename(obj) === typename;
     }
 

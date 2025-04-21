@@ -13,6 +13,7 @@ import { Placeholder } from './Placeholder';
 
 export type MasterDetailTableProps = {
   properties: TablePropertyDefinition[];
+  // TODO(burdon): Rename to objects.
   data: Array<{ id: string; [key: string]: any }>;
   detailsTransform?: (data: any) => MaybePromise<any>;
   detailsPosition?: 'bottom' | 'right';
@@ -81,7 +82,7 @@ export const MasterDetailTable = ({
 
   return (
     <div className={mx('bs-full divide-y divide-separator', gridLayout)}>
-      <DynamicTable data={data} properties={properties} onRowClicked={handleRowClicked} features={features} />
+      <DynamicTable properties={properties} rows={data} features={features} onRowClick={handleRowClicked} />
       <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-is')}>
         {selected ? (
           isLoading ? (

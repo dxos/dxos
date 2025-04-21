@@ -44,7 +44,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
     return invocationSpans.find((span) => selectedId === span.id);
   }, [selectedId, invocationSpans]);
 
-  const invocationProperties: TablePropertyDefinition[] = useMemo(() => {
+  const properties: TablePropertyDefinition[] = useMemo(() => {
     function* generateProperties() {
       if (props.script === undefined) {
         yield { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 };
@@ -92,7 +92,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
     return [...generateProperties()];
   }, [props.script]);
 
-  const invocationData = useMemo(() => {
+  const rows = useMemo(() => {
     return invocationSpans.map((invocation) => {
       const status = invocation.outcome;
       const targetDxn = decodeReference(invocation.invocationTarget).dxn;
@@ -110,7 +110,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
     });
   }, [invocationSpans, resolver]);
 
-  const handleInvocationRowClicked = useCallback((row: any) => {
+  const handleRowClick = useCallback((row: any) => {
     if (!row) {
       return;
     }
@@ -143,12 +143,7 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
       }
     >
       <div className={mx('bs-full', gridLayout)}>
-        <DynamicTable
-          properties={invocationProperties}
-          data={invocationData}
-          onRowClicked={handleInvocationRowClicked}
-          features={features}
-        />
+        <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
         {selectedInvocation && <Selected span={selectedInvocation} />}
       </div>
     </PanelContainer>

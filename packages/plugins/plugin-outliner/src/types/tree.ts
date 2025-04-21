@@ -20,7 +20,7 @@ export interface TreeNodeType extends S.Schema.Type<typeof TreeNodeType> {}
 export const TreeType = S.Struct({
   root: ObjectId,
   nodes: S.mutable(S.Record({ key: ObjectId, value: TreeNodeType })),
-}).pipe(EchoObject('dxos.org/type/Tree', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/Tree', version: '0.1.0' }));
 
 export interface TreeType extends S.Schema.Type<typeof TreeType> {}
 

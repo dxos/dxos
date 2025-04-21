@@ -83,12 +83,12 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     table,
     projection,
     features,
-    objects: filteredObjects,
+    rows: filteredObjects,
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChanged: () => tableRef.current?.update?.(),
+    onRowOrderChange: () => tableRef.current?.update?.(),
   });
 
   const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);

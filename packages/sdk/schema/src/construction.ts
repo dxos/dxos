@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormatEnum, formatToType, S, TypedObject, TypeEnum, type SelectOptionSchema } from '@dxos/echo-schema';
+import {
+  formatToType,
+  type EchoSchema,
+  FormatEnum,
+  S,
+  TypedObject,
+  TypeEnum,
+  type SelectOptionSchema,
+} from '@dxos/echo-schema';
 import { createEchoSchema } from '@dxos/live-object/testing';
 
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';
@@ -17,7 +25,11 @@ export type SchemaPropertyDefinition = {
   config?: { options?: SelectOptionType[] };
 };
 
-export const echoSchemaFromPropertyDefinitions = (typename: string, properties: SchemaPropertyDefinition[]) => {
+export const getSchemaFromPropertyDefinitions = (
+  typename: string,
+  properties: SchemaPropertyDefinition[],
+): EchoSchema => {
+  // TODO(burdon): Move to echo-schema.
   const typeToSchema: Record<TypeEnum, S.Any> = {
     [TypeEnum.String]: S.String.pipe(S.optional),
     [TypeEnum.Number]: S.Number.pipe(S.optional),

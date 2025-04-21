@@ -7,7 +7,7 @@ import { ulid } from 'ulidx';
 
 export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
 
-// TODO(dmaretskyi): Make brand.
+// TODO(dmaretskyi): Make brand. (RB: Yes!)
 // export const ObjectIdSchema = S.ULID.pipe(S.brand(ObjectIdBrand));
 export const ObjectIdSchema = S.ULID;
 
