@@ -103,64 +103,53 @@ export const EchoObject: {
       [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
     });
 
-    return makeEchoObjectSchemaClass<Self>(typename, version, ast);
+    return makeEchoObjectSchema<Self>(typename, version, ast);
   };
 };
 
-const makeEchoObjectSchemaClass = <Self extends S.Schema.Any>(
+type EchoObjectSchemaType<T> = Simplify<HasId & ToMutable<T>>;
+
+export interface EchoObjectSchema<Self extends S.Schema.Any>
+  // TODO(burdon): Extend TypeLiteral to provide `is` and `make` function to handle defaults.
+  extends TypeMeta,
+    S.AnnotableClass<
+      EchoObjectSchema<Self>,
+      EchoObjectSchemaType<S.Schema.Type<Self>>,
+      EchoObjectSchemaType<S.Schema.Encoded<Self>>,
+      S.Schema.Context<Self>
+    > {
+  instanceOf(value: unknown): boolean;
+  // make(value: unknown): any;
+}
+
+const makeEchoObjectSchema = <Self extends S.Schema.Any>(
   typename: string,
   version: string,
   ast: AST.AST,
 ): EchoObjectSchema<Self> => {
   return class EchoObjectSchemaClass extends S.make<
-    EchoObjectSchemaData<S.Schema.Type<Self>>,
-    EchoObjectSchemaData<S.Schema.Encoded<Self>>,
+    EchoObjectSchemaType<S.Schema.Type<Self>>,
+    EchoObjectSchemaType<S.Schema.Encoded<Self>>,
     S.Schema.Context<Self>
   >(ast) {
     static readonly typename = typename;
     static readonly version = version;
 
     static override annotations(
-      annotations: S.Annotations.Schema<EchoObjectSchemaData<S.Schema.Type<Self>>>,
+      annotations: S.Annotations.Schema<EchoObjectSchemaType<S.Schema.Type<Self>>>,
     ): EchoObjectSchema<Self> {
-      return makeEchoObjectSchemaClass(
+      return makeEchoObjectSchema(
         typename,
         version,
-        S.make<EchoObjectSchemaData<S.Schema.Type<Self>>>(ast).annotations(annotations).ast,
+        S.make<EchoObjectSchemaType<S.Schema.Type<Self>>>(ast).annotations(annotations).ast,
       );
     }
 
-    static is(value: unknown): boolean {
+    static instanceOf(value: unknown): boolean {
       return S.is(this)(value);
     }
-
-    // TODO(burdon): See makeTypeLiteralClass.
-    // static make = (
-    //   props: Simplify<TypeLiteral.Constructor<Fields, Records>>,
-    //   options?: S.MakeOptions,
-    // ): Simplify<TypeLiteral.Type<Fields, Records>> => {
-    //   const propsWithDefaults: any = lazilyMergeDefaults(fields, { ...(props as any) });
-    //   return getDisableValidationMakeOption(options)
-    //     ? propsWithDefaults
-    //     : ParseResult.validateSync(this)(propsWithDefaults);
-    // };
   };
 };
-
-type EchoObjectSchemaData<T> = Simplify<HasId & ToMutable<T>>;
-
-export interface EchoObjectSchema<Self extends S.Schema.Any>
-  extends TypeMeta,
-    S.AnnotableClass<
-      EchoObjectSchema<Self>,
-      EchoObjectSchemaData<S.Schema.Type<Self>>,
-      EchoObjectSchemaData<S.Schema.Encoded<Self>>,
-      S.Schema.Context<Self>
-    > {
-  // TODO(burdon): Extend TypeLiteral to provide `is` and `make` function to handle defaults.
-  is(value: unknown): boolean;
-  // make(value: unknown): any;
-}
 
 /**
  * PropertyMeta (metadata for dynamic schema properties).

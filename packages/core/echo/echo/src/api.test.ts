@@ -80,7 +80,7 @@ describe('Experimental API review', () => {
     const contact = Type.create(Testing.Contact, { name: 'Test', org: Type.ref(org) });
 
     expect(S.is(Testing.Contact)(contact)).to.be.true;
-    expect(Testing.Contact.is(contact)).to.be.true;
+    expect(Testing.Contact.instanceOf(contact)).to.be.true;
     expect(Type.instanceOf(Testing.Contact, contact)).to.be.true;
     expect(Type.instanceOf(Testing.Org, contact.org?.target)).to.be.true;
   });
