@@ -29,7 +29,7 @@ export default async ({ context, onClientInitialized, ...options }: ClientCapabi
 
   const subscription = client.spaces.isReady.subscribe(async (ready) => {
     if (ready) {
-      await context.activate(ClientEvents.SpacesReady);
+      await context.activatePromise(ClientEvents.SpacesReady);
     }
   });
 
