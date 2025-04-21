@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, Option, pipe, SchemaAST as AST, Schema as S } from 'effect';
+import { flow, Option, pipe, SchemaAST as AST, Schema as S, ParseResult, Predicate } from 'effect';
+import { isPropertySignature } from 'effect/Schema';
 import { type Simplify } from 'effect/Types';
 
 import { getField, type JsonPath } from '@dxos/effect';
@@ -90,7 +91,7 @@ export const EchoObject: {
   return <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(
     self: Self,
   ): EchoObjectSchema<Self, Fields> => {
-    invariant(AST.isTypeLiteral(self.ast), 'Must be a TypeLiteral.');
+    invariant(AST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
@@ -100,11 +101,41 @@ export const EchoObject: {
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
     });
 
-    return makeEchoObjectSchema<Self, Fields>(ast, typename, version);
+    return makeEchoObjectSchema<Self, Fields>(self.fields, ast, typename, version);
   };
 };
 
 type EchoObjectSchemaType<T> = Simplify<HasId & ToMutable<T>>;
+type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
+type MakeOptions =
+  | boolean
+  | {
+      readonly disableValidation?: boolean;
+    };
+
+const _ownKeys = (o: object): Array<PropertyKey> =>
+  (Object.keys(o) as Array<PropertyKey>).concat(Object.getOwnPropertySymbols(o));
+
+const lazilyMergeDefaults = (
+  fields: S.Struct.Fields,
+  out: Record<PropertyKey, unknown>,
+): { [x: string | symbol]: unknown } => {
+  const ownKeys = _ownKeys(fields);
+  for (const key of ownKeys) {
+    const field = fields[key];
+    if (out[key] === undefined && isPropertySignature(field)) {
+      const ast = field.ast;
+      const defaultValue = ast._tag === 'PropertySignatureDeclaration' ? ast.defaultValue : ast.to.defaultValue;
+      if (defaultValue !== undefined) {
+        out[key] = defaultValue();
+      }
+    }
+  }
+  return out;
+};
+
+const getDisableValidationMakeOption = (options: MakeOptions | undefined): boolean =>
+  Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
 
 export interface EchoObjectSchema<Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>
   extends TypeMeta,
@@ -114,18 +145,19 @@ export interface EchoObjectSchema<Self extends S.Struct<Fields>, Fields extends 
       EchoObjectSchemaType<S.Schema.Encoded<Self>>,
       S.Schema.Context<Self>
     > {
-  instanceOf(value: unknown): boolean;
-
   // TODO(burdon): Need Fields, Records type.
-  // make(
-  //   props: RequiredKeys<TypeLiteral.Constructor<Fields, Records>> extends never
-  //     ? void | Simplify<TypeLiteral.Constructor<Fields, Records>>
-  //     : Simplify<TypeLiteral.Constructor<Fields, Records>>,
-  //   options?: MakeOptions,
-  // ): Simplify<TypeLiteral.Type<Fields, Records>>;
+  make(
+    props: RequiredKeys<S.TypeLiteral.Constructor<Fields, []>> extends never
+      ? void | Simplify<S.TypeLiteral.Constructor<Fields, []>>
+      : Simplify<S.TypeLiteral.Constructor<Fields, []>>,
+    options?: MakeOptions,
+  ): Simplify<S.TypeLiteral.Type<Fields, []>>;
+
+  instanceOf(value: unknown): boolean;
 }
 
 const makeEchoObjectSchema = <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(
+  fields: Fields,
   ast: AST.AST,
   typename: string,
   version: string,
@@ -142,7 +174,19 @@ const makeEchoObjectSchema = <Self extends S.Struct<Fields>, Fields extends S.St
       annotations: S.Annotations.GenericSchema<EchoObjectSchemaType<S.Schema.Type<Self>>>,
     ): EchoObjectSchema<Self, Fields> {
       const schema = S.make<EchoObjectSchemaType<S.Schema.Type<Self>>>(ast).annotations(annotations);
-      return makeEchoObjectSchema<Self, Fields>(schema.ast, typename, version);
+      return makeEchoObjectSchema<Self, Fields>(fields, schema.ast, typename, version);
+    }
+
+    static make(
+      props: RequiredKeys<S.TypeLiteral.Constructor<Fields, []>> extends never
+        ? void | Simplify<S.TypeLiteral.Constructor<Fields, []>>
+        : Simplify<S.TypeLiteral.Constructor<Fields, []>>,
+      options?: MakeOptions,
+    ): Simplify<S.TypeLiteral.Type<Fields, []>> {
+      const propsWithDefaults: any = lazilyMergeDefaults(fields, { ...(props as any) });
+      return getDisableValidationMakeOption(options)
+        ? propsWithDefaults
+        : ParseResult.validateSync(this)(propsWithDefaults);
     }
 
     static instanceOf(value: unknown): boolean {
