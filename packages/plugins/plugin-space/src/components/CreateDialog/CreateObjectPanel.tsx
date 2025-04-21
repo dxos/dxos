@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework';
-import { getObjectAnnotation, type TypeAnnotation, type S } from '@dxos/echo-schema';
+import { getTypeAnnotation, type TypeAnnotation, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type Space } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -69,9 +69,9 @@ export const CreateObjectPanel = ({
   const { t } = useTranslation(SPACE_PLUGIN);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
-  const form = forms.find((form) => getObjectAnnotation(form.objectSchema)?.typename === typename);
+  const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
   const options: TypeAnnotation[] = forms
-    .map((form) => getObjectAnnotation(form.objectSchema))
+    .map((form) => getTypeAnnotation(form.objectSchema))
     .filter(isNonNullable)
     .sort((a, b) => {
       const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
@@ -92,7 +92,7 @@ export const CreateObjectPanel = ({
   const handleSetTypename = useCallback(
     async (typename: string) => {
       invariant(target, 'target is required');
-      const form = forms.find((form) => getObjectAnnotation(form.objectSchema)?.typename === typename);
+      const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
       if (form && !form.formSchema) {
         await onCreateObject?.({ form, target });
       } else {

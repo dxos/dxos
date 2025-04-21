@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, SchemaAST } from 'effect';
+import { Option, SchemaAST as AST } from 'effect';
 import Exa from 'exa-js';
 
 import { defineTool, Message, type TextContentBlock } from '@dxos/artifact';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest } from '@dxos/assistant';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { createStatic, getObjectAnnotation, ObjectId, ReferenceAnnotationId, S } from '@dxos/echo-schema';
+import { createStatic, getTypeAnnotation, ObjectId, ReferenceAnnotationId, S } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -92,10 +92,10 @@ export const search = async <Schema extends S.Schema.AnyNoContext>(
 
     schema: S.Struct({
       ...Object.fromEntries(
-        mappedSchema.map((s, index) => [
+        mappedSchema.map((schema, index) => [
           `objects_${index}`,
-          S.Array(s).annotations({
-            description: `The objects to answer the query of type ${getObjectAnnotation(s)?.typename ?? SchemaAST.getIdentifierAnnotation(s.ast).pipe(Option.getOrNull)}`,
+          S.Array(schema).annotations({
+            description: `The objects to answer the query of type ${getTypeAnnotation(schema)?.typename ?? AST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
           }),
         ]),
       ),
@@ -238,8 +238,8 @@ const SoftRef = S.Struct({
 });
 
 const mapSchemaRefs = (schema: S.Schema.AnyNoContext) => {
-  const go = (ast: SchemaAST.AST): SchemaAST.AST => {
-    if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
+  const go = (ast: AST.AST): AST.AST => {
+    if (AST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
       return SoftRef.ast;
     }
 
