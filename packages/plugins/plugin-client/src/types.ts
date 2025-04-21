@@ -107,5 +107,5 @@ export namespace Account {
 
   export const Profile = `${_id}.profile`;
   export const Devices = `${_id}.devices`;
-  export const Passkeys = `${_id}.passkeys`;
+  export const Security = `${_id}.security`;
 }

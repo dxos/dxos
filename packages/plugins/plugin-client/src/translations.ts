@@ -20,7 +20,7 @@ export default [
         'create device invitation label': 'Create code',
         'qr code description':
           'Scan this QR code using the device you want to log in to, or copy the URL and share it with the new device.',
-        'passkeys label': 'Passkeys',
+        'security label': 'Security',
         'reset device description': 'Log out from this device, erasing all the data on this device.',
         'join new identity description':
           'Log out from this device, erasing all the data currently on this device, and use a QR code or URL to log in.',
@@ -28,7 +28,7 @@ export default [
           'Log out from this device, erasing all the data currently on this device, and use a passkey or recovery code to log in.',
         'danger zone title': 'Log out',
         'danger zone description':
-          'Because Composer is decentralized, logging out entails erasing all the data on this device. If you have any data on this device that you’d like to keep, you can log in on a separate device using the ‘Add device’ process above, or you can create recovery credentials for later use.',
+          'Because Composer is decentralized, logging out entails erasing all the data on this device. If you have any data on this device that you’d like to keep, you can log in on a separate device using a passkey or complete a peer-to-peer device invitation above.',
         'display name label': 'Display name',
         'display name description': 'Your name as it appears in the app.',
         'display name input placeholder': 'Enter a name',
@@ -44,10 +44,12 @@ export default [
         'credentials list label': 'Recovery credentials',
         'no credentials title': 'There’s no way to recover your account yet.',
         'no credentials message': 'Create a recovery credential above to secure your account.',
-        'recovery setup dialog title': 'Account Recovery',
+        'recovery setup dialog title': 'Account Security',
         'recovery setup dialog description':
-          'In order to recover your account you need to register a recovery credential. Passkeys are the recommended way to do this, they can be stored in your browser or in a password manager.',
+          'In order to maintain access to your account you need to register a recovery credential. Passkeys are the recommended way to do this, they can be stored in your browser or in a password manager.',
         'create passkey label': 'Create Passkey',
+        // TODO(wittjosiah): At link to user-focused passkey information.
+        //   Something like https://www.tomsguide.com/news/what-are-passkeys.
         'create passkey description':
           'A passkey is a secure and easy to use credential that can be used to recover your account.',
         'create recovery code label': 'Create Recovery Code',

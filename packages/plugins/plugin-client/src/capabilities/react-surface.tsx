@@ -41,9 +41,9 @@ export default ({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
       component: ({ data }) => <DevicesContainer createInvitationUrl={createInvitationUrl} />,
     }),
     createSurface({
-      id: Account.Passkeys,
+      id: Account.Security,
       role: 'article',
-      filter: (data): data is any => data.subject === Account.Passkeys,
+      filter: (data): data is any => data.subject === Account.Security,
       component: () => <RecoveryCredentialsContainer />,
     }),
     createSurface({

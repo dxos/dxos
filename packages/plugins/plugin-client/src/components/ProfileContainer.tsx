@@ -69,7 +69,6 @@ export const ProfileContainer = () => {
 
   const customElements: Partial<Record<string, InputComponent>> = useMemo(
     () => ({
-      // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       displayName: ({ type, getValue, onValueChange }) => {
         const handleChange = useCallback(
           ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),

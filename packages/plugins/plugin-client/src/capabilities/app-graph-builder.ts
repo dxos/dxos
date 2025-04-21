@@ -78,11 +78,11 @@ export default (context: PluginsContext) =>
                 },
               },
               {
-                id: Account.Passkeys,
-                data: Account.Passkeys,
+                id: Account.Security,
+                data: Account.Security,
                 type: CLIENT_PLUGIN,
                 properties: {
-                  label: ['passkeys label', { ns: CLIENT_PLUGIN }],
+                  label: ['security label', { ns: CLIENT_PLUGIN }],
                   icon: 'ph--key--regular',
                 },
               },
