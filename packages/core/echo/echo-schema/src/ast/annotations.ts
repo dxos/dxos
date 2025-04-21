@@ -18,7 +18,7 @@ type ToMutable<T> = T extends BaseObject
   : T;
 
 /**
- * ECHO identifier for a stored schema.
+ * ECHO identifier (for a stored schema).
  * Must be a `dxn:echo:` URI.
  */
 export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
@@ -129,11 +129,8 @@ const makeEchoObjectSchema = <Self extends S.Schema.Any>(
     static override annotations(
       annotations: S.Annotations.GenericSchema<EchoObjectSchemaType<S.Schema.Type<Self>>>,
     ): EchoObjectSchema<Self> {
-      return makeEchoObjectSchema<Self>(
-        typename,
-        version,
-        S.make<EchoObjectSchemaType<S.Schema.Type<Self>>>(ast).annotations(annotations).ast,
-      );
+      const schema = S.make<EchoObjectSchemaType<S.Schema.Type<Self>>>(ast).annotations(annotations);
+      return makeEchoObjectSchema<Self>(typename, version, schema.ast);
     }
 
     static instanceOf(value: unknown): boolean {
