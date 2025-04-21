@@ -67,7 +67,7 @@ const useTestTableModel = () => {
     tableRef.current?.update?.(cell);
   }, []);
 
-  const handleRowOrderChanged = useCallback(() => {
+  const handleRowOrderChange = useCallback(() => {
     tableRef.current?.update?.();
   }, []);
 
@@ -99,12 +99,12 @@ const useTestTableModel = () => {
     table,
     projection,
     features,
-    objects: filteredObjects,
+    rows: filteredObjects,
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: handleCellUpdate,
-    onRowOrderChanged: handleRowOrderChanged,
+    onRowOrderChange: handleRowOrderChange,
   });
 
   const presentation = useMemo(() => {

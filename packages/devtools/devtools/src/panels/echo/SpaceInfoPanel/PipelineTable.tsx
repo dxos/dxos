@@ -75,7 +75,7 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
     };
   };
 
-  const objects = useMemo(() => {
+  const rows = useMemo(() => {
     const controlKeys = Array.from(
       new ComplexSet(PublicKey.hash, [
         ...(state.controlFeeds ?? []),
@@ -166,5 +166,5 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
 
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
-  return <DynamicTable properties={properties} objects={objects} onRowClicked={handleRowClicked} features={features} />;
+  return <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClicked} />;
 };

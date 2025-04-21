@@ -82,7 +82,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
   }, [selected]);
 
-  const objectProperties = useMemo(
+  const dataProperties = useMemo(
     () => [
       { name: 'id', format: FormatEnum.DID },
       { name: 'type', format: FormatEnum.String },
@@ -110,7 +110,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const objects = useMemo(() => {
+  const dataRows = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
       id: item.id,
       type: getTypename(item),
@@ -143,7 +143,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const historyObjects = useMemo(() => {
+  const historyRows = useMemo(() => {
     return history.map((item) => ({
       id: item.hash,
       hash: item.hash.slice(0, 8),
@@ -190,10 +190,10 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
         <div className='flex flex-col w-full overflow-hidden'>
           <DynamicTable
-            properties={objectProperties}
-            objects={objects}
+            properties={dataProperties}
+            rows={dataRows}
             features={features}
-            onRowClicked={handleObjectRowClicked}
+            onRowClick={handleObjectRowClicked}
           />
           <div
             className={mx(
@@ -216,11 +216,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           </div>
           <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
             {selected ? (
-              <DynamicTable
-                properties={historyProperties}
-                objects={historyObjects}
-                onRowClicked={handleHistoryRowClicked}
-              />
+              <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
             ) : (
               <Placeholder label='History' />
             )}

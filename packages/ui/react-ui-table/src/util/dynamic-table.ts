@@ -33,16 +33,17 @@ export const getBaseSchems = ({
   jsonSchema,
   schema,
 }: {
-  typename: string;
+  typename?: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchemaType;
   schema?: BaseSchema;
 }): { typename: string; jsonSchema: JsonSchemaType } => {
-  if (properties) {
-    return getSchemaFromPropertyDefinitions(typename, properties);
+  if (typename && properties) {
+    const schema = getSchemaFromPropertyDefinitions(typename, properties);
+    return { typename: schema.typename, jsonSchema: schema.jsonSchema };
   } else if (schema) {
-    return schema;
-  } else if (jsonSchema) {
+    return { typename: schema.typename, jsonSchema: schema.jsonSchema };
+  } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {
     throw new Error('invalid properties');
