@@ -13,10 +13,21 @@ import { EntityKind } from './entity-kind';
 import { type HasId } from './types';
 import { type BaseObject } from '../types';
 
-// TODO(burdon): Rename?
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
   : T;
+
+/**
+ * ECHO identifier for a stored schema.
+ * Must be a `dxn:echo:` URI.
+ */
+export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
+
+export const getTypeIdentifierAnnotation = (schema: S.Schema.All) =>
+  flow(
+    AST.getAnnotation<string>(TypeIdentifierAnnotationId),
+    Option.getOrElse(() => undefined),
+  )(schema.ast);
 
 /**
  * ECHO type.
@@ -65,18 +76,6 @@ export const getSchemaTypename = (schema: S.Schema.All): string | undefined => g
  * @returns Schema version in semver format.
  */
 export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
-
-/**
- * ECHO identifier for a stored schema.
- * Must be a `dxn:echo:` URI.
- */
-export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
-
-export const getTypeIdentifierAnnotation = (schema: S.Schema.All) =>
-  flow(
-    AST.getAnnotation<string>(TypeIdentifierAnnotationId),
-    Option.getOrElse(() => undefined),
-  )(schema.ast);
 
 /**
  * Pipeable function to add ECHO object annotations to a schema.
