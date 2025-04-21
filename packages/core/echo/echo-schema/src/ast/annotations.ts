@@ -83,9 +83,13 @@ export const getSchemaVersion = (schema: S.Schema.All): string | undefined => ge
 // TODO(burdon): Rename EchoType.
 export const EchoObject: {
   // TODO(burdon): Tighten Self type to S.TypeLiteral or S.Struct to facilitate definition of `make` method.
-  (meta: TypeMeta): <Self extends S.Schema.Any>(self: Self) => EchoObjectSchema<Self>;
+  (
+    meta: TypeMeta,
+  ): <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
 } = ({ typename, version }) => {
-  return <Self extends S.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
+  return <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(
+    self: Self,
+  ): EchoObjectSchema<Self, Fields> => {
     invariant(AST.isTypeLiteral(self.ast), 'Must be a TypeLiteral.');
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
@@ -96,16 +100,16 @@ export const EchoObject: {
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
     });
 
-    return makeEchoObjectSchema<Self>(ast, typename, version);
+    return makeEchoObjectSchema<Self, Fields>(ast, typename, version);
   };
 };
 
 type EchoObjectSchemaType<T> = Simplify<HasId & ToMutable<T>>;
 
-export interface EchoObjectSchema<Self extends S.Schema.Any>
+export interface EchoObjectSchema<Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>
   extends TypeMeta,
     S.AnnotableClass<
-      EchoObjectSchema<Self>,
+      EchoObjectSchema<Self, Fields>,
       EchoObjectSchemaType<S.Schema.Type<Self>>,
       EchoObjectSchemaType<S.Schema.Encoded<Self>>,
       S.Schema.Context<Self>
@@ -121,11 +125,11 @@ export interface EchoObjectSchema<Self extends S.Schema.Any>
   // ): Simplify<TypeLiteral.Type<Fields, Records>>;
 }
 
-const makeEchoObjectSchema = <Self extends S.Schema.Any>(
+const makeEchoObjectSchema = <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(
   ast: AST.AST,
   typename: string,
   version: string,
-): EchoObjectSchema<Self> => {
+): EchoObjectSchema<Self, Fields> => {
   return class EchoObjectSchemaClass extends S.make<
     EchoObjectSchemaType<S.Schema.Type<Self>>,
     EchoObjectSchemaType<S.Schema.Encoded<Self>>,
@@ -136,9 +140,9 @@ const makeEchoObjectSchema = <Self extends S.Schema.Any>(
 
     static override annotations(
       annotations: S.Annotations.GenericSchema<EchoObjectSchemaType<S.Schema.Type<Self>>>,
-    ): EchoObjectSchema<Self> {
+    ): EchoObjectSchema<Self, Fields> {
       const schema = S.make<EchoObjectSchemaType<S.Schema.Type<Self>>>(ast).annotations(annotations);
-      return makeEchoObjectSchema<Self>(schema.ast, typename, version);
+      return makeEchoObjectSchema<Self, Fields>(schema.ast, typename, version);
     }
 
     static instanceOf(value: unknown): boolean {

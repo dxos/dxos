@@ -16,6 +16,9 @@ const TestObject = S.Struct({
   [LabelAnnotationId]: ['name', 'fallbackName'],
 });
 
+const a: S.Struct<typeof TestObject.fields> = TestObject;
+console.log(a);
+
 type TestObject = S.Schema.Type<typeof TestObject>;
 
 const TestEchoSchema = TestObject.pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
