@@ -7,7 +7,7 @@ import { type Schema as S } from 'effect';
 import {
   createObjectId,
   defineHiddenProperty,
-  getObjectAnnotation,
+  getTypeAnnotation,
   type BaseObject,
   type ExcludeId,
   Expando,
@@ -67,7 +67,7 @@ const createReactiveObject = <T extends BaseObject>(
   }
 
   if (schema) {
-    const shouldGenerateId = options?.expando || getObjectAnnotation(schema);
+    const shouldGenerateId = options?.expando || getTypeAnnotation(schema);
     if (shouldGenerateId) {
       setIdOnTarget(obj);
     }

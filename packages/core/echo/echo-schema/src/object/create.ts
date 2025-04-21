@@ -9,7 +9,7 @@ import { failedInvariant } from '@dxos/invariant';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { ObjectId } from './object-id';
 import { setTypename } from './typename';
-import { setSchema, getObjectAnnotation } from '../ast';
+import { setSchema, getTypeAnnotation } from '../ast';
 import { getSchemaDXN } from '../types';
 
 // Make `id` optional.
@@ -49,7 +49,7 @@ export const createStatic = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   data: CreateData<S.Schema.Type<Schema>>,
 ): CreateData<S.Schema.Type<Schema>> & { id: string } => {
-  const annotation = getObjectAnnotation(schema);
+  const annotation = getTypeAnnotation(schema);
   if (!annotation) {
     throw new Error('Schema is not an object schema');
   }

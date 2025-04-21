@@ -5,14 +5,14 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
-  ObjectIdentifierAnnotationId,
+  TypeIdentifierAnnotationId,
   EchoSchema,
   EntityKind,
-  ObjectAnnotationId,
+  TypeAnnotationId,
   S,
   StoredSchema,
   toJsonSchema,
-  type ObjectAnnotation,
+  type TypeAnnotation,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -24,21 +24,21 @@ const Org = S.Struct({
   name: S.String,
   address: S.String,
 }).annotations({
-  [ObjectAnnotationId]: {
+  [TypeAnnotationId]: {
     kind: EntityKind.Object,
     typename: 'example.com/type/Org',
     version: '0.1.0',
-  } satisfies ObjectAnnotation,
+  } satisfies TypeAnnotation,
 });
 
 const Contact = S.Struct({
   name: S.String,
 }).annotations({
-  [ObjectAnnotationId]: {
+  [TypeAnnotationId]: {
     kind: EntityKind.Object,
     typename: 'example.com/type/Contact',
     version: '0.1.0',
-  } satisfies ObjectAnnotation,
+  } satisfies TypeAnnotation,
 });
 
 describe('schema registry', () => {
@@ -61,12 +61,12 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     const expectedSchema = Contact.annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Contact',
         version: '0.1.0',
-      } satisfies ObjectAnnotation,
-      [ObjectIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
+      } satisfies TypeAnnotation,
+      [TypeIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
     log('schema', { echoSchema: echoSchema.ast, expectedSchema: expectedSchema.ast });
     expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
@@ -79,12 +79,12 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Org]);
     const expectedSchema = Org.annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Org',
         version: '0.1.0',
-      } satisfies ObjectAnnotation,
-      [ObjectIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
+      } satisfies TypeAnnotation,
+      [TypeIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
     log('schema', { echoSchema: echoSchema.ast, expectedSchema: expectedSchema.ast });
     expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);

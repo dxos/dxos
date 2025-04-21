@@ -13,8 +13,8 @@ import {
   PropertyMeta,
   setSchemaProperty,
   getSchemaProperty,
-  getObjectAnnotation,
-  getObjectIdentifierAnnotation,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
   EntityKind,
   JsonSchemaType,
   createSchemaReference,
@@ -315,12 +315,12 @@ describe('json-to-effect', () => {
     };
 
     const schema = toEffectSchema(jsonSchema);
-    expect(getObjectAnnotation(schema)).to.deep.eq({
+    expect(getTypeAnnotation(schema)).to.deep.eq({
       kind: EntityKind.Object,
       typename: 'example.com/type/Project',
       version: '0.1.0',
     });
-    expect(getObjectIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
+    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
   });
 
   test('symbol annotations get compared', () => {
