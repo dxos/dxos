@@ -47,7 +47,7 @@ namespace Testing {
     ),
   });
 
-  // TODO(burdon): Fix (Type.def should return TypeLiteral to implement make function)..
+  // TODO(burdon): Fix (Type.def currently removes TypeLiteral that implements the `make` function)..
   // }).pipe(
   //   Type.def({
   //     typename: 'example.com/type/Message',
