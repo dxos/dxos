@@ -35,16 +35,35 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   const queue = useQueue<MessageType>(mailbox.queue.dxn, { pollInterval: 1_000 });
 
-  const messages = useMemo(
-    () =>
-      [...(queue?.items ?? [])]
-        .filter(
-          (message) =>
-            message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,
-        )
-        .sort(byDate()),
-    [queue?.items],
-  );
+  // const messages = useMemo(
+  //   () =>
+  //     [...(queue?.items ?? [])]
+  //       .filter(
+  //         (message) =>
+  //           message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,
+  //       )
+  //       .sort(byDate()),
+  //   [queue?.items],
+  // );
+
+  // TODO(ZaymonFC): Remove this stub.
+  const messages: MessageType[] = useMemo(() => {
+    return Array(10)
+      .fill({
+        id: 'msg123',
+        created: new Date().toISOString(),
+        sender: {
+          id: 'user456',
+          name: 'Alice',
+          avatar: 'https://example.com/avatar/alice.jpg',
+        },
+        blocks: [{ type: 'text', text: 'Hello world! This is a simple text message.' }],
+      })
+      .map((msg, index) => ({
+        ...msg,
+        id: `msg${123 + index}`,
+      }));
+  }, []);
 
   const handleAction = useCallback<MailboxActionHandler>(
     ({ action, messageId }) => {
