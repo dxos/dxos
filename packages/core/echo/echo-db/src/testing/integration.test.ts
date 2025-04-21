@@ -13,7 +13,7 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import {
   Expando,
-  getObjectAnnotation,
+  getTypeAnnotation,
   getSchemaTypename,
   getTypeReference,
   RelationSourceId,
@@ -467,7 +467,7 @@ describe('Integration tests', () => {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const { objects } = await db.query(Filter.typeDXN(schemaDxn)).run();
         expect(objects.length).to.eq(1);
-        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+        expect(getTypeAnnotation(getSchema(objects[0])!)).to.include({
           typename: 'example.com/type/Test',
           version: '0.1.0',
         });
@@ -481,7 +481,7 @@ describe('Integration tests', () => {
 
         const { objects } = await db.query(Filter.schema(schema!)).run();
         expect(objects.length).to.eq(1);
-        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+        expect(getTypeAnnotation(getSchema(objects[0])!)).to.include({
           typename: 'example.com/type/Test',
           version: '0.1.0',
         });

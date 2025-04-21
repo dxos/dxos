@@ -8,8 +8,8 @@ import { invariant } from '@dxos/invariant';
 
 import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
 import type { RelationSourceTargetRefs } from './relation';
-import { EntityKind, type HasId, ObjectAnnotationId, Typename, Version } from '../ast';
-import type { ObjectAnnotation, TypeMeta } from '../ast/annotations';
+import { EntityKind, type HasId, TypeAnnotationId, Typename, Version } from '../ast';
+import type { TypeAnnotation, TypeMeta } from '../ast/annotations';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -61,7 +61,7 @@ export const TypedRelation = ({ typename: _typename, version: _version, disableV
     // Set ECHO annotations.
     invariant(typeof EntityKind.Relation === 'string');
     const annotatedSchema = typeSchema.annotations({
-      [ObjectAnnotationId]: { kind: EntityKind.Relation, typename, version } satisfies ObjectAnnotation,
+      [TypeAnnotationId]: { kind: EntityKind.Relation, typename, version } satisfies TypeAnnotation,
     });
 
     /**
