@@ -9,7 +9,7 @@ import { DXN, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 
-type MakeOptions<T extends BaseEchoObject = BaseEchoObject> = {
+export type MemoryQueueOptions<T extends BaseEchoObject = BaseEchoObject> = {
   spaceId?: SpaceId;
   queueId?: string;
   dxn?: DXN;
@@ -25,7 +25,7 @@ export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Q
     queueId,
     dxn,
     items,
-  }: MakeOptions<T>): MemoryQueue<T> {
+  }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!dxn) {
       dxn = new DXN(DXN.kind.QUEUE, [spaceId ?? SpaceId.random(), queueId ?? ObjectId.random()]);
     } else {
