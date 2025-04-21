@@ -8,13 +8,16 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 
+// TODO(burdon): Move to echo-schema?
+
 /**
  * Constructs a reference that points to the given object.
  */
+// TODO(burdon): Tighten type of T?
 // TODO(dmaretskyi): Should be `Ref.make` but that's not possible because of the circular dependency.
 export const makeRef = <T extends BaseObject>(obj: T): Ref<T> => {
   if (typeof obj !== 'object' || obj === null) {
-    throw new TypeError('Invalid parameter `obj`. Expected: ECHO object.');
+    throw new TypeError('Expected: ECHO object.');
   }
 
   // TODO(dmaretskyi): Extract to `getObjectDXN` function.

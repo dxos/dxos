@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ObjectId, type HasId } from '@dxos/echo-schema';
+import { type BaseEchoObject, ObjectId, type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 
-type MakeOptions<T> = {
+export type MemoryQueueOptions<T extends BaseEchoObject = BaseEchoObject> = {
   spaceId?: SpaceId;
   queueId?: string;
   dxn?: DXN;
@@ -17,17 +17,22 @@ type MakeOptions<T> = {
 };
 
 /**
- * In-memory mock queue.
+ * In-memory queue.
  */
-export class QueueMock<T> implements Queue<T> {
-  static make<T>({ spaceId, queueId, dxn, items }: MakeOptions<T>): QueueMock<T> {
+export class MemoryQueue<T extends BaseEchoObject = BaseEchoObject> implements Queue<T> {
+  static make<T extends BaseEchoObject = BaseEchoObject>({
+    spaceId,
+    queueId,
+    dxn,
+    items,
+  }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!dxn) {
       dxn = new DXN(DXN.kind.QUEUE, [spaceId ?? SpaceId.random(), queueId ?? ObjectId.random()]);
     } else {
       invariant(spaceId == null && queueId == null);
     }
 
-    const queue = new QueueMock<T>(dxn);
+    const queue = new MemoryQueue<T>(dxn);
     if (items) {
       void queue.append(items);
     }
@@ -46,7 +51,7 @@ export class QueueMock<T> implements Queue<T> {
 
   get items(): T[] {
     this._signal.notifyRead();
-    return this._items;
+    return [...this._items];
   }
 
   get isLoading(): boolean {

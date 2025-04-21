@@ -10,22 +10,22 @@ import { DXN } from '@dxos/keys';
 import { orderKeys } from '@dxos/util';
 
 import {
-  ObjectIdentifierAnnotationId,
   EntityKind,
   EntityKindSchema,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
+  type JsonSchemaReferenceInfo,
   type JsonSchemaType,
   LabelAnnotationId,
   type ObjectAnnotation,
   ObjectAnnotationId,
+  ObjectIdentifierAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
-  getObjectIdentifierAnnotation,
-  getObjectAnnotation,
-  type JsonSchemaReferenceInfo,
   Ref,
   createEchoReferenceSchema,
+  getObjectIdentifierAnnotation,
+  getObjectAnnotation,
 } from '../ast';
 import { CustomAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
@@ -126,7 +126,6 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     'entityKind',
     'typename',
     'version',
-
     'type',
     'enum',
 

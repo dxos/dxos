@@ -5,7 +5,7 @@ Live Objects for ECHO.
 ## Installation
 
 ```bash
-pnpm i @dxos/echo-schema
+pnpm i @dxos/live-object
 ```
 
 ## DXOS Resources

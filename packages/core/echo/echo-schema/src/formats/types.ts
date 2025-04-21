@@ -6,6 +6,7 @@ import { SchemaAST as AST, type JSONSchema } from 'effect';
 import { Option, pipe } from 'effect';
 
 import type { JsonSchemaType } from '../ast';
+import { createAnnotationHelper } from '../ast/annotation-helper';
 
 export enum TypeEnum {
   Object = 'object',
@@ -42,9 +43,12 @@ export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
  */
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
+export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotationId);
+
 export const getFormatAnnotation = (node: AST.AST): FormatEnum | undefined =>
   pipe(AST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
 
+// TODO(burdon): Rename Format.
 export enum FormatEnum {
   None = 'none',
   String = 'string',
@@ -117,7 +121,6 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.None]: undefined as any,
   [FormatEnum.String]: TypeEnum.String,
   [FormatEnum.Number]: TypeEnum.Number,
-  // Schema for options in the form
   [FormatEnum.Boolean]: TypeEnum.Boolean,
   [FormatEnum.Ref]: TypeEnum.Ref,
 

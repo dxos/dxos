@@ -95,7 +95,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
-  private readonly _echoClient = new EchoClient({});
+  private readonly _echoClient = new EchoClient();
 
   /**
    * Unique id of the Client, local to the current peer.

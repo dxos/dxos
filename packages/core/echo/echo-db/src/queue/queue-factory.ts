@@ -11,13 +11,13 @@ import { QueueImpl } from './queue';
 import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
 
-export interface QueuesAPI {
+export interface AbstractQueueFactory {
   get<T extends BaseEchoObject = BaseEchoObject>(dxn: DXN): Queue<T>;
 }
 
-export class QueuesAPIImpl extends Resource implements QueuesAPI {
-  private _service?: QueuesService = undefined;
+export class QueueFactory extends Resource implements AbstractQueueFactory {
   private readonly _queues = new Map<DXN.String, Queue<BaseEchoObject>>();
+  private _service?: QueuesService = undefined;
 
   setService(service: QueuesService) {
     this._service = service;
