@@ -14,7 +14,7 @@ import {
   setSchemaProperty,
   getSchemaProperty,
   getTypeAnnotation,
-  getObjectIdentifierAnnotation,
+  getTypeIdentifierAnnotation,
   EntityKind,
   JsonSchemaType,
   createSchemaReference,
@@ -320,7 +320,7 @@ describe('json-to-effect', () => {
       typename: 'example.com/type/Project',
       version: '0.1.0',
     });
-    expect(getObjectIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
+    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
   });
 
   test('symbol annotations get compared', () => {

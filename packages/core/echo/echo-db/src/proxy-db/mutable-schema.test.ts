@@ -12,7 +12,7 @@ import {
   TypedObject,
   S,
   getTypename,
-  ObjectIdentifierAnnotationId,
+  TypeIdentifierAnnotationId,
   type TypeAnnotation,
   EntityKind,
 } from '@dxos/echo-schema';
@@ -53,7 +53,7 @@ describe('EchoSchema', () => {
         typename: 'example.com/type/Test',
         version: '0.1.0',
       } satisfies TypeAnnotation,
-      [ObjectIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.target?.id}`,
+      [TypeIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.target?.id}`,
     });
     expect(instanceWithSchemaRef.schema?.target?.ast).to.deep.eq(schemaWithId.ast);
 

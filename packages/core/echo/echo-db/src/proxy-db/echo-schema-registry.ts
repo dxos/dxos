@@ -5,9 +5,9 @@
 import { Event, type CleanupFn } from '@dxos/async';
 import { Resource, type Context } from '@dxos/context';
 import {
-  ObjectIdentifierAnnotationId,
+  TypeIdentifierAnnotationId,
   EchoSchema,
-  getObjectIdentifierAnnotation,
+  getTypeIdentifierAnnotation,
   getTypeAnnotation,
   TypeAnnotationId,
   S,
@@ -278,7 +278,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
   private _addSchema(schema: S.Schema.AnyNoContext): EchoSchema {
     if (schema instanceof EchoSchema) {
       schema = schema.snapshot.annotations({
-        [ObjectIdentifierAnnotationId]: undefined,
+        [TypeIdentifierAnnotationId]: undefined,
       });
     }
 
@@ -287,7 +287,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
       [TypeAnnotationId]: meta,
-      [ObjectIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
+      [TypeIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
     });
 
     schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
@@ -347,7 +347,7 @@ const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
 };
 
 const getObjectIdFromSchema = (schema: S.Schema.AnyNoContext): ObjectId | undefined => {
-  const echoIdentifier = getObjectIdentifierAnnotation(schema);
+  const echoIdentifier = getTypeIdentifierAnnotation(schema);
   if (!echoIdentifier) {
     return undefined;
   }

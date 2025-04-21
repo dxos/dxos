@@ -9,7 +9,7 @@ import { splitJsonPath, type JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getObjectIdentifierAnnotation, getTypeAnnotation, type HasId } from './ast';
+import { getTypeIdentifierAnnotation, getTypeAnnotation, type HasId } from './ast';
 import { ObjectId, type ObjectMeta, getTypename } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
@@ -110,7 +110,7 @@ export const getTypeReference = (schema: S.Schema.AnyNoContext | undefined): Ref
     return undefined;
   }
 
-  const echoId = getObjectIdentifierAnnotation(schema);
+  const echoId = getTypeIdentifierAnnotation(schema);
   if (echoId) {
     return Reference.fromDXN(DXN.parse(echoId));
   }

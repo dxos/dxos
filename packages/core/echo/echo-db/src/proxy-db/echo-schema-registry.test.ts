@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
-  ObjectIdentifierAnnotationId,
+  TypeIdentifierAnnotationId,
   EchoSchema,
   EntityKind,
   TypeAnnotationId,
@@ -66,7 +66,7 @@ describe('schema registry', () => {
         typename: 'example.com/type/Contact',
         version: '0.1.0',
       } satisfies TypeAnnotation,
-      [ObjectIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
+      [TypeIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
     log('schema', { echoSchema: echoSchema.ast, expectedSchema: expectedSchema.ast });
     expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
@@ -84,7 +84,7 @@ describe('schema registry', () => {
         typename: 'example.com/type/Org',
         version: '0.1.0',
       } satisfies TypeAnnotation,
-      [ObjectIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
+      [TypeIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
     log('schema', { echoSchema: echoSchema.ast, expectedSchema: expectedSchema.ast });
     expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);

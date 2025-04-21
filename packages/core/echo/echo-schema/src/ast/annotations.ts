@@ -58,7 +58,7 @@ export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => g
 /**
  * @returns Schema typename (without dxn: prefix or version number).
  */
-// TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects.
+// TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects; (burdon): Use namespaces.
 export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
 
 /**
@@ -67,21 +67,21 @@ export const getSchemaTypename = (schema: S.Schema.All): string | undefined => g
 export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
 
 /**
- * ECHO identifier for a schema.
+ * ECHO identifier for a stored schema.
  * Must be a `dxn:echo:` URI.
  */
-export const ObjectIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/ObjectIdentifier');
+export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
 
-export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
+export const getTypeIdentifierAnnotation = (schema: S.Schema.All) =>
   flow(
-    AST.getAnnotation<string>(ObjectIdentifierAnnotationId),
+    AST.getAnnotation<string>(TypeIdentifierAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
 
 /**
  * Pipeable function to add ECHO object annotations to a schema.
  */
-// TODO(burdon): Reconcile EchoObject/EchoSchema; rename EchoType.
+// TODO(burdon): Rename EchoType.
 export const EchoObject: {
   // TODO(burdon): Tighten Self type to S.TypeLiteral or S.Struct.
   (meta: TypeMeta): <Self extends S.Schema.Any>(self: Self) => EchoObjectSchema<Self>;
