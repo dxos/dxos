@@ -31,7 +31,7 @@ const useTestPropertiesAndObjects = () => {
     [],
   );
 
-  const [objects] = useState<any[]>(
+  const [rows] = useState<any[]>(
     Array.from({ length: 10 }, () => ({
       id: faker.string.uuid(),
       name: faker.person.fullName(),
@@ -39,7 +39,7 @@ const useTestPropertiesAndObjects = () => {
     })),
   );
 
-  return { properties, objects };
+  return { properties, rows };
 };
 
 //
@@ -47,8 +47,8 @@ const useTestPropertiesAndObjects = () => {
 //
 
 const DynamicTableStory = () => {
-  const { properties, objects } = useTestPropertiesAndObjects();
-  return <DynamicTable properties={properties} objects={objects} />;
+  const { properties, rows } = useTestPropertiesAndObjects();
+  return <DynamicTable properties={properties} rows={rows} />;
 };
 
 //
@@ -70,27 +70,27 @@ export const Default: StoryObj = {
 
 export const WithRowClicks: StoryObj = {
   render: () => {
-    const { properties, objects } = useTestPropertiesAndObjects();
+    const { properties, rows } = useTestPropertiesAndObjects();
 
     const handleRowClicked = (row: any) => {
       console.log('Row clicked:', row);
       alert(`Row clicked: ${row.name}, age: ${row.age}`);
     };
 
-    return <DynamicTable properties={properties} objects={objects} onRowClicked={handleRowClicked} />;
+    return <DynamicTable properties={properties} rows={rows} onRowClick={handleRowClicked} />;
   },
 };
 
 export const WithClickToSelect: StoryObj = {
   render: () => {
-    const { properties, objects } = useTestPropertiesAndObjects();
+    const { properties, rows } = useTestPropertiesAndObjects();
 
     const features = useMemo<Partial<TableFeatures>>(
       () => ({ selection: { enabled: true, mode: 'single' as const }, dataEditable: false }),
       [],
     );
 
-    return <DynamicTable properties={properties} objects={objects} features={features} />;
+    return <DynamicTable properties={properties} rows={rows} features={features} />;
   },
 };
 
@@ -110,7 +110,7 @@ export const WithJsonSchema: StoryObj = {
       [],
     );
 
-    const [objects, _setObjects] = useState<any[]>(
+    const [rows] = useState<any[]>(
       Array.from({ length: 15 }, () => ({
         name: faker.person.fullName(),
         age: faker.number.int({ min: 18, max: 80 }),
@@ -119,7 +119,7 @@ export const WithJsonSchema: StoryObj = {
       })),
     );
 
-    return <DynamicTable jsonSchema={schema} objects={objects} name='json-schema-table' />;
+    return <DynamicTable jsonSchema={schema} rows={rows} />;
   },
 };
 
@@ -133,7 +133,7 @@ export const WithEchoSchema: StoryObj = {
       return <div>Loading schema...</div>;
     }
 
-    return <DynamicTable schema={schema} objects={objects} name='contact-table' />;
+    return <DynamicTable schema={schema} rows={objects} />;
   },
   decorators: [
     withClientProvider({

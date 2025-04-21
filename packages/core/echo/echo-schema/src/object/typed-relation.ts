@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 
 import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
 import type { RelationSourceTargetRefs } from './relation';
-import { EntityKind, type HasId, ObjectAnnotationId, TYPENAME_REGEX, VERSION_REGEX } from '../ast';
+import { EntityKind, type HasId, ObjectAnnotationId, Typename, Version } from '../ast';
 import type { ObjectAnnotation, TypeMeta } from '../ast/annotations';
 
 /**
@@ -31,22 +31,16 @@ export interface TypedRelationPrototype<A = any, I = any> extends TypedRelation<
 }
 
 export type TypedRelationProps = TypeMeta & {
-  // TODO(dmaretskyi): Remove after all legacy types has been removed. (burdon): Can do this now (after 0.7).
-  skipTypenameFormatCheck?: boolean;
+  // TODO(dmaretskyi): Remove after all legacy types has been removed.
+  disableValidation?: boolean;
 };
 
 /**
  * Base class factory for typed objects.
  */
-export const TypedRelation = ({ typename, version, skipTypenameFormatCheck }: TypedRelationProps) => {
-  if (!skipTypenameFormatCheck) {
-    if (!TYPENAME_REGEX.test(typename)) {
-      throw new TypeError(`Invalid typename: ${typename}`);
-    }
-    if (!VERSION_REGEX.test(version)) {
-      throw new TypeError(`Invalid version: ${version}`);
-    }
-  }
+export const TypedRelation = ({ typename: _typename, version: _version, disableValidation }: TypedRelationProps) => {
+  const typename = Typename.make(_typename, { disableValidation });
+  const version = Version.make(_version, { disableValidation });
 
   /**
    * Return class definition factory.

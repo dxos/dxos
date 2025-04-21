@@ -16,7 +16,7 @@ import { type TableType } from '../types';
 export type UseTableModelParams<T extends TableRow = TableRow> = {
   table?: TableType;
   projection?: ViewProjection;
-  objects?: ReactiveObject<T>[];
+  rows?: ReactiveObject<T>[];
   rowActions?: TableRowAction[];
   onSelectionChanged?: (selection: string[]) => void;
   onRowAction?: (actionId: string, data: T) => void;
@@ -28,7 +28,7 @@ export type UseTableModelParams<T extends TableRow = TableRow> = {
 export const useTableModel = <T extends TableRow = TableRow>({
   table,
   projection,
-  objects,
+  rows,
   rowActions,
   features,
   onSelectionChanged,
@@ -65,10 +65,10 @@ export const useTableModel = <T extends TableRow = TableRow>({
 
   // Update data.
   useEffect(() => {
-    if (objects) {
-      model?.setRows(objects);
+    if (rows) {
+      model?.setRows(rows);
     }
-  }, [model, objects]);
+  }, [model, rows]);
 
   const { select, clear } = useSelectionActions([table?.id, table?.view?.target?.query.typename].filter(isNonNullable));
 

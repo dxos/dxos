@@ -24,13 +24,8 @@ type ToMutable<T> = T extends BaseObject
 // TODO(burdon): Rename to TypeAnnotation?
 export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
-/** @internal */
-export const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
-/** @internal */
-export const VERSION_REGEX = /^\d+.\d+.\d+$/;
-
-export const Typename = S.String.pipe(S.pattern(TYPENAME_REGEX));
-export const Version = S.String.pipe(S.pattern(VERSION_REGEX));
+export const Typename = S.String.pipe(S.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/));
+export const Version = S.String.pipe(S.pattern(/^\d+.\d+.\d+$/));
 
 /**
  * Payload stored under {@link ObjectAnnotationId}.

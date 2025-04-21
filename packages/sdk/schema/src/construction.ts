@@ -3,9 +3,9 @@
 //
 
 import {
+  formatToType,
   type EchoSchema,
   FormatEnum,
-  formatToType,
   S,
   TypedObject,
   TypeEnum,
@@ -29,6 +29,7 @@ export const getSchemaFromPropertyDefinitions = (
   typename: string,
   properties: SchemaPropertyDefinition[],
 ): EchoSchema => {
+  // TODO(burdon): Move to echo-schema.
   const typeToSchema: Record<TypeEnum, S.Any> = {
     [TypeEnum.String]: S.String.pipe(S.optional),
     [TypeEnum.Number]: S.Number.pipe(S.optional),
