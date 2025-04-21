@@ -32,7 +32,7 @@ export const LogTable = ({ logs = [] }: { logs: LogEntry[] }) => {
     [],
   );
 
-  const objects = useMemo(
+  const rows = useMemo(
     () =>
       logs.map((entry) => ({
         id: `${entry.timestamp}-${Math.random()}`, // Unique ID
@@ -47,5 +47,5 @@ export const LogTable = ({ logs = [] }: { logs: LogEntry[] }) => {
     [logs],
   );
 
-  return <DynamicTable properties={properties} objects={objects} />;
+  return <DynamicTable properties={properties} rows={rows} />;
 };

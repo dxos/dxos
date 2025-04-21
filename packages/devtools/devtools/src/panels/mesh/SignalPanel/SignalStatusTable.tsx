@@ -102,20 +102,20 @@ export const SignalStatusTable = () => {
   }
 
   const properties = useMemo(() => tableProperties, []);
-  const objects = useMemo(() => {
-    return status.map((s, index) => ({
-      id: `${index}-${s.host}`,
-      host: new URL(s.host).origin,
-      status: getStateLabel(s.state),
+  const rows = useMemo(() => {
+    return status.map((status, index) => ({
+      id: `${index}-${status.host}`,
+      host: new URL(status.host).origin,
+      status: getStateLabel(status.state),
       connected:
-        s.state === SignalState.CONNECTED
-          ? formatDistance(s.lastStateChange.getTime(), time.getTime(), { includeSeconds: true, addSuffix: true })
-          : `Reconnecting ${formatDistance(time.getTime(), s.lastStateChange.getTime() + s.reconnectIn, {
+        status.state === SignalState.CONNECTED
+          ? formatDistance(status.lastStateChange.getTime(), time.getTime(), { includeSeconds: true, addSuffix: true })
+          : `Reconnecting ${formatDistance(time.getTime(), status.lastStateChange.getTime() + status.reconnectIn, {
               addSuffix: true,
             })}`,
-      _original: s,
+      _original: status,
     }));
   }, [status, time]);
 
-  return <DynamicTable properties={properties} objects={objects} />;
+  return <DynamicTable properties={properties} rows={rows} />;
 };

@@ -25,7 +25,7 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
   const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
 
   // Define properties for the DynamicTable
-  const logProperties: TablePropertyDefinition[] = useMemo(
+  const properties: TablePropertyDefinition[] = useMemo(
     () => [
       { name: 'time', title: 'Started', format: FormatEnum.DateTime, sort: 'desc' as const, size: 194 },
       {
@@ -49,7 +49,7 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
     [],
   );
 
-  const objects = useMemo(() => {
+  const rows = useMemo(() => {
     if (!eventQueue?.items?.length) {
       return [];
     }
@@ -70,5 +70,5 @@ export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
     return <div className={mx('flex items-center justify-center')}>Loading trace data...</div>;
   }
 
-  return <DynamicTable objects={objects} properties={logProperties} />;
+  return <DynamicTable properties={properties} rows={rows} />;
 };

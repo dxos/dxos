@@ -52,7 +52,7 @@ const TableRoot = ({ children, role }: TableRootProps) => {
       role='none'
       className={mx(
         'relative !border-separator',
-        role === 'section'
+        role === 'section' // TODO(burdon): This leaks composer plugin concepts? Standardize for react-ui?
           ? 'attention-surface overflow-hidden [&_.dx-grid]:max-is-[--dx-grid-content-inline-size]'
           : 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
       )}
@@ -75,11 +75,11 @@ export type TableMainProps = {
   presentation?: TablePresentation;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
-  onRowClicked?: (row: any) => void;
+  onRowClick?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, onRowClicked }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, onRowClick }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
@@ -141,9 +141,9 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       (event: MouseEvent) => {
         const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
         if (rowIndex != null) {
-          if (onRowClicked) {
+          if (onRowClick) {
             const row = model?.getRowAt(rowIndex);
-            row && onRowClicked(row);
+            row && onRowClick(row);
           }
 
           if (model?.features.selection.enabled && model?.selection.selectionMode === 'single') {

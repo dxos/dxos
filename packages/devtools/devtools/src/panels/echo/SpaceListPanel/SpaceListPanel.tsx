@@ -33,7 +33,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const setState = useDevtoolsDispatch();
   const download = useFileDownload();
 
-  const objects = useMemo(() => {
+  const rows = useMemo(() => {
     return spaces.map((space) => {
       const { open, ready } = space.internal.data.metrics ?? {};
       return {
@@ -172,14 +172,14 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       <DialogRestoreSpace handleFile={handleImport} />
       <DynamicTable
         properties={properties}
-        objects={objects}
+        rows={rows}
         features={features}
         rowActions={[
           { id: 'toggleOpen', translationKey: 'toggle space open closed label' },
           { id: 'backup', translationKey: 'download space backup label' },
           { id: 'archive', translationKey: 'download space archive label' },
         ]}
-        onRowClicked={handleRowClicked}
+        onRowClick={handleRowClicked}
         onRowAction={handleRowAction}
       />
     </PanelContainer>

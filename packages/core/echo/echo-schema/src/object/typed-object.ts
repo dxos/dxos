@@ -13,8 +13,8 @@ import {
   type ObjectAnnotation,
   ObjectAnnotationId,
   type TypeMeta,
-  TYPENAME_REGEX,
-  VERSION_REGEX,
+  Typename,
+  Version,
 } from '../ast';
 
 /**
@@ -37,23 +37,17 @@ export interface TypedObjectPrototype<A = any, I = any> extends TypedObject<A, I
 }
 
 export type TypedObjectProps = TypeMeta & {
-  // TODO(dmaretskyi): Remove after all legacy types has been removed. (burdon): Can do this now (after 0.7).
-  skipTypenameFormatCheck?: boolean;
+  // TODO(dmaretskyi): Remove after all legacy types has been removed.
+  disableValidation?: boolean;
 };
 
 /**
  * Base class factory for typed objects.
  * @deprecated Use pipe(Type.def) instead.
  */
-export const TypedObject = ({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
-  if (!skipTypenameFormatCheck) {
-    if (!TYPENAME_REGEX.test(typename)) {
-      throw new TypeError(`Invalid typename: ${typename}`);
-    }
-    if (!VERSION_REGEX.test(version)) {
-      throw new TypeError(`Invalid version: ${version}`);
-    }
-  }
+export const TypedObject = ({ typename: _typename, version: _version, disableValidation }: TypedObjectProps) => {
+  const typename = Typename.make(_typename, { disableValidation });
+  const version = Version.make(_version, { disableValidation });
 
   /**
    * Return class definition factory.
