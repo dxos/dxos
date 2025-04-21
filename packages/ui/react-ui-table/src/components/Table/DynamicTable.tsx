@@ -11,41 +11,43 @@ import { mx } from '@dxos/react-ui-theme';
 import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
-import { getBaseSchems, makeDynamicTable, type TablePropertyDefinition } from '../../util';
+import { getBaseSchems as getBaseSchema, makeDynamicTable, type TablePropertyDefinition } from '../../util';
 
 type DynamicTableProps = ThemedClassName<{
-  name?: string;
-  objects: any[];
+  name?: string; // TODO(burdon): Remove?
+  rows: any[];
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchemaType;
   schema?: BaseSchema;
   features?: Partial<TableFeatures>;
   rowActions?: TableRowAction[];
-  onRowClicked?: (row: any) => void;
+  onRowClick?: (row: any) => void;
   onRowAction?: (actionId: string, datum: any) => void;
 }>;
 
 /**
- * A dynamic table component that renders data using the specified properties.
  * Properties define both the schema and display characteristics of the table columns.
+ *
+ * @deprecated Use Table.
  */
-// TODO(burdon): Instead of creating table variants, create different hooks that normalize the props.
+// TODO(burdon): Instead of creating component variants, create helpers/hooks that normalize the props.
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
 export const DynamicTable = ({
   classNames,
-  name = 'example.com/dynamic-table',
-  objects,
+  name = 'example.com/dynamic-table', // Rmove default or make random; this will lead to type collisions.
+  rows,
   properties,
   jsonSchema,
   schema,
   rowActions,
-  onRowClicked,
+  onRowClick,
   onRowAction,
   ...props
 }: DynamicTableProps) => {
   const { table, projection } = useMemo(() => {
-    // TODO(burdon): Remove variance from the props (should be normalized externally).
-    return makeDynamicTable({ ...getBaseSchems({ typename: name, properties, jsonSchema, schema }), properties });
+    // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
+    const props = getBaseSchema({ typename: name, properties, jsonSchema, schema });
+    return makeDynamicTable({ ...props, properties });
   }, [name, properties, schema, jsonSchema]);
 
   const tableRef = useRef<TableController>(null);
@@ -53,7 +55,7 @@ export const DynamicTable = ({
     tableRef.current?.update?.(cell);
   }, []);
 
-  const handleRowOrderChanged = useCallback(() => {
+  const handleRowOrderChange = useCallback(() => {
     tableRef.current?.update?.();
   }, []);
 
@@ -68,12 +70,12 @@ export const DynamicTable = ({
 
   const model = useTableModel({
     table,
-    objects,
+    rows,
     projection,
     features,
     rowActions,
     onCellUpdate: handleCellUpdate,
-    onRowOrderChanged: handleRowOrderChanged,
+    onRowOrderChange: handleRowOrderChange,
     onRowAction,
   });
 
@@ -93,7 +95,7 @@ export const DynamicTable = ({
             model={model}
             presentation={presentation}
             ignoreAttention
-            onRowClicked={onRowClicked}
+            onRowClick={onRowClick}
           />
         </Table.Root>
       </div>

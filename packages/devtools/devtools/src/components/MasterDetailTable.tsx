@@ -82,7 +82,7 @@ export const MasterDetailTable = ({
 
   return (
     <div className={mx('bs-full divide-y divide-separator', gridLayout)}>
-      <DynamicTable properties={properties} objects={data} onRowClicked={handleRowClicked} features={features} />
+      <DynamicTable properties={properties} rows={data} features={features} onRowClick={handleRowClicked} />
       <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-is')}>
         {selected ? (
           isLoading ? (
