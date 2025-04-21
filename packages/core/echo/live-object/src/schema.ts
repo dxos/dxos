@@ -6,12 +6,12 @@ import { Schema as S } from 'effect';
 
 import {
   createJsonSchema,
-  EchoObject,
   getTypeAnnotation,
-  EchoSchema,
-  TypeAnnotationId,
-  StoredSchema,
   toJsonSchema,
+  EchoObject,
+  EchoSchema,
+  StoredSchema,
+  TypeAnnotationId,
   type JsonSchemaType,
   type TypeMeta,
   type TypeAnnotation,
