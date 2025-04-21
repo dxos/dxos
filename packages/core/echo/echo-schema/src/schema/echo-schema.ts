@@ -17,20 +17,22 @@ import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
 import {
   getObjectAnnotation,
-  type ObjectAnnotation,
-  SchemaMetaSymbol,
   schemaVariance,
   type JsonSchemaType,
+  type ObjectAnnotation,
   type SchemaMeta,
+  SchemaMetaSymbol,
 } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
-import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../object';
+import { type ObjectId, type TypedObject, type TypedObjectPrototype } from '../object';
 
 /**
  * Base schema type.
  */
+// TODO(burdon): Merge with ImmutableSchema.
 export interface BaseSchema<A = any, I = any> extends TypedObject<A, I> {
   get readonly(): boolean;
+  // TODO(burdon): Change to external function.
   get mutable(): EchoSchema<A, I>;
   get snapshot(): S.Schema<A, I>;
   get jsonSchema(): JsonSchemaType;
@@ -168,7 +170,7 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  *
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
-// TODO(burdon): Rename MutableSchema.
+// TODO(burdon): Rename MutableSchema; extend ImmutableSchema.
 export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implements BaseSchema<A, I> {
   private _schema: S.Schema.AnyNoContext | undefined;
   private _isDirty = true;

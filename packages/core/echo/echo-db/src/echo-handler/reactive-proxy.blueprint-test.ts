@@ -5,13 +5,14 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { getTypeReference, type S } from '@dxos/echo-schema';
-import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
+import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler, getSchema, getType } from '@dxos/live-object';
+import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT: TestSchema = {
+const TEST_OBJECT: Testing.TestSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -30,13 +31,13 @@ export interface TestConfiguration {
   allowObjectAssignments?: boolean;
   beforeAllCb?: () => Promise<void>;
   afterAllCb?: () => Promise<void>;
-  createObjectFn: (props?: Partial<TestSchema>) => Promise<TestSchema>;
+  createObjectFn: (props?: Partial<Testing.TestSchema>) => Promise<Testing.TestSchema>;
 }
 
 export type TestConfigurationFactory = (schema: S.Schema.AnyNoContext | undefined) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [undefined, TestSchema, TestSchemaType]) {
+  for (const schema of [undefined, Testing.TestSchema, Testing.TestSchemaType]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;
@@ -61,7 +62,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
     describe(`Proxy properties(schema=${schema != null})`, () => {
       test('handler type', async () => {
         const obj = await createObject();
-        console.log('handler =', Object.getPrototypeOf(getProxyHandler(obj)).constructor.name);
+        log('handler', { handler: Object.getPrototypeOf(getProxyHandler(obj)).constructor.name });
       });
 
       test('object initializer', async () => {

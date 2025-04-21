@@ -240,5 +240,5 @@ const MessageType = S.Struct({
       }),
     ),
   ),
-}).pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/Message', version: '0.1.0' }));
 type MessageType = S.Schema.Type<typeof MessageType>;

@@ -21,11 +21,10 @@ import {
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
-  type QueuesAPI,
   type QueuesService,
   type ReactiveEchoObject,
   Filter,
-  QueuesAPIImpl,
+  QueueFactory,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -105,11 +104,11 @@ export class SpaceProxy implements Space, CustomInspectable {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
+  private readonly _queues = new QueueFactory();
+
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
   private _properties?: ReactiveEchoObject<any> = undefined;
-
-  private readonly _queues = new QueuesAPIImpl();
 
   constructor(
     private _clientServices: ClientServicesProvider,
@@ -166,7 +165,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     return this._db;
   }
 
-  get queues(): QueuesAPI {
+  get queues(): QueueFactory {
     return this._queues;
   }
 

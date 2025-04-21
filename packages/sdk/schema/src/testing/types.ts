@@ -2,18 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  AST,
-  S,
-  Format,
-  TypedObject,
-  FieldLookupAnnotationId,
-  GeneratorAnnotationId,
-  LabelAnnotationId,
-  Ref,
-  EchoObject,
-  ObjectId,
-} from '@dxos/echo-schema';
+import { SchemaAST as AST, Schema as S } from 'effect';
+
+import { Type } from '@dxos/echo';
+import { Format, FieldLookupAnnotationId, GeneratorAnnotationId, LabelAnnotationId, ObjectId } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
@@ -36,18 +28,22 @@ export namespace Testing {
   }).annotations({
     [AST.TitleAnnotationId]: 'Organization',
     [LabelAnnotationId]: 'name',
-    // TODO(dmaretskyi): Use combinator.
-    [IconAnnotationId]: 'building',
+    [IconAnnotationId]: 'ph--building--regular',
   });
 
-  export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
+  // export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
-  export const OrgType = OrgSchema.pipe(EchoObject('example.com/type/Org', '0.1.0'));
-  export type OrgType = S.Schema.Type<typeof OrgType>;
+  export const Org = OrgSchema.pipe(
+    Type.def({
+      typename: 'example.com/type/Org',
+      version: '0.1.0',
+    }),
+  );
+  export type Org = S.Schema.Type<typeof Org>;
 
   //
   // Contact
-  // TODO(burdon): Array of emails.
+  // TODO(burdon): Array of email addresses.
   // TODO(burdon): Materialize link for Role (Org => [Role] => Contact).
   // TODO(burdon): Use with concrete Message type.
   // TODO(burdon): Address sub type with geo location.
@@ -66,31 +62,30 @@ export namespace Testing {
 
   export const ContactSchema = S.Struct({
     id: ObjectId,
-    name: S.String.annotations({
-      [GeneratorAnnotationId]: 'person.fullName',
-    }),
-    email: S.optional(
-      Format.Email.annotations({
-        [GeneratorAnnotationId]: 'internet.email',
-      }),
-    ),
+    name: S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName' }),
+    email: S.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
     employer: S.optional(
-      Ref(OrgType).annotations({
+      Type.Ref(Org).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
     // TODO(burdon): This breaks the table view.
     // address: S.optional(AddressSchema),
   }).annotations({
-    [LabelAnnotationId]: ['label', 'name'],
-    // TODO(dmaretskyi): Use combinator.
-    [IconAnnotationId]: 'user',
+    [AST.TitleAnnotationId]: 'Contact',
+    [LabelAnnotationId]: 'name',
+    [IconAnnotationId]: 'ph--user--regular',
   });
 
-  export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
+  // export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
-  export const ContactType = ContactSchema.pipe(EchoObject('example.com/type/Contact', '0.1.0'));
-  export type ContactType = S.Schema.Type<typeof ContactType>;
+  export const Contact = ContactSchema.pipe(
+    Type.def({
+      typename: 'example.com/type/Contact',
+      version: '0.1.0',
+    }),
+  );
+  export type Contact = S.Schema.Type<typeof Contact>;
 
   //
   // Project
@@ -99,42 +94,23 @@ export namespace Testing {
 
   export const ProjectSchema = S.Struct({
     id: ObjectId,
-    name: S.String.annotations({
-      [GeneratorAnnotationId]: 'commerce.productName',
-    }),
+    name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
     description: S.optional(S.String),
   }).annotations({
+    [AST.TitleAnnotationId]: 'Project',
     [LabelAnnotationId]: 'name',
-    // TODO(dmaretskyi): Use combinator.
-    [IconAnnotationId]: 'kanban',
+    [IconAnnotationId]: 'ph--kanban--regular',
   });
 
-  export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
+  // export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
 
-  export const ProjectType = ProjectSchema.pipe(EchoObject('example.com/type/Project', '0.1.0'));
-  export type ProjectType = S.Schema.Type<typeof ProjectType>;
-
-  //
-  // Email
-  //
-
-  export const EmailSchema = S.Struct({
-    from: S.String,
-    to: S.String,
-    subject: S.String,
-    created: S.String,
-    body: S.String,
-    category: S.String,
-  }).annotations({
-    [LabelAnnotationId]: 'subject',
-  });
-
-  export type EmailSchemaType = S.Schema.Type<typeof EmailSchema>;
-
-  export class EmailType extends TypedObject({
-    typename: 'example.com/type/Email',
-    version: '0.1.0',
-  })(EmailSchema.fields, { partial: true }) {}
+  export const Project = ProjectSchema.pipe(
+    Type.def({
+      typename: 'example.com/type/Project',
+      version: '0.1.0',
+    }),
+  );
+  export type Project = S.Schema.Type<typeof Project>;
 
   //
   // Message
@@ -143,15 +119,20 @@ export namespace Testing {
   export const MessageSchema = S.Struct({
     from: S.String,
     created: S.String,
+    title: S.String,
     content: S.String,
   }).annotations({
-    [LabelAnnotationId]: 'content',
+    [AST.TitleAnnotationId]: 'Message',
+    [LabelAnnotationId]: 'title',
   });
 
-  export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
+  // export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
 
-  export class MessageType extends TypedObject({
-    typename: 'example.com/type/Message',
-    version: '0.1.0',
-  })(MessageSchema.fields, { partial: true }) {}
+  export const Message = MessageSchema.pipe(
+    Type.def({
+      typename: 'example.com/type/Message',
+      version: '0.1.0',
+    }),
+  );
+  export type Message = S.Schema.Type<typeof Message>;
 }
