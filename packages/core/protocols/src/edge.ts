@@ -85,6 +85,7 @@ export type RecoverIdentityRequest = {
   controlFeedKey: string;
   lookupKey?: string;
   signature?: RecoverIdentitySignature;
+  token?: string;
 };
 
 export type RecoverIdentityResponseBody = {

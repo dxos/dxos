@@ -230,4 +230,13 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
         });
       },
     }),
+    createResolver({
+      intent: ClientAction.RedeemToken,
+      resolve: async (data) => {
+        const client = context.requestCapability(ClientCapabilities.Client);
+        // TODO(wittjosiah): This needs a proper api.
+        invariant(client.services.services.IdentityService, 'IdentityService not available');
+        await client.services.services.IdentityService.recoverIdentity({ token: data.token });
+      },
+    }),
   ]);

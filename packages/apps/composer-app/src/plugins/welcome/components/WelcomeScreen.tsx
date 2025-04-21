@@ -129,7 +129,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   return (
     <Welcome
       state={state}
-      identity={identity}
       error={error}
       onSignup={handleSignup}
       onPasskey={!identity && !spaceInvitationCode ? handlePasskey : undefined}

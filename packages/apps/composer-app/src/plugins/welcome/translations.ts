@@ -8,29 +8,26 @@ export default [
   {
     'en-US': {
       [WELCOME_PLUGIN]: {
-        'welcome title': 'Join the Beta',
-        'welcome description': 'Drop your email below to sign-up for the Composer beta.',
-        'welcome back title': 'Welcome back',
-        'welcome back description':
-          "Sign-up to join the beta. We'll send you a verification email that will give you immediate access.",
+        'welcome title': 'Now check your email!',
         'space invitation welcome title': 'Joining a space',
         'space invitation welcome description':
           'You have been invited to join a space. Click the button below to accept the invitation.',
-        'check email for access': 'Please check your email for the access link.',
+        'check email for access':
+          "A login link has been sent to your inbox. If it doesn't arrive in 3 minutes, be sure to check your spam folder.",
         'email error': 'Failed to send verification email.',
-        'existing users title': 'Existing users',
+        'existing users title': 'Sign up or login',
         'existing users description':
           'If you have already signed-up and created a passkey, click on the button below to access your account.',
         'name label': 'Name',
         'name placeholder': 'Your name',
         'email input label': 'Email',
         'email input placeholder': 'Your email',
-        'signup button label': 'Sign up',
-        'redeem passkey button label': 'Sign in with a passkey',
+        'signup button label': 'Continue',
+        'redeem passkey button label': 'Continue with a passkey',
         'redeem passkey button description': 'The simplest way to access your data on new devices.',
-        'join device button label': 'Connect using an existing device',
+        'join device button label': 'Continue with an existing device',
         'join device button description': 'Authenticate using an existing device.',
-        'recover identity button label': 'Connect using a recovery code',
+        'recover identity button label': 'Continue with a recovery code',
         'recover identity button description': 'Recover your identity using a paper key.',
         'join space button label': 'Accept invitation',
         'space invitation title': "You've been invited to a space",

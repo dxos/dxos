@@ -4,13 +4,7 @@
 
 import { pipe } from 'effect';
 
-import {
-  chain,
-  createIntent,
-  LayoutAction,
-  type PluginsContext,
-  type PromiseIntentDispatcher,
-} from '@dxos/app-framework';
+import { chain, createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -29,10 +23,10 @@ import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 export type OnboardingManagerParams = {
   dispatch: PromiseIntentDispatcher;
   client: Client;
-  context: PluginsContext;
   firstRun?: Trigger;
   hubUrl?: string;
   token?: string;
+  tokenType?: 'login' | 'verify';
   recoverIdentity?: boolean;
   deviceInvitationCode?: string;
   spaceInvitationCode?: string;
@@ -43,10 +37,10 @@ export class OnboardingManager {
   private readonly _subscriptions = new SubscriptionList();
   private readonly _dispatch: PromiseIntentDispatcher;
   private readonly _client: Client;
-  private readonly _context: PluginsContext;
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
   private readonly _token?: string;
+  private readonly _tokenType?: 'login' | 'verify';
   private readonly _recoverIdentity?: boolean;
   private readonly _deviceInvitationCode?: string;
   private readonly _spaceInvitationCode?: string;
@@ -57,9 +51,9 @@ export class OnboardingManager {
   constructor({
     dispatch,
     client,
-    context,
     hubUrl,
     token,
+    tokenType,
     recoverIdentity,
     deviceInvitationCode,
     spaceInvitationCode,
@@ -68,10 +62,10 @@ export class OnboardingManager {
 
     this._dispatch = dispatch;
     this._client = client;
-    this._context = context;
     this._hubUrl = hubUrl;
     this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
     this._token = token;
+    this._tokenType = tokenType;
     this._recoverIdentity = recoverIdentity || false;
     this._deviceInvitationCode = deviceInvitationCode;
     this._spaceInvitationCode = spaceInvitationCode;
@@ -109,11 +103,13 @@ export class OnboardingManager {
       await this._openJoinIdentity();
     } else if (this._recoverIdentity) {
       await this._openRecoverIdentity();
-    } else if (!this._identity && (this._token || this._skipAuth)) {
+    } else if (!this._identity && (this._token || this._skipAuth) && this._tokenType === 'verify') {
       await this._createIdentity();
       await this.setupRecovery();
       await this._startHelp();
       await this._createAgent();
+    } else if (!this._identity && this._token && this._tokenType === 'login') {
+      await this._login();
     }
 
     if (this._skipAuth) {
@@ -122,6 +118,7 @@ export class OnboardingManager {
     }
 
     if (this._identity) {
+      // TODO(wittjosiah): Is this spamming credentials?
       await this._activateAccount();
     }
   }
@@ -150,7 +147,7 @@ export class OnboardingManager {
           onAction: () => {
             const intent = pipe(
               createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
-              chain(LayoutAction.Open, { part: 'main', subject: [Account.Passkeys] }),
+              chain(LayoutAction.Open, { part: 'main', subject: [Account.Security] }),
             );
             void this._dispatch(intent);
           },
@@ -202,11 +199,19 @@ export class OnboardingManager {
       invariant(this._identity);
       const credential = await activateAccount({ hubUrl: this._hubUrl, identity: this._identity, token: this._token });
       await this._client.halo.writeCredentials([credential]);
-      log('beta credential saved', { credential });
+      log.info('beta credential saved', { credential });
       this._token && removeQueryParamByValue(this._token);
+      this._tokenType && removeQueryParamByValue(this._tokenType);
     } catch {
       // No-op. This is expected for referred users who have an identity but no token yet.
     }
+  }
+
+  private async _login() {
+    invariant(this._token);
+    await this._dispatch(createIntent(ClientAction.RedeemToken, { token: this._token }));
+    this._token && removeQueryParamByValue(this._token);
+    this._tokenType && removeQueryParamByValue(this._tokenType);
   }
 
   private async _showWelcome() {

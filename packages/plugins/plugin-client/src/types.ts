@@ -74,6 +74,13 @@ export namespace ClientAction {
     input: S.Void,
     output: S.Void,
   }) {}
+
+  export class RedeemToken extends S.TaggedClass<RedeemToken>()(`${CLIENT_ACTION}/redeem-token`, {
+    input: S.Struct({
+      token: S.String,
+    }),
+    output: S.Void,
+  }) {}
 }
 
 export type ClientPluginOptions = ClientOptions & {

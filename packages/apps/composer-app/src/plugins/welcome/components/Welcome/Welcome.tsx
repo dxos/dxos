@@ -20,7 +20,6 @@ const supportsPasskeys = navigator.credentials && 'create' in navigator.credenti
 
 export const Welcome = ({
   state,
-  identity,
   error,
   onSignup,
   onPasskey,
@@ -110,24 +109,23 @@ export const Welcome = ({
               composer
             </h1>
 
-            {state === WelcomeState.INIT && Object.keys(actions).length > 0 && (
-              <div role='none' className='flex flex-col gap-8'>
-                <div className='flex flex-col gap-2'>
-                  <h1 className='text-2xl'>{t('existing users title')}</h1>
-                  <p className='text-subdued'>{t('existing users description')}</p>
-                </div>
-                <div className='flex flex-col gap-2'>
-                  <BifurcatedAction actions={actions} />
-                </div>
-              </div>
-            )}
-
             {state === WelcomeState.INIT && !onSpaceInvitation && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
-                  <h1 className='text-2xl'>{t(identity ? 'welcome back title' : 'welcome title')}</h1>
-                  <p className='text-subdued'>{t(identity ? 'welcome back description' : 'welcome description')}</p>
+                  <h1 className='text-2xl'>{t('existing users title')}</h1>
                 </div>
+                {Object.keys(actions).length > 0 && (
+                  <>
+                    <div className='flex flex-col gap-2'>
+                      <BifurcatedAction actions={actions} classNames='bg-neutral-775' />
+                    </div>
+                    <div className='flex items-center w-full my-4'>
+                      <div className='flex-grow h-px bg-subdued'></div>
+                      <span className='px-4 text-sm text-subdued'>or</span>
+                      <div className='flex-grow h-px bg-subdued'></div>
+                    </div>
+                  </>
+                )}
                 <div role='none' className='flex gap-2'>
                   <Input.Root>
                     <div className='flex flex-col w-full'>
@@ -150,6 +148,7 @@ export const Welcome = ({
                   <div>
                     <Button
                       variant='primary'
+                      classNames='disabled:bg-neutral-775'
                       disabled={!validEmail(email) || pending}
                       onClick={handleSignup}
                       data-testid='welcome.login'

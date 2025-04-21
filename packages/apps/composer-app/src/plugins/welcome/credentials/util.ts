@@ -48,11 +48,12 @@ export const signup = async ({
     throw new Error('signup failed', { cause: response.statusText });
   }
 
-  const { token } = await response.json();
+  const { token, type } = await response.json();
   if (token) {
     // Debugging link.
     const activationLink = new URL('/', window.location.href);
     activationLink.searchParams.set('token', token);
+    activationLink.searchParams.set('type', type);
     // eslint-disable-next-line
     console.log(activationLink.href);
   }
