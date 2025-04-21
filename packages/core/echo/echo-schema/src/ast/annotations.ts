@@ -2,165 +2,195 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, Option, pipe, SchemaAST as AST, Schema as S } from 'effect';
+import { flow, Option, pipe, SchemaAST as AST, Schema as S, Predicate } from 'effect';
+import { isPropertySignature } from 'effect/Schema';
 import { type Simplify } from 'effect/Types';
 
 import { getField, type JsonPath } from '@dxos/effect';
-import { assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';
 import { type HasId } from './types';
 import { type BaseObject } from '../types';
 
-// TODO(burdon): Rename?
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
   : T;
 
 /**
- * ECHO object.
+ * ECHO identifier (for a stored schema).
+ * Must be a `dxn:echo:` URI.
  */
-// TODO(burdon): Rename to TypeAnnotation?
-export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
+export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
+
+export const getTypeIdentifierAnnotation = (schema: S.Schema.All) =>
+  flow(
+    AST.getAnnotation<string>(TypeIdentifierAnnotationId),
+    Option.getOrElse(() => undefined),
+  )(schema.ast);
+
+/**
+ * ECHO type.
+ */
+export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
 
 export const Typename = S.String.pipe(S.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/));
 export const Version = S.String.pipe(S.pattern(/^\d+.\d+.\d+$/));
 
 /**
- * Payload stored under {@link ObjectAnnotationId}.
+ * Payload stored under {@link TypeAnnotationId}.
  */
-// TODO(burdon): Rename TypeAnnotation?
 // TODO(dmaretskyi): Rename getTypeAnnotation to represent commonality between objects and relations (e.g. `entity`).
-export const ObjectAnnotation = S.Struct({
+export const TypeAnnotation = S.Struct({
   kind: S.Enums(EntityKind),
   typename: Typename,
   version: Version,
 });
 
-export interface ObjectAnnotation extends S.Schema.Type<typeof ObjectAnnotation> {}
+export interface TypeAnnotation extends S.Schema.Type<typeof TypeAnnotation> {}
 
-export type TypeMeta = Pick<ObjectAnnotation, 'typename' | 'version'>;
+export type TypeMeta = Pick<TypeAnnotation, 'typename' | 'version'>;
 
 /**
- * @returns {@link ObjectAnnotation} from a schema.
+ * @returns {@link TypeAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
-export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | undefined =>
+export const getTypeAnnotation = (schema: S.Schema.All): TypeAnnotation | undefined =>
   flow(
-    AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId),
+    AST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
 
 /**
  * @returns {@link EntityKind} from a schema.
  */
-export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => getObjectAnnotation(schema)?.kind;
+export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => getTypeAnnotation(schema)?.kind;
 
 /**
  * @returns Schema typename (without dxn: prefix or version number).
  */
-// TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects.
-export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
+// TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects; (burdon): Use namespaces.
+export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
 
 /**
  * @returns Schema version in semver format.
  */
-export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.version;
-
-/**
- * ECHO identifier for a schema.
- * Must be a `dxn:echo:` URI.
- */
-export const ObjectIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/ObjectIdentifier');
-
-export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
-  flow(
-    AST.getAnnotation<string>(ObjectIdentifierAnnotationId),
-    Option.getOrElse(() => undefined),
-  )(schema.ast);
+export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
 
 /**
  * Pipeable function to add ECHO object annotations to a schema.
  */
-// TODO(burdon): Reconcile EchoObject/EchoSchema; rename EchoType.
+// TODO(burdon): Rename EchoType.
 export const EchoObject: {
-  (meta: TypeMeta): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
+  // TODO(burdon): Tighten Self type to S.TypeLiteral or S.Struct to facilitate definition of `make` method.
+  // (meta: TypeMeta): <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
+  (meta: TypeMeta): <Self extends S.Schema.Any>(self: Self) => EchoObjectSchema<Self>;
 } = ({ typename, version }) => {
   return <Self extends S.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
-    if (!AST.isTypeLiteral(self.ast)) {
-      throw new Error('EchoObject can only be applied to an S.Struct type.');
-    }
-
-    // TODO(dmaretskyi): Allow id on schema.
-    // checkIdNotPresentOnSchema(self);
+    invariant(AST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
     const ast = AST.annotations(schemaWithId.ast, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,
-      [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
+      [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
     });
 
-    return makeEchoObjectSchemaClass<Self>(typename, version, ast);
+    return makeEchoObjectSchema<Self>(/* self.fields, */ ast, typename, version);
   };
 };
 
-const makeEchoObjectSchemaClass = <Self extends S.Schema.Any>(
+// type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
+type EchoObjectSchemaType<T> = Simplify<HasId & ToMutable<T>>;
+type MakeOptions =
+  | boolean
+  | {
+      readonly disableValidation?: boolean;
+    };
+
+// NOTE: Utils copied from Effect `Schema.ts`.
+const _ownKeys = (o: object): Array<PropertyKey> =>
+  (Object.keys(o) as Array<PropertyKey>).concat(Object.getOwnPropertySymbols(o));
+
+const _lazilyMergeDefaults = (
+  fields: S.Struct.Fields,
+  out: Record<PropertyKey, unknown>,
+): { [x: string | symbol]: unknown } => {
+  const ownKeys = _ownKeys(fields);
+  for (const key of ownKeys) {
+    const field = fields[key];
+    if (out[key] === undefined && isPropertySignature(field)) {
+      const ast = field.ast;
+      const defaultValue = ast._tag === 'PropertySignatureDeclaration' ? ast.defaultValue : ast.to.defaultValue;
+      if (defaultValue !== undefined) {
+        out[key] = defaultValue();
+      }
+    }
+  }
+  return out;
+};
+
+const _getDisableValidationMakeOption = (options: MakeOptions | undefined): boolean =>
+  Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
+
+export interface EchoObjectSchema<Self extends S.Schema.Any>
+  extends TypeMeta,
+    S.AnnotableClass<
+      EchoObjectSchema<Self>,
+      EchoObjectSchemaType<S.Schema.Type<Self>>,
+      EchoObjectSchemaType<S.Schema.Encoded<Self>>,
+      S.Schema.Context<Self>
+    > {
+  // make(
+  //   props: RequiredKeys<S.TypeLiteral.Constructor<Fields, []>> extends never
+  //     ? void | Simplify<S.TypeLiteral.Constructor<Fields, []>>
+  //     : Simplify<S.TypeLiteral.Constructor<Fields, []>>,
+  //   options?: MakeOptions,
+  // ): Simplify<S.TypeLiteral.Type<Fields, []>>;
+
+  instanceOf(value: unknown): boolean;
+}
+
+const makeEchoObjectSchema = <Self extends S.Schema.Any>(
+  // fields: Fields,
+  ast: AST.AST,
   typename: string,
   version: string,
-  ast: AST.AST,
 ): EchoObjectSchema<Self> => {
   return class EchoObjectSchemaClass extends S.make<
-    EchoObjectSchemaData<S.Schema.Type<Self>>,
-    EchoObjectSchemaData<S.Schema.Encoded<Self>>,
+    EchoObjectSchemaType<S.Schema.Type<Self>>,
+    EchoObjectSchemaType<S.Schema.Encoded<Self>>,
     S.Schema.Context<Self>
   >(ast) {
     static readonly typename = typename;
     static readonly version = version;
 
     static override annotations(
-      annotations: S.Annotations.Schema<EchoObjectSchemaData<S.Schema.Type<Self>>>,
+      annotations: S.Annotations.GenericSchema<EchoObjectSchemaType<S.Schema.Type<Self>>>,
     ): EchoObjectSchema<Self> {
-      return makeEchoObjectSchemaClass(
-        typename,
-        version,
-        S.make<EchoObjectSchemaData<S.Schema.Type<Self>>>(ast).annotations(annotations).ast,
-      );
+      const schema = S.make<EchoObjectSchemaType<S.Schema.Type<Self>>>(ast).annotations(annotations);
+      return makeEchoObjectSchema<Self>(/* fields, */ schema.ast, typename, version);
     }
 
-    static is(value: unknown): boolean {
-      return S.is(this)(value);
-    }
-
-    // TODO(burdon): See makeTypeLiteralClass.
-    // static make = (
-    //   props: Simplify<TypeLiteral.Constructor<Fields, Records>>,
-    //   options?: S.MakeOptions,
-    // ): Simplify<TypeLiteral.Type<Fields, Records>> => {
-    //   const propsWithDefaults: any = lazilyMergeDefaults(fields, { ...(props as any) });
-    //   return getDisableValidationMakeOption(options)
+    // static make(
+    //   props: RequiredKeys<S.TypeLiteral.Constructor<Fields, []>> extends never
+    //     ? void | Simplify<S.TypeLiteral.Constructor<Fields, []>>
+    //     : Simplify<S.TypeLiteral.Constructor<Fields, []>>,
+    //   options?: MakeOptions,
+    // ): Simplify<S.TypeLiteral.Type<Fields, []>> {
+    //   const propsWithDefaults: any = _lazilyMergeDefaults(fields, { ...(props as any) });
+    //   return _getDisableValidationMakeOption(options)
     //     ? propsWithDefaults
     //     : ParseResult.validateSync(this)(propsWithDefaults);
-    // };
+    // }
+
+    static instanceOf(value: unknown): boolean {
+      return S.is(this)(value);
+    }
   };
 };
-
-type EchoObjectSchemaData<T> = Simplify<HasId & ToMutable<T>>;
-
-export interface EchoObjectSchema<Self extends S.Schema.Any>
-  extends TypeMeta,
-    S.AnnotableClass<
-      EchoObjectSchema<Self>,
-      EchoObjectSchemaData<S.Schema.Type<Self>>,
-      EchoObjectSchemaData<S.Schema.Encoded<Self>>,
-      S.Schema.Context<Self>
-    > {
-  // TODO(burdon): Extend TypeLiteral to provide `is` and `make` function to handle defaults.
-  is(value: unknown): boolean;
-  // make(value: unknown): any;
-}
 
 /**
  * PropertyMeta (metadata for dynamic schema properties).
@@ -198,7 +228,7 @@ export const getPropertyMetaAnnotation = <T>(prop: AST.PropertySignature, name: 
  */
 export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Reference');
 
-export type ReferenceAnnotationValue = ObjectAnnotation;
+export type ReferenceAnnotationValue = TypeAnnotation;
 
 export const getReferenceAnnotation = (schema: S.Schema.AnyNoContext) =>
   pipe(
@@ -206,6 +236,9 @@ export const getReferenceAnnotation = (schema: S.Schema.AnyNoContext) =>
     Option.getOrElse(() => undefined),
   );
 
+/**
+ * SchemaMeta.
+ */
 export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 
 export type SchemaMeta = TypeMeta & { id: string };

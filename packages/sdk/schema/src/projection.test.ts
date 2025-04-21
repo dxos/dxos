@@ -9,15 +9,15 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { EchoSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
+  EntityKind,
   Format,
   FormatEnum,
-  ObjectAnnotationId,
-  TypeEnum,
-  TypedObject,
-  Ref,
   type JsonPath,
   type JsonProp,
-  EntityKind,
+  TypeEnum,
+  TypedObject,
+  TypeAnnotationId,
+  Ref,
   getPropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -54,7 +54,7 @@ describe('ViewProjection', () => {
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -150,7 +150,7 @@ describe('ViewProjection', () => {
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
       org: Ref(Org),
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -205,7 +205,7 @@ describe('ViewProjection', () => {
       name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         typename: 'example.com/type/Person',
         version: '0.1.0',
       },
@@ -236,7 +236,7 @@ describe('ViewProjection', () => {
       email: S.optional(S.Number),
       description: S.optional(S.String),
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -282,7 +282,7 @@ describe('ViewProjection', () => {
       name: S.String,
       email: Format.Email,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -328,7 +328,7 @@ describe('ViewProjection', () => {
     const schema = S.Struct({
       status: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -435,7 +435,7 @@ describe('ViewProjection', () => {
     const schema = S.Struct({
       tags: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -567,7 +567,7 @@ describe('ViewProjection', () => {
       email: Format.Email,
       createdAt: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -671,7 +671,7 @@ describe('ViewProjection', () => {
       description: S.String,
       status: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -707,7 +707,7 @@ describe('ViewProjection', () => {
     const initialSchema = S.Struct({
       title: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -752,7 +752,7 @@ describe('ViewProjection', () => {
       email: Format.Email,
       phone: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
