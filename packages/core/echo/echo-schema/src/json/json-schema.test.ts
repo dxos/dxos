@@ -13,7 +13,7 @@ import {
   PropertyMeta,
   setSchemaProperty,
   getSchemaProperty,
-  getObjectAnnotation,
+  getTypeAnnotation,
   getObjectIdentifierAnnotation,
   EntityKind,
   JsonSchemaType,
@@ -315,7 +315,7 @@ describe('json-to-effect', () => {
     };
 
     const schema = toEffectSchema(jsonSchema);
-    expect(getObjectAnnotation(schema)).to.deep.eq({
+    expect(getTypeAnnotation(schema)).to.deep.eq({
       kind: EntityKind.Object,
       typename: 'example.com/type/Project',
       version: '0.1.0',

@@ -13,7 +13,7 @@ import {
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 
-import { getObjectIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
+import { getObjectIdentifierAnnotation, getTypeAnnotation, ReferenceAnnotationId } from './annotations';
 import { type JsonSchemaType } from './json-schema-type';
 import { type ObjectId } from '../object';
 import { type WithId } from '../types';
@@ -75,7 +75,7 @@ interface RefFn {
  * Schema builder for references.
  */
 export const Ref: RefFn = <T extends WithId>(schema: S.Schema<T, any>): Ref$<T> => {
-  const annotation = getObjectAnnotation(schema);
+  const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO schema.');
   }

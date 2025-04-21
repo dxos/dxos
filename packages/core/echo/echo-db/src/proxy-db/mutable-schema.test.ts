@@ -6,14 +6,14 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   EchoSchema,
-  ObjectAnnotationId,
+  TypeAnnotationId,
   getTypeReference,
   Ref,
   TypedObject,
   S,
   getTypename,
   ObjectIdentifierAnnotationId,
-  type ObjectAnnotation,
+  type TypeAnnotation,
   EntityKind,
 } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
@@ -48,11 +48,11 @@ describe('EchoSchema', () => {
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     instanceWithSchemaRef.schema = makeRef(schema);
     const schemaWithId = GeneratedSchema.annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Test',
         version: '0.1.0',
-      } satisfies ObjectAnnotation,
+      } satisfies TypeAnnotation,
       [ObjectIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.target?.id}`,
     });
     expect(instanceWithSchemaRef.schema?.target?.ast).to.deep.eq(schemaWithId.ast);

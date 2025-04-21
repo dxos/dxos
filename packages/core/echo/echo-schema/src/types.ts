@@ -9,7 +9,7 @@ import { splitJsonPath, type JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getObjectIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
+import { getObjectIdentifierAnnotation, getTypeAnnotation, type HasId } from './ast';
 import { ObjectId, type ObjectMeta, getTypename } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
@@ -115,7 +115,7 @@ export const getTypeReference = (schema: S.Schema.AnyNoContext | undefined): Ref
     return Reference.fromDXN(DXN.parse(echoId));
   }
 
-  const annotation = getObjectAnnotation(schema);
+  const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     return undefined;
   }
@@ -140,7 +140,7 @@ export const requireTypeReference = (schema: S.Schema.AnyNoContext): Reference =
 // TODO(dmaretskyi): Unify with `getTypeReference`.
 export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
   // TODO(dmaretskyi): Add support for dynamic schema.
-  const objectAnnotation = getObjectAnnotation(schema);
+  const objectAnnotation = getTypeAnnotation(schema);
   if (!objectAnnotation) {
     return undefined;
   }

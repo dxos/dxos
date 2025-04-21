@@ -31,7 +31,7 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count: number) => {
   const table = useMemo(() => {
-    // const { typename } = pipe(schema.ast, AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId), Option.getOrThrow);
+    // const { typename } = pipe(schema.ast, AST.getAnnotation<TypeAnnotation>(ObjectAnnotationId), Option.getOrThrow);
     const typename = schema.typename;
     const name = getAnnotation<string>(AST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema: schema.jsonSchema });

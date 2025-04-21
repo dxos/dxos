@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework';
-import { getObjectAnnotation, type ObjectAnnotation, type S } from '@dxos/echo-schema';
+import { getObjectAnnotation, type TypeAnnotation, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type Space } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -70,7 +70,7 @@ export const CreateObjectPanel = ({
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
   const form = forms.find((form) => getObjectAnnotation(form.objectSchema)?.typename === typename);
-  const options: ObjectAnnotation[] = forms
+  const options: TypeAnnotation[] = forms
     .map((form) => getObjectAnnotation(form.objectSchema))
     .filter(isNonNullable)
     .sort((a, b) => {
@@ -170,7 +170,7 @@ const SelectSchema = ({
   resolve,
   onChange,
 }: {
-  options: ObjectAnnotation[];
+  options: TypeAnnotation[];
   onChange: (type: string) => void;
 } & Pick<CreateObjectPanelProps, 'resolve'>) => {
   const { t } = useTranslation(SPACE_PLUGIN);

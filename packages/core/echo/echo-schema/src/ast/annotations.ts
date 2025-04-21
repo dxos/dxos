@@ -19,54 +19,52 @@ type ToMutable<T> = T extends BaseObject
   : T;
 
 /**
- * ECHO object.
+ * ECHO type.
  */
-// TODO(burdon): Rename to TypeAnnotation?
-export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
+export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
 
 export const Typename = S.String.pipe(S.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/));
 export const Version = S.String.pipe(S.pattern(/^\d+.\d+.\d+$/));
 
 /**
- * Payload stored under {@link ObjectAnnotationId}.
+ * Payload stored under {@link TypeAnnotationId}.
  */
-// TODO(burdon): Rename TypeAnnotation?
 // TODO(dmaretskyi): Rename getTypeAnnotation to represent commonality between objects and relations (e.g. `entity`).
-export const ObjectAnnotation = S.Struct({
+export const TypeAnnotation = S.Struct({
   kind: S.Enums(EntityKind),
   typename: Typename,
   version: Version,
 });
 
-export interface ObjectAnnotation extends S.Schema.Type<typeof ObjectAnnotation> {}
+export interface TypeAnnotation extends S.Schema.Type<typeof TypeAnnotation> {}
 
-export type TypeMeta = Pick<ObjectAnnotation, 'typename' | 'version'>;
+export type TypeMeta = Pick<TypeAnnotation, 'typename' | 'version'>;
 
 /**
- * @returns {@link ObjectAnnotation} from a schema.
+ * @returns {@link TypeAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
-export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | undefined =>
+export const getTypeAnnotation = (schema: S.Schema.All): TypeAnnotation | undefined =>
   flow(
-    AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId),
+    AST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
 
 /**
  * @returns {@link EntityKind} from a schema.
  */
-export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => getObjectAnnotation(schema)?.kind;
+export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => getTypeAnnotation(schema)?.kind;
 
 /**
  * @returns Schema typename (without dxn: prefix or version number).
  */
 // TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects.
-export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
+export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
 
 /**
  * @returns Schema version in semver format.
  */
-export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.version;
+export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
 
 /**
  * ECHO identifier for a schema.
@@ -100,7 +98,7 @@ export const EchoObject: {
     const ast = AST.annotations(schemaWithId.ast, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,
-      [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
+      [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
     });
 
     return makeEchoObjectSchema<Self, Fields>(typename, version, ast);
@@ -185,7 +183,7 @@ export const getPropertyMetaAnnotation = <T>(prop: AST.PropertySignature, name: 
  */
 export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Reference');
 
-export type ReferenceAnnotationValue = ObjectAnnotation;
+export type ReferenceAnnotationValue = TypeAnnotation;
 
 export const getReferenceAnnotation = (schema: S.Schema.AnyNoContext) =>
   pipe(

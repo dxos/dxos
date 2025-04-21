@@ -17,15 +17,15 @@ import {
   type JsonSchemaReferenceInfo,
   type JsonSchemaType,
   LabelAnnotationId,
-  type ObjectAnnotation,
-  ObjectAnnotationId,
+  TypeAnnotationId,
   ObjectIdentifierAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
   Ref,
   createEchoReferenceSchema,
   getObjectIdentifierAnnotation,
-  getObjectAnnotation,
+  getTypeAnnotation,
+  type TypeAnnotation,
 } from '../ast';
 import { CustomAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
@@ -50,8 +50,8 @@ export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})): JsonSche
 };
 
 interface EchoRefinement {
-  type?: ObjectAnnotation;
-  reference?: ObjectAnnotation;
+  type?: TypeAnnotation;
+  reference?: TypeAnnotation;
   annotations?: PropertyMetaAnnotation;
   generator?: string;
 }
@@ -106,7 +106,7 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     jsonSchema.$id = echoIdentifier;
   }
 
-  const objectAnnotation = getObjectAnnotation(schema);
+  const objectAnnotation = getTypeAnnotation(schema);
   if (objectAnnotation) {
     // EchoIdentifier annotation takes precedence but the id can also be defined by the typename.
     if (!jsonSchema.$id) {
@@ -384,7 +384,7 @@ const refToEffectSchema = (root: any): S.Schema.AnyNoContext => {
 export const ECHO_REFINEMENT_KEY = 'echo';
 
 const ECHO_REFINEMENTS = [
-  ObjectAnnotationId,
+  TypeAnnotationId,
   PropertyMetaAnnotationId,
   LabelAnnotationId,
   FieldLookupAnnotationId, // TODO(burdon): ???
@@ -452,20 +452,20 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
   }
 
   if (schema.typename) {
-    annotations[ObjectAnnotationId] ??= {
+    annotations[TypeAnnotationId] ??= {
       kind: schema.entityKind ? S.decodeSync(EntityKindSchema)(schema.entityKind) : EntityKind.Object,
       typename: schema.typename,
       version: schema.version ?? '0.1.0',
-    } satisfies ObjectAnnotation;
+    } satisfies TypeAnnotation;
   }
 
   // Decode legacy schema.
   if (!schema.typename && schema?.echo?.type) {
-    annotations[ObjectAnnotationId] ??= {
+    annotations[TypeAnnotationId] ??= {
       kind: EntityKind.Object,
       typename: schema.echo.type.typename,
       version: schema.echo.type.version,
-    } satisfies ObjectAnnotation;
+    } satisfies TypeAnnotation;
   }
 
   // Custom (at end).

@@ -7,14 +7,14 @@ import { Schema as S } from 'effect';
 import {
   createJsonSchema,
   EchoObject,
-  getObjectAnnotation,
+  getTypeAnnotation,
   EchoSchema,
-  ObjectAnnotationId,
+  TypeAnnotationId,
   StoredSchema,
   toJsonSchema,
   type JsonSchemaType,
-  type ObjectAnnotation,
   type TypeMeta,
+  type TypeAnnotation,
 } from '@dxos/echo-schema';
 
 import { create, type ReactiveObject } from './object';
@@ -38,10 +38,10 @@ export const createStoredSchema = (
  */
 export const createEchoSchema = ({ typename, version }: TypeMeta, fields: S.Struct.Fields): EchoSchema => {
   const schema = S.partial(S.Struct(fields).omit('id')).pipe(EchoObject({ typename, version }));
-  const objectAnnotation = getObjectAnnotation(schema)!;
+  const objectAnnotation = getTypeAnnotation(schema)!;
   const schemaObject = createStoredSchema({ typename, version });
   const updatedSchema = schema.annotations({
-    [ObjectAnnotationId]: { ...objectAnnotation } satisfies ObjectAnnotation,
+    [TypeAnnotationId]: { ...objectAnnotation } satisfies TypeAnnotation,
   });
 
   schemaObject.jsonSchema = toJsonSchema(updatedSchema);
