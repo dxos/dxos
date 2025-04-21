@@ -82,7 +82,7 @@ export const getSchemaVersion = (schema: S.Schema.All): string | undefined => ge
  */
 // TODO(burdon): Rename EchoType.
 export const EchoObject: {
-  // TODO(burdon): Tighten Self type to S.TypeLiteral or S.Struct.
+  // TODO(burdon): Tighten Self type to S.TypeLiteral or S.Struct to facilitate definition of `make` method.
   (meta: TypeMeta): <Self extends S.Schema.Any>(self: Self) => EchoObjectSchema<Self>;
 } = ({ typename, version }) => {
   return <Self extends S.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
@@ -111,6 +111,14 @@ export interface EchoObjectSchema<Self extends S.Schema.Any>
       S.Schema.Context<Self>
     > {
   instanceOf(value: unknown): boolean;
+
+  // TODO(burdon): Need Fields, Records type.
+  // make(
+  //   props: RequiredKeys<TypeLiteral.Constructor<Fields, Records>> extends never
+  //     ? void | Simplify<TypeLiteral.Constructor<Fields, Records>>
+  //     : Simplify<TypeLiteral.Constructor<Fields, Records>>,
+  //   options?: MakeOptions,
+  // ): Simplify<TypeLiteral.Type<Fields, Records>>;
 }
 
 const makeEchoObjectSchema = <Self extends S.Schema.Any>(
