@@ -113,6 +113,7 @@ type MakeOptions =
       readonly disableValidation?: boolean;
     };
 
+// NOTE: Utils copied from Effect `Schema.ts`.
 const _ownKeys = (o: object): Array<PropertyKey> =>
   (Object.keys(o) as Array<PropertyKey>).concat(Object.getOwnPropertySymbols(o));
 
