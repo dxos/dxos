@@ -72,7 +72,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     name: 'vite-plugin-dxos-ui-theme',
     config: async ({ root }, env): Promise<UserConfig> => {
       environment = env.mode;
-      const content = root ? await resolveKnownPeers([...(config.content ?? []), '**/*.pcss'], root) : config.content;
+      const content = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
       if (options.verbose) {
         console.log('content', content);
       }
