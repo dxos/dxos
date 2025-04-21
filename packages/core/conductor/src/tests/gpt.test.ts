@@ -46,7 +46,6 @@ describe.skip('GPT pipelines', () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
-
         const output = yield* runtime
           .runGraph(
             'dxn:compute:gpt2',
