@@ -6,7 +6,7 @@ import { flow, Option, pipe, SchemaAST as AST, Schema as S } from 'effect';
 import { type Simplify } from 'effect/Types';
 
 import { getField, type JsonPath } from '@dxos/effect';
-import { assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';
@@ -83,17 +83,17 @@ export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
 /**
  * Pipeable function to add ECHO object annotations to a schema.
  */
+// TODO(burdon): Tighten S type to S.TypeLiteral.
 // TODO(burdon): Reconcile EchoObject/EchoSchema; rename EchoType.
 export const EchoObject: {
-  (meta: TypeMeta): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
+  (
+    meta: TypeMeta,
+  ): <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
 } = ({ typename, version }) => {
-  return <Self extends S.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
-    if (!AST.isTypeLiteral(self.ast)) {
-      throw new Error('EchoObject can only be applied to an S.Struct type.');
-    }
-
-    // TODO(dmaretskyi): Allow id on schema.
-    // checkIdNotPresentOnSchema(self);
+  return <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(
+    self: Self,
+  ): EchoObjectSchema<Self, Fields> => {
+    invariant(AST.isTypeLiteral(self.ast), 'Must be a TypeLiteral.');
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
@@ -103,30 +103,28 @@ export const EchoObject: {
       [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
     });
 
-    return makeEchoObjectSchema<Self>(typename, version, ast);
+    return makeEchoObjectSchema<Self, Fields>(typename, version, ast);
   };
 };
 
 type EchoObjectSchemaType<T> = Simplify<HasId & ToMutable<T>>;
 
-export interface EchoObjectSchema<Self extends S.Schema.Any>
-  // TODO(burdon): Extend TypeLiteral to provide `is` and `make` function to handle defaults.
+export interface EchoObjectSchema<Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>
   extends TypeMeta,
     S.AnnotableClass<
-      EchoObjectSchema<Self>,
+      EchoObjectSchema<Self, Fields>,
       EchoObjectSchemaType<S.Schema.Type<Self>>,
       EchoObjectSchemaType<S.Schema.Encoded<Self>>,
       S.Schema.Context<Self>
     > {
   instanceOf(value: unknown): boolean;
-  // make(value: unknown): any;
 }
 
-const makeEchoObjectSchema = <Self extends S.Schema.Any>(
+const makeEchoObjectSchema = <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(
   typename: string,
   version: string,
   ast: AST.AST,
-): EchoObjectSchema<Self> => {
+): EchoObjectSchema<Self, Fields> => {
   return class EchoObjectSchemaClass extends S.make<
     EchoObjectSchemaType<S.Schema.Type<Self>>,
     EchoObjectSchemaType<S.Schema.Encoded<Self>>,
@@ -136,9 +134,9 @@ const makeEchoObjectSchema = <Self extends S.Schema.Any>(
     static readonly version = version;
 
     static override annotations(
-      annotations: S.Annotations.Schema<EchoObjectSchemaType<S.Schema.Type<Self>>>,
-    ): EchoObjectSchema<Self> {
-      return makeEchoObjectSchema(
+      annotations: S.Annotations.GenericSchema<EchoObjectSchemaType<S.Schema.Type<Self>>>,
+    ): EchoObjectSchema<Self, Fields> {
+      return makeEchoObjectSchema<Self, Fields>(
         typename,
         version,
         S.make<EchoObjectSchemaType<S.Schema.Type<Self>>>(ast).annotations(annotations).ast,
