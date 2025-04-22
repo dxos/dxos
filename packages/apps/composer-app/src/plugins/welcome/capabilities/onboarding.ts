@@ -2,14 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ClientAction } from '@dxos/plugin-client/types';
-import { DeviceType } from '@dxos/react-client/halo';
 
 import { WelcomeCapabilities } from './capabilities';
-import { queryAllCredentials } from '../../../util';
 import { OnboardingManager } from '../onboarding-manager';
 
 export default async (context: PluginsContext) => {
@@ -33,24 +29,6 @@ export default async (context: PluginsContext) => {
   });
 
   await manager.initialize();
-
-  // TODO(wittjosiah): Fold into onboarding manager.
-  const identity = client.halo.identity.get();
-  const credentials = await queryAllCredentials(client);
-  const recoveryCredential = credentials.find(
-    (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
-  );
-  if (identity && !recoveryCredential && !token) {
-    await manager.setupRecovery();
-  }
-
-  const devices = client.halo.devices.get();
-  const edgeAgent = devices.find(
-    (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
-  );
-  if (identity && !edgeAgent && !token) {
-    await dispatch(createIntent(ClientAction.CreateAgent));
-  }
 
   return contributes(WelcomeCapabilities.Onboarding, manager, () => manager.destroy());
 };

@@ -4,7 +4,7 @@
 
 import '@fontsource/poiret-one';
 
-import { CaretRight, Key, Planet, QrCode, Receipt } from '@phosphor-icons/react';
+import { CaretRight, Key, Planet, QrCode, Receipt, User } from '@phosphor-icons/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
@@ -21,6 +21,7 @@ const supportsPasskeys = navigator.credentials && 'create' in navigator.credenti
 export const Welcome = ({
   state,
   error,
+  identity,
   onSignup,
   onPasskey,
   onJoinIdentity,
@@ -31,6 +32,11 @@ export const Welcome = ({
   const emailRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);
+  const [spaceInvitation, setSpaceInvitation] = useState(!!onSpaceInvitation);
+
+  const handleGoToLogin = useCallback(() => {
+    setSpaceInvitation(false);
+  }, []);
 
   const handleSignup = useCallback(async () => {
     if (validEmail(email)) {
@@ -109,10 +115,10 @@ export const Welcome = ({
               composer
             </h1>
 
-            {state === WelcomeState.INIT && !onSpaceInvitation && (
+            {state === WelcomeState.INIT && !spaceInvitation && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
-                  <h1 className='text-2xl'>{t('existing users title')}</h1>
+                  <h1 className='text-2xl'>{identity ? t('existing identity title') : t('login title')}</h1>
                 </div>
                 {Object.keys(actions).length > 0 && (
                   <>
@@ -160,11 +166,11 @@ export const Welcome = ({
               </div>
             )}
 
-            {state === WelcomeState.INIT && onSpaceInvitation && (
+            {state === WelcomeState.INIT && spaceInvitation && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
-                  <h1 className='text-2xl'>{t('space invitation welcome title')}</h1>
-                  <p className='text-subdued'>{t('space invitation welcome description')}</p>
+                  <h1 className='text-2xl'>{t('space invitation title')}</h1>
+                  <p className='text-subdued'>{t('space invitation description')}</p>
                 </div>
                 <CompoundButton
                   slots={{ root: { className: 'is-full' } }}
@@ -173,6 +179,18 @@ export const Welcome = ({
                   onClick={onSpaceInvitation}
                 >
                   {t('join space button label')}
+                </CompoundButton>
+                <div className='flex flex-col gap-2'>
+                  <h1 className='text-2xl'>{t('go to login title')}</h1>
+                  <p className='text-subdued'>{t('go to login description')}</p>
+                </div>
+                <CompoundButton
+                  slots={{ root: { className: 'is-full' } }}
+                  after={<CaretRight className={getSize(4)} weight='bold' />}
+                  before={<User className={getSize(6)} />}
+                  onClick={handleGoToLogin}
+                >
+                  {t('go to login button label')}
                 </CompoundButton>
               </div>
             )}

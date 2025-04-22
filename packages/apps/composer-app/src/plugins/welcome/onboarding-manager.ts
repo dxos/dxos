@@ -13,7 +13,7 @@ import { Account, ClientAction } from '@dxos/plugin-client/types';
 import { HelpAction } from '@dxos/plugin-help/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
-import { type Credential, type Identity } from '@dxos/react-client/halo';
+import { DeviceType, type Credential, type Identity } from '@dxos/react-client/halo';
 
 import { WELCOME_SCREEN } from './components';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
@@ -89,37 +89,46 @@ export class OnboardingManager {
   }
 
   async initialize() {
-    await this.fetchCredential();
+    await this._fetchBetaCredential();
     if (this._credential && this._hubUrl) {
       // Don't block app loading on network request.
       void this._upgradeCredential();
+      // Automatically start join space flow if already authed.
       this._spaceInvitationCode && (await this._openJoinSpace());
+      // Ensure that recovery credential is present.
+      await this._setupRecovery();
+      // Ensure that agent is present.
+      await this._createAgent();
       return;
     } else if (!this._skipAuth) {
+      // Show welcome screen if no credential found and not skipping auth.
       await this._showWelcome();
     }
 
     if (this._deviceInvitationCode !== undefined) {
+      // If device invitation code is present, open join identity flow.
       await this._openJoinIdentity();
     } else if (this._recoverIdentity) {
+      // If recovery flag is present, open recover identity flow.
       await this._openRecoverIdentity();
     } else if (!this._identity && (this._token || this._skipAuth) && this._tokenType === 'verify') {
+      // If there's no existing identity and a verification token (or if skipping auth), setup a new identity.
       await this._createIdentity();
-      await this.setupRecovery();
+      await this._setupRecovery();
       await this._startHelp();
       await this._createAgent();
-    } else if (!this._identity && this._token && this._tokenType === 'login') {
-      await this._login();
-    }
-
-    if (this._skipAuth) {
-      this._spaceInvitationCode && (await this._openJoinSpace());
-      return;
-    }
-
-    if (this._identity) {
-      // TODO(wittjosiah): Is this spamming credentials?
       await this._activateAccount();
+    } else if (!this._identity && this._token && this._tokenType === 'login') {
+      // If there's no existing identity and a login token, recover the identity.
+      await this._login();
+    } else if (this._identity && this._token) {
+      // If there's an existing identity and a verification token, activate the account.
+      await this._activateAccount();
+    }
+
+    if (this._skipAuth && this._spaceInvitationCode) {
+      // If skipping auth and a space invitation code is present, open join space flow.
+      await this._openJoinSpace();
     }
   }
 
@@ -127,8 +136,16 @@ export class OnboardingManager {
     await this._ctx.dispose();
   }
 
-  async setupRecovery() {
-    if (this._skipAuth) {
+  private async _queryRecoveryCredentials() {
+    const credentials = await queryAllCredentials(this._client);
+    return credentials.filter(
+      (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    );
+  }
+
+  private async _setupRecovery() {
+    const credentials = await this._queryRecoveryCredentials();
+    if (this._skipAuth || credentials.length > 0) {
       return;
     }
 
@@ -156,7 +173,7 @@ export class OnboardingManager {
     );
   }
 
-  async fetchCredential() {
+  private async _fetchBetaCredential() {
     const credentials = await queryAllCredentials(this._client);
     this._setCredential(credentials);
   }
@@ -240,6 +257,14 @@ export class OnboardingManager {
   }
 
   private async _createAgent() {
+    const devices = this._client.halo.devices.get();
+    const edgeAgent = devices.find(
+      (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
+    );
+    if (edgeAgent) {
+      return;
+    }
+
     await this._dispatch(createIntent(ClientAction.CreateAgent));
   }
 

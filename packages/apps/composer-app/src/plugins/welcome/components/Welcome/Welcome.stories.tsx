@@ -31,8 +31,16 @@ export const Default = {
   decorators: [withClientProvider()],
 };
 
+export const WithIdentity = {
+  args: {},
+  decorators: [withClientProvider({ createIdentity: true })],
+};
+
 export const SpaceInvitation = {
   args: {
+    onPasskey: () => console.log('passkey'),
+    onJoinIdentity: () => console.log('join identity'),
+    onRecoverIdentity: () => console.log('recover identity'),
     onSpaceInvitation: () => console.log('space invitation'),
   },
   decorators: [withClientProvider()],

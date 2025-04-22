@@ -69,6 +69,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const handleSpaceInvitation = async () => {
     let identityCreated = true;
     await dispatch(createIntent(ClientAction.CreateIdentity)).catch(() => {
+      // This will happen if the identity already exists.
       identityCreated = false;
     });
     const identity = client.halo.identity.get();
@@ -93,7 +94,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       );
 
       if (identityCreated) {
-        await dispatch(createIntent(ClientAction.CreateRecoveryCode));
         await dispatch(createIntent(ClientAction.CreateAgent));
       }
 
@@ -130,10 +130,11 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     <Welcome
       state={state}
       error={error}
+      identity={identity}
       onSignup={handleSignup}
-      onPasskey={!identity && !spaceInvitationCode ? handlePasskey : undefined}
-      onJoinIdentity={!identity && !spaceInvitationCode ? handleJoinIdentity : undefined}
-      onRecoverIdentity={!identity && !spaceInvitationCode ? handleRecoverIdentity : undefined}
+      onPasskey={!identity ? handlePasskey : undefined}
+      onJoinIdentity={!identity ? handleJoinIdentity : undefined}
+      onRecoverIdentity={!identity ? handleRecoverIdentity : undefined}
       onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
     />
   );
