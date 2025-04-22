@@ -4,7 +4,7 @@
 
 import { describe } from 'vitest';
 
-import { EchoObject, getObjectAnnotation } from '@dxos/echo-schema';
+import { EchoObject, getTypeAnnotation } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { create } from '@dxos/live-object';
 
@@ -16,7 +16,7 @@ import { EchoTestBuilder } from '../testing';
 //  echo-schema cannot export the test blueprint because @dxos/test is not published.
 describe('Reactive proxy', () => {
   reactiveProxyTests((schema) => {
-    if (schema != null && getObjectAnnotation(schema) != null) {
+    if (schema != null && getTypeAnnotation(schema) != null) {
       return null;
     }
 

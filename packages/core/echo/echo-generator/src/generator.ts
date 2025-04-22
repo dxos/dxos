@@ -4,7 +4,7 @@
 
 import { Filter, type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { getObjectAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
+import { getTypeAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create, getSchema, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
@@ -35,7 +35,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   }
 
   getSchema(type: T): EchoSchema | S.Schema.AnyNoContext | undefined {
-    return this.schemas.find((schema) => getObjectAnnotation(schema)!.typename === type);
+    return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
   }
 
   protected setSchema(type: T, schema: EchoSchema | S.Schema.AnyNoContext) {
@@ -119,7 +119,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   async mutateObject(object: ReactiveEchoObject<any>, params: MutationsProviderParams) {
     invariant(this._mutations, 'Mutations not defined.');
-    const type = getObjectAnnotation(getSchema(object)!)!.typename as T;
+    const type = getTypeAnnotation(getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
 
     await this._mutations![type](object, params);

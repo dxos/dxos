@@ -10,8 +10,8 @@ import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions }
 import {
   EntityKind,
   type HasId,
-  type ObjectAnnotation,
-  ObjectAnnotationId,
+  type TypeAnnotation,
+  TypeAnnotationId,
   type TypeMeta,
   Typename,
   Version,
@@ -65,7 +65,7 @@ export const TypedObject = ({ typename: _typename, version: _version, disableVal
     // Set ECHO annotations.
     invariant(typeof EntityKind.Object === 'string');
     const annotatedSchema = typeSchema.annotations({
-      [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
+      [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
     });
 
     /**

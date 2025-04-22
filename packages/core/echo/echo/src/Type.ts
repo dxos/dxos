@@ -15,7 +15,7 @@ import {
   EntityKind,
   ObjectId,
   Ref as Ref$,
-  getObjectAnnotation,
+  getTypeAnnotation,
   getSchema,
   getSchemaDXN,
   getSchemaTypename,
@@ -36,7 +36,7 @@ export type { TypeMeta as Meta, JsonSchemaType as JsonSchema };
 export {
   EntityKind as Kind,
   ObjectId,
-  getObjectAnnotation as getMeta,
+  getTypeAnnotation as getMeta,
   getSchema,
   getSchemaDXN as getDXN,
   getSchemaTypename as getTypename,
