@@ -20,6 +20,7 @@ export default [
         'templates label': 'Templates',
 
         'open ambient chat label': 'Open AI chat',
+        'assistant chat label': 'AI chat',
         'plugin name': 'Assistant',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',

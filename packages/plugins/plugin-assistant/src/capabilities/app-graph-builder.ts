@@ -12,10 +12,11 @@ import {
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { type Space, Filter, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
+import { type Space, Filter, fullyQualifiedId, getSpace, isSpace, isReactiveObject } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
 import { AIChatType, AssistantAction, TemplateType } from '../types';
@@ -70,13 +71,30 @@ export default (context: PluginsContext) =>
           },
           properties: {
             label: ['open assistant label', { ns: ASSISTANT_PLUGIN }],
-            icon: 'ph--chat-centered-text--regular',
+            icon: 'ph--star-four--regular',
             disposition: 'pin-end',
             position: 'hoist',
             keyBinding: {
               macos: 'shift+meta+k',
               windows: 'shift+ctrl+k',
             },
+          },
+        },
+      ],
+    }),
+
+    createExtension({
+      id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
+      filter: (node): node is Node<AIChatType> =>
+        isReactiveObject(node.data) && node.data.assistantChatQueue && node.data.type !== AIChatType.typename,
+      connector: ({ node }) => [
+        {
+          id: [node.id, 'assistant-chat'].join(SLUG_PATH_SEPARATOR),
+          type: COMPANION_TYPE,
+          data: node.data,
+          properties: {
+            label: ['assistant chat label', { ns: ASSISTANT_PLUGIN }],
+            icon: 'ph--star-four--regular',
           },
         },
       ],

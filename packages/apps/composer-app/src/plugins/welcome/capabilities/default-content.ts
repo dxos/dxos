@@ -4,6 +4,9 @@
 
 import { createIntent, LayoutAction } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
+import { ObjectId } from '@dxos/echo-schema';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { refFromDXN } from '@dxos/live-object';
 import { SPACES } from '@dxos/plugin-space';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
@@ -22,7 +25,14 @@ export default async (context: PluginsContext) => {
 
   const readme = create(DocumentType, {
     name: INITIAL_DOC_TITLE,
-    content: makeRef(create(TextType, { content: INITIAL_CONTENT.join('\n\n') })),
+    content: makeRef(
+      create(TextType, {
+        content: INITIAL_CONTENT.join('\n\n'),
+      }),
+    ),
+    assistantChatQueue: refFromDXN(
+      new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, defaultSpace.id, ObjectId.random()]),
+    ),
     threads: [],
   });
 
