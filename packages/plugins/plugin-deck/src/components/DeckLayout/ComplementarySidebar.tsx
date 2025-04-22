@@ -3,19 +3,19 @@
 //
 
 import React, {
+  Fragment,
+  type MouseEvent,
   type PropsWithChildren,
   useCallback,
   useEffect,
   useMemo,
   useState,
-  type MouseEvent,
-  Fragment,
 } from 'react';
 
 import {
-  createIntent,
   LayoutAction,
   Surface,
+  createIntent,
   useAppGraph,
   useCapabilities,
   useCapability,
@@ -27,13 +27,12 @@ import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { byPosition } from '@dxos/util';
 
-import { PlankContentError } from './PlankError';
-import { PlankLoading } from './PlankLoading';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
 import { DECK_PLUGIN } from '../../meta';
 import { type Panel } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
+import { PlankContentError, PlankLoading } from '../Plank';
 
 export type ComplementarySidebarProps = {
   current?: string;

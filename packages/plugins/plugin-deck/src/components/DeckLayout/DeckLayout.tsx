@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment,
 
 import {
   LayoutAction,
-  createIntent,
   Surface,
+  createIntent,
   useCapability,
   useIntentDispatcher,
   usePluginManager,
@@ -30,8 +30,6 @@ import { ActiveNode } from './ActiveNode';
 import { ComplementarySidebar } from './ComplementarySidebar';
 import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
-import { Plank } from './Plank';
-import { PlankContentError } from './PlankError';
 import { Sidebar } from './Sidebar';
 import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
@@ -40,6 +38,7 @@ import { Topbar } from './Topbar';
 import { DeckCapabilities } from '../../capabilities';
 import { getMode, type Overscroll } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
+import { Plank, PlankContentError } from '../Plank';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
@@ -263,9 +262,9 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                   orientation='horizontal'
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
-                  onScroll={handleScroll}
                   itemsCount={itemsCount - 1}
                   style={padding}
+                  onScroll={handleScroll}
                   ref={deckRef}
                 >
                   {active.map((entryId) => (

@@ -10,6 +10,9 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { CloseSidebarButton, ToggleSidebarButton } from './SidebarButton';
 
+// TOOD(burdon): Extract to translation.
+const APP_NAME = 'Composer';
+
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
   return (
     <header
@@ -21,7 +24,7 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       )}
     >
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
-      <span className='self-center grow mis-1'>Composer</span>
+      <span className='self-center grow mis-1'>{APP_NAME}</span>
       {variant === 'topbar' && (
         <div role='none' className='absolute inset-0 pointer-events-none'>
           <div role='none' className='grid bs-full pointer-fine:p-1 max-is-md mli-auto pointer-events-auto'>
