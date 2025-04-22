@@ -8,6 +8,7 @@ export default [
   {
     'en-US': {
       [DECK_PLUGIN]: {
+        'app name': 'Composer',
         'plugin name': 'Deck',
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open sidebar',

@@ -27,11 +27,8 @@ import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-sta
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
-import { ComplementarySidebar } from './ComplementarySidebar';
 import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
-import { Sidebar } from './Sidebar';
-import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
@@ -39,6 +36,7 @@ import { DeckCapabilities } from '../../capabilities';
 import { getMode, type Overscroll } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 import { Plank, PlankContentError } from '../Plank';
+import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
