@@ -9,9 +9,9 @@ import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-for
 
 import { DECK_PLUGIN } from '../meta';
 import {
+  type DeckSettingsProps,
   type NewPlankPositioning,
   NewPlankPositions,
-  type DeckSettingsProps,
   type Overscroll,
   OverscrollOptions,
 } from '../types';

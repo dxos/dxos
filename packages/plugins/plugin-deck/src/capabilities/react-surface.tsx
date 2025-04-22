@@ -7,8 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 
-import { LayoutSettings } from '../components';
-import { Banner } from '../components/DeckLayout/Banner';
+import { LayoutSettings, Banner } from '../components';
 import { DECK_PLUGIN } from '../meta';
 import { type DeckSettingsProps } from '../types';
 

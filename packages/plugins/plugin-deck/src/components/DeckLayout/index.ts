@@ -3,4 +3,6 @@
 //
 
 export { NAV_ID } from './constants';
+
+export * from './Banner';
 export * from './DeckLayout';

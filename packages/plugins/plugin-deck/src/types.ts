@@ -27,35 +27,32 @@ export type Panel = {
   label: Label;
   icon: string;
   position?: Position;
-  /**
-   * If true, the panel will not be wrapped in a scroll area.
-   */
+  /** If true, the panel will not be wrapped in a scroll area. */
   fixed?: boolean;
   filter?: (node: Node) => boolean;
 };
 
-export const DeckSettingsSchema = S.mutable(
-  S.Struct({
-    showHints: S.Boolean,
-    enableNativeRedirect: S.Boolean,
-    enableStatusbar: S.Boolean,
-    newPlankPositioning: S.Literal(...NewPlankPositions),
-    overscroll: S.Literal(...OverscrollOptions),
-  }),
-);
-
+// TODO(burdon): Allow/disable deck.
+export const DeckSettingsSchema = S.Struct({
+  showHints: S.Boolean,
+  enableNativeRedirect: S.Boolean,
+  enableStatusbar: S.Boolean,
+  newPlankPositioning: S.Literal(...NewPlankPositions),
+  overscroll: S.Literal(...OverscrollOptions),
+}).pipe(S.mutable);
 export type DeckSettingsProps = S.Schema.Type<typeof DeckSettingsSchema>;
 
-const LayoutMode = S.Union(S.Literal('deck'), S.Literal('solo'), S.Literal('fullscreen'));
-export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
+const LayoutMode = S.Literal('deck', 'solo', 'fullscreen');
 export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
+export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
 
 export const PlankSizing = S.Record({ key: S.String, value: S.Number });
 export type PlankSizing = S.Schema.Type<typeof PlankSizing>;
 
+// TODO(burdon): Rename (explain different from DeckState).
 export const Deck = S.Struct({
   initialized: S.Boolean.annotations({
-    description: "If false, the deck has not yet left solo mode and new planks should be solo'd.",
+    description: 'If false, the deck has not yet left solo mode and new planks should be soloed.',
   }),
   active: S.mutable(S.Array(S.String)),
   // TODO(wittjosiah): Piping into both mutable and optional caused invalid typescript output.
@@ -68,7 +65,7 @@ export const Deck = S.Struct({
 });
 export type Deck = S.Schema.Type<typeof Deck>;
 
-export const defaultDeck = {
+export const defaultDeck: Deck = {
   initialized: false,
   active: [],
   activeCompanions: {},
@@ -77,45 +74,37 @@ export const defaultDeck = {
   solo: undefined,
   plankSizing: {},
   companionFrameSizing: {},
-} satisfies Deck;
+};
 
-export const DeckState = S.mutable(
-  S.Struct({
-    sidebarState: S.Literal('closed', 'collapsed', 'expanded'),
-    complementarySidebarState: S.Literal('closed', 'collapsed', 'expanded'),
-    complementarySidebarPanel: S.optional(S.String),
+export const DeckState = S.Struct({
+  sidebarState: S.Literal('closed', 'collapsed', 'expanded'),
+  complementarySidebarState: S.Literal('closed', 'collapsed', 'expanded'),
+  complementarySidebarPanel: S.optional(S.String),
 
-    dialogOpen: S.Boolean,
-    /**
-     * Data to be passed to the dialog Surface.
-     */
-    dialogContent: S.optional(S.Any),
-    dialogBlockAlign: S.optional(S.Literal('start', 'center', 'end')),
-    dialogType: S.optional(S.Literal('default', 'alert')),
+  dialogOpen: S.Boolean,
+  /** Data to be passed to the dialog Surface. */
+  dialogContent: S.optional(S.Any),
+  dialogBlockAlign: S.optional(S.Literal('start', 'center', 'end')),
+  dialogType: S.optional(S.Literal('default', 'alert')),
 
-    popoverOpen: S.Boolean,
-    popoverSide: S.optional(S.Literal('top', 'right', 'bottom', 'left')),
-    /**
-     * Data to be passed to the popover Surface.
-     */
-    popoverContent: S.optional(S.Any),
-    popoverAnchorId: S.optional(S.String),
+  popoverOpen: S.Boolean,
+  popoverSide: S.optional(S.Literal('top', 'right', 'bottom', 'left')),
+  /** Data to be passed to the popover Surface. */
+  popoverContent: S.optional(S.Any),
+  popoverAnchorId: S.optional(S.String),
 
-    toasts: S.mutable(S.Array(LayoutAction.Toast)),
-    currentUndoId: S.optional(S.String),
+  toasts: S.mutable(S.Array(LayoutAction.Toast)),
+  currentUndoId: S.optional(S.String),
 
-    activeDeck: S.String,
-    previousDeck: S.String,
-    decks: S.mutable(S.Record({ key: S.String, value: S.mutable(Deck) })),
-    previousMode: S.mutable(S.Record({ key: S.String, value: LayoutMode })),
-    deck: S.mutable(Deck),
+  activeDeck: S.String,
+  previousDeck: S.String,
+  decks: S.mutable(S.Record({ key: S.String, value: S.mutable(Deck) })),
+  previousMode: S.mutable(S.Record({ key: S.String, value: LayoutMode })),
+  deck: S.mutable(Deck),
 
-    /**
-     * The identifier of a component to scroll into view when it is mounted.
-     */
-    scrollIntoView: S.optional(S.String),
-  }),
-);
+  /** The identifier of a component to scroll into view when it is mounted. */
+  scrollIntoView: S.optional(S.String),
+}).pipe(S.mutable);
 
 export type DeckState = S.Schema.Type<typeof DeckState>;
 

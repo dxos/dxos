@@ -24,7 +24,7 @@ export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 export type PlankCapabilities = {
   incrementStart?: boolean;
   incrementEnd?: boolean;
-  solo?: boolean;
+  solo?: boolean; // TODO(burdon): Variants.
   companion?: boolean;
 };
 
@@ -87,7 +87,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
 // NOTE(thure): Pinning & unpinning are disabled indefinitely.
 export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
   (
-    { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, classNames, ...props },
+    { children, classNames, variant = 'default', capabilities, isSolo, pin, close = false, onClick, ...props },
     forwardedRef,
   ) => {
     const { t } = useTranslation(DECK_PLUGIN);
@@ -106,7 +106,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           />
         )} */}
 
-        {can.solo && (
+        {capabilities.solo && (
           <PlankControl
             label={isSolo ? t('show deck plank label') : t('show solo plank label')}
             classNames={buttonClassNames}
@@ -115,18 +115,18 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           />
         )}
 
-        {!isSolo && can.solo && (
+        {!isSolo && capabilities.solo && (
           <>
             <PlankControl
               label={t('increment start label')}
-              disabled={!can.incrementStart}
+              disabled={!capabilities.incrementStart}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-start')}
               icon='ph--caret-left--regular'
             />
             <PlankControl
               label={t('increment end label')}
-              disabled={!can.incrementEnd}
+              disabled={!capabilities.incrementEnd}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-end')}
               icon='ph--caret-right--regular'
@@ -159,7 +159,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           />
         )}
 
-        {can.companion && (
+        {capabilities.companion && (
           <PlankControl
             label={t('open companion label')}
             classNames={buttonClassNames}

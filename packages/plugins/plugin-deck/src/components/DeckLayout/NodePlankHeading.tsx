@@ -47,6 +47,7 @@ export const NodePlankHeading = memo(
     companions,
   }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
+    const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -60,7 +61,6 @@ export const NodePlankHeading = memo(
             : node?.properties?.label) ?? ['plank heading fallback label', { ns: DECK_PLUGIN }],
           t,
         );
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
 
     const isCompanionNode = node?.type === COMPANION_TYPE;
 

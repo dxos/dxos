@@ -17,5 +17,9 @@ export default () => {
     overscroll: 'none',
   });
 
-  return contributes(Capabilities.Settings, { schema: DeckSettingsSchema, prefix: DECK_PLUGIN, value: settings });
+  return contributes(Capabilities.Settings, {
+    schema: DeckSettingsSchema,
+    prefix: DECK_PLUGIN,
+    value: settings,
+  });
 };
