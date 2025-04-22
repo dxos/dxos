@@ -1,13 +1,12 @@
 //
 // Copyright 2025 DXOS.org
 //
+
+// TODO(ZaymonFC): Export the DXOS logger from 'dxos:functions'.
 /* eslint-disable no-console */
-// TODO(ZaymonFC): Make dxos log available.
 
 // @ts-ignore
 import { createStatic, defineFunction, S, ObjectId, EchoObject, Filter } from 'dxos:functions';
-// @ts-ignore
-import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
 // @ts-ignore
 import { Effect } from 'https://esm.sh/effect@3.13.3';
 
@@ -18,21 +17,32 @@ export default defineFunction({
     Effect.gen(function* () {
       console.log('Starting queue function', JSON.stringify(event.data));
 
-      console.log('Upserting contact stored schema');
-      const [contactStoredSchema] = yield* Effect.tryPromise({
-        try: () => space.db.schemaRegistry.register([ContactType]),
-        catch: (e: any) => e,
-      });
+      const contactStoredSchema = yield* Effect.gen(function* () {
+        const existingSchema = yield* Effect.tryPromise({
+          try: () => space.db.schemaRegistry.query({ typename: ContactType.typename }).firstOrUndefined(),
+          catch: (e: any) => e,
+        });
 
-      const item = event.data.item as MessageType;
-      console.log('Found item', JSON.stringify(item, null, 2));
+        if (existingSchema) {
+          console.log('Found existing contact stored schema');
+          return existingSchema;
+        } else {
+          console.log('Upserting contact stored schema');
+          const [newSchema] = yield* Effect.tryPromise({
+            try: () => space.db.schemaRegistry.register([ContactType]),
+            catch: (e: any) => e,
+          });
+          return newSchema;
+        }
+      });
 
       const { objects } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.schema(contactStoredSchema)).run(),
         catch: (e: any) => e,
       });
-      console.log('Found contacts', objects);
+      console.log('Loaded existing contacts', JSON.stringify(objects));
 
+      const item = event.data.item as MessageType;
       const sender = (item as any).sender;
 
       const contactExists = (objects as ContactType[]).findIndex((c) => c.email === sender.email) !== -1;
@@ -52,7 +62,7 @@ export default defineFunction({
       });
 
       return { success: true };
-    }).pipe(Effect.provide(FetchHttpClient.layer)),
+    }),
 });
 
 //
