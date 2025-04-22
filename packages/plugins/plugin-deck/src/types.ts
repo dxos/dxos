@@ -42,18 +42,13 @@ export const DeckSettingsSchema = S.Struct({
 }).pipe(S.mutable);
 export type DeckSettingsProps = S.Schema.Type<typeof DeckSettingsSchema>;
 
-const LayoutMode = S.Literal('deck', 'solo', 'fullscreen');
-export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
-export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
-
 export const PlankSizing = S.Record({ key: S.String, value: S.Number });
 export type PlankSizing = S.Schema.Type<typeof PlankSizing>;
 
 // TODO(burdon): Rename (explain different from DeckState).
 export const Deck = S.Struct({
-  initialized: S.Boolean.annotations({
-    description: 'If false, the deck has not yet left solo mode and new planks should be soloed.',
-  }),
+  /** If false, the deck has not yet left solo mode and new planks should be soloed. */
+  initialized: S.Boolean,
   active: S.mutable(S.Array(S.String)),
   // TODO(wittjosiah): Piping into both mutable and optional caused invalid typescript output.
   activeCompanions: S.optional(S.mutable(S.Record({ key: S.String, value: S.String }))),
@@ -70,10 +65,22 @@ export const defaultDeck: Deck = {
   active: [],
   activeCompanions: {},
   inactive: [],
-  fullscreen: false,
   solo: undefined,
+  fullscreen: false,
   plankSizing: {},
   companionFrameSizing: {},
+};
+
+const LayoutMode = S.Literal('deck', 'solo', 'fullscreen');
+export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
+export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
+
+export const getMode = (deck: Deck): LayoutMode => {
+  if (deck.solo) {
+    return deck.fullscreen ? 'fullscreen' : 'solo';
+  }
+
+  return 'deck';
 };
 
 export const DeckState = S.Struct({
@@ -107,14 +114,6 @@ export const DeckState = S.Struct({
 }).pipe(S.mutable);
 
 export type DeckState = S.Schema.Type<typeof DeckState>;
-
-export const getMode = (deck: Deck): LayoutMode => {
-  if (deck.solo) {
-    return deck.fullscreen ? 'fullscreen' : 'solo';
-  }
-
-  return 'deck';
-};
 
 // NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 export const SLUG_PATH_SEPARATOR = '~';
