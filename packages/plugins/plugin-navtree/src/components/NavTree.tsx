@@ -26,7 +26,11 @@ export const NavTree = ({ id, root }: NavTreeProps) => {
     [topLevelActions, topLevelCollections, topLevelWorkspaces, topLevelNavigation],
   );
   const pinnedItems = getItems(root, 'pin-end').toSorted((a, b) => byPosition(a.properties, b.properties));
-  const topLevelItems = useMemo(() => [...l0Items, ...pinnedItems], [l0Items, pinnedItems]);
+  const userAccountItem = getItems(root, 'user-account')[0];
+  const topLevelItems = useMemo(
+    () => [...l0Items, ...pinnedItems, userAccountItem],
+    [l0Items, pinnedItems, userAccountItem],
+  );
 
   useLoadDescendents(root);
   const path = useMemo(() => [id], [id]);
@@ -34,7 +38,13 @@ export const NavTree = ({ id, root }: NavTreeProps) => {
   return (
     // NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls
     <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative'>
-      <L0Menu topLevelItems={l0Items} pinnedItems={pinnedItems} path={path} parent={root} />
+      <L0Menu
+        topLevelItems={l0Items}
+        pinnedItems={pinnedItems}
+        userAccountItem={userAccountItem}
+        path={path}
+        parent={root}
+      />
       <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} />
     </Tabs.Root>
   );

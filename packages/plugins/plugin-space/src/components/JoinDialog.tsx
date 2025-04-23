@@ -5,9 +5,10 @@
 import React, { useCallback } from 'react';
 
 import { createIntent, LayoutAction, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { log } from '@dxos/log';
+import { Trigger } from '@dxos/async';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { useClient } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
@@ -28,34 +29,44 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
-      if (result?.spaceKey) {
-        await Promise.all([
-          dispatch(
-            createIntent(LayoutAction.AddToast, {
-              part: 'toast',
-              subject: {
-                id: `${SPACE_PLUGIN}/join-success`,
-                duration: 5_000,
-                title: ['join success label', { ns: SPACE_PLUGIN }],
-                closeLabel: ['dismiss label', { ns: SPACE_PLUGIN }],
-              },
-            }),
-          ),
-          dispatch(
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              options: {
-                state: false,
-              },
-            }),
-          ),
-        ]);
+      const spaceKey = result?.spaceKey;
+      if (!spaceKey) {
+        return;
       }
 
-      const space = result?.spaceKey ? client.spaces.get(result.spaceKey) : undefined;
+      await Promise.all([
+        dispatch(
+          createIntent(LayoutAction.AddToast, {
+            part: 'toast',
+            subject: {
+              id: `${SPACE_PLUGIN}/join-success`,
+              duration: 5_000,
+              title: ['join success label', { ns: SPACE_PLUGIN }],
+              closeLabel: ['dismiss label', { ns: SPACE_PLUGIN }],
+            },
+          }),
+        ),
+        dispatch(
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            options: {
+              state: false,
+            },
+          }),
+        ),
+      ]);
+
+      let space = client.spaces.get(spaceKey);
       if (!space) {
-        log.warn('Space not found', result?.spaceKey);
-        return;
+        // TODO(wittjosiah): Add api to wait for a space.
+        const trigger = new Trigger<Space>();
+        client.spaces.subscribe(() => {
+          const space = client.spaces.get(spaceKey);
+          if (space) {
+            trigger.wake(space);
+          }
+        });
+        space = await trigger.wait();
       }
 
       await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));

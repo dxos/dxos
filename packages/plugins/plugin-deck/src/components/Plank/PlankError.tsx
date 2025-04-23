@@ -8,7 +8,7 @@ import { type Node } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { NodePlankHeading, type NodePlankHeadingProps } from './NodePlankHeading';
+import { PlankHeading, type PlankHeadingProps } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 import { DECK_PLUGIN } from '../../meta';
 
@@ -38,7 +38,7 @@ export const PlankError = ({
   error,
 }: {
   id: string;
-  part: NodePlankHeadingProps['part'];
+  part: PlankHeadingProps['part'];
   node?: Node;
   error?: Error;
 }) => {
@@ -48,7 +48,7 @@ export const PlankError = ({
   }, []);
   return (
     <>
-      <NodePlankHeading id={id} part={part} node={node} pending={!timedOut} />
+      <PlankHeading id={id} part={part} node={node} pending={!timedOut} />
       {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
   );

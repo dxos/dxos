@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+// NOTE(ZaymonFC): This is a workaround. See: https://discord.com/channels/837138313172353095/1363955461350621235
+import '@dxos/plugin-inbox/css';
+
 import { INTENT_PLUGIN, IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@dxos/app-framework';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';

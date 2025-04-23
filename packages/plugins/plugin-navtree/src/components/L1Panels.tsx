@@ -42,7 +42,7 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
               density='fine'
               classNames={mx(
                 'is-6 pli-0 dx-focus-ring-inset',
-                item.properties.disposition !== 'pin-end' && 'invisible',
+                !item.id.startsWith('!') && 'invisible',
                 hoverableControlItem,
                 hoverableOpenControlItem,
               )}

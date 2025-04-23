@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type ButtonProps, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { ToolbarPickerButton, type ToolbarPickerProps } from '../ToolbarPicker';
+import { PickerButton, type PickerButtonProps } from '../PickerButton';
 
 export type IconPickerProps = {
   disabled?: boolean;
@@ -14,13 +14,13 @@ export type IconPickerProps = {
   value?: string;
   onChange?: (nextHue: string) => void;
   onReset?: ButtonProps['onClick'];
-} & Pick<ToolbarPickerProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset'>;
+} & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
 
 export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
   const { t } = useTranslation('os');
 
   return (
-    <ToolbarPickerButton
+    <PickerButton
       Component={IconPreview}
       label={t('select icon label')}
       icon='ph--selection--regular'

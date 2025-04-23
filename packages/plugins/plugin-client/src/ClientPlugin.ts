@@ -57,7 +57,7 @@ export const ClientPlugin = ({
     defineModule({
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
-      activate: () => ReactSurface({ createInvitationUrl }),
+      activate: () => ReactSurface({ createInvitationUrl, onReset }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
@@ -67,7 +67,7 @@ export const ClientPlugin = ({
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
-      activate: (context) => IntentResolver({ context, onReset }),
+      activate: (context) => IntentResolver({ context }),
     }),
     defineModule({
       id: `${meta.id}/module/translations`,

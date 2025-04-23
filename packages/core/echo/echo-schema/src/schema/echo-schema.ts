@@ -16,10 +16,10 @@ import {
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
 import {
-  getObjectAnnotation,
+  getTypeAnnotation,
   schemaVariance,
   type JsonSchemaType,
-  type ObjectAnnotation,
+  type TypeAnnotation,
   type SchemaMeta,
   SchemaMetaSymbol,
 } from '../ast';
@@ -43,9 +43,9 @@ export interface BaseSchema<A = any, I = any> extends TypedObject<A, I> {
  */
 // TODO(burdon): Common abstract base class?
 export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
-  private readonly _objectAnnotation: ObjectAnnotation;
+  private readonly _objectAnnotation: TypeAnnotation;
   constructor(private readonly _schema: S.Schema<A, I>) {
-    this._objectAnnotation = getObjectAnnotation(this._schema)!;
+    this._objectAnnotation = getTypeAnnotation(this._schema)!;
     invariant(this._objectAnnotation);
   }
 

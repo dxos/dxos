@@ -126,6 +126,22 @@ describe('Swarm', () => {
     await connectSwarms(peer1, peer2, () => sleep(15));
   });
 
+  test('reconnect', { timeout: 10_000 }, async () => {
+    const topic = PublicKey.random();
+
+    const peer1 = await setupSwarm({ topic });
+    const peer2 = await setupSwarm({ topic });
+
+    await connectSwarms(peer1, peer2, () => sleep(15));
+
+    void peer1.swarm._peers.get(peer2.peer)!.connection!.close();
+    void peer2.swarm.goOffline();
+
+    const reconnectedPeer2 = await setupSwarm({ topic, peer: peer2.peer });
+
+    await connectSwarms(peer1, reconnectedPeer2, () => sleep(15));
+  });
+
   test('connection limiter', async () => {
     // remotePeer1 <--> peer (connectionLimiter: max = 1) <--> remotePeer2
 

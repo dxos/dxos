@@ -111,7 +111,13 @@ const IdentityHeading = ({
 
         <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
-          <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} classNames='bs-[--rail-action]' />
+          <HuePicker
+            value={hue}
+            onChange={setHue}
+            onReset={() => setHue(undefined)}
+            classNames='bs-[--rail-action]'
+            rootVariant='toolbar-button'
+          />
           <Clipboard.IconButton
             classNames='bs-[--rail-action]'
             data-testid='update-profile-form-copy-key'
