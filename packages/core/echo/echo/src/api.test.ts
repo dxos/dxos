@@ -6,7 +6,7 @@ import { Schema as S } from 'effect';
 import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
-import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
+import { FormatEnum, FormatAnnotation, getSchema } from '@dxos/echo-schema';
 
 // Deliberately testing top-level import as if external consumer for @dxos/echo.
 import { Type } from '.';
@@ -88,7 +88,7 @@ describe('Experimental API review', () => {
   test('default props', ({ expect }) => {
     // TODO(burdon): Doesn't work after pipe(Type.def).
     // Property 'make' does not exist on type 'EchoObjectSchema<Struct<{ timestamp: PropertySignature<":", string, never, ":", string, true, never>; }>>'.ts(2339)
-    const message = Type.create(Testing.Message, Testing.Message.make({}));
+    const message = Type.create(Testing.Message, getSchema(Testing.Message).make({}));
     expect(message.timestamp).to.exist;
   });
 });

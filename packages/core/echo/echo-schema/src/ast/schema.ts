@@ -14,7 +14,7 @@ export const symbolSchema = Symbol.for('@dxos/schema/Schema');
  */
 // TODO(burdon): Reconcile with `getTypename`.
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
-export const getSchema = (obj: unknown | undefined): S.Schema.AnyNoContext | undefined => {
+export const getSchema = (obj: unknown | undefined): S.Struct<any> | undefined => {
   if (!obj) {
     return undefined;
   }
@@ -25,7 +25,7 @@ export const getSchema = (obj: unknown | undefined): S.Schema.AnyNoContext | und
 /**
  * Internal use only.
  */
-export const setSchema = (obj: any, schema: S.Schema.AnyNoContext) => {
+export const setSchema = (obj: any, schema: S.Struct<any>) => {
   Object.defineProperty(obj, symbolSchema, {
     value: schema,
     writable: false,

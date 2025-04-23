@@ -12,7 +12,7 @@ import { setTypename } from './typename';
 import { setSchema, getTypeAnnotation } from '../ast';
 import { getSchemaDXN } from '../types';
 
-// Make `id` optional.
+// This makes the `id` field optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
 
 /**
@@ -45,10 +45,10 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  */
 // TODO(burdon): Handle defaults (see S.make).
 // TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
-export const createStatic = <Schema extends S.Schema.AnyNoContext>(
+export const createStatic = <Schema extends S.Struct<T>, T extends S.Struct.Fields>(
   schema: Schema,
-  data: CreateData<S.Schema.Type<Schema>>,
-): CreateData<S.Schema.Type<Schema>> & { id: string } => {
+  data: CreateData<T>,
+): CreateData<T> => {
   const annotation = getTypeAnnotation(schema);
   if (!annotation) {
     throw new Error('Schema is not an object schema');
