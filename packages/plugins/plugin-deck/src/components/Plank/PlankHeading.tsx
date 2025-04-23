@@ -54,8 +54,6 @@ export const PlankHeading = memo(
     actions = [],
     settings,
   }: PlankHeadingProps) => {
-    console.log('=== capabilities', settings?.enableDeck);
-
     const { t } = useTranslation(DECK_PLUGIN);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { graph } = useAppGraph();
