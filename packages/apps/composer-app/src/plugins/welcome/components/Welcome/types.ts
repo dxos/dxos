@@ -7,7 +7,10 @@ import { type MaybePromise } from '@dxos/util';
 
 export enum WelcomeState {
   INIT = 0,
+  // TODO(wittjosiah): Remove this state once signups are auto-admitted.
   EMAIL_SENT = 1,
+  LOGIN_SENT = 2,
+  SPACE_INVITATION = 3,
 }
 
 export type WelcomeScreenProps = {
@@ -19,6 +22,7 @@ export type WelcomeScreenProps = {
   onJoinIdentity?: () => MaybePromise<void>;
   onRecoverIdentity?: () => MaybePromise<void>;
   onSpaceInvitation?: () => MaybePromise<void>;
+  onGoToLogin?: () => MaybePromise<void>;
 };
 
 export const validEmail = (email: string) => !!email.match(/.+@.+\..+/);

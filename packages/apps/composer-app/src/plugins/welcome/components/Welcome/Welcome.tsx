@@ -27,16 +27,12 @@ export const Welcome = ({
   onJoinIdentity,
   onRecoverIdentity,
   onSpaceInvitation,
+  onGoToLogin,
 }: WelcomeScreenProps) => {
   const { t } = useTranslation(WELCOME_PLUGIN);
   const emailRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);
-  const [spaceInvitation, setSpaceInvitation] = useState(!!onSpaceInvitation);
-
-  const handleGoToLogin = useCallback(() => {
-    setSpaceInvitation(false);
-  }, []);
 
   const handleSignup = useCallback(async () => {
     if (validEmail(email)) {
@@ -115,10 +111,11 @@ export const Welcome = ({
               composer
             </h1>
 
-            {state === WelcomeState.INIT && !spaceInvitation && (
+            {state === WelcomeState.INIT && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{identity ? t('existing identity title') : t('login title')}</h1>
+                  {!identity && <p className='text-subdued'>{t('beta description')}</p>}
                 </div>
                 {Object.keys(actions).length > 0 && (
                   <>
@@ -166,7 +163,7 @@ export const Welcome = ({
               </div>
             )}
 
-            {state === WelcomeState.INIT && spaceInvitation && (
+            {state === WelcomeState.SPACE_INVITATION && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{t('space invitation title')}</h1>
@@ -188,18 +185,22 @@ export const Welcome = ({
                   slots={{ root: { className: 'is-full' } }}
                   after={<CaretRight className={getSize(4)} weight='bold' />}
                   before={<User className={getSize(6)} />}
-                  onClick={handleGoToLogin}
+                  onClick={onGoToLogin}
                 >
                   {t('go to login button label')}
                 </CompoundButton>
               </div>
             )}
 
-            {state === WelcomeState.EMAIL_SENT && (
+            {(state === WelcomeState.EMAIL_SENT || state === WelcomeState.LOGIN_SENT) && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
-                  <h1 className='text-2xl'>{t('welcome title')}</h1>
-                  <p className='text-subdued'>{t('check email for access')}</p>
+                  <h1 className='text-2xl'>{t('check email title')}</h1>
+                  <p className='text-subdued'>
+                    {state === WelcomeState.EMAIL_SENT
+                      ? t('request access email description')
+                      : t('check email description')}
+                  </p>
                 </div>
               </div>
             )}

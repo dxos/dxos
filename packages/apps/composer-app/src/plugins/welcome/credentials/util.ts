@@ -33,7 +33,7 @@ export const signup = async ({
   email: string;
   redirectUrl?: string;
   identity: Identity | null;
-}): Promise<void> => {
+}): Promise<boolean> => {
   const response = await fetch(new URL('/account/signup', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -57,6 +57,8 @@ export const signup = async ({
     // eslint-disable-next-line
     console.log(activationLink.href);
   }
+
+  return type === 'login';
 };
 
 /**

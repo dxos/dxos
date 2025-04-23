@@ -8,14 +8,17 @@ export default [
   {
     'en-US': {
       [WELCOME_PLUGIN]: {
-        'welcome title': 'Now check your email!',
-        'check email for access':
-          "A login link has been sent to your inbox. If it doesn't arrive in 3 minutes, be sure to check your spam folder.",
-        'email error': 'Failed to send verification email.',
-        'login title': 'Sign up or login',
+        'login title': 'Request access or login',
         'existing identity title': 'Sign up to access your account',
-        'name label': 'Name',
-        'name placeholder': 'Your name',
+        'beta description': 'Drop your email below to request early access to Composer.',
+
+        'check email title': 'Now check your email!',
+        'check email description':
+          "A login link has been sent to your inbox. If it doesn't arrive in 3 minutes, be sure to check your spam folder.",
+        'request access email description':
+          "A confirmation link has been sent to your inbox. If it doesn't arrive in 3 minutes, be sure to check your spam folder.",
+        'email error': 'Failed to send verification email.',
+
         'email input label': 'Email',
         'email input placeholder': 'Your email',
         'signup button label': 'Continue',
@@ -31,7 +34,8 @@ export default [
           "You're not currently logged in on this device, click the button below to create a new account and accept the invitation, or log in on this device before accepting the invitation.",
         'join space button label': 'Create account & accept invitation',
         'go to login title': 'Already have an account?',
-        'go to login description': 'If you already have an account, log in to accept the invitation with that account.',
+        'go to login description':
+          'If you already have an account, log in before accepting the invitation with that account.',
         'go to login button label': 'Go to login',
 
         'passkey setup toast title': 'Setup a passkey',

@@ -15,11 +15,19 @@ import { Welcome } from './Welcome';
 import { type WelcomeScreenProps, WelcomeState } from './types';
 import translations from '../../translations';
 
-const Container = (props: Partial<WelcomeScreenProps>) => {
+const Container = ({ state: initialState = WelcomeState.INIT, ...props }: Partial<WelcomeScreenProps>) => {
   const identity = useIdentity();
-  const [state, setState] = useState(WelcomeState.INIT);
+  const [state, setState] = useState(initialState);
 
-  return <Welcome identity={identity} state={state} onSignup={() => setState(WelcomeState.EMAIL_SENT)} {...props} />;
+  return (
+    <Welcome
+      identity={identity}
+      state={state}
+      onSignup={() => setState(WelcomeState.EMAIL_SENT)}
+      onGoToLogin={() => setState(WelcomeState.INIT)}
+      {...props}
+    />
+  );
 };
 
 export const Default = {
@@ -38,6 +46,7 @@ export const WithIdentity = {
 
 export const SpaceInvitation = {
   args: {
+    state: WelcomeState.SPACE_INVITATION,
     onPasskey: () => console.log('passkey'),
     onJoinIdentity: () => console.log('join identity'),
     onRecoverIdentity: () => console.log('recover identity'),
