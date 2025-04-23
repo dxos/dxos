@@ -9,14 +9,12 @@ import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 import { DeckCapabilities } from './capabilities';
 import { DeckLayout } from '../components';
 import { DECK_PLUGIN } from '../meta';
-import { type DeckSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactRoot, {
     id: DECK_PLUGIN,
     root: () => {
       const layout = useCapability(DeckCapabilities.MutableDeckState);
-      const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
 
       const handleDismissToast = useCallback(
         (id: string) => {
@@ -35,6 +33,6 @@ export default () =>
         [layout.toasts],
       );
 
-      return <DeckLayout settings={settings} onDismissToast={handleDismissToast} />;
+      return <DeckLayout onDismissToast={handleDismissToast} />;
     },
   });

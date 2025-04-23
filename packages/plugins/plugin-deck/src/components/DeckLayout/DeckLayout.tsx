@@ -6,6 +6,7 @@ import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment, useState } from 'react';
 
 import {
+  Capabilities,
   LayoutAction,
   Surface,
   createIntent,
@@ -33,6 +34,7 @@ import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 import { DeckCapabilities } from '../../capabilities';
+import { DECK_PLUGIN } from '../../meta';
 import { type DeckSettingsProps, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 import { Plank, PlankContentError } from '../Plank';
@@ -40,15 +42,15 @@ import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, Toggle
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
-  settings: DeckSettingsProps;
   onDismissToast: (id: string) => void;
 };
 
 const PlankSeparator = ({ order }: { order: number }) =>
   order > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: order }} /> : null;
 
-export const DeckLayout = ({ settings, onDismissToast }: DeckLayoutProps) => {
+export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const {
     sidebarState,
@@ -293,6 +295,7 @@ export const DeckLayout = ({ settings, onDismissToast }: DeckLayoutProps) => {
                     companionId={solo ? activeCompanions?.[solo] : undefined}
                     part='solo'
                     layoutMode={layoutMode}
+                    settings={settings}
                   />
                 </StackContext.Provider>
               </div>

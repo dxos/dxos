@@ -165,6 +165,7 @@ const PlankImpl = memo(
               id={id}
               part={part.startsWith('solo-') ? 'solo' : part}
               node={node}
+              deckEnabled={settings?.enableDeck}
               canIncrementStart={canIncrementStart}
               canIncrementEnd={canIncrementEnd}
               popoverAnchorId={popoverAnchorId}
@@ -172,7 +173,6 @@ const PlankImpl = memo(
               surfaceVariant={surfaceVariant}
               companioned={companioned}
               companions={companions}
-              settings={settings}
             />
             <Surface
               key={node.id}

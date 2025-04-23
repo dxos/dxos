@@ -12,13 +12,7 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
-import {
-  COMPANION_TYPE,
-  SLUG_PATH_SEPARATOR,
-  DeckAction,
-  type DeckSettingsProps,
-  type ResolvedPart,
-} from '../../types';
+import { COMPANION_TYPE, SLUG_PATH_SEPARATOR, DeckAction, type ResolvedPart } from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
@@ -26,6 +20,7 @@ export type PlankHeadingProps = {
   id: string;
   part: ResolvedPart;
   node?: Node;
+  deckEnabled?: boolean;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
   popoverAnchorId?: string;
@@ -35,7 +30,6 @@ export type PlankHeadingProps = {
   companioned?: 'primary' | 'companion';
   companions?: Node[];
   actions?: StackItemSigilAction[];
-  settings?: DeckSettingsProps;
 };
 
 export const PlankHeading = memo(
@@ -43,6 +37,7 @@ export const PlankHeading = memo(
     id,
     part,
     node,
+    deckEnabled,
     canIncrementStart,
     canIncrementEnd,
     popoverAnchorId,
@@ -52,7 +47,6 @@ export const PlankHeading = memo(
     companioned,
     companions,
     actions = [],
-    settings,
   }: PlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -85,13 +79,13 @@ export const PlankHeading = memo(
     const attendableId = primaryId ?? id.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
-        deck: settings?.enableDeck,
+        deck: deckEnabled ?? true,
         solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
         companion: !isCompanionNode && companions && companions.length > 0,
       }),
-      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, settings?.enableDeck],
+      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
     );
 
     const sigilActions = useMemo(

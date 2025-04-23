@@ -45,8 +45,8 @@ export type DeckSettingsProps = S.Schema.Type<typeof DeckSettingsSchema>;
 export const PlankSizing = S.Record({ key: S.String, value: S.Number });
 export type PlankSizing = S.Schema.Type<typeof PlankSizing>;
 
-// TODO(burdon): Rename (explain different from DeckState).
-export const Deck = S.Struct({
+// State of an individual deck.
+export const DeckState = S.Struct({
   /** If false, the deck has not yet left solo mode and new planks should be soloed. */
   initialized: S.Boolean,
   active: S.mutable(S.Array(S.String)),
@@ -58,9 +58,9 @@ export const Deck = S.Struct({
   plankSizing: S.mutable(PlankSizing),
   companionFrameSizing: S.mutable(PlankSizing),
 });
-export type Deck = S.Schema.Type<typeof Deck>;
+export type DeckState = S.Schema.Type<typeof DeckState>;
 
-export const defaultDeck: Deck = {
+export const defaultDeck: DeckState = {
   initialized: false,
   active: [],
   activeCompanions: {},
@@ -75,7 +75,7 @@ const LayoutMode = S.Literal('deck', 'solo', 'fullscreen');
 export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
 
-export const getMode = (deck: Deck): LayoutMode => {
+export const getMode = (deck: DeckState): LayoutMode => {
   if (deck.solo) {
     return deck.fullscreen ? 'fullscreen' : 'solo';
   }
@@ -83,7 +83,8 @@ export const getMode = (deck: Deck): LayoutMode => {
   return 'deck';
 };
 
-export const DeckState = S.Struct({
+// State of the deck plugin.
+export const DeckPluginState = S.Struct({
   sidebarState: S.Literal('closed', 'collapsed', 'expanded'),
   complementarySidebarState: S.Literal('closed', 'collapsed', 'expanded'),
   complementarySidebarPanel: S.optional(S.String),
@@ -105,15 +106,15 @@ export const DeckState = S.Struct({
 
   activeDeck: S.String,
   previousDeck: S.String,
-  decks: S.mutable(S.Record({ key: S.String, value: S.mutable(Deck) })),
+  decks: S.mutable(S.Record({ key: S.String, value: S.mutable(DeckState) })),
   previousMode: S.mutable(S.Record({ key: S.String, value: LayoutMode })),
-  deck: S.mutable(Deck),
+  deck: S.mutable(DeckState),
 
   /** The identifier of a component to scroll into view when it is mounted. */
   scrollIntoView: S.optional(S.String),
 }).pipe(S.mutable);
 
-export type DeckState = S.Schema.Type<typeof DeckState>;
+export type DeckPluginState = S.Schema.Type<typeof DeckPluginState>;
 
 // NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 export const SLUG_PATH_SEPARATOR = '~';

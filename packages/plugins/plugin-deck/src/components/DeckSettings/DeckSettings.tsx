@@ -23,6 +23,9 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
 
   return (
     <DeprecatedFormContainer>
+      <DeprecatedFormInput label={t('settings enable deck label')}>
+        <Input.Switch checked={settings.enableDeck} onCheckedChange={(checked) => (settings.enableDeck = checked)} />
+      </DeprecatedFormInput>
       <DeprecatedFormInput label={t('select new plank positioning label')}>
         <Select.Root
           value={settings.newPlankPositioning ?? 'start'}
@@ -61,8 +64,11 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
           </Select.Portal>
         </Select.Root>
       </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings enable deck label')}>
-        <Input.Switch checked={settings.enableDeck} onCheckedChange={(checked) => (settings.enableDeck = checked)} />
+      <DeprecatedFormInput label={t('settings enable statusbar label')}>
+        <Input.Switch
+          checked={settings.enableStatusbar}
+          onCheckedChange={(checked) => (settings.enableStatusbar = checked)}
+        />
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('settings show hints label')}>
         <Input.Switch checked={settings.showHints} onCheckedChange={(checked) => (settings.showHints = checked)} />
@@ -75,12 +81,6 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
           />
         </DeprecatedFormInput>
       )}
-      <DeprecatedFormInput label={t('settings enable statusbar label')}>
-        <Input.Switch
-          checked={settings.enableStatusbar}
-          onCheckedChange={(checked) => (settings.enableStatusbar = checked)}
-        />
-      </DeprecatedFormInput>
     </DeprecatedFormContainer>
   );
 };
