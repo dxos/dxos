@@ -185,7 +185,7 @@ export class Connection {
     this._protocol.stream.on('close', () => {
       log('protocol stream closed');
       this._protocolClosed.wake();
-      this.close(new ProtocolError('protocol stream closed')).catch((err) => this.errors.raise(err));
+      this.close({ error: new ProtocolError('protocol stream closed') }).catch((err) => this.errors.raise(err));
     });
 
     scheduleTask(
@@ -262,7 +262,7 @@ export class Connection {
   // TODO(nf): make the caller responsible for recording the reason and determining flow control.
   // TODO(nf): make abort cancel an existing close in progress.
   async abort(err?: Error) {
-    log('aborting...', { err });
+    log('abort', { err });
     if (this._state === ConnectionState.CLOSED || this._state === ConnectionState.ABORTED) {
       log(`abort ignored: already ${this._state}`, this.closeReason);
       return;
@@ -275,6 +275,8 @@ export class Connection {
     }
 
     await this._ctx.dispose();
+
+    log('aborting...', { peerId: this.localInfo, err });
 
     try {
       // Forcefully close the stream flushing any unsent data packets.
@@ -299,17 +301,19 @@ export class Connection {
   }
 
   @synchronized
-  async close(err?: Error) {
+  async close({ error, reason }: { error?: Error; reason?: string } = {}) {
+    log('close', { error });
     if (!this.closeReason) {
-      this.closeReason = err?.message;
+      this.closeReason = reason ?? error?.message;
     } else {
-      this.closeReason += `; ${err?.message}`;
+      this.closeReason += `; ${reason ?? error?.message}`;
     }
     if (
       this._state === ConnectionState.CLOSED ||
       this._state === ConnectionState.ABORTING ||
       this._state === ConnectionState.ABORTED
     ) {
+      log('close ignored: already in progress', { state: this._state, error });
       return;
     }
     const lastState = this._state;
@@ -318,13 +322,14 @@ export class Connection {
     await this.connectedTimeoutContext.dispose();
     await this._ctx.dispose();
 
-    log('closing...', { peerId: this.localInfo });
-
     let abortProtocol = false;
-    if (lastState !== ConnectionState.CONNECTED) {
+    if (lastState !== ConnectionState.CONNECTED || error != null) {
       log(`graceful close requested when we were in ${lastState} state? aborting`);
       abortProtocol = true;
     }
+
+    log('closing...', { peerId: this.localInfo, abortProtocol, error });
+
     try {
       await this._closeProtocol({ abort: abortProtocol });
     } catch (err: any) {
@@ -339,7 +344,7 @@ export class Connection {
 
     log('closed', { peerId: this.localInfo });
     this._changeState(ConnectionState.CLOSED);
-    this._callbacks?.onClosed?.(err);
+    this._callbacks?.onClosed?.(error);
   }
 
   private async _closeProtocol(options?: { abort: boolean }) {
@@ -392,7 +397,7 @@ export class Connection {
 
       // If signal fails treat connection as failed
       log.info('signal message failed to deliver', { err });
-      await this.close(new ConnectivityError('signal message failed to deliver', err));
+      await this.close({ error: new ConnectivityError('signal message failed to deliver', err) });
     }
   }
 

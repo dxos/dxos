@@ -6,9 +6,10 @@ import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment, useState } from 'react';
 
 import {
+  Capabilities,
   LayoutAction,
-  createIntent,
   Surface,
+  createIntent,
   useCapability,
   useIntentDispatcher,
   usePluginManager,
@@ -27,32 +28,29 @@ import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-sta
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
-import { ComplementarySidebar } from './ComplementarySidebar';
 import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
-import { Plank } from './Plank';
-import { PlankContentError } from './PlankError';
-import { Sidebar } from './Sidebar';
-import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 import { DeckCapabilities } from '../../capabilities';
-import { getMode, type Overscroll } from '../../types';
+import { DECK_PLUGIN } from '../../meta';
+import { type DeckSettingsProps, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
+import { Plank, PlankContentError } from '../Plank';
+import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
-  overscroll: Overscroll;
-  showHints: boolean;
   onDismissToast: (id: string) => void;
 };
 
 const PlankSeparator = ({ order }: { order: number }) =>
   order > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: order }} /> : null;
 
-export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayoutProps) => {
+export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const {
     sidebarState,
@@ -120,6 +118,15 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
     }
   }, [isNotMobile, deck, dispatch]);
 
+  // If deck is disabled in settings, ensure that the layout is in solo mode.
+  useEffect(() => {
+    if (!settings.enableDeck) {
+      void dispatch(
+        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
+      );
+    }
+  }, [settings.enableDeck, dispatch, active]);
+
   /**
    * Clear scroll restoration state if the window is resized
    */
@@ -156,11 +163,11 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
   const isEmpty = !solo && active.length === 0;
 
   const padding = useMemo(() => {
-    if (!solo && overscroll === 'centering') {
+    if (!solo && settings.overscroll === 'centering') {
       return calculateOverscroll(active.length);
     }
     return {};
-  }, [solo, overscroll, deck]);
+  }, [solo, settings.overscroll, deck]);
 
   const mainPosition = useMemo(
     () => [
@@ -260,13 +267,13 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                 {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
                 {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
                 <Stack
+                  ref={deckRef}
                   orientation='horizontal'
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
-                  onScroll={handleScroll}
                   itemsCount={itemsCount - 1}
                   style={padding}
-                  ref={deckRef}
+                  onScroll={handleScroll}
                 >
                   {active.map((entryId) => (
                     <Fragment key={entryId}>
@@ -278,6 +285,7 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                         order={order[entryId]}
                         active={active}
                         layoutMode={layoutMode}
+                        settings={settings}
                       />
                     </Fragment>
                   ))}
@@ -296,15 +304,18 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                     companionId={solo ? activeCompanions?.[solo] : undefined}
                     part='solo'
                     layoutMode={layoutMode}
+                    settings={settings}
                   />
                 </StackContext.Provider>
               </div>
             </Main.Content>
           )}
 
-          {/* Status bar. */}
+          {/* Topbar. */}
           {topbar && <Topbar />}
-          {hoistStatusbar && <StatusBar showHints={showHints} />}
+
+          {/* Status bar. */}
+          {hoistStatusbar && <StatusBar showHints={settings.showHints} />}
         </Main.Root>
       )}
 

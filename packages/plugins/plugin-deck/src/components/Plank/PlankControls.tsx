@@ -24,6 +24,7 @@ export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 export type PlankCapabilities = {
   incrementStart?: boolean;
   incrementEnd?: boolean;
+  deck?: boolean;
   solo?: boolean;
   companion?: boolean;
 };
@@ -87,7 +88,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
 // NOTE(thure): Pinning & unpinning are disabled indefinitely.
 export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
   (
-    { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, classNames, ...props },
+    { children, classNames, variant = 'default', capabilities, isSolo, pin, close = false, onClick, ...props },
     forwardedRef,
   ) => {
     const { t } = useTranslation(DECK_PLUGIN);
@@ -106,31 +107,33 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           />
         )} */}
 
-        {can.solo && (
-          <PlankControl
-            label={isSolo ? t('show deck plank label') : t('show solo plank label')}
-            classNames={buttonClassNames}
-            onClick={() => onClick?.('solo')}
-            icon={isSolo ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
-          />
-        )}
-
-        {!isSolo && can.solo && (
+        {capabilities.deck && capabilities.solo && (
           <>
             <PlankControl
-              label={t('increment start label')}
-              disabled={!can.incrementStart}
+              label={isSolo ? t('show deck plank label') : t('show solo plank label')}
               classNames={buttonClassNames}
-              onClick={() => onClick?.('increment-start')}
-              icon='ph--caret-left--regular'
+              icon={isSolo ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
+              onClick={() => onClick?.('solo')}
             />
-            <PlankControl
-              label={t('increment end label')}
-              disabled={!can.incrementEnd}
-              classNames={buttonClassNames}
-              onClick={() => onClick?.('increment-end')}
-              icon='ph--caret-right--regular'
-            />
+
+            {!isSolo && (
+              <>
+                <PlankControl
+                  label={t('increment start label')}
+                  disabled={!capabilities.incrementStart}
+                  classNames={buttonClassNames}
+                  icon='ph--caret-left--regular'
+                  onClick={() => onClick?.('increment-start')}
+                />
+                <PlankControl
+                  label={t('increment end label')}
+                  disabled={!capabilities.incrementEnd}
+                  classNames={buttonClassNames}
+                  icon='ph--caret-right--regular'
+                  onClick={() => onClick?.('increment-end')}
+                />
+              </>
+            )}
           </>
         )}
 
@@ -138,8 +141,8 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           <PlankControl
             label={t('pin end label')}
             classNames={buttonClassNames}
-            onClick={() => onClick?.('pin-end')}
             icon='ph--caret-line-right--regular'
+            onClick={() => onClick?.('pin-end')}
           />
         )} */}
 
@@ -147,7 +150,6 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           <PlankControl
             label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
             classNames={buttonClassNames}
-            onClick={() => onClick?.('close')}
             data-testid='plankHeading.close'
             icon={
               close === 'minify-start'
@@ -156,16 +158,17 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                   ? 'ph--caret-line-right--regular'
                   : 'ph--x--regular'
             }
+            onClick={() => onClick?.('close')}
           />
         )}
 
-        {can.companion && (
+        {capabilities.companion && (
           <PlankControl
             label={t('open companion label')}
             classNames={buttonClassNames}
-            onClick={() => onClick?.('companion')}
             data-testid='plankHeading.companion'
             icon='ph--square-split-horizontal--regular'
+            onClick={() => onClick?.('companion')}
           />
         )}
         {children}
