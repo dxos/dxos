@@ -111,7 +111,7 @@ export class OnboardingManager {
     } else if (this._recoverIdentity) {
       // If recovery flag is present, open recover identity flow.
       await this._openRecoverIdentity();
-    } else if (!this._identity && (this._token || this._skipAuth) && this._tokenType === 'verify') {
+    } else if (!this._identity && ((this._token && this._tokenType === 'verify') || this._skipAuth)) {
       // If there's no existing identity and a verification token (or if skipping auth), setup a new identity.
       await this._createIdentity();
       await this._setupRecovery();
