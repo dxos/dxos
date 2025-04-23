@@ -3,4 +3,5 @@
 //
 
 export * from './DeviceList';
+export * from './DeviceListItem';
 export * from './DeviceListProps';

@@ -132,6 +132,33 @@ export class EdgeIdentityRecoveryManager {
     });
   }
 
+  /**
+   * Recovery identity using an opaque token sent to the user's email.
+   */
+  public async recoverIdentityWithToken({ token }: { token: string }) {
+    invariant(this._edgeClient, 'Not connected to EDGE.');
+
+    const deviceKey = await this._keyring.createKey();
+    const controlFeedKey = await this._keyring.createKey();
+    const request: EdgeRecoverIdentityRequest = {
+      deviceKey: deviceKey.toHex(),
+      controlFeedKey: controlFeedKey.toHex(),
+      token,
+    };
+
+    const response = await this._edgeClient.recoverIdentity(request);
+
+    await this._acceptRecoveredIdentity({
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
+      haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
+      haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
+      identityKey: PublicKey.fromHex(response.identityKey),
+      deviceKey,
+      controlFeedKey,
+      dataFeedKey: await this._keyring.createKey(),
+    });
+  }
+
   public async recoverIdentity({ recoveryCode }: { recoveryCode: string }) {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 

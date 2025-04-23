@@ -52,6 +52,7 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
         />
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('icon label')}>
+        {/* TODO(thure): Why are these pickers alone in toolbars? */}
         <Toolbar.Root>
           <IconPicker
             value={space.properties.icon}
@@ -59,6 +60,7 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
             onReset={() => {
               space.properties.icon = undefined;
             }}
+            rootVariant='toolbar-button'
           />
         </Toolbar.Root>
       </DeprecatedFormInput>
@@ -70,6 +72,7 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
             onReset={() => {
               space.properties.hue = undefined;
             }}
+            rootVariant='toolbar-button'
           />
         </Toolbar.Root>
       </DeprecatedFormInput>

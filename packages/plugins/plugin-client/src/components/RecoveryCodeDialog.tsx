@@ -8,13 +8,12 @@ import { AlertDialog, Button, Clipboard, Input, useTranslation } from '@dxos/rea
 
 import { CLIENT_PLUGIN } from '../meta';
 
-export const RECOVER_CODE_DIALOG = `${CLIENT_PLUGIN}/RecoveryCodeDialog`;
+export const RECOVERY_CODE_DIALOG = `${CLIENT_PLUGIN}/RecoveryCodeDialog`;
 
 export type RecoveryCodeDialogProps = {
   code: string;
 };
 
-// TODO(wittjosiah): Factor panel out to @dxos/shell.
 export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
   const { t } = useTranslation(CLIENT_PLUGIN);
   const [confirmation, setConfirmation] = useState(false);

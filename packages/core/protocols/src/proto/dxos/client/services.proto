@@ -144,6 +144,7 @@ message RecoverIdentityRequest {
   oneof request {
     string recovery_code = 1;
     ExternalSignature external = 2;
+    string token = 3;
   }
 }
 

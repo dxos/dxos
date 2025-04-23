@@ -94,8 +94,8 @@ test.describe('Basic tests', () => {
     await host.createSpace();
     await expect(host.getSpaceItems()).toHaveCount(2);
 
-    await host.openIdentityManager();
-    await host.shell.resetDevice();
+    await host.openUserDevices();
+    await host.resetDevice();
     // Wait for reset to complete and attempt to reload.
     await host.page.waitForRequest(INITIAL_URL, { timeout: 20_000 });
     await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 20_000 });

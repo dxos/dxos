@@ -104,7 +104,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.Join,
-      resolve: ({ invitationCode }) => ({
+      resolve: ({ invitationCode, onDone }) => ({
         intents: [
           createIntent(LayoutAction.UpdateDialog, {
             part: 'dialog',
@@ -113,6 +113,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
               blockAlign: 'start',
               props: {
                 initialInvitationCode: invitationCode,
+                onDone,
               } satisfies Partial<JoinDialogProps>,
             },
           }),
