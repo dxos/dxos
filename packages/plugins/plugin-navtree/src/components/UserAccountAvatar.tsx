@@ -19,7 +19,7 @@ export const UserAccountAvatar = (props: UserAccountAvatarProps) => {
   const fallbackValue = hexToFallback(props.userId ?? '0');
 
   return (
-    <div className='grid place-items-center'>
+    <div className='grid place-items-center' data-joyride='welcome/account'>
       <Avatar.Root>
         <Avatar.Content
           variant='circle'
@@ -28,7 +28,6 @@ export const UserAccountAvatar = (props: UserAccountAvatarProps) => {
           hue={props.hue || fallbackValue.hue}
           fallback={props.emoji || fallbackValue.emoji}
           data-testid='treeview.userAccount'
-          data-joyride='welcome/account'
         />
       </Avatar.Root>
     </div>
