@@ -118,6 +118,15 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     }
   }, [isNotMobile, deck, dispatch]);
 
+  // If deck is disabled in settings, ensure that the layout is in solo mode.
+  useEffect(() => {
+    if (!settings.enableDeck) {
+      void dispatch(
+        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
+      );
+    }
+  }, [settings.enableDeck, dispatch, active]);
+
   /**
    * Clear scroll restoration state if the window is resized
    */
@@ -258,13 +267,13 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
                 {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
                 {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
                 <Stack
+                  ref={deckRef}
                   orientation='horizontal'
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
                   itemsCount={itemsCount - 1}
                   style={padding}
                   onScroll={handleScroll}
-                  ref={deckRef}
                 >
                   {active.map((entryId) => (
                     <Fragment key={entryId}>

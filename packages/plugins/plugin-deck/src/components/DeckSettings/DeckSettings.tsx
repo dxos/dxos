@@ -28,6 +28,7 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('select new plank positioning label')}>
         <Select.Root
+          disabled={!settings.enableDeck}
           value={settings.newPlankPositioning ?? 'start'}
           onValueChange={(value) => (settings.newPlankPositioning = value as NewPlankPositioning)}
         >
@@ -47,6 +48,7 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('settings overscroll label')}>
         <Select.Root
+          disabled={!settings.enableDeck}
           value={settings.overscroll ?? 'none'}
           onValueChange={(value) => (settings.overscroll = value as Overscroll)}
         >
