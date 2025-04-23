@@ -7,14 +7,15 @@ import { EchoObject, Expando, LabelAnnotationId, ObjectId, Ref, S } from '@dxos/
 import { ViewType } from '@dxos/schema';
 
 export const TableSchema = S.Struct({
-  id: ObjectId, // TODO(burdon): Where should this be?
+  id: ObjectId,
   name: S.optional(S.String),
   view: S.optional(Ref(ViewType)),
-  // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
-  threads: S.optional(S.Array(Ref(Expando /* ThreadType */))), // TODO(dmaretskyi): Breaks edge because plugin-space depends on react-client.
+  // TODO(burdon): Document why threads is included here?
+  threads: S.optional(S.Array(Ref(Expando /* ThreadType */))),
 }).annotations({
+  // TODO(burdon): Move annotation to property.
   [LabelAnnotationId]: 'name',
 });
 
-export const TableType = TableSchema.pipe(EchoObject('dxos.org/type/Table', '0.1.0'));
-export type TableType = S.Schema.Type<typeof TableType>;
+export const TableType = TableSchema.pipe(EchoObject({ typename: 'dxos.org/type/Table', version: '0.1.0' }));
+export interface TableType extends S.Schema.Type<typeof TableType> {}

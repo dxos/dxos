@@ -57,13 +57,11 @@ export type AddOptions = {
 // TODO(burdon): Document.
 // TODO(burdon): Rename DatabaseProxy.
 export interface EchoDatabase {
-  get spaceKey(): PublicKey;
-
-  get spaceId(): SpaceId;
-
+  get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;
 
-  get graph(): Hypergraph;
+  get spaceKey(): PublicKey;
+  get spaceId(): SpaceId;
 
   getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): ReactiveEchoObject<T> | undefined;
 

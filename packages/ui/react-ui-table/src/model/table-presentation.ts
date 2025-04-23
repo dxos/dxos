@@ -5,18 +5,19 @@
 import { signal } from '@preact/signals-core';
 
 import { FormatEnum, getValue } from '@dxos/echo-schema';
-import { cellClassesForFieldType, cellClassesForRowSelection, formatForDisplay } from '@dxos/react-ui-form';
+import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridPlane,
   type DxGridPlaneCells,
-  toPlaneCellIndex,
   type DxGridPlaneRange,
   type DxGridCellValue,
+  toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { VIEW_FIELD_LIMIT, type FieldType } from '@dxos/schema';
 
-import { type BaseTableRow, type TableModel } from './table-model';
+import { type SelectionMode } from './selection-model';
+import { type TableRow, type TableModel } from './table-model';
 import { tableButtons, tableControls } from '../util';
 
 /**
@@ -24,7 +25,7 @@ import { tableButtons, tableControls } from '../util';
  * Manages rendering of table cells, headers, selection columns, and action columns across
  * different grid planes.
  */
-export class TablePresentation<T extends BaseTableRow = { id: string }> {
+export class TablePresentation<T extends TableRow = TableRow> {
   constructor(
     private readonly model: TableModel<T>,
     private readonly _visibleRange = signal<DxGridPlaneRange>({
@@ -85,7 +86,8 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
 
           switch (props.format) {
             case FormatEnum.Boolean:
-            case FormatEnum.SingleSelect: {
+            case FormatEnum.SingleSelect:
+            case FormatEnum.MultiSelect: {
               return '';
             }
             case FormatEnum.Ref: {
@@ -108,7 +110,10 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
       if (formatClasses) {
         classes.push(formatClasses);
       }
-      const rowSelectionClasses = cellClassesForRowSelection(this.model.selection.isObjectSelected(obj));
+      const rowSelectionClasses = cellClassesForRowSelection(
+        this.model.selection.isObjectSelected(obj),
+        this.model.selection.selectionMode,
+      );
       if (rowSelectionClasses) {
         classes.push(rowSelectionClasses);
       }
@@ -143,6 +148,27 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
           const option = options.find((o) => o.id === value);
           if (option) {
             cell.accessoryHtml = `<span class="dx-tag" data-hue="${option.color}">${option.title}</span>`;
+          }
+        }
+      }
+
+      if (props.format === FormatEnum.MultiSelect) {
+        const values = getValue(obj, field.path) as string[] | undefined;
+        const options = this.model.projection.getFieldProjection(field.id).props.options;
+        if (options && values && values.length > 0) {
+          const tags = values
+            .map((value) => {
+              const option = options.find((o) => o.id === value);
+              if (option) {
+                return `<span class="dx-tag" data-hue="${option.color}">${option.title}</span>`;
+              }
+              return null;
+            })
+            .filter(Boolean)
+            .join(' ');
+
+          if (tags) {
+            cell.accessoryHtml = tags;
           }
         }
       }
@@ -193,7 +219,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
     const cells: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       const isSelected = this.model.selection.isRowIndexSelected(row);
-      const classes = cellClassesForRowSelection(isSelected);
+      const classes = cellClassesForRowSelection(isSelected, this.model.selection.selectionMode);
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: 'no-text-select',
@@ -209,7 +235,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
     const cells: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       const isSelected = this.model.selection.isRowIndexSelected(row);
-      const classes = cellClassesForRowSelection(isSelected);
+      const classes = cellClassesForRowSelection(isSelected, this.model.selection.selectionMode);
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: true,
@@ -222,6 +248,16 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
   }
 
   private getSelectAllCell(): DxGridPlaneCells {
+    if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
+      return {
+        [toPlaneCellIndex({ col: 0, row: 0 })]: {
+          className: '!bg-gridHeader',
+          readonly: true,
+          value: '',
+        },
+      };
+    }
+
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         accessoryHtml: tableControls.checkbox.render({
@@ -251,3 +287,21 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
     };
   }
 }
+
+export const cellClassesForRowSelection = (selected: boolean, selectionMode: SelectionMode) => {
+  if (!selected) {
+    if (selectionMode === 'single') {
+      return ['!cursor-pointer'];
+    } else {
+      return undefined;
+    }
+  }
+
+  switch (selectionMode) {
+    case 'single':
+      // TODO(ZaymonFC): @thure, do we need a grid version of 'currentRelated'?
+      return ['!bg-currentRelated hover:bg-hoverSurface', '!cursor-pointer'];
+    case 'multiple':
+      return ['!bg-gridCellSelected'];
+  }
+};

@@ -15,6 +15,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
   type TableController,
+  type TableFeatures,
   TablePresentation,
   TableToolbar,
   type TableToolbarAction,
@@ -66,11 +67,15 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
       return;
     }
 
-    return new ViewProjection(schema, table.view.target!);
+    return new ViewProjection(schema.jsonSchema, table.view.target!);
   }, [schema, table.view?.target]);
 
-  const features = useMemo(
-    () => ({ selection: true, dataEditable: true, schemaEditable: !(schema instanceof ImmutableSchema) }),
+  const features: Partial<TableFeatures> = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'multiple' },
+      dataEditable: true,
+      schemaEditable: !(schema instanceof ImmutableSchema),
+    }),
     [],
   );
 
@@ -78,12 +83,12 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     table,
     projection,
     features,
-    objects: filteredObjects,
+    rows: filteredObjects,
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChanged: () => tableRef.current?.update?.(),
+    onRowOrderChange: () => tableRef.current?.update?.(),
   });
 
   const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);

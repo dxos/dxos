@@ -5,11 +5,11 @@
 import { Event, type CleanupFn } from '@dxos/async';
 import { Resource, type Context } from '@dxos/context';
 import {
-  ObjectIdentifierAnnotationId,
+  TypeIdentifierAnnotationId,
   EchoSchema,
-  getObjectIdentifierAnnotation,
-  getObjectAnnotation,
-  ObjectAnnotationId,
+  getTypeIdentifierAnnotation,
+  getTypeAnnotation,
+  TypeAnnotationId,
   S,
   StoredSchema,
   toJsonSchema,
@@ -223,7 +223,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       return undefined;
     }
 
-    if (!(typeObject instanceof StoredSchema)) {
+    if (!S.is(StoredSchema)(typeObject)) {
       log.warn('type object is not a stored schema', { id: typeObject?.id });
       return undefined;
     }
@@ -278,16 +278,16 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
   private _addSchema(schema: S.Schema.AnyNoContext): EchoSchema {
     if (schema instanceof EchoSchema) {
       schema = schema.snapshot.annotations({
-        [ObjectIdentifierAnnotationId]: undefined,
+        [TypeIdentifierAnnotationId]: undefined,
       });
     }
 
-    const meta = getObjectAnnotation(schema);
+    const meta = getTypeAnnotation(schema);
     invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
     const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
-      [ObjectAnnotationId]: meta,
-      [ObjectIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
+      [TypeAnnotationId]: meta,
+      [TypeIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
     });
 
     schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
@@ -347,7 +347,7 @@ const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
 };
 
 const getObjectIdFromSchema = (schema: S.Schema.AnyNoContext): ObjectId | undefined => {
-  const echoIdentifier = getObjectIdentifierAnnotation(schema);
+  const echoIdentifier = getTypeIdentifierAnnotation(schema);
   if (!echoIdentifier) {
     return undefined;
   }

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
@@ -13,6 +13,7 @@ import { Placeholder } from './Placeholder';
 
 export type MasterDetailTableProps = {
   properties: TablePropertyDefinition[];
+  // TODO(burdon): Rename to objects.
   data: Array<{ id: string; [key: string]: any }>;
   detailsTransform?: (data: any) => MaybePromise<any>;
   detailsPosition?: 'bottom' | 'right';
@@ -68,12 +69,20 @@ export const MasterDetailTable = ({
   }, [selected, detailsTransform]);
 
   const gridLayout = useMemo(() => {
-    return detailsPosition === 'right' ? 'grid grid-cols-[2fr_1fr]' : 'grid grid-rows-[2fr_1fr]';
+    return detailsPosition === 'right' ? 'grid grid-cols-[2fr_1fr]' : 'grid grid-rows-[3fr_4fr]';
   }, [detailsPosition]);
 
+  const features: Partial<TableFeatures> = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'single' },
+      dataEditable: false,
+    }),
+    [],
+  );
+
   return (
-    <div className={mx('bs-full divide-x divide-y divide-separator', gridLayout)}>
-      <DynamicTable data={data} properties={properties} onRowClicked={handleRowClicked} />
+    <div className={mx('bs-full divide-y divide-separator', gridLayout)}>
+      <DynamicTable properties={properties} rows={data} features={features} onRowClick={handleRowClicked} />
       <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-is')}>
         {selected ? (
           isLoading ? (

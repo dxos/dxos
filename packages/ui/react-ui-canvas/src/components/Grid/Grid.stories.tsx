@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { GridComponent, type GridProps } from './Grid';
 import { type ProjectionState } from '../../hooks';
 
-const Render = (props: GridProps) => {
+const DefaultStory = (props: GridProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [{ scale, offset }] = useState<ProjectionState>({ scale: 1, offset: { x: 0, y: 0 } });
 
@@ -26,7 +26,7 @@ const Render = (props: GridProps) => {
 const meta: Meta<GridProps> = {
   title: 'ui/react-ui-canvas/Grid',
   component: GridComponent,
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

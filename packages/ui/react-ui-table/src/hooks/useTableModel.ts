@@ -10,28 +10,28 @@ import { useSelectionActions } from '@dxos/react-ui-attention';
 import { type ViewProjection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { type BaseTableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
+import { type TableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
 import { type TableType } from '../types';
 
-export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
+export type UseTableModelParams<T extends TableRow = TableRow> = {
   table?: TableType;
   projection?: ViewProjection;
-  objects?: ReactiveObject<T>[];
-  onSelectionChanged?: (selection: string[]) => void;
+  rows?: ReactiveObject<T>[];
   rowActions?: TableRowAction[];
+  onSelectionChanged?: (selection: string[]) => void;
   onRowAction?: (actionId: string, data: T) => void;
 } & Pick<
   TableModelProps<T>,
-  'features' | 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'
+  'features' | 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChange'
 >;
 
-export const useTableModel = <T extends BaseTableRow = { id: string }>({
-  objects,
+export const useTableModel = <T extends TableRow = TableRow>({
   table,
   projection,
+  rows,
+  rowActions,
   features,
   onSelectionChanged,
-  rowActions,
   onRowAction,
   ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
@@ -65,10 +65,10 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
 
   // Update data.
   useEffect(() => {
-    if (objects) {
-      model?.setRows(objects);
+    if (rows) {
+      model?.setRows(rows);
     }
-  }, [model, objects]);
+  }, [model, rows]);
 
   const { select, clear } = useSelectionActions([table?.id, table?.view?.target?.query.typename].filter(isNonNullable));
 

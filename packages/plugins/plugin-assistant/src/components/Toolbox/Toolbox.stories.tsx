@@ -20,7 +20,7 @@ import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 import { Toolbox, type ToolboxProps } from './Toolbox';
 import translations from '../../translations';
 
-const Render = (props: ToolboxProps) => {
+const DefaultStory = (props: ToolboxProps) => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   return (
     <Toolbox
@@ -34,7 +34,7 @@ const Render = (props: ToolboxProps) => {
 const meta: Meta<typeof Toolbox> = {
   title: 'plugins/plugin-automation/Toolbox',
   component: Toolbox,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withSignals,
     withPluginManager({

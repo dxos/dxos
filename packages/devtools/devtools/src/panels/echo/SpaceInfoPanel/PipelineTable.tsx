@@ -8,7 +8,7 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
@@ -75,7 +75,7 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
     };
   };
 
-  const data = useMemo(() => {
+  const rows = useMemo(() => {
     const controlKeys = Array.from(
       new ComplexSet(PublicKey.hash, [
         ...(state.controlFeeds ?? []),
@@ -164,5 +164,7 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
     [onSelect, setContext],
   );
 
-  return <DynamicTable properties={properties} data={data} onRowClicked={handleRowClicked} />;
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
+  return <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClicked} />;
 };

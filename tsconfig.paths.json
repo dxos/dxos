@@ -319,9 +319,6 @@
       "@dxos/react-ui-menu": [
         "packages/ui/react-ui-menu/src/index.ts"
       ],
-      "@dxos/react-ui-multiselect": [
-        "packages/ui/react-ui-multiselect/src/index.ts"
-      ],
       "@dxos/react-ui-pickers": [
         "packages/ui/react-ui-pickers/src/index.ts"
       ],
@@ -340,9 +337,6 @@
       "@dxos/react-ui-syntax-highlighter": [
         "packages/ui/react-ui-syntax-highlighter/src/index.ts"
       ],
-      "@dxos/react-ui-table/deprecated": [
-        "packages/ui/react-ui-table/src/deprecated/index.ts"
-      ],
       "@dxos/react-ui-table": [
         "packages/ui/react-ui-table/src/index.ts"
       ],
@@ -351,6 +345,9 @@
       ],
       "@dxos/react-ui-tabs": [
         "packages/ui/react-ui-tabs/src/index.ts"
+      ],
+      "@dxos/react-ui-tag-picker": [
+        "packages/ui/react-ui-tag-picker/src/index.ts"
       ],
       "@dxos/react-ui-text-tooltip": [
         "packages/ui/react-ui-text-tooltip/src/index.ts"

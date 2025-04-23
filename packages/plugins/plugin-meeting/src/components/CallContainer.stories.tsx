@@ -10,6 +10,7 @@ import React from 'react';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { GraphPlugin } from '@dxos/plugin-graph';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { Config, useClient } from '@dxos/react-client';
@@ -20,7 +21,7 @@ import { CallContainer, type CallContainerProps } from './CallContainer';
 import { MeetingPlugin } from '../MeetingPlugin';
 import translations from '../translations';
 
-const Render = (props: CallContainerProps) => {
+const DefaultStory = (props: CallContainerProps) => {
   const client = useClient();
   const space = client.spaces.get().at(-1);
 
@@ -30,7 +31,7 @@ const Render = (props: CallContainerProps) => {
 
   return (
     <div className='flex grow gap-8 justify-center'>
-      <div className='flex h-full border border-neutral-500'>
+      <div className='flex w-[30rem] h-full border border-neutral-500'>
         <CallContainer {...props} />
       </div>
     </div>
@@ -40,7 +41,7 @@ const Render = (props: CallContainerProps) => {
 const meta: Meta<CallContainerProps> = {
   title: 'plugins/plugin-meeting/CallContainer',
   component: CallContainer,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withPluginManager({
       plugins: [
@@ -65,6 +66,7 @@ const meta: Meta<CallContainerProps> = {
         IntentPlugin(),
         MeetingPlugin(),
         SettingsPlugin(),
+        GraphPlugin(),
       ],
     }),
     withLayout({ fullscreen: true, tooltips: true }),

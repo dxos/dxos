@@ -9,7 +9,7 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { LogTable } from './LogTable';
@@ -26,6 +26,7 @@ export const TracingPanel = () => {
     resources: new Map<number, ResourceState>(),
     spans: new Map<number, Span>(),
   });
+  const [live, setLive] = useState(true);
 
   const [selectedResourceId, setSelectedResourceId] = useState<number>();
   const selectedResource: ResourceState | undefined =
@@ -35,6 +36,9 @@ export const TracingPanel = () => {
     const stream = client.services.services.TracingService!.streamTrace();
     stream.subscribe(
       (data) => {
+        if (!live) {
+          return;
+        }
         setState((prevState) => {
           // Create new map references to trigger re-render
           const newResources = new Map(prevState.resources);
@@ -85,7 +89,7 @@ export const TracingPanel = () => {
     return () => {
       void stream.close();
     };
-  }, [client.services.services.TracingService]);
+  }, [client.services.services.TracingService, live]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -99,7 +103,7 @@ export const TracingPanel = () => {
     [],
   );
 
-  const resourceData = useMemo(() => {
+  const rows = useMemo(() => {
     return Array.from(state.resources.values()).map((resourceState) => ({
       id: String(resourceState.resource.id),
       name: resourceState.resource.className,
@@ -117,13 +121,15 @@ export const TracingPanel = () => {
     setSelectedResourceId(Number(row.id));
   }, []);
 
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
   // TODO(ZaymonFC): Do we need these visual specializations from the old table?
   //  - 'name' column: Special ResourceName component
   //  - 'info' column: font-mono + text-green-500 styling for JSON
 
   return (
     <PanelContainer classNames={mx('grid grid-rows-[1fr_1fr] divide-y divide-separator')}>
-      <DynamicTable data={resourceData} properties={resourceProperties} onRowClicked={handleRowClicked} />
+      <DynamicTable rows={rows} properties={resourceProperties} features={features} onRowClick={handleRowClicked} />
       <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
         <Tabs.List className='flex divide-x divide-separator border-b border-separator'>
           <Tabs.Trigger className='flex-1' value='details'>
@@ -146,7 +152,7 @@ export const TracingPanel = () => {
         </Tabs.Content>
 
         <Tabs.Content value='spans' className='grow overflow-hidden'>
-          <TraceView state={state} resourceId={selectedResourceId} />
+          <TraceView state={state} resourceId={selectedResourceId} live={live} onLiveChanged={setLive} />
         </Tabs.Content>
       </Tabs.Root>
     </PanelContainer>

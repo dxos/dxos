@@ -30,6 +30,7 @@ export const EntityKindSchema = S.Enums(EntityKind);
  * Contains extensions for ECHO (e.g., references).
  * Ref: https://json-schema.org/draft-07/schema
  */
+// TODO(burdon): Integrate with Effect Serializable?
 // TODO(dmaretskyi): Update to latest draft: https://json-schema.org/draft/2020-12
 const _JsonSchemaType = S.Struct({
   /**

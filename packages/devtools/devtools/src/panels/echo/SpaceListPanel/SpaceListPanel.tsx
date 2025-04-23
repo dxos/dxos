@@ -11,7 +11,7 @@ import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { DialogRestoreSpace } from './DialogRestoreSpace';
 import { exportData, importData } from './backup';
@@ -33,7 +33,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const setState = useDevtoolsDispatch();
   const download = useFileDownload();
 
-  const tableData = useMemo(() => {
+  const rows = useMemo(() => {
     return spaces.map((space) => {
       const { open, ready } = space.internal.data.metrics ?? {};
       return {
@@ -165,18 +165,21 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     }
   };
 
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
   return (
     <PanelContainer classNames='overflow-auto flex-1'>
       <DialogRestoreSpace handleFile={handleImport} />
       <DynamicTable
         properties={properties}
-        data={tableData}
-        onRowClicked={handleRowClicked}
+        rows={rows}
+        features={features}
         rowActions={[
           { id: 'toggleOpen', translationKey: 'toggle space open closed label' },
           { id: 'backup', translationKey: 'download space backup label' },
           { id: 'archive', translationKey: 'download space archive label' },
         ]}
+        onRowClick={handleRowClicked}
         onRowAction={handleRowAction}
       />
     </PanelContainer>

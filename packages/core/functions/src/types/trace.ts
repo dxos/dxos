@@ -13,6 +13,7 @@ export enum InvocationOutcome {
   PENDING = 'pending',
 }
 
+// TODO(burdon): Convert to extensible discriminated union of EDGE events.
 export enum InvocationTraceEventType {
   START = 'start',
   END = 'end',
@@ -43,10 +44,12 @@ export const InvocationTraceStartEvent = S.Struct({
   /**
    * Data passed to function / workflow as an argument.
    */
+  // TODO(burdon): Input schema?
   input: S.Object,
   /**
    * Queue DXN for function/workflow invocation events.
    */
+  // TODO(burdon): Need reference type for queue. vs. string?
   invocationTraceQueue: Ref(Expando),
   /**
    * DXN of the invoked function/workflow.
@@ -56,7 +59,7 @@ export const InvocationTraceStartEvent = S.Struct({
    * Present for automatic invocations.
    */
   trigger: S.optional(Ref(FunctionTrigger)),
-}).pipe(EchoObject('dxos.org/type/InvocationTraceStart', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
 
 export type InvocationTraceStartEvent = S.Schema.Type<typeof InvocationTraceStartEvent>;
 
@@ -73,10 +76,11 @@ export const InvocationTraceEndEvent = S.Struct({
   /**
    * Event generation time.
    */
+  // TODO(burdon): Remove ms suffix.
   timestampMs: S.Number,
   outcome: S.Enums(InvocationOutcome),
   exception: S.optional(TraceEventException),
-}).pipe(EchoObject('dxos.org/type/InvocationTraceEnd', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
 
 export type InvocationTraceEndEvent = S.Schema.Type<typeof InvocationTraceEndEvent>;
 
@@ -91,6 +95,7 @@ export const TraceEventLog = S.Struct({
 
 export const TraceEvent = S.Struct({
   id: ObjectId,
+  // TODO(burdon): Need enum/numeric result (not string).
   outcome: S.String,
   truncated: S.Boolean,
   /**
@@ -99,14 +104,15 @@ export const TraceEvent = S.Struct({
   ingestionTimestampMs: S.Number,
   logs: S.Array(TraceEventLog),
   exceptions: S.Array(TraceEventException),
-}).pipe(EchoObject('dxos.org/type/TraceEvent', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
 
 export type TraceEvent = S.Schema.Type<typeof TraceEvent>;
 
 /**
- * TODO: remove
  * Deprecated InvocationTrace event format.
+ * @deprecated
  */
+// TODO(burdon): Remove.
 export type InvocationSpan = {
   id: string;
   timestampMs: number;
@@ -133,7 +139,6 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
 
     const invocationId = event.invocationId;
     const entry = eventsByInvocationId.get(invocationId) || { start: undefined, end: undefined };
-
     if (event.type === InvocationTraceEventType.START) {
       entry.start = event as InvocationTraceStartEvent;
     } else if (event.type === InvocationTraceEventType.END) {
@@ -150,7 +155,7 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
   for (const [invocationId, { start, end }] of eventsByInvocationId.entries()) {
     if (!start) {
       // No start event, can't create a meaningful span
-      log.warn('Found end event without matching start', { invocationId });
+      log.warn('found end event without matching start', { invocationId });
       continue;
     }
 

@@ -18,6 +18,7 @@ export default [
         'table name placeholder': 'Table name',
         'settings title': 'Table settings',
         'table schema label': 'Schema',
+        'companion schema label': 'Schema',
         'new schema': 'New schema',
         'continue label': 'Continue',
         'add row label': 'Add row',

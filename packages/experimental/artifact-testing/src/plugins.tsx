@@ -15,7 +15,7 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = S.Struct({
   coordinates: GeoPoint,
-}).pipe(EchoObject('example.com/type/Map', '0.1.0')) as any as S.Schema<{ id: ObjectId; coordinates: GeoPoint }>; // TODO(dmaretskyi): Fix the tuples/mutable issues.
+}).pipe(EchoObject({ typename: 'example.com/type/Map', version: '0.1.0' }));
 
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
