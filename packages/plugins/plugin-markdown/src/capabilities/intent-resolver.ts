@@ -3,7 +3,9 @@
 //
 
 import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
-import { makeRef, create } from '@dxos/live-object';
+import { ObjectId } from '@dxos/echo-schema';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { makeRef, create, refFromDXN } from '@dxos/live-object';
 import { TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -13,10 +15,11 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
-      resolve: ({ name, content }) => {
+      resolve: ({ name, spaceId, content }) => {
         const doc = create(DocumentType, {
           name,
           content: makeRef(create(TextType, { content: content ?? '' })),
+          assistantChatQueue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           threads: [],
         });
 

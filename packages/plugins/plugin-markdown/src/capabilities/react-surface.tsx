@@ -20,7 +20,8 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/document`,
       role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
+      filter: (data): data is { subject: DocumentType; variant: undefined } =>
+        isInstanceOf(DocumentType, data.subject) && !data.variant,
       component: ({ data, role }) => {
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;

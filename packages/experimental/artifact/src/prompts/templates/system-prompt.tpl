@@ -57,6 +57,17 @@ Do not mention the tag anywhere else in your response unless you are rendering a
 {{/each}}
 {{/if}}
 
+{{#if associatedArtifact}}
+{{section}}. Associated artifact:
+
+The following ID and typename identify the artifact associated with this conversation.
+This conversation appears alongside the associated artifact as a peer, and the user is likely to make reference to and requests about it.
+You can interact with this artifact using tools.
+
+ID: {{associatedArtifact.id}}
+Typename: {{associatedArtifact.typename}}
+{{/if}}
+
 {{#if suggestions}}
 {{section}}. Suggestions:
 
