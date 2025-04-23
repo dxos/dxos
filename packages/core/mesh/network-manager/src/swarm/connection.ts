@@ -323,7 +323,7 @@ export class Connection {
     await this._ctx.dispose();
 
     let abortProtocol = false;
-    if (lastState !== ConnectionState.CONNECTED) {
+    if (lastState !== ConnectionState.CONNECTED || error != null) {
       log(`graceful close requested when we were in ${lastState} state? aborting`);
       abortProtocol = true;
     }
