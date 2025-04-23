@@ -262,7 +262,7 @@ export class Connection {
   // TODO(nf): make the caller responsible for recording the reason and determining flow control.
   // TODO(nf): make abort cancel an existing close in progress.
   async abort(err?: Error) {
-    log('aborting...', { err });
+    log('abort', { err });
     if (this._state === ConnectionState.CLOSED || this._state === ConnectionState.ABORTED) {
       log(`abort ignored: already ${this._state}`, this.closeReason);
       return;
@@ -275,6 +275,8 @@ export class Connection {
     }
 
     await this._ctx.dispose();
+
+    log('aborting...', { peerId: this.localInfo, err });
 
     try {
       // Forcefully close the stream flushing any unsent data packets.
@@ -300,6 +302,7 @@ export class Connection {
 
   @synchronized
   async close(err?: Error) {
+    log('close', { err });
     if (!this.closeReason) {
       this.closeReason = err?.message;
     } else {
@@ -310,6 +313,7 @@ export class Connection {
       this._state === ConnectionState.ABORTING ||
       this._state === ConnectionState.ABORTED
     ) {
+      log('close ignored: already in progress', { state: this._state, err });
       return;
     }
     const lastState = this._state;
@@ -318,13 +322,14 @@ export class Connection {
     await this.connectedTimeoutContext.dispose();
     await this._ctx.dispose();
 
-    log('closing...', { peerId: this.localInfo });
-
     let abortProtocol = false;
-    if (lastState !== ConnectionState.CONNECTED) {
+    if (lastState !== ConnectionState.CONNECTED || err != null) {
       log(`graceful close requested when we were in ${lastState} state? aborting`);
       abortProtocol = true;
     }
+
+    log('closing...', { peerId: this.localInfo, abortProtocol, err });
+
     try {
       await this._closeProtocol({ abort: abortProtocol });
     } catch (err: any) {
