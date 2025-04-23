@@ -65,7 +65,9 @@ const meta: Meta<typeof AmbientDialog> = {
       createIdentity: true,
       createSpace: true,
     }),
-    withPluginManager({ plugins: [IntentPlugin()] }),
+    withPluginManager({
+      plugins: [IntentPlugin()],
+    }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
   ],
