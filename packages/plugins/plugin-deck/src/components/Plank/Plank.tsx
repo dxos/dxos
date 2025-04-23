@@ -53,6 +53,7 @@ export type PlankProps = {
   order?: number;
   active?: string[];
   layoutMode: LayoutMode;
+  settings?: DeckSettingsProps;
 };
 
 type PlankImplProps = Omit<PlankProps, 'id' | 'companionId' | 'part'> & {
@@ -62,7 +63,6 @@ type PlankImplProps = Omit<PlankProps, 'id' | 'companionId' | 'part'> & {
   companioned?: 'primary' | 'companion';
   primary?: Node;
   companions?: Node[];
-  settings?: DeckSettingsProps;
 };
 
 const PlankImpl = memo(
@@ -168,9 +168,9 @@ const PlankImpl = memo(
               canIncrementStart={canIncrementStart}
               canIncrementEnd={canIncrementEnd}
               popoverAnchorId={popoverAnchorId}
-              companioned={companioned}
               primaryId={primary?.id}
               surfaceVariant={surfaceVariant}
+              companioned={companioned}
               companions={companions}
               settings={settings}
             />

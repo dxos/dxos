@@ -274,6 +274,7 @@ export const DeckLayout = ({ settings, onDismissToast }: DeckLayoutProps) => {
                         order={order[entryId]}
                         active={active}
                         layoutMode={layoutMode}
+                        settings={settings}
                       />
                     </Fragment>
                   ))}

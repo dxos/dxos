@@ -29,12 +29,12 @@ export type PlankHeadingProps = {
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
   popoverAnchorId?: string;
-  pending?: boolean;
-  actions?: StackItemSigilAction[];
-  companioned?: 'primary' | 'companion';
   primaryId?: string;
   surfaceVariant?: string;
+  pending?: boolean;
+  companioned?: 'primary' | 'companion';
   companions?: Node[];
+  actions?: StackItemSigilAction[];
   settings?: DeckSettingsProps;
 };
 
@@ -46,14 +46,16 @@ export const PlankHeading = memo(
     canIncrementStart,
     canIncrementEnd,
     popoverAnchorId,
-    pending,
-    actions = [],
-    companioned,
     primaryId,
     surfaceVariant,
+    pending,
+    companioned,
     companions,
+    actions = [],
     settings,
   }: PlankHeadingProps) => {
+    console.log('=== capabilities', settings?.enableDeck);
+
     const { t } = useTranslation(DECK_PLUGIN);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { graph } = useAppGraph();
@@ -93,7 +95,6 @@ export const PlankHeading = memo(
       }),
       [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, settings?.enableDeck],
     );
-    console.log('capabilities', settings?.enableDeck);
 
     const sigilActions = useMemo(
       () => node && [actions, graph.actions(node)].filter((a) => a.length > 0),
