@@ -333,7 +333,7 @@ export class Swarm {
     const peer = this._peers.get(peerInfo);
     invariant(peer);
     this._peers.delete(peerInfo);
-    await peer.safeDestroy(new Error(reason));
+    await peer.safeDestroy(reason);
   }
 
   private _getSwarmController(): SwarmController {
