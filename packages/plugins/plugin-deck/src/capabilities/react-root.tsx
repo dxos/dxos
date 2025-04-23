@@ -35,12 +35,6 @@ export default () =>
         [layout.toasts],
       );
 
-      return (
-        <DeckLayout
-          showHints={settings.showHints}
-          overscroll={settings.overscroll}
-          onDismissToast={handleDismissToast}
-        />
-      );
+      return <DeckLayout settings={settings} onDismissToast={handleDismissToast} />;
     },
   });

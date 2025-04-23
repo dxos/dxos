@@ -33,22 +33,21 @@ import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 import { DeckCapabilities } from '../../capabilities';
-import { getMode, type Overscroll } from '../../types';
+import { type DeckSettingsProps, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 import { Plank, PlankContentError } from '../Plank';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
-  overscroll: Overscroll;
-  showHints: boolean;
+  settings: DeckSettingsProps;
   onDismissToast: (id: string) => void;
 };
 
 const PlankSeparator = ({ order }: { order: number }) =>
   order > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: order }} /> : null;
 
-export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayoutProps) => {
+export const DeckLayout = ({ settings, onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const {
@@ -153,11 +152,11 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
   const isEmpty = !solo && active.length === 0;
 
   const padding = useMemo(() => {
-    if (!solo && overscroll === 'centering') {
+    if (!solo && settings.overscroll === 'centering') {
       return calculateOverscroll(active.length);
     }
     return {};
-  }, [solo, overscroll, deck]);
+  }, [solo, settings.overscroll, deck]);
 
   const mainPosition = useMemo(
     () => [
@@ -299,9 +298,11 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
             </Main.Content>
           )}
 
-          {/* Status bar. */}
+          {/* Topbar. */}
           {topbar && <Topbar />}
-          {hoistStatusbar && <StatusBar showHints={showHints} />}
+
+          {/* Status bar. */}
+          {hoistStatusbar && <StatusBar showHints={settings.showHints} />}
         </Main.Root>
       )}
 

@@ -24,7 +24,6 @@ export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 export type PlankCapabilities = {
   incrementStart?: boolean;
   incrementEnd?: boolean;
-  // TODO(burdon): Variants.
   deck?: boolean;
   solo?: boolean;
   companion?: boolean;

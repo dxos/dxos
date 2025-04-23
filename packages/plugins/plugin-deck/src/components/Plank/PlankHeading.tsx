@@ -12,7 +12,13 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
-import { COMPANION_TYPE, DeckAction, type ResolvedPart, SLUG_PATH_SEPARATOR } from '../../types';
+import {
+  COMPANION_TYPE,
+  SLUG_PATH_SEPARATOR,
+  DeckAction,
+  type DeckSettingsProps,
+  type ResolvedPart,
+} from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
@@ -29,6 +35,7 @@ export type PlankHeadingProps = {
   primaryId?: string;
   surfaceVariant?: string;
   companions?: Node[];
+  settings?: DeckSettingsProps;
 };
 
 export const PlankHeading = memo(
@@ -45,6 +52,7 @@ export const PlankHeading = memo(
     primaryId,
     surfaceVariant,
     companions,
+    settings,
   }: PlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -77,13 +85,15 @@ export const PlankHeading = memo(
     const attendableId = primaryId ?? id.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
+        deck: settings?.enableDeck,
         solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
         companion: !isCompanionNode && companions && companions.length > 0,
       }),
-      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode],
+      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, settings?.enableDeck],
     );
+    console.log('capabilities', settings?.enableDeck);
 
     const sigilActions = useMemo(
       () => node && [actions, graph.actions(node)].filter((a) => a.length > 0),

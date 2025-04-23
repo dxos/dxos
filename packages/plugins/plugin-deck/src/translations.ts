@@ -55,6 +55,7 @@ export default [
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
         'settings enable statusbar label': 'Show status bar',
+        'settings enable deck label': 'Enable Deck',
         'close current label': 'Close current plank',
         'close others label': 'Close other planks',
         'close all label': 'Close all planks',

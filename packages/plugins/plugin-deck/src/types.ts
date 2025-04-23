@@ -32,13 +32,13 @@ export type Panel = {
   filter?: (node: Node) => boolean;
 };
 
-// TODO(burdon): Allow/disable deck.
 export const DeckSettingsSchema = S.Struct({
-  showHints: S.Boolean,
-  enableNativeRedirect: S.Boolean,
-  enableStatusbar: S.Boolean,
-  newPlankPositioning: S.Literal(...NewPlankPositions),
-  overscroll: S.Literal(...OverscrollOptions),
+  showHints: S.optional(S.Boolean),
+  enableDeck: S.optional(S.Boolean),
+  enableNativeRedirect: S.optional(S.Boolean),
+  enableStatusbar: S.optional(S.Boolean),
+  newPlankPositioning: S.optional(S.Literal(...NewPlankPositions)),
+  overscroll: S.optional(S.Literal(...OverscrollOptions)),
 }).pipe(S.mutable);
 export type DeckSettingsProps = S.Schema.Type<typeof DeckSettingsSchema>;
 

@@ -39,6 +39,7 @@ import {
   type LayoutMode,
   type Part,
   type ResolvedPart,
+  type DeckSettingsProps,
 } from '../../types';
 import { useCompanions } from '../../util';
 
@@ -61,10 +62,11 @@ type PlankImplProps = Omit<PlankProps, 'id' | 'companionId' | 'part'> & {
   companioned?: 'primary' | 'companion';
   primary?: Node;
   companions?: Node[];
+  settings?: DeckSettingsProps;
 };
 
 const PlankImpl = memo(
-  ({ id, node, part, path, order, active, layoutMode, companioned, primary, companions }: PlankImplProps) => {
+  ({ id, node, part, path, order, active, layoutMode, companioned, primary, companions, settings }: PlankImplProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
     const rootElement = useRef<HTMLDivElement | null>(null);
@@ -170,6 +172,7 @@ const PlankImpl = memo(
               primaryId={primary?.id}
               surfaceVariant={surfaceVariant}
               companions={companions}
+              settings={settings}
             />
             <Surface
               key={node.id}
