@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { type Device, useDevices } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
@@ -73,7 +74,7 @@ export const DevicesContainer = ({
             title={t('reset device label')}
             description={t('reset device description', { ns: CLIENT_PLUGIN })}
           >
-            <Button variant='destructive' onClick={handleResetStorage}>
+            <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
               {t('reset device label')}
             </Button>
           </ControlItem>
@@ -81,7 +82,7 @@ export const DevicesContainer = ({
             title={t('recover identity label')}
             description={t('recover identity description', { ns: CLIENT_PLUGIN })}
           >
-            <Button variant='destructive' onClick={handleRecover}>
+            <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
               {t('recover identity label')}
             </Button>
           </ControlItem>
@@ -89,7 +90,7 @@ export const DevicesContainer = ({
             title={t('join new identity label')}
             description={t('join new identity description', { ns: CLIENT_PLUGIN })}
           >
-            <Button variant='destructive' onClick={handleJoinNewIdentity}>
+            <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
               {t('join new identity label')}
             </Button>
           </ControlItem>
@@ -109,10 +110,20 @@ type DeviceInvitationProps = {
 const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUrl'>) => {
   const client = useClient();
   const [invitation, setInvitation] = useState<CancellableInvitationObservable>();
+
   const onInvitationCreate = useCallback(() => {
     const invitation = client.halo.share();
+    if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
+      const subscription = invitation.subscribe((invitation: Invitation) => {
+        const invitationCode = InvitationEncoder.encode(invitation);
+        if (invitation.state === Invitation.State.CONNECTING) {
+          log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+          subscription.unsubscribe();
+        }
+      });
+    }
     setInvitation(invitation);
-  }, []);
+  }, [client]);
 
   const onInvitationDone = useCallback(() => {
     setInvitation(undefined);
@@ -175,8 +186,9 @@ const InvitationSection = ({
         icon='ph--plus--regular'
         label={t('create device invitation label')}
         disabled={state >= 0}
-        onClick={onInvitationCreate}
         classNames='is-full'
+        data-testid='devicesContainer.createInvitation'
+        onClick={onInvitationCreate}
       />
     </>
   ) : (

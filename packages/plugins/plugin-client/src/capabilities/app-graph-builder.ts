@@ -75,6 +75,7 @@ export default (context: PluginsContext) =>
                 properties: {
                   label: ['devices label', { ns: CLIENT_PLUGIN }],
                   icon: 'ph--devices--regular',
+                  testId: 'clientPlugin.devices',
                 },
               },
               {
