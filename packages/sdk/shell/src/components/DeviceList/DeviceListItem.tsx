@@ -25,7 +25,9 @@ import { type AgentFormProps, type DeviceListItemProps } from './DeviceListProps
 
 export const DeviceListItem = forwardRef<
   HTMLLIElement,
-  ThemedClassName<ComponentPropsWithoutRef<'li'>> & DeviceListItemProps & Pick<AgentFormProps, 'onAgentDestroy'>
+  ThemedClassName<ComponentPropsWithoutRef<'li'>> &
+    DeviceListItemProps &
+    Partial<Pick<AgentFormProps, 'onAgentDestroy'>>
 >(
   (
     {
@@ -109,7 +111,7 @@ export const DeviceListItem = forwardRef<
               </Tooltip.Portal>
             </Tooltip.Root>
           )} */}
-          {device.kind === DeviceKind.CURRENT && (
+          {device.kind === DeviceKind.CURRENT && (onClickJoinExisting || onClickRecover || onClickReset) && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button
@@ -127,20 +129,27 @@ export const DeviceListItem = forwardRef<
                   {/*  <PencilSimpleLine className={getSize(5)} /> */}
                   {/*  {t('edit device label')} */}
                   {/* </DropdownMenu.Item> */}
-                  <DropdownMenu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
-                    <ShareFat className={getSize(5)} />
-                    {t('choose join new identity label')}
-                  </DropdownMenu.Item>
+                  {onClickJoinExisting && (
+                    <DropdownMenu.Item
+                      data-testid='device-list-item-current.join-existing'
+                      onClick={onClickJoinExisting}
+                    >
+                      <ShareFat className={getSize(5)} />
+                      {t('choose join new identity label')}
+                    </DropdownMenu.Item>
+                  )}
                   {onClickRecover && (
                     <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
                       <FirstAidKit className={getSize(5)} />
                       {t('choose recover identity label')}
                     </DropdownMenu.Item>
                   )}
-                  <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                    <Power className={getSize(5)} />
-                    {t('reset device label')}
-                  </DropdownMenu.Item>
+                  {onClickReset && (
+                    <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
+                      <Power className={getSize(5)} />
+                      {t('reset device label')}
+                    </DropdownMenu.Item>
+                  )}
                 </DropdownMenu.Viewport>
               </DropdownMenu.Content>
             </DropdownMenu.Root>

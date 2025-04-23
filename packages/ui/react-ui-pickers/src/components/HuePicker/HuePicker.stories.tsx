@@ -17,7 +17,13 @@ const ToolbarStory = (props: HuePickerProps) => {
 
   return (
     <Toolbar.Root>
-      <HuePicker {...props} value={hue} onChange={setHue} onReset={() => setHue(undefined)} />
+      <HuePicker
+        {...props}
+        value={hue}
+        onChange={setHue}
+        onReset={() => setHue(undefined)}
+        rootVariant='toolbar-button'
+      />
     </Toolbar.Root>
   );
 };

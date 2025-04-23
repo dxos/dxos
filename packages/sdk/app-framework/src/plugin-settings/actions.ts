@@ -6,6 +6,8 @@ import { Schema as S } from 'effect';
 
 export const SETTINGS_PLUGIN = 'dxos.org/plugin/settings';
 export const SETTINGS_ACTION = `${SETTINGS_PLUGIN}/action`;
+// TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
+//  Ideally this should be worked into the data model in a generic way.
 export const SETTINGS_ID = '!dxos:settings';
 export const SETTINGS_KEY = 'settings';
 
