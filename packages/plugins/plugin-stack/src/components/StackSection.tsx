@@ -3,10 +3,9 @@
 //
 
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 
-import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { DeckAction, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { Surface } from '@dxos/app-framework';
 import { DropdownMenu, Icon, useTranslation, IconButton } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -29,16 +28,6 @@ export const StackSection = ({
   const { onNavigate, onAdd, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const attendableAttrs = useAttendableAttributes(id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-
-  const handleOpenChatThread = useCallback(() => {
-    void dispatch(
-      createIntent(DeckAction.ChangeCompanion, {
-        primary: id,
-        companion: `${id}${SLUG_PATH_SEPARATOR}chat`,
-      }),
-    );
-  }, [id, dispatch]);
 
   return (
     <CollapsiblePrimitive.Root asChild open={!view.collapsed} onOpenChange={(nextOpen) => onCollapse?.(id, !nextOpen)}>
@@ -73,10 +62,6 @@ export const StackSection = ({
                         </DropdownMenu.Item>
                       </CollapsiblePrimitive.Trigger>
                     )}
-                    <DropdownMenu.Item onClick={handleOpenChatThread} data-testid='section.open-chat'>
-                      <Icon icon='ph--chat-text--regular' size={5} />
-                      <span className='mis-2 grow'>{t('open chat thread label')}</span>
-                    </DropdownMenu.Item>
                     <DropdownMenu.Item onClick={() => onAdd(id, 'before')} data-testid='section.add-before'>
                       <Icon icon='ph--arrow-line-up--regular' size={5} />
                       <span className='mis-2 grow'>{t('add section before label')}</span>
@@ -115,15 +100,6 @@ export const StackSection = ({
                 classNames={sectionActionDimensions}
               />
             )}
-            <IconButton
-              iconOnly
-              variant='ghost'
-              onClick={handleOpenChatThread}
-              label={t('open chat thread label')}
-              icon='ph--chat-text--regular'
-              data-testid='section.open-chat'
-              classNames={sectionActionDimensions}
-            />
           </div>
         </StackItem.Heading>
         <CollapsiblePrimitive.Content>
