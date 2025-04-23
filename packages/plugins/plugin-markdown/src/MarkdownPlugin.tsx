@@ -74,7 +74,7 @@ export const MarkdownPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: DocumentType,
-            getIntent: () => createIntent(MarkdownAction.Create),
+            getIntent: (_, { space }) => createIntent(MarkdownAction.Create, { spaceId: space.id }),
           }),
         ),
     }),

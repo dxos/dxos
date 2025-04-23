@@ -17,8 +17,9 @@ export default () => [
       resolve: ({ spaceId, name }) => ({
         data: {
           object: create(AIChatType, {
-            name,
-            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+            assistantChatQueue: refFromDXN(
+              new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]),
+            ),
           }),
         },
       }),
