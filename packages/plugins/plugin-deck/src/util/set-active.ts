@@ -6,11 +6,11 @@ import { batch } from '@preact/signals-core';
 
 import { type AttentionManager } from '@dxos/plugin-attention';
 
-import { type DeckState } from '../types';
+import { type DeckPluginState } from '../types';
 
 export type SetActiveOptions = {
   next: string[];
-  state: DeckState;
+  state: DeckPluginState;
   attention?: AttentionManager;
 };
 

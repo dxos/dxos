@@ -14,7 +14,7 @@ import { Tree, TreeType } from './tree';
 export const OutlineType = S.Struct({
   name: S.optional(S.String),
   tree: Ref(TreeType),
-}).pipe(EchoObject('dxos.org/type/Outline', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/Outline', version: '0.1.0' }));
 
 export interface OutlineType extends S.Schema.Type<typeof OutlineType> {}
 
@@ -25,14 +25,14 @@ export interface OutlineType extends S.Schema.Type<typeof OutlineType> {}
 export const JournalEntryType = S.Struct({
   date: S.String, // TODO(burdon): Date.
   tree: Ref(TreeType),
-}).pipe(EchoObject('dxos.org/type/JournalEntry', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/JournalEntry', version: '0.1.0' }));
 
 export interface JournalEntryType extends S.Schema.Type<typeof JournalEntryType> {}
 
 export const JournalType = S.Struct({
   name: S.optional(S.String),
   entries: S.mutable(S.Array(Ref(JournalEntryType))),
-}).pipe(EchoObject('dxos.org/type/Journal', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/Journal', version: '0.1.0' }));
 
 export interface JournalType extends S.Schema.Type<typeof JournalType> {}
 

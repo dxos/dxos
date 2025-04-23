@@ -7,10 +7,7 @@ import { invariant } from '@dxos/invariant';
 
 import { ReactiveArray } from './array';
 import { type ReactiveHandler } from './types';
-import type { ReactiveObject } from '../object';
-
-// TODO(burdon): Need tighter tests for these.
-// TODO(burdon): Reconcile Proxy and Reactive Object names.
+import { type ReactiveObject } from '../object';
 
 export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 

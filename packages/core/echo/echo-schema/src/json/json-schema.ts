@@ -10,22 +10,22 @@ import { DXN } from '@dxos/keys';
 import { orderKeys } from '@dxos/util';
 
 import {
-  ObjectIdentifierAnnotationId,
   EntityKind,
   EntityKindSchema,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
+  type JsonSchemaReferenceInfo,
   type JsonSchemaType,
   LabelAnnotationId,
-  type ObjectAnnotation,
-  ObjectAnnotationId,
+  TypeAnnotationId,
+  TypeIdentifierAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
-  getObjectIdentifierAnnotation,
-  getObjectAnnotation,
-  type JsonSchemaReferenceInfo,
   Ref,
   createEchoReferenceSchema,
+  getTypeIdentifierAnnotation,
+  getTypeAnnotation,
+  type TypeAnnotation,
 } from '../ast';
 import { CustomAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
@@ -50,8 +50,8 @@ export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})): JsonSche
 };
 
 interface EchoRefinement {
-  type?: ObjectAnnotation;
-  reference?: ObjectAnnotation;
+  type?: TypeAnnotation;
+  reference?: TypeAnnotation;
   annotations?: PropertyMetaAnnotation;
   generator?: string;
 }
@@ -101,12 +101,12 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);
   }
 
-  const echoIdentifier = getObjectIdentifierAnnotation(schema);
+  const echoIdentifier = getTypeIdentifierAnnotation(schema);
   if (echoIdentifier) {
     jsonSchema.$id = echoIdentifier;
   }
 
-  const objectAnnotation = getObjectAnnotation(schema);
+  const objectAnnotation = getTypeAnnotation(schema);
   if (objectAnnotation) {
     // EchoIdentifier annotation takes precedence but the id can also be defined by the typename.
     if (!jsonSchema.$id) {
@@ -126,7 +126,6 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     'entityKind',
     'typename',
     'version',
-
     'type',
     'enum',
 
@@ -385,7 +384,7 @@ const refToEffectSchema = (root: any): S.Schema.AnyNoContext => {
 export const ECHO_REFINEMENT_KEY = 'echo';
 
 const ECHO_REFINEMENTS = [
-  ObjectAnnotationId,
+  TypeAnnotationId,
   PropertyMetaAnnotationId,
   LabelAnnotationId,
   FieldLookupAnnotationId, // TODO(burdon): ???
@@ -413,7 +412,7 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
     schemaFields[ECHO_REFINEMENT_KEY] = echoRefinement;
   }
 
-  const echoIdentifier = annotations[ObjectIdentifierAnnotationId];
+  const echoIdentifier = annotations[TypeIdentifierAnnotationId];
   if (echoIdentifier) {
     schemaFields[ECHO_REFINEMENT_KEY] ??= {};
     schemaFields[ECHO_REFINEMENT_KEY].schemaId = echoIdentifier;
@@ -444,29 +443,29 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
 
   // Limit to dxn:echo: URIs.
   if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
-    annotations[ObjectIdentifierAnnotationId] = schema.$id;
+    annotations[TypeIdentifierAnnotationId] = schema.$id;
   } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
     const id = schema?.echo?.type?.schemaId;
     if (ObjectId.isValid(id)) {
-      annotations[ObjectIdentifierAnnotationId] = DXN.fromLocalObjectId(id).toString();
+      annotations[TypeIdentifierAnnotationId] = DXN.fromLocalObjectId(id).toString();
     }
   }
 
   if (schema.typename) {
-    annotations[ObjectAnnotationId] ??= {
+    annotations[TypeAnnotationId] ??= {
       kind: schema.entityKind ? S.decodeSync(EntityKindSchema)(schema.entityKind) : EntityKind.Object,
       typename: schema.typename,
       version: schema.version ?? '0.1.0',
-    } satisfies ObjectAnnotation;
+    } satisfies TypeAnnotation;
   }
 
   // Decode legacy schema.
   if (!schema.typename && schema?.echo?.type) {
-    annotations[ObjectAnnotationId] ??= {
+    annotations[TypeAnnotationId] ??= {
       kind: EntityKind.Object,
       typename: schema.echo.type.typename,
       version: schema.echo.type.version,
-    } satisfies ObjectAnnotation;
+    } satisfies TypeAnnotation;
   }
 
   // Custom (at end).

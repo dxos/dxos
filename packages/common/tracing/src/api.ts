@@ -6,7 +6,7 @@ import { Context } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
 import { getTracingContext } from './symbols';
-import { TRACE_PROCESSOR } from './trace-processor';
+import { TRACE_PROCESSOR, type TraceSpanParams, type TracingSpan } from './trace-processor';
 
 /**
  * Annotates a class as a tracked resource.
@@ -72,6 +72,9 @@ export type SpanOptions = {
   attributes?: Record<string, any>;
 };
 
+/**
+ * Decorator that creates a span for the execution duration of the decorated method.
+ */
 const span =
   ({ showInBrowserTimeline = false, op, attributes }: SpanOptions = {}) =>
   (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
@@ -99,6 +102,31 @@ const span =
       }
     };
   };
+
+const spans = new Map<string, TracingSpan>();
+
+/**
+ * Creates a span that must be ended manually.
+ */
+const spanStart = (params: TraceSpanParams & { id: string }) => {
+  if (spans.has(params.id)) {
+    return;
+  }
+
+  const span = TRACE_PROCESSOR.traceSpan(params);
+  spans.set(params.id, span);
+};
+
+/**
+ * Ends a span that was started manually.
+ */
+const spanEnd = (id: string) => {
+  const span = spans.get(id);
+  if (span) {
+    span.markSuccess();
+    spans.delete(id);
+  }
+};
 
 /**
  * Attaches metrics counter to the resource.
@@ -151,5 +179,7 @@ export const trace = {
   metricsCounter,
   resource,
   span,
+  spanStart,
+  spanEnd,
   metrics: TRACE_PROCESSOR.remoteMetrics,
 };

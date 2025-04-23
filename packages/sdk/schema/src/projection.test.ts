@@ -9,15 +9,15 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { EchoSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
+  EntityKind,
   Format,
   FormatEnum,
-  ObjectAnnotationId,
-  TypeEnum,
-  TypedObject,
-  Ref,
   type JsonPath,
   type JsonProp,
-  EntityKind,
+  TypeEnum,
+  TypedObject,
+  TypeAnnotationId,
+  Ref,
   getPropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -54,7 +54,7 @@ describe('ViewProjection', () => {
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -150,7 +150,7 @@ describe('ViewProjection', () => {
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
       org: Ref(Org),
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -205,7 +205,7 @@ describe('ViewProjection', () => {
       name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         typename: 'example.com/type/Person',
         version: '0.1.0',
       },
@@ -236,7 +236,7 @@ describe('ViewProjection', () => {
       email: S.optional(S.Number),
       description: S.optional(S.String),
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -282,7 +282,7 @@ describe('ViewProjection', () => {
       name: S.String,
       email: Format.Email,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -328,7 +328,7 @@ describe('ViewProjection', () => {
     const schema = S.Struct({
       status: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -428,6 +428,134 @@ describe('ViewProjection', () => {
     });
   });
 
+  test('multi select format', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    const schema = S.Struct({
+      tags: S.String,
+    }).annotations({
+      [TypeAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Task',
+        version: '0.1.0',
+      },
+    });
+
+    const [mutable] = await registry.register([schema]);
+    const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = new ViewProjection(mutable.jsonSchema, view);
+    const fieldId = projection.getFieldId('tags');
+    invariant(fieldId);
+
+    projection.setFieldProjection({
+      field: { id: fieldId, path: 'tags' as JsonPath },
+      props: {
+        property: 'tags' as JsonProp,
+        type: TypeEnum.Object,
+        format: FormatEnum.MultiSelect,
+        options: [
+          { id: 'feature', title: 'Feature', color: 'emerald' },
+          { id: 'bug', title: 'Bug', color: 'red' },
+          { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
+        ],
+      },
+    });
+
+    expect(mutable.jsonSchema.properties?.tags).to.deep.include({
+      type: 'object',
+      format: 'multi-select',
+      echo: {
+        annotations: {
+          multiSelect: {
+            options: [
+              { id: 'feature', title: 'Feature', color: 'emerald' },
+              { id: 'bug', title: 'Bug', color: 'red' },
+              { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
+            ],
+          },
+        },
+      },
+    });
+
+    const { props } = projection.getFieldProjection(fieldId);
+
+    expect(props.format).to.equal(FormatEnum.MultiSelect);
+    expect(props.options).to.deep.equal([
+      { id: 'feature', title: 'Feature', color: 'emerald' },
+      { id: 'bug', title: 'Bug', color: 'red' },
+      { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
+    ]);
+
+    projection.setFieldProjection({
+      field: { id: fieldId, path: 'tags' as JsonPath },
+      props: {
+        ...props,
+        property: 'tags' as JsonProp,
+        options: [
+          { id: 'draft', title: 'Draft', color: 'indigo' },
+          { id: 'published', title: 'Published', color: 'blue' },
+          { id: 'archived', title: 'Archived', color: 'amber' },
+        ],
+      },
+    });
+
+    const updatedProjection = projection.getFieldProjection(fieldId);
+    expect(updatedProjection.props.options).to.deep.equal([
+      { id: 'draft', title: 'Draft', color: 'indigo' },
+      { id: 'published', title: 'Published', color: 'blue' },
+      { id: 'archived', title: 'Archived', color: 'amber' },
+    ]);
+
+    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
+      annotations: {
+        multiSelect: {
+          options: [
+            { id: 'draft', title: 'Draft', color: 'indigo' },
+            { id: 'published', title: 'Published', color: 'blue' },
+            { id: 'archived', title: 'Archived', color: 'amber' },
+          ],
+        },
+      },
+    });
+
+    // Verify updated JSON Schema.
+    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
+      annotations: {
+        multiSelect: {
+          options: [
+            { id: 'draft', title: 'Draft', color: 'indigo' },
+            { id: 'published', title: 'Published', color: 'blue' },
+            { id: 'archived', title: 'Archived', color: 'amber' },
+          ],
+        },
+      },
+    });
+
+    const effectSchema = mutable.snapshot;
+    expect(effectSchema).not.toBeUndefined;
+    expect(() => S.validateSync(effectSchema)({ tags: ['draft'] })).not.to.throw();
+    expect(() => S.validateSync(effectSchema)({ tags: ['published'] })).not.to.throw();
+
+    // TODO(ZaymonFC): Get validation working.
+    // expect(() => S.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
+    // expect(() => S.validateSync(effectSchema)({ tags: 'invalid-status' })).to.throw();
+
+    const properties = getPropertySignatures(effectSchema.ast);
+    const statusProperty = properties.find((p) => p.name === 'tags');
+    invariant(statusProperty);
+    const statusPropertyMeta = getPropertyMetaAnnotation(statusProperty, 'multiSelect');
+
+    // Ensure that the materialized schema contains option annotations.
+    expect(statusPropertyMeta).to.deep.equal({
+      options: [
+        { id: 'draft', title: 'Draft', color: 'indigo' },
+        { id: 'published', title: 'Published', color: 'blue' },
+        { id: 'archived', title: 'Archived', color: 'amber' },
+      ],
+    });
+  });
+
   // TODO(burdon): Test changing format.
 
   test('hidden fields are tracked in hiddenFields', async ({ expect }) => {
@@ -439,7 +567,7 @@ describe('ViewProjection', () => {
       email: Format.Email,
       createdAt: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -543,7 +671,7 @@ describe('ViewProjection', () => {
       description: S.String,
       status: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -579,7 +707,7 @@ describe('ViewProjection', () => {
     const initialSchema = S.Struct({
       title: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -624,7 +752,7 @@ describe('ViewProjection', () => {
       email: Format.Email,
       phone: S.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',

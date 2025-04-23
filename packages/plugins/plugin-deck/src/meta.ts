@@ -8,6 +8,6 @@ export const DECK_PLUGIN = 'dxos.org/plugin/deck' as const;
 
 export const meta: PluginMeta = {
   id: DECK_PLUGIN,
-  name: 'Deck',
-  icon: 'ph--columns--regular',
+  name: 'Layout',
+  icon: 'ph--layout--regular',
 };

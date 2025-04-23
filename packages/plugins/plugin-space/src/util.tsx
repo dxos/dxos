@@ -3,7 +3,7 @@
 //
 
 import { createIntent, type PromiseIntentDispatcher, LayoutAction } from '@dxos/app-framework';
-import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
@@ -101,7 +101,6 @@ const getCollectionGraphNodePartials = ({
   resolve: (typename: string) => Record<string, any>;
 }) => {
   return {
-    disabled: !navigable,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
@@ -560,7 +559,7 @@ export const cloneObject = async (
   newSpace: Space,
 ): Promise<Expando> => {
   const schema = getSchema(object);
-  const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
+  const typename = schema ? getTypeAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

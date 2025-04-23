@@ -19,7 +19,7 @@ const MessageSchema = S.Struct({
   from: S.String,
   created: S.String,
   content: S.String,
-}).pipe(EchoObject('example.com/type/Message', '0.1.0'));
+}).pipe(EchoObject({ typename: 'example.com/type/Message', version: '0.1.0' }));
 
 const DEFAULT_AFTER = 1704067200; // 2024-01-01
 

@@ -4,16 +4,16 @@
 
 import { Option, Schema as S, SchemaAST } from 'effect';
 import {
+  type Annotated,
   getDescriptionAnnotation,
   getIdentifierAnnotation,
   getTitleAnnotation,
-  type Annotated,
 } from 'effect/SchemaAST';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 
-import { getObjectIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
+import { getTypeIdentifierAnnotation, getTypeAnnotation, ReferenceAnnotationId } from './annotations';
 import { type JsonSchemaType } from './json-schema-type';
 import { type ObjectId } from '../object';
 import { type WithId } from '../types';
@@ -27,7 +27,7 @@ export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
-    return { typename: DXN.parse($ref).toTypename() };
+    return { typename: DXN.parse($ref).typename };
   }
 };
 
@@ -75,13 +75,13 @@ interface RefFn {
  * Schema builder for references.
  */
 export const Ref: RefFn = <T extends WithId>(schema: S.Schema<T, any>): Ref$<T> => {
-  const annotation = getObjectAnnotation(schema);
+  const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO schema.');
   }
 
   return createEchoReferenceSchema(
-    getObjectIdentifierAnnotation(schema),
+    getTypeIdentifierAnnotation(schema),
     annotation.typename,
     annotation.version,
     getSchemaExpectedName(schema.ast),
