@@ -12,41 +12,44 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
-import { COMPANION_TYPE, DeckAction, type ResolvedPart, SLUG_PATH_SEPARATOR } from '../../types';
+import { COMPANION_TYPE, SLUG_PATH_SEPARATOR, DeckAction, type ResolvedPart } from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
-export type NodePlankHeadingProps = {
+export type PlankHeadingProps = {
   id: string;
   part: ResolvedPart;
   node?: Node;
+  deckEnabled?: boolean;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
   popoverAnchorId?: string;
-  pending?: boolean;
-  actions?: StackItemSigilAction[];
-  companioned?: 'primary' | 'companion';
   primaryId?: string;
   surfaceVariant?: string;
+  pending?: boolean;
+  companioned?: 'primary' | 'companion';
   companions?: Node[];
+  actions?: StackItemSigilAction[];
 };
 
-export const NodePlankHeading = memo(
+export const PlankHeading = memo(
   ({
     id,
     part,
     node,
+    deckEnabled,
     canIncrementStart,
     canIncrementEnd,
     popoverAnchorId,
-    pending,
-    actions = [],
-    companioned,
     primaryId,
     surfaceVariant,
+    pending,
+    companioned,
     companions,
-  }: NodePlankHeadingProps) => {
+    actions = [],
+  }: PlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
+    const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -60,7 +63,6 @@ export const NodePlankHeading = memo(
             : node?.properties?.label) ?? ['plank heading fallback label', { ns: DECK_PLUGIN }],
           t,
         );
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
 
     const isCompanionNode = node?.type === COMPANION_TYPE;
 
@@ -77,18 +79,20 @@ export const NodePlankHeading = memo(
     const attendableId = primaryId ?? id.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
+        deck: deckEnabled ?? true,
         solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
         companion: !isCompanionNode && companions && companions.length > 0,
       }),
-      [breakpoint, part, canIncrementStart, canIncrementEnd, isCompanionNode, companions],
+      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
     );
 
     const sigilActions = useMemo(
       () => node && [actions, graph.actions(node)].filter((a) => a.length > 0),
       [actions, node, graph],
     );
+
     const handleAction = useCallback((action: StackItemSigilAction) => {
       typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN });
     }, []);
