@@ -7,7 +7,7 @@ import { EchoSchema, Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 export class FolderType extends TypedObject({
   typename: 'braneframe.Folder',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   name: S.optional(S.String),
   objects: S.mutable(S.Array(Ref(Expando))),
@@ -16,7 +16,7 @@ export class FolderType extends TypedObject({
 export class SectionType extends TypedObject({
   typename: 'braneframe.Stack.Section',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   object: Ref(Expando),
 }) {}
@@ -24,7 +24,7 @@ export class SectionType extends TypedObject({
 export class StackType extends TypedObject({
   typename: 'braneframe.Stack',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   title: S.optional(S.String),
   sections: S.mutable(S.Array(Ref(SectionType))),
@@ -33,7 +33,7 @@ export class StackType extends TypedObject({
 export class FileType extends TypedObject({
   typename: 'braneframe.File',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   filename: S.String,
   type: S.String,
@@ -45,7 +45,7 @@ export class FileType extends TypedObject({
 export class SketchType extends TypedObject({
   typename: 'braneframe.Sketch',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   title: S.optional(S.String),
   data: Ref(Expando),
@@ -58,7 +58,7 @@ export class SketchType extends TypedObject({
 export class TextType extends TypedObject({
   typename: 'dxos.Text.v0',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   content: S.String,
 }) {}
@@ -73,7 +73,7 @@ const CommentSchema = S.mutable(
 export class DocumentType extends TypedObject({
   typename: 'braneframe.Document',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   title: S.optional(S.String),
   content: Ref(TextType),
@@ -100,7 +100,7 @@ const TablePropSchema = S.partial(
 export class TableType extends TypedObject({
   typename: 'braneframe.Table',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   title: S.String,
   schema: S.optional(Ref(EchoSchema)),
@@ -133,7 +133,7 @@ export interface BlockType extends S.Schema.Type<typeof BlockSchema> {}
 export class MessageType extends TypedObject({
   typename: 'braneframe.Message',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   type: S.optional(S.String),
   date: S.optional(S.String),
@@ -156,7 +156,7 @@ export class MessageType extends TypedObject({
 export class ThreadType extends TypedObject({
   typename: 'braneframe.Thread',
   version: '0.1.0',
-  skipTypenameFormatCheck: true,
+  disableValidation: true,
 })({
   title: S.optional(S.String),
   messages: S.mutable(S.Array(Ref(MessageType))),

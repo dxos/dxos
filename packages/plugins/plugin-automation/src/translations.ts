@@ -10,6 +10,7 @@ export default [
       [AUTOMATION_PLUGIN]: {
         'plugin name': 'Automation',
         'automation panel label': 'Automations',
+        'script automation label': 'Automation',
 
         'new trigger label': 'New Trigger',
         'trigger type timer': 'Timer',

@@ -17,15 +17,12 @@ import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DynamicTable } from './DynamicTable';
+import { type TableFeatures } from '../../model';
 import translations from '../../translations';
 
 faker.seed(0);
 
-//
-// Story components.
-//
-
-const DynamicTableStory = () => {
+const useTestPropertiesAndObjects = () => {
   const properties = useMemo<SchemaPropertyDefinition[]>(
     () => [
       { name: 'name', format: FormatEnum.String },
@@ -34,14 +31,24 @@ const DynamicTableStory = () => {
     [],
   );
 
-  const [objects, _setObjects] = useState<any[]>(
-    Array.from({ length: 100 }, () => ({
+  const [rows] = useState<any[]>(
+    Array.from({ length: 10 }, () => ({
+      id: faker.string.uuid(),
       name: faker.person.fullName(),
       age: faker.number.int({ min: 18, max: 80 }),
     })),
   );
 
-  return <DynamicTable properties={properties} data={objects} />;
+  return { properties, rows };
+};
+
+//
+// Story components.
+//
+
+const DynamicTableStory = () => {
+  const { properties, rows } = useTestPropertiesAndObjects();
+  return <DynamicTable properties={properties} rows={rows} />;
 };
 
 //
@@ -63,27 +70,27 @@ export const Default: StoryObj = {
 
 export const WithRowClicks: StoryObj = {
   render: () => {
-    const properties = useMemo<SchemaPropertyDefinition[]>(
-      () => [
-        { name: 'name', format: FormatEnum.String },
-        { name: 'age', format: FormatEnum.Number },
-      ],
-      [],
-    );
-
-    const [objects, _setObjects] = useState<any[]>(
-      Array.from({ length: 10 }, () => ({
-        name: faker.person.fullName(),
-        age: faker.number.int({ min: 18, max: 80 }),
-      })),
-    );
+    const { properties, rows } = useTestPropertiesAndObjects();
 
     const handleRowClicked = (row: any) => {
       console.log('Row clicked:', row);
       alert(`Row clicked: ${row.name}, age: ${row.age}`);
     };
 
-    return <DynamicTable properties={properties} data={objects} onRowClicked={handleRowClicked} />;
+    return <DynamicTable properties={properties} rows={rows} onRowClick={handleRowClicked} />;
+  },
+};
+
+export const WithClickToSelect: StoryObj = {
+  render: () => {
+    const { properties, rows } = useTestPropertiesAndObjects();
+
+    const features = useMemo<Partial<TableFeatures>>(
+      () => ({ selection: { enabled: true, mode: 'single' as const }, dataEditable: false }),
+      [],
+    );
+
+    return <DynamicTable properties={properties} rows={rows} features={features} />;
   },
 };
 
@@ -103,7 +110,7 @@ export const WithJsonSchema: StoryObj = {
       [],
     );
 
-    const [objects, _setObjects] = useState<any[]>(
+    const [rows] = useState<any[]>(
       Array.from({ length: 15 }, () => ({
         name: faker.person.fullName(),
         age: faker.number.int({ min: 18, max: 80 }),
@@ -112,7 +119,7 @@ export const WithJsonSchema: StoryObj = {
       })),
     );
 
-    return <DynamicTable jsonSchema={schema} data={objects} tableName='com.example/json_schema_table' />;
+    return <DynamicTable jsonSchema={schema} rows={rows} />;
   },
 };
 
@@ -120,25 +127,23 @@ export const WithEchoSchema: StoryObj = {
   render: () => {
     const client = useClient();
     const { space } = useClientProvider();
-    const schema = useSchema(client, space, Testing.ContactType.typename);
+    const schema = useSchema(client, space, Testing.Contact.typename);
     const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
-
     if (!schema) {
       return <div>Loading schema...</div>;
     }
 
-    // Pass the Echo schema directly instead of extracting jsonSchema
-    return <DynamicTable echoSchema={schema} data={objects} tableName='contact-table' />;
+    return <DynamicTable schema={schema} rows={objects} />;
   },
   decorators: [
     withClientProvider({
-      types: [Testing.ContactType],
+      types: [Testing.Contact],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            create(Testing.ContactType, {
+            create(Testing.Contact, {
               name: faker.person.fullName(),
               email: faker.internet.email(),
             }),

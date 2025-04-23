@@ -2,24 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, type FC } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
-import { type ScriptType } from '@dxos/functions/types';
+import { type InvocationSpan, type ScriptType } from '@dxos/functions/types';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ExceptionPanel } from './ExceptionPanel';
 import { LogPanel } from './LogPanel';
 import { RawDataPanel } from './RawDataPanel';
-import { SpanSummary } from './SpanSummary';
 import { useScriptNameResolver, useInvocationSpans } from './hooks';
 import { formatDuration } from './utils';
-import { PanelContainer, Placeholder } from '../../../components';
+import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
@@ -32,7 +32,7 @@ export type InvocationTracePanelProps = {
 export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: InvocationTracePanelProps) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-
+  const resolver = useScriptNameResolver({ space });
   const invocationSpans = useInvocationSpans({ space, script: props.script });
 
   const [selectedId, setSelectedId] = useState<string>();
@@ -40,19 +40,24 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
     if (!selectedId) {
       return undefined;
     }
+
     return invocationSpans.find((span) => selectedId === span.id);
   }, [selectedId, invocationSpans]);
 
-  const resolver = useScriptNameResolver({ space });
-
-  const invocationProperties: TablePropertyDefinition[] = useMemo(() => {
+  const properties: TablePropertyDefinition[] = useMemo(() => {
     function* generateProperties() {
       if (props.script === undefined) {
         yield { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 };
       }
 
       yield* [
-        { name: 'time', title: 'Started', format: FormatEnum.DateTime, sort: 'desc' as const, size: 194 },
+        {
+          name: 'time',
+          title: 'Started',
+          format: FormatEnum.DateTime,
+          sort: 'desc' as const,
+          size: 194,
+        },
         {
           name: 'status',
           title: 'Status',
@@ -67,19 +72,32 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
             ],
           },
         },
-        { name: 'duration', title: 'Duration', format: FormatEnum.Duration, size: 110 },
-        { name: 'queue', title: 'Queue', format: FormatEnum.String },
+        {
+          name: 'duration',
+          title: 'Duration',
+          format: FormatEnum.Duration,
+          size: 110,
+        },
+        {
+          name: 'queue',
+          title: 'Queue',
+          format: FormatEnum.String,
+          // TODO(burdon): Add formatter.
+          // formatter: (value: string) => value.split(':').pop(),
+          size: 400,
+        },
       ];
     }
 
     return [...generateProperties()];
   }, [props.script]);
 
-  const invocationData = useMemo(() => {
+  const rows = useMemo(() => {
     return invocationSpans.map((invocation) => {
       const status = invocation.outcome;
       const targetDxn = decodeReference(invocation.invocationTarget).dxn;
 
+      // TODO(burdon): Use InvocationTraceStartEvent.
       return {
         id: invocation.id,
         target: resolver(targetDxn),
@@ -92,14 +110,12 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
     });
   }, [invocationSpans, resolver]);
 
-  const handleInvocationRowClicked = useCallback((row: any) => {
+  const handleRowClick = useCallback((row: any) => {
     if (!row) {
       return;
     }
     setSelectedId(row.id);
   }, []);
-
-  const [activeTab, setActiveTab] = useState('logs');
 
   const gridLayout = useMemo(() => {
     if (selectedInvocation) {
@@ -114,6 +130,8 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
     return 'grid grid-cols-1';
   }, [selectedInvocation, detailAxis]);
 
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
   return (
     <PanelContainer
       toolbar={
@@ -125,50 +143,54 @@ export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: Invoca
       }
     >
       <div className={mx('bs-full', gridLayout)}>
-        <DynamicTable
-          properties={invocationProperties}
-          data={invocationData}
-          onRowClicked={handleInvocationRowClicked}
-        />
-        {selectedInvocation && (
-          <div
-            className={mx(
-              'grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator',
-              detailAxis === 'inline' && 'border-is',
-              detailAxis === 'block' && 'border-bs',
-            )}
-          >
-            <SpanSummary span={selectedInvocation} space={space} onClose={() => setSelectedId(undefined)} />
-            <Tabs.Root
-              orientation='horizontal'
-              value={activeTab}
-              onValueChange={setActiveTab}
-              classNames='grid grid-rows-[min-content_1fr] min-bs-0 [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid border-bs border-separator'
-            >
-              <Tabs.Tablist classNames='border-be border-separator'>
-                <Tabs.Tab value='logs'>Logs</Tabs.Tab>
-                <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>
-                <Tabs.Tab value='raw'>Raw</Tabs.Tab>
-              </Tabs.Tablist>
-              <Tabs.Tabpanel value='logs'>
-                <LogPanel span={selectedInvocation} />
-              </Tabs.Tabpanel>
-              <Tabs.Tabpanel value='exceptions'>
-                {selectedInvocation ? (
-                  <ExceptionPanel span={selectedInvocation} />
-                ) : (
-                  <Placeholder label='Select an invocation to see exceptions' />
-                )}
-              </Tabs.Tabpanel>
-              <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
-                <div className='text-xs'>
-                  {selectedInvocation ? <RawDataPanel span={selectedInvocation} /> : <Placeholder label='Contents' />}
-                </div>
-              </Tabs.Tabpanel>
-            </Tabs.Root>
-          </div>
-        )}
+        <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
+        {selectedInvocation && <Selected span={selectedInvocation} />}
       </div>
     </PanelContainer>
   );
+};
+
+const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
+  const [activeTab, setActiveTab] = useState('input');
+  const data = useMemo(() => parseJsonString((span?.input as any)?.bodyText), [span]);
+
+  return (
+    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator'>
+      <Tabs.Root
+        classNames='grid grid-rows-[min-content_1fr] min-bs-0 [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid border-bs border-separator'
+        orientation='horizontal'
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
+        <Tabs.Tablist classNames='border-be border-separator'>
+          <Tabs.Tab value='input'>Input</Tabs.Tab>
+          <Tabs.Tab value='logs'>Logs</Tabs.Tab>
+          <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>
+          <Tabs.Tab value='raw'>Raw</Tabs.Tab>
+        </Tabs.Tablist>
+        <Tabs.Tabpanel value='input'>
+          <SyntaxHighlighter language='json'>{JSON.stringify(data, null, 2)}</SyntaxHighlighter>
+        </Tabs.Tabpanel>
+        <Tabs.Tabpanel value='logs'>
+          <LogPanel span={span} />
+        </Tabs.Tabpanel>
+        <Tabs.Tabpanel value='exceptions'>
+          <ExceptionPanel span={span} />
+        </Tabs.Tabpanel>
+        <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
+          <RawDataPanel classNames='text-xs' span={span} />
+        </Tabs.Tabpanel>
+      </Tabs.Root>
+    </div>
+  );
+};
+
+const parseJsonString = (str: string): any => {
+  try {
+    // Handle double-quoted strings by removing outer quotes.
+    const cleaned = str.replace(/^"+|"+$/g, '');
+    return JSON.parse(cleaned);
+  } catch (err) {
+    return null;
+  }
 };

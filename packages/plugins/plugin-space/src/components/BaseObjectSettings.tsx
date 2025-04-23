@@ -2,26 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef } from 'react';
+import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/react-client/echo';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-export type BaseObjectSettingsProps = {
-  object: ReactiveEchoObject<any>;
-};
+export type BaseObjectSettingsProps = ThemedClassName<
+  PropsWithChildren<{
+    object: ReactiveEchoObject<any>;
+  }>
+>;
 
-export const BaseObjectSettings = ({ object }: BaseObjectSettingsProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectSettingsProps) => {
+  const { t } = useTranslation(meta.id);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // TODO(wittjosiah): This should be a form based on the schema of the object.
   //  The form should only include fields with a specific settings annotation.
   //  Perhaps also including the field of the title annotation as well.
   return (
-    <div role='form' className='flex flex-col p-2 gap-4'>
+    <form className={mx('flex flex-col p-2 gap-2', classNames)}>
       <Input.Root>
         <Input.Label>{t('name label')}</Input.Label>
         <Input.TextInput
@@ -38,6 +41,7 @@ export const BaseObjectSettings = ({ object }: BaseObjectSettingsProps) => {
           }}
         />
       </Input.Root>
-    </div>
+      {children}
+    </form>
   );
 };

@@ -9,15 +9,11 @@ import { splitJsonPath, type JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getObjectIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
+import { getTypeIdentifierAnnotation, getTypeAnnotation, type HasId } from './ast';
 import { ObjectId, type ObjectMeta, getTypename } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_META = '@meta';
-
-//
-// Objects
-//
 
 /**
  * Base type for all data objects (reactive, ECHO, and other raw objects).
@@ -26,14 +22,14 @@ export const ECHO_ATTR_META = '@meta';
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
 // TODO(dmaretskyi): Rename AnyProperties.
-export type BaseObject = { [key: string]: any };
+export type BaseObject = Record<string, any>;
+
+// TODO(burdon): Reconcile with ReactiveEchoObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
+export type WithId = BaseObject & HasId;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
-
-// TODO(burdon): Reconcile with ReactiveEchoObject.
-export type WithId = HasId & BaseObject;
 
 export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
@@ -114,12 +110,12 @@ export const getTypeReference = (schema: S.Schema.AnyNoContext | undefined): Ref
     return undefined;
   }
 
-  const echoId = getObjectIdentifierAnnotation(schema);
+  const echoId = getTypeIdentifierAnnotation(schema);
   if (echoId) {
     return Reference.fromDXN(DXN.parse(echoId));
   }
 
-  const annotation = getObjectAnnotation(schema);
+  const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     return undefined;
   }
@@ -144,7 +140,7 @@ export const requireTypeReference = (schema: S.Schema.AnyNoContext): Reference =
 // TODO(dmaretskyi): Unify with `getTypeReference`.
 export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
   // TODO(dmaretskyi): Add support for dynamic schema.
-  const objectAnnotation = getObjectAnnotation(schema);
+  const objectAnnotation = getTypeAnnotation(schema);
   if (!objectAnnotation) {
     return undefined;
   }
@@ -152,6 +148,7 @@ export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
   return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };
 
+// TODO(burdon): Can we use `S.is`?
 export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   object: any,
@@ -165,20 +162,20 @@ export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
     throw new Error('Schema must have an object annotation.');
   }
 
-  const objectTypename = getTypename(object);
-  if (!objectTypename) {
+  const typename = getTypename(object);
+  if (!typename) {
     return false;
   }
 
-  if (objectTypename.startsWith('dxn:')) {
-    return schemaDXN.toString() === objectTypename;
+  if (typename.startsWith('dxn:')) {
+    return schemaDXN.toString() === typename;
   } else {
     const typeDXN = schemaDXN.asTypeDXN();
     if (!typeDXN) {
       return false;
     }
 
-    return typeDXN.type === objectTypename;
+    return typeDXN.type === typename;
   }
 };
 

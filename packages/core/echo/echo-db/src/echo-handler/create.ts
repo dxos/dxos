@@ -5,7 +5,7 @@
 import { Reference } from '@dxos/echo-protocol';
 import {
   type BaseObject,
-  getObjectAnnotation,
+  getTypeAnnotation,
   type HasId,
   EchoSchema,
   type ObjectMeta,
@@ -69,7 +69,7 @@ export const isTypedObjectProxy = (value: any): value is ReactiveObject<any> => 
 
   const schema = getSchema(value);
   if (schema != null) {
-    return !!getObjectAnnotation(schema);
+    return !!getTypeAnnotation(schema);
   }
 
   return false;

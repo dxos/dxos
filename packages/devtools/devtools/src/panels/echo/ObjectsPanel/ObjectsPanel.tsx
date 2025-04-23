@@ -12,7 +12,7 @@ import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
 import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { PanelContainer, Placeholder, Searchbar } from '../../../components';
@@ -82,15 +82,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
   }, [selected]);
 
-  const onVersionClick = useCallback(
-    (version: HistoryRow) => {
-      setSelectedVersion(version);
-      setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
-    },
-    [selected],
-  );
-
-  const objectProperties = useMemo(
+  const dataProperties = useMemo(
     () => [
       { name: 'id', format: FormatEnum.DID },
       { name: 'type', format: FormatEnum.String },
@@ -118,7 +110,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const tableData = useMemo(() => {
+  const dataRows = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
       id: item.id,
       type: getTypename(item),
@@ -151,13 +143,21 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const historyData = useMemo(() => {
+  const historyRows = useMemo(() => {
     return history.map((item) => ({
       id: item.hash,
       hash: item.hash.slice(0, 8),
       actor: item.actor,
     }));
   }, [history, selectedVersion]);
+
+  const handleVersionClick = useCallback(
+    (version: HistoryRow) => {
+      setSelectedVersion(version);
+      setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
+    },
+    [selected],
+  );
 
   const handleHistoryRowClicked = useCallback(
     (row: any) => {
@@ -170,11 +170,13 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       const versionItem = history.find((item) => item.hash === row.id);
 
       if (versionItem) {
-        onVersionClick(versionItem);
+        handleVersionClick(versionItem);
       }
     },
-    [history, onVersionClick, selected],
+    [history, handleVersionClick, selected],
   );
+
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
     <PanelContainer
@@ -187,7 +189,12 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     >
       <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
         <div className='flex flex-col w-full overflow-hidden'>
-          <DynamicTable data={tableData} properties={objectProperties} onRowClicked={handleObjectRowClicked} />
+          <DynamicTable
+            properties={dataProperties}
+            rows={dataRows}
+            features={features}
+            onRowClick={handleObjectRowClicked}
+          />
           <div
             className={mx(
               'bs-[--statusbar-size]',
@@ -209,7 +216,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           </div>
           <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
             {selected ? (
-              <DynamicTable data={historyData} properties={historyProperties} onRowClicked={handleHistoryRowClicked} />
+              <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
             ) : (
               <Placeholder label='History' />
             )}

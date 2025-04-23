@@ -10,6 +10,7 @@ import type { QueryResult, QueueQuery } from '@dxos/protocols';
 /**
  * Service for managing queues.
  */
+// TODO(burdon): Base type for all services?
 export interface QueuesService {
   queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult>;
 
