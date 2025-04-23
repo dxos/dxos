@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
 
-import { ToggleSidebarButton } from './SidebarButton';
 import { layoutAppliesTopbar, useBreakpoints } from '../../util';
+import { ToggleSidebarButton } from '../Sidebar';
 import { fixedSidebarToggleStyles } from '../fragments';
 
 export const ContentEmpty = () => {
