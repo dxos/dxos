@@ -33,7 +33,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, getFirstTwoRenderableChars } from '@dxos/util';
 
 import { useNavTreeContext } from './NavTreeContext';
-import { NotchStart } from './NotchStart';
+import { UserAccountAvatar } from './UserAccountAvatar';
 import { useLoadDescendents } from '../hooks';
 import { NAVTREE_PLUGIN } from '../meta';
 import { l0ItemType } from '../util';
@@ -45,6 +45,7 @@ type L0ItemProps = {
   parent?: Node<any>;
   path: string[];
   pinned?: boolean;
+  userAccount?: boolean;
   onRearrange?: StackItemRearrangeHandler<L0ItemData>;
 };
 
@@ -95,7 +96,7 @@ const l0Breakpoints: Record<string, string> = {
   lg: 'hidden lg:grid',
 };
 
-const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
+const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
@@ -184,31 +185,40 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       )}
       ref={itemElement}
     >
-      <div
-        role='none'
-        data-frame={true}
-        className={mx(
-          'absolute grid dx-focus-ring-group-indicator transition-colors',
-          type === 'tab' || pinned ? 'rounded' : 'rounded-full',
-          pinned
-            ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
-            : 'bg-groupSurface inset-inline-3 inset-block-2',
-        )}
-        {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
-      >
-        {(item.properties.icon && (
-          <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
-        )) ||
-          (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
-            <span role='img' className='place-self-center text-3xl font-light' {...hueFgStyle}>
-              {avatarValue}
-            </span>
-          ) : (
-            item.properties.icon && (
-              <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
-            )
-          ))}
-      </div>
+      {userAccount ? (
+        <UserAccountAvatar
+          userId={item.properties.userId}
+          hue={item.properties.hue}
+          emoji={item.properties.emoji}
+          status={item.properties.status}
+        />
+      ) : (
+        <div
+          role='none'
+          data-frame={true}
+          className={mx(
+            'absolute grid dx-focus-ring-group-indicator transition-colors',
+            type === 'tab' || pinned ? 'rounded' : 'rounded-full',
+            pinned
+              ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
+              : 'bg-groupSurface inset-inline-3 inset-block-2',
+          )}
+          {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+        >
+          {(item.properties.icon && (
+            <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+          )) ||
+            (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
+              <span role='img' className='place-self-center text-3xl font-light' {...hueFgStyle}>
+                {avatarValue}
+              </span>
+            ) : (
+              item.properties.icon && (
+                <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+              )
+            ))}
+        </div>
+      )}
       <div
         role='none'
         className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
@@ -280,11 +290,13 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
 export const L0Menu = ({
   topLevelItems,
   pinnedItems,
+  userAccountItem,
   parent,
   path,
 }: {
   topLevelItems: Node<any>[];
   pinnedItems: Node<any>[];
+  userAccountItem: Node<any>;
   parent?: Node<any>;
   path: string[];
 }) => {
@@ -316,9 +328,11 @@ export const L0Menu = ({
             <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
           ))}
       </div>
-      <div role='none' className='grid p-2 app-no-drag'>
-        <NotchStart />
-      </div>
+      {userAccountItem && (
+        <div role='none' className='grid py-2 app-no-drag'>
+          <L0Item key={userAccountItem.id} item={userAccountItem} parent={parent} path={path} userAccount />
+        </div>
+      )}
       <div
         role='none'
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'

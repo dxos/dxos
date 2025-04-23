@@ -5,31 +5,19 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AlertDialog } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/shell/react';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { ManageCredentialsDialog } from './ManageCredentialsDialog';
+import { DevicesContainer } from './DevicesContainer';
 import { ClientPlugin } from '../ClientPlugin';
 import translations from '../translations';
 
-const DefaultStory = () => {
-  return (
-    <AlertDialog.Root open>
-      <AlertDialog.Overlay>
-        <ManageCredentialsDialog />
-      </AlertDialog.Overlay>
-    </AlertDialog.Root>
-  );
-};
-
 const meta: Meta = {
-  title: 'plugins/plugin-client/ManageCredentialsDialog',
-  component: ManageCredentialsDialog,
-  render: DefaultStory,
+  title: 'plugins/plugin-client/DevicesContainer',
+  component: DevicesContainer,
   decorators: [
     withPluginManager({
       plugins: [
@@ -46,12 +34,12 @@ const meta: Meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, osTranslations],
   },
 };
 
 export default meta;
 
-type Story = StoryObj<typeof ManageCredentialsDialog>;
+type Story = StoryObj<typeof DevicesContainer>;
 
 export const Default: Story = {};
