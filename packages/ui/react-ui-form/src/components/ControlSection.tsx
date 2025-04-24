@@ -61,7 +61,7 @@ export type ControlItemProps = PropsWithChildren<{
 const controlItemClasses =
   'p-4 border border-separator rounded-lg container-max-width grid md:col-span-2 grid-cols-subgrid items-center';
 
-const controlItemTitleClasses = 'text-lg mbe-2';
+const controlItemTitleClasses = 'text-lg font-normal mbe-2';
 const controlItemDescriptionClasses = 'text-base mlb-2 md:mbe-0 text-description';
 
 export const ControlItem = ({ title, description, children }: ControlItemProps) => {
