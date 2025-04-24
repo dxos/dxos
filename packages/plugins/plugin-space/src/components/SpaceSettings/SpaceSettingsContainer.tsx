@@ -7,6 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { ControlSectionHeading } from '@dxos/react-ui-form';
 import { Accordion } from '@dxos/react-ui-list';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -35,7 +36,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   return (
-    <StackItem.Content classNames='plb-2 block overflow-y-auto'>
+    <StackItem.Content classNames='p-2 block overflow-y-auto'>
       <Accordion.Root<SpaceCapabilities.SettingsSection>
         items={items}
         value={state.spaceSettingsOpenSections}
@@ -45,7 +46,9 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           <>
             {items.map((item) => (
               <Accordion.Item key={item.id} item={item} classNames='container-max-width'>
-                <Accordion.ItemHeader title={toLocalizedString(item.label, t)} />
+                <Accordion.ItemHeader classNames='pie-6' asChild>
+                  <ControlSectionHeading title={toLocalizedString(item.label, t)} />
+                </Accordion.ItemHeader>
                 <Accordion.ItemBody>
                   <Surface role={`space-settings--${item.id}`} data={data} />
                 </Accordion.ItemBody>

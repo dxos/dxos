@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { createContext } from '@radix-ui/react-context';
-import React, { useState, type ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -11,8 +12,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { type ListItemRecord } from '../List';
 
 type AccordionContext<T extends ListItemRecord> = {
-  value: string[];
-  setValue: (value: string[]) => void;
   getId: (item: T) => string;
 };
 
@@ -38,28 +37,22 @@ export const AccordionRoot = <T extends ListItemRecord>({
   items,
   getId = defaultGetId,
   children,
-  value: controlledValue,
-  defaultValue = [],
+  value,
+  defaultValue,
   onValueChange,
-}: AccordionRootProps<T> & {
-  value?: string[];
-  defaultValue?: string[];
-  onValueChange?: (value: string[]) => void;
-}) => {
-  const [uncontrolledValue, setUncontrolledValue] = useState<string[]>(defaultValue);
-  const isControlled = controlledValue !== undefined;
-  const value = isControlled ? controlledValue : uncontrolledValue;
-
-  const setValue = (newValue: string[]) => {
-    if (!isControlled) {
-      setUncontrolledValue(newValue);
-    }
-    onValueChange?.(newValue);
-  };
-
+}: AccordionRootProps<T> &
+  Pick<AccordionPrimitive.AccordionMultipleProps, 'value' | 'defaultValue' | 'onValueChange'>) => {
   return (
-    <AccordionProvider {...{ value, setValue, getId }}>
-      <div className={mx('overflow-y-auto scrollbar-thin', classNames)}>{children?.({ items: items ?? [] })}</div>
+    <AccordionProvider {...{ getId }}>
+      <AccordionPrimitive.Root
+        type='multiple'
+        value={value}
+        defaultValue={defaultValue}
+        onValueChange={onValueChange}
+        className={mx(classNames)}
+      >
+        {children?.({ items: items ?? [] })}
+      </AccordionPrimitive.Root>
     </AccordionProvider>
   );
 };

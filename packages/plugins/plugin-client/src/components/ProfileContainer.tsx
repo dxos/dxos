@@ -98,6 +98,7 @@ export const ProfileContainer = () => {
               emoji={getValue()}
               onChangeEmoji={handleChange}
               onClickClear={handleEmojiReset}
+              classNames='justify-self-end'
             />
           </ControlItem>
         );
@@ -114,7 +115,7 @@ export const ProfileContainer = () => {
               value={getValue()}
               onChange={handleChange}
               onReset={handleHueReset}
-              classNames='[--hue-preview-size:1.5rem]'
+              classNames='[--hue-preview-size:1.5rem] justify-self-end'
             />
           </ControlItem>
         );
@@ -135,7 +136,7 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <StackItem.Content classNames='plb-2 block overflow-y-auto'>
+    <StackItem.Content classNames='p-2 block overflow-y-auto'>
       <Clipboard.Provider>
         <ControlSection title={t('profile label')} description={t('profile description')}>
           <Form

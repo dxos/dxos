@@ -15,7 +15,7 @@ export type ControlSectionProps = PropsWithChildren<{
   description?: Label;
 }>;
 
-export const ControlSection = ({ title, description, children }: ControlSectionProps) => {
+export const ControlSectionHeading = ({ title, description }: Omit<ControlSectionProps, 'children'>) => {
   const { t } = useTranslation(translationKey);
   return (
     <>
@@ -23,6 +23,14 @@ export const ControlSection = ({ title, description, children }: ControlSectionP
       {description && (
         <p className='pli-4 mlb-4 container-max-width text-description'>{toLocalizedString(description, t)}</p>
       )}
+    </>
+  );
+};
+
+export const ControlSection = ({ title, description, children }: ControlSectionProps) => {
+  return (
+    <>
+      <ControlSectionHeading title={title} description={description} />
       {children}
     </>
   );
@@ -53,7 +61,7 @@ export type ControlItemProps = PropsWithChildren<{
 const controlItemClasses =
   'p-4 border border-separator rounded-lg container-max-width grid md:col-span-2 grid-cols-subgrid items-center';
 
-const controlItemTitleClasses = 'text-lg mbe-2';
+const controlItemTitleClasses = 'text-lg font-normal mbe-2';
 const controlItemDescriptionClasses = 'text-base mlb-2 md:mbe-0 text-description';
 
 export const ControlItem = ({ title, description, children }: ControlItemProps) => {
