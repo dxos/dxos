@@ -28,6 +28,8 @@ export default [
         'action delete': 'Delete',
         'action mark read': 'Mark as read',
         'message label': 'Message',
+        'no connections label': 'No connections configured',
+        'manage connections button label': 'Manage Connections',
       },
     },
   },
