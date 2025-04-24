@@ -23,7 +23,7 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, Icon, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, defaultTx, getSize, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -666,9 +666,8 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
 export const Command = {
   render: () => (
     <DefaultStory
-      text={str('# Command', '')}
+      text={str('# Command', '', '', '[Test](dxn:ref:1234)', '', '', '')}
       extensions={[
-        // ...defaultExtensions,
         command({
           onHint: () => 'Press / for commands.',
           onRenderMenu: (el, onClick) => {
@@ -685,6 +684,8 @@ export const Command = {
             renderRoot(el, <CommandDialog onClose={onClose} />);
           },
           onRenderPreview: (el, url, text) => {
+            faker.seed(text.length);
+            const data = Array.from({ length: 2 }, () => faker.lorem.sentences(2));
             renderRoot(
               el,
               <ThemeProvider tx={defaultTx}>
@@ -692,18 +693,11 @@ export const Command = {
                   <div className='flex items-center gap-2'>
                     <div className='flex-1'>{text}</div>
                     <div className='flex gap-1'>
-                      <Button classNames='p-1 aspect-square'>
-                        <Icon icon={'ph--check--regular'} classNames='text-green-500' size={5} />
-                      </Button>
-                      <Button classNames='p-1 aspect-square'>
-                        <Icon icon={'ph--x--regular'} classNames='text-red-500' size={5} />
-                      </Button>
+                      <IconButton classNames='text-green-500' label='Apply' icon={'ph--check--regular'} />
+                      <IconButton classNames='text-red-500' label='Cancel' icon={'ph--x--regular'} />
                     </div>
                   </div>
-                  <div>
-                    ECHO is an open source database architecture that incorporates transparent data replication and
-                    conflict resolution for secure and scalable local storage.
-                  </div>
+                  <div>{data.join('\n\n')}</div>
                 </div>
               </ThemeProvider>,
             );

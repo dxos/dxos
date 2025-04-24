@@ -46,9 +46,9 @@ export const command = (options: CommandOptions): Extension => {
         marginLeft: '-1rem',
         marginRight: '-1rem',
         padding: '1rem',
-        background: 'var(--dx-hoverSurface)',
+        borderRadius: '1rem',
+        background: 'var(--dx-modalSurface)',
         border: '1px solid var(--dx-separator)',
-        borderRadius: '4px',
       },
     }),
   ];
