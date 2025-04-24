@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { Surface, useCapabilities } from '@dxos/app-framework';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Accordion } from '@dxos/react-ui-list';
@@ -23,14 +23,24 @@ export type SpaceSettingsContainerProps = {
 
 export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const panels = useCapabilities(SpaceCapabilities.SettingsSection);
+  const state = useCapability(SpaceCapabilities.MutableState);
+  const items = useCapabilities(SpaceCapabilities.SettingsSection);
   const data = useMemo(() => ({ subject: space }), [space]);
 
-  // TODO(wittjosiah): Accordion items should be open by default.
-  // TODO(wittjosiah): Accordion open state should come from plugin state so that it can be preserved.
+  const handleOpenSectionChange = useCallback(
+    (sections: string[]) => {
+      state.spaceSettingsOpenSections.splice(0, state.spaceSettingsOpenSections.length, ...sections);
+    },
+    [state],
+  );
+
   return (
     <StackItem.Content classNames='plb-2 block overflow-y-auto'>
-      <Accordion.Root<SpaceCapabilities.SettingsSection> items={panels}>
+      <Accordion.Root<SpaceCapabilities.SettingsSection>
+        items={items}
+        value={state.spaceSettingsOpenSections}
+        onValueChange={handleOpenSectionChange}
+      >
         {({ items }) => (
           <>
             {items.map((item) => (

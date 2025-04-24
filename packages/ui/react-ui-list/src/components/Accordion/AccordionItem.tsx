@@ -25,9 +25,12 @@ export const [AccordionItemProvider, useAccordionItemContext] =
 export type AccordionItemProps<T extends ListItemRecord> = ThemedClassName<PropsWithChildren<{ item: T }>>;
 
 export const AccordionItem = <T extends ListItemRecord>({ children, classNames, item }: AccordionItemProps<T>) => {
-  const { openItems, setItemOpen, getId } = useAccordionContext(ACCORDION_ITEM_NAME);
-  const open = !!openItems[getId(item)];
-  const setOpen = useCallback((open: boolean) => setItemOpen(getId(item), open), [setItemOpen, getId, item]);
+  const { value, setValue, getId } = useAccordionContext(ACCORDION_ITEM_NAME);
+  const open = value.includes(getId(item));
+  const setOpen = useCallback(
+    (open: boolean) => setValue(open ? [...value, getId(item)] : value.filter((id) => id !== getId(item))),
+    [setValue, value, getId, item],
+  );
 
   return (
     <AccordionItemProvider {...{ item, open, setOpen }}>

@@ -43,6 +43,11 @@ export type PluginState = {
   spaceNames: Record<string, string>;
 
   /**
+   * Which sections of the space settings are open.
+   */
+  spaceSettingsOpenSections: string[];
+
+  /**
    * Which spaces have an SDK migration running currently.
    */
   // TODO(wittjosiah): Factor out to sdk. Migration running should probably be a space state.
@@ -169,6 +174,7 @@ export namespace SpaceAction {
     output: S.Void,
   }) {}
 
+  // TODO(wittjosiah): Handle scrolling to section.
   export class OpenSettings extends S.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {
     input: S.Struct({
       space: SpaceSchema,

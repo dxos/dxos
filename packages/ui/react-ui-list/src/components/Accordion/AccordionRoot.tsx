@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { useCallback, useState, type ReactNode } from 'react';
+import React, { useState, type ReactNode } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -11,8 +11,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { type ListItemRecord } from '../List';
 
 type AccordionContext<T extends ListItemRecord> = {
-  openItems: Record<string, boolean>;
-  setItemOpen: (id: string, open: boolean) => void;
+  value: string[];
+  setValue: (value: string[]) => void;
   getId: (item: T) => string;
 };
 
@@ -38,15 +38,27 @@ export const AccordionRoot = <T extends ListItemRecord>({
   items,
   getId = defaultGetId,
   children,
-}: AccordionRootProps<T>) => {
-  const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
+  value: controlledValue,
+  defaultValue = [],
+  onValueChange,
+}: AccordionRootProps<T> & {
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+}) => {
+  const [uncontrolledValue, setUncontrolledValue] = useState<string[]>(defaultValue);
+  const isControlled = controlledValue !== undefined;
+  const value = isControlled ? controlledValue : uncontrolledValue;
 
-  const handleSetItemOpen = useCallback((id: string, open: boolean) => {
-    setOpenItems((prev) => ({ ...prev, [id]: open }));
-  }, []);
+  const setValue = (newValue: string[]) => {
+    if (!isControlled) {
+      setUncontrolledValue(newValue);
+    }
+    onValueChange?.(newValue);
+  };
 
   return (
-    <AccordionProvider {...{ openItems, setItemOpen: handleSetItemOpen, getId }}>
+    <AccordionProvider {...{ value, setValue, getId }}>
       <div className={mx('overflow-y-auto scrollbar-thin', classNames)}>{children?.({ items: items ?? [] })}</div>
     </AccordionProvider>
   );
