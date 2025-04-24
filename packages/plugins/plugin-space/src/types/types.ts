@@ -178,6 +178,7 @@ export namespace SpaceAction {
   export class OpenSettings extends S.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {
     input: S.Struct({
       space: SpaceSchema,
+      initialTab: S.optional(S.String),
     }),
     output: S.Void,
   }) {}
