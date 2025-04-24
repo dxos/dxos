@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EchoObject, LabelAnnotationId, Ref, S } from '@dxos/echo-schema';
+import { EchoObject, Expando, LabelAnnotationId, Ref, S } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';
 
@@ -11,6 +11,7 @@ export const DocumentSchema = S.Struct({
   fallbackName: S.optional(S.String),
   content: Ref(TextType),
   threads: S.mutable(S.Array(Ref(ThreadType))),
+  assistantChatQueue: S.optional(Ref(Expando)),
 }).annotations({
   // TODO(dmaretskyi): `S.Struct(...).pipe(defaultLabel(['name', 'fallbackName']))` for type-safe annotations.
   [LabelAnnotationId]: ['name', 'fallbackName'],

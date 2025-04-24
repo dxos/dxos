@@ -594,19 +594,21 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
   };
 
   return (
-    <div className={mx('flex items-center p-2 gap-2 border rounded-md', baseSurface)}>
-      <Input.Root>
-        <Input.TextInput
-          autoFocus={true}
-          placeholder='Enter command.'
-          value={text}
-          onChange={({ target: { value } }) => setText(value)}
-          onKeyDown={handleKeyDown}
-        />
-      </Input.Root>
-      <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
-        <X className={getSize(5)} />
-      </Button>
+    <div className='flex w-full justify-center'>
+      <div className={mx('flex w-full p-2 gap-2 items-center border rounded-md', editorContent, baseSurface)}>
+        <Input.Root>
+          <Input.TextInput
+            autoFocus={true}
+            placeholder='Enter command.'
+            value={text}
+            onChange={({ target: { value } }) => setText(value)}
+            onKeyDown={handleKeyDown}
+          />
+        </Input.Root>
+        <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
+          <X className={getSize(5)} />
+        </Button>
+      </div>
     </div>
   );
 };

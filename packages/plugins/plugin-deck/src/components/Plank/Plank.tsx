@@ -5,8 +5,8 @@
 import React, {
   Fragment,
   type KeyboardEvent,
-  memo,
   type PropsWithChildren,
+  memo,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -14,9 +14,9 @@ import React, {
 } from 'react';
 
 import {
-  createIntent,
   LayoutAction,
   Surface,
+  createIntent,
   useCapability,
   useAppGraph,
   useIntentDispatcher,
@@ -27,18 +27,19 @@ import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
-import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
+import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 import { DeckCapabilities } from '../../capabilities';
 import { useMainSize } from '../../hooks';
 import {
   COMPANION_TYPE,
+  SLUG_PATH_SEPARATOR,
   DeckAction,
   type LayoutMode,
   type Part,
   type ResolvedPart,
-  SLUG_PATH_SEPARATOR,
+  type DeckSettingsProps,
 } from '../../types';
 import { useCompanions } from '../../util';
 
@@ -52,6 +53,7 @@ export type PlankProps = {
   order?: number;
   active?: string[];
   layoutMode: LayoutMode;
+  settings?: DeckSettingsProps;
 };
 
 type PlankImplProps = Omit<PlankProps, 'id' | 'companionId' | 'part'> & {
@@ -64,7 +66,7 @@ type PlankImplProps = Omit<PlankProps, 'id' | 'companionId' | 'part'> & {
 };
 
 const PlankImpl = memo(
-  ({ id, node, part, path, order, active, layoutMode, companioned, primary, companions }: PlankImplProps) => {
+  ({ id, node, part, path, order, active, layoutMode, companioned, primary, companions, settings }: PlankImplProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
     const rootElement = useRef<HTMLDivElement | null>(null);
@@ -159,16 +161,17 @@ const PlankImpl = memo(
       >
         {node ? (
           <>
-            <NodePlankHeading
+            <PlankHeading
               id={id}
               part={part.startsWith('solo-') ? 'solo' : part}
               node={node}
+              deckEnabled={settings?.enableDeck}
               canIncrementStart={canIncrementStart}
               canIncrementEnd={canIncrementEnd}
               popoverAnchorId={popoverAnchorId}
-              companioned={companioned}
               primaryId={primary?.id}
               surfaceVariant={surfaceVariant}
+              companioned={companioned}
               companions={companions}
             />
             <Surface

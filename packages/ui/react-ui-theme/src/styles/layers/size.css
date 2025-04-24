@@ -1,8 +1,8 @@
-@layer dx-components {
+.container-max-width {
+  @apply is-full max-is-containerMaxWidth mli-auto;
+}
 
-  .container-max-width {
-    @apply is-full max-is-containerMaxWidth mli-auto;
-  }
+@layer dx-components {
 
   /* Block size */
 

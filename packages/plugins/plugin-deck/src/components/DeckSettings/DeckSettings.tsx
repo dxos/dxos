@@ -7,24 +7,28 @@ import React from 'react';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { DECK_PLUGIN } from '../meta';
+import { DECK_PLUGIN } from '../../meta';
 import {
+  type DeckSettingsProps,
   type NewPlankPositioning,
   NewPlankPositions,
-  type DeckSettingsProps,
   type Overscroll,
   OverscrollOptions,
-} from '../types';
+} from '../../types';
 
 const isSocket = !!(globalThis as any).__args;
 
-export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) => {
+export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
   const { t } = useTranslation(DECK_PLUGIN);
 
   return (
     <DeprecatedFormContainer>
+      <DeprecatedFormInput label={t('settings enable deck label')}>
+        <Input.Switch checked={settings.enableDeck} onCheckedChange={(checked) => (settings.enableDeck = checked)} />
+      </DeprecatedFormInput>
       <DeprecatedFormInput label={t('select new plank positioning label')}>
         <Select.Root
+          disabled={!settings.enableDeck}
           value={settings.newPlankPositioning ?? 'start'}
           onValueChange={(value) => (settings.newPlankPositioning = value as NewPlankPositioning)}
         >
@@ -44,6 +48,7 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('settings overscroll label')}>
         <Select.Root
+          disabled={!settings.enableDeck}
           value={settings.overscroll ?? 'none'}
           onValueChange={(value) => (settings.overscroll = value as Overscroll)}
         >
@@ -61,6 +66,12 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           </Select.Portal>
         </Select.Root>
       </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings enable statusbar label')}>
+        <Input.Switch
+          checked={settings.enableStatusbar}
+          onCheckedChange={(checked) => (settings.enableStatusbar = checked)}
+        />
+      </DeprecatedFormInput>
       <DeprecatedFormInput label={t('settings show hints label')}>
         <Input.Switch checked={settings.showHints} onCheckedChange={(checked) => (settings.showHints = checked)} />
       </DeprecatedFormInput>
@@ -72,12 +83,6 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           />
         </DeprecatedFormInput>
       )}
-      <DeprecatedFormInput label={t('settings enable statusbar label')}>
-        <Input.Switch
-          checked={settings.enableStatusbar}
-          onCheckedChange={(checked) => (settings.enableStatusbar = checked)}
-        />
-      </DeprecatedFormInput>
     </DeprecatedFormContainer>
   );
 };

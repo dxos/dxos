@@ -4,6 +4,7 @@
 
 import React, { useCallback, type FC } from 'react';
 
+import { type AssociatedArtifact } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
@@ -17,6 +18,7 @@ export type ThreadContainerProps = {
   chat?: AIChatType;
   settings?: AssistantSettingsProps;
   part?: 'deck' | 'dialog';
+  associatedArtifact?: AssociatedArtifact;
 } & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange'>;
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?
@@ -25,12 +27,13 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   chat,
   settings,
   part,
+  associatedArtifact,
   onOpenChange,
   ...props
 }) => {
   const space = getSpace(chat);
   const contextProvider = useContextProvider(space);
-  const processor = useChatProcessor({ chat, space, settings, part });
+  const processor = useChatProcessor({ chat, space, settings, part, associatedArtifact });
   const messageQueue = useMessageQueue(chat);
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
 
