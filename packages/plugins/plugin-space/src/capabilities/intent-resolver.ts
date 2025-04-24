@@ -18,6 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { isSpace, getSpace, SpaceState, type Space, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
@@ -124,6 +125,19 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
       intent: SpaceAction.Share,
       filter: (data): data is { space: Space } => !data.space.properties[COMPOSER_SPACE_LOCK],
       resolve: ({ space }) => {
+        const layout = context.requestCapability(Capabilities.Layout);
+        const id = `${space.id}${ATTENDABLE_PATH_SEPARATOR}members`;
+        if (layout.active.includes(id)) {
+          return {
+            intents: [
+              createIntent(LayoutAction.ScrollIntoView, {
+                part: 'current',
+                subject: id,
+              }),
+            ],
+          };
+        }
+
         return {
           intents: [
             pipe(
@@ -230,6 +244,19 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     createResolver({
       intent: SpaceAction.OpenSettings,
       resolve: ({ space }) => {
+        const layout = context.requestCapability(Capabilities.Layout);
+        const id = `${space.id}${ATTENDABLE_PATH_SEPARATOR}settings`;
+        if (layout.active.includes(id)) {
+          return {
+            intents: [
+              createIntent(LayoutAction.ScrollIntoView, {
+                part: 'current',
+                subject: id,
+              }),
+            ],
+          };
+        }
+
         return {
           intents: [
             pipe(
