@@ -7,7 +7,7 @@ import { EditorView, keymap } from '@codemirror/view';
 
 import { hintViewPlugin } from './hint';
 import { floatingMenu } from './menu';
-import { preview } from './preview';
+import { preview, type PreviewOptions } from './preview';
 import { closeEffect, commandConfig, commandKeyBindings, commandState } from './state';
 
 // TODO(burdon): Create knowledge base for CM notes and ideas.
@@ -24,8 +24,7 @@ export type CommandOptions = {
   onHint: () => string | undefined;
   onRenderDialog: (el: HTMLElement, cb: (action?: CommandAction) => void) => void;
   onRenderMenu: (el: HTMLElement, cb: () => void) => void;
-  onRenderPreview: (el: HTMLElement, url: string, text: string) => void;
-};
+} & Pick<PreviewOptions, 'onRenderPreview'>;
 
 export const command = (options: CommandOptions): Extension => {
   return [

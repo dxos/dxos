@@ -646,11 +646,17 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
 
   return (
     <div className='flex w-full justify-center'>
-      <div className={mx('flex w-full p-2 gap-2 items-center border rounded-md', editorContent, baseSurface)}>
+      <div
+        className={mx(
+          'flex w-full p-2 gap-2 items-center border border-separator rounded-md',
+          editorContent,
+          baseSurface,
+        )}
+      >
         <Input.Root>
           <Input.TextInput
             autoFocus={true}
-            placeholder='Enter command.'
+            placeholder='Ask a question...'
             value={text}
             onChange={({ target: { value } }) => setText(value)}
             onKeyDown={handleKeyDown}
@@ -684,15 +690,18 @@ export const Command = {
           onRenderDialog: (el, onClose) => {
             renderRoot(el, <CommandDialog onClose={onClose} />);
           },
-          onRenderPreview: (el, url, text) => {
+          onRenderPreview: (el, { text }) => {
             faker.seed(text.length);
             const data = Array.from({ length: 2 }, () => faker.lorem.sentences(2));
             renderRoot(
               el,
               <ThemeProvider tx={defaultTx}>
                 <div className='flex flex-col gap-2'>
-                  <div className='flex items-center gap-2'>
-                    <div className='flex-1'>{text}</div>
+                  <div className='flex items-center gap-4'>
+                    <div className='grow truncate'>
+                      <span className='text-xs text-subdued mie-2'>Prompt</span>
+                      {text}
+                    </div>
                     <div className='flex gap-1'>
                       <IconButton classNames='text-green-500' label='Apply' icon={'ph--check--regular'} />
                       <IconButton classNames='text-red-500' label='Cancel' icon={'ph--x--regular'} />

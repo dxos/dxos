@@ -13,14 +13,14 @@ import {
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
-export type LinkOptions = {
-  onRenderPreview: (el: HTMLElement, url: string, text: string) => void;
+export type PreviewOptions = {
+  onRenderPreview: (el: HTMLElement, props: { url: string; text: string }) => void;
 };
 
 /**
  * Create image decorations.
  */
-export const preview = (options: LinkOptions): Extension => {
+export const preview = (options: PreviewOptions): Extension => {
   return [
     StateField.define<DecorationSet>({
       create: (state) => buildDecorations(state, options),
@@ -32,7 +32,7 @@ export const preview = (options: LinkOptions): Extension => {
 };
 
 // TODO(burdon): Make atomic.
-const buildDecorations = (state: EditorState, options: LinkOptions) => {
+const buildDecorations = (state: EditorState, options: PreviewOptions) => {
   const builder = new RangeSetBuilder<Decoration>();
   syntaxTree(state).iterate({
     enter: (node) => {
@@ -59,7 +59,7 @@ const buildDecorations = (state: EditorState, options: LinkOptions) => {
 
 class PreviewWidget extends WidgetType {
   constructor(
-    readonly _onRenderPreview: (el: HTMLElement, url: string, text: string) => void,
+    readonly _onRenderPreview: PreviewOptions['onRenderPreview'],
     readonly _url: string,
     readonly _text: string,
   ) {
@@ -73,7 +73,7 @@ class PreviewWidget extends WidgetType {
   override toDOM(view: EditorView) {
     const root = document.createElement('div');
     root.classList.add('cm-preview');
-    this._onRenderPreview(root, this._url, this._text);
+    this._onRenderPreview(root, { url: this._url, text: this._text });
     return root;
   }
 }
