@@ -62,7 +62,7 @@ export const MembersContainer = ({
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = space.properties[CollectionType.typename]?.target?.objects[0].target;
+  const target = space.properties[CollectionType.typename]?.target?.objects[0]?.target;
 
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
