@@ -82,6 +82,9 @@ export const floatingMenu = (options: CommandOptions) =>
         const offsetTop = lineRect.top - containerRect.top + this.view.scrollDOM.scrollTop;
         const offsetLeft = this.view.scrollDOM.clientWidth + this.view.scrollDOM.scrollLeft - lineRect.x;
 
+        // TODO(burdon): Position is incorrect if cursor is in fenced code block.
+        // console.log('offsetTop', lineRect, containerRect);
+
         this.button.style.top = `${offsetTop}px`;
         this.button.style.left = `${offsetLeft}px`;
         this.button.style.display = 'block';

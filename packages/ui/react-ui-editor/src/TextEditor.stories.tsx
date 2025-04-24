@@ -364,25 +364,49 @@ const allExtensions: Extension[] = [
   folding(),
 ];
 
+//
+// Default
+//
+
 export const Default = {
   render: () => <DefaultStory text={text} extensions={defaultExtensions} />,
 };
+
+//
+// Everything
+//
 
 export const Everything = {
   render: () => <DefaultStory text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
+//
+// Empty
+//
+
 export const Empty = {
   render: () => <DefaultStory extensions={defaultExtensions} />,
 };
+
+//
+// Readonly
+//
 
 export const Readonly = {
   render: () => <DefaultStory text={text} extensions={defaultExtensions} readOnly />,
 };
 
+//
+// No Extensions
+//
+
 export const NoExtensions = {
   render: () => <DefaultStory text={text} />,
 };
+
+//
+// Vim
+//
 
 export const Vim = {
   render: () => (
@@ -512,6 +536,10 @@ export const Table = {
   render: () => <DefaultStory text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
 };
 
+//
+// Commented out
+//
+
 export const CommentedOut = {
   render: () => (
     <DefaultStory
@@ -524,6 +552,10 @@ export const CommentedOut = {
     />
   ),
 };
+
+//
+// Typescript
+//
 
 export const Typescript = {
   render: () => (
@@ -555,6 +587,10 @@ export const Autocomplete = {
   ),
 };
 
+//
+// Mention
+//
+
 export const Mention = {
   render: () => (
     <DefaultStory
@@ -568,6 +604,10 @@ export const Mention = {
   ),
 };
 
+//
+// Search
+//
+
 export const Search = {
   render: () => (
     <DefaultStory
@@ -578,10 +618,16 @@ export const Search = {
   ),
 };
 
+//
+// Command
+//
+
 const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
   const [text, setText] = useState('');
   const handleInsert = () => {
-    onClose(text.length ? { insert: text + '\n' } : undefined);
+    const link = `[${text}](/ref)`;
+    console.log({ link });
+    onClose(text.length ? { insert: link } : undefined);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -622,6 +668,7 @@ export const Command = {
     <DefaultStory
       text={str('# Command', '')}
       extensions={[
+        // ...defaultExtensions,
         command({
           onHint: () => 'Press / for commands.',
           onRenderMenu: (el, onClick) => {
@@ -637,11 +684,39 @@ export const Command = {
           onRenderDialog: (el, onClose) => {
             renderRoot(el, <CommandDialog onClose={onClose} />);
           },
+          onRenderPreview: (el, url, text) => {
+            renderRoot(
+              el,
+              <ThemeProvider tx={defaultTx}>
+                <div className='flex flex-col gap-2'>
+                  <div className='flex items-center gap-2'>
+                    <div className='flex-1'>{text}</div>
+                    <div className='flex gap-1'>
+                      <Button classNames='p-1 aspect-square'>
+                        <Icon icon={'ph--check--regular'} classNames='text-green-500' size={5} />
+                      </Button>
+                      <Button classNames='p-1 aspect-square'>
+                        <Icon icon={'ph--x--regular'} classNames='text-red-500' size={5} />
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    ECHO is an open source database architecture that incorporates transparent data replication and
+                    conflict resolution for secure and scalable local storage.
+                  </div>
+                </div>
+              </ThemeProvider>,
+            );
+          },
         }),
       ]}
     />
   ),
 };
+
+//
+// Comments
+//
 
 export const Comments = {
   render: () => {
@@ -683,11 +758,19 @@ export const Comments = {
   },
 };
 
+//
+// Annotations
+//
+
 export const Annotations = {
   render: () => (
     <DefaultStory text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />
   ),
 };
+
+//
+// DND
+//
 
 export const DND = {
   render: () => (
@@ -703,6 +786,10 @@ export const DND = {
     />
   ),
 };
+
+//
+// Listener
+//
 
 export const Listener = {
   render: () => (
@@ -722,6 +809,10 @@ export const Listener = {
   ),
 };
 
+//
+// Typewriter
+//
+
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
 
 export const Typewriter = {
@@ -732,6 +823,10 @@ export const Typewriter = {
     />
   ),
 };
+
+//
+// Blast
+//
 
 export const Blast = {
   render: () => (

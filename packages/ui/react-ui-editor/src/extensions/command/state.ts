@@ -53,11 +53,14 @@ export const commandState = StateField.define<CommandState>({
                 options.onRenderDialog(dom, (action) => {
                   view.dispatch({ effects: closeEffect.of(null) });
                   if (action?.insert?.length) {
+                    // Insert into editor.
+                    const text = action.insert + '\n';
                     view.dispatch({
-                      changes: { from: pos, insert: action.insert },
-                      selection: { anchor: pos + action.insert.length },
+                      changes: { from: pos, insert: text },
+                      selection: { anchor: pos + text.length },
                     });
                   }
+
                   // NOTE: Truncates text if set focus immediately.
                   requestAnimationFrame(() => view.focus());
                 });

@@ -7,6 +7,7 @@ import { EditorView, keymap } from '@codemirror/view';
 
 import { hintViewPlugin } from './hint';
 import { floatingMenu } from './menu';
+import { preview } from './preview';
 import { closeEffect, commandConfig, commandKeyBindings, commandState } from './state';
 
 // TODO(burdon): Create knowledge base for CM notes and ideas.
@@ -23,6 +24,7 @@ export type CommandOptions = {
   onHint: () => string | undefined;
   onRenderDialog: (el: HTMLElement, cb: (action?: CommandAction) => void) => void;
   onRenderMenu: (el: HTMLElement, cb: () => void) => void;
+  onRenderPreview: (el: HTMLElement, url: string, text: string) => void;
 };
 
 export const command = (options: CommandOptions): Extension => {
@@ -30,6 +32,7 @@ export const command = (options: CommandOptions): Extension => {
     commandConfig.of(options),
     commandState,
     keymap.of(commandKeyBindings),
+    preview(options),
     floatingMenu(options),
     hintViewPlugin(options),
     EditorView.focusChangeEffect.of((_, focusing) => {
@@ -38,6 +41,14 @@ export const command = (options: CommandOptions): Extension => {
     EditorView.theme({
       '.cm-tooltip': {
         background: 'transparent',
+      },
+      '.cm-preview': {
+        marginLeft: '-4px',
+        marginRight: '-4px',
+        background: 'var(--dx-hoverSurface)',
+        border: '1px solid var(--dx-separator)',
+        borderRadius: '4px',
+        padding: '0 4px',
       },
     }),
   ];
