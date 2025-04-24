@@ -18,8 +18,9 @@ export default () =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ScriptAction.Create,
-      resolve: async ({ name, gistUrl }) => {
+      resolve: async ({ name, gistUrl, initialTemplateId }) => {
         let content = templates[0].source;
+
         const gistId = gistUrl?.split('/').at(-1);
         if (gistId) {
           // TODO(wittjosiah): Capability which contributes Octokit?
@@ -31,6 +32,14 @@ export default () =>
           const gistContent = Object.values(response.data.files ?? {})[0]?.content;
           if (gistContent) {
             content = gistContent;
+          }
+        }
+
+        if (initialTemplateId) {
+          const template = templates.find((template) => template.id === initialTemplateId);
+          if (template) {
+            content = template.source;
+            name = template.name;
           }
         }
 
@@ -46,7 +55,7 @@ export default () =>
     }),
     createResolver({
       intent: TokenManagerAction.AccessTokenCreated,
-      resolve: async (accessToken) => {
+      resolve: async ({ accessToken }) => {
         const scripts = defaultScripts[accessToken.source] ?? [];
 
         if (scripts.length > 0) {
@@ -72,7 +81,7 @@ const defaultScripts: Record<string, { label: string; templateId: string }[]> = 
   'gmail.com': [
     {
       label: 'Gmail Sync',
-      templateId: 'gmail',
+      templateId: 'dxos.org/script/gmail',
     },
   ],
 };

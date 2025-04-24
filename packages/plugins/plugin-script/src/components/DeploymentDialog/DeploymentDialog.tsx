@@ -2,12 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { type AccessTokenType } from '@dxos/schema';
 
+import { useCreateAndDeployScriptTemplates } from '../../hooks/useCreateAndDeployScriptTemplates';
 import { SCRIPT_PLUGIN } from '../../meta';
+
+// TODO(ZaymonFC):
+//   - Show activity and feedback to the user.
+//   - Only take an array of templateIds and get the name from the data.
+//   - Pending / onError states.
 
 type DeploymentDialogProps = {
   accessToken: AccessTokenType;
@@ -16,6 +23,10 @@ type DeploymentDialogProps = {
 
 export const DeploymentDialog = ({ accessToken, scripts }: DeploymentDialogProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
+  const space = useMemo(() => getSpace(accessToken), [accessToken]);
+  const scriptTemplateIds = useMemo(() => scripts.map((script) => script.templateId), [scripts]);
+
+  const handleCreateAndDeployScripts = useCreateAndDeployScriptTemplates(space, scriptTemplateIds);
 
   return (
     <Dialog.Content>
@@ -37,7 +48,7 @@ export const DeploymentDialog = ({ accessToken, scripts }: DeploymentDialogProps
         </ul>
       </div>
       <div role='none' className='flex flex-row-reverse gap-1'>
-        <Button variant='primary'>
+        <Button variant='primary' onClick={handleCreateAndDeployScripts}>
           {t('deployment dialog deploy functions button label', { count: scripts.length })}
         </Button>
         <Dialog.Close asChild>

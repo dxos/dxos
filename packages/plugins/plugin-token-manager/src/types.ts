@@ -13,7 +13,7 @@ export namespace TokenManagerAction {
   export class AccessTokenCreated extends S.TaggedClass<AccessTokenCreated>()(
     `${TOKEN_MANAGER_ACTION}/access-token-created`,
     {
-      input: AccessTokenType,
+      input: S.Struct({ accessToken: AccessTokenType }),
       output: S.Void,
     },
   ) {}

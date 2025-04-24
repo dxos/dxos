@@ -43,7 +43,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true }),
       );
       if (isInstanceOf(AccessTokenType, result.data?.object)) {
-        void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, result.data?.object));
+        void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
       }
     },
     [space, dispatch],

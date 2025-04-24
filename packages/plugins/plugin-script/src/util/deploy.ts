@@ -26,7 +26,7 @@ type DeployScriptProps = {
   script: ScriptType;
   client: Client;
   space: Space;
-  fn: FunctionType;
+  fn?: FunctionType;
   existingFunctionUrl?: string;
 };
 
