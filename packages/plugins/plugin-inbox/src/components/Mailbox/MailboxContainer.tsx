@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { DeckAction, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -64,7 +64,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           void dispatch(
             createIntent(DeckAction.ChangeCompanion, {
               primary: id,
-              companion: `${id}${SLUG_PATH_SEPARATOR}message`,
+              companion: `${id}-message`,
             }),
           );
           break;

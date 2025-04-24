@@ -79,10 +79,19 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
     createSurface({
+      id: `${SPACE_PLUGIN}/members`,
+      role: 'article',
+      position: 'hoist',
+      filter: (data): data is { subject: Space; variant: 'members' } =>
+        isSpace(data.subject) && data.variant === 'members',
+      component: ({ data }) => <>members</>,
+    }),
+    createSurface({
       id: `${SPACE_PLUGIN}/settings`,
-      // TODO(burdon): Add role name syntax to minimal plugin docs.
-      role: 'complementary--settings',
-      filter: (data): data is { subject: Space } => isSpace(data.subject),
+      role: 'article',
+      position: 'hoist',
+      filter: (data): data is { subject: Space; variant: 'settings' } =>
+        isSpace(data.subject) && data.variant === 'settings',
       component: ({ data }) => <SpaceSettingsPanel space={data.subject} />,
     }),
     createSurface({

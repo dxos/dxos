@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
+
 import {
   Capabilities,
+  chain,
   contributes,
   createIntent,
   createResolver,
@@ -14,7 +17,6 @@ import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -24,8 +26,6 @@ import { SpaceCapabilities } from './capabilities';
 import {
   CREATE_SPACE_DIALOG,
   JOIN_DIALOG,
-  SPACE_SETTINGS_DIALOG,
-  type SpaceSettingsDialogProps,
   type JoinDialogProps,
   POPOVER_RENAME_SPACE,
   CREATE_OBJECT_DIALOG,
@@ -124,25 +124,21 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
       intent: SpaceAction.Share,
       filter: (data): data is { space: Space } => !data.space.properties[COMPOSER_SPACE_LOCK],
       resolve: ({ space }) => {
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const current = attention.current.at(-1);
-        const target = current?.startsWith(space.id) ? current : undefined;
-
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: SPACE_SETTINGS_DIALOG,
-              options: {
-                blockAlign: 'start',
-                props: {
-                  space,
-                  target,
-                  initialTab: 'members',
-                  createInvitationUrl,
-                } satisfies Partial<SpaceSettingsDialogProps>,
-              },
-            }),
+            pipe(
+              createIntent(LayoutAction.SwitchWorkspace, {
+                part: 'workspace',
+                subject: space.id,
+              }),
+              chain(LayoutAction.Open, {
+                part: 'main',
+                subject: [space.id],
+                options: {
+                  variant: 'members',
+                },
+              }),
+            ),
             ...(observability
               ? [
                   createIntent(ObservabilityAction.SendEvent, {
@@ -236,18 +232,19 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
       resolve: ({ space }) => {
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: SPACE_SETTINGS_DIALOG,
-              options: {
-                blockAlign: 'start',
-                props: {
-                  space,
-                  initialTab: 'settings',
-                  createInvitationUrl,
-                } satisfies Partial<SpaceSettingsDialogProps>,
-              },
-            }),
+            pipe(
+              createIntent(LayoutAction.SwitchWorkspace, {
+                part: 'workspace',
+                subject: space.id,
+              }),
+              chain(LayoutAction.Open, {
+                part: 'main',
+                subject: [space.id],
+                options: {
+                  variant: 'settings',
+                },
+              }),
+            ),
           ],
         };
       },

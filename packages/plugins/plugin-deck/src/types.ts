@@ -10,6 +10,8 @@ import { type Position } from '@dxos/util';
 
 import { DECK_PLUGIN } from './meta';
 
+export { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+
 export const COMPANION_TYPE = 'dxos.org/plugin/deck/companion';
 
 // TODO(Zan): In the future we should consider adding new planks adjacent to the attended plank.
@@ -115,9 +117,6 @@ export const DeckPluginState = S.Struct({
 }).pipe(S.mutable);
 
 export type DeckPluginState = S.Schema.Type<typeof DeckPluginState>;
-
-// NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
-export const SLUG_PATH_SEPARATOR = '~';
 
 export const DECK_ACTION = `${DECK_PLUGIN}/action`;
 

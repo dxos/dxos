@@ -176,6 +176,7 @@ export namespace LayoutAction {
       options: S.optional(
         S.Struct({
           state: S.optional(S.Literal(true).annotations({ description: 'The items are being added.' })),
+          variant: S.optional(S.String.annotations({ description: 'The variant of the item to open.' })),
           key: S.optional(
             S.String.annotations({ description: 'If provided, will replace item with a matching key (id prefix).' }),
           ),
