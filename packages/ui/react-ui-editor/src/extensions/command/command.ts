@@ -43,12 +43,12 @@ export const command = (options: CommandOptions): Extension => {
         background: 'transparent',
       },
       '.cm-preview': {
-        marginLeft: '-4px',
-        marginRight: '-4px',
+        marginLeft: '-1rem',
+        marginRight: '-1rem',
+        padding: '1rem',
         background: 'var(--dx-hoverSurface)',
         border: '1px solid var(--dx-separator)',
         borderRadius: '4px',
-        padding: '0 4px',
       },
     }),
   ];
