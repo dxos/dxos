@@ -31,5 +31,10 @@ export const command = (options: CommandOptions): Extension => {
     EditorView.focusChangeEffect.of((_, focusing) => {
       return focusing ? closeEffect.of(null) : null;
     }),
+    EditorView.theme({
+      '.cm-tooltip': {
+        background: 'transparent',
+      },
+    }),
   ];
 };
