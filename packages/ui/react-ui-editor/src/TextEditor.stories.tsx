@@ -622,54 +622,6 @@ export const Search = {
 // Command
 //
 
-const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
-  const [text, setText] = useState('');
-  const handleInsert = () => {
-    // TODO(burdon): Use queue ref.
-    const link = `[${text}](dxn:queue:data:123)`;
-    console.log({ link });
-    onClose(text.length ? { insert: link } : undefined);
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    switch (event.key) {
-      case 'Enter': {
-        handleInsert();
-        break;
-      }
-      case 'Escape': {
-        onClose();
-        break;
-      }
-    }
-  };
-
-  return (
-    <div className='flex w-full justify-center'>
-      <div
-        className={mx(
-          'flex w-full p-2 gap-2 items-center border border-separator rounded-md',
-          editorContent,
-          baseSurface,
-        )}
-      >
-        <Input.Root>
-          <Input.TextInput
-            autoFocus={true}
-            placeholder='Ask a question...'
-            value={text}
-            onChange={({ target: { value } }) => setText(value)}
-            onKeyDown={handleKeyDown}
-          />
-        </Input.Root>
-        <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
-          <X className={getSize(5)} />
-        </Button>
-      </div>
-    </div>
-  );
-};
-
 export const Command = {
   render: () => (
     <DefaultStory
@@ -716,6 +668,54 @@ export const Command = {
       ]}
     />
   ),
+};
+
+const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
+  const [text, setText] = useState('');
+  const handleInsert = () => {
+    // TODO(burdon): Use queue ref.
+    const link = `[${text}](dxn:queue:data:123)`;
+    console.log({ link });
+    onClose(text.length ? { insert: link } : undefined);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    switch (event.key) {
+      case 'Enter': {
+        handleInsert();
+        break;
+      }
+      case 'Escape': {
+        onClose();
+        break;
+      }
+    }
+  };
+
+  return (
+    <div className='flex w-full justify-center'>
+      <div
+        className={mx(
+          'flex w-full p-2 gap-2 items-center border border-separator rounded-md',
+          editorContent,
+          baseSurface,
+        )}
+      >
+        <Input.Root>
+          <Input.TextInput
+            autoFocus={true}
+            placeholder='Ask a question...'
+            value={text}
+            onChange={({ target: { value } }) => setText(value)}
+            onKeyDown={handleKeyDown}
+          />
+        </Input.Root>
+        <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
+          <X className={getSize(5)} />
+        </Button>
+      </div>
+    </div>
+  );
 };
 
 //
