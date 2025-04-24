@@ -112,8 +112,8 @@ const EmptyMailboxContent = ({ mailbox }: { mailbox: MailboxType }) => {
   if (!gmailToken) {
     return (
       <div className='flex flex-col items-center gap-4 p-8'>
-        <p className='text-description'>{t('no connections label')}</p>
-        <Button onClick={handleGoogleOAuth}>{t('manage connections button label')}</Button>
+        <p className='text-description'>{t('no integrations label')}</p>
+        <Button onClick={handleGoogleOAuth}>{t('manage integrations button label')}</Button>
       </div>
     );
   }
