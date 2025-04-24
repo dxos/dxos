@@ -11,7 +11,7 @@ import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, useSpaceInvitations, type Space } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
-import { ControlSection } from '@dxos/react-ui-form';
+import { ControlSection, ControlFrame, ControlFrameItem } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import {
@@ -26,7 +26,6 @@ import {
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
-import { ControlFrame, ControlFrameItem } from './ControlSection';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType } from '../types';
 
