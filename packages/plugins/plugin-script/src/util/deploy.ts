@@ -39,9 +39,6 @@ export const getFunctionUrl = ({
   });
 };
 
-/**
- * Check if a script is deployed
- */
 export const isScriptDeployed = ({ script, fn }: { script: ScriptType; fn: any }): boolean => {
   const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   return Boolean(existingFunctionUrl) && !script.changed;
@@ -117,9 +114,6 @@ export const deployScript = async ({
   }
 };
 
-/**
- * Helper function to update function metadata
- */
 const updateFunctionMetadata = (script: ScriptType, storedFunction: any, meta: any, functionId: string) => {
   if (script.description !== undefined && script.description.trim() !== '') {
     storedFunction.description = script.description;
