@@ -75,6 +75,14 @@ export class AppManager {
     await this.page.keyboard.press(`${modifier}+KeyV`);
   }
 
+  isAuthenticated({ timeout = 5_000 } = {}) {
+    return this.page
+      .getByTestId('treeview.userAccount')
+      .waitFor({ timeout })
+      .then(() => true)
+      .catch(() => false);
+  }
+
   async openUserAccount() {
     const platform = os.platform();
     const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
@@ -109,17 +117,18 @@ export class AppManager {
     await this.page.getByTestId('join-new-identity.reset-identity-confirm').click();
   }
 
-  async openSpaceManager() {
+  async shareSpace() {
     const shortcut = isMac ? 'Meta+.' : 'Alt+.';
     await this.page.keyboard.press(shortcut);
   }
 
-  isAuthenticated({ timeout = 5_000 } = {}) {
-    return this.page
-      .getByTestId('treeview.userAccount')
-      .waitFor({ timeout })
-      .then(() => true)
-      .catch(() => false);
+  async createSpaceInvitation(): Promise<string> {
+    this._invitationCode = new Trigger<string>();
+    this._authCode = new Trigger<string>();
+    await this.page.getByTestId('membersContainer.createInvitation.more').click();
+    await this.page.getByTestId('membersContainer.inviteOne').click();
+    await this.page.getByTestId('membersContainer.createInvitation').click();
+    return await this._invitationCode.wait();
   }
 
   async confirmRecoveryCode() {
@@ -200,6 +209,10 @@ export class AppManager {
       await objectForm.getByLabel('Name').fill(name);
     }
     await objectForm.getByTestId('save-button').click();
+  }
+
+  async navigateToObject(nth = 0) {
+    await this.page.getByTestId('spacePlugin.object').nth(nth).click();
   }
 
   async renameObject(newName: string, nth = 0) {

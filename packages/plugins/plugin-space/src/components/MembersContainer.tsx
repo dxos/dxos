@@ -8,7 +8,7 @@ import { QR } from 'react-qr-rounded';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { useSpaceInvitations, type Space } from '@dxos/react-client/echo';
+import { fullyQualifiedId, useSpaceInvitations, type Space } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -27,6 +27,7 @@ import { hexToEmoji } from '@dxos/util';
 
 import { ControlFrame, ControlFrameItem, ControlSection } from './ControlSection';
 import { SPACE_PLUGIN } from '../meta';
+import { CollectionType } from '../types';
 
 // TODO(wittjosiah): Copied from Shell.
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';
@@ -60,18 +61,22 @@ export const MembersContainer = ({
     localStorage.setItem(activeActionKey, nextAction);
   };
 
+  // TODO(wittjosiah): Track which was the most recently viewed object.
+  const target = space.properties[CollectionType.typename]?.target?.objects[0].target;
+
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
       inviteOne: {
         label: t('invite one label'),
         description: t('invite one description'),
         icon: () => <Icon icon='ph--user-plus--regular' size={5} />,
-        testId: 'spaces-panel.invite-one',
+        testId: 'membersContainer.inviteOne',
         onClick: () => {
           const invitation = space.share?.({
             type: Invitation.Type.INTERACTIVE,
             authMethod: Invitation.AuthMethod.SHARED_SECRET,
             multiUse: false,
+            target: target && fullyQualifiedId(target),
           });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
             const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
@@ -84,12 +89,13 @@ export const MembersContainer = ({
         label: t('invite many label'),
         description: t('invite many description'),
         icon: () => <Icon icon='ph--users-three--regular' size={5} />,
-        testId: 'spaces-panel.invite-many',
+        testId: 'membersContainer.inviteMany',
         onClick: () => {
           const invitation = space.share?.({
             type: Invitation.Type.DELEGATED,
             authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
             multiUse: true,
+            target: target && fullyQualifiedId(target),
           });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
             const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
@@ -99,7 +105,7 @@ export const MembersContainer = ({
         },
       },
     }),
-    [t, space],
+    [t, space, target],
   );
 
   const [selectedInvitation, setSelectedInvitation] = useState<CancellableInvitationObservable | null>(null);
@@ -136,7 +142,7 @@ export const MembersContainer = ({
                   actions={inviteActions}
                   activeAction={activeAction}
                   onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                  data-testid='spaces-panel.create-invitation'
+                  data-testid='membersContainer.createInvitation'
                 />
               </>
             )}
