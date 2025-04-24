@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Client } from '@dxos/client';
 import {
   FunctionType,
   type ScriptType,
-  getInvocationUrl,
   getUserFunctionUrlInMetadata,
   incrementSemverPatch,
   setUserFunctionUrlInMetadata,
@@ -13,39 +13,27 @@ import {
 } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { log } from '@dxos/log';
-import { create, getMeta, getSpace, makeRef } from '@dxos/react-client/echo';
+import { create, getMeta, makeRef, type Space } from '@dxos/react-client/echo';
 
-/**
- * Get the function URL for a given script and client configuration
- */
-export const getFunctionUrl = ({
-  script,
-  fn,
-  edgeUrl,
-}: {
-  script: ScriptType;
-  fn: any;
-  edgeUrl: string;
-}): string | undefined => {
-  const space = getSpace(script);
-  const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
-
-  if (!existingFunctionUrl) {
-    return undefined;
-  }
-
-  return getInvocationUrl(existingFunctionUrl, edgeUrl, {
-    spaceId: space?.id,
-  });
-};
+import { updateFunctionMetadata } from './functions';
 
 export const isScriptDeployed = ({ script, fn }: { script: ScriptType; fn: any }): boolean => {
   const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   return Boolean(existingFunctionUrl) && !script.changed;
 };
 
+type DeployScriptProps = {
+  script: ScriptType;
+  client: Client;
+  space: Space;
+  fn: FunctionType;
+  existingFunctionUrl?: string;
+};
+
+type DeployScriptResult = { success: boolean; error?: Error; functionUrl?: string };
+
 /**
- * Core deployment function that handles bundling and uploading a script
+ * Deploy a script to a space, handling bundling and uploading to the FaaS infrastructure.
  */
 export const deployScript = async ({
   script,
@@ -53,24 +41,18 @@ export const deployScript = async ({
   space,
   fn,
   existingFunctionUrl,
-}: {
-  script: ScriptType;
-  client: any;
-  space: any;
-  fn: any;
-  existingFunctionUrl?: string;
-}): Promise<{ success: boolean; error?: Error; functionUrl?: string }> => {
-  if (!script.source || !space) {
-    return { success: false, error: new Error('Script source or space not available') };
+}: DeployScriptProps): Promise<DeployScriptResult> => {
+  const validationError = validateDeployInputs(script, space);
+  if (validationError) {
+    return { success: false, error: validationError };
   }
 
   try {
-    const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
+    const existingFunctionId = extractFunctionId(existingFunctionUrl);
 
-    const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
-    const buildResult = await bundler.bundle({ source: script.source.target!.content });
-    if (buildResult.error || !buildResult.bundle) {
-      throw buildResult.error || new Error('Bundle creation failed');
+    const { bundle, error } = await bundleScript(script.source!.target!.content);
+    if (error || !bundle) {
+      throw error || new Error('Bundle creation failed');
     }
 
     const { functionId, version, meta } = await uploadWorkerFunction({
@@ -78,60 +60,67 @@ export const deployScript = async ({
       spaceId: space.id,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
       functionId: existingFunctionId,
-      source: buildResult.bundle,
+      source: bundle,
     });
 
     if (functionId === undefined || version === undefined) {
       throw new Error(`Upload didn't return expected data: ${JSON.stringify({ functionId, version })}`);
     }
 
-    let storedFunction = fn;
-    if (storedFunction) {
-      storedFunction.version = version;
-    } else {
-      storedFunction = space.db.add(
-        create(FunctionType, {
-          name: functionId,
-          version,
-          source: makeRef(script),
-        }),
-      );
-    }
-
+    const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, functionId, version);
     script.changed = false;
     updateFunctionMetadata(script, storedFunction, meta, functionId);
 
-    const functionUrl = `/${space.id}/${functionId}`;
+    const functionUrl = makeFunctionUrl(space.id, functionId);
     setUserFunctionUrlInMetadata(getMeta(storedFunction), functionUrl);
 
-    return {
-      success: true,
-      functionUrl,
-    };
+    return { success: true, functionUrl };
   } catch (err: any) {
     log.catch(err);
     return { success: false, error: err };
   }
 };
 
-const updateFunctionMetadata = (script: ScriptType, storedFunction: any, meta: any, functionId: string) => {
-  if (script.description !== undefined && script.description.trim() !== '') {
-    storedFunction.description = script.description;
-  } else if (meta.description) {
-    storedFunction.description = meta.description;
-  } else {
-    log.verbose('no description in function metadata', { functionId });
+/**
+ * Validate inputs for script deployment.
+ */
+const validateDeployInputs = (script: ScriptType, space: Space): Error | null => {
+  if (!script.source || !space) {
+    return new Error('Script source or space not available');
+  }
+  return null;
+};
+
+const extractFunctionId = (functionUrl?: string): string | undefined => {
+  return functionUrl?.split('/').at(-1);
+};
+
+const bundleScript = async (source: string): Promise<{ bundle?: string; error?: Error }> => {
+  const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
+  const buildResult = await bundler.bundle({ source });
+
+  if (buildResult.error || !buildResult.bundle) {
+    return { error: buildResult.error || new Error('Bundle creation failed') };
   }
 
-  if (meta.inputSchema) {
-    storedFunction.inputSchema = meta.inputSchema;
-  } else {
-    log.verbose('no input schema in function metadata', { functionId });
-  }
+  return { bundle: buildResult.bundle };
+};
 
-  if (meta.outputSchema) {
-    storedFunction.outputSchema = meta.outputSchema;
+const createOrUpdateFunctionInSpace = (
+  space: Space,
+  fn: FunctionType | undefined,
+  script: ScriptType,
+  functionId: string,
+  version: string,
+): FunctionType => {
+  if (fn) {
+    fn.version = version;
+    return fn;
   } else {
-    log.verbose('no output schema in function metadata', { functionId });
+    return space.db.add(create(FunctionType, { name: functionId, version, source: makeRef(script) }));
   }
+};
+
+const makeFunctionUrl = (spaceId: string, functionId: string): string => {
+  return `/${spaceId}/${functionId}`;
 };
