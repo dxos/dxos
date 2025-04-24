@@ -13,7 +13,6 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export * from './components';
 export * from './defaults';
 export * from './extensions';
-export * from './fragments';
 export * from './hooks';
 export * from './types';
 export * from './util';
