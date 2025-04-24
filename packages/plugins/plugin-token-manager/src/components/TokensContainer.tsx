@@ -40,8 +40,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
 
   return (
     <>
-      <div className='flex mbe-4'>
-        <div className='grow' />
+      <div role='none' className='container-max-width pli-4 grid'>
         {!adding && <NewTokenSelector space={space} onCustomToken={handleNew} />}
       </div>
       {adding ? (

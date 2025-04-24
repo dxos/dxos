@@ -46,7 +46,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           <>
             {items.map((item) => (
               <Accordion.Item key={item.id} item={item} classNames='container-max-width'>
-                <Accordion.ItemHeader classNames='pie-4' asChild>
+                <Accordion.ItemHeader classNames='pie-6' asChild>
                   <ControlSectionHeading title={toLocalizedString(item.label, t)} />
                 </Accordion.ItemHeader>
                 <Accordion.ItemBody>
