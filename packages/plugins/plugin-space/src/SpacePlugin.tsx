@@ -156,7 +156,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
-      activate: (context) => IntentResolver({ createInvitationUrl, context, observability }),
+      activate: (context) => IntentResolver({ context, observability }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,

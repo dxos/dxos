@@ -42,12 +42,11 @@ import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
 const SPACE_MAX_OBJECTS = 500;
 
 type IntentResolverOptions = {
-  createInvitationUrl: (invitationCode: string) => string;
   context: PluginsContext;
   observability?: boolean;
 };
 
-export default ({ createInvitationUrl, context, observability }: IntentResolverOptions) => {
+export default ({ context, observability }: IntentResolverOptions) => {
   const resolve = (typename: string) =>
     context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
