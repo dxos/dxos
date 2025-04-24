@@ -8,3 +8,4 @@ export * from './Settings';
 export * from './TestPanel';
 
 export const ScriptContainer = lazy(() => import('./ScriptContainer'));
+export const DeploymentDialog = lazy(() => import('./DeploymentDialog'));

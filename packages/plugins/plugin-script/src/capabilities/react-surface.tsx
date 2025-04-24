@@ -11,6 +11,7 @@ import { ScriptType } from '@dxos/functions/types';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { type AccessTokenType } from '@dxos/schema';
 
 import { ScriptCapabilities } from './capabilities';
 import {
@@ -19,9 +20,10 @@ import {
   ScriptObjectSettings,
   TestPanel,
   ScriptProperties,
+  DeploymentDialog,
 } from '../components';
 import { useDeployState, useToolbarState } from '../hooks';
-import { meta } from '../meta';
+import { DEPLOYMENT_DIALOG, meta } from '../meta';
 import { type ScriptSettingsProps } from '../types';
 
 export default () =>
@@ -85,5 +87,13 @@ export default () =>
           </StackItem.Content>
         );
       },
+    }),
+    createSurface({
+      id: DEPLOYMENT_DIALOG,
+      role: 'dialog',
+      // TODO(Zaymon): Tighten up type checking.
+      filter: (data): data is { props: { accessToken: AccessTokenType; scripts: any } } =>
+        data.component === DEPLOYMENT_DIALOG,
+      component: ({ data }) => <DeploymentDialog {...data.props} />,
     }),
   ]);

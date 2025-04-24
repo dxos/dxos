@@ -4,17 +4,18 @@
 
 import { Octokit } from '@octokit/core';
 
-import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
+import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions/types';
 import { create, makeRef } from '@dxos/live-object';
+import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
 import { TextType } from '@dxos/schema';
 
+import { DEPLOYMENT_DIALOG } from '../meta';
 import { templates } from '../templates';
 import { ScriptAction } from '../types';
 
 export default () =>
-  contributes(
-    Capabilities.IntentResolver,
+  contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ScriptAction.Create,
       resolve: async ({ name, gistUrl }) => {
@@ -43,4 +44,35 @@ export default () =>
         };
       },
     }),
-  );
+    createResolver({
+      intent: TokenManagerAction.AccessTokenCreated,
+      resolve: async (accessToken) => {
+        const scripts = defaultScripts[accessToken.source] ?? [];
+
+        if (scripts.length > 0) {
+          return {
+            intents: [
+              createIntent(LayoutAction.UpdateDialog, {
+                part: 'dialog',
+                subject: DEPLOYMENT_DIALOG,
+                options: { blockAlign: 'start', state: true, props: { accessToken, scripts } },
+              }),
+            ],
+          };
+        }
+
+        return { data: undefined };
+      },
+    }),
+  ]);
+
+// TODO(ZaymonFC): Move to META? Defs?
+// TODO(ZaymonFC): Configure by scopes?
+const defaultScripts: Record<string, { label: string; templateId: string }[]> = {
+  'gmail.com': [
+    {
+      label: 'Gmail Sync',
+      templateId: 'gmail',
+    },
+  ],
+};
