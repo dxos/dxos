@@ -8,7 +8,7 @@ import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Space } from '@dxos/react-client/echo';
-import { Input, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { Form, type InputComponent, ControlItem, ControlItemInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -87,15 +87,13 @@ export const SpacePropertiesForm = ({ space }: SpacePropertiesFormProps) => {
         const handleEmojiReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
           <ControlItem title={label} description={t('icon description')}>
-            {/* TODO(wittjosiah): Why is Toolbar.Root required here? */}
-            <Toolbar.Root>
-              <IconPicker
-                value={getValue()}
-                onChange={handleChange}
-                onReset={handleEmojiReset}
-                rootVariant='toolbar-button'
-              />
-            </Toolbar.Root>
+            <IconPicker
+              value={getValue()}
+              onChange={handleChange}
+              onReset={handleEmojiReset}
+              classNames='justify-self-end'
+              iconSize={7}
+            />
           </ControlItem>
         );
       },
@@ -108,7 +106,7 @@ export const SpacePropertiesForm = ({ space }: SpacePropertiesFormProps) => {
               value={getValue()}
               onChange={handleChange}
               onReset={handleHueReset}
-              classNames='[--hue-preview-size:1.5rem]'
+              classNames='[--hue-preview-size:1.5rem] justify-self-end'
             />
           </ControlItem>
         );
@@ -117,7 +115,7 @@ export const SpacePropertiesForm = ({ space }: SpacePropertiesFormProps) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
           <ControlItemInput title={label} description={t('edge replication description')}>
-            <Input.Switch checked={getValue()} onCheckedChange={handleChange} />
+            <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
           </ControlItemInput>
         );
       },

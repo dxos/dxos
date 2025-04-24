@@ -98,6 +98,7 @@ export const ProfileContainer = () => {
               emoji={getValue()}
               onChangeEmoji={handleChange}
               onClickClear={handleEmojiReset}
+              classNames='justify-self-end'
             />
           </ControlItem>
         );
@@ -114,7 +115,7 @@ export const ProfileContainer = () => {
               value={getValue()}
               onChange={handleChange}
               onReset={handleHueReset}
-              classNames='[--hue-preview-size:1.5rem]'
+              classNames='[--hue-preview-size:1.5rem] justify-self-end'
             />
           </ControlItem>
         );
