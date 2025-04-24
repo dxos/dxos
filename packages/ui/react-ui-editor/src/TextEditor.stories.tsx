@@ -625,7 +625,8 @@ export const Search = {
 const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
   const [text, setText] = useState('');
   const handleInsert = () => {
-    const link = `[${text}](/ref)`;
+    // TODO(burdon): Use queue ref.
+    const link = `[${text}](dxn:queue:data:123)`;
     console.log({ link });
     onClose(text.length ? { insert: link } : undefined);
   };
@@ -666,7 +667,7 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
 export const Command = {
   render: () => (
     <DefaultStory
-      text={str('# Command', '', '', '[Test](dxn:ref:1234)', '', '', '')}
+      text={str('# Command', '', '', '[Test](dxn:queue:data:123)', '', '', '')}
       extensions={[
         command({
           onHint: () => 'Press / for commands.',
