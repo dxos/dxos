@@ -10,7 +10,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { ArrowSquareOut, X } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useState, type FC, type KeyboardEvent } from 'react';
@@ -23,8 +23,8 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, Input, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
+import { baseSurface, defaultTx, getSize, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace } from './defaults';
@@ -216,16 +216,6 @@ const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', '
 const hover =
   'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const renderLinkTooltip = (el: Element, url: string) => {
-  const web = new URL(url);
-  createRoot(el).render(
-    <a href={url} target='_blank' rel='noreferrer' className={hover}>
-      {web.origin}
-      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
-    </a>,
-  );
-};
-
 const Key: FC<{ char: string }> = ({ char }) => (
   <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
     {char}
@@ -245,11 +235,35 @@ const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   );
 };
 
+const renderLinkTooltip = (el: Element, url: string) => {
+  const web = new URL(url);
+  createRoot(el).render(
+    <ThemeProvider tx={defaultTx}>
+      <a href={url} target='_blank' rel='noreferrer' className={mx(hover, 'flex items-center gap-2')}>
+        {web.origin}
+        <Icon icon='ph--arrow-square-out--regular' size={4} />
+      </a>
+    </ThemeProvider>,
+  );
+};
+
 const renderLinkButton = (el: Element, url: string) => {
   createRoot(el).render(
-    <a href={url} target='_blank' rel='noreferrer' className={hover}>
-      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
-    </a>,
+    <ThemeProvider tx={defaultTx}>
+      <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
+        <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block mis-1 mb-[3px]' />
+      </a>
+    </ThemeProvider>,
+  );
+};
+
+const renderIcon = (el: Element, icon: string) => {
+  createRoot(el).render(
+    <ThemeProvider tx={defaultTx}>
+      <Button classNames='p-1 aspect-square'>
+        <Icon icon={icon} size={6} />
+      </Button>
+    </ThemeProvider>,
   );
 };
 
@@ -620,7 +634,10 @@ export const Command = {
       extensions={[
         command({
           onHint: () => 'Press / for commands.',
-          onRender: (el, onClose) => {
+          onRenderMenu: (el) => {
+            renderIcon(el, 'ph--sparkle--regular');
+          },
+          onRenderDialog: (el, onClose) => {
             renderRoot(el, <CommandDialog onClose={onClose} />);
           },
         }),

@@ -50,7 +50,7 @@ export const commandState = StateField.define<CommandState>({
                 }
 
                 // Render react component.
-                options.onRender(dom, (action) => {
+                options.onRenderDialog(dom, (action) => {
                   view.dispatch({ effects: closeEffect.of(null) });
                   if (action?.insert?.length) {
                     view.dispatch({
@@ -88,6 +88,7 @@ export const openCommand: Command = (view: EditorView) => {
       return true;
     }
   }
+
   return false;
 };
 
@@ -96,6 +97,7 @@ export const closeCommand: Command = (view: EditorView) => {
     view.dispatch({ effects: closeEffect.of(null) });
     return true;
   }
+
   return false;
 };
 
