@@ -75,7 +75,8 @@
     "localforage": "^1.10.0",
     "lodash.get": "^4.4.2",
     "react-drag-drop-files": "^2.3.8",
-    "react-is": "~18.2.0"
+    "react-is": "~18.2.0",
+    "react-qr-rounded": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",

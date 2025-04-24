@@ -45,6 +45,7 @@ import {
   PopoverAddSpace,
   SpaceSettingsContainer,
   SpacePropertiesForm,
+  MembersContainer,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, type SpaceSettingsProps } from '../types';
@@ -82,7 +83,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       position: 'hoist',
       filter: (data): data is { subject: Space; variant: 'members' } =>
         isSpace(data.subject) && data.variant === 'members',
-      component: ({ data }) => <>members</>,
+      component: ({ data }) => <MembersContainer space={data.subject} createInvitationUrl={createInvitationUrl} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/settings`,

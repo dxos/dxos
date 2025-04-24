@@ -8779,6 +8779,9 @@ importers:
       react-is:
         specifier: ~18.2.0
         version: 18.2.0
+      react-qr-rounded:
+        specifier: ^1.0.0
+        version: 1.0.0(react@18.2.0)
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13

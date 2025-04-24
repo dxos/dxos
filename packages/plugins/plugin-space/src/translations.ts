@@ -119,6 +119,14 @@ export default [
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',
 
+        'members panel label': 'Members',
+        'members verbose label': 'Manage space members',
+        'members description': 'You can view the current status of space members here as well as invite new members.',
+        'members label': 'Members',
+        'invitations label': 'Invitations',
+        'space invitation description': 'Manage invitations to the space.',
+        'qr code description': 'Share this QR code, or copy the URL and share it with the person you want to invite.',
+
         'settings panel label': 'Space Settings',
         'open space settings label': 'Space Settings',
         'space settings properties label': 'General',
