@@ -4,9 +4,8 @@
 
 import { type BlockInfo, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { log } from '@dxos/log';
-
 import { type CommandOptions } from './command';
+import { closeEffect, openCommand, openEffect } from './state';
 
 // TODO(burdon): Trigger completion on click.
 // TODO(burdon): Hide when dialog is open.
@@ -28,12 +27,13 @@ export const floatingMenu = (options: CommandOptions) =>
 
         // Render menu externally.
         this.button = document.createElement('div');
-        this.button.onclick = () => log.info('Floating button clicked!');
         this.button.style.position = 'absolute';
         this.button.style.zIndex = '10';
         this.button.style.display = 'none';
 
-        options.onRenderMenu(this.button);
+        options.onRenderMenu(this.button, () => {
+          openCommand(view);
+        });
         container.appendChild(this.button);
 
         // Listen for scroll events.
@@ -42,7 +42,12 @@ export const floatingMenu = (options: CommandOptions) =>
       }
 
       update(update: ViewUpdate) {
-        if (update.selectionSet || update.viewportChanged || update.docChanged || update.geometryChanged) {
+        // TODO(burdon): Timer to fade in/out.
+        if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(openEffect)))) {
+          this.button.style.display = 'none';
+        } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
+          this.button.style.display = 'block';
+        } else if (update.selectionSet || update.viewportChanged || update.docChanged || update.geometryChanged) {
           this.scheduleUpdate();
         }
       }

@@ -14,6 +14,7 @@ import { closeEffect, commandConfig, commandKeyBindings, commandState } from './
 // https://github.com/saminzadeh/codemirror-extension-inline-suggestion
 // https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/ui/components/text_editor/config.ts#L370
 
+// TODO(burdon): Discriminated union.
 export type CommandAction = {
   insert?: string;
 };
@@ -21,7 +22,7 @@ export type CommandAction = {
 export type CommandOptions = {
   onHint: () => string | undefined;
   onRenderDialog: (el: HTMLElement, cb: (action?: CommandAction) => void) => void;
-  onRenderMenu: (el: HTMLElement) => void;
+  onRenderMenu: (el: HTMLElement, cb: () => void) => void;
 };
 
 export const command = (options: CommandOptions): Extension => {

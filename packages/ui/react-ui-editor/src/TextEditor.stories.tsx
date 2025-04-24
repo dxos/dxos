@@ -257,16 +257,6 @@ const renderLinkButton = (el: Element, url: string) => {
   );
 };
 
-const renderIcon = (el: Element, icon: string) => {
-  createRoot(el).render(
-    <ThemeProvider tx={defaultTx}>
-      <Button classNames='p-1 aspect-square'>
-        <Icon icon={icon} size={6} />
-      </Button>
-    </ThemeProvider>,
-  );
-};
-
 //
 // Story
 //
@@ -634,8 +624,15 @@ export const Command = {
       extensions={[
         command({
           onHint: () => 'Press / for commands.',
-          onRenderMenu: (el) => {
-            renderIcon(el, 'ph--sparkle--regular');
+          onRenderMenu: (el, onClick) => {
+            renderRoot(
+              el,
+              <ThemeProvider tx={defaultTx}>
+                <Button classNames='p-1 aspect-square' onClick={onClick}>
+                  <Icon icon={'ph--sparkle--regular'} size={5} />
+                </Button>
+              </ThemeProvider>,
+            );
           },
           onRenderDialog: (el, onClose) => {
             renderRoot(el, <CommandDialog onClose={onClose} />);

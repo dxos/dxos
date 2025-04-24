@@ -4,10 +4,10 @@
 
 import { StateEffect, StateField } from '@codemirror/state';
 import {
+  showTooltip,
   type Command,
   type EditorView,
   type KeyBinding,
-  showTooltip,
   type Tooltip,
   type TooltipView,
 } from '@codemirror/view';
