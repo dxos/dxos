@@ -24,6 +24,7 @@ class CommandHint extends WidgetType {
     } else {
       wrap.setAttribute('aria-hidden', 'true');
     }
+
     return wrap;
   }
 
@@ -32,12 +33,14 @@ class CommandHint extends WidgetType {
     if (!rects.length) {
       return null;
     }
+
     const style = window.getComputedStyle(dom.parentNode as HTMLElement);
     const rect = flattenRect(rects[0], style.direction !== 'rtl');
     const lineHeight = parseInt(style.lineHeight);
     if (rect.bottom - rect.top > lineHeight * 1.5) {
       return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.top + lineHeight };
     }
+
     return rect;
   }
 
