@@ -5,7 +5,7 @@
 import { SchemaAST as AST, Schema as S } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Format, FieldLookupAnnotationId, GeneratorAnnotationId, LabelAnnotationId, ObjectId } from '@dxos/echo-schema';
+import { Format, FieldLookupAnnotationId, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
@@ -15,7 +15,7 @@ export namespace Testing {
   //
 
   export const OrgSchema = S.Struct({
-    id: ObjectId,
+    id: Type.ObjectId,
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'company.name',
     }),
@@ -61,7 +61,7 @@ export namespace Testing {
   });
 
   export const ContactSchema = S.Struct({
-    id: ObjectId,
+    id: Type.ObjectId,
     name: S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName' }),
     email: S.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
     employer: S.optional(
@@ -93,7 +93,7 @@ export namespace Testing {
   //
 
   export const ProjectSchema = S.Struct({
-    id: ObjectId,
+    id: Type.ObjectId,
     name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
     description: S.optional(S.String),
   }).annotations({
