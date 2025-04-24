@@ -32,7 +32,7 @@ import { useListContext } from './ListRoot';
 
 export type ListItemRecord = {};
 
-export type ItemState =
+export type ItemDragState =
   | {
       type: 'idle';
     }
@@ -48,9 +48,9 @@ export type ItemState =
       closestEdge: Edge | null;
     };
 
-export const idle: ItemState = { type: 'idle' };
+export const idle: ItemDragState = { type: 'idle' };
 
-const stateStyles: { [Key in ItemState['type']]?: HTMLAttributes<HTMLDivElement>['className'] } = {
+const stateStyles: { [Key in ItemDragState['type']]?: HTMLAttributes<HTMLDivElement>['className'] } = {
   'is-dragging': 'opacity-50',
 };
 
@@ -85,7 +85,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
   const { isItem, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
   const ref = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLElement | null>(null);
-  const [state, setState] = useState<ItemState>(idle);
+  const [state, setState] = useState<ItemDragState>(idle);
   useEffect(() => {
     const element = ref.current;
     invariant(element);
