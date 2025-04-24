@@ -29,7 +29,7 @@ export const DeploymentDialog = ({ accessToken, scripts }: DeploymentDialogProps
       </div>
       <div role='none' className='plb-4'>
         {/* TODO: Implement deployment logic and UI. */}
-        <p>{t('deployment dialog scripts found message')}</p>
+        <p>{t('deployment dialog scripts found message', { count: scripts.length })}</p>
         <ul className='pbs-2'>
           {scripts.map((script) => (
             <li key={script.templateId}>{script.label}</li>
@@ -37,7 +37,9 @@ export const DeploymentDialog = ({ accessToken, scripts }: DeploymentDialogProps
         </ul>
       </div>
       <div role='none' className='flex flex-row-reverse gap-1'>
-        <Button variant='primary'>{t('deployment dialog deploy functions button label')}</Button>
+        <Button variant='primary'>
+          {t('deployment dialog deploy functions button label', { count: scripts.length })}
+        </Button>
         <Dialog.Close asChild>
           <Button>{t('deployment dialog skip button label')}</Button>
         </Dialog.Close>

@@ -48,8 +48,12 @@ export default [
         'script test label': 'Test',
         'script logs label': 'Logs',
         'deployment dialog title': 'Default Scripts',
-        'deployment dialog scripts found message': 'We found the following default scripts for your new integration:',
-        'deployment dialog deploy functions button label': 'Create and deploy scripts',
+        'deployment dialog scripts found message_one':
+          'We found the following script template for your new integration:',
+        'deployment dialog scripts found message_other':
+          'We found the following script templates for your new integration:',
+        'deployment dialog deploy functions button label_one': 'Create and deploy script',
+        'deployment dialog deploy functions button label_other': 'Create and deploy scripts',
         'deployment dialog skip button label': 'Skip',
       },
     },
