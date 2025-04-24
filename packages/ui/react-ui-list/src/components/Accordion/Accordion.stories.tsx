@@ -29,7 +29,7 @@ const DefaultStory = () => {
         <div className='flex flex-col w-full border-y border-divider divide-y divide-divider'>
           {items.map((item) => (
             <Accordion.Item key={item.id} item={item} classNames='border-x border-divider'>
-              <Accordion.ItemHeader title={item.name} />
+              <Accordion.ItemHeader>{item.name}</Accordion.ItemHeader>
               <Accordion.ItemBody>
                 <p>{item.text}</p>
               </Accordion.ItemBody>

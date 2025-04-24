@@ -135,7 +135,7 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <StackItem.Content classNames='plb-2 block overflow-y-auto'>
+    <StackItem.Content classNames='p-2 block overflow-y-auto'>
       <Clipboard.Provider>
         <ControlSection title={t('profile label')} description={t('profile description')}>
           <Form

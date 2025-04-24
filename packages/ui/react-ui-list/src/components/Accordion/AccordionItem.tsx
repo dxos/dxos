@@ -35,14 +35,13 @@ export const AccordionItem = <T extends ListItemRecord>({ children, classNames, 
   );
 };
 
-export type AccordionItemHeaderProps = ThemedClassName<{ title: string; icon?: string }>;
+export type AccordionItemHeaderProps = ThemedClassName<AccordionPrimitive.AccordionHeaderProps>;
 
-export const AccordionItemHeader = ({ classNames, title, icon }: AccordionItemHeaderProps) => {
+export const AccordionItemHeader = ({ classNames, children, ...props }: AccordionItemHeaderProps) => {
   return (
-    <AccordionPrimitive.Header className={mx(classNames)}>
+    <AccordionPrimitive.Header {...props} className={mx(classNames)}>
       <AccordionPrimitive.Trigger className='group flex items-center p-2 dx-focus-ring-inset is-full text-start'>
-        {icon && <Icon icon={icon} />}
-        <span className='grow truncate'>{title}</span>
+        {children}
         <Icon
           icon='ph--caret-right--regular'
           size={4}
