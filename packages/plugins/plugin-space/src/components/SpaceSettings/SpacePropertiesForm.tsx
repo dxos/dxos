@@ -9,12 +9,11 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Space } from '@dxos/react-client/echo';
 import { Input, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Form, type InputComponent } from '@dxos/react-ui-form';
+import { Form, type InputComponent, ControlItem, ControlItemInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { SPACE_PLUGIN } from '../../meta';
 import { SpaceForm } from '../../types';
-import { ControlItem, ControlItemInput } from '../ControlSection';
 
 export type SpacePropertiesFormProps = {
   space: Space;

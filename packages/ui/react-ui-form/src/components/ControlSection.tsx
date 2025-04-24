@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { type Label, toLocalizedString, useTranslation, Input } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN } from '../meta';
+import { translationKey } from '../translations';
 
 // TODO(wittjosiah): Copied from @dxos/plugin-client. Reconcile/factor out.
 
@@ -16,7 +16,7 @@ export type ControlSectionProps = PropsWithChildren<{
 }>;
 
 export const ControlSection = ({ title, description, children }: ControlSectionProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(translationKey);
   return (
     <>
       <h2 className='pli-4 container-max-width text-xl mbs-6 mbe-4'>{toLocalizedString(title, t)}</h2>
@@ -57,7 +57,7 @@ const controlItemTitleClasses = 'text-lg mbe-2';
 const controlItemDescriptionClasses = 'text-base mlb-2 md:mbe-0 text-description';
 
 export const ControlItem = ({ title, description, children }: ControlItemProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(translationKey);
 
   return (
     <div className={controlItemClasses}>
@@ -71,7 +71,7 @@ export const ControlItem = ({ title, description, children }: ControlItemProps) 
 };
 
 export const ControlItemInput = ({ title, description, children }: ControlItemProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(translationKey);
 
   return (
     <Input.Root>
@@ -93,7 +93,7 @@ export const ControlItemInput = ({ title, description, children }: ControlItemPr
 };
 
 export const ControlFrameItem = ({ title, description, children }: ControlItemProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(translationKey);
 
   return (
     <div role='group' className='min-is-0'>
