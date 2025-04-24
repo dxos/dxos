@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { useCallback, type PropsWithChildren } from 'react';
+import React, { useCallback, useEffect, useRef, useState, type PropsWithChildren } from 'react';
 
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -62,15 +62,21 @@ export const AccordionItemHeader = ({ classNames, title, icon }: AccordionItemHe
 
 export type AccordionItemBodyProps = ThemedClassName<PropsWithChildren>;
 
-export const AccordionItemBody = ({ children, classNames, ...props }: AccordionItemBodyProps) => {
+export const AccordionItemBody = ({ children, classNames }: AccordionItemBodyProps) => {
   const { open } = useAccordionItemContext(ACCORDION_ITEM_HEADER_NAME);
-  if (!open) {
-    return null;
-  }
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    if (ref.current) {
+      setHeight(ref.current.scrollHeight);
+    }
+  }, [children]);
 
   return (
-    <div className={mx('flex flex-col p-2', classNames)} {...props}>
-      {children}
+    <div className='transition-all duration-200 overflow-hidden' style={{ height: open ? height : 0 }}>
+      <div ref={ref} className={mx('flex flex-col p-2', classNames)}>
+        {children}
+      </div>
     </div>
   );
 };

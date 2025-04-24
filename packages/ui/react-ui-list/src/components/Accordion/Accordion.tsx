@@ -7,6 +7,7 @@ import { AccordionRoot } from './AccordionRoot';
 
 // TODO(burdon): Next iteration should be based on Radix UI Accordion:
 //  https://www.radix-ui.com/primitives/docs/components/accordion
+// TODO(burdon): Support key navigation.
 
 export const Accordion = {
   Root: AccordionRoot,

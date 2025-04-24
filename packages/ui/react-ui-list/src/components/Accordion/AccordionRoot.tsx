@@ -47,9 +47,7 @@ export const AccordionRoot = <T extends ListItemRecord>({
 
   return (
     <AccordionProvider {...{ openItems, setItemOpen: handleSetItemOpen, getId }}>
-      <div className={mx('flex flex-col w-full overflow-x-hidden overflow-y-auto scrollbar-thin', classNames)}>
-        {children?.({ items: items ?? [] })}
-      </div>
+      <div className={mx('overflow-y-auto scrollbar-thin', classNames)}>{children?.({ items: items ?? [] })}</div>
     </AccordionProvider>
   );
 };
