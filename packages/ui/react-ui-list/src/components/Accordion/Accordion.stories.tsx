@@ -24,18 +24,18 @@ const items: TestItem[] = Array.from({ length: 10 }, (_, i) => ({
 
 const DefaultStory = () => {
   return (
-    <Accordion.Root<TestItem> items={items}>
+    <Accordion.Root<TestItem> items={items} classNames='w-[40rem]'>
       {({ items }) => (
-        <>
+        <div className='flex flex-col w-full border-y border-divider divide-y divide-divider'>
           {items.map((item) => (
-            <Accordion.Item key={item.id}>
+            <Accordion.Item key={item.id} item={item} classNames='border-x border-divider'>
               <Accordion.ItemHeader title={item.name} />
               <Accordion.ItemBody>
                 <p>{item.text}</p>
               </Accordion.ItemBody>
             </Accordion.Item>
           ))}
-        </>
+        </div>
       )}
     </Accordion.Root>
   );
@@ -44,7 +44,7 @@ const DefaultStory = () => {
 const meta: Meta<typeof Accordion> = {
   title: 'ui/react-ui-list/Accordion',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex justify-center' })],
 };
 
 export default meta;
