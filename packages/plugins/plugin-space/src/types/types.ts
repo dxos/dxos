@@ -3,7 +3,7 @@
 //
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { AST, S, type Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { S, type Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -88,9 +88,11 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
 }
 
 export const SpaceForm = S.Struct({
-  name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
+  name: S.optional(S.String.annotations({ title: 'Name' })),
+  icon: S.optional(S.String.annotations({ title: 'Icon' })),
+  hue: S.optional(S.String.annotations({ title: 'Color' })),
   // TODO(wittjosiah): Make optional with default value.
-  edgeReplication: S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enable EDGE Replication' }),
+  edgeReplication: S.Boolean.annotations({ title: 'Enable EDGE Replication' }),
 });
 
 export type ObjectForm<T extends BaseObject = BaseObject> = {

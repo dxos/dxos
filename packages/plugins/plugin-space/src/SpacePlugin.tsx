@@ -115,6 +115,15 @@ export const SpacePlugin = ({
         ),
     }),
     defineModule({
+      id: `${meta.id}/module/space-settings`,
+      activatesOn: SpaceEvents.SetupSettingsPanel,
+      activate: () =>
+        contributes(SpaceCapabilities.SettingsSection, {
+          id: 'properties',
+          label: ['space settings properties label', { ns: SPACE_PLUGIN }],
+        }),
+    }),
+    defineModule({
       id: `${meta.id}/module/complementary-panel`,
       activatesOn: DeckEvents.SetupComplementaryPanels,
       activate: () =>

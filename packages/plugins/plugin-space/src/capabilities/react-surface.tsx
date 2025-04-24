@@ -37,16 +37,14 @@ import {
   PopoverRenameObject,
   PopoverRenameSpace,
   SmallPresenceLive,
-  SPACE_SETTINGS_DIALOG,
   SpacePluginSettings,
   SpacePresence,
-  SpaceSettingsDialog,
-  SpaceSettingsPanel,
   SyncStatus,
   type CreateObjectDialogProps,
-  type SpaceSettingsDialogProps,
   POPOVER_ADD_SPACE,
   PopoverAddSpace,
+  SpaceSettingsContainer,
+  SpacePropertiesForm,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, type SpaceSettingsProps } from '../types';
@@ -92,8 +90,15 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       position: 'hoist',
       filter: (data): data is { subject: Space; variant: 'settings' } =>
         isSpace(data.subject) && data.variant === 'settings',
-      component: ({ data }) => <SpaceSettingsPanel space={data.subject} />,
+      component: ({ data }) => <SpaceSettingsContainer space={data.subject} />,
     }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/space-settings--properties`,
+      role: 'space-settings--properties',
+      filter: (data): data is { subject: Space } => isSpace(data.subject),
+      component: ({ data }) => <SpacePropertiesForm space={data.subject} />,
+    }),
+    // TODO(wittjosiah): Move to companion.
     createSurface({
       id: `${SPACE_PLUGIN}/object-settings-base-panel`,
       role: 'complementary--settings',
@@ -101,18 +106,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
       component: ({ data }) => <BaseObjectSettings object={data.subject} />,
     }),
+    // TODO(wittjosiah): Move to companion.
     createSurface({
       id: `${SPACE_PLUGIN}/object-settings-advanced-panel`,
       role: 'complementary--settings',
       position: 'fallback',
       filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
       component: ({ data }) => <AdvancedObjectSettings object={data.subject} />,
-    }),
-    createSurface({
-      id: SPACE_SETTINGS_DIALOG,
-      role: 'dialog',
-      filter: (data): data is { props: SpaceSettingsDialogProps } => data.component === SPACE_SETTINGS_DIALOG,
-      component: ({ data }) => <SpaceSettingsDialog {...data.props} createInvitationUrl={createInvitationUrl} />,
     }),
     createSurface({
       id: JOIN_DIALOG,
@@ -162,14 +162,15 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return <SmallPresenceLive id={data.id} open={data.open} viewers={state.viewersByObject[data.id]} />;
       },
     }),
+    // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
     createSurface({
-      // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       id: `${SPACE_PLUGIN}/navtree-presence-fallback`,
       role: 'navtree-item-end',
       position: 'fallback',
       filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
       component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
     }),
+    // TODO(wittjosiah): Broken?
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-sync-status`,
       role: 'navtree-item-end',
