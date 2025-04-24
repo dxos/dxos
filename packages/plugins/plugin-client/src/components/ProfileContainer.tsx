@@ -9,12 +9,11 @@ import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
-import { Form, type InputComponent } from '@dxos/react-ui-form';
+import { Form, type InputComponent, ControlItem, ControlItemInput, ControlSection } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 import { hexToHue, hexToEmoji } from '@dxos/util';
 
-import { ControlItem, ControlItemInput, ControlSection } from './ControlSection';
 import { CLIENT_PLUGIN } from '../meta';
 
 // TODO(thure): Factor out?
