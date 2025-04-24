@@ -41,3 +41,15 @@ export const editorMonospace = EditorView.theme({
 
 export const editorWithToolbarLayout =
   'grid grid-cols-1 grid-rows-[min-content_1fr] data-[toolbar=disabled]:grid-rows-[1fr] justify-center content-start overflow-hidden';
+
+export const stackItemContentEditorClassNames = (role?: string) =>
+  mx(
+    'attention-surface dx-focus-ring-inset data-[toolbar=disabled]:pbs-2',
+    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24' : 'min-bs-0',
+  );
+
+export const stackItemContentToolbarClassNames = (role?: string) =>
+  mx(
+    'attention-surface is-full border-be !border-separator',
+    role === 'section' && 'sticky block-start-0 z-[1] -mbe-px min-is-0',
+  );

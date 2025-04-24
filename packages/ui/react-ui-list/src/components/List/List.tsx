@@ -43,4 +43,4 @@ export const List = {
 
 type ListItem = ListItemRecord;
 
-export type { ListRootProps, ListItemProps, IconButtonProps, ListItem };
+export type { ListRootProps, ListItemProps, IconButtonProps, ListItem, ListItemRecord };
