@@ -60,7 +60,8 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${TRANSCRIPTION_PLUGIN}/meeting-transcript`,
-      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data) && node.type !== PLANK_COMPANION_TYPE,
+      filter: (node): node is Node<MeetingType> =>
+        isInstanceOf(MeetingType, node.data) && node.type !== PLANK_COMPANION_TYPE,
       actions: ({ node }) => {
         const meeting = node.data;
         const state = context.requestCapability(TranscriptionCapabilities.MeetingTranscriptionState);
