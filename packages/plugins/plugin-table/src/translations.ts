@@ -33,7 +33,7 @@ export default [
         'column deleted label': 'Column deleted',
         'new column button label': 'Create column',
         'row details no selection label': 'No objects selected',
-        'objects label': 'Objects',
+        'companion selected objects label': 'Selected',
       },
     },
   },

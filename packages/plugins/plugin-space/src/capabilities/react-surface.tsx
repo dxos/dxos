@@ -20,8 +20,6 @@ import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { SpaceCapabilities } from './capabilities';
 import {
-  AdvancedObjectSettings,
-  BaseObjectSettings,
   CollectionMain,
   CollectionSection,
   CREATE_OBJECT_DIALOG,
@@ -46,6 +44,7 @@ import {
   SpaceSettingsContainer,
   SpacePropertiesForm,
   MembersContainer,
+  ObjectSettingsContainer,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, type SpaceSettingsProps } from '../types';
@@ -94,26 +93,17 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <SpaceSettingsContainer space={data.subject} />,
     }),
     createSurface({
+      id: `${SPACE_PLUGIN}/companion/object-settings`,
+      role: 'article',
+      filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
+        isEchoObject(data.companionTo) && data.subject === 'settings',
+      component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
+    }),
+    createSurface({
       id: `${SPACE_PLUGIN}/space-settings--properties`,
       role: 'space-settings--properties',
       filter: (data): data is { subject: Space } => isSpace(data.subject),
       component: ({ data }) => <SpacePropertiesForm space={data.subject} />,
-    }),
-    // TODO(wittjosiah): Move to companion.
-    createSurface({
-      id: `${SPACE_PLUGIN}/object-settings-base-panel`,
-      role: 'complementary--settings',
-      position: 'hoist',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <BaseObjectSettings object={data.subject} />,
-    }),
-    // TODO(wittjosiah): Move to companion.
-    createSurface({
-      id: `${SPACE_PLUGIN}/object-settings-advanced-panel`,
-      role: 'complementary--settings',
-      position: 'fallback',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <AdvancedObjectSettings object={data.subject} />,
     }),
     createSurface({
       id: JOIN_DIALOG,

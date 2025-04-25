@@ -16,8 +16,6 @@ import { S } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
-import { isEchoObject, getSpace } from '@dxos/react-client/echo';
 import { osTranslations } from '@dxos/shell/react';
 
 import {
@@ -121,18 +119,7 @@ export const SpacePlugin = ({
         contributes(SpaceCapabilities.SettingsSection, {
           id: 'properties',
           label: ['space settings properties label', { ns: SPACE_PLUGIN }],
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panel`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'settings',
-          label: ['settings panel label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--sliders--regular',
           position: 'hoist',
-          filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
         }),
     }),
     defineModule({
