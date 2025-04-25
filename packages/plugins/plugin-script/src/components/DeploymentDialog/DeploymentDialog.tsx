@@ -32,13 +32,12 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
   // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
   //   Deployment shouldn't be tied to the lifecycle of the dialogue component.
   const { handleCreateAndDeployScripts, status } = useCreateAndDeployScriptTemplates(space, scriptTemplates);
-  const { dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   useEffect(() => {
     if (status === 'success') {
-      dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
       // TODO(ZaymonFC): We can probably re-use this toast for normal script deployment.
-      dispatch(
+      void dispatch(
         createIntent(LayoutAction.AddToast, {
           part: 'toast',
           subject: {
@@ -51,10 +50,11 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
           },
         }),
       );
+      void dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
     }
     if (status === 'error') {
-      dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
-      dispatch(
+      void dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
+      void dispatch(
         createIntent(LayoutAction.AddToast, {
           part: 'toast',
           subject: {
@@ -97,10 +97,12 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
       </div>
       <div role='none' className='flex flex-row-reverse gap-1'>
         <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
-          {t('deployment dialog deploy functions button label', { count: scriptTemplates.length })}
+          {status === 'pending'
+            ? t('deployment dialog deploy functions pending button label', { count: scriptTemplates.length })
+            : t('deployment dialog deploy functions button label', { count: scriptTemplates.length })}
         </Button>
-        <Dialog.Close asChild>
-          <Button>{t('deployment dialog skip button label')}</Button>
+        <Dialog.Close asChild disabled={status === 'pending'}>
+          <Button disabled={status === 'pending'}>{t('deployment dialog skip button label')}</Button>
         </Dialog.Close>
       </div>
     </Dialog.Content>

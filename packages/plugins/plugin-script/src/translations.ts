@@ -54,6 +54,8 @@ export default [
           'We found the following script templates for your new integration:',
         'deployment dialog deploy functions button label_one': 'Create and deploy script',
         'deployment dialog deploy functions button label_other': 'Create and deploy scripts',
+        'deployment dialog deploy functions pending button label_one': 'Deploying script',
+        'deployment dialog deploy functions pending button label_other': 'Deploying scripts',
         'deployment dialog skip button label': 'Skip',
         'script deployment toast label_one': 'Script deployed',
         'script deployment toast label_other': 'Scripts deployed',
