@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { TableType } from '@dxos/react-ui-table';
 
@@ -18,12 +18,13 @@ export default (context: PluginsContext) =>
       filter: (node): node is Node<TableType> => isInstanceOf(TableType, node.data),
       connector: ({ node }) => [
         {
-          id: [node.id, 'schema'].join(SLUG_PATH_SEPARATOR),
+          id: [node.id, 'schema'].join(ATTENDABLE_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
             label: ['companion schema label', { ns: meta.id }],
             icon: 'ph--database--regular',
+            disposition: 'hidden',
           },
         },
       ],

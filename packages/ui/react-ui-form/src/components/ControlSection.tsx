@@ -6,21 +6,31 @@ import React, { type PropsWithChildren } from 'react';
 
 import { type Label, toLocalizedString, useTranslation, Input } from '@dxos/react-ui';
 
-import { CLIENT_PLUGIN } from '../meta';
+import { translationKey } from '../translations';
+
+// TODO(wittjosiah): Copied from @dxos/plugin-client. Reconcile/factor out.
 
 export type ControlSectionProps = PropsWithChildren<{
   title: Label;
   description?: Label;
 }>;
 
-export const ControlSection = ({ title, description, children }: ControlSectionProps) => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+export const ControlSectionHeading = ({ title, description }: Omit<ControlSectionProps, 'children'>) => {
+  const { t } = useTranslation(translationKey);
   return (
     <>
       <h2 className='pli-4 container-max-width text-xl mbs-6 mbe-4'>{toLocalizedString(title, t)}</h2>
       {description && (
         <p className='pli-4 mlb-4 container-max-width text-description'>{toLocalizedString(description, t)}</p>
       )}
+    </>
+  );
+};
+
+export const ControlSection = ({ title, description, children }: ControlSectionProps) => {
+  return (
+    <>
+      <ControlSectionHeading title={title} description={description} />
       {children}
     </>
   );
@@ -48,14 +58,14 @@ export type ControlItemProps = PropsWithChildren<{
   description?: Label;
 }>;
 
-const controlItemClasses =
+export const controlItemClasses =
   'p-4 border border-separator rounded-lg container-max-width grid md:col-span-2 grid-cols-subgrid items-center';
 
-const controlItemTitleClasses = 'text-lg mbe-2';
+const controlItemTitleClasses = 'text-lg font-normal mbe-2';
 const controlItemDescriptionClasses = 'text-base mlb-2 md:mbe-0 text-description';
 
 export const ControlItem = ({ title, description, children }: ControlItemProps) => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(translationKey);
 
   return (
     <div className={controlItemClasses}>
@@ -69,7 +79,7 @@ export const ControlItem = ({ title, description, children }: ControlItemProps) 
 };
 
 export const ControlItemInput = ({ title, description, children }: ControlItemProps) => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(translationKey);
 
   return (
     <Input.Root>
@@ -91,7 +101,7 @@ export const ControlItemInput = ({ title, description, children }: ControlItemPr
 };
 
 export const ControlFrameItem = ({ title, description, children }: ControlItemProps) => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(translationKey);
 
   return (
     <div role='group' className='min-is-0'>

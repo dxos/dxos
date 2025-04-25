@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { ATTENDABLE_PATH_SEPARATOR, COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { InboxCapabilities } from './capabilities';
@@ -21,12 +21,13 @@ export default (context: PluginsContext) =>
         const message = state[node.id];
         return [
           {
-            id: `${node.id}${SLUG_PATH_SEPARATOR}message`,
+            id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}message`,
             type: COMPANION_TYPE,
-            data: message,
+            data: message ?? 'message',
             properties: {
               label: ['message label', { ns: INBOX_PLUGIN }],
               icon: 'ph--envelope-open--regular',
+              disposition: 'hidden',
             },
           },
         ];

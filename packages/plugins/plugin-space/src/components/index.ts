@@ -9,6 +9,7 @@ export * from './CreateDialog';
 export * from './CollectionMain';
 export * from './CollectionSection';
 export * from './JoinDialog';
+export * from './MembersContainer';
 export * from './MenuFooter';
 export * from './PersistenceStatus';
 export * from './PopoverAddSpace';

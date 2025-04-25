@@ -9,12 +9,11 @@ import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
-import { Form, type InputComponent } from '@dxos/react-ui-form';
+import { Form, type InputComponent, ControlItem, ControlItemInput, ControlSection } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 import { hexToHue, hexToEmoji } from '@dxos/util';
 
-import { ControlItem, ControlItemInput, ControlSection } from './ControlSection';
 import { CLIENT_PLUGIN } from '../meta';
 
 // TODO(thure): Factor out?
@@ -67,15 +66,16 @@ export const ProfileContainer = () => {
     [identity, displayName, emoji, hue],
   );
 
+  // TODO(wittjosiah): Integrate descriptions with the form schema.
   const customElements: Partial<Record<string, InputComponent>> = useMemo(
     () => ({
-      displayName: ({ type, getValue, onValueChange }) => {
+      displayName: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback(
           ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
           [onValueChange, type],
         );
         return (
-          <ControlItemInput title={t('display name label')} description={t('display name description')}>
+          <ControlItemInput title={label} description={t('display name description')}>
             <Input.TextInput
               value={getValue()}
               onChange={handleChange}
@@ -85,44 +85,45 @@ export const ProfileContainer = () => {
           </ControlItemInput>
         );
       },
-      emoji: ({ type, getValue, onValueChange }) => {
+      emoji: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextEmoji: string) => onValueChange(type, nextEmoji), [onValueChange, type]);
         const handleEmojiReset = useCallback(
           () => onValueChange(type, getDefaultEmojiValue(identity)),
           [onValueChange, type],
         );
         return (
-          <ControlItem title={t('icon label')} description={t('icon description')}>
+          <ControlItem title={label} description={t('icon description')}>
             <EmojiPickerBlock
               triggerVariant='default'
               emoji={getValue()}
               onChangeEmoji={handleChange}
               onClickClear={handleEmojiReset}
+              classNames='justify-self-end'
             />
           </ControlItem>
         );
       },
-      hue: ({ type, getValue, onValueChange }) => {
+      hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleHueReset = useCallback(
           () => onValueChange(type, getDefaultHueValue(identity)),
           [onValueChange, type],
         );
         return (
-          <ControlItem title={t('hue label')} description={t('hue description')}>
+          <ControlItem title={label} description={t('hue description')}>
             <HuePicker
               value={getValue()}
               onChange={handleChange}
               onReset={handleHueReset}
-              classNames='[--hue-preview-size:1.5rem]'
+              classNames='[--hue-preview-size:1.5rem] justify-self-end'
             />
           </ControlItem>
         );
       },
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
-      did: ({ getValue }) => {
+      did: ({ label, getValue }) => {
         return (
-          <ControlItemInput title={t('did label')} description={t('did description')}>
+          <ControlItemInput title={label} description={t('did description')}>
             <ButtonGroup>
               <Input.TextInput value={getValue()} disabled classNames='min-is-64' />
               <Clipboard.IconButton value={getValue() ?? ''} />
@@ -135,7 +136,7 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <StackItem.Content classNames='plb-2 block overflow-y-auto'>
+    <StackItem.Content classNames='p-2 block overflow-y-auto'>
       <Clipboard.Provider>
         <ControlSection title={t('profile label')} description={t('profile description')}>
           <Form
@@ -152,10 +153,11 @@ export const ProfileContainer = () => {
   );
 };
 
+// TODO(wittjosiah): Integrate annotations with translations.
 const ProfileSchema = S.Struct({
-  displayName: S.String.annotations({ title: 'Display Name' }),
+  displayName: S.String.annotations({ title: 'Display name' }),
   emoji: S.String.annotations({ title: 'Avatar' }),
-  hue: S.String.annotations({ title: 'Avatar Background' }),
+  hue: S.String.annotations({ title: 'Color' }),
   did: S.String.annotations({ title: 'DID' }),
 });
 type Profile = S.Schema.Type<typeof ProfileSchema>;
