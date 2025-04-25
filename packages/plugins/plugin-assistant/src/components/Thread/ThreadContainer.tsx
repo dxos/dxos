@@ -4,6 +4,7 @@
 
 import React, { useCallback, type FC, useEffect } from 'react';
 
+import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -35,27 +36,24 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   const contextProvider = useContextProvider(space);
   const processor = useChatProcessor({ chat, space, settings, part, associatedArtifact });
   const messageQueue = useMessageQueue(chat);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   // TODO(thure): This will be referentially new on every render, is it causing overreactivity?
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
 
   useEffect(() => {
     if (!processor.streaming.value && messageQueue?.items) {
-      console.log(
-        '[processor.streaming=false]',
-        messageQueue.items.length,
-        messageQueue.items[messageQueue.items.length - 1],
-      );
-      // if (dispatch && associatedArtifact) {
-      //   void dispatch(
-      //     createIntent(CollaborationActions.ContentProposal, {
-      //       dxn: chat.assistantChatQueue.dxn.toString(),
-      //       messageId,
-      //       associatedArtifact,
-      //     }),
-      //   );
-      // }
+      const message = messageQueue.items[messageQueue.items.length - 1];
+      if (chat && message && dispatch && associatedArtifact) {
+        void dispatch(
+          createIntent(CollaborationActions.ContentProposal, {
+            dxn: chat.assistantChatQueue.dxn.toString(),
+            messageId: message.id,
+            associatedArtifact,
+          }),
+        );
+      }
     }
-  }, [processor.streaming.value, messageQueue]);
+  }, [processor.streaming.value, messageQueue, associatedArtifact]);
 
   const handleSubmit = useCallback(
     (text: string) => {
