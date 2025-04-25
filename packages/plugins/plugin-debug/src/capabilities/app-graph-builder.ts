@@ -3,9 +3,10 @@
 //
 
 import { contributes, Capabilities, type PluginsContext } from '@dxos/app-framework';
+import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { isSpace, SpaceState, type Space } from '@dxos/react-client/echo';
+import { isEchoObject, isSpace, type ReactiveEchoObject, SpaceState, type Space } from '@dxos/react-client/echo';
 
 import { DEBUG_PLUGIN } from '../meta';
 import { Devtools } from '../types';
@@ -389,5 +390,24 @@ export default (context: PluginsContext) =>
           },
         ];
       },
+    }),
+
+    // Debug object companion.
+    createExtension({
+      id: `${DEBUG_PLUGIN}/debug-object`,
+      filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+      connector: ({ node }) => [
+        {
+          id: [node.id, 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
+          type: PLANK_COMPANION_TYPE,
+          data: 'debug',
+          properties: {
+            label: ['debug label', { ns: DEBUG_PLUGIN }],
+            icon: 'ph--bug--regular',
+            disposition: 'hidden',
+            position: 'fallback',
+          },
+        },
+      ],
     }),
   ]);
