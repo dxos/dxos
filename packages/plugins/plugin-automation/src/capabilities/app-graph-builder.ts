@@ -14,13 +14,13 @@ import { meta } from '../meta';
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${SCRIPT_PLUGIN}/automation`,
+      id: `${SCRIPT_PLUGIN}/script-companion`,
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
           id: [node.id, 'automation'].join(ATTENDABLE_PATH_SEPARATOR),
           type: PLANK_COMPANION_TYPE,
-          data: node.data,
+          data: 'automation',
           properties: {
             label: ['script automation label', { ns: meta.id }],
             icon: 'ph--lightning--regular',

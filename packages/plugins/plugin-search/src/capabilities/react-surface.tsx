@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useLayout, useAppGraph } from '@dxos/app-framework';
 import { getActiveSpace } from '@dxos/plugin-space';
+import { isSpace, type Space } from '@dxos/react-client/echo';
 
 import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from '../components';
 import { SearchContextProvider } from '../hooks';
@@ -43,20 +44,10 @@ export default () =>
     }),
     createSurface({
       id: `${SEARCH_DIALOG}/search`,
-      role: 'complementary--search',
+      role: 'deck-companion--search',
+      filter: (data): data is { subject: Space } => isSpace(data.subject),
       component: ({ data }) => {
-        /*
-          data: {
-            id: 'B2UX75DTB6F45T27UD5P6KDAMG5S5XNNB:01JMKV3QACH00R21429HJ54YDY',
-            popoverAnchorId: undefined,
-            subject: dxos.org/type/Document#01JMKV3QACH00R21429HJ54YDY,
-            workspace: 'B2UX75DTB6F45T27UD5P6KDAMG5S5XNNB',
-          }
-        */
-        const layout = useLayout();
-        const { graph } = useAppGraph();
-        const space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
-
+        const space = data.subject;
         if (!space) {
           return null;
         }

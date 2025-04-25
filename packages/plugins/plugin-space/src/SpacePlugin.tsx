@@ -119,6 +119,7 @@ export const SpacePlugin = ({
         contributes(SpaceCapabilities.SettingsSection, {
           id: 'properties',
           label: ['space settings properties label', { ns: SPACE_PLUGIN }],
+          position: 'hoist',
         }),
     }),
     defineModule({

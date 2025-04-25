@@ -395,7 +395,7 @@ export class Graph {
       const node = existingNode ?? this._constructNode({ data: null, properties: {}, ..._node });
       if (existingNode) {
         const { data, properties, type } = _node;
-        if (data && data !== node.data) {
+        if (data !== node.data) {
           node.data = data;
         }
 
