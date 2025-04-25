@@ -5,19 +5,11 @@
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import {
-  AppGraphBuilder,
-  CallManager,
-  IntentResolver,
-  MeetingCapabilities,
-  ReactRoot,
-  ReactSurface,
-} from './capabilities';
-import { MEETING_PLUGIN, meta } from './meta';
+import { AppGraphBuilder, CallManager, IntentResolver, ReactRoot, ReactSurface } from './capabilities';
+import { meta } from './meta';
 import translations from './translations';
 import { MeetingAction, MeetingType } from './types';
 
@@ -79,23 +71,5 @@ export const MeetingPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panels`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: (context) => {
-        const call = context.requestCapability(MeetingCapabilities.CallManager);
-
-        return [
-          contributes(DeckCapabilities.ComplementaryPanel, {
-            id: 'meeting',
-            label: ['meeting panel label', { ns: MEETING_PLUGIN }],
-            icon: 'ph--video-conference--regular',
-            position: 'hoist',
-            fixed: true,
-            filter: () => call.joined,
-          }),
-        ];
-      },
     }),
   ]);

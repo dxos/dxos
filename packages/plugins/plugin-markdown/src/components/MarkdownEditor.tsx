@@ -7,7 +7,8 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { createIntent, type FileInfo, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, type FileInfo, useIntentDispatcher } from '@dxos/app-framework';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type DNDOptions,
@@ -70,7 +71,7 @@ export const MarkdownEditor = ({
   extensionProviders,
   scrollPastEnd,
   toolbar,
-  comment,
+  comment = true,
   viewMode,
   editorStateStore,
   onFileUpload,
@@ -96,10 +97,9 @@ export const MarkdownEditor = ({
   const commentObserver = useCommentState(toolbarState);
   const onCommentClick = useCallback(async () => {
     await dispatch(
-      createIntent(LayoutAction.UpdateComplementary, {
-        part: 'complementary',
-        subject: 'comments',
-        options: { state: 'expanded' },
+      createIntent(DeckAction.ChangeCompanion, {
+        primary: id,
+        companion: `${id}${ATTENDABLE_PATH_SEPARATOR}comments`,
       }),
     );
   }, [dispatch]);

@@ -3,10 +3,9 @@
 //
 
 import { contributes, Events, defineModule, definePlugin, Capabilities } from '@dxos/app-framework';
-import { DeckEvents, DeckCapabilities } from '@dxos/plugin-deck';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
-import { meta, SEARCH_PLUGIN, SEARCH_RESULT } from './meta';
+import { meta, SEARCH_RESULT } from './meta';
 import translations from './translations';
 import { type SearchResult } from './types';
 
@@ -51,15 +50,5 @@ export const SearchPlugin = () =>
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panels`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'search',
-          label: ['search label', { ns: SEARCH_PLUGIN }],
-          icon: 'ph--magnifying-glass--regular',
-        }),
     }),
   ]);

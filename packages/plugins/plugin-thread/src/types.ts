@@ -37,7 +37,6 @@ export namespace ThreadAction {
   export class Select extends S.TaggedClass<Select>()(`${THREAD_ACTION}/select`, {
     input: S.Struct({
       current: S.String,
-      skipOpen: S.optional(S.Boolean),
     }),
     output: S.Void,
   }) {}

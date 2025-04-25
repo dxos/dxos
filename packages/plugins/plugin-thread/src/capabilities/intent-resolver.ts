@@ -2,19 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  createResolver,
-  LayoutAction,
-  type PluginsContext,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, createResolver, type PluginsContext } from '@dxos/app-framework';
 import { ObjectId, Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
@@ -65,22 +59,19 @@ export default (context: PluginsContext) =>
           data: { object: thread },
           intents: [
             createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
-            createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'comments' }),
+            createIntent(DeckAction.ChangeCompanion, {
+              primary: subjectId,
+              companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
+            }),
           ],
         };
       },
     }),
     createResolver({
       intent: ThreadAction.Select,
-      resolve: ({ current, skipOpen }) => {
+      resolve: ({ current }) => {
         const { state } = context.requestCapability(ThreadCapabilities.MutableState);
         state.current = current;
-
-        return {
-          intents: !skipOpen
-            ? [createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'comments' })]
-            : undefined,
-        };
       },
     }),
     createResolver({

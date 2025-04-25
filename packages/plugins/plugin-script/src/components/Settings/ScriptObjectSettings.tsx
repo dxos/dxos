@@ -8,7 +8,6 @@ import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react
 import { createIntent, SettingsAction, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions/types';
 import { log } from '@dxos/log';
-import { BaseObjectSettings } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
@@ -22,31 +21,26 @@ export type ScriptObjectSettingsProps = {
 
 export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
   return (
-    <Clipboard.Provider>
-      <div className='flex flex-col overflow-y-auto divide-y divide-separator'>
-        <Properties object={object} />
-        <Binding object={object} />
-        <Publishing object={object} />
-      </div>
-    </Clipboard.Provider>
+    <>
+      <Binding object={object} />
+      <Publishing object={object} />
+    </>
   );
 };
 
-const Properties = ({ object }: ScriptObjectSettingsProps) => {
+export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   return (
-    <BaseObjectSettings object={object}>
-      <Input.Root>
-        <Input.Label>{t('description label')}</Input.Label>
-        <Input.TextInput
-          placeholder={t('description placeholder')}
-          value={object.description ?? ''}
-          onChange={(event) => {
-            object.description = event.target.value;
-          }}
-        />
-      </Input.Root>
-    </BaseObjectSettings>
+    <Input.Root>
+      <Input.Label>{t('description label')}</Input.Label>
+      <Input.TextInput
+        placeholder={t('description placeholder')}
+        value={object.description ?? ''}
+        onChange={(event) => {
+          object.description = event.target.value;
+        }}
+      />
+    </Input.Root>
   );
 };
 

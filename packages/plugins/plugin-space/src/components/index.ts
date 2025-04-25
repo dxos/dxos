@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './AdvancedObjectSettings';
 export * from './AwaitingObject';
-export * from './BaseObjectSettings';
 export * from './CreateDialog';
 export * from './CollectionMain';
 export * from './CollectionSection';
 export * from './JoinDialog';
 export * from './MembersContainer';
 export * from './MenuFooter';
+export * from './ObjectSettingsContainer';
 export * from './PersistenceStatus';
 export * from './PopoverAddSpace';
 export * from './PopoverRenameObject';
