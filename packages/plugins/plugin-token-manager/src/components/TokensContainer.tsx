@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
+import { isInstanceOf, S } from '@dxos/echo-schema';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { create, Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
@@ -16,6 +16,7 @@ import { AccessTokenSchema, AccessTokenType } from '@dxos/schema';
 import { NewTokenSelector } from './NewTokenSelector';
 import { TokenManager } from './TokenManager';
 import { TOKEN_MANAGER_PLUGIN } from '../meta';
+import { TokenManagerAction } from '../types';
 
 const initialValues = {
   note: '',
@@ -34,13 +35,29 @@ export const TokensContainer = ({ space }: { space: Space }) => {
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
+
+  const handleAddAccessToken = useCallback(
+    async (token: AccessTokenType) => {
+      // TODO(ZaymonFC): Is there a more ergonomic way to do this intent chain?
+      const result = await dispatch(
+        createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true }),
+      );
+      if (isInstanceOf(AccessTokenType, result.data?.object)) {
+        void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
+      }
+    },
+    [space, dispatch],
+  );
+
   const handleAdd = useCallback(
     async (form: TokenForm) => {
-      await dispatch(createIntent(SpaceAction.AddObject, { object: create(AccessTokenType, form), target: space }));
+      const token = create(AccessTokenType, form);
+      await handleAddAccessToken(token);
       setAdding(false);
     },
-    [space],
+    [handleAddAccessToken],
   );
+
   const handleDelete = useCallback((token: AccessTokenType) => space.db.remove(token), [space]);
 
   return (
@@ -59,7 +76,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         <div role='none' className={controlItemClasses}>
           <TokenManager tokens={tokens} onDelete={handleDelete} />
           {tokens.length > 0 && <Separator classNames='mlb-4' />}
-          <NewTokenSelector space={space} onCustomToken={handleNew} />
+          <NewTokenSelector space={space} onAddAccessToken={handleAddAccessToken} onCustomToken={handleNew} />
         </div>
       )}
     </StackItem.Content>
