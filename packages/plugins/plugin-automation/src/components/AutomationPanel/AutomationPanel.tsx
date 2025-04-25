@@ -15,8 +15,10 @@ import {
 } from '@dxos/functions/types';
 import { type Client, useClient } from '@dxos/react-client';
 import { create, Filter, useQuery, type Space, type ReactiveObject, getSpace } from '@dxos/react-client/echo';
-import { Clipboard, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
+import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
+import { StackItem } from '@dxos/react-ui-stack';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
@@ -74,60 +76,62 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
 
   return (
     <Clipboard.Provider>
-      <div className='flex flex-col w-full'>
-        {!trigger && (
-          <List.Root<FunctionTrigger> items={triggers} isItem={S.is(FunctionTrigger)} getId={(field) => field.id}>
-            {({ items: triggers }) => (
-              <div role='list' className='flex flex-col w-full'>
-                {triggers?.map((trigger) => {
-                  const copyAction = getCopyAction(client, trigger);
-                  return (
-                    <List.Item<FunctionTrigger>
-                      key={trigger.id}
-                      item={trigger}
-                      classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
-                    >
-                      <Input.Root>
-                        <Input.Switch
-                          checked={trigger.enabled}
-                          onCheckedChange={(checked) => (trigger.enabled = checked)}
-                        />
-                      </Input.Root>
-
-                      <div className={'flex'}>
-                        <List.ItemTitle
-                          classNames='px-1 cursor-pointer w-0 shrink truncate'
-                          onClick={() => handleSelect(trigger)}
+      <StackItem.Content classNames='block overflow-y-auto'>
+        <div className='flex flex-col w-full'>
+          {trigger ? (
+            <ControlItem title={t('trigger editor title')}>
+              <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />
+            </ControlItem>
+          ) : (
+            <div role='none' className={controlItemClasses}>
+              <List.Root<FunctionTrigger> items={triggers} isItem={S.is(FunctionTrigger)} getId={(field) => field.id}>
+                {({ items: triggers }) => (
+                  <div role='list' className='flex flex-col w-full'>
+                    {triggers?.map((trigger) => {
+                      const copyAction = getCopyAction(client, trigger);
+                      return (
+                        <List.Item<FunctionTrigger>
+                          key={trigger.id}
+                          item={trigger}
+                          classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
                         >
-                          {getFunctionName(scripts, functions, trigger) ?? '∅'}
-                        </List.ItemTitle>
+                          <Input.Root>
+                            <Input.Switch
+                              checked={trigger.enabled}
+                              onCheckedChange={(checked) => (trigger.enabled = checked)}
+                            />
+                          </Input.Root>
 
-                        {/* TODO: a better way to expose copy action */}
-                        {copyAction && (
-                          <Clipboard.IconButton
-                            label={t(copyAction.translationKey)}
-                            value={copyAction.contentProvider()}
-                          />
-                        )}
-                      </div>
+                          <div className={'flex'}>
+                            <List.ItemTitle
+                              classNames='px-1 cursor-pointer w-0 shrink truncate'
+                              onClick={() => handleSelect(trigger)}
+                            >
+                              {getFunctionName(scripts, functions, trigger) ?? '∅'}
+                            </List.ItemTitle>
 
-                      <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
-                    </List.Item>
-                  );
-                })}
-              </div>
-            )}
-          </List.Root>
-        )}
+                            {/* TODO: a better way to expose copy action */}
+                            {copyAction && (
+                              <Clipboard.IconButton
+                                label={t(copyAction.translationKey)}
+                                value={copyAction.contentProvider()}
+                              />
+                            )}
+                          </div>
 
-        {trigger && <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />}
-
-        {!trigger && (
-          <div className='flex p-2 justify-center'>
-            <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
-          </div>
-        )}
-      </div>
+                          <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
+                        </List.Item>
+                      );
+                    })}
+                  </div>
+                )}
+              </List.Root>
+              {triggers.length > 0 && <Separator classNames='mlb-4' />}
+              <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
+            </div>
+          )}
+        </div>
+      </StackItem.Content>
     </Clipboard.Provider>
   );
 };

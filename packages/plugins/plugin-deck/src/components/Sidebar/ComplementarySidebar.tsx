@@ -17,24 +17,45 @@ import {
   Surface,
   createIntent,
   useAppGraph,
-  useCapabilities,
   useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { useNode } from '@dxos/plugin-graph';
+import { type Node } from '@dxos/plugin-graph';
 import { Main, useTranslation, toLocalizedString, IconButton, type Label } from '@dxos/react-ui';
-import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { byPosition } from '@dxos/util';
+import { byPosition, type Position } from '@dxos/util';
 
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
 import { DECK_PLUGIN } from '../../meta';
-import { type Panel } from '../../types';
+import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 import { PlankContentError, PlankLoading } from '../Plank';
 
 const label = ['complementary sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
+
+const getCompanionId = (id: string) => {
+  const [_, companionId] = id.split(ATTENDABLE_PATH_SEPARATOR);
+  return companionId ?? 'never';
+};
+
+type DeckCompanion = Node<
+  any,
+  {
+    label: Label;
+    icon: string;
+    // TODO(burdon): Scroll area should be controlled by surface.
+    /** If true, the panel will not be wrapped in a scroll area. */
+    fixed?: boolean;
+    position?: Position;
+  }
+>;
+
+const useDeckCompanions = (): DeckCompanion[] => {
+  const { graph } = useAppGraph();
+  const companions = graph.nodes(graph.root, { type: DECK_COMPANION_TYPE }) as DeckCompanion[];
+  return companions.toSorted((a, b) => byPosition(a.properties, b.properties));
+};
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -44,34 +65,23 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const { t } = useTranslation(DECK_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layout = useCapability(DeckCapabilities.MutableDeckState);
-  const attended = useAttended();
-  const { graph } = useAppGraph();
-  const node = useNode(graph, attended[0]);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);
 
-  const panels = useCapabilities(DeckCapabilities.ComplementaryPanel);
-  const availablePanels = panels
-    .filter((panel) => {
-      if (!node || !panel.filter) {
-        return true;
-      }
-
-      return panel.filter(node);
-    })
-    .toSorted(byPosition);
-  const activePanelId = availablePanels.find((panel) => panel.id === current)?.id ?? availablePanels[0]?.id;
-  const [internalValue, setInternalValue] = useState(activePanelId);
+  const companions = useDeckCompanions();
+  const activeCompanion = companions.find((companion) => getCompanionId(companion.id) === current) ?? companions.at(0);
+  const activeId = getCompanionId(activeCompanion?.id ?? 'never');
+  const [internalValue, setInternalValue] = useState(activeId);
 
   useEffect(() => {
-    setInternalValue(activePanelId);
-  }, [activePanelId]);
+    setInternalValue(activeId);
+  }, [activeId]);
 
   const handleTabClick = useCallback(
     (event: MouseEvent) => {
       const nextValue = event.currentTarget.getAttribute('data-value') as string;
-      if (nextValue === activePanelId) {
+      if (nextValue === activeId) {
         layout.complementarySidebarState = layout.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
       } else {
         setInternalValue(nextValue);
@@ -79,21 +89,18 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         void dispatch(createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
       }
     },
-    [layout, activePanelId, dispatch],
+    [layout, activeId, dispatch],
   );
 
   const data = useMemo(
     () =>
-      node && {
-        id: node.id,
-        subject: node.data,
-        workspace: layout.activeDeck,
-        popoverAnchorId: layout.popoverAnchorId,
+      activeCompanion && {
+        id: activeCompanion.id,
+        subject: activeCompanion.data,
       },
-    [node, layout.popoverAnchorId],
+    [activeCompanion?.id, activeCompanion?.data],
   );
 
-  // TODO(burdon): Scroll area should be controlled by surface.
   return (
     <Main.ComplementarySidebar
       label={label}
@@ -102,29 +109,23 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         hoistStatusbar && 'block-end-[--statusbar-size]',
       ]}
     >
-      <Tabs.Root
-        orientation='vertical'
-        verticalVariant='stateless'
-        value={internalValue}
-        attendableId={attended[0]}
-        classNames='contents'
-      >
+      <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
         <div
           role='none'
           className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag'
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto'>
-            {availablePanels.map((panel) => (
-              <Tabs.Tab key={panel.id} value={panel.id} asChild>
+            {companions.map((companion) => (
+              <Tabs.Tab key={getCompanionId(companion.id)} value={getCompanionId(companion.id)} asChild>
                 <IconButton
-                  label={toLocalizedString(panel.label, t)}
-                  icon={panel.icon}
+                  label={toLocalizedString(companion.properties.label, t)}
+                  icon={companion.properties.icon}
                   size={5}
                   iconOnly
                   tooltipSide='left'
-                  data-value={panel.id}
+                  data-value={getCompanionId(companion.id)}
                   variant={
-                    activePanelId === panel.id
+                    activeId === getCompanionId(companion.id)
                       ? layout.complementarySidebarState === 'expanded'
                         ? 'primary'
                         : 'default'
@@ -144,16 +145,16 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             <ToggleComplementarySidebarButton />
           </div>
         </div>
-        {availablePanels.map((panel) => (
+        {companions.map((companion) => (
           <Tabs.Tabpanel
-            key={panel.id}
-            value={panel.id}
+            key={getCompanionId(companion.id)}
+            value={getCompanionId(companion.id)}
             classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]'
             {...(layout.complementarySidebarState !== 'expanded' && { inert: 'true' })}
           >
             <ComplementarySidebarPanel
-              panel={panel}
-              activePanelId={activePanelId}
+              companion={companion}
+              activeId={activeId}
               data={data}
               hoistStatusbar={hoistStatusbar}
             />
@@ -165,13 +166,11 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 };
 
 type ComplementarySidebarPanelProps = {
-  panel: Panel;
-  activePanelId: string;
+  companion: DeckCompanion;
+  activeId: string;
   data?: {
     id: string;
     subject: any;
-    workspace: string;
-    popoverAnchorId?: string;
   };
   hoistStatusbar: boolean;
 };
@@ -180,23 +179,23 @@ const ScrollArea = ({ children }: PropsWithChildren) => {
   return <div className='flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-thin'>{children}</div>;
 };
 
-const ComplementarySidebarPanel = ({ panel, activePanelId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {
+const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
 
-  if (panel.id !== activePanelId || !data) {
+  if (getCompanionId(companion.id) !== activeId && !data) {
     return null;
   }
 
-  const Wrapper = panel.fixed ? Fragment : ScrollArea;
+  const Wrapper = companion.properties.fixed ? Fragment : ScrollArea;
 
   return (
     <>
       <h2 className='flex items-center pli-2 border-separator border-be font-medium'>
-        {toLocalizedString(panel.label, t)}
+        {toLocalizedString(companion.properties.label, t)}
       </h2>
       <Wrapper>
         <Surface
-          role={`complementary--${activePanelId}`}
+          role={`deck-companion--${getCompanionId(companion.id)}`}
           data={data}
           fallback={PlankContentError}
           placeholder={<PlankLoading />}

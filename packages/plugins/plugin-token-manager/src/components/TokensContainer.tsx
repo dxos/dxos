@@ -58,7 +58,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
       ) : (
         <div role='none' className={controlItemClasses}>
           <TokenManager tokens={tokens} onDelete={handleDelete} />
-          <Separator classNames='mlb-4' />
+          {tokens.length > 0 && <Separator classNames='mlb-4' />}
           <NewTokenSelector space={space} onCustomToken={handleNew} />
         </div>
       )}

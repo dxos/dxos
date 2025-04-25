@@ -5,5 +5,4 @@
 import { lazy } from '@dxos/app-framework';
 
 export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const ComplementaryPanel = lazy(() => import('./complementary-panel'));
 export const ReactSurface = lazy(() => import('./react-surface'));
