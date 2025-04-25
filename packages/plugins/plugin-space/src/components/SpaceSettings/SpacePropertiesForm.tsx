@@ -106,7 +106,7 @@ export const SpacePropertiesForm = ({ space }: SpacePropertiesFormProps) => {
               value={getValue()}
               onChange={handleChange}
               onReset={handleHueReset}
-              classNames='[--hue-preview-size:1.5rem] justify-self-end'
+              classNames='[--hue-preview-size:1.25rem] justify-self-end'
             />
           </ControlItem>
         );
