@@ -25,8 +25,9 @@ export default () => {
     name: meta.name,
     instructions: `
       - The markdown plugin allows you to work with text documents in the current space.
-      - Use these tools to interact with documents, including listing available documents and retrieving their content.
+      - Use these tools to interact with documents, including listing available documents, retrieving their content, and adding suggestions.
       - Documents are stored in Markdown format.
+      - When using the 'suggest' tool, your suggestion will be appended to the document within a code fence annotated as a suggestion.
     `,
     schema: DocumentType,
     tools: [
@@ -68,6 +69,35 @@ export default () => {
             id: fullyQualifiedId(document),
             name: document.name || document.fallbackName || 'Unnamed Document',
             content,
+          });
+        },
+      }),
+      defineTool(meta.id, {
+        name: 'suggest',
+        description: 'Append a suggestion to a markdown document.',
+        caption: 'Adding suggestion to markdown document...',
+        schema: S.Struct({
+          id: ArtifactId,
+          suggestion: S.String,
+        }),
+        execute: async ({ id, suggestion }, { extensions }) => {
+          invariant(extensions?.space, 'No space');
+          const document = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          assertArgument(isInstanceOf(DocumentType, document), 'Invalid type');
+
+          const contentRef = await document.content?.load();
+          invariant(contentRef, 'Document content not found');
+
+          // Format the suggestion with a code fence
+          const formattedSuggestion = `\n\n\`\`\`suggestion\n${suggestion}\n\`\`\``;
+
+          // Append the suggestion to the existing content
+          contentRef.content = contentRef.content + formattedSuggestion;
+
+          return ToolResult.Success({
+            id: fullyQualifiedId(document),
+            name: document.name || document.fallbackName || 'Unnamed Document',
+            content: contentRef.content,
           });
         },
       }),
