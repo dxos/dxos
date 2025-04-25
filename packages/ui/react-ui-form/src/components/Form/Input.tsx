@@ -17,7 +17,7 @@ import { type FormInputStateProps } from './FormContext';
 export type InputProps = {
   type: SimpleType;
   format?: FormatEnum;
-  label?: string;
+  label: string;
   disabled?: boolean;
   placeholder?: string;
   inputOnly?: boolean;

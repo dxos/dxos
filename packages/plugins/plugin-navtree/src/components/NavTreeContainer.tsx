@@ -68,12 +68,14 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       return graph.nodes(node ?? graph.root, {
         filter: (node): node is Node => {
           return untracked(() => {
-            const action = isAction(node);
-            if (!disposition) {
-              return (!action && node.type !== COMPANION_TYPE) || node.properties.disposition === 'item';
+            if (node.properties.disposition === 'hidden') {
+              return false;
+            } else if (!disposition) {
+              const action = isAction(node);
+              return !action || node.properties.disposition === 'item';
+            } else {
+              return node.properties.disposition === disposition;
             }
-
-            return node.properties.disposition === disposition;
           });
         },
       });

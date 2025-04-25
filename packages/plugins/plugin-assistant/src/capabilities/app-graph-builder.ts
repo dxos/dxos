@@ -12,7 +12,7 @@ import {
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -89,7 +89,7 @@ export default (context: PluginsContext) =>
         isReactiveObject(node.data) && node.data.assistantChatQueue && node.data.type !== AIChatType.typename,
       connector: ({ node }) => [
         {
-          id: [node.id, 'assistant-chat'].join(SLUG_PATH_SEPARATOR),
+          id: [node.id, 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {

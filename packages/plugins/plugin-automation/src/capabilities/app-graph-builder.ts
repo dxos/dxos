@@ -5,7 +5,7 @@
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { SCRIPT_PLUGIN } from '@dxos/plugin-script/types';
 
@@ -18,7 +18,7 @@ export default (context: PluginsContext) =>
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          id: [node.id, 'automation'].join(SLUG_PATH_SEPARATOR),
+          id: [node.id, 'automation'].join(ATTENDABLE_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {

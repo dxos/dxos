@@ -11,13 +11,13 @@ import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
-  await host.openSpaceManager();
-  const invitationCode = await host.shell.createSpaceInvitation();
-  const authCode = await host.shell.getAuthCode();
+  await host.shareSpace();
+  const invitationCode = await host.createSpaceInvitation();
+  const authCode = await host.getAuthCode();
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
-  await host.shell.closeShell();
+  await host.navigateToObject();
 };
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.

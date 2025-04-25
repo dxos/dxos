@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { memoizeQuery } from '@dxos/plugin-space';
@@ -89,13 +89,14 @@ export default (context: PluginsContext) =>
       // TODO(wittjosiah): Only show the summary companion if the meeting plausibly completed.
       connector: ({ node }) => [
         {
-          id: `${fullyQualifiedId(node.data)}${SLUG_PATH_SEPARATOR}summary`,
+          id: `${fullyQualifiedId(node.data)}${ATTENDABLE_PATH_SEPARATOR}summary`,
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
             label: ['meeting summary label', { ns: MEETING_PLUGIN }],
             icon: 'ph--book-open-text--regular',
             position: 'fallback',
+            disposition: 'hidden',
             schema: DocumentType,
             getIntent: ({ meeting }: { meeting: MeetingType }) => createIntent(MeetingAction.Summarize, { meeting }),
           },

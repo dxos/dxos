@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
+
 import {
   Capabilities,
+  chain,
   contributes,
   createIntent,
   createResolver,
@@ -14,8 +17,8 @@ import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { isSpace, getSpace, SpaceState, type Space, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
@@ -24,8 +27,6 @@ import { SpaceCapabilities } from './capabilities';
 import {
   CREATE_SPACE_DIALOG,
   JOIN_DIALOG,
-  SPACE_SETTINGS_DIALOG,
-  type SpaceSettingsDialogProps,
   type JoinDialogProps,
   POPOVER_RENAME_SPACE,
   CREATE_OBJECT_DIALOG,
@@ -41,12 +42,11 @@ import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
 const SPACE_MAX_OBJECTS = 500;
 
 type IntentResolverOptions = {
-  createInvitationUrl: (invitationCode: string) => string;
   context: PluginsContext;
   observability?: boolean;
 };
 
-export default ({ createInvitationUrl, context, observability }: IntentResolverOptions) => {
+export default ({ context, observability }: IntentResolverOptions) => {
   const resolve = (typename: string) =>
     context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
@@ -124,25 +124,34 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
       intent: SpaceAction.Share,
       filter: (data): data is { space: Space } => !data.space.properties[COMPOSER_SPACE_LOCK],
       resolve: ({ space }) => {
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const current = attention.current.at(-1);
-        const target = current?.startsWith(space.id) ? current : undefined;
+        const layout = context.requestCapability(Capabilities.Layout);
+        const id = `${space.id}${ATTENDABLE_PATH_SEPARATOR}members`;
+        if (layout.active.includes(id)) {
+          return {
+            intents: [
+              createIntent(LayoutAction.ScrollIntoView, {
+                part: 'current',
+                subject: id,
+              }),
+            ],
+          };
+        }
 
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: SPACE_SETTINGS_DIALOG,
-              options: {
-                blockAlign: 'start',
-                props: {
-                  space,
-                  target,
-                  initialTab: 'members',
-                  createInvitationUrl,
-                } satisfies Partial<SpaceSettingsDialogProps>,
-              },
-            }),
+            pipe(
+              createIntent(LayoutAction.SwitchWorkspace, {
+                part: 'workspace',
+                subject: space.id,
+              }),
+              chain(LayoutAction.Open, {
+                part: 'main',
+                subject: [space.id],
+                options: {
+                  variant: 'members',
+                },
+              }),
+            ),
             ...(observability
               ? [
                   createIntent(ObservabilityAction.SendEvent, {
@@ -234,20 +243,34 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     createResolver({
       intent: SpaceAction.OpenSettings,
       resolve: ({ space }) => {
+        const layout = context.requestCapability(Capabilities.Layout);
+        const id = `${space.id}${ATTENDABLE_PATH_SEPARATOR}settings`;
+        if (layout.active.includes(id)) {
+          return {
+            intents: [
+              createIntent(LayoutAction.ScrollIntoView, {
+                part: 'current',
+                subject: id,
+              }),
+            ],
+          };
+        }
+
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: SPACE_SETTINGS_DIALOG,
-              options: {
-                blockAlign: 'start',
-                props: {
-                  space,
-                  initialTab: 'settings',
-                  createInvitationUrl,
-                } satisfies Partial<SpaceSettingsDialogProps>,
-              },
-            }),
+            pipe(
+              createIntent(LayoutAction.SwitchWorkspace, {
+                part: 'workspace',
+                subject: space.id,
+              }),
+              chain(LayoutAction.Open, {
+                part: 'main',
+                subject: [space.id],
+                options: {
+                  variant: 'settings',
+                },
+              }),
+            ),
           ],
         };
       },

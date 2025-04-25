@@ -12,8 +12,8 @@ export namespace SpaceCapabilities {
   export const State = defineCapability<DeepReadonly<PluginState>>(`${SPACE_PLUGIN}/capability/state`);
   export const MutableState = defineCapability<PluginState>(`${SPACE_PLUGIN}/capability/state`);
 
-  export type SpaceSettingsPanel = { id: string; label: Label };
-  export const SettingsPanel = defineCapability<SpaceSettingsPanel>(`${SPACE_PLUGIN}/capability/settings-panel`);
+  export type SettingsSection = { id: string; label: Label };
+  export const SettingsSection = defineCapability<SettingsSection>(`${SPACE_PLUGIN}/capability/settings-section`);
 
   export const ObjectForm = defineCapability<ObjectForm<any>>(`${SPACE_PLUGIN}/capability/object-form`);
 }

@@ -5,7 +5,7 @@
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
@@ -18,12 +18,13 @@ export default (context: PluginsContext) =>
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          id: [node.id, 'settings'].join(SLUG_PATH_SEPARATOR),
+          id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
             label: ['script settings label', { ns: meta.id }],
             icon: 'ph--sliders--regular',
+            disposition: 'hidden',
           },
         },
       ],
@@ -33,13 +34,14 @@ export default (context: PluginsContext) =>
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          id: [node.id, 'execute'].join(SLUG_PATH_SEPARATOR),
+          id: [node.id, 'execute'].join(ATTENDABLE_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           // TODO(burdon): Shouldn't require the primary node data.
           data: node.data,
           properties: {
             label: ['script test label', { ns: meta.id }],
             icon: 'ph--terminal--regular',
+            disposition: 'hidden',
           },
         },
       ],
@@ -49,12 +51,13 @@ export default (context: PluginsContext) =>
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),
       connector: ({ node }) => [
         {
-          id: [node.id, 'logs'].join(SLUG_PATH_SEPARATOR),
+          id: [node.id, 'logs'].join(ATTENDABLE_PATH_SEPARATOR),
           type: COMPANION_TYPE,
           data: node.data,
           properties: {
             label: ['script logs label', { ns: meta.id }],
             icon: 'ph--clock-countdown--regular',
+            disposition: 'hidden',
           },
         },
       ],
