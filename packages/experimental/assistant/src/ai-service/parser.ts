@@ -317,7 +317,6 @@ export const mergeMessageBlock = (
         }
 
         case 'proposal': {
-          console.log('[parser]', 'proposal encountered');
           if (streamBlock.content.length === 1 && streamBlock.content[0].type === 'text') {
             return {
               type: 'json',

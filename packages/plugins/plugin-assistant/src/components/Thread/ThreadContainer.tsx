@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, type FC } from 'react';
+import React, { useCallback, type FC, useEffect } from 'react';
 
 import { type AssociatedArtifact } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
@@ -35,7 +35,27 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   const contextProvider = useContextProvider(space);
   const processor = useChatProcessor({ chat, space, settings, part, associatedArtifact });
   const messageQueue = useMessageQueue(chat);
+  // TODO(thure): This will be referentially new on every render, is it causing overreactivity?
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
+
+  useEffect(() => {
+    if (!processor.streaming.value && messageQueue?.items) {
+      console.log(
+        '[processor.streaming=false]',
+        messageQueue.items.length,
+        messageQueue.items[messageQueue.items.length - 1],
+      );
+      // if (dispatch && associatedArtifact) {
+      //   void dispatch(
+      //     createIntent(CollaborationActions.ContentProposal, {
+      //       dxn: chat.assistantChatQueue.dxn.toString(),
+      //       messageId,
+      //       associatedArtifact,
+      //     }),
+      //   );
+      // }
+    }
+  }, [processor.streaming.value, messageQueue]);
 
   const handleSubmit = useCallback(
     (text: string) => {

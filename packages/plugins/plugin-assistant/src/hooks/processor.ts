@@ -82,7 +82,6 @@ export class ChatProcessor {
     private _artifacts?: ArtifactDefinition[],
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: ChatProcessorOptions = defaultOptions,
-    private readonly _onProposalProcessed?: (messageId: string) => void,
   ) {}
 
   get tools() {
@@ -108,9 +107,6 @@ export class ChatProcessor {
         this._pending.value = [...this._pending.value, message];
         this._block.value = undefined;
       });
-
-      // Check for proposals in the completed message
-      this._checkForProposals(message);
     });
 
     // Streaming update (happens before message complete).
@@ -163,25 +159,6 @@ export class ChatProcessor {
     log.info('cancelling...');
     this._session?.abort();
     return this._reset();
-  }
-
-  /**
-   * Check for proposals in a message and call the callback if found.
-   * @private
-   */
-  private _checkForProposals(message: Message): void {
-    const proposal = message.content.find((block) => {
-      console.log('checking block', block);
-      return block.type === 'json' && block.disposition === 'proposal';
-    });
-
-    console.log('[proposal]', proposal);
-
-    // Check each content block in the message
-    if (proposal) {
-      console.log('[processor]', 'calling proposal callback with message id', message.id);
-      this._onProposalProcessed?.(message.id);
-    }
   }
 
   private async _reset(): Promise<Message[]> {
