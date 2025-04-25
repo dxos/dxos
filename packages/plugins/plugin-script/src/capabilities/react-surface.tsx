@@ -21,9 +21,10 @@ import {
   TestPanel,
   ScriptProperties,
   DeploymentDialog,
+  DEPLOYMENT_DIALOG,
 } from '../components';
 import { useDeployState, useToolbarState } from '../hooks';
-import { DEPLOYMENT_DIALOG, meta } from '../meta';
+import { meta } from '../meta';
 import { type ScriptSettingsProps } from '../types';
 
 export default () =>
@@ -91,8 +92,7 @@ export default () =>
     createSurface({
       id: DEPLOYMENT_DIALOG,
       role: 'dialog',
-      // TODO(Zaymon): Tighten up type checking.
-      filter: (data): data is { props: { accessToken: AccessTokenType; scripts: any } } =>
+      filter: (data): data is { props: { accessToken: AccessTokenType; scriptTemplates: any } } =>
         data.component === DEPLOYMENT_DIALOG,
       component: ({ data }) => <DeploymentDialog {...data.props} />,
     }),

@@ -3,6 +3,7 @@
 //
 
 import { Octokit } from '@octokit/core';
+import { isNotNullable } from 'effect/Predicate';
 
 import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions/types';
@@ -10,7 +11,7 @@ import { create, makeRef } from '@dxos/live-object';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
 import { TextType } from '@dxos/schema';
 
-import { DEPLOYMENT_DIALOG } from '../meta';
+import { DEPLOYMENT_DIALOG } from '../components';
 import { templates } from '../templates';
 import { ScriptAction } from '../types';
 
@@ -56,15 +57,17 @@ export default () =>
     createResolver({
       intent: TokenManagerAction.AccessTokenCreated,
       resolve: async ({ accessToken }) => {
-        const scripts = defaultScripts[accessToken.source] ?? [];
+        const scriptTemplates = (defaultScripts[accessToken.source] ?? [])
+          .map((id) => templates.find((t) => t.id === id))
+          .filter(isNotNullable);
 
-        if (scripts.length > 0) {
+        if (scriptTemplates.length > 0) {
           return {
             intents: [
               createIntent(LayoutAction.UpdateDialog, {
                 part: 'dialog',
                 subject: DEPLOYMENT_DIALOG,
-                options: { blockAlign: 'start', state: true, props: { accessToken, scripts } },
+                options: { blockAlign: 'start', state: true, props: { accessToken, scriptTemplates } },
               }),
             ],
           };
@@ -77,11 +80,6 @@ export default () =>
 
 // TODO(ZaymonFC): Move to META? Defs?
 // TODO(ZaymonFC): Configure by scopes?
-const defaultScripts: Record<string, { label: string; templateId: string }[]> = {
-  'gmail.com': [
-    {
-      label: 'Gmail Sync',
-      templateId: 'dxos.org/script/gmail',
-    },
-  ],
+const defaultScripts: Record<string, string[]> = {
+  'gmail.com': ['dxos.org/script/gmail'],
 };

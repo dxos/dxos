@@ -2,14 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { type AccessTokenType } from '@dxos/schema';
 
 import { useCreateAndDeployScriptTemplates } from '../../hooks/useCreateAndDeployScriptTemplates';
 import { SCRIPT_PLUGIN } from '../../meta';
+import { type Template } from '../../templates';
+
+export const DEPLOYMENT_DIALOG = `${SCRIPT_PLUGIN}/deployment/dialog`;
 
 // TODO(ZaymonFC):
 //   - Show activity and feedback to the user.
@@ -18,15 +22,59 @@ import { SCRIPT_PLUGIN } from '../../meta';
 
 type DeploymentDialogProps = {
   accessToken: AccessTokenType;
-  scripts: { label: string; templateId: string }[];
+  scriptTemplates: Template[];
 };
 
-export const DeploymentDialog = ({ accessToken, scripts }: DeploymentDialogProps) => {
+export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDialogProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const space = useMemo(() => getSpace(accessToken), [accessToken]);
-  const scriptTemplateIds = useMemo(() => scripts.map((script) => script.templateId), [scripts]);
 
-  const handleCreateAndDeployScripts = useCreateAndDeployScriptTemplates(space, scriptTemplateIds);
+  // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
+  //   Deployment shouldn't be tied to the lifecycle of the dialogue component.
+  const { handleCreateAndDeployScripts, status } = useCreateAndDeployScriptTemplates(space, scriptTemplates);
+  const { dispatch } = useIntentDispatcher();
+
+  useEffect(() => {
+    if (status === 'success') {
+      dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
+      // TODO(ZaymonFC): We can probably re-use this toast for normal script deployment.
+      dispatch(
+        createIntent(LayoutAction.AddToast, {
+          part: 'toast',
+          subject: {
+            id: `${SCRIPT_PLUGIN}/deployment-success`,
+            icon: 'ph--info--regular',
+            duration: Infinity,
+            title: ['script deployment toast label', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
+            description: ['script deployment toast description', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
+            closeLabel: ['script deployment toast close label', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
+          },
+        }),
+      );
+    }
+    if (status === 'error') {
+      dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
+      dispatch(
+        createIntent(LayoutAction.AddToast, {
+          part: 'toast',
+          subject: {
+            id: `${SCRIPT_PLUGIN}/deployment-error`,
+            icon: 'ph--error--regular',
+            duration: Infinity,
+            title: ['script deployment error toast label', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
+            description: [
+              'script deployment error toast description',
+              { ns: SCRIPT_PLUGIN, count: scriptTemplates.length },
+            ],
+            closeLabel: [
+              'script deployment error toast close label',
+              { ns: SCRIPT_PLUGIN, count: scriptTemplates.length },
+            ],
+          },
+        }),
+      );
+    }
+  }, [status, dispatch]);
 
   return (
     <Dialog.Content>
@@ -40,16 +88,16 @@ export const DeploymentDialog = ({ accessToken, scripts }: DeploymentDialogProps
       </div>
       <div role='none' className='plb-4'>
         {/* TODO: Implement deployment logic and UI. */}
-        <p>{t('deployment dialog scripts found message', { count: scripts.length })}</p>
+        <p>{t('deployment dialog scripts found message', { count: scriptTemplates.length })}</p>
         <ul className='pbs-2'>
-          {scripts.map((script) => (
-            <li key={script.templateId}>{script.label}</li>
-          ))}
+          {scriptTemplates.map((template) => {
+            return <li key={template.id}>{template.name}</li>;
+          })}
         </ul>
       </div>
       <div role='none' className='flex flex-row-reverse gap-1'>
-        <Button variant='primary' onClick={handleCreateAndDeployScripts}>
-          {t('deployment dialog deploy functions button label', { count: scripts.length })}
+        <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
+          {t('deployment dialog deploy functions button label', { count: scriptTemplates.length })}
         </Button>
         <Dialog.Close asChild>
           <Button>{t('deployment dialog skip button label')}</Button>

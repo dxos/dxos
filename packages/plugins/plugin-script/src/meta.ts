@@ -16,5 +16,3 @@ export const meta: PluginMeta = {
   tags: ['experimental'],
   screenshots: ['https://dxos.network/plugin-details-scripts-dark.png'],
 };
-
-export const DEPLOYMENT_DIALOG = `${SCRIPT_PLUGIN}/deployment/dialog`;
