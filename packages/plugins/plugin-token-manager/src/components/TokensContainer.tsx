@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { type S } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { create, Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
@@ -20,7 +20,8 @@ const initialValues = {
   token: '',
 };
 
-type Form = S.Schema.Type<typeof AccessTokenSchema>;
+const FormSchema = AccessTokenSchema.pipe(S.omit('id'));
+type TokenForm = S.Schema.Type<typeof FormSchema>;
 
 export const TokensContainer = ({ space }: { space: Space }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -30,7 +31,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
   const handleAdd = useCallback(
-    async (form: Form) => {
+    async (form: TokenForm) => {
       await dispatch(createIntent(SpaceAction.AddObject, { object: create(AccessTokenType, form), target: space }));
       setAdding(false);
     },
@@ -44,7 +45,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         {!adding && <NewTokenSelector space={space} onCustomToken={handleNew} />}
       </div>
       {adding ? (
-        <Form schema={AccessTokenSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd} />
+        <Form schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd} />
       ) : (
         <TokenManager tokens={tokens} onDelete={handleDelete} />
       )}
