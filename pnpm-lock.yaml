@@ -8242,9 +8242,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

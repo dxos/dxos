@@ -4,7 +4,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, createIntent, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import {
+  Capabilities,
+  CollaborationActions,
+  createIntent,
+  useCapabilities,
+  useCapability,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { type AssociatedArtifact, createSystemPrompt, type Tool } from '@dxos/artifact';
 import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL } from '@dxos/assistant';
 import { FunctionType } from '@dxos/functions/types';
@@ -16,7 +23,7 @@ import { isNonNullable } from '@dxos/util';
 import { AssistantCapabilities } from '../capabilities';
 import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
 import { covertFunctionToTool, createToolsFromService } from '../tools';
-import { type AIChatType, AssistantAction, type AssistantSettingsProps, ServiceType } from '../types';
+import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
   chat?: AIChatType;
@@ -90,7 +97,7 @@ export const useChatProcessor = ({
     return (dxn: string, blockIndex: number, content: string) => {
       if (dispatch && associatedArtifact) {
         void dispatch(
-          createIntent(AssistantAction.ContentProposal, {
+          createIntent(CollaborationActions.ContentProposal, {
             dxn,
             blockIndex,
             content,

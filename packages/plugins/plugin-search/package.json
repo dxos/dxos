@@ -35,7 +35,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
