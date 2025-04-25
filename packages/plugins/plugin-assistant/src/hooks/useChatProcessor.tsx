@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact, createSystemPrompt, type Tool } from '@dxos/artifact';
 import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL } from '@dxos/assistant';
 import { FunctionType } from '@dxos/functions/types';
@@ -16,7 +16,7 @@ import { isNonNullable } from '@dxos/util';
 import { AssistantCapabilities } from '../capabilities';
 import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
 import { covertFunctionToTool, createToolsFromService } from '../tools';
-import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
+import { type AIChatType, AssistantAction, type AssistantSettingsProps, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
   chat?: AIChatType;
@@ -85,12 +85,35 @@ export const useChatProcessor = ({
       ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
       : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
 
+  // Create a callback for processing proposals
+  const onProposalProcessed = useMemo(() => {
+    return (dxn: string, blockIndex: number, content: string) => {
+      if (dispatch && associatedArtifact) {
+        void dispatch(
+          createIntent(AssistantAction.ContentProposal, {
+            dxn,
+            blockIndex,
+            content,
+            associatedArtifact,
+          }),
+        );
+      }
+    };
+  }, [dispatch, associatedArtifact]);
+
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
     log('creating processor...', { settings });
-    return new ChatProcessor(aiClient.value, tools, artifactDefinitions, extensions, { model, systemPrompt });
-  }, [aiClient.value, tools, extensions, model, systemPrompt]);
+    return new ChatProcessor(
+      aiClient.value,
+      tools,
+      artifactDefinitions,
+      extensions,
+      { model, systemPrompt },
+      onProposalProcessed,
+    );
+  }, [aiClient.value, tools, artifactDefinitions, extensions, model, systemPrompt, onProposalProcessed]);
 
   return processor;
 };
