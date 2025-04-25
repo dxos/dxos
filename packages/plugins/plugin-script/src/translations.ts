@@ -45,7 +45,6 @@ export default [
         'settings editor input mode vscode label': 'VS Code',
         'template select group label': 'Select template',
         'function panel label': 'Debug Function',
-        'script settings label': 'Settings',
         'script test label': 'Test',
         'script logs label': 'Logs',
       },

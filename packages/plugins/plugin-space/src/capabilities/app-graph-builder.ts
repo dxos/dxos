@@ -19,6 +19,7 @@ import {
 import { isDeleted } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, toSignal, type Node, type InvokeParams } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
@@ -314,6 +315,25 @@ export default (context: PluginsContext) => {
         const state = context.requestCapability(SpaceCapabilities.State);
         return constructObjectActions({ node, dispatch, navigable: state.navigableCollections });
       },
+    }),
+
+    // Object settings plank companion.
+    createExtension({
+      id: `${SPACE_PLUGIN}/settings`,
+      filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+      connector: ({ node }) => [
+        {
+          id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),
+          type: PLANK_COMPANION_TYPE,
+          data: 'settings',
+          properties: {
+            label: ['object settings label', { ns: SPACE_PLUGIN }],
+            icon: 'ph--sliders--regular',
+            disposition: 'hidden',
+            position: 'hoist',
+          },
+        },
+      ],
     }),
   ]);
 };

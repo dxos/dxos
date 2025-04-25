@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { ATTENDABLE_PATH_SEPARATOR, COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { InboxCapabilities } from './capabilities';
@@ -22,7 +22,7 @@ export default (context: PluginsContext) =>
         return [
           {
             id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}message`,
-            type: COMPANION_TYPE,
+            type: PLANK_COMPANION_TYPE,
             data: message ?? 'message',
             properties: {
               label: ['message label', { ns: INBOX_PLUGIN }],

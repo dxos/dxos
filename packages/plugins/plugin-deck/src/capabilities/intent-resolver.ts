@@ -34,7 +34,7 @@ import {
   isLayoutMode,
   getMode,
   defaultDeck,
-  COMPANION_TYPE,
+  PLANK_COMPANION_TYPE,
 } from '../types';
 import { setActive } from '../util';
 
@@ -377,7 +377,7 @@ export default (context: PluginsContext) =>
             const node = graph.findNode(adjustment.id);
             const [companion] = node
               ? graph
-                  .nodes(node, { filter: (n): n is Node<any> => n.type === COMPANION_TYPE })
+                  .nodes(node, { filter: (n): n is Node<any> => n.type === PLANK_COMPANION_TYPE })
                   .toSorted((a, b) => byPosition(a.properties, b.properties))
               : [];
             if (companion) {
