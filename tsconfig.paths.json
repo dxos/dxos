@@ -217,6 +217,9 @@
       "@dxos/plugin-token-manager": [
         "packages/plugins/plugin-token-manager/src/index.ts"
       ],
+      "@dxos/plugin-token-manager/types": [
+        "packages/plugins/plugin-token-manager/src/types.ts"
+      ],
       "@dxos/plugin-transcription": [
         "packages/plugins/plugin-transcription/src/index.ts"
       ],
