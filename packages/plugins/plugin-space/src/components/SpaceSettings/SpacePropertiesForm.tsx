@@ -92,7 +92,7 @@ export const SpacePropertiesForm = ({ space }: SpacePropertiesFormProps) => {
               onChange={handleChange}
               onReset={handleEmojiReset}
               classNames='justify-self-end'
-              iconSize={7}
+              iconSize={5}
             />
           </ControlItem>
         );

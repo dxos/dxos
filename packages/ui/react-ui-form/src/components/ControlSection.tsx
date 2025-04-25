@@ -58,7 +58,7 @@ export type ControlItemProps = PropsWithChildren<{
   description?: Label;
 }>;
 
-const controlItemClasses =
+export const controlItemClasses =
   'p-4 border border-separator rounded-lg container-max-width grid md:col-span-2 grid-cols-subgrid items-center';
 
 const controlItemTitleClasses = 'text-lg font-normal mbe-2';
