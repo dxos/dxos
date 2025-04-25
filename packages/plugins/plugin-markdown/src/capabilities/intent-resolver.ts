@@ -45,7 +45,8 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: CollaborationActions.ContentProposal,
-      resolve: async ({ dxn, blockIndex, associatedArtifact }) => {
+      resolve: async ({ dxn, messageId, associatedArtifact }) => {
+        console.log('[markdown]', 'processing proposal');
         // Get the document from the associatedArtifact
         const { id, typename } = associatedArtifact;
 
@@ -74,7 +75,7 @@ export default (context: PluginsContext) =>
         const content = await document.content.load();
 
         // Format the link with the proposal protocol
-        const proposalLink = `\n\n[View proposal](proposal:${dxn}#${blockIndex})`;
+        const proposalLink = `\n\n[View proposal](proposal:${dxn}#${messageId})`;
 
         // Append the link to the document content
         document.content = content + proposalLink;

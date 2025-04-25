@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   Capabilities,
@@ -93,20 +93,21 @@ export const useChatProcessor = ({
       : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
 
   // Create a callback for processing proposals
-  const onProposalProcessed = useMemo(() => {
-    return (dxn: string, blockIndex: number, content: string) => {
-      if (dispatch && associatedArtifact) {
+  const onProposalProcessed = useCallback(
+    (messageId: string) => {
+      console.log('[use chat processor]', 'dispatching proposal intent');
+      if (chat && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.ContentProposal, {
-            dxn,
-            blockIndex,
-            content,
+            dxn: chat.assistantChatQueue.dxn.toString(),
+            messageId,
             associatedArtifact,
           }),
         );
       }
-    };
-  }, [dispatch, associatedArtifact]);
+    },
+    [dispatch, associatedArtifact],
+  );
 
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.

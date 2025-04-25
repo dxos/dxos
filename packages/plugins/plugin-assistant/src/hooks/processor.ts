@@ -5,14 +5,7 @@
 import { type Signal, batch, computed, signal } from '@preact/signals-core';
 
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import {
-  ArtifactId,
-  type ArtifactDefinition,
-  type Message,
-  type MessageContentBlock,
-  type TextContentBlock,
-  type Tool,
-} from '@dxos/artifact';
+import { type ArtifactDefinition, type Message, type MessageContentBlock, type Tool } from '@dxos/artifact';
 import { type AIServiceClient, AISession, DEFAULT_EDGE_MODEL, type GenerateRequest } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -55,12 +48,6 @@ export class ChatProcessor {
   private _session: AISession | undefined;
 
   /**
-   * Regex to detect proposals in text.
-   * @private
-   */
-  private readonly _proposalRegex = /<proposal>(.*?)<\/proposal>/gs;
-
-  /**
    * Streaming state.
    * @reactive
    */
@@ -95,7 +82,7 @@ export class ChatProcessor {
     private _artifacts?: ArtifactDefinition[],
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: ChatProcessorOptions = defaultOptions,
-    private readonly _onProposalProcessed?: (dxn: string, blockIndex: number, content: string) => void,
+    private readonly _onProposalProcessed?: (messageId: string) => void,
   ) {}
 
   get tools() {
@@ -131,20 +118,6 @@ export class ChatProcessor {
       batch(() => {
         this._block.value = block;
       });
-
-      // For streaming updates, we need to check the current message with the new block
-      if (block.type === 'text' && this._pending.value.length > 0) {
-        const currentMessage = this._pending.value[this._pending.value.length - 1];
-
-        // Create a temporary message with the current block to check for proposals
-        const tempMessage: Message = {
-          ...currentMessage,
-          content: [block],
-        };
-
-        // Check for proposals in the current block
-        this._checkForProposals(tempMessage, 0);
-      }
     });
 
     this._session.userMessage.on((message) => {
@@ -196,56 +169,18 @@ export class ChatProcessor {
    * Check for proposals in a message and call the callback if found.
    * @private
    */
-  private _checkForProposals(message: Message, blockIndex?: number): void {
-    // If no callback is provided and extensions are not available, return
-    if (!this._onProposalProcessed) {
-      return;
-    }
+  private _checkForProposals(message: Message): void {
+    const proposal = message.content.find((block) => {
+      console.log('checking block', block);
+      return block.type === 'json' && block.disposition === 'proposal';
+    });
 
-    // Only check messages from the assistant
-    if (message.role !== 'assistant') {
-      return;
-    }
+    console.log('[proposal]', proposal);
 
-    // Create a DXN for the message
-    const messageDxn = message.spaceId && ArtifactId.toDXN(`${message.spaceId}:${message.id}`);
-    if (!messageDxn) {
-      log.warn('Failed to create DXN for message', { message });
-      return;
-    }
-
-    // Check each content block for proposals
-    const blocks = blockIndex !== undefined ? [message.content[blockIndex]] : message.content;
-
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      const currentBlockIndex = blockIndex !== undefined ? blockIndex : i;
-
-      // Only check text blocks
-      if (block.type !== 'text') {
-        continue;
-      }
-
-      const textBlock = block as TextContentBlock;
-
-      // Check if the text contains proposals
-      const proposalMatches = [...textBlock.text.matchAll(this._proposalRegex)];
-      if (proposalMatches.length > 0) {
-        // Process each proposal
-        for (const match of proposalMatches) {
-          const proposalContent = match[1];
-          log.info('Found proposal', {
-            proposalContent,
-            messageDxn: messageDxn.toString(),
-            blockIndex: currentBlockIndex,
-          });
-
-          // If a callback is provided, call it with the DXN, block index, and content
-          if (this._onProposalProcessed) {
-            this._onProposalProcessed(messageDxn.toString(), currentBlockIndex, proposalContent);
-          }
-        }
-      }
+    // Check each content block in the message
+    if (proposal) {
+      console.log('[processor]', 'calling proposal callback with message id', message.id);
+      this._onProposalProcessed?.(message.id);
     }
   }
 

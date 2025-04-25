@@ -316,6 +316,18 @@ export const mergeMessageBlock = (
           break;
         }
 
+        case 'proposal': {
+          console.log('[parser]', 'proposal encountered');
+          if (streamBlock.content.length === 1 && streamBlock.content[0].type === 'text') {
+            return {
+              type: 'json',
+              disposition: 'proposal',
+              json: JSON.stringify({ text: streamBlock.content[0].content }),
+            };
+          }
+          break;
+        }
+
         case 'select': {
           return {
             type: 'json',
