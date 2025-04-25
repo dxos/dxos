@@ -84,9 +84,6 @@
       "path": "../plugin-attention"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
       "path": "../plugin-graph"
     },
     {

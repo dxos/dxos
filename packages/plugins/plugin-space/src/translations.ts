@@ -96,7 +96,7 @@ export default [
         'join success label': 'Successfully joined space',
         'name label': 'Name',
         'name placeholder': 'Name',
-        'unnamed object settings label': 'Settings',
+        'object settings label': 'Settings',
         'edge replication label': 'Enable EDGE Replication',
         'saving locally label': 'Writing to disk',
         'downloading label': 'Replicating from peers',

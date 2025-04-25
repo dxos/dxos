@@ -62,7 +62,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
       intent: ObservabilityAction.CaptureUserFeedback,
       resolve: async (data) => {
         const observability = context.requestCapability(ObservabilityCapabilities.Observability);
-        observability.captureUserFeedback(data.email, data.name, data.message);
+        observability.captureUserFeedback(data.message);
       },
     }),
   ]);

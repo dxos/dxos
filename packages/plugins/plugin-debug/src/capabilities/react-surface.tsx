@@ -141,10 +141,11 @@ export default (context: PluginsContext) =>
       ),
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/complementary`,
-      role: 'complementary--debug',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <DebugObjectPanel object={data.subject} />,
+      id: `${DEBUG_PLUGIN}/object-debug`,
+      role: 'article',
+      filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
+        data.subject === 'debug' && isEchoObject(data.companionTo),
+      component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,

@@ -10,6 +10,7 @@ import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ControlSectionHeading } from '@dxos/react-ui-form';
 import { Accordion } from '@dxos/react-ui-list';
 import { StackItem } from '@dxos/react-ui-stack';
+import { byPosition } from '@dxos/util';
 
 import { SpaceCapabilities } from '../../capabilities';
 import { SPACE_PLUGIN } from '../../meta';
@@ -25,7 +26,7 @@ export type SpaceSettingsContainerProps = {
 export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const state = useCapability(SpaceCapabilities.MutableState);
-  const items = useCapabilities(SpaceCapabilities.SettingsSection);
+  const items = useCapabilities(SpaceCapabilities.SettingsSection).toSorted(byPosition);
   const data = useMemo(() => ({ subject: space }), [space]);
 
   const handleOpenSectionChange = useCallback(

@@ -109,7 +109,7 @@ export class Observability {
   private _otelLogs?: OtelLogs;
   private _errorReportingOptions?: InitOptions;
   private _captureException?: typeof SentryCaptureException;
-  private _captureUserFeedback?: (name: string, email: string, message: string) => Promise<void>;
+  private _captureUserFeedback?: (message: string) => Promise<void>;
   private _lastNetworkStatus?: NetworkStatus;
 
   private _ctx = new Context();
@@ -620,10 +620,15 @@ export class Observability {
    * Manually capture user feedback.
    * The default implementation uses Sentry.
    */
-  captureUserFeedback(name: string, email: string, message: string) {
+  captureUserFeedback(message: string) {
+    if (!this._secrets.SENTRY_DESTINATION) {
+      log.info('Feedback submitted without Sentry destination', { message });
+      return;
+    }
+
     // TODO(Zan): Should this respect telemetry mode? Sending feedback is explicitly user-initiated.
     // - Maybe if telemetry is disable we shouldn't enable replay.
     // - (Check the browser.ts implementation for reference).
-    void this._captureUserFeedback?.(name, email, message);
+    void this._captureUserFeedback?.(message);
   }
 }

@@ -19,6 +19,11 @@ export default [
         // TODO: Add link about telemetry privacy. Make it clearer that user data is not collected.
         'observability description':
           'When enabled, basic usage data will used to improve the product. This may include performance metrics, error logs, and usage data. No personally identifiable information, other than your public key, is included with this data and no private data ever leaves your devices.',
+
+        'help label': 'Feedback & Support',
+        'feedback text area label': 'Feedback',
+        'feedback text area placeholder': 'Please describe your issue or suggestion.',
+        'send feedback label': 'Send Feedback',
       },
     },
   },
