@@ -95,6 +95,7 @@ export default (context: PluginsContext) =>
           properties: {
             label: ['assistant chat label', { ns: ASSISTANT_PLUGIN }],
             icon: 'ph--star-four--regular',
+            position: 'hoist',
           },
         },
       ],
