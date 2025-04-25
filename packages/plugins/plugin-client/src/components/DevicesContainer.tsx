@@ -13,12 +13,12 @@ import { type Device, useDevices } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
+import { ControlFrame, ControlFrameItem, ControlGroup, ControlItem, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
-import { ControlFrame, ControlFrameItem, ControlGroup, ControlItem, ControlSection } from './ControlSection';
 import { CLIENT_PLUGIN } from '../meta';
 import { ClientAction } from '../types';
 

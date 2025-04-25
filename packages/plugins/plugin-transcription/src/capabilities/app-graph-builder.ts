@@ -8,7 +8,7 @@ import { generateName } from '@dxos/display-name';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { MeetingCapabilities, type CallState, type MediaState } from '@dxos/plugin-meeting';
 import { MeetingType } from '@dxos/plugin-meeting/types';
@@ -99,12 +99,13 @@ export default (context: PluginsContext) =>
 
         return [
           {
-            id: `${fullyQualifiedId(meeting)}${SLUG_PATH_SEPARATOR}${getSchemaTypename(TranscriptType)}`,
+            id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}${getSchemaTypename(TranscriptType)}`,
             type: COMPANION_TYPE,
             data: meeting.artifacts[getSchemaTypename(TranscriptType)!]?.target,
             properties: {
               label: ['transcript companion label', { ns: TRANSCRIPTION_PLUGIN }],
               icon: 'ph--subtitles--regular',
+              disposition: 'hidden',
               schema: TranscriptType,
               getIntent: ({ space }: { space: Space }) =>
                 createIntent(TranscriptionAction.Create, { spaceId: space.id }),

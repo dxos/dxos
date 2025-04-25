@@ -115,6 +115,15 @@ export const SpacePlugin = ({
         ),
     }),
     defineModule({
+      id: `${meta.id}/module/space-settings`,
+      activatesOn: SpaceEvents.SetupSettingsPanel,
+      activate: () =>
+        contributes(SpaceCapabilities.SettingsSection, {
+          id: 'properties',
+          label: ['space settings properties label', { ns: SPACE_PLUGIN }],
+        }),
+    }),
+    defineModule({
       id: `${meta.id}/module/complementary-panel`,
       activatesOn: DeckEvents.SetupComplementaryPanels,
       activate: () =>
@@ -147,7 +156,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
-      activate: (context) => IntentResolver({ createInvitationUrl, context, observability }),
+      activate: (context) => IntentResolver({ context, observability }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
