@@ -100,7 +100,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
       onSelect: ({ selection }) => {
         const current = selection.current ?? selection.closest;
         if (current) {
-          void dispatch(createIntent(ThreadAction.Select, { current, skipOpen: true }));
+          void dispatch(createIntent(ThreadAction.Select, { current }));
         }
       },
     }),

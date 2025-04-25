@@ -56,6 +56,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
@@ -102,6 +103,7 @@
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "@types/react-window": "^1.8.8",
+    "effect": "3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"
@@ -109,6 +111,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "effect": "3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
