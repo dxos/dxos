@@ -16,3 +16,8 @@ export const meta: PluginMeta = {
   tags: ['experimental'],
   screenshots: ['https://dxos.network/plugin-details-scripts-dark.png'],
 };
+
+// TODO(ZaymonFC): Configure by scopes?
+export const defaultScriptsForIntegration: Record<string, string[]> = {
+  'gmail.com': ['dxos.org/script/gmail'],
+};

@@ -28,6 +28,8 @@ export default [
         'action delete': 'Delete',
         'action mark read': 'Mark as read',
         'message label': 'Message',
+        'no integrations label': 'No integrations configured',
+        'manage integrations button label': 'Manage Integrations',
       },
     },
   },
