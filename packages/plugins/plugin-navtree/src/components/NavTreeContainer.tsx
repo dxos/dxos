@@ -17,7 +17,7 @@ import {
   useLayout,
 } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
-import { COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
 import { useMediaQuery } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
@@ -47,7 +47,7 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
 );
 
 const getChildrenFilter = (node: Node): node is Node =>
-  untracked(() => !isActionLike(node) && node.type !== COMPANION_TYPE);
+  untracked(() => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE);
 
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;

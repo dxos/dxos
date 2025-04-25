@@ -42,8 +42,8 @@ export default () =>
       },
     }),
     // createSurface({
-    //   id: `${meta.id}/settings`,
-    //   role: 'complementary--settings',
+    //   id: `${meta.id}/object-settings`,
+    //   role: 'object-settings',
     //   filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
     //   component: ({ data }) => <TableViewEditor table={data.subject} />,
     // }),

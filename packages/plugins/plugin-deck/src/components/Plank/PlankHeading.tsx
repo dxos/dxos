@@ -13,7 +13,7 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { parseEntryId } from '../../layout';
 import { DECK_PLUGIN } from '../../meta';
-import { COMPANION_TYPE, DeckAction, type ResolvedPart } from '../../types';
+import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart } from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
@@ -56,7 +56,7 @@ export const PlankHeading = memo(
       ? t('pending heading')
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
 
-    const isCompanionNode = node?.type === COMPANION_TYPE;
+    const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {

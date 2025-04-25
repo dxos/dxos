@@ -12,7 +12,8 @@ import { DECK_PLUGIN } from './meta';
 
 export { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
-export const COMPANION_TYPE = 'dxos.org/plugin/deck/companion';
+export const PLANK_COMPANION_TYPE = 'dxos.org/plugin/deck/plank-companion';
+export const DECK_COMPANION_TYPE = 'dxos.org/plugin/deck/deck-companion';
 
 // TODO(Zan): In the future we should consider adding new planks adjacent to the attended plank.
 export const NewPlankPositions = ['start', 'end'] as const;
