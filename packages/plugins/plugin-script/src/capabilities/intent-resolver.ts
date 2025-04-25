@@ -12,6 +12,7 @@ import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
 import { TextType } from '@dxos/schema';
 
 import { DEPLOYMENT_DIALOG } from '../components';
+import { defaultScriptsForIntegration } from '../meta';
 import { templates } from '../templates';
 import { ScriptAction } from '../types';
 
@@ -57,7 +58,7 @@ export default () =>
     createResolver({
       intent: TokenManagerAction.AccessTokenCreated,
       resolve: async ({ accessToken }) => {
-        const scriptTemplates = (defaultScripts[accessToken.source] ?? [])
+        const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
           .map((id) => templates.find((t) => t.id === id))
           .filter(isNotNullable);
 
@@ -77,9 +78,3 @@ export default () =>
       },
     }),
   ]);
-
-// TODO(ZaymonFC): Move to META? Defs?
-// TODO(ZaymonFC): Configure by scopes?
-const defaultScripts: Record<string, string[]> = {
-  'gmail.com': ['dxos.org/script/gmail'],
-};
