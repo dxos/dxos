@@ -42,7 +42,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
           part: 'toast',
           subject: {
             id: `${SCRIPT_PLUGIN}/deployment-success`,
-            icon: 'ph--info--regular',
+            icon: 'ph--check--regular',
             duration: Infinity,
             title: ['script deployment toast label', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
             description: ['script deployment toast description', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
@@ -59,7 +59,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
           part: 'toast',
           subject: {
             id: `${SCRIPT_PLUGIN}/deployment-error`,
-            icon: 'ph--error--regular',
+            icon: 'ph--warning--regular',
             duration: Infinity,
             title: ['script deployment error toast label', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
             description: [

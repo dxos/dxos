@@ -242,7 +242,6 @@ export default ({ context, observability }: IntentResolverOptions) => {
     }),
     createResolver({
       intent: SpaceAction.OpenSettings,
-<<<<<<< HEAD
       resolve: ({ space }) => {
         const layout = context.requestCapability(Capabilities.Layout);
         const id = `${space.id}${ATTENDABLE_PATH_SEPARATOR}settings`;
@@ -272,23 +271,6 @@ export default ({ context, observability }: IntentResolverOptions) => {
                 },
               }),
             ),
-=======
-      resolve: ({ space, initialTab }) => {
-        return {
-          intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: SPACE_SETTINGS_DIALOG,
-              options: {
-                blockAlign: 'start',
-                props: {
-                  space,
-                  initialTab: initialTab ?? 'settings',
-                  createInvitationUrl,
-                } satisfies Partial<SpaceSettingsDialogProps>,
-              },
-            }),
->>>>>>> faa03a85ca (Broaded type for space settings tab)
           ],
         };
       },

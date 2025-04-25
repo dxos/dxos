@@ -176,10 +176,7 @@ export namespace SpaceAction {
 
   // TODO(wittjosiah): Handle scrolling to section.
   export class OpenSettings extends S.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {
-    input: S.Struct({
-      space: SpaceSchema,
-      initialTab: S.optional(S.String),
-    }),
+    input: S.Struct({ space: SpaceSchema, }),
     output: S.Void,
   }) {}
 

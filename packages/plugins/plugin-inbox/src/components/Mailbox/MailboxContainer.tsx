@@ -7,12 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { DeckAction } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { DeckAction, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue } from '@dxos/react-client/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { fullyQualifiedId, useQueue, Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { useTranslation, Button } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { AccessTokenType, type MessageType } from '@dxos/schema';
 
@@ -100,10 +97,9 @@ const EmptyMailboxContent = ({ mailbox }: { mailbox: MailboxType }) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  const handleGoogleOAuth = useCallback(() => {
+  const openSpaceSettings = useCallback(() => {
     if (space) {
-      // TODO(ZaymonFC): Space setting tab names should be an accessible constant somewhere?
-      void dispatch(createIntent(SpaceAction.OpenSettings, { space, initialTab: 'token-manager' }));
+      void dispatch(createIntent(SpaceAction.OpenSettings, { space }));
     }
   }, [space]);
 
@@ -113,7 +109,7 @@ const EmptyMailboxContent = ({ mailbox }: { mailbox: MailboxType }) => {
     return (
       <div className='flex flex-col items-center gap-4 p-8'>
         <p className='text-description'>{t('no integrations label')}</p>
-        <Button onClick={handleGoogleOAuth}>{t('manage integrations button label')}</Button>
+        <Button onClick={openSpaceSettings}>{t('manage integrations button label')}</Button>
       </div>
     );
   }
