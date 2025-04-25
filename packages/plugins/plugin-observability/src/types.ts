@@ -6,13 +6,6 @@ import { S } from '@dxos/echo-schema';
 
 import { OBSERVABILITY_PLUGIN } from './meta';
 
-const Email = S.String.pipe(
-  S.nonEmptyString({ message: () => 'Email is required.' }),
-  S.pattern(/^(?!\.)(?!.*\.\.)([A-Z0-9_+-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i, {
-    message: () => 'Invalid email address.',
-  }),
-);
-
 const nonEmpty = <S extends S.Schema.Any>(field: string) =>
   S.nonEmptyString<S>({ message: () => `Missing field: ${field}` });
 
@@ -20,8 +13,6 @@ const maxLength = <S extends S.Schema.Any>(field: string, length: number) =>
   S.maxLength<S>(length, { message: () => `Exceeds max length (${length}): ${field}` });
 
 export const UserFeedback = S.Struct({
-  name: S.String.pipe(nonEmpty('Name'), maxLength('Name', 256)),
-  email: Email.pipe(maxLength('Email', 256)),
   message: S.String.pipe(nonEmpty('Feedback'), maxLength('Feedback', 32_768)),
 });
 

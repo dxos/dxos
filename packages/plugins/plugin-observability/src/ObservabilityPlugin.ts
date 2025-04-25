@@ -6,6 +6,7 @@ import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } 
 import { type Observability } from '@dxos/observability';
 
 import {
+  AppGraphBuilder,
   ClientReady,
   IntentResolver,
   ObservabilityCapabilities,
@@ -49,6 +50,11 @@ export const ObservabilityPlugin = (options: { namespace: string; observability:
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/client-ready`,

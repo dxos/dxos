@@ -7,8 +7,8 @@ import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { type Observability } from '@dxos/observability';
+import { FeedbackForm } from '@dxos/plugin-observability';
 import { type UserFeedback } from '@dxos/plugin-observability/types';
-import { FeedbackForm } from '@dxos/plugin-status-bar';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -81,7 +81,7 @@ export const ResetDialog = ({
       }
 
       const observability = await observabilityPromise;
-      observability.captureUserFeedback(values.email, values.name, values.message);
+      observability.captureUserFeedback(values.message);
       setFeedbackOpen(false);
     },
     [observabilityPromise],
