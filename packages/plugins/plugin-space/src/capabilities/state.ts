@@ -14,9 +14,11 @@ import { SPACE_PLUGIN } from '../meta';
 import { type PluginState } from '../types';
 
 export default (context: PluginsContext) => {
+  const sections = context.requestCapabilities(SpaceCapabilities.SettingsSection);
   const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
     awaiting: undefined,
     spaceNames: {},
+    spaceSettingsOpenSections: sections.map((section) => section.id),
     viewersByObject: {},
     // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
     viewersByIdentity: new ComplexMap(PublicKey.hash),

@@ -23,7 +23,7 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useNode, type Node } from '@dxos/plugin-graph';
-import { useAttendableAttributes } from '@dxos/react-ui-attention';
+import { ATTENDABLE_PATH_SEPARATOR, useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
@@ -32,15 +32,8 @@ import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 import { DeckCapabilities } from '../../capabilities';
 import { useMainSize } from '../../hooks';
-import {
-  COMPANION_TYPE,
-  SLUG_PATH_SEPARATOR,
-  DeckAction,
-  type LayoutMode,
-  type Part,
-  type ResolvedPart,
-  type DeckSettingsProps,
-} from '../../types';
+import { parseEntryId } from '../../layout';
+import { DeckAction, type LayoutMode, type Part, type ResolvedPart, type DeckSettingsProps } from '../../types';
 import { useCompanions } from '../../util';
 
 const UNKNOWN_ID = 'unknown_id';
@@ -79,9 +72,8 @@ const PlankImpl = memo(
     const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
     const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
-    const surfaceVariant = node?.type === COMPANION_TYPE ? node?.id.split(SLUG_PATH_SEPARATOR).pop() : undefined;
-
-    const sizeKey = `${id.split('+')[0]}${surfaceVariant ? `${SLUG_PATH_SEPARATOR}${surfaceVariant}` : ''}`;
+    const { variant } = parseEntryId(id);
+    const sizeKey = `${id.split('+')[0]}${variant ? `${ATTENDABLE_PATH_SEPARATOR}${variant}` : ''}`;
     const size = deck.plankSizing[sizeKey] as number | undefined;
     const setSize = useCallback(
       debounce((nextSize: number) => {
@@ -120,11 +112,11 @@ const PlankImpl = memo(
         node && {
           subject: node.data,
           companionTo: primary?.data,
-          variant: surfaceVariant,
+          variant,
           path,
           popoverAnchorId,
         },
-      [node, node?.data, path, popoverAnchorId, surfaceVariant, primary?.data],
+      [node, node?.data, path, popoverAnchorId, primary?.data],
     );
 
     // TODO(wittjosiah): Change prop to accept a component.
@@ -170,7 +162,6 @@ const PlankImpl = memo(
               canIncrementEnd={canIncrementEnd}
               popoverAnchorId={popoverAnchorId}
               primaryId={primary?.id}
-              surfaceVariant={surfaceVariant}
               companioned={companioned}
               companions={companions}
             />
