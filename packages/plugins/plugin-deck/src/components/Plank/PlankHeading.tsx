@@ -150,7 +150,7 @@ export const PlankHeading = memo(
                 key={id}
                 data-id={id}
                 icon={icon}
-                // iconOnly
+                iconOnly={node?.id !== id}
                 label={toLocalizedString(label, t)}
                 size={5}
                 variant={node?.id === id ? 'primary' : 'default'}
