@@ -22,7 +22,7 @@ export default [
 
         'help label': 'Feedback & Support',
         'feedback text area label': 'Feedback',
-        'feedback text area placeholder': 'Please describe your issue or suggestion.',
+        'feedback text area placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'send feedback label': 'Send Feedback',
       },
     },

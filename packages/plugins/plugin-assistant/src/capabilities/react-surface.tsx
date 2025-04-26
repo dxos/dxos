@@ -51,6 +51,8 @@ export default () =>
       component: ({ data, role }) => {
         const associatedArtifact = useMemo(
           () => ({
+            // id: data.subject.id,
+            // typename: getTypename(data.subject) ?? 'unknown',
             id: fullyQualifiedId(data.companionTo),
             typename: getTypename(data.companionTo) ?? 'unknown',
           }),
