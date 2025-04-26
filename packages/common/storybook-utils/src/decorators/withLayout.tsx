@@ -41,7 +41,7 @@ export type WithLayoutProps = ThemedClassName<ProviderOptions & { Container?: FC
 export const withLayout = ({
   classNames,
   fullscreen,
-  Container = FixedContainer,
+  Container = fullscreen ? FixedContainer : DefaultContainer,
   ...providedOptions
 }: WithLayoutProps = {}): Decorator => {
   // TODO(burdon): Inspect "fullscreen" parameter in context.
@@ -57,9 +57,17 @@ export const withLayout = ({
   };
 };
 
-export const FixedContainer: FC<ContainerProps> = ({ children, classNames, fullscreen }) => {
+export const DefaultContainer: FC<ContainerProps> = ({ children, classNames }) => {
   return (
-    <div role='none' className={mx(fullscreen && 'fixed inset-0 flex overflow-hidden', classNames)}>
+    <div role='none' className={mx(classNames)}>
+      {children}
+    </div>
+  );
+};
+
+export const FixedContainer: FC<ContainerProps> = ({ children, classNames }) => {
+  return (
+    <div role='none' className={mx('fixed inset-0 flex overflow-hidden', classNames)}>
       {children}
     </div>
   );
@@ -68,7 +76,9 @@ export const FixedContainer: FC<ContainerProps> = ({ children, classNames, fulls
 export const ColumnContainer: FC<ContainerProps> = ({ children, classNames = 'w-[50rem]', ...props }) => {
   return (
     <FixedContainer classNames='justify-center' {...props}>
-      <div className={mx('flex h-full overflow-y-auto', classNames)}>{children}</div>
+      <div role='none' className={mx('flex flex-col h-full overflow-y-auto', classNames)}>
+        {children}
+      </div>
     </FixedContainer>
   );
 };

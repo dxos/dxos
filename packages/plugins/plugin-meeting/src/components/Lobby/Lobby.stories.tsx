@@ -25,7 +25,7 @@ const meta: Meta<typeof Lobby> = {
   // },
   decorators: [
     withPluginManager({ plugins: [...(await createMeetingPlugins())] }),
-    withLayout({ tooltips: true, Container: ColumnContainer, classNames: 'w-[50rem]' }),
+    withLayout({ tooltips: true, Container: ColumnContainer, classNames: 'w-[50rem] overflow-hidden' }),
     withTheme,
   ],
   parameters: {
