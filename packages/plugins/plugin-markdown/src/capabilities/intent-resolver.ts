@@ -15,7 +15,7 @@ import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { makeRef, create, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { createDocAccessor, parseId } from '@dxos/react-client/echo';
+import { createDocAccessor, parseFullyQualifiedId, parseId } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -45,45 +45,47 @@ export default (context: PluginsContext) =>
         state.viewMode[id] = viewMode;
       },
     }),
+    // TODO(burdon): What is the error boundary for intents? Are errors reported back to caller?
     createResolver({
       intent: CollaborationActions.InsertContent,
-      resolve: async ({ queueId, messageId, associatedArtifact }) => {
-        // Get the document from the associatedArtifact.
-        // Only handle markdown documents.
-        const { id, typename } = associatedArtifact;
-        log.info('processing proposal', { queueId, messageId, associatedArtifact, id, typename });
-        if (typename !== DocumentType.typename) {
-          log.warn('not a markdown document', { id, typename });
-          return;
-        }
-
+      resolve: async ({ label, queueId, messageId, associatedArtifact }) => {
         const client = context.requestCapability(ClientCapabilities.Client);
         const layout = context.requestCapability(Capabilities.Layout);
-        const { spaceId } = parseId(layout.workspace);
-        const space = spaceId ? client.spaces.get(spaceId) : null;
 
-        let document;
-        if (space) {
-          document = await space.db.query({ id }).first();
-        }
-        if (!document) {
-          log.warn('document not found', { id });
+        // Only handle markdown documents.
+        const { id, typename } = associatedArtifact;
+        log('processing proposal', { queueId, messageId, associatedArtifact });
+        if (typename !== DocumentType.typename) {
+          log.warn('invalid object type', { associatedArtifact });
           return;
         }
 
-        // Load the document content.
-        const content = await document.content.load();
+        // Get the document from the associatedArtifact.
+        let document;
+        const { spaceId } = parseId(layout.workspace);
+        const space = spaceId ? client.spaces.get(spaceId) : null;
+        if (space) {
+          const [objectSpaceId, objectId] = parseFullyQualifiedId(id);
+          if (objectSpaceId !== spaceId) {
+            log.warn('invalid space', { spaceId, associatedArtifact });
+            return;
+          }
 
-        // TODO(burdon): Get prompt for link name.
-        // Format the link with the proposal protocol.
-        const proposalLink = `\n\n[View proposal](dxn://${queueId}#${messageId})`;
+          document = await space.db.query({ id: objectId }).first();
+        }
+        if (!document) {
+          log.warn('document not found', { associatedArtifact });
+          return;
+        }
+
+        // Load the document content and insert link.
+        const content = await document.content.load();
+        const proposalLink = `[${label ?? 'Generated content'}]](${queueId}#${messageId})\n`;
         const accessor = createDocAccessor(content, ['content']);
         accessor.handle.change((doc) => {
-          log.info('insert', { proposalLink });
+          // TODO(burdon): Insert at current cursor position.
           A.splice(doc, accessor.path.slice(), 0, 0, proposalLink);
         });
-
-        log.info('done');
       },
     }),
   ]);

@@ -47,6 +47,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       if (chat && message && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
+            label: 'View proposal',
             queueId: chat.assistantChatQueue.dxn.toString(),
             messageId: message.id,
             associatedArtifact,
