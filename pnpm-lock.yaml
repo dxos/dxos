@@ -7114,6 +7114,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema

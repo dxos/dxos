@@ -9,11 +9,13 @@ import {
   createResolver,
   type PluginsContext,
 } from '@dxos/app-framework';
+import { next as A } from '@dxos/automerge/automerge';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { makeRef, create, refFromDXN } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { parseId } from '@dxos/react-client/echo';
+import { createDocAccessor, parseId } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -46,7 +48,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: CollaborationActions.ContentProposal,
       resolve: async ({ queueId, messageId, associatedArtifact }) => {
-        console.log('[markdown]', 'processing proposal');
+        log.info('processing proposal');
         // Get the document from the associatedArtifact.
         const { id, typename } = associatedArtifact;
 
@@ -73,10 +75,11 @@ export default (context: PluginsContext) =>
         const content = await document.content.load();
 
         // Format the link with the proposal protocol
-        const proposalLink = `\n\n[View proposal](proposal:${queueId}#${messageId})`;
-
-        // Append the link to the document content
-        document.content = content + proposalLink;
+        const proposalLink = `\n\n[View proposal](proposal://${queueId}#${messageId})`;
+        const accessor = createDocAccessor(content, ['content']);
+        accessor.handle.change((doc) => {
+          A.splice(doc, accessor.path.slice(), 0, 0, proposalLink);
+        });
       },
     }),
   ]);
