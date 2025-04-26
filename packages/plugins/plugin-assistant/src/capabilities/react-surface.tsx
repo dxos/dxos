@@ -10,7 +10,14 @@ import { getTypename } from '@dxos/live-object';
 import { SettingsStore } from '@dxos/local-storage';
 import { fullyQualifiedId, isReactiveObject, isSpace, type Space } from '@dxos/react-client/echo';
 
-import { AssistantDialog, AssistantSettings, ChatContainer, ServiceRegistry, TemplateContainer } from '../components';
+import {
+  AssistantDialog,
+  AssistantSettings,
+  ChatContainer,
+  PromptSettings,
+  ServiceRegistry,
+  TemplateContainer,
+} from '../components';
 import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
 import { AIChatType, type AssistantSettingsProps, TemplateType } from '../types';
 
@@ -63,5 +70,11 @@ export default () =>
       role: 'deck-companion--service-registry',
       filter: (data): data is { subject: Space } => isSpace(data.subject),
       component: ({ data }) => <ServiceRegistry space={data.subject} />,
+    }),
+    createSurface({
+      id: `${ASSISTANT_PLUGIN}/prompt-settings`,
+      role: 'object-settings',
+      filter: (data): data is { subject: TemplateType } => isInstanceOf(TemplateType, data.subject),
+      component: ({ data }) => <PromptSettings template={data.subject} />,
     }),
   ]);

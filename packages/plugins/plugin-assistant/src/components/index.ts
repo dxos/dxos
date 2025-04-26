@@ -5,6 +5,7 @@
 import { lazy } from 'react';
 
 export * from './AssistantSettings';
+export * from './PromptSettings';
 export * from './ServiceRegistry';
 export * from './TemplateEditor';
 export * from './Thread';
