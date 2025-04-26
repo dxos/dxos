@@ -19,5 +19,6 @@ export const meta: PluginMeta = {
 
 // TODO(ZaymonFC): Configure by scopes?
 export const defaultScriptsForIntegration: Record<string, string[]> = {
+  // TODO(wittjosiah): Also include content extraction scripts in the default set.
   'gmail.com': ['dxos.org/script/gmail'],
 };

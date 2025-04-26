@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { AutomationAction } from '@dxos/plugin-automation/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 
@@ -19,16 +21,27 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
   const space = useMemo(() => getSpace(object), [object]);
   const triggers = useQuery(space, Filter.schema(FunctionTrigger));
 
-  const [showHandleSync, setShowHandleSync] = useState(true);
-  useEffect(() => {
+  const handleConfigureSync = useCallback(() => {
+    invariant(space);
+
     const syncTrigger = triggers.find((trigger) => trigger.meta?.mailboxId === object.id);
     if (syncTrigger) {
-      setShowHandleSync(false);
+      void dispatch(createIntent(SpaceAction.OpenSettings, { space }));
+    } else {
+      void dispatch(
+        createIntent(AutomationAction.CreateTriggerFromTemplate, {
+          space,
+          template: { type: 'timer', cron: '*/30 * * * * *' },
+          scriptName: 'Gmail',
+          payload: { mailboxId: object.id },
+        }),
+      );
     }
-  }, [triggers]);
+  }, [dispatch, space, object.id, triggers]);
 
-  const [showHandleSubscription, setShowHandleSubscription] = useState(true);
-  useEffect(() => {
+  const handleConfigureSubscription = useCallback(() => {
+    invariant(space);
+
     const subscriptionTrigger = triggers.find((trigger) => {
       if (trigger.spec?.type === TriggerKind.Queue) {
         if (trigger.spec.queue === object.queue.dxn.toString()) {
@@ -38,40 +51,28 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
       return false;
     });
     if (subscriptionTrigger) {
-      setShowHandleSubscription(false);
+      void dispatch(createIntent(SpaceAction.OpenSettings, { space }));
+    } else {
+      void dispatch(
+        createIntent(AutomationAction.CreateTriggerFromTemplate, {
+          space,
+          template: { type: 'queue', queueDXN: object.queue.dxn },
+        }),
+      );
     }
-  }, [triggers]);
+  }, [dispatch, space, object.queue.dxn, triggers]);
 
-  const handleConfigureSync = useCallback(() => {
-    void dispatch(
-      createIntent(AutomationAction.CreateTriggerFromTemplate, {
-        template: { type: 'gmail-sync', mailboxId: object.id },
-      }),
-    );
-  }, [dispatch, object.id]);
-
-  const handleConfigureSubscription = useCallback(() => {
-    void dispatch(
-      createIntent(AutomationAction.CreateTriggerFromTemplate, {
-        template: { type: 'queue', queueDXN: object.queue.dxn },
-      }),
-    );
-  }, [dispatch, object.queue.dxn]);
-
-  if (!showHandleSync && !showHandleSubscription) {
-    return null;
-  }
-
+  // TODO(wittjosiah): More than one trigger may be desired, particularly for subscription.
+  //   Distinguish between configuring existing triggers and adding new ones.
   return (
-    <div className='p-1 flex flex-row gap-1'>
-      {showHandleSync && (
+    <div className='p-2 flex flex-col gap-4'>
+      <h2>{t('mailbox sync label')}</h2>
+      <div className='p-1 flex flex-row gap-1'>
         <Button onClick={handleConfigureSync}>{t('mailbox object settings configure sync button label')}</Button>
-      )}
-      {showHandleSubscription && (
         <Button onClick={handleConfigureSubscription}>
           {t('mailbox object settings configure subscription button label')}
         </Button>
-      )}
+      </div>
     </div>
   );
 };

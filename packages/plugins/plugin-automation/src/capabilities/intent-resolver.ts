@@ -2,26 +2,44 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { contributes, Capabilities, createResolver, type PluginsContext, createIntent } from '@dxos/app-framework';
+import { FunctionTrigger, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { create } from '@dxos/live-object';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { Filter } from '@dxos/react-client/echo';
 
 import { AutomationAction } from '../types';
 
-export default () =>
+export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,
-      resolve: async ({ template }) => {
-        const trigger = create(FunctionTrigger, { enabled: false });
+      resolve: async ({ space, template, enabled = false, scriptName, payload }) => {
+        const trigger = create(FunctionTrigger, { enabled });
+
+        // TODO(wittjosiah): Factor out function lookup by script name?
+        if (scriptName) {
+          const {
+            objects: [script],
+          } = await space.db.query(Filter.schema(ScriptType, { name: scriptName })).run();
+          if (script) {
+            const {
+              objects: [fn],
+            } = await space.db.query(Filter.schema(FunctionType, { source: script })).run();
+            if (fn) {
+              trigger.function = `dxn:worker:${fn.name}`;
+            }
+          }
+        }
+
+        if (payload) {
+          trigger.meta = payload;
+        }
 
         switch (template.type) {
-          case 'gmail-sync': {
-            trigger.spec = { type: TriggerKind.Timer, cron: '*/30 * * * * *' }; // Every 30 seconds.
-
-            // TODO(ZaymonFC): Find the gmail function and set that as the trigger function.
-
+          case 'timer': {
+            trigger.spec = { type: TriggerKind.Timer, cron: template.cron };
             break;
           }
           case 'queue': {
@@ -33,9 +51,12 @@ export default () =>
           }
         }
 
-        // TODO: Add new trigger to the space.
-        // TODO: Navigate to the new trigger.
-        return { data: undefined };
+        return {
+          intents: [
+            createIntent(SpaceAction.AddObject, { object: trigger, target: space }),
+            createIntent(SpaceAction.OpenSettings, { space }),
+          ],
+        };
       },
     }),
   ]);
