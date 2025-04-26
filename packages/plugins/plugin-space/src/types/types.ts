@@ -175,6 +175,7 @@ export namespace SpaceAction {
   }) {}
 
   // TODO(wittjosiah): Handle scrolling to section.
+  //   This maybe motivates making the space settings its own deck?
   export class OpenSettings extends S.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {
     input: S.Struct({ space: SpaceSchema }),
     output: S.Void,

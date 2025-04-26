@@ -29,17 +29,19 @@ const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
 export type AutomationPanelProps = {
   space: Space;
   object?: ReactiveObject<any>;
+  initialTrigger?: FunctionTriggerType;
+  onDone?: () => void;
 };
 
 // TODO(burdon): Factor out common layout with ViewEditor.
-export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
+export const AutomationPanel = ({ space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const client = useClient();
   const triggers = useQuery(space, Filter.schema(FunctionTrigger));
   const functions = useQuery(space, Filter.schema(FunctionType));
   const scripts = useQuery(space, Filter.schema(ScriptType));
 
-  const [trigger, setTrigger] = useState<FunctionTriggerType>();
+  const [trigger, setTrigger] = useState<FunctionTriggerType | undefined>(initialTrigger);
   const [selected, setSelected] = useState<FunctionTrigger>();
 
   const handleSelect = (trigger: FunctionTrigger) => {
@@ -68,10 +70,12 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
 
     setTrigger(undefined);
     setSelected(undefined);
+    onDone?.();
   };
 
   const handleCancel: TriggerEditorProps['onCancel'] = () => {
     setTrigger(undefined);
+    onDone?.();
   };
 
   return (
