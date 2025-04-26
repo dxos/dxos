@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { Capabilities, useCapabilities, useCapability } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';

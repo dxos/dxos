@@ -11,7 +11,7 @@ export const callsSememes: ColorSememes = {
     dark: ['green', '500'],
   },
   callAlert: {
-    light: ['red', '500'],
-    dark: ['red', '500'],
+    light: ['rose', '500'],
+    dark: ['rose', '500'],
   },
 };
