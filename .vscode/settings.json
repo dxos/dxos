@@ -41,10 +41,11 @@
     "command-versions.json": "jsonc"
   },
   "files.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
+    "**/.nx": true,
     "**/build": true,
-    "**/coverage": true
+    "**/coverage": true,
+    "**/dist": true,
+    "**/node_modules": true
   },
   "typescript.preferences.importModuleSpecifier": "relative",
   "search.followSymlinks": false,
@@ -66,5 +67,7 @@
     "effect/Effect",
     "effect/Console"
   ],
-  "circleci.notifications.mine": true
+  "circleci.notifications.mine": true,
+  "search.useParentIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": false
 }

@@ -6,11 +6,12 @@ import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { DeckAction, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { DeckAction } from '@dxos/plugin-deck/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { fullyQualifiedId, useQueue, Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { useTranslation, Button } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import type { MessageType } from '@dxos/schema';
+import { AccessTokenType, type MessageType } from '@dxos/schema';
 
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
 import { InboxCapabilities } from '../../capabilities/capabilities';
@@ -28,7 +29,6 @@ const byDate =
 
 export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const id = fullyQualifiedId(mailbox);
-  const { t } = useTranslation(INBOX_PLUGIN);
   const state = useCapability(InboxCapabilities.MailboxState);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const currentMessageId = state[id]?.id;
@@ -64,7 +64,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           void dispatch(
             createIntent(DeckAction.ChangeCompanion, {
               primary: id,
-              companion: `${id}${SLUG_PATH_SEPARATOR}message`,
+              companion: `${id}-message`,
             }),
           );
           break;
@@ -85,8 +85,34 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           currentMessageId={currentMessageId}
         />
       ) : (
-        <p className='text-description text-center p-8'>{t('empty mailbox message')}</p>
+        <EmptyMailboxContent mailbox={mailbox} />
       )}
     </StackItem.Content>
   );
+};
+
+const EmptyMailboxContent = ({ mailbox }: { mailbox: MailboxType }) => {
+  const space = getSpace(mailbox);
+  const tokens = useQuery(space, Filter.schema(AccessTokenType));
+  const { t } = useTranslation(INBOX_PLUGIN);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+
+  const openSpaceSettings = useCallback(() => {
+    if (space) {
+      void dispatch(createIntent(SpaceAction.OpenSettings, { space }));
+    }
+  }, [space]);
+
+  // TODO(ZaymonFC): This should be generalised to all tokens that can be used to source messages.
+  const gmailToken = tokens.find((t) => t.source.includes('gmail'));
+  if (!gmailToken) {
+    return (
+      <div className='flex flex-col items-center gap-4 p-8'>
+        <p className='text-description'>{t('no integrations label')}</p>
+        <Button onClick={openSpaceSettings}>{t('manage integrations button label')}</Button>
+      </div>
+    );
+  }
+
+  return <p className='text-description text-center p-8'>{t('empty mailbox message')}</p>;
 };

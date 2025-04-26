@@ -23,6 +23,7 @@ export type UseQueueOptions = {
 // TODO(burdon): Replace polling with socket?
 // TODO(dmaretskyi): Move into client package.
 // TODO(dmaretskyi): Consider passing the space into the hook to support queue DXNs without space id.
+// TODO(ZaymonFC): If queue is unchanged returned object should be refferentially stable on poll.
 export const useQueue = <T extends BaseEchoObject>(
   queueDxn?: DXN,
   options: UseQueueOptions = {},

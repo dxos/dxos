@@ -13,6 +13,7 @@ export default [
         'add token': 'Add Integration',
         'add custom token': 'Custom Token',
         'delete token': 'Delete Token',
+        'new integration label': 'New Integration',
       },
     },
   },

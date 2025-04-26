@@ -7,6 +7,7 @@ import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type Expando } from '
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import {
   ACTION_GROUP_TYPE,
   ACTION_TYPE,
@@ -212,6 +213,28 @@ export const constructSpaceNode = ({
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
+    nodes: [
+      {
+        id: `${space.id}${ATTENDABLE_PATH_SEPARATOR}members`,
+        type: `${SPACE_PLUGIN}/members`,
+        data: space,
+        properties: {
+          label: ['members panel label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--users--regular',
+          disposition: 'hidden',
+        },
+      },
+      {
+        id: `${space.id}${ATTENDABLE_PATH_SEPARATOR}settings`,
+        type: `${SPACE_PLUGIN}/settings`,
+        data: space,
+        properties: {
+          label: ['settings panel label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--gear--regular',
+          disposition: 'hidden',
+        },
+      },
+    ],
   };
 };
 

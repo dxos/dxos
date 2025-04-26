@@ -92,6 +92,15 @@ export const tailwindConfig = ({
             from: { opacity: 0 },
             to: { opacity: 1 },
           },
+          // Accordion
+          slideDown: {
+            from: { height: '0px' },
+            to: { height: 'var(--radix-accordion-content-height)' },
+          },
+          slideUp: {
+            from: { height: 'var(--radix-accordion-content-height)' },
+            to: { height: '0px' },
+          },
 
           // Toast
           'toast-hide': {
@@ -176,6 +185,10 @@ export const tailwindConfig = ({
           'toast-slide-in-right': 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
           'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
           'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
+
+          // Accordion
+          slideDown: 'slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)',
+          slideUp: 'slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)',
 
           spin: 'spin 1.5s linear infinite',
           'spin-slow': 'spin 3s linear infinite',

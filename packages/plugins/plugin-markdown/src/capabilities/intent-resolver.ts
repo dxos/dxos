@@ -48,12 +48,12 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: CollaborationActions.ContentProposal,
       resolve: async ({ queueId, messageId, associatedArtifact }) => {
-        log.info('processing proposal');
         // Get the document from the associatedArtifact.
-        const { id, typename } = associatedArtifact;
-
         // Only handle markdown documents.
+        const { id, typename } = associatedArtifact;
+        log.info('processing proposal', { queueId, messageId, associatedArtifact, id, typename });
         if (typename !== DocumentType.typename) {
+          log.warn('not a markdown document', { id, typename });
           return;
         }
 
@@ -68,6 +68,7 @@ export default (context: PluginsContext) =>
           document = await space.db.query({ id }).first();
         }
         if (!document) {
+          log.warn('document not found', { id });
           return;
         }
 
@@ -78,6 +79,7 @@ export default (context: PluginsContext) =>
         const proposalLink = `\n\n[View proposal](proposal://${queueId}#${messageId})`;
         const accessor = createDocAccessor(content, ['content']);
         accessor.handle.change((doc) => {
+          log.info('insert', { proposalLink });
           A.splice(doc, accessor.path.slice(), 0, 0, proposalLink);
         });
       },

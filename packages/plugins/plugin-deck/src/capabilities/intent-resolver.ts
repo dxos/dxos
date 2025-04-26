@@ -25,7 +25,7 @@ import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
-import { closeEntry, incrementPlank, openEntry } from '../layout';
+import { closeEntry, createEntryId, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
 import {
   DeckAction,
@@ -34,7 +34,7 @@ import {
   isLayoutMode,
   getMode,
   defaultDeck,
-  COMPANION_TYPE,
+  PLANK_COMPANION_TYPE,
 } from '../types';
 import { setActive } from '../util';
 
@@ -249,13 +249,14 @@ export default (context: PluginsContext) =>
         const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
         batch(() => {
           const next = state.deck.solo
-            ? (subject as string[])
+            ? (subject as string[]).map((id) => createEntryId(id, options?.variant))
             : subject.reduce(
                 (acc, entryId) =>
                   openEntry(acc, entryId, {
                     key: options?.key,
                     positioning: options?.positioning ?? settings?.newPlankPositioning,
                     pivotId: options?.pivotId,
+                    variant: options?.variant,
                   }),
                 state.deck.active,
               );
@@ -376,7 +377,7 @@ export default (context: PluginsContext) =>
             const node = graph.findNode(adjustment.id);
             const [companion] = node
               ? graph
-                  .nodes(node, { filter: (n): n is Node<any> => n.type === COMPANION_TYPE })
+                  .nodes(node, { filter: (n): n is Node<any> => n.type === PLANK_COMPANION_TYPE })
                   .toSorted((a, b) => byPosition(a.properties, b.properties))
               : [];
             if (companion) {

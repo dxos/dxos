@@ -28,6 +28,8 @@ type IntentResolverOptions = {
   appName?: string;
 };
 
+const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
+
 export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
@@ -218,16 +220,19 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
           },
         });
         const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
-        await client.services.services.IdentityService.recoverIdentity({
-          external: {
-            lookupKey,
-            deviceKey,
-            controlFeedKey,
-            signature: Buffer.from((credential as any).response.signature),
-            clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
-            authenticatorData: Buffer.from((credential as any).response.authenticatorData),
+        await client.services.services.IdentityService.recoverIdentity(
+          {
+            external: {
+              lookupKey,
+              deviceKey,
+              controlFeedKey,
+              signature: Buffer.from((credential as any).response.signature),
+              clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
+              authenticatorData: Buffer.from((credential as any).response.authenticatorData),
+            },
           },
-        });
+          { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
+        );
       },
     }),
     createResolver({
@@ -236,7 +241,10 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
         const client = context.requestCapability(ClientCapabilities.Client);
         // TODO(wittjosiah): This needs a proper api.
         invariant(client.services.services.IdentityService, 'IdentityService not available');
-        await client.services.services.IdentityService.recoverIdentity({ token: data.token });
+        await client.services.services.IdentityService.recoverIdentity(
+          { token: data.token },
+          { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
+        );
       },
     }),
   ]);

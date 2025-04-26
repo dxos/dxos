@@ -7,9 +7,9 @@ import React from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useCredentials } from '@dxos/react-client/halo';
 import { Icon, IconButton, List, ListItem, useTranslation, Message } from '@dxos/react-ui';
+import { ControlGroup, ControlItem, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ControlGroup, ControlItem, ControlSection } from './ControlSection';
 import { CLIENT_PLUGIN } from '../meta';
 import { ClientAction } from '../types';
 

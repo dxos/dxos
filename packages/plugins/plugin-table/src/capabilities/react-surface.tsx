@@ -42,37 +42,37 @@ export default () =>
       },
     }),
     // createSurface({
-    //   id: `${meta.id}/settings`,
-    //   role: 'complementary--settings',
+    //   id: `${meta.id}/object-settings`,
+    //   role: 'object-settings',
     //   filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
     //   component: ({ data }) => <TableViewEditor table={data.subject} />,
     // }),
     createSurface({
-      id: `${meta.id}/complementary`,
-      role: 'complementary--selected-objects',
+      id: `${meta.id}/selected-objects`,
+      role: 'article',
       filter: (
         data,
       ): data is {
-        subject: ReactiveEchoObject<{ view: Ref<ViewType> } | { cardView: Ref<ViewType> }>;
+        companionTo: ReactiveEchoObject<{ view: Ref<ViewType> } | { cardView: Ref<ViewType> }>;
       } => {
-        if (!data.subject || !isEchoObject(data.subject)) {
+        if (data.subject !== 'selected-objects' || !data.companionTo || !isEchoObject(data.companionTo)) {
           return false;
         }
 
-        const subject = data.subject;
+        const companionTo = data.companionTo;
         // TODO(ZaymonFC): Unify the path of view between table and kanban.
-        const hasValidView = subject.view?.target instanceof ViewType;
-        const hasValidCardView = subject.cardView?.target instanceof ViewType;
+        const hasValidView = companionTo.view?.target instanceof ViewType;
+        const hasValidCardView = companionTo.cardView?.target instanceof ViewType;
         return hasValidView || hasValidCardView;
       },
       component: ({ data }) => {
-        const view = 'view' in data.subject ? data.subject.view : data.subject.cardView;
+        const view = 'view' in data.companionTo ? data.companionTo.view : data.companionTo.cardView;
         const viewTarget = view?.target;
         if (!viewTarget) {
           return null;
         }
 
-        return <ObjectDetailsPanel objectId={data.subject.id} view={viewTarget} />;
+        return <ObjectDetailsPanel objectId={data.companionTo.id} view={viewTarget} />;
       },
     }),
     // TODO(burdon): Factor out from Table, Kanban, and Map.

@@ -28,6 +28,7 @@ import {
   Validation as ValidationPrimitive,
   type ValidationProps as ValidationPrimitiveProps,
 } from '@dxos/react-input';
+import { mx } from '@dxos/react-ui-theme';
 import { type Density, type Elevation, type ClassNameValue, type Size } from '@dxos/react-ui-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
@@ -307,7 +308,7 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
     return (
       <input
         type='checkbox'
-        className='dx-checkbox--switch dx-focus-ring'
+        className={mx('dx-checkbox--switch dx-focus-ring', classNames)}
         checked={checked}
         onChange={(event) => {
           onCheckedChange(event.target.checked);

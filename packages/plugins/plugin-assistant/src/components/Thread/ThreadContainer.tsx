@@ -40,20 +40,21 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   // TODO(thure): This will be referentially new on every render, is it causing overreactivity?
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
 
+  // Post last message to document.
   useEffect(() => {
     if (!processor.streaming.value && messageQueue?.items) {
       const message = messageQueue.items[messageQueue.items.length - 1];
       if (chat && message && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.ContentProposal, {
-            dxn: chat.assistantChatQueue.dxn.toString(),
+            queueId: chat.assistantChatQueue.dxn.toString(),
             messageId: message.id,
             associatedArtifact,
           }),
         );
       }
     }
-  }, [processor.streaming.value, messageQueue, associatedArtifact]);
+  }, [messageQueue, associatedArtifact, processor.streaming.value]);
 
   const handleSubmit = useCallback(
     (text: string) => {

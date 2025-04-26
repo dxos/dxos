@@ -6,7 +6,7 @@ import React, { useCallback, useEffect } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { useNode } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Toolbar, IconButton, useTranslation, toLocalizedString } from '@dxos/react-ui';
@@ -28,7 +28,7 @@ export const CallToolbar = ({ meeting }: CallToolbarProps) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, meeting && fullyQualifiedId(meeting));
   const actions = node ? graph.actions(node).filter((action) => action.properties.disposition === 'toolbar') : [];
-  const companions = node ? graph.nodes(node, { type: COMPANION_TYPE }) : [];
+  const companions = node ? graph.nodes(node, { type: PLANK_COMPANION_TYPE }) : [];
 
   // TODO(thure): Should these be intents rather than callbacks?
   useEffect(() => {
