@@ -90,7 +90,7 @@ export const useChatProcessor = ({
   const processor = useMemo(() => {
     log('creating processor...', { settings });
     return new ChatProcessor(aiClient.value, tools, artifactDefinitions, extensions, { model, systemPrompt });
-  }, [aiClient.value, tools, extensions, model, systemPrompt]);
+  }, [aiClient.value, tools, artifactDefinitions, extensions, model, systemPrompt]);
 
   return processor;
 };

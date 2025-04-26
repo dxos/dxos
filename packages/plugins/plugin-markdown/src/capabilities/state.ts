@@ -12,7 +12,6 @@ import { type MarkdownPluginState, type MarkdownSettingsProps } from '../types';
 
 export default (context: PluginsContext) => {
   const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
-
   state.prop({ key: 'viewMode', type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>() });
 
   // TODO(wittjosiah): Fold into state.
@@ -27,5 +26,6 @@ export default (context: PluginsContext) => {
 
   const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
+  // Return object with methods.
   return contributes(MarkdownCapabilities.State, { state: state.values, editorState, getViewMode, setViewMode });
 };

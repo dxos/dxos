@@ -69,13 +69,13 @@ Typename: {{associatedArtifact.typename}}
 {{/if}}
 
 {{#if suggestions}}
-{{section}}. Suggestions:
+{{section}}. Suggested actions:
 
-- You can add suggestions at the end of your response.
-- Suggestions should be very concise and start with a verb and be phrased as a command to an agent -- not a question to the user.
-- Suggestions must be in the form of a user instruction that you can follow.
-- Suggestions could include actions that create artifacts.
-- Suggestions must be enclosed in a <suggest> tag and on a separate line.
+- You can add suggested actions at the end of your response.
+- Suggested actions should be very concise and start with a verb and be phrased as a command to an agent -- not a question to the user.
+- Suggested actions must be in the form of a user instruction that you can follow.
+- Suggested actions could include actions that create artifacts.
+- Suggested actions must be enclosed in a <suggest> tag and on a separate line.
   Examples:
   <suggest>Show the data on a map.</suggest>
   <suggest>Create a kanban from the table.</suggest>
@@ -85,10 +85,17 @@ Typename: {{associatedArtifact.typename}}
   <select><option>Yes</option><option>No</option></select>
 {{/if}}
 
+{{section}}. Content proposals:
+
+You can propose content to add to associated artifacts. Enclose the content you are proposing to add in a <proposal> tag on a separate line.
+For example:
+<proposal>Apples add a delightful crunch and natural sweetness to salads</proposal>
+
 {{section}}. Output Formats:
 
 It is very important to respond in the correct format.
 
 - Your detailed chain-of-thought must be in the form of a markdown list enclosed in <cot> tags.
 - The <cot> tag should be the first thing in your response.
-- Suggestions must be enclosed in a <suggest> tag and on a separate line.
+- Suggested actions must be enclosed in a <suggest> tag and on a separate line.
+- Content proposals must be enclosed in a <proposal> tag and on a separate line.

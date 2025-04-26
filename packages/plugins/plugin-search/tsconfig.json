@@ -84,9 +84,6 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-markdown"
-    },
-    {
       "path": "../plugin-space"
     }
   ]
