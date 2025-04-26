@@ -58,6 +58,10 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
     );
   }, [dispatch, object.queue.dxn]);
 
+  if (!showHandleSync && !showHandleSubscription) {
+    return null;
+  }
+
   return (
     <div className='p-1 flex flex-row gap-1'>
       {showHandleSync && (
