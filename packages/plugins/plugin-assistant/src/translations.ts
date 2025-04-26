@@ -29,6 +29,7 @@ export default [
         'command placeholder': 'Enter slash command...',
         'template placeholder': 'Enter template...',
         'value placeholder': 'Enter value...',
+        'prompt rules label': 'Prompt Rules',
         'typename placeholder': 'Enter typename of objects which this template is for',
         'description placeholder': 'Enter description of when this template should be used',
         'select preset template placeholder': 'Select preset',

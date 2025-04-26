@@ -171,7 +171,7 @@ export default (context: PluginsContext) =>
             type: `${ASSISTANT_PLUGIN}/template`,
             data: template,
             properties: {
-              label: template.name ?? ['template title placeholder', { ns: ASSISTANT_PLUGIN }],
+              label: template.name ?? ['object placeholder', { ns: ASSISTANT_PLUGIN }],
               icon: 'ph--file-code--regular',
             },
           }));
