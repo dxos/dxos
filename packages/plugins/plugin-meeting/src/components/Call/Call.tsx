@@ -9,10 +9,9 @@ import { type ThemedClassName } from '@dxos/react-ui';
 
 import { MeetingCapabilities } from '../../capabilities';
 import { useDebugMode } from '../../hooks';
-import { type MeetingType } from '../../types';
 import { AudioStream } from '../Media';
-import { MeetingToolbar } from '../MeetingToolbar';
 import { ParticipantGrid } from '../Participant';
+import { Toolbar, type ToolbarProps } from '../Toolbar';
 
 //
 // Root
@@ -59,14 +58,10 @@ CallRoom.displayName = 'CallRoom';
 // Toolbar
 //
 
-type CallToolbarProps = {
-  roomId?: string;
-  meeting?: MeetingType;
-  onLeave?: () => void;
-};
+type CallToolbarProps = Pick<ToolbarProps, 'meeting' | 'onLeave'>;
 
-const CallToolbar: FC<CallToolbarProps> = ({ roomId, meeting, onLeave }) => {
-  return <MeetingToolbar roomId={roomId} meeting={meeting} onLeave={onLeave} />;
+const CallToolbar: FC<CallToolbarProps> = (props) => {
+  return <Toolbar {...props} />;
 };
 
 CallToolbar.displayName = 'CallToolbar';

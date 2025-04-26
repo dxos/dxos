@@ -9,8 +9,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 
 import { MeetingCapabilities } from '../../capabilities';
 import { VideoObject } from '../Media';
-import { MeetingToolbar } from '../MeetingToolbar';
 import { ResponsiveContainer } from '../ResponsiveGrid';
+import { Toolbar, type ToolbarProps } from '../Toolbar';
 
 const SWARM_PEEK_INTERVAL = 1_000;
 
@@ -21,7 +21,7 @@ const SWARM_PEEK_INTERVAL = 1_000;
 type LobbyRootProps = PropsWithChildren<ThemedClassName>;
 
 const LobbyRoot: FC<LobbyRootProps> = ({ children }) => {
-  return <div className='flex flex-col grow overflow-hidden'>{children}</div>;
+  return <div className='flex flex-col grow overflow-hidden group'>{children}</div>;
 };
 
 LobbyRoot.displayName = 'LobbyRoot';
@@ -48,14 +48,15 @@ LobbyPreview.displayName = 'LobbyPreview';
 // Toolbar
 //
 
-type LobbyToolbarProps = ThemedClassName<{
-  roomId: string;
-  onJoin?: () => void;
-}>;
+type LobbyToolbarProps = ThemedClassName<
+  {
+    roomId: string;
+  } & Pick<ToolbarProps, 'onJoin'>
+>;
 
-const LobbyToolbar: FC<LobbyToolbarProps> = ({ roomId, onJoin }) => {
+const LobbyToolbar: FC<LobbyToolbarProps> = ({ roomId, ...props }) => {
   const call = useCapability(MeetingCapabilities.CallManager);
-  const [count, setCount] = useState<number>();
+  const [count, setCount] = useState<number>(0);
 
   // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.
   useEffect(() => {
@@ -67,7 +68,7 @@ const LobbyToolbar: FC<LobbyToolbarProps> = ({ roomId, onJoin }) => {
     return () => clearInterval(interval);
   }, [call, roomId]);
 
-  return <MeetingToolbar roomId={roomId} participants={count} onJoin={onJoin} />;
+  return <Toolbar participants={count} {...props} />;
 };
 
 LobbyToolbar.displayName = 'LobbyToolbar';

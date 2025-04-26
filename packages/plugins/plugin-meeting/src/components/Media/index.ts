@@ -3,5 +3,4 @@
 //
 
 export * from './AudioStream';
-export * from './MediaButtons';
 export * from './VideoObject';

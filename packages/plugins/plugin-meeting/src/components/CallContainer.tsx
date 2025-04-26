@@ -79,14 +79,13 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
     }
 
     try {
+      void joinSound.play();
       call.setRoomId(roomId);
       await call.join();
 
       companions.forEach((companion) => {
         companion.properties.onJoin?.(roomId);
       });
-
-      void joinSound.play();
     } catch (err) {
       log.catch(err);
     }
@@ -120,7 +119,7 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
       {call.joined && call.roomId === roomId ? (
         <Call.Root>
           <Call.Room />
-          <Call.Toolbar roomId={roomId} meeting={meeting} onLeave={handleLeave} />
+          <Call.Toolbar meeting={meeting} onLeave={handleLeave} />
         </Call.Root>
       ) : (
         <Lobby.Root>
