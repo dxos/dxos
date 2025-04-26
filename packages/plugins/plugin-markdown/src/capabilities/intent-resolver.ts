@@ -45,28 +45,26 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: CollaborationActions.ContentProposal,
-      resolve: async ({ dxn, messageId, associatedArtifact }) => {
+      resolve: async ({ queueId, messageId, associatedArtifact }) => {
         console.log('[markdown]', 'processing proposal');
-        // Get the document from the associatedArtifact
+        // Get the document from the associatedArtifact.
         const { id, typename } = associatedArtifact;
 
-        // Only handle markdown documents
+        // Only handle markdown documents.
         if (typename !== DocumentType.typename) {
           return;
         }
-
-        // Find the document in all spaces
-        let document;
 
         const layout = context.requestCapability(Capabilities.Layout);
         const client = context.requestCapability(ClientCapabilities.Client);
         const { spaceId } = parseId(layout.workspace);
         const space = spaceId ? client.spaces.get(spaceId) : null;
 
+        // Find the document in all spaces.
+        let document;
         if (space) {
           document = await space.db.query({ id }).first();
         }
-
         if (!document) {
           return;
         }
@@ -75,7 +73,7 @@ export default (context: PluginsContext) =>
         const content = await document.content.load();
 
         // Format the link with the proposal protocol
-        const proposalLink = `\n\n[View proposal](proposal:${dxn}#${messageId})`;
+        const proposalLink = `\n\n[View proposal](proposal:${queueId}#${messageId})`;
 
         // Append the link to the document content
         document.content = content + proposalLink;

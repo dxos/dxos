@@ -74,11 +74,11 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       processing={processor.streaming.value}
       error={processor.error.value}
       tools={processor.tools}
+      contextProvider={contextProvider}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       onPrompt={handleSubmit}
       onOpenChange={onOpenChange}
-      contextProvider={contextProvider}
       {...props}
     />
   );

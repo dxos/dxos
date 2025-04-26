@@ -99,7 +99,7 @@ export const useChatProcessor = ({
       if (chat && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.ContentProposal, {
-            dxn: chat.assistantChatQueue.dxn.toString(),
+            queueId: chat.assistantChatQueue.dxn.toString(),
             messageId,
             associatedArtifact,
           }),

@@ -9,7 +9,7 @@ export default [
   {
     'en-US': {
       [AIChatType.typename]: {
-        'typename label': 'AI Chat',
+        'typename label': 'Assistant',
         'object name placeholder': 'AI Chat',
       },
       [TemplateType.typename]: {
@@ -19,8 +19,8 @@ export default [
       [ASSISTANT_PLUGIN]: {
         'templates label': 'Templates',
 
-        'open ambient chat label': 'Open AI chat',
-        'assistant chat label': 'AI chat',
+        'open ambient chat label': 'Open Assistant',
+        'assistant chat label': 'Assistant',
         'plugin name': 'Assistant',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',
