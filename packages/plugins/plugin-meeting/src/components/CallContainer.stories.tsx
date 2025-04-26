@@ -5,40 +5,20 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useClient } from '@dxos/react-client';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme, withLayout, ColumnContainer } from '@dxos/storybook-utils';
 
 import { CallContainer, type CallContainerProps } from './CallContainer';
 import { createMeetingPlugins } from '../testing';
 import translations from '../translations';
 
-const DefaultStory = (props: CallContainerProps) => {
-  const client = useClient();
-  const space = client.spaces.get().at(-1);
-
-  if (!space) {
-    return <div />;
-  }
-
-  return (
-    <div className='flex grow gap-8 justify-center'>
-      <div className='flex w-[30rem] h-full border border-neutral-500'>
-        <CallContainer {...props} />
-      </div>
-    </div>
-  );
-};
-
 const meta: Meta<CallContainerProps> = {
   title: 'plugins/plugin-meeting/CallContainer',
   component: CallContainer,
-  render: DefaultStory,
   decorators: [
     withPluginManager({ plugins: [...(await createMeetingPlugins())] }),
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ tooltips: true, Container: ColumnContainer, classNames: 'w-[40rem] overflow-hidden' }),
     withTheme,
   ],
   parameters: {

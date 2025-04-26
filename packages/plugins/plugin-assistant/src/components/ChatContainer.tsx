@@ -13,16 +13,14 @@ import { ThreadContainer } from './Thread';
 import { ASSISTANT_PLUGIN } from '../meta';
 import { type AssistantSettingsProps, type AIChatType } from '../types';
 
-// TODO(burdon): Attention.
-export const ChatContainer = ({
-  role,
-  chat,
-  associatedArtifact,
-}: {
+export type ChatContainerProps = {
   role: string;
   chat: AIChatType;
   associatedArtifact?: AssociatedArtifact;
-}) => {
+};
+
+// TODO(burdon): Attention.
+export const ChatContainer: FC<ChatContainerProps> = ({ role, chat, associatedArtifact }) => {
   const transcription = useCapabilities(TranscriptionCapabilities.Transcriber).length > 0;
   const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)?.value;
 
