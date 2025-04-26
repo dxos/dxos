@@ -76,7 +76,7 @@ export default (context: PluginsContext) =>
 
         // TODO(burdon): Get prompt for link name.
         // Format the link with the proposal protocol.
-        const proposalLink = `\n\n[View proposal](proposal://${queueId}#${messageId})`;
+        const proposalLink = `\n\n[View proposal](dxn://${queueId}#${messageId})`;
         const accessor = createDocAccessor(content, ['content']);
         accessor.handle.change((doc) => {
           log.info('insert', { proposalLink });
