@@ -4,7 +4,7 @@
 
 import { type Decorator } from '@storybook/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type JSX } from 'react';
+import React, { type PropsWithChildren, type JSX, type FC } from 'react';
 
 import { type Density, DensityProvider, type ThemedClassName } from '@dxos/react-ui';
 import { Tooltip } from '@dxos/react-ui';
@@ -31,22 +31,44 @@ const providers: Provider[] = [
   },
 ];
 
-export type WithFullscreenProps = ThemedClassName<ProviderOptions>;
+export type ContainerProps = ThemedClassName<PropsWithChildren<Pick<ProviderOptions, 'fullscreen'>>>;
+
+export type WithLayoutProps = ThemedClassName<ProviderOptions & { Container?: FC<ContainerProps> }>;
 
 /**
  * Decorator to layout the story container, adding optional providers.
  */
-export const withLayout = ({ classNames, fullscreen, ..._options }: WithFullscreenProps = {}): Decorator => {
+export const withLayout = ({
+  classNames,
+  fullscreen,
+  Container = FixedContainer,
+  ...providedOptions
+}: WithLayoutProps = {}): Decorator => {
   // TODO(burdon): Inspect "fullscreen" parameter in context.
   return (Story, _context) => {
-    const options = defaultsDeep({}, _options, defaultOptions);
     const children = (
-      // NOTE: Do not change the flex direction to flex-col by default.
-      <div role='none' className={mx(fullscreen && 'fixed inset-0 flex overflow-hidden', classNames)}>
+      <Container classNames={classNames} fullscreen={fullscreen}>
         <Story />
-      </div>
+      </Container>
     );
 
+    const options = defaultsDeep({}, providedOptions, defaultOptions);
     return providers.reduceRight((acc, provider) => provider(acc, options), children);
   };
+};
+
+export const FixedContainer: FC<ContainerProps> = ({ children, classNames, fullscreen }) => {
+  return (
+    <div role='none' className={mx(fullscreen && 'fixed inset-0 flex overflow-hidden', classNames)}>
+      {children}
+    </div>
+  );
+};
+
+export const ColumnContainer: FC<ContainerProps> = ({ children, classNames = 'w-[50rem]', ...props }) => {
+  return (
+    <FixedContainer classNames='justify-center' {...props}>
+      <div className={mx('flex h-full overflow-y-auto', classNames)}>{children}</div>
+    </FixedContainer>
+  );
 };

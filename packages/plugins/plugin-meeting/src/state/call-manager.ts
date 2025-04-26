@@ -135,13 +135,14 @@ export class CallManager extends Resource {
     return this._mediaManager.turnScreenshareOff();
   }
 
+  // TODO(burdon): Can this be mocked?
   constructor(private readonly _client: Client) {
     super();
-    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService: _client.services.services.NetworkService! });
+    this._client.config.getOrThrow('runtime.services.edge.url');
+    const networkService = this._client.services.services.NetworkService;
+    invariant(networkService, 'network service not found');
+    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService });
     this._mediaManager = new MediaManager();
-
-    const edgeUrl = this._client.config.get('runtime.services.edge.url');
-    invariant(edgeUrl);
   }
 
   protected override async _open() {
