@@ -57,12 +57,11 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const layout = context.requestCapability(Capabilities.Layout);
         const client = context.requestCapability(ClientCapabilities.Client);
+        const layout = context.requestCapability(Capabilities.Layout);
         const { spaceId } = parseId(layout.workspace);
         const space = spaceId ? client.spaces.get(spaceId) : null;
 
-        // Find the document in all spaces.
         let document;
         if (space) {
           document = await space.db.query({ id }).first();
@@ -72,16 +71,19 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        // Load the document content
+        // Load the document content.
         const content = await document.content.load();
 
-        // Format the link with the proposal protocol
+        // TODO(burdon): Get prompt for link name.
+        // Format the link with the proposal protocol.
         const proposalLink = `\n\n[View proposal](proposal://${queueId}#${messageId})`;
         const accessor = createDocAccessor(content, ['content']);
         accessor.handle.change((doc) => {
           log.info('insert', { proposalLink });
           A.splice(doc, accessor.path.slice(), 0, 0, proposalLink);
         });
+
+        log.info('done');
       },
     }),
   ]);
