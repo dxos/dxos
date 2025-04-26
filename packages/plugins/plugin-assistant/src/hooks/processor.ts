@@ -134,8 +134,7 @@ export class ChatProcessor {
         },
       });
 
-      log.info('completed', { messages });
-
+      log('completed', { messages });
       options.onComplete?.(this._pending.value);
     } catch (err) {
       log.catch(err);

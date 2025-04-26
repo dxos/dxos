@@ -97,6 +97,7 @@ export const lazy =
 /**
  * Context which is passed to plugins, allowing them to interact with each other.
  */
+// TOOD(burdon): Rename PluginContext.
 export class PluginsContext {
   private readonly _definedCapabilities = new Map<string, CapabilityImpl<unknown>[]>();
 
