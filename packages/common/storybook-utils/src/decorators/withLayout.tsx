@@ -73,10 +73,10 @@ export const FixedContainer: FC<ContainerProps> = ({ children, classNames }) => 
   );
 };
 
-export const ColumnContainer: FC<ContainerProps> = ({ children, classNames = 'w-[50rem]', ...props }) => {
+export const ColumnContainer: FC<ContainerProps> = ({ children, classNames = 'w-[30rem]', ...props }) => {
   return (
-    <FixedContainer classNames='justify-center' {...props}>
-      <div role='none' className={mx('flex flex-col h-full overflow-y-auto', classNames)}>
+    <FixedContainer classNames='bg-baseSurface justify-center' {...props}>
+      <div role='none' className={mx('flex flex-col h-full overflow-y-auto bg-modalSurface', classNames)}>
         {children}
       </div>
     </FixedContainer>
