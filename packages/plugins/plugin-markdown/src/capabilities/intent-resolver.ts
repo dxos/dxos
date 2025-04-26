@@ -46,7 +46,7 @@ export default (context: PluginsContext) =>
       },
     }),
     createResolver({
-      intent: CollaborationActions.ContentProposal,
+      intent: CollaborationActions.InsertContent,
       resolve: async ({ queueId, messageId, associatedArtifact }) => {
         // Get the document from the associatedArtifact.
         // Only handle markdown documents.
