@@ -57,7 +57,7 @@ export type SpacePluginOptions = {
 export const SpacePlugin = ({
   invitationUrl = window.location.origin,
   invitationParam = 'spaceInvitationCode',
-  observability = true,
+  observability = false,
 }: SpacePluginOptions = {}) => {
   const createInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);

@@ -8,10 +8,10 @@ import { Call } from './Call';
 
 export const CallSidebar = () => {
   return (
-    <div className='flex flex-col h-full overflow-hidden'>
+    <Call.Root>
       <Call.Room />
       <Call.Toolbar />
-    </div>
+    </Call.Root>
   );
 };
 

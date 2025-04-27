@@ -86,9 +86,9 @@ export default (context: PluginsContext) =>
               label: state.enabled
                 ? ['stop transcription label', { ns: TRANSCRIPTION_PLUGIN }]
                 : ['start transcription label', { ns: TRANSCRIPTION_PLUGIN }],
-              icon: 'ph--record--regular',
+              icon: 'ph--subtitles--regular',
               disposition: 'toolbar',
-              classNames: state.enabled ? 'text-activeInCall' : '',
+              classNames: state.enabled ? 'bg-callAlert' : '',
             },
           },
         ];
