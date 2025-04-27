@@ -4,12 +4,15 @@
 
 import { type BlockInfo, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { type CommandOptions } from './command';
-import { closeEffect, openCommand, openEffect } from './state';
+import { closeEffect, openCommand, openEffect } from './action';
+
+export type FloatingMenuOptions = {
+  onRenderMenu: (el: HTMLElement, cb: () => void) => void;
+};
 
 // TODO(burdon): Trigger completion on click.
 // TODO(burdon): Hide when dialog is open.
-export const floatingMenu = (options: CommandOptions) =>
+export const floatingMenu = (options: FloatingMenuOptions) =>
   ViewPlugin.fromClass(
     class {
       button: HTMLElement;

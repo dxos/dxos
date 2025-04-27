@@ -5,35 +5,27 @@
 import { type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
-import { hintViewPlugin } from './hint';
-import { floatingMenu } from './menu';
+import { closeEffect, commandKeyBindings } from './action';
+import { hintViewPlugin, type HintOptions } from './hint';
+import { floatingMenu, type FloatingMenuOptions } from './menu';
 import { preview, type PreviewOptions } from './preview';
-import { closeEffect, commandConfig, commandKeyBindings, commandState } from './state';
+import { commandConfig, commandState, type PopupOptions } from './state';
 
 // TODO(burdon): Create knowledge base for CM notes and ideas.
 // https://discuss.codemirror.net/t/inline-code-hints-like-vscode/5533/4
 // https://github.com/saminzadeh/codemirror-extension-inline-suggestion
 // https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/ui/components/text_editor/config.ts#L370
 
-// TODO(burdon): Discriminated union.
-export type CommandAction = {
-  insert?: string;
-};
+export type CommandOptions = Partial<PopupOptions & PreviewOptions & FloatingMenuOptions & HintOptions>;
 
-export type CommandOptions = {
-  onHint: () => string | undefined;
-  onRenderDialog: (el: HTMLElement, cb: (action?: CommandAction) => void) => void;
-  onRenderMenu: (el: HTMLElement, cb: () => void) => void;
-} & Pick<PreviewOptions, 'onRenderPreview'>;
-
-export const command = (options: CommandOptions): Extension => {
+export const command = (options: CommandOptions = {}): Extension => {
   return [
+    keymap.of(commandKeyBindings),
     commandConfig.of(options),
     commandState,
-    keymap.of(commandKeyBindings),
-    preview(options),
-    floatingMenu(options),
-    hintViewPlugin(options),
+    options.onRenderPreview ? preview({ onRenderPreview: options.onRenderPreview }) : [],
+    options.onRenderMenu ? floatingMenu({ onRenderMenu: options.onRenderMenu }) : [],
+    options.onHint ? hintViewPlugin({ onHint: options.onHint }) : [],
     EditorView.focusChangeEffect.of((_, focusing) => {
       return focusing ? closeEffect.of(null) : null;
     }),

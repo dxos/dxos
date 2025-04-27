@@ -31,7 +31,7 @@ const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
 };
 
 const meta: Meta<typeof MarkdownEditor> = {
-  title: 'plugins/plugin-markdown/EditorMain',
+  title: 'plugins/plugin-markdown/MarkdownEditor',
   component: MarkdownEditor,
   render: DefaultStory,
   decorators: [

@@ -2,24 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { StateEffect, StateField } from '@codemirror/state';
-import {
-  showTooltip,
-  type Command,
-  type EditorView,
-  type KeyBinding,
-  type Tooltip,
-  type TooltipView,
-} from '@codemirror/view';
+import { StateField } from '@codemirror/state';
+import { showTooltip, type EditorView, type Tooltip, type TooltipView } from '@codemirror/view';
 
+import { closeEffect, type CommandAction, openEffect } from './action';
 import { type CommandOptions } from './command';
 import { singleValueFacet } from '../../util';
+
+export const commandConfig = singleValueFacet<CommandOptions>();
 
 type CommandState = {
   tooltip?: Tooltip | null;
 };
 
-export const commandConfig = singleValueFacet<CommandOptions>();
+export type PopupOptions = {
+  onRenderDialog: (el: HTMLElement, cb: (action?: CommandAction) => void) => void;
+};
 
 export const commandState = StateField.define<CommandState>({
   create: () => ({}),
@@ -29,8 +27,8 @@ export const commandState = StateField.define<CommandState>({
         return {};
       }
 
-      if (effect.is(openEffect)) {
-        const options = tr.state.facet(commandConfig);
+      const { onRenderDialog } = tr.state.facet(commandConfig);
+      if (effect.is(openEffect) && onRenderDialog) {
         const { pos, fullWidth } = effect.value;
         const tooltip: Tooltip = {
           pos,
@@ -50,7 +48,7 @@ export const commandState = StateField.define<CommandState>({
                 }
 
                 // Render react component.
-                options.onRenderDialog(dom, (action) => {
+                onRenderDialog(dom, (action) => {
                   view.dispatch({ effects: closeEffect.of(null) });
                   if (action?.insert?.length) {
                     // Insert into editor.
@@ -70,6 +68,7 @@ export const commandState = StateField.define<CommandState>({
             return tooltipView;
           },
         };
+
         return { tooltip };
       }
     }
@@ -78,33 +77,3 @@ export const commandState = StateField.define<CommandState>({
   },
   provide: (field) => [showTooltip.from(field, (value) => value.tooltip ?? null)],
 });
-
-export const openEffect = StateEffect.define<{ pos: number; fullWidth?: boolean }>();
-export const closeEffect = StateEffect.define<null>();
-
-export const openCommand: Command = (view: EditorView) => {
-  if (view.state.field(commandState, false)) {
-    const selection = view.state.selection.main;
-    const line = view.state.doc.lineAt(selection.from);
-    if (line.from === selection.from && line.from === line.to) {
-      view.dispatch({ effects: openEffect.of({ pos: selection.anchor, fullWidth: true }) });
-      return true;
-    }
-  }
-
-  return false;
-};
-
-export const closeCommand: Command = (view: EditorView) => {
-  if (view.state.field(commandState, false)) {
-    view.dispatch({ effects: closeEffect.of(null) });
-    return true;
-  }
-
-  return false;
-};
-
-export const commandKeyBindings: readonly KeyBinding[] = [
-  { key: '/', run: openCommand },
-  { key: 'Escape', run: closeCommand },
-];
