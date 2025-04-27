@@ -346,6 +346,10 @@ export type CommentsOptions = {
    */
   key?: string;
   /**
+   * Called to render tooltip.
+   */
+  renderTooltip?: RenderCallback<{ shortcut: string }>;
+  /**
    * Called to create a new thread and return the thread id.
    */
   onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => void;
@@ -361,11 +365,6 @@ export type CommentsOptions = {
    * Called to notify which thread is currently closest to the cursor.
    */
   onSelect?: (state: CommentsState) => void;
-  /**
-   * Called to render tooltip.
-   */
-  // TODO(burdon): Rename.
-  onHover?: RenderCallback<{ shortcut: string }>;
 };
 
 const optionsFacet = singleValueFacet<CommentsOptions>();
@@ -409,7 +408,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     // Hover tooltip (for key shortcut hints, etc.)
     // TODO(burdon): Factor out to generic hints extension for current selection/line.
     //
-    options.onHover &&
+    options.renderTooltip &&
       hoverTooltip(
         (view, pos) => {
           const selection = view.state.selection.main;
@@ -420,7 +419,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
               above: true,
               create: () => {
                 const el = document.createElement('div');
-                options.onHover!(el, { shortcut }, view);
+                options.renderTooltip!(el, { shortcut }, view);
                 return { dom: el, offset: { x: 0, y: 8 } };
               },
             };

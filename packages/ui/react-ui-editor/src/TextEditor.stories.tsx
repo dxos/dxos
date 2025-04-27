@@ -226,7 +226,7 @@ const Key: FC<{ char: string }> = ({ char }) => (
   </span>
 );
 
-const renderCommentTooltip: CommentsOptions['onHover'] = (el, { shortcut }) => {
+const renderCommentTooltip: CommentsOptions['renderTooltip'] = (el, { shortcut }) => {
   createRoot(el).render(
     <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
       <div>Create comment</div>
@@ -856,7 +856,7 @@ export const Comments = {
           ),
           comments({
             id: 'test',
-            onHover: renderCommentTooltip,
+            renderTooltip: renderCommentTooltip,
             onCreate: ({ cursor }) => {
               const id = PublicKey.random().toHex();
               _comments.value = [..._comments.value, { id, cursor }];

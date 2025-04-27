@@ -20,6 +20,7 @@ import {
   keymap,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { type RenderCallback } from '@dxos/react-ui-editor';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
 import { tagsExtension } from './tags';
@@ -110,7 +111,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
 
           // Markdown subset.
           createMarkdownExtensions({ themeMode }),
-          decorateMarkdown({ renderLinkButton: onRenderLink }),
+          decorateMarkdown({ renderLinkButton }),
 
           // Tags.
           tagsExtension(),
@@ -330,7 +331,7 @@ const getPosition = (view: EditorView, selection: SelectionRange, goalColumn: nu
 // TODO(burdon): Factor out style.
 const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const onRenderLink = (el: Element, url: string) => {
+const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) => {
   createRoot(el).render(
     <StrictMode>
       <ThemeProvider tx={defaultTx}>

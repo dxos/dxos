@@ -14,9 +14,9 @@ import {
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { hoverTooltip } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
-import { isNotNullable } from 'effect/Predicate';
 
 import { tooltipContent } from '@dxos/react-ui-theme';
+import { isNonNullable } from '@dxos/util';
 
 import { type RenderCallback } from '../../types';
 
@@ -59,10 +59,6 @@ export type PreviewOptions = {
   onRenderPopover?: RenderCallback<PreviewRenderProps>;
   onLookup: PreviewLookup;
 };
-
-// TODO(burdon): Callback to retrieve data from ECHO.
-// TODO(burdon): Make backspace delete the entire range.
-// TODO(burdon): Popover (card).
 
 /**
  * Create preview decorations.
@@ -144,7 +140,7 @@ export const preview = (options: PreviewOptions): Extension => {
         border: '1px solid var(--dx-separator)',
       },
     }),
-  ].filter(isNotNullable);
+  ].filter(isNonNullable);
 };
 
 /**
