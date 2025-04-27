@@ -44,7 +44,7 @@ const meta: Meta<typeof Toolbox> = {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin({ observability: false }),
+        SpacePlugin(),
         SettingsPlugin(),
         IntentPlugin(),
         ChessPlugin(),

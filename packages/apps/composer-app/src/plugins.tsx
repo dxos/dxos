@@ -180,7 +180,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
-    SpacePlugin(),
+    SpacePlugin({ observability: true }),
     StackPlugin(),
     StatusBarPlugin(),
     ThemeEditorPlugin(),

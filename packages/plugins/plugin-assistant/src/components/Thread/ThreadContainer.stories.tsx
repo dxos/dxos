@@ -220,7 +220,7 @@ const meta: Meta<typeof DefaultStory> = {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin({ observability: false }),
+        SpacePlugin(),
         SettingsPlugin(),
         IntentPlugin(),
 
