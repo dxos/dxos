@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useLayoutEffect, useState, useEffect, useMemo, type ComponentType, useCallback, type FC } from 'react';
+import React, { type ComponentType, type FC, useLayoutEffect, useState, useEffect, useMemo, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
-import { resizeAttributes, ResizeHandle, sizeStyle, type Size } from '@dxos/react-ui-dnd';
+import { type Size } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
-const MIN_HEIGHT_REM = 15;
-const DEFAULT_HEIGHT_REM = 30;
+const ASPECT_RATIO = 16 / 9;
+const MIN_GALLERY_HEIGHT = 250;
 
 /**
  * Props for the ResponsiveGrid component.
@@ -34,6 +34,9 @@ export type ResponsiveGridProps<T extends object = any> = {
   /** ID of the pinned item. */
   pinned?: string;
 
+  /** Whether the divider is resizable. */
+  resizable?: boolean;
+
   /** Debug mode. */
   debug?: boolean;
 
@@ -42,8 +45,6 @@ export type ResponsiveGridProps<T extends object = any> = {
 };
 
 const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
-
-// TODO(burdon): Start with pinned; Resize to bottom; Unpin; Pin.
 
 /**
  * A responsive grid component that automatically adjusts its layout to optimize space usage.
@@ -58,14 +59,18 @@ export const ResponsiveGrid = <T extends object = any>({
   debug,
   onPinnedChange,
 }: ResponsiveGridProps<T>) => {
-  const { height: containerHeight = 0, ref: containerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
-  const [dividerHeight, setDividerHeight] = useState<Size>(DEFAULT_HEIGHT_REM);
-  const maxDividerHeight = Math.max(DEFAULT_HEIGHT_REM, containerHeight / 16 - MIN_HEIGHT_REM);
+  const {
+    width: containerWidth = 0,
+    height: containerHeight = 0,
+    ref: containerRef,
+  } = useResizeDetector<HTMLDivElement>({ refreshRate: 100 });
+  const [dividerHeight, setDividerHeight] = useState<Size>(0);
   useEffect(() => {
-    if (typeof dividerHeight === 'number' && dividerHeight > maxDividerHeight) {
-      setDividerHeight(maxDividerHeight);
+    if (containerWidth && containerHeight) {
+      const { height } = fitAspectRatio(containerWidth, containerHeight - gap * 2, ASPECT_RATIO);
+      setDividerHeight(Math.min(height, containerHeight - MIN_GALLERY_HEIGHT));
     }
-  }, [containerHeight, dividerHeight, maxDividerHeight]);
+  }, [containerWidth, containerHeight]);
 
   const pinnedItem = useMemo(() => items.find((item) => getId(item) === pinned), [items, pinned]);
   const mainItems = useMemo(() => items.filter((item) => getId(item) !== pinned), [items, pinned]);
@@ -73,22 +78,23 @@ export const ResponsiveGrid = <T extends object = any>({
   //
   // Recalculate optimal layout when container size or items change.
   //
-  const [{ columns, cellWidth }, setLayout] = useState<Layout>({ columns: 0, cellWidth: 0 });
+  const [{ time, columns, cellWidth }, setLayout] = useState<Layout>({ time: 0, columns: 0, cellWidth: 0 });
   const { width = 0, height = 0, ref: gridContainerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
   useEffect(() => {
-    if (width > 0 && height > 0) {
-      setLayout(calculateLayout(width, height, mainItems.length, gap));
+    if (containerHeight && width && height) {
+      const layout = calculateLayout(width, height, mainItems.length, gap);
+      setLayout({ time: Date.now(), ...layout });
     }
-  }, [width, height, mainItems.length, gap, pinned]);
+  }, [containerHeight, width, height, mainItems.length, gap, pinned]);
 
-  // Absolutely positioned items.
+  // Calculate absolutely positioned items.
   const [bounds, setBounds] = useState<[T, DOMRectBounds][]>([]);
   useLayoutEffect(() => {
-    if (!gridContainerRef.current) {
+    if (!gridContainerRef.current || !containerHeight) {
       return;
     }
 
-    // TODO(burdon): Consider directly setting bounds instead of state update.
+    // TODO(burdon): Consider directly setting bounds on DOM elementsinstead of state update.
     const t = setTimeout(() => {
       setBounds(
         items
@@ -98,6 +104,7 @@ export const ResponsiveGrid = <T extends object = any>({
             if (!el) {
               return null;
             }
+
             const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
             return [item, bounds];
           })
@@ -106,7 +113,7 @@ export const ResponsiveGrid = <T extends object = any>({
     });
 
     return () => clearTimeout(t);
-  }, [mainItems, columns, cellWidth, width, height]);
+  }, [items, time]);
 
   const handleClick = useCallback(
     (item: T) => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item)),
@@ -114,65 +121,59 @@ export const ResponsiveGrid = <T extends object = any>({
   );
 
   return (
-    <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
-      {pinnedItem && (
+    <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden')}>
+      <div className='absolute inset-0 flex flex-col grow'>
+        {/* Pinned item. */}
+        {pinnedItem && (
+          <div
+            className='relative flex shrink-0 w-full overflow-hidden border-be border-separator'
+            style={{
+              paddingTop: gap,
+              paddingBottom: gap,
+              height: dividerHeight,
+            }}
+          >
+            {/* Pinned item. */}
+            <SoloItem id={getId(pinnedItem)} debug={debug} />
+          </div>
+        )}
+
+        {/* Placeholder grid used to calculate layout. */}
         <div
-          {...resizeAttributes}
-          className='relative flex shrink-0 w-full overflow-hidden border-be border-separator'
+          ref={gridContainerRef}
+          className='flex w-full grow justify-center items-center overflow-hidden '
           style={{
-            ...sizeStyle(dividerHeight, 'vertical'),
             paddingTop: gap,
             paddingBottom: gap,
           }}
         >
-          {/* Pinned item. */}
-          <SoloItem id={getId(pinnedItem)} debug={debug} />
-
-          <ResizeHandle
-            side='block-end'
-            classNames='z-10'
-            defaultSize='min-content'
-            minSize={MIN_HEIGHT_REM}
-            maxSize={maxDividerHeight}
-            fallbackSize={DEFAULT_HEIGHT_REM}
-            iconPosition='center'
-            onSizeChange={setDividerHeight}
-          />
+          {mainItems.length === 1 && <SoloItem id={getId(mainItems[0])} debug={debug} />}
+          {mainItems.length > 1 && columns > 0 && (
+            <div
+              role='grid'
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
+                gap: `${gap}px`,
+              }}
+            >
+              {mainItems.map((item) => (
+                <div
+                  key={getId(item)}
+                  {...{ 'data-grid-item': getId(item) }}
+                  className={mx(
+                    'aspect-video max-h-full max-w-full w-auto h-auto overflow-hidden',
+                    debug && 'border border-primary-500',
+                  )}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Placeholder grid. */}
-      <div
-        ref={gridContainerRef}
-        className='flex w-full grow overflow-hidden justify-center items-center'
-        style={{
-          paddingTop: gap,
-          paddingBottom: gap,
-        }}
-      >
-        {mainItems.length === 1 && <SoloItem id={getId(mainItems[0])} debug={debug} />}
-        {mainItems.length > 1 && columns > 0 && (
-          <div
-            role='grid'
-            style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
-              gap: `${gap}px`,
-            }}
-          >
-            {mainItems.map((item) => (
-              <div
-                key={getId(item)}
-                {...{ 'data-grid-item': getId(item) }}
-                className={mx('aspect-video max-h-full max-w-full w-auto h-auto', debug && 'border border-primary-500')}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* Absolutely positioned items. */}
-      <div className={mx(debug && 'opacity-50')}>
+      {/* Absolutely positioned items for participants gallery. */}
+      <div className={mx(debug && 'opacity-10')}>
         {bounds.map(([item, bounds]) => (
           <Cell
             key={getId(item)}
@@ -217,6 +218,7 @@ const getRelativeBounds = (container: HTMLElement, el: HTMLElement): DOMRectBoun
 };
 
 type Layout = {
+  time?: number;
   columns: number;
   cellWidth: number;
 };
@@ -235,49 +237,88 @@ const calculateLayout = (
   containerHeight: number,
   count: number,
   gap: number,
-  aspectRatio = 16 / 9,
+  aspectRatio = ASPECT_RATIO,
 ): Layout => {
   if (count === 0) {
     return { columns: 1, cellWidth: 1 };
   }
 
-  let bestRows = 1;
-  let bestColumns = 1;
   let minWastedSpace = Infinity;
+  let bestColumns = 1;
+  let cellWidth = 0;
 
-  // TODO(burdon): Balance rows and columns.
-
-  // Try different column counts to find the optimal layout that minimizes wasted space.
-  for (let cols = 1; cols <= count; cols++) {
-    const rows = Math.ceil(count / cols);
+  // Try different rows counts to find the optimal layout that minimizes wasted space.
+  for (let rows = 1; rows <= count; rows++) {
+    const cols = Math.ceil(count / rows);
 
     // Calculate available space accounting for gaps.
-    const availableWidth = containerWidth - gap * (cols - 1);
-    const itemWidth = availableWidth / cols;
-    const itemHeight = itemWidth / aspectRatio;
-
-    // Skip configurations that exceed container height.
-    const totalHeight = itemHeight * rows + gap * (rows - 1);
-    if (totalHeight > containerHeight) {
-      continue;
-    }
+    const { width: itemWidth, height: itemHeight } = fitItemsToGrid(
+      containerWidth,
+      containerHeight,
+      cols,
+      rows,
+      aspectRatio,
+      gap,
+    );
 
     // Calculate total wasted space for this configuration.
-    const usedWidth = itemWidth * cols + gap * (cols - 1);
-    const usedHeight = itemHeight * rows + gap * (rows - 1);
+    const usedWidth = itemWidth * cols + gap * (cols + 1);
+    const usedHeight = itemHeight * rows + gap * (rows + 1);
     const wastedSpace = containerWidth * containerHeight - usedWidth * usedHeight;
     if (wastedSpace < minWastedSpace) {
       minWastedSpace = wastedSpace;
-      bestRows = rows;
       bestColumns = cols;
+      cellWidth = itemWidth;
     }
   }
 
-  // Prefer fewer columns to balance rows and columns.
-  const cellWidth = Math.floor((containerWidth - gap * (bestColumns - 1)) / bestColumns);
-  while (bestColumns > 1 && count / (bestColumns - 1) < bestRows) {
-    bestColumns--;
+  return { columns: bestColumns, cellWidth };
+};
+
+/**
+ * Returns the size of the largest rectangle with the given aspect ration that fits within the grid.
+ */
+const fitItemsToGrid = (
+  outerWidth: number,
+  outerHeight: number,
+  numCols: number,
+  numRows: number,
+  aspectRatio: number,
+  gap: number,
+): { width: number; height: number } => {
+  // Calculate available space accounting for gaps.
+  const availableWidth = outerWidth - gap * (numCols + 1);
+  const availableHeight = outerHeight - gap * (numRows + 1);
+
+  // Calculate max dimensions.
+  const maxCellWidth = availableWidth / numCols;
+  const maxCellHeight = availableHeight / numRows;
+
+  // Use fitAspectRatio to get dimensions that fit within max cell size while maintaining the desired aspect ratio
+  return fitAspectRatio(maxCellWidth, maxCellHeight, aspectRatio);
+};
+
+/**
+ * Returns the size of the largest rectangle the given aspect ratio that fits within the outer rectangle.
+ */
+const fitAspectRatio = (
+  outerWidth: number,
+  outerHeight: number,
+  aspectRatio: number,
+): { width: number; height: number } => {
+  if (outerWidth <= 0 || outerHeight <= 0 || aspectRatio <= 0) {
+    return { width: 0, height: 0 };
   }
 
-  return { columns: bestColumns, cellWidth };
+  // First try fitting to width.
+  let width = outerWidth;
+  let height = width / aspectRatio;
+
+  // If too tall, fit to height instead.
+  if (height > outerHeight) {
+    height = outerHeight;
+    width = height * aspectRatio;
+  }
+
+  return { width, height };
 };
