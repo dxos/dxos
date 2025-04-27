@@ -13,7 +13,6 @@ import { type EditorView } from '@codemirror/view';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useState, type FC, type KeyboardEvent } from 'react';
-import { createRoot } from 'react-dom/client';
 
 import { Expando } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
@@ -22,14 +21,13 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, Icon, IconButton, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, IconButton, Input, useThemeContext } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace, editorWidth } from './defaults';
 import {
   type Action,
-  type CommentsOptions,
   type DebugNode,
   type EditorSelectionState,
   InputModeExtensions,
@@ -64,7 +62,7 @@ import {
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
-import { type RenderCallback, type Comment } from './types';
+import { type Comment } from './types';
 import { createRenderer } from './util';
 
 faker.seed(101);
@@ -220,46 +218,27 @@ const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', '
 const hover =
   'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
-    {char}
-  </span>
-);
-
-const renderCommentTooltip: CommentsOptions['renderTooltip'] = (el, { shortcut }) => {
-  createRoot(el).render(
-    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
-      <div>Create comment</div>
-      <div className='flex gap-1'>
-        {keySymbols(parseShortcut(shortcut)).map((char) => (
-          <Key key={char} char={char} />
-        ))}
-      </div>
-    </div>,
-  );
-};
-
-const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
+const LinkTooltip: FC<{ url: string }> = ({ url }) => {
   const web = new URL(url);
-  createRoot(el).render(
-    <ThemeProvider tx={defaultTx}>
-      <a href={url} target='_blank' rel='noreferrer' className={mx(hover, 'flex items-center gap-2')}>
-        {web.origin}
-        <Icon icon='ph--arrow-square-out--regular' size={4} />
-      </a>
-    </ThemeProvider>,
+  return (
+    <a href={url} target='_blank' rel='noreferrer' className={mx(hover, 'flex items-center gap-2')}>
+      {web.origin}
+      <Icon icon='ph--arrow-square-out--regular' size={4} />
+    </a>
   );
 };
 
-const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) => {
-  createRoot(el).render(
-    <ThemeProvider tx={defaultTx}>
-      <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
-        <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block mis-1 mb-[3px]' />
-      </a>
-    </ThemeProvider>,
+const renderLinkTooltip = createRenderer(LinkTooltip);
+
+const LinkButton: FC<{ url: string }> = ({ url }) => {
+  return (
+    <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
+      <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block mis-1 mb-[3px]' />
+    </a>
   );
 };
+
+const renderLinkButton = createRenderer(LinkButton);
 
 //
 // Story
@@ -646,9 +625,9 @@ export const Preview = {
       extensions={[
         image(),
         preview({
-          onLookup: handlePreviewLookup,
           renderBlock: createRenderer(PreviewBlock),
           renderPopover: createRenderer(PreviewCard),
+          onLookup: handlePreviewLookup,
         }),
       ]}
     />
@@ -748,14 +727,14 @@ export const Command = {
       )}
       extensions={[
         preview({
-          onLookup: handlePreviewLookup,
           renderBlock: createRenderer(PreviewBlock),
           renderPopover: createRenderer(PreviewCard),
+          onLookup: handlePreviewLookup,
         }),
         command({
-          onHint: () => 'Press / for commands.',
           renderMenu: createRenderer(CommandMenu),
           renderDialog: createRenderer(CommandDialog),
+          onHint: () => 'Press / for commands.',
         }),
       ]}
     />
@@ -835,7 +814,7 @@ export const Comments = {
           ),
           comments({
             id: 'test',
-            renderTooltip: renderCommentTooltip,
+            renderTooltip: createRenderer(CommentTooltip),
             onCreate: ({ cursor }) => {
               const id = PublicKey.random().toHex();
               _comments.value = [..._comments.value, { id, cursor }];
@@ -859,6 +838,25 @@ export const Comments = {
       />
     );
   },
+};
+
+const Key: FC<{ char: string }> = ({ char }) => (
+  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+    {char}
+  </span>
+);
+
+const CommentTooltip: FC<{ shortcut: string }> = ({ shortcut }) => {
+  return (
+    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+      <div>Create comment</div>
+      <div className='flex gap-1'>
+        {keySymbols(parseShortcut(shortcut)).map((char) => (
+          <Key key={char} char={char} />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 //

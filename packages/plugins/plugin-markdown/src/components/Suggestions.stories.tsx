@@ -32,9 +32,9 @@ const DefaultStory = () => {
       automerge(createDocAccessor(doc, ['content'])),
       command(),
       preview({
-        onLookup: async () => undefined,
         renderBlock: createRenderer(PreviewBlock),
         renderPopover: createRenderer(PreviewCard),
+        onLookup: async () => undefined,
       }),
     ],
     [doc],
