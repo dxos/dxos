@@ -674,6 +674,7 @@ const handlePreviewRenderBlock: PreviewOptions['onRenderBlock'] = (el, props) =>
   );
 };
 
+// TODO(burdon): Replace with card.
 const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
   const [target, setTarget] = useState<PreviewLinkTarget>();
   useEffect(() => {
