@@ -669,7 +669,7 @@ const PreviewCard: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLooku
 const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
   const target = useRefTarget(link, onLookup);
   return (
-    <div className='flex flex-col gap-2'>
+    <div className='group flex flex-col gap-2'>
       <div className='flex items-center gap-4'>
         <div className='grow truncate'>
           {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
@@ -699,6 +699,7 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
                 iconOnly
                 label='Delete'
                 icon={'ph--x--regular'}
+                classNames='transition-opacity duration-300 opacity-0 group-hover:opacity-100'
                 onClick={() => onAction({ type: 'delete', link })}
               />
             )}
