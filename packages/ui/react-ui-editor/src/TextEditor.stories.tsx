@@ -10,7 +10,6 @@ import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useState, type FC, type KeyboardEvent } from 'react';
@@ -24,11 +23,17 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { defaultTx, getSize, mx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace, editorWidth } from './defaults';
 import {
+  type Action,
+  type ActionHandler,
+  type CommentsOptions,
+  type DebugNode,
+  type EditorSelectionState,
+  InputModeExtensions,
   annotations,
   autocomplete,
   blast,
@@ -46,18 +51,12 @@ import {
   folding,
   formattingKeymap,
   image,
-  InputModeExtensions,
   linkTooltip,
   listener,
   mention,
   selectionState,
   table,
   typewriter,
-  type Action,
-  type ActionHandler,
-  type CommentsOptions,
-  type DebugNode,
-  type EditorSelectionState,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
@@ -648,8 +647,8 @@ export const Command = {
               </ThemeProvider>,
             );
           },
-          onRenderPreview: (el, { text }, handleAction) => {
-            faker.seed(text.length);
+          onRenderPreview: (el, data, handleAction) => {
+            faker.seed(data.text.length);
             const content = Array.from({ length: 2 }, () => faker.lorem.sentences(2)).join('\n\n');
             renderRoot(
               el,
@@ -677,7 +676,7 @@ const Preview: FC<{ label: string; text: string; onAction: ActionHandler }> = ({
             classNames='text-green-500'
             label='Apply'
             icon={'ph--check--regular'}
-            onClick={() => onAction({ type: 'apply' })}
+            onClick={() => onAction({ type: 'apply', text })}
           />
           <IconButton
             classNames='text-red-500'
@@ -716,7 +715,12 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
 
   return (
     <div className='flex w-full justify-center'>
-      <div className={mx('flex w-full p-2 gap-2 items-center border border-separator rounded-md', editorWidth)}>
+      <div
+        className={mx(
+          'flex w-full p-2 gap-2 items-center bg-modalSurface border border-separator rounded-md',
+          editorWidth,
+        )}
+      >
         <Input.Root>
           <Input.TextInput
             autoFocus={true}
@@ -727,7 +731,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
           />
         </Input.Root>
         <Button variant='ghost' classNames='pli-0' onClick={() => onAction({ type: 'cancel' })}>
-          <X className={getSize(5)} />
+          <Icon icon='ph--x--regular' size={5} />
         </Button>
       </div>
     </div>

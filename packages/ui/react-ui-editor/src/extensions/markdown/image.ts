@@ -100,7 +100,7 @@ class ImageWidget extends WidgetType {
   }
 
   override eq(other: this) {
-    return this._url === (other as any as ImageWidget)._url;
+    return this._url === other._url;
   }
 
   override toDOM(view: EditorView) {

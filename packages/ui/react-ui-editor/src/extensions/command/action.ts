@@ -10,10 +10,11 @@ import { commandState } from './state';
 export type Action =
   | {
       type: 'insert';
-      text?: string;
+      text: string;
     }
   | {
       type: 'apply';
+      text: string;
     }
   | {
       type: 'cancel';

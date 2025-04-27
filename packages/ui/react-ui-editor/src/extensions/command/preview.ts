@@ -32,13 +32,14 @@ export const preview = (options: PreviewOptions): Extension => {
     StateField.define<DecorationSet>({
       create: (state) => buildDecorations(state, options),
       update: (_: RangeSet<Decoration>, tr: Transaction) => buildDecorations(tr.state, options),
-      // TODO(burdon): Make atomic.
+      // TODO(burdon): Make atomic (so delete).
       provide: (field) => EditorView.decorations.from(field),
     }),
   ];
 };
 
-// TODO(burdon): Make atomic.
+// TODO(burdon): Make backspace delete the entire range.
+
 const buildDecorations = (state: EditorState, options: PreviewOptions) => {
   const builder = new RangeSetBuilder<Decoration>();
   syntaxTree(state).iterate({
@@ -73,14 +74,37 @@ class PreviewWidget extends WidgetType {
   }
 
   override eq(other: this) {
-    return this._data.url === (other as any as PreviewWidget)._data.url;
+    return this._data.url === other._data.url;
   }
 
   override toDOM(view: EditorView) {
     const root = document.createElement('div');
     root.classList.add('cm-preview');
     this._onRenderPreview(root, this._data, (action) => {
-      console.log(action);
+      const pos = view.posAtDOM(root);
+      const node = syntaxTree(view.state).resolve(pos + 1);
+      switch (action.type) {
+        case 'apply': {
+          view.dispatch({
+            changes: {
+              from: node.from,
+              to: node.to,
+              insert: action.text,
+            },
+          });
+          break;
+        }
+        case 'cancel': {
+          view.dispatch({
+            changes: {
+              from: node.from,
+              to: node.to,
+              insert: '',
+            },
+          });
+          break;
+        }
+      }
     });
 
     return root;
