@@ -126,7 +126,7 @@ export const ResponsiveGrid = <T extends object = any>({
         {/* Pinned item. */}
         {pinnedItem && (
           <div
-            className='relative flex shrink-0 w-full overflow-hidden border-be border-separator'
+            className='relative flex shrink-0 w-full overflow-hidden'
             style={{
               paddingTop: gap,
               paddingBottom: gap,
