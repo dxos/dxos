@@ -40,7 +40,7 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
         container.appendChild(this.button);
 
         // Listen for scroll events.
-        container.addEventListener('scroll', this.scheduleUpdate);
+        container.addEventListener('scroll', this.scheduleUpdate.bind(this));
         this.scheduleUpdate();
       }
 
@@ -59,7 +59,8 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
         if (this.rafId != null) {
           cancelAnimationFrame(this.rafId);
         }
-        this.rafId = requestAnimationFrame(() => this.updateButtonPosition());
+
+        this.rafId = requestAnimationFrame(this.updateButtonPosition.bind(this));
       }
 
       updateButtonPosition() {

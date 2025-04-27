@@ -13,10 +13,6 @@ export type Action =
       text: string;
     }
   | {
-      type: 'apply';
-      text: string;
-    }
-  | {
       type: 'cancel';
     };
 

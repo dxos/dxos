@@ -29,11 +29,12 @@ import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 import { editorContent, editorGutter, editorMonospace, editorWidth } from './defaults';
 import {
   type Action,
-  type ActionHandler,
   type CommentsOptions,
   type DebugNode,
   type EditorSelectionState,
   InputModeExtensions,
+  type PreviewOptions,
+  type PreviewRef as PreviewLinkRef,
   annotations,
   autocomplete,
   blast,
@@ -54,9 +55,12 @@ import {
   linkTooltip,
   listener,
   mention,
+  preview,
   selectionState,
   table,
   typewriter,
+  type PreviewLinkTarget,
+  type PreviewRenderProps,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
@@ -69,7 +73,7 @@ const str = (...lines: string[]) => lines.join('\n');
 
 const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
-const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)';
+const img = '![dxos](https://dxos.network/dxos-logotype-blue.png)';
 
 const code = str(
   '// Code',
@@ -619,14 +623,111 @@ export const Search = {
 };
 
 //
+// Preview
+//
+
+export const Preview = {
+  render: () => (
+    <DefaultStory
+      text={str(
+        '# Preview',
+        '',
+        'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
+        '',
+        '![DXOS][dxn:queue:data:123]',
+        '',
+        'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
+        '',
+        '## Deep dive',
+        '',
+        '![ECHO][dxn:queue:data:echo]',
+        '',
+      )}
+      extensions={[
+        image(),
+        preview({
+          onLookup: handlePreviewLookup,
+          onRenderBlock: handlePreviewRenderBlock,
+        }),
+      ]}
+    />
+  ),
+};
+
+const handlePreviewLookup = async (link: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+  faker.seed(link.dxn.split(':').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0));
+  const text = Array.from({ length: 1 }, () => faker.lorem.paragraph()).join('\n\n');
+  return {
+    label: link.label,
+    text,
+  };
+};
+
+const handlePreviewRenderBlock: PreviewOptions['onRenderBlock'] = (el, props) => {
+  renderRoot(
+    el,
+    <ThemeProvider tx={defaultTx}>
+      <PreviewBlock {...props} />
+    </ThemeProvider>,
+  );
+};
+
+const PreviewBlock: FC<PreviewRenderProps> = ({ link, onAction, onLookup }) => {
+  const [target, setTarget] = useState<PreviewLinkTarget>();
+  useEffect(() => {
+    // Async lookup.
+    void onLookup(link).then((target) => setTarget(target));
+  }, [link, onLookup]);
+
+  return (
+    <div className='flex flex-col gap-2'>
+      <div className='flex items-center gap-4'>
+        <div className='grow truncate'>
+          {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
+          {link.label}
+        </div>
+        <div className='flex gap-1'>
+          {target && (
+            <IconButton
+              classNames='text-green-500'
+              label='Apply'
+              icon={'ph--check--regular'}
+              onClick={() => onAction({ type: 'apply', link, target })}
+            />
+          )}
+          <IconButton
+            classNames='text-red-500'
+            label='Cancel'
+            icon={'ph--x--regular'}
+            onClick={() => onAction({ type: 'cancel', link })}
+          />
+        </div>
+      </div>
+      {target && <div className='line-clamp-3'>{target.text}</div>}
+    </div>
+  );
+};
+
+//
 // Command
 //
 
 export const Command = {
   render: () => (
     <DefaultStory
-      text={str('# Command', '', '', '[Test](dxn:queue:data:123)', '', '', '')}
+      text={str(
+        '# Preview',
+        '',
+        'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
+        '',
+        '![DXOS][dxn:queue:data:123]',
+        '',
+      )}
       extensions={[
+        preview({
+          onLookup: handlePreviewLookup,
+          onRenderBlock: handlePreviewRenderBlock,
+        }),
         command({
           onHint: () => 'Press / for commands.',
           onRenderMenu: (el, onClick) => {
@@ -647,48 +748,10 @@ export const Command = {
               </ThemeProvider>,
             );
           },
-          onRenderPreview: (el, data, handleAction) => {
-            faker.seed(data.text.length);
-            const content = Array.from({ length: 2 }, () => faker.lorem.sentences(2)).join('\n\n');
-            renderRoot(
-              el,
-              <ThemeProvider tx={defaultTx}>
-                <Preview label='Prompt' text={content} onAction={handleAction} />
-              </ThemeProvider>,
-            );
-          },
         }),
       ]}
     />
   ),
-};
-
-const Preview: FC<{ label: string; text: string; onAction: ActionHandler }> = ({ label, text, onAction }) => {
-  return (
-    <div className='flex flex-col gap-2'>
-      <div className='flex items-center gap-4'>
-        <div className='grow truncate'>
-          <span className='text-xs text-subdued mie-2'>{label}</span>
-          {text}
-        </div>
-        <div className='flex gap-1'>
-          <IconButton
-            classNames='text-green-500'
-            label='Apply'
-            icon={'ph--check--regular'}
-            onClick={() => onAction({ type: 'apply', text })}
-          />
-          <IconButton
-            classNames='text-red-500'
-            label='Cancel'
-            icon={'ph--x--regular'}
-            onClick={() => onAction({ type: 'cancel' })}
-          />
-        </div>
-      </div>
-      <div>{text}</div>
-    </div>
-  );
 };
 
 const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {
