@@ -31,7 +31,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { documentId } from './selection';
 import { type EditorToolbarState } from '../components';
-import { type Comment, type Range } from '../types';
+import { type RenderCallback, type Comment, type Range } from '../types';
 import { Cursor, overlap, singleValueFacet, callbackWrapper } from '../util';
 
 //
@@ -364,7 +364,8 @@ export type CommentsOptions = {
   /**
    * Called to render tooltip.
    */
-  onHover?: (el: Element, shortcut: string) => void;
+  // TODO(burdon): Rename.
+  onHover?: RenderCallback<{ shortcut: string }>;
 };
 
 const optionsFacet = singleValueFacet<CommentsOptions>();
@@ -419,7 +420,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
               above: true,
               create: () => {
                 const el = document.createElement('div');
-                options.onHover!(el, shortcut);
+                options.onHover!(el, { shortcut }, view);
                 return { dom: el, offset: { x: 0, y: 8 } };
               },
             };

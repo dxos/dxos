@@ -31,6 +31,7 @@ import {
   listener,
   selectionState,
   typewriter,
+  type RenderCallback,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { type TextType } from '@dxos/schema';
@@ -266,7 +267,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
   );
 };
 
-const renderLinkTooltip = (el: Element, url: string) => {
+const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   const web = new URL(url);
   renderRoot(
     el,

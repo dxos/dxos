@@ -12,7 +12,13 @@ import {
   type Transaction,
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
+import { hoverTooltip } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
+import { isNotNullable } from 'effect/Predicate';
+
+import { tooltipContent } from '@dxos/react-ui-theme';
+
+import { type RenderCallback } from '../../types';
 
 export type PreviewLinkRef = {
   suggest?: boolean;
@@ -49,9 +55,8 @@ export type PreviewRenderProps = {
 };
 
 export type PreviewOptions = {
-  // TODO(burdon): Handle render callbacks uniformly across all extensions. Pass object.
-  onRenderBlock: (el: HTMLElement, props: PreviewRenderProps, view: EditorView) => void;
-  onRenderPopover?: (el: HTMLElement, props: PreviewRenderProps, view: EditorView) => void;
+  onRenderBlock: RenderCallback<PreviewRenderProps>;
+  onRenderPopover?: RenderCallback<PreviewRenderProps>;
   onLookup: PreviewLookup;
 };
 
@@ -75,6 +80,50 @@ export const preview = (options: PreviewOptions): Extension => {
       ],
     }),
 
+    // Popover.
+    options.onRenderPopover &&
+      hoverTooltip(
+        (view, pos, side) => {
+          const node = syntaxTree(view.state).resolveInner(pos, side);
+          if (node.name !== 'LinkMark') {
+            return null;
+          }
+
+          const link = node.parent!;
+          const ref = getLinkRef(view.state, link);
+          if (!ref) {
+            return null;
+          }
+
+          return {
+            pos: link.from,
+            end: link.to,
+            arrow: true,
+            create: () => {
+              const el = document.createElement('div');
+              el.className = tooltipContent({}, 'text-md');
+              options.onRenderPopover!(
+                el,
+                {
+                  readonly: view.state.readOnly,
+                  link: ref,
+                  onAction: () => {},
+                  onLookup: options.onLookup,
+                },
+                view,
+              );
+
+              // NOTE: Align horizontally with title of card.
+              return { dom: el, offset: { x: 8, y: 0 } };
+            },
+          };
+        },
+        {
+          // NOTE: 0 = default of 300ms.
+          hoverTime: 1,
+        },
+      ),
+
     EditorView.theme({
       '.cm-preview-inline': {
         padding: '0.25rem',
@@ -90,8 +139,12 @@ export const preview = (options: PreviewOptions): Extension => {
         background: 'var(--dx-modalSurface)',
         border: '1px solid var(--dx-separator)',
       },
+      '.cm-tooltip': {
+        borderRadius: '0.25rem',
+        border: '1px solid var(--dx-separator)',
+      },
     }),
-  ];
+  ].filter(isNotNullable);
 };
 
 /**

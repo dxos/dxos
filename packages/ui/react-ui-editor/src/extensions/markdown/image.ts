@@ -51,16 +51,6 @@ export const image = (_options: ImageOptions = {}): Extension => {
   ];
 };
 
-const preloaded = new Set<string>();
-
-const preloadImage = (url: string) => {
-  if (!preloaded.has(url)) {
-    const img = document.createElement('img');
-    img.src = url;
-    preloaded.add(url);
-  }
-};
-
 const buildDecorations = (from: number, to: number, state: EditorState) => {
   const decorations: Range<Decoration>[] = [];
   const cursor = state.selection.main.head;
@@ -94,6 +84,16 @@ const buildDecorations = (from: number, to: number, state: EditorState) => {
   return decorations;
 };
 
+const preloaded = new Set<string>();
+
+const preloadImage = (url: string) => {
+  if (!preloaded.has(url)) {
+    const img = document.createElement('img');
+    img.src = url;
+    preloaded.add(url);
+  }
+};
+
 class ImageWidget extends WidgetType {
   constructor(readonly _url: string) {
     super();
@@ -113,6 +113,7 @@ class ImageWidget extends WidgetType {
     } else {
       img.classList.add('cm-loaded-image');
     }
+
     return img;
   }
 }

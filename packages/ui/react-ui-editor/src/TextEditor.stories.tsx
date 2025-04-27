@@ -64,7 +64,7 @@ import {
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
-import { type Comment } from './types';
+import { type RenderCallback, type Comment } from './types';
 import { renderRoot } from './util';
 
 faker.seed(101);
@@ -226,7 +226,7 @@ const Key: FC<{ char: string }> = ({ char }) => (
   </span>
 );
 
-const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
+const renderCommentTooltip: CommentsOptions['onHover'] = (el, { shortcut }) => {
   createRoot(el).render(
     <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
       <div>Create comment</div>
@@ -239,7 +239,7 @@ const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   );
 };
 
-const renderLinkTooltip = (el: Element, url: string) => {
+const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   const web = new URL(url);
   createRoot(el).render(
     <ThemeProvider tx={defaultTx}>
@@ -251,7 +251,7 @@ const renderLinkTooltip = (el: Element, url: string) => {
   );
 };
 
-const renderLinkButton = (el: Element, url: string) => {
+const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) => {
   createRoot(el).render(
     <ThemeProvider tx={defaultTx}>
       <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
@@ -360,7 +360,7 @@ const defaultExtensions: Extension[] = [
 ];
 
 const allExtensions: Extension[] = [
-  decorateMarkdown({ numberedHeadings: { from: 2, to: 4 }, renderLinkButton, selectionChangeDelay: 100 }),
+  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, numberedHeadings: { from: 2, to: 4 } }),
   formattingKeymap(),
   linkTooltip(renderLinkTooltip),
   image(),
@@ -647,7 +647,8 @@ export const Preview = {
         image(),
         preview({
           onLookup: handlePreviewLookup,
-          onRenderBlock: handlePreviewRenderBlock,
+          onRenderBlock: handlePreviewRenderBlock(PreviewBlock),
+          onRenderPopover: handlePreviewRenderBlock(PreviewCard),
         }),
       ]}
     />
@@ -655,33 +656,52 @@ export const Preview = {
 };
 
 const handlePreviewLookup = async (link: PreviewLinkRef): Promise<PreviewLinkTarget> => {
-  faker.seed(link.dxn.split(':').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0));
-  const text = Array.from({ length: 1 }, () => faker.lorem.paragraph()).join('\n\n');
+  // Random text.
+  faker.seed(link.dxn.split(':').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+  const text = Array.from({ length: 2 }, () => faker.lorem.paragraphs()).join('\n\n');
   return {
     label: link.label,
     text,
   };
 };
 
-const handlePreviewRenderBlock: PreviewOptions['onRenderBlock'] = (el, props) => {
-  renderRoot(
-    el,
-    <ThemeProvider tx={defaultTx}>
-      <Tooltip.Provider>
-        <PreviewBlock {...props} />
-      </Tooltip.Provider>
-    </ThemeProvider>,
+const handlePreviewRenderBlock =
+  (Component: FC<PreviewRenderProps>): PreviewOptions['onRenderBlock'] =>
+  (el, props) => {
+    renderRoot(
+      el,
+      <ThemeProvider tx={defaultTx}>
+        <Tooltip.Provider>
+          <Component {...props} />
+        </Tooltip.Provider>
+      </ThemeProvider>,
+    );
+  };
+
+// Async lookup.
+// TODO(burdon): Handle error.s
+const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']): PreviewLinkTarget | undefined => {
+  const [target, setTarget] = useState<PreviewLinkTarget>();
+  useEffect(() => {
+    void onLookup(link).then((target) => setTarget(target));
+  }, [link, onLookup]);
+
+  return target;
+};
+
+const PreviewCard: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
+  const target = useRefTarget(link, onLookup);
+  return (
+    <div className='flex flex-col gap-2'>
+      <div className='grow truncate'>{link.label}</div>
+      {target && <div className='line-clamp-3'>{target.text}</div>}
+    </div>
   );
 };
 
 // TODO(burdon): Replace with card.
 const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
-  const [target, setTarget] = useState<PreviewLinkTarget>();
-  useEffect(() => {
-    // Async lookup.
-    void onLookup(link).then((target) => setTarget(target));
-  }, [link, onLookup]);
-
+  const target = useRefTarget(link, onLookup);
   return (
     <div className='flex flex-col gap-2'>
       <div className='flex items-center gap-4'>
@@ -742,7 +762,8 @@ export const Command = {
       extensions={[
         preview({
           onLookup: handlePreviewLookup,
-          onRenderBlock: handlePreviewRenderBlock,
+          onRenderBlock: handlePreviewRenderBlock(PreviewBlock),
+          onRenderPopover: handlePreviewRenderBlock(PreviewCard),
         }),
         command({
           onHint: () => 'Press / for commands.',
@@ -835,7 +856,7 @@ export const Comments = {
           ),
           comments({
             id: 'test',
-            onHover: onCommentsHover,
+            onHover: renderCommentTooltip,
             onCreate: ({ cursor }) => {
               const id = PublicKey.random().toHex();
               _comments.value = [..._comments.value, { id, cursor }];
