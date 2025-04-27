@@ -5,18 +5,18 @@
 import { StateField } from '@codemirror/state';
 import { showTooltip, type EditorView, type Tooltip, type TooltipView } from '@codemirror/view';
 
-import { closeEffect, type CommandAction, openEffect } from './action';
+import { closeEffect, type Action, openEffect } from './action';
 import { type CommandOptions } from './command';
 import { singleValueFacet } from '../../util';
 
 export const commandConfig = singleValueFacet<CommandOptions>();
 
-type CommandState = {
-  tooltip?: Tooltip | null;
+export type PopupOptions = {
+  onRenderDialog: (el: HTMLElement, cb: (action?: Action) => void) => void;
 };
 
-export type PopupOptions = {
-  onRenderDialog: (el: HTMLElement, cb: (action?: CommandAction) => void) => void;
+type CommandState = {
+  tooltip?: Tooltip | null;
 };
 
 export const commandState = StateField.define<CommandState>({
@@ -37,6 +37,7 @@ export const commandState = StateField.define<CommandState>({
           strictSide: true,
           create: (view: EditorView) => {
             const dom = document.createElement('div');
+
             const tooltipView: TooltipView = {
               dom,
               mount: (view: EditorView) => {
@@ -50,13 +51,16 @@ export const commandState = StateField.define<CommandState>({
                 // Render react component.
                 onRenderDialog(dom, (action) => {
                   view.dispatch({ effects: closeEffect.of(null) });
-                  if (action?.insert?.length) {
-                    // Insert into editor.
-                    const text = action.insert + '\n';
-                    view.dispatch({
-                      changes: { from: pos, insert: text },
-                      selection: { anchor: pos + text.length },
-                    });
+                  switch (action?.type) {
+                    case 'insert': {
+                      // Insert into editor.
+                      const text = action.text + '\n';
+                      view.dispatch({
+                        changes: { from: pos, insert: text },
+                        selection: { anchor: pos + text.length },
+                      });
+                      break;
+                    }
                   }
 
                   // NOTE: Truncates text if set focus immediately.

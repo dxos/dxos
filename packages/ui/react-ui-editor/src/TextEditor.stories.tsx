@@ -24,10 +24,10 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, defaultTx, getSize, mx } from '@dxos/react-ui-theme';
+import { defaultTx, getSize, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { editorContent, editorGutter, editorMonospace } from './defaults';
+import { editorContent, editorGutter, editorMonospace, editorWidth } from './defaults';
 import {
   annotations,
   autocomplete,
@@ -53,7 +53,8 @@ import {
   selectionState,
   table,
   typewriter,
-  type CommandAction,
+  type Action,
+  type ActionHandler,
   type CommentsOptions,
   type DebugNode,
   type EditorSelectionState,
@@ -634,33 +635,26 @@ export const Command = {
               el,
               <ThemeProvider tx={defaultTx}>
                 <Button classNames='p-1 aspect-square' onClick={onClick}>
-                  <Icon icon={'ph--sparkle--regular'} size={5} />
+                  <Icon icon='ph--sparkle--regular' size={5} />
                 </Button>
               </ThemeProvider>,
             );
           },
-          onRenderDialog: (el, onClose) => {
-            renderRoot(el, <CommandDialog onClose={onClose} />);
-          },
-          onRenderPreview: (el, { text }) => {
-            faker.seed(text.length);
-            const data = Array.from({ length: 2 }, () => faker.lorem.sentences(2));
+          onRenderDialog: (el, onAction) => {
             renderRoot(
               el,
               <ThemeProvider tx={defaultTx}>
-                <div className='flex flex-col gap-2'>
-                  <div className='flex items-center gap-4'>
-                    <div className='grow truncate'>
-                      <span className='text-xs text-subdued mie-2'>Prompt</span>
-                      {text}
-                    </div>
-                    <div className='flex gap-1'>
-                      <IconButton classNames='text-green-500' label='Apply' icon={'ph--check--regular'} />
-                      <IconButton classNames='text-red-500' label='Cancel' icon={'ph--x--regular'} />
-                    </div>
-                  </div>
-                  <div>{data.join('\n\n')}</div>
-                </div>
+                <CommandDialog onAction={onAction} />
+              </ThemeProvider>,
+            );
+          },
+          onRenderPreview: (el, { text }, handleAction) => {
+            faker.seed(text.length);
+            const content = Array.from({ length: 2 }, () => faker.lorem.sentences(2)).join('\n\n');
+            renderRoot(
+              el,
+              <ThemeProvider tx={defaultTx}>
+                <Preview label='Prompt' text={content} onAction={handleAction} />
               </ThemeProvider>,
             );
           },
@@ -670,13 +664,41 @@ export const Command = {
   ),
 };
 
-const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
+const Preview: FC<{ label: string; text: string; onAction: ActionHandler }> = ({ label, text, onAction }) => {
+  return (
+    <div className='flex flex-col gap-2'>
+      <div className='flex items-center gap-4'>
+        <div className='grow truncate'>
+          <span className='text-xs text-subdued mie-2'>{label}</span>
+          {text}
+        </div>
+        <div className='flex gap-1'>
+          <IconButton
+            classNames='text-green-500'
+            label='Apply'
+            icon={'ph--check--regular'}
+            onClick={() => onAction({ type: 'apply' })}
+          />
+          <IconButton
+            classNames='text-red-500'
+            label='Cancel'
+            icon={'ph--x--regular'}
+            onClick={() => onAction({ type: 'cancel' })}
+          />
+        </div>
+      </div>
+      <div>{text}</div>
+    </div>
+  );
+};
+
+const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {
   const [text, setText] = useState('');
+
   const handleInsert = () => {
     // TODO(burdon): Use queue ref.
     const link = `[${text}](dxn:queue:data:123)`;
-    console.log({ link });
-    onClose(text.length ? { insert: link } : undefined);
+    onAction(text.length ? { type: 'insert', text: link } : undefined);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -686,7 +708,7 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
         break;
       }
       case 'Escape': {
-        onClose();
+        onAction();
         break;
       }
     }
@@ -694,23 +716,17 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
 
   return (
     <div className='flex w-full justify-center'>
-      <div
-        className={mx(
-          'flex w-full p-2 gap-2 items-center border border-separator rounded-md',
-          editorContent,
-          baseSurface,
-        )}
-      >
+      <div className={mx('flex w-full p-2 gap-2 items-center border border-separator rounded-md', editorWidth)}>
         <Input.Root>
           <Input.TextInput
             autoFocus={true}
             placeholder='Ask a question...'
             value={text}
-            onChange={({ target: { value } }) => setText(value)}
+            onChange={(ev) => setText(ev.target.value)}
             onKeyDown={handleKeyDown}
           />
         </Input.Root>
-        <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
+        <Button variant='ghost' classNames='pli-0' onClick={() => onAction({ type: 'cancel' })}>
           <X className={getSize(5)} />
         </Button>
       </div>

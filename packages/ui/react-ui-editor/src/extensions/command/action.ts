@@ -7,10 +7,19 @@ import { type KeyBinding, type Command, type EditorView } from '@codemirror/view
 
 import { commandState } from './state';
 
-// TODO(burdon): Discriminated union.
-export type CommandAction = {
-  insert?: string;
-};
+export type Action =
+  | {
+      type: 'insert';
+      text?: string;
+    }
+  | {
+      type: 'apply';
+    }
+  | {
+      type: 'cancel';
+    };
+
+export type ActionHandler = (action: Action) => void;
 
 export const openEffect = StateEffect.define<{ pos: number; fullWidth?: boolean }>();
 export const closeEffect = StateEffect.define<null>();

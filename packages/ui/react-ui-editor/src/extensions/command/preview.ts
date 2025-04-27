@@ -13,8 +13,15 @@ import {
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
+import { type ActionHandler } from './action';
+
+export type PreviewData = {
+  url: string;
+  text: string;
+};
+
 export type PreviewOptions = {
-  onRenderPreview: (el: HTMLElement, props: { url: string; text: string }) => void;
+  onRenderPreview: (el: HTMLElement, data: PreviewData, handleAction: ActionHandler) => void;
 };
 
 /**
@@ -46,7 +53,7 @@ const buildDecorations = (state: EditorState, options: PreviewOptions) => {
             node.to,
             Decoration.replace({
               block: true, // Prevent cursor from entering.
-              widget: new PreviewWidget(options.onRenderPreview, url, text),
+              widget: new PreviewWidget(options.onRenderPreview, { url, text }),
             }),
           );
         }
@@ -60,20 +67,22 @@ const buildDecorations = (state: EditorState, options: PreviewOptions) => {
 class PreviewWidget extends WidgetType {
   constructor(
     readonly _onRenderPreview: PreviewOptions['onRenderPreview'],
-    readonly _url: string,
-    readonly _text: string,
+    readonly _data: PreviewData,
   ) {
     super();
   }
 
   override eq(other: this) {
-    return this._url === (other as any as PreviewWidget)._url;
+    return this._data.url === (other as any as PreviewWidget)._data.url;
   }
 
   override toDOM(view: EditorView) {
     const root = document.createElement('div');
     root.classList.add('cm-preview');
-    this._onRenderPreview(root, { url: this._url, text: this._text });
+    this._onRenderPreview(root, this._data, (action) => {
+      console.log(action);
+    });
+
     return root;
   }
 }
