@@ -15,6 +15,7 @@ import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemir
 import { type SyntaxNode } from '@lezer/common';
 
 export type PreviewLinkRef = {
+  suggest?: boolean;
   block?: boolean;
   label: string;
   dxn: string;
@@ -27,12 +28,12 @@ export type PreviewLinkTarget = {
 
 export type PreviewAction =
   | {
-      type: 'apply';
+      type: 'insert';
       link: PreviewLinkRef;
       target: PreviewLinkTarget;
     }
   | {
-      type: 'cancel';
+      type: 'delete';
       link: PreviewLinkRef;
     };
 
@@ -41,6 +42,7 @@ export type PreviewLookup = (link: PreviewLinkRef) => Promise<PreviewLinkTarget>
 export type PreviewActionHandler = (action: PreviewAction) => void;
 
 export type PreviewRenderProps = {
+  readonly: boolean;
   link: PreviewLinkRef;
   onAction: PreviewActionHandler;
   onLookup: PreviewLookup;
@@ -48,8 +50,8 @@ export type PreviewRenderProps = {
 
 export type PreviewOptions = {
   // TODO(burdon): Handle render callbacks uniformly across all extensions. Pass object.
-  onRenderBlock: (el: HTMLElement, props: PreviewRenderProps) => void;
-  onRenderPopover?: (el: HTMLElement, props: PreviewRenderProps) => void;
+  onRenderBlock: (el: HTMLElement, props: PreviewRenderProps, view: EditorView) => void;
+  onRenderPopover?: (el: HTMLElement, props: PreviewRenderProps, view: EditorView) => void;
   onLookup: PreviewLookup;
 };
 
@@ -92,14 +94,24 @@ export const preview = (options: PreviewOptions): Extension => {
   ];
 };
 
+/**
+ * Link references.
+ *
+ *  [Label][dxn:echo:123]    Inline reference
+ * ![Label][dxn:echo:123]    Block reference
+ * ![Label][?dxn:echo:123]   Suggestion
+ */
 const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | undefined => {
   const mark = node.getChild('LinkMark');
   const label = node.getChild('LinkLabel');
   if (mark && label) {
+    const ref = state.sliceDoc(label.from + 1, label.to - 1);
+    const dxn = ref.startsWith('?') ? ref.slice(1) : ref;
     return {
+      suggest: ref.startsWith('?'),
       block: state.sliceDoc(mark.from, mark.from + 1) === '!',
       label: state.sliceDoc(mark.to, label.from - 1),
-      dxn: state.sliceDoc(label.from, label.to),
+      dxn,
     };
   }
 };
@@ -159,6 +171,10 @@ const buildDecorations = (state: EditorState, options: PreviewOptions) => {
   return builder.finish();
 };
 
+/**
+ * Inline widget.
+ * [Label][dxn:echo:123]
+ */
 class PreviewInlineWidget extends WidgetType {
   constructor(
     readonly _options: PreviewOptions,
@@ -177,12 +193,16 @@ class PreviewInlineWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const root = document.createElement('span');
-    root.classList.add('cm-preview-inline');
+    root.classList.add('cm-preview-inline', 'hover:bg-hoverSurface');
     root.innerHTML = this._link.label;
     return root;
   }
 }
 
+/**
+ * Block widget.
+ * ![Label][dxn:echo:123]
+ */
 class PreviewBlockWidget extends WidgetType {
   constructor(
     readonly _options: PreviewOptions,
@@ -217,9 +237,9 @@ class PreviewBlockWidget extends WidgetType {
       }
 
       switch (action.type) {
-        case 'apply': {
-          // Insert text.
-          // TODO(burdon): Should this insert directly into the document? (i.e., be handled externally?)
+        // TODO(burdon): Should we dispatch to the view or mutate the document? (i.e., handle externally?)
+        // Insert ref text.
+        case 'insert': {
           view.dispatch({
             changes: {
               from: node.from,
@@ -229,13 +249,12 @@ class PreviewBlockWidget extends WidgetType {
           });
           break;
         }
-        case 'cancel': {
-          // Remove ref.
+        // Remove ref.
+        case 'delete': {
           view.dispatch({
             changes: {
               from: node.from,
               to: node.to,
-              insert: '',
             },
           });
           break;
@@ -243,11 +262,16 @@ class PreviewBlockWidget extends WidgetType {
       }
     };
 
-    this._options.onRenderBlock(root, {
-      link: this._link,
-      onAction: handleAction,
-      onLookup: this._options.onLookup,
-    });
+    this._options.onRenderBlock(
+      root,
+      {
+        readonly: view.state.readOnly,
+        link: this._link,
+        onAction: handleAction,
+        onLookup: this._options.onLookup,
+      },
+      view,
+    );
 
     return root;
   }

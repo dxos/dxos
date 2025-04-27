@@ -22,7 +22,7 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, Icon, IconButton, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Input, ThemeProvider, Tooltip, useThemeContext } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -34,7 +34,9 @@ import {
   type EditorSelectionState,
   InputModeExtensions,
   type PreviewOptions,
-  type PreviewRef as PreviewLinkRef,
+  type PreviewLinkRef,
+  type PreviewLinkTarget,
+  type PreviewRenderProps,
   annotations,
   autocomplete,
   blast,
@@ -59,8 +61,6 @@ import {
   selectionState,
   table,
   typewriter,
-  type PreviewLinkTarget,
-  type PreviewRenderProps,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
@@ -634,7 +634,7 @@ export const Preview = {
         '',
         'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
         '',
-        '![DXOS][dxn:queue:data:123]',
+        '![DXOS][?dxn:queue:data:123]',
         '',
         'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
         '',
@@ -667,12 +667,14 @@ const handlePreviewRenderBlock: PreviewOptions['onRenderBlock'] = (el, props) =>
   renderRoot(
     el,
     <ThemeProvider tx={defaultTx}>
-      <PreviewBlock {...props} />
+      <Tooltip.Provider>
+        <PreviewBlock {...props} />
+      </Tooltip.Provider>
     </ThemeProvider>,
   );
 };
 
-const PreviewBlock: FC<PreviewRenderProps> = ({ link, onAction, onLookup }) => {
+const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
   const [target, setTarget] = useState<PreviewLinkTarget>();
   useEffect(() => {
     // Async lookup.
@@ -686,22 +688,35 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ link, onAction, onLookup }) => {
           {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
           {link.label}
         </div>
-        <div className='flex gap-1'>
-          {target && (
-            <IconButton
-              classNames='text-green-500'
-              label='Apply'
-              icon={'ph--check--regular'}
-              onClick={() => onAction({ type: 'apply', link, target })}
-            />
-          )}
-          <IconButton
-            classNames='text-red-500'
-            label='Cancel'
-            icon={'ph--x--regular'}
-            onClick={() => onAction({ type: 'cancel', link })}
-          />
-        </div>
+        {!readonly && (
+          <div className='flex gap-1'>
+            {(link.suggest && (
+              <>
+                {target && (
+                  <IconButton
+                    classNames='text-green-500'
+                    label='Apply'
+                    icon={'ph--check--regular'}
+                    onClick={() => onAction({ type: 'insert', link, target })}
+                  />
+                )}
+                <IconButton
+                  classNames='text-red-500'
+                  label='Cancel'
+                  icon={'ph--x--regular'}
+                  onClick={() => onAction({ type: 'delete', link })}
+                />
+              </>
+            )) || (
+              <IconButton
+                iconOnly
+                label='Delete'
+                icon={'ph--x--regular'}
+                onClick={() => onAction({ type: 'delete', link })}
+              />
+            )}
+          </div>
+        )}
       </div>
       {target && <div className='line-clamp-3'>{target.text}</div>}
     </div>
