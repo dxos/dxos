@@ -22,7 +22,7 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, Icon, IconButton, Input, ThemeProvider, Tooltip, useThemeContext } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -65,7 +65,7 @@ import {
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
 import { type RenderCallback, type Comment } from './types';
-import { renderRoot } from './util';
+import { createRenderer } from './util';
 
 faker.seed(101);
 
@@ -647,8 +647,8 @@ export const Preview = {
         image(),
         preview({
           onLookup: handlePreviewLookup,
-          onRenderBlock: handlePreviewRenderBlock(PreviewBlock),
-          onRenderPopover: handlePreviewRenderBlock(PreviewCard),
+          renderBlock: createRenderer(PreviewBlock),
+          renderPopover: createRenderer(PreviewCard),
         }),
       ]}
     />
@@ -664,19 +664,6 @@ const handlePreviewLookup = async (link: PreviewLinkRef): Promise<PreviewLinkTar
     text,
   };
 };
-
-const handlePreviewRenderBlock =
-  (Component: FC<PreviewRenderProps>): PreviewOptions['onRenderBlock'] =>
-  (el, props) => {
-    renderRoot(
-      el,
-      <ThemeProvider tx={defaultTx}>
-        <Tooltip.Provider>
-          <Component {...props} />
-        </Tooltip.Provider>
-      </ThemeProvider>,
-    );
-  };
 
 // Async lookup.
 // TODO(burdon): Handle error.s
@@ -762,33 +749,25 @@ export const Command = {
       extensions={[
         preview({
           onLookup: handlePreviewLookup,
-          onRenderBlock: handlePreviewRenderBlock(PreviewBlock),
-          onRenderPopover: handlePreviewRenderBlock(PreviewCard),
+          renderBlock: createRenderer(PreviewBlock),
+          renderPopover: createRenderer(PreviewCard),
         }),
         command({
           onHint: () => 'Press / for commands.',
-          onRenderMenu: (el, onClick) => {
-            renderRoot(
-              el,
-              <ThemeProvider tx={defaultTx}>
-                <Button classNames='p-1 aspect-square' onClick={onClick}>
-                  <Icon icon='ph--sparkle--regular' size={5} />
-                </Button>
-              </ThemeProvider>,
-            );
-          },
-          onRenderDialog: (el, onAction) => {
-            renderRoot(
-              el,
-              <ThemeProvider tx={defaultTx}>
-                <CommandDialog onAction={onAction} />
-              </ThemeProvider>,
-            );
-          },
+          renderMenu: createRenderer(CommandMenu),
+          renderDialog: createRenderer(CommandDialog),
         }),
       ]}
     />
   ),
+};
+
+const CommandMenu = ({ onAction }: { onAction: () => void }) => {
+  return (
+    <Button classNames='p-1 aspect-square' onClick={onAction}>
+      <Icon icon='ph--sparkle--regular' size={5} />
+    </Button>
+  );
 };
 
 const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {

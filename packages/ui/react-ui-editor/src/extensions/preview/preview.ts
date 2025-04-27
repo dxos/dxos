@@ -43,7 +43,8 @@ export type PreviewAction =
       link: PreviewLinkRef;
     };
 
-export type PreviewLookup = (link: PreviewLinkRef) => Promise<PreviewLinkTarget>;
+// TODO(burdon): Handle error.
+export type PreviewLookup = (link: PreviewLinkRef) => Promise<PreviewLinkTarget | undefined>;
 
 export type PreviewActionHandler = (action: PreviewAction) => void;
 
@@ -55,8 +56,8 @@ export type PreviewRenderProps = {
 };
 
 export type PreviewOptions = {
-  onRenderBlock: RenderCallback<PreviewRenderProps>;
-  onRenderPopover?: RenderCallback<PreviewRenderProps>;
+  renderBlock: RenderCallback<PreviewRenderProps>;
+  renderPopover?: RenderCallback<PreviewRenderProps>;
   onLookup: PreviewLookup;
 };
 
@@ -77,7 +78,7 @@ export const preview = (options: PreviewOptions): Extension => {
     }),
 
     // Popover.
-    options.onRenderPopover &&
+    options.renderPopover &&
       hoverTooltip(
         (view, pos, side) => {
           const node = syntaxTree(view.state).resolveInner(pos, side);
@@ -98,12 +99,12 @@ export const preview = (options: PreviewOptions): Extension => {
             create: () => {
               const el = document.createElement('div');
               el.className = tooltipContent({}, 'text-md');
-              options.onRenderPopover!(
+              options.renderPopover!(
                 el,
                 {
                   readonly: view.state.readOnly,
                   link: ref,
-                  onAction: () => {},
+                  onAction: () => {}, // TODO(burdon): ???
                   onLookup: options.onLookup,
                 },
                 view,
@@ -126,6 +127,7 @@ export const preview = (options: PreviewOptions): Extension => {
         borderRadius: '0.25rem',
         background: 'var(--dx-modalSurface)',
         border: '1px solid var(--dx-separator)',
+        cursor: 'pointer',
       },
       '.cm-preview-block': {
         marginLeft: '-1rem',
@@ -311,7 +313,7 @@ class PreviewBlockWidget extends WidgetType {
       }
     };
 
-    this._options.onRenderBlock(
+    this._options.renderBlock(
       root,
       {
         readonly: view.state.readOnly,

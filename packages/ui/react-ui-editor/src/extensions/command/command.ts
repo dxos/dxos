@@ -22,7 +22,7 @@ export const command = (options: CommandOptions = {}): Extension => {
     keymap.of(commandKeyBindings),
     commandConfig.of(options),
     commandState,
-    options.onRenderMenu ? floatingMenu({ onRenderMenu: options.onRenderMenu }) : [],
+    options.renderMenu ? floatingMenu({ renderMenu: options.renderMenu }) : [],
     options.onHint ? hintViewPlugin({ onHint: options.onHint }) : [],
     EditorView.focusChangeEffect.of((_, focusing) => {
       return focusing ? closeEffect.of(null) : null;

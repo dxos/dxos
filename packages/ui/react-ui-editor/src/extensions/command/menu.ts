@@ -5,9 +5,10 @@
 import { type BlockInfo, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { closeEffect, openCommand, openEffect } from './action';
+import { type RenderCallback } from '../../types';
 
 export type FloatingMenuOptions = {
-  onRenderMenu: (el: HTMLElement, cb: () => void) => void;
+  renderMenu: RenderCallback<{ onAction: () => void }>;
 };
 
 // TODO(burdon): Trigger completion on click.
@@ -34,9 +35,7 @@ export const floatingMenu = (options: FloatingMenuOptions) =>
         this.button.style.zIndex = '10';
         this.button.style.display = 'none';
 
-        options.onRenderMenu(this.button, () => {
-          openCommand(view);
-        });
+        options.renderMenu(this.button, { onAction: () => openCommand(view) }, view);
         container.appendChild(this.button);
 
         // Listen for scroll events.

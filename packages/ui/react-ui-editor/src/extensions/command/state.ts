@@ -7,12 +7,13 @@ import { showTooltip, type EditorView, type Tooltip, type TooltipView } from '@c
 
 import { closeEffect, type Action, openEffect } from './action';
 import { type CommandOptions } from './command';
+import { type RenderCallback } from '../../types';
 import { singleValueFacet } from '../../util';
 
 export const commandConfig = singleValueFacet<CommandOptions>();
 
 export type PopupOptions = {
-  onRenderDialog: (el: HTMLElement, cb: (action?: Action) => void) => void;
+  renderDialog: RenderCallback<{ onAction: (action?: Action) => void }>;
 };
 
 type CommandState = {
@@ -27,8 +28,8 @@ export const commandState = StateField.define<CommandState>({
         return {};
       }
 
-      const { onRenderDialog } = tr.state.facet(commandConfig);
-      if (effect.is(openEffect) && onRenderDialog) {
+      const { renderDialog } = tr.state.facet(commandConfig);
+      if (effect.is(openEffect) && renderDialog) {
         const { pos, fullWidth } = effect.value;
         const tooltip: Tooltip = {
           pos,
@@ -36,36 +37,42 @@ export const commandState = StateField.define<CommandState>({
           arrow: false,
           strictSide: true,
           create: (view: EditorView) => {
-            const dom = document.createElement('div');
+            const root = document.createElement('div');
 
             const tooltipView: TooltipView = {
-              dom,
+              dom: root,
               mount: (view: EditorView) => {
                 if (fullWidth) {
-                  const parent = dom.parentElement!;
+                  const parent = root.parentElement!;
                   const { paddingLeft, paddingRight } = window.getComputedStyle(parent);
                   const widthWithoutPadding = parent.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight);
-                  dom.style.width = `${widthWithoutPadding}px`;
+                  root.style.width = `${widthWithoutPadding}px`;
                 }
 
                 // Render react component.
-                onRenderDialog(dom, (action) => {
-                  view.dispatch({ effects: closeEffect.of(null) });
-                  switch (action?.type) {
-                    case 'insert': {
-                      // Insert into editor.
-                      const text = action.text + '\n';
-                      view.dispatch({
-                        changes: { from: pos, insert: text },
-                        selection: { anchor: pos + text.length },
-                      });
-                      break;
-                    }
-                  }
+                renderDialog(
+                  root,
+                  {
+                    onAction: (action) => {
+                      view.dispatch({ effects: closeEffect.of(null) });
+                      switch (action?.type) {
+                        case 'insert': {
+                          // Insert into editor.
+                          const text = action.text + '\n';
+                          view.dispatch({
+                            changes: { from: pos, insert: text },
+                            selection: { anchor: pos + text.length },
+                          });
+                          break;
+                        }
+                      }
 
-                  // NOTE: Truncates text if set focus immediately.
-                  requestAnimationFrame(() => view.focus());
-                });
+                      // NOTE: Truncates text if set focus immediately.
+                      requestAnimationFrame(() => view.focus());
+                    },
+                  },
+                  view,
+                );
               },
             };
 

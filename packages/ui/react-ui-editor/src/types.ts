@@ -18,7 +18,6 @@ export type Comment = {
 };
 
 /**
- * Callback that renders into a DOM element.
+ * Callback that renders into a DOM element within the editor.
  */
-// TODO(burdon): Handle render callbacks uniformly across all extensions. Pass object.
 export type RenderCallback<Props extends object> = (el: HTMLElement, props: Props, view: EditorView) => void;
