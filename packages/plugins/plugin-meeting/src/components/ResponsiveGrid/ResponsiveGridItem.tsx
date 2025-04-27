@@ -6,11 +6,9 @@ import React, { type CSSProperties, type PropsWithChildren } from 'react';
 
 import { Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { Waveform } from '@dxos/react-ui-sfx';
-import { mx } from '@dxos/react-ui-theme';
+import { hoverableHidden, mx } from '@dxos/react-ui-theme';
 
 import { MEETING_PLUGIN } from '../../meta';
-
-const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-100');
 
 export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
   ThemedClassName<{
@@ -68,7 +66,7 @@ export const ResponsiveGridItem = <T extends object = any>({
       {onClick && (
         <div className='z-10 absolute top-1 right-1 flex'>
           <IconButton
-            classNames={mx('p-1 min-bs-1 rounded', hover)}
+            classNames={mx('p-1 min-bs-1 rounded', hoverableHidden)}
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
             size={pinned ? 5 : 3}

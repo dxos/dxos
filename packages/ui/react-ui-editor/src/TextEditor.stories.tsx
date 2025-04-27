@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, Input, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx, hoverableHidden } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace, editorWidth } from './defaults';
@@ -699,7 +699,7 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
                 iconOnly
                 label='Delete'
                 icon={'ph--x--regular'}
-                classNames='transition-opacity duration-300 opacity-0 group-hover:opacity-100'
+                classNames={hoverableHidden}
                 onClick={() => onAction({ type: 'delete', link })}
               />
             )}
