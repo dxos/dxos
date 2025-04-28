@@ -130,6 +130,8 @@ export default [
         'settings panel label': 'Space Settings',
         'open space settings label': 'Space Settings',
         'space settings properties label': 'General',
+        'space properties settings verbose label': 'Manage space properties',
+        'space properties settings description': 'You can configure how this space is displayed in the app here.',
         'display name input placeholder': 'Space name',
         'display name description': 'Name of the space as it appears in the app.',
         'icon description': 'Icon used to represent the space in the app.',

@@ -4,22 +4,31 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
-import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
+import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { AutomationPanel } from '../components';
+import { AutomationContainer, AutomationPanel } from '../components';
 import { meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${meta.id}/automation`,
-      role: 'space-settings--automation',
-      filter: (data): data is { subject: Space } => isSpace(data.subject),
-      component: ({ data }) => <AutomationPanel space={data.subject} />,
+      id: `${meta.id}/space-settings`,
+      role: 'article',
+      filter: (data): data is { subject: string } => data.subject === `${meta.id}/space-settings`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <AutomationContainer space={space} />;
+      },
     }),
     createSurface({
       id: `${meta.id}/companion/automation`,

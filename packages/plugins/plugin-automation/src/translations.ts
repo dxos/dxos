@@ -11,6 +11,8 @@ export default [
         'plugin name': 'Automation',
         'automation panel label': 'Automations',
         'script automation label': 'Automation',
+        'automation verbose label': 'Manage automations',
+        'automation description': 'You can manage all the triggers which automate your space here.',
 
         'trigger editor title': 'New Trigger',
         'new trigger label': 'Add Trigger',

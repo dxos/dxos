@@ -5,7 +5,7 @@
 import { contributes, Capabilities, type PluginsContext } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
-import { CollectionType } from '@dxos/plugin-space/types';
+import { CollectionType, SPACE_TYPE } from '@dxos/plugin-space/types';
 import { isEchoObject, isSpace, type ReactiveEchoObject, SpaceState, type Space } from '@dxos/react-client/echo';
 
 import { DEBUG_PLUGIN } from '../meta';
@@ -18,7 +18,7 @@ export default (context: PluginsContext) =>
     // Devtools node.
     createExtension({
       id: 'dxos.org/plugin/debug/devtools',
-      filter: (node): node is Node<null | Space> => node.id === 'root' || isSpace(node.data),
+      filter: (node): node is Node<null | Space> => node.id === 'root' || node.type === SPACE_TYPE,
       connector: ({ node }) => {
         const space = node.data;
         const state = toSignal(

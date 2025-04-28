@@ -118,7 +118,7 @@ export const MembersContainer = ({
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content classNames='p-2 block overflow-y-auto'>
+      <StackItem.Content classNames='block overflow-y-auto'>
         <ControlSection
           title={t('members verbose label', { ns: SPACE_PLUGIN })}
           description={t('members description', { ns: SPACE_PLUGIN })}

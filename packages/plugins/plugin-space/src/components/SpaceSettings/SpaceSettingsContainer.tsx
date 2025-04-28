@@ -2,17 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React from 'react';
 
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { ControlSectionHeading } from '@dxos/react-ui-form';
-import { Accordion } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { byPosition } from '@dxos/util';
 
-import { SpaceCapabilities } from '../../capabilities';
+import { SpacePropertiesForm } from './SpacePropertiesForm';
 import { SPACE_PLUGIN } from '../../meta';
 
 export const SPACE_SETTINGS_DIALOG = `${SPACE_PLUGIN}/SpaceSettingsDialog`;
@@ -25,39 +22,15 @@ export type SpaceSettingsContainerProps = {
 
 export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const state = useCapability(SpaceCapabilities.MutableState);
-  const items = useCapabilities(SpaceCapabilities.SettingsSection).toSorted(byPosition);
-  const data = useMemo(() => ({ subject: space }), [space]);
-
-  const handleOpenSectionChange = useCallback(
-    (sections: string[]) => {
-      state.spaceSettingsOpenSections.splice(0, state.spaceSettingsOpenSections.length, ...sections);
-    },
-    [state],
-  );
 
   return (
-    <StackItem.Content classNames='p-2 block overflow-y-auto'>
-      <Accordion.Root<SpaceCapabilities.SettingsSection>
-        items={items}
-        value={state.spaceSettingsOpenSections}
-        onValueChange={handleOpenSectionChange}
+    <StackItem.Content classNames='block overflow-y-auto'>
+      <ControlSection
+        title={t('space properties settings verbose label', { ns: SPACE_PLUGIN })}
+        description={t('space properties settings description', { ns: SPACE_PLUGIN })}
       >
-        {({ items }) => (
-          <>
-            {items.map((item) => (
-              <Accordion.Item key={item.id} item={item} classNames='container-max-width'>
-                <Accordion.ItemHeader classNames='pie-6' asChild>
-                  <ControlSectionHeading title={toLocalizedString(item.label, t)} />
-                </Accordion.ItemHeader>
-                <Accordion.ItemBody>
-                  <Surface role={`space-settings--${item.id}`} data={data} />
-                </Accordion.ItemBody>
-              </Accordion.Item>
-            ))}
-          </>
-        )}
-      </Accordion.Root>
+        <SpacePropertiesForm space={space} />
+      </ControlSection>
     </StackItem.Content>
   );
 };

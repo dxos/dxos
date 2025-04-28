@@ -15,16 +15,8 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import {
-  type Space,
-  Filter,
-  fullyQualifiedId,
-  getSpace,
-  isSpace,
-  isLiveObject,
-  parseId,
-} from '@dxos/react-client/echo';
+import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
+import { type Space, Filter, fullyQualifiedId, getSpace, isLiveObject, parseId } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
 import { AIChatType, AssistantAction, TemplateType } from '../types';
@@ -135,7 +127,7 @@ export default (context: PluginsContext) =>
 
     createExtension({
       id: `${ASSISTANT_PLUGIN}/root`,
-      filter: (node): node is Node<Space> => isSpace(node.data),
+      filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       connector: ({ node }) => {
         const templates = memoizeQuery(node.data, Filter.schema(TemplateType));
         return templates.length > 0

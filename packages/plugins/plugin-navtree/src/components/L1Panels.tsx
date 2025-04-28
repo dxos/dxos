@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
-import { Button, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
@@ -23,6 +23,12 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
   const layout = useLayout();
   const navTreeContext = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
+
+  // TODO(wittjosiah): Support multiple alternate trees.
+  const [alternate, setAlternate] = useState(false);
+  const alternateTree = navTreeContext.getItems(item, 'alternate-tree')[0];
+  const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
+
   return (
     <Tabs.Tabpanel
       key={item.id}
@@ -51,23 +57,58 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
               <Icon icon='ph--caret-left--regular' size={3} />
             </Button>
             <span className='flex-1 truncate cursor-default'>{toLocalizedString(item.properties.label, t)}</span>
+            {alternateTree && (
+              <AlternateTree
+                icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
+                label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
+                open={alternate}
+                onOpen={setAlternate}
+              />
+            )}
             <NavTreeItemColumns path={path} item={item} open />
           </h2>
           <div role='none' className='overflow-y-auto'>
-            <Tree
-              {...navTreeContext}
-              id={item.id}
-              root={item}
-              path={path}
-              levelOffset={5}
-              draggable
-              gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-              renderColumns={NavTreeItemColumns}
-            />
+            {alternate && alternateTree ? (
+              <Tree
+                {...navTreeContext}
+                id={alternateTree.id}
+                root={alternateTree}
+                path={alternatePath}
+                levelOffset={5}
+                gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+                renderColumns={NavTreeItemColumns}
+              />
+            ) : (
+              <Tree
+                {...navTreeContext}
+                id={item.id}
+                root={item}
+                path={path}
+                levelOffset={5}
+                draggable
+                gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+                renderColumns={NavTreeItemColumns}
+              />
+            )}
           </div>
         </>
       )}
     </Tabs.Tabpanel>
+  );
+};
+
+type AlternateTreeProps = { icon: string; label: string; open: boolean; onOpen: (open: boolean) => void };
+
+const AlternateTree = ({ icon, label, open, onOpen }: AlternateTreeProps) => {
+  return (
+    <IconButton
+      variant={open ? 'primary' : 'ghost'}
+      classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
+      iconOnly
+      icon={icon}
+      label={label}
+      onClick={() => onOpen(!open)}
+    />
   );
 };
 

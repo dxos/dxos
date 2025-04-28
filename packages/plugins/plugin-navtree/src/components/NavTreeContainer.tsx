@@ -22,7 +22,7 @@ import { isEchoObject, isSpace } from '@dxos/react-client/echo';
 import { useMediaQuery } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
-import { arrayMove } from '@dxos/util';
+import { arrayMove, byPosition } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree } from './NavTree';
 import { NavTreeContext } from './NavTreeContext';
@@ -65,20 +65,25 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const getItems = useCallback(
     (node?: Node, disposition?: string) => {
-      return graph.nodes(node ?? graph.root, {
-        filter: (node): node is Node => {
-          return untracked(() => {
-            if (node.properties.disposition === 'hidden') {
-              return false;
-            } else if (!disposition) {
-              const action = isAction(node);
-              return !action || node.properties.disposition === 'item';
-            } else {
-              return node.properties.disposition === disposition;
-            }
-          });
-        },
-      });
+      return graph
+        .nodes(node ?? graph.root, {
+          filter: (node): node is Node => {
+            return untracked(() => {
+              if (
+                !disposition &&
+                (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')
+              ) {
+                return false;
+              } else if (!disposition) {
+                const action = isAction(node);
+                return !action || node.properties.disposition === 'item';
+              } else {
+                return node.properties.disposition === disposition;
+              }
+            });
+          },
+        })
+        .toSorted((a, b) => byPosition(a.properties, b.properties));
     },
     [graph],
   );

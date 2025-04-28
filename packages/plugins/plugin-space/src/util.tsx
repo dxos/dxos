@@ -7,7 +7,6 @@ import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type
 import { invariant } from '@dxos/invariant';
 import { getSchema, isLiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import {
   ACTION_GROUP_TYPE,
   ACTION_TYPE,
@@ -34,12 +33,12 @@ import {
   type ReactiveEchoObject,
   type Space,
 } from '@dxos/react-client/echo';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { SPACE_PLUGIN } from './meta';
-import { CollectionType, SpaceAction } from './types';
+import { CollectionType, SpaceAction, SPACE_TYPE } from './types';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
-export const SPACE_TYPE = 'dxos.org/type/Space';
 export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
@@ -215,24 +214,36 @@ export const constructSpaceNode = ({
     },
     nodes: [
       {
-        id: `${space.id}${ATTENDABLE_PATH_SEPARATOR}members`,
-        type: `${SPACE_PLUGIN}/members`,
-        data: space,
-        properties: {
-          label: ['members panel label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--users--regular',
-          disposition: 'hidden',
-        },
-      },
-      {
-        id: `${space.id}${ATTENDABLE_PATH_SEPARATOR}settings`,
+        id: `settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
         type: `${SPACE_PLUGIN}/settings`,
-        data: space,
+        data: null,
         properties: {
           label: ['settings panel label', { ns: SPACE_PLUGIN }],
           icon: 'ph--gear--regular',
-          disposition: 'hidden',
+          disposition: 'alternate-tree',
         },
+        nodes: [
+          {
+            id: `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
+            type: `${SPACE_PLUGIN}/properties`,
+            data: `${SPACE_PLUGIN}/properties`,
+            properties: {
+              label: ['space settings properties label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--sliders--regular',
+              position: 'hoist',
+            },
+          },
+          {
+            id: `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
+            type: `${SPACE_PLUGIN}/members`,
+            data: `${SPACE_PLUGIN}/members`,
+            properties: {
+              label: ['members panel label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--users--regular',
+              position: 'hoist',
+            },
+          },
+        ],
       },
     ],
   };
@@ -299,9 +310,6 @@ export const constructSpaceActions = ({
           label: ['share space label', { ns: SPACE_PLUGIN }],
           icon: 'ph--users--regular',
           disabled: locked,
-          disposition: 'list-item-primary',
-          iconOnly: false,
-          variant: 'default',
           testId: 'spacePlugin.shareSpace',
           keyBinding: {
             macos: 'meta+.',
