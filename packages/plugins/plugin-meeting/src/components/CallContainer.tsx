@@ -94,7 +94,6 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
   /**
    * Leave the call.
    */
-  // TODO(wittjosiah): Leaving the call doesn't relinquish system audio/video.
   const handleLeave = useCallback(async () => {
     try {
       companions.forEach((companion) => {
@@ -103,6 +102,8 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
     } catch (err) {
       log.catch(err);
     } finally {
+      void call.turnAudioOff();
+      void call.turnVideoOff();
       void call.turnScreenshareOff();
       void call.leave();
       void leaveSound.play();
