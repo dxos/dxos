@@ -13,7 +13,7 @@ import {
 } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { log } from '@dxos/log';
-import { create, getMeta, makeRef, type Space } from '@dxos/react-client/echo';
+import { live, getMeta, makeRef, type Space } from '@dxos/react-client/echo';
 
 import { updateFunctionMetadata } from './functions';
 
@@ -117,7 +117,7 @@ const createOrUpdateFunctionInSpace = (
     fn.version = version;
     return fn;
   } else {
-    return space.db.add(create(FunctionType, { name: functionId, version, source: makeRef(script) }));
+    return space.db.add(live(FunctionType, { name: functionId, version, source: makeRef(script) }));
   }
 };
 

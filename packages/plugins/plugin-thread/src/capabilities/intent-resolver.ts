@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
-import { create, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
+import { live, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
 import { MessageType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
@@ -24,7 +24,7 @@ export default (context: PluginsContext) =>
       intent: ThreadAction.CreateChannel,
       resolve: ({ spaceId, name }) => ({
         data: {
-          object: create(ChannelType, {
+          object: live(ChannelType, {
             name,
             queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           }),
@@ -47,7 +47,7 @@ export default (context: PluginsContext) =>
 
         const { state } = context.requestCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
-        const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
+        const thread = live(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
         const draft = state.drafts[subjectId];
         if (draft) {
           draft.push(thread);
@@ -172,7 +172,7 @@ export default (context: PluginsContext) =>
         invariant(space, 'Space not found');
         const intents = [];
 
-        const message = create(MessageType, {
+        const message = live(MessageType, {
           sender,
           created: new Date().toISOString(),
           blocks: [{ type: 'text', text }],

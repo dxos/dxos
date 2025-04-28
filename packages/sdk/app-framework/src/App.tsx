@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import React, { useEffect, useState, type FC, type PropsWithChildren } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { Capabilities, Events } from './common';
 import { PluginManager, type PluginManagerOptions, type Plugin } from './core';
@@ -69,7 +69,7 @@ export const createApp = ({
       return plugin;
     });
 
-  const state = create({ ready: false, error: null });
+  const state = live({ ready: false, error: null });
   const cached: string[] = JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]');
   const enabled = cacheEnabled && cached.length > 0 ? cached : defaults;
   const manager = pluginManager ?? new PluginManager({ pluginLoader, plugins, core, enabled });

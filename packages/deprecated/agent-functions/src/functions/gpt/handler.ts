@@ -6,7 +6,7 @@ import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { S, foreignKey, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { create, getMeta, makeRef } from '@dxos/live-object';
+import { live, getMeta, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TemplateType } from '@dxos/plugin-automation/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -119,7 +119,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
         if (text) {
           const metaKey = foreignKey(AI_SOURCE, Date.now().toString());
           if (thread) {
-            const response = create(
+            const response = live(
               MessageType,
               {
                 sender: { identityKey: resources.identityKey },

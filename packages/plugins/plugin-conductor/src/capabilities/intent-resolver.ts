@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { ConductorAction } from '../types';
@@ -16,9 +16,9 @@ export default () =>
       intent: ConductorAction.Create,
       resolve: ({ name }) => ({
         data: {
-          object: create(CanvasBoardType, {
+          object: live(CanvasBoardType, {
             name,
-            computeGraph: makeRef(create(ComputeGraph, { graph: { nodes: [], edges: [] } })),
+            computeGraph: makeRef(live(ComputeGraph, { graph: { nodes: [], edges: [] } })),
             layout: { nodes: [], edges: [] },
           }),
         },

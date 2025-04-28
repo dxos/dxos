@@ -10,7 +10,7 @@ import { createArtifactElement } from '@dxos/assistant';
 import { isInstanceOf, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { create, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
+import { live, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
 import { meta } from '../meta';
@@ -193,7 +193,7 @@ export default () => {
 
           // Validate all rows.
           // TODO(ZaymonFC): There should be a nicer way to do this!
-          const validationResults = data.map((row) => S.validateEither(schema)(create(schema, row)));
+          const validationResults = data.map((row) => S.validateEither(schema)(live(schema, row)));
           const validationError = validationResults.find((res) => res._tag === 'Left');
           if (validationError) {
             return ToolResult.Error(`Validation failed: ${validationError.left.message}`);

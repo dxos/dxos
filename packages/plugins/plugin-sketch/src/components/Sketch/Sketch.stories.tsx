@@ -10,7 +10,7 @@ import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -21,8 +21,8 @@ import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
   return createObject(
-    create(DiagramType, {
-      canvas: makeRef(create(CanvasType, { schema: TLDRAW_SCHEMA, content })),
+    live(DiagramType, {
+      canvas: makeRef(live(CanvasType, { schema: TLDRAW_SCHEMA, content })),
     }),
   );
 };

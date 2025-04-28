@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 
-import { Expando, create, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Expando, live, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {
@@ -14,7 +14,7 @@ export const Counter = () => {
 
   useEffect(() => {
     if (space && !counter) {
-      const counter = create(Expando, { type: 'counter', values: [] });
+      const counter = live(Expando, { type: 'counter', values: [] });
       space.db.add(counter);
     }
   }, [space, counter]);

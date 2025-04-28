@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isEncodedReference, type EncodedReference, type ForeignKey } from '@dxos/echo-protocol';
+import { type EncodedReference, type ForeignKey, isEncodedReference } from '@dxos/echo-protocol';
 import { type BaseObject, requireTypeReference, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -13,13 +13,18 @@ import {
   type QueryOptions_DataLocation,
   type QueryOptions_ShowDeletedOption,
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
-import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type Filter as FilterProto, type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type ReactiveEchoObject, getReferenceWithSpaceKey } from '../echo-handler';
+import { getReferenceWithSpaceKey } from '../echo-handler';
 
+// TODO(dmaretskyi): Rename `hasInstanceOf`.
+// TODO(dmaretskyi): Remove from echo api
+/**
+ * @deprecated Use `isInstanceOf` instead.
+ */
 export const hasType =
-  <T extends ReactiveEchoObject<T>>(type: { new (): T }) =>
-  (object: ReactiveEchoObject<any> | undefined): object is T =>
+  <T extends BaseObject>(type: { new (): T }) =>
+  (object: BaseObject | undefined): object is T =>
     object instanceof type;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)

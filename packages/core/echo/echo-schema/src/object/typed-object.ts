@@ -70,7 +70,7 @@ export const TypedObject = ({ typename: _typename, version: _version, disableVal
 
     /**
      * Return class definition.
-     * NOTE: Actual reactive ECHO objects must be created via the `create(Type)` function.
+     * NOTE: Actual reactive ECHO objects must be created via the `live(Type)` function.
      */
     // TODO(burdon): This is missing fields required by TypedObject (e.g., Type, Encoded, Context)?
     return class TypedObject extends makeTypedEntityClass(typename, version, annotatedSchema as any) {} as any;

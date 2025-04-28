@@ -17,7 +17,7 @@ import {
 } from '@dxos/app-framework';
 import { getTypename, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { type Node } from '@dxos/plugin-graph';
@@ -275,7 +275,7 @@ export default (context: PluginsContext) =>
             createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
             ...newlyOpen.map((subjectId) => {
               const active = graph?.findNode(subjectId)?.data;
-              const typename = isReactiveObject(active) ? getTypename(active) : undefined;
+              const typename = isLiveObject(active) ? getTypename(active) : undefined;
               return createIntent(ObservabilityAction.SendEvent, {
                 name: 'navigation.activate',
                 properties: {

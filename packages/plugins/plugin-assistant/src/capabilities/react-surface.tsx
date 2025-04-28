@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { getTypename } from '@dxos/live-object';
 import { SettingsStore } from '@dxos/local-storage';
-import { fullyQualifiedId, isReactiveObject, isSpace, type Space } from '@dxos/react-client/echo';
+import { fullyQualifiedId, isLiveObject, isSpace, type Space } from '@dxos/react-client/echo';
 
 import {
   AssistantDialog,
@@ -47,7 +47,9 @@ export default () =>
       id: `${ASSISTANT_PLUGIN}/object-chat`,
       role: 'article',
       filter: (data): data is { companionTo: AIChatType; subject: 'assistant-chat' } =>
-        isReactiveObject(data.companionTo) && data.companionTo.assistantChatQueue && data.subject === 'assistant-chat',
+        isLiveObject(data.companionTo) &&
+        (data as any).companionTo.assistantChatQueue &&
+        data.subject === 'assistant-chat',
       component: ({ data, role }) => {
         const associatedArtifact = useMemo(
           () => ({

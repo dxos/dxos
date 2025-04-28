@@ -3,7 +3,7 @@
 //
 
 import { defineCapability } from '@dxos/app-framework';
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 
 import { TRANSCRIPTION_PLUGIN } from '../meta';
 import { type TranscriberParams, type Transcriber, type TranscriptionManager } from '../transcriber';
@@ -16,7 +16,7 @@ export namespace TranscriptionCapabilities {
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;
   export const Transcriber = defineCapability<GetTranscriber>(`${TRANSCRIPTION_PLUGIN}/capability/transcriber`);
 
-  export type MeetingTranscriptionState = ReactiveObject<{
+  export type MeetingTranscriptionState = Live<{
     enabled: boolean;
     transcriptionManager?: TranscriptionManager;
   }>;

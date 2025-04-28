@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { Format, getTypename, toJsonSchema } from '@dxos/echo-schema';
-import { create, createStoredSchema, makeRef } from '@dxos/live-object';
+import { live, createStoredSchema, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { getSchemaProperties } from './properties';
@@ -48,8 +48,8 @@ describe('View', () => {
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const org = create(Testing.Org, { name: 'DXOS', website: 'https://dxos.org' });
-    const contact = create(Testing.Contact, { name: 'Alice', email: 'alice@example.com', employer: makeRef(org) });
+    const org = live(Testing.Org, { name: 'DXOS', website: 'https://dxos.org' });
+    const contact = live(Testing.Contact, { name: 'Alice', email: 'alice@example.com', employer: makeRef(org) });
     log('schema', { org: toJsonSchema(Testing.Org), person: toJsonSchema(Testing.Contact) });
     log('objects', { org, person: contact });
     expect(getTypename(org)).to.eq(Testing.Org.typename);

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { create } from '@dxos/react-client/echo';
+import { live } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';
@@ -40,7 +40,7 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
 
       const [schema] = space.db.schemaRegistry.query({ typename: state.typename }).runSync();
       if (schema) {
-        const obj = space.db.add(create(schema, values));
+        const obj = space.db.add(live(schema, values));
         state.onCreate?.(obj);
       }
       void modals.close();

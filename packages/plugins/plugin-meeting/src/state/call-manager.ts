@@ -6,7 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
@@ -32,7 +32,7 @@ export class CallManager extends Resource {
    * Live object state. Is changed on internal events.
    * CAUTION: Do not change directly.
    */
-  private readonly _state = create<GlobalState>({
+  private readonly _state = live<GlobalState>({
     call: {},
     media: { pulledAudioTracks: {}, pulledVideoStreams: {} },
   });

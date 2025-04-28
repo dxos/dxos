@@ -5,7 +5,7 @@
 import { contributes, Capabilities, createResolver, type PluginsContext, createIntent } from '@dxos/app-framework';
 import { FunctionTrigger, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter } from '@dxos/react-client/echo';
 
@@ -16,7 +16,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,
       resolve: async ({ space, template, enabled = false, scriptName, payload }) => {
-        const trigger = create(FunctionTrigger, { enabled });
+        const trigger = live(FunctionTrigger, { enabled });
 
         // TODO(wittjosiah): Factor out function lookup by script name?
         if (scriptName) {

@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { getObjectCore } from './echo-handler';
@@ -23,19 +23,19 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'B',
       }),
     );
     const obj3 = db2.add(
-      create(Expando, {
+      live(Expando, {
         type: 'record',
         title: 'C',
       }),
@@ -83,13 +83,13 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'B',
       }),
@@ -117,13 +117,13 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'B',
       }),
