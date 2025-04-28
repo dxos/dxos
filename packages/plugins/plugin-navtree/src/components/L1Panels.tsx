@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
@@ -17,17 +17,26 @@ import { useLoadDescendents } from '../hooks';
 import { NAVTREE_PLUGIN } from '../meta';
 import { l0ItemType } from '../util';
 
-export type L1PanelProps = { item: Node<any>; path: string[]; currentItemId: string; onBack?: () => void };
+export type L1PanelProps = {
+  item: Node<any>;
+  path: string[];
+  currentItemId: string;
+  onBack?: () => void;
+};
 
 const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
   const layout = useLayout();
-  const navTreeContext = useNavTreeContext();
+  const { isAlternateTree, setAlternateTree, ...navTreeContext } = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
   // TODO(wittjosiah): Support multiple alternate trees.
-  const [alternate, setAlternate] = useState(false);
   const alternateTree = navTreeContext.getItems(item, 'alternate-tree')[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
+  const handleOpenChange = useCallback(
+    (open: boolean) => setAlternateTree?.(alternatePath, open),
+    [alternatePath, setAlternateTree],
+  );
+  const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
 
   return (
     <Tabs.Tabpanel
@@ -61,14 +70,14 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
               <AlternateTree
                 icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
                 label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
-                open={alternate}
-                onOpen={setAlternate}
+                open={isAlternate}
+                onOpen={handleOpenChange}
               />
             )}
             <NavTreeItemColumns path={path} item={item} open />
           </h2>
           <div role='none' className='overflow-y-auto'>
-            {alternate && alternateTree ? (
+            {isAlternate ? (
               <Tree
                 {...navTreeContext}
                 id={alternateTree.id}

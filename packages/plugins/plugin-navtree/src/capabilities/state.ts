@@ -40,7 +40,7 @@ export default (context: PluginsContext) => {
   //   If it is a Live then React errors when initializing new paths because of state change during render.
   //   Ideally this could be a Live but be able to access and update the root level without breaking render.
   //   Wrapping accesses and updates in `untracked` didn't seem to work in all cases.
-  const state = new Map<string, Live<{ open: boolean; current: boolean }>>(
+  const state = new Map<string, Live<{ open: boolean; current: boolean; alternateTree?: boolean }>>(
     getInitialState() ?? [
       // TODO(thure): Initialize these dynamically.
       ['root', live({ open: true, current: false })],
@@ -51,7 +51,7 @@ export default (context: PluginsContext) => {
 
   const getItem = (_path: string[]) => {
     const path = Path.create(..._path);
-    const value = state.get(path) ?? live({ open: false, current: false });
+    const value = state.get(path) ?? live({ open: false, current: false, alternateTree: false });
     if (!state.has(path)) {
       state.set(path, value);
     }
@@ -59,7 +59,7 @@ export default (context: PluginsContext) => {
     return value;
   };
 
-  const setItem = (path: string[], key: 'open' | 'current', next: boolean) => {
+  const setItem = (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => {
     const value = getItem(path);
     value[key] = next;
 
@@ -68,6 +68,10 @@ export default (context: PluginsContext) => {
 
   const isOpen = (path: string[]) => getItem(path).open;
   const isCurrent = (path: string[]) => getItem(path).current;
+  const isAlternateTree = (path: string[]) => {
+    const item = getItem(path);
+    return item.alternateTree ?? false;
+  };
 
   let previous: string[] = [];
   const unsubscribe = effect(() => {
@@ -93,5 +97,7 @@ export default (context: PluginsContext) => {
     });
   });
 
-  return contributes(NavTreeCapabilities.State, { state, getItem, setItem, isOpen, isCurrent }, () => unsubscribe());
+  return contributes(NavTreeCapabilities.State, { state, getItem, setItem, isOpen, isCurrent, isAlternateTree }, () =>
+    unsubscribe(),
+  );
 };
