@@ -12,12 +12,12 @@ import {
   isSpace,
   type Echo,
   type FilterSource,
-  type ReactiveEchoObject,
   type Space,
   SpaceState,
   type QueryOptions,
   type Query,
 } from '@dxos/client/echo';
+import type { BaseObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -30,7 +30,6 @@ import { Tree } from './Tree';
 import { type Graph } from '../graph';
 import { GraphBuilder, cleanup, createExtension, memoize, toSignal } from '../graph-builder';
 import { type Node } from '../node';
-import type { BaseObject } from '@dxos/echo-schema';
 
 const DEFAULT_PERIOD = 500;
 

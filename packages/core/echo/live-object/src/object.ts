@@ -16,10 +16,10 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
+import type { Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import type { Live } from './live';
 
 /**
  * Creates a reactive object from a plain Javascript object.

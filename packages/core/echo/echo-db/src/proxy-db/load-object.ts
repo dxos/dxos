@@ -3,8 +3,8 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
-
 import type { BaseEchoObject } from '@dxos/echo-schema';
+
 import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 
 /**
