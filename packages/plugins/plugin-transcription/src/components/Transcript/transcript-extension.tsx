@@ -2,18 +2,50 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import { type Extension, RangeSetBuilder, StateEffect, StateField, Text } from '@codemirror/state';
 import { EditorView, GutterMarker, gutter } from '@codemirror/view';
 
-// TODO(burdon): Autoscroll + fade.
-// TODO(burdon): Data structure that maps Blocks to lines with transcript state.
-// TODO(burdon): Extension pulls in blocks by timestamp (as scrolls).
-// TOOD(burdon): Client pushes blocks into structure.
+// TODO(burdon): Autoscroll.
+// TODO(burdon): Fade.
 // TODO(burdon): Menu actions.
 // TODO(burdon): Edit/corrections.
 
+/**
+ * Data structure that maps Blocks queue to lines with transcript state.
+ */
+// TODO(burdon): Wrap queue.
+export class TranscriptModel extends Text {
+  constructor(readonly _lines: string[] = []) {
+    super();
+  }
+
+  addLine(line: string) {
+    this._lines.push(line);
+  }
+
+  //
+  // Text abstract class.
+  //
+
+  override get length() {
+    return this._lines.join('\n').length;
+  }
+
+  override get lines() {
+    return this._lines.length;
+  }
+
+  override sliceString(from: number, to?: number, lineSep: string = '\n'): string {
+    return this._lines.join(lineSep).slice(from, to);
+  }
+
+  get children() {
+    return null;
+  }
+}
+
 export type TranscriptOptions = {
-  getTimestamp: (line: number) => string;
+  model: TranscriptModel;
 };
 
 export const transcript = (options: TranscriptOptions): Extension => {
@@ -21,14 +53,14 @@ export const transcript = (options: TranscriptOptions): Extension => {
     timestampField,
     gutter({
       class: 'cm-timestamp-gutter',
-      initialSpacer: () => new TimestampMarker('--:--'),
       lineMarkerChange: (update) => update.docChanged || update.viewportChanged,
       markers: (view) => {
         const builder = new RangeSetBuilder<GutterMarker>();
+        const timestamps = view.state.field(timestampField);
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            const timestamp = options.getTimestamp(line.number);
+            const timestamp = timestamps.get(line.number);
             if (timestamp) {
               builder.add(line.from, line.from, new TimestampMarker(timestamp));
             }
@@ -55,14 +87,14 @@ export const transcript = (options: TranscriptOptions): Extension => {
   ];
 };
 
-const setTimestampEffect = StateEffect.define<{ line: number; timestamp: string }>();
+const setTimestampEffect = StateEffect.define<{ line: number; timestamp: Date }>();
 
-const setLineTimestamp = (meta: { line: number; timestamp: string }) => setTimestampEffect.of(meta);
+const setLineTimestamp = (meta: { line: number; timestamp: Date }) => setTimestampEffect.of(meta);
 
 /**
  * State tracks timestamps for each line.
  */
-const timestampField = StateField.define<Map<number, string>>({
+const timestampField = StateField.define<Map<number, Date>>({
   create: () => new Map(),
   update: (timestamps, tr) => {
     const updated = new Map(timestamps);
@@ -77,13 +109,18 @@ const timestampField = StateField.define<Map<number, string>>({
 });
 
 class TimestampMarker extends GutterMarker {
-  constructor(readonly _timestamp: string) {
+  constructor(readonly _timestamp: Date) {
     super();
   }
 
   override toDOM(view: EditorView): HTMLElement {
     const el = document.createElement('div');
-    el.textContent = this._timestamp;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    el.textContent = [
+      pad(this._timestamp.getHours()),
+      pad(this._timestamp.getMinutes()),
+      pad(this._timestamp.getSeconds()),
+    ].join(':');
     return el;
   }
 }
