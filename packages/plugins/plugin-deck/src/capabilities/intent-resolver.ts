@@ -397,7 +397,7 @@ export default (context: PluginsContext) =>
                   createIntent(LayoutAction.SetLayoutMode, {
                     part: 'mode',
                     subject: entryId,
-                    options: { mode: 'solo' },
+                    options: { mode: adjustment.type },
                   }),
                 ],
               };
