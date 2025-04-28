@@ -5,9 +5,41 @@
 import { RangeSetBuilder } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { type CommandOptions } from './command';
 import { commandState } from './state';
 import { clientRectsFor, flattenRect } from '../../util';
+
+export type HintOptions = {
+  onHint: () => string | undefined;
+};
+
+export const hintViewPlugin = ({ onHint }: HintOptions) =>
+  ViewPlugin.fromClass(
+    class {
+      deco = Decoration.none;
+      update(update: ViewUpdate) {
+        const builder = new RangeSetBuilder<Decoration>();
+        const cState = update.view.state.field(commandState, false);
+        if (!cState?.tooltip) {
+          const selection = update.view.state.selection.main;
+          const line = update.view.state.doc.lineAt(selection.from);
+          // Only show if blank line.
+          // TODO(burdon): Clashes with placeholder if pos === 0.
+          // TODO(burdon): Show after delay or if blank line above?
+          if (selection.from === selection.to && line.from === line.to) {
+            const hint = onHint();
+            if (hint) {
+              builder.add(selection.from, selection.to, Decoration.widget({ widget: new CommandHint(hint) }));
+            }
+          }
+        }
+
+        this.deco = builder.finish();
+      }
+    },
+    {
+      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none)],
+    },
+  );
 
 class CommandHint extends WidgetType {
   constructor(readonly content: string | HTMLElement) {
@@ -48,32 +80,3 @@ class CommandHint extends WidgetType {
     return false;
   }
 }
-
-export const hintViewPlugin = ({ onHint }: CommandOptions) =>
-  ViewPlugin.fromClass(
-    class {
-      deco = Decoration.none;
-      update(update: ViewUpdate) {
-        const builder = new RangeSetBuilder<Decoration>();
-        const cState = update.view.state.field(commandState, false);
-        if (!cState?.tooltip) {
-          const selection = update.view.state.selection.main;
-          const line = update.view.state.doc.lineAt(selection.from);
-          // Only show if blank line.
-          // TODO(burdon): Clashes with placeholder if pos === 0.
-          // TODO(burdon): Show after delay or if blank line above?
-          if (selection.from === selection.to && line.from === line.to) {
-            const hint = onHint();
-            if (hint) {
-              builder.add(selection.from, selection.to, Decoration.widget({ widget: new CommandHint(hint) }));
-            }
-          }
-        }
-
-        this.deco = builder.finish();
-      }
-    },
-    {
-      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none)],
-    },
-  );
