@@ -154,7 +154,6 @@ export default (context: PluginsContext) =>
       },
       resolve: ({ subject, options }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        console.log('[update layout]');
 
         const setMode = (mode: LayoutMode) => {
           const deck = state.deck;
