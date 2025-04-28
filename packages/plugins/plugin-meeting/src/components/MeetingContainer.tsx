@@ -6,8 +6,8 @@ import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, Input, useTranslation } from '@dxos/react-ui';
-import { ControlItemInput } from '@dxos/react-ui-form';
+import { Input, useTranslation } from '@dxos/react-ui';
+import { ControlGroup, ControlItemInput, ControlGroupButton } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { CallContainer } from './CallContainer';
@@ -33,22 +33,19 @@ const DisplayNameMissing = () => {
   const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setDisplayName(event.target.value), []);
   const handleSave = useCallback(() => client.halo.updateProfile({ displayName }), [client, displayName]);
 
-  // TODO(wittjosiah): Styles copied from ProfileContainer. Should probably be factored out for this style of form.
   return (
-    <div className='flex flex-col justify-center gap-4 p-0 container-max-width [&_[role="form"]]:grid [&_[role="form"]]:grid-cols-1 md:[&_[role="form"]]:grid-cols-[1fr_min-content] [&_[role="form"]]:gap-4'>
-      <div role='form' className='flex flex-col w-full gap-2 '>
-        <ControlItemInput title={t('display name label')} description={t('display name description')}>
-          <Input.TextInput
-            value={displayName}
-            onChange={handleChange}
-            placeholder={t('display name input placeholder')}
-            classNames='min-is-64'
-          />
-        </ControlItemInput>
-      </div>
-      <Button disabled={!displayName} onClick={handleSave}>
+    <ControlGroup classNames='place-content-center'>
+      <ControlItemInput title={t('display name label')} description={t('display name description')}>
+        <Input.TextInput
+          value={displayName}
+          onChange={handleChange}
+          placeholder={t('display name input placeholder')}
+          classNames='md:min-is-64'
+        />
+      </ControlItemInput>
+      <ControlGroupButton disabled={!displayName} onClick={handleSave}>
         {t('set display name label')}
-      </Button>
-    </div>
+      </ControlGroupButton>
+    </ControlGroup>
   );
 };

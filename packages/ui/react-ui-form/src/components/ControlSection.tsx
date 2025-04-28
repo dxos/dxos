@@ -4,7 +4,16 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type Label, toLocalizedString, useTranslation, Input } from '@dxos/react-ui';
+import {
+  type Label,
+  toLocalizedString,
+  useTranslation,
+  Input,
+  type ThemedClassName,
+  type ButtonProps,
+  Button,
+} from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
 
@@ -36,10 +45,17 @@ export const ControlSection = ({ title, description, children }: ControlSectionP
   );
 };
 
-export type ControlGroupProps = PropsWithChildren<{}>;
+export const ControlGroupButton = ({ classNames, ...props }: ButtonProps) => {
+  return <Button {...props} classNames={['md:col-span-2', classNames]} />;
+};
 
-export const ControlGroup = ({ children }: ControlGroupProps) => (
-  <div role='none' className='group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'>
+export type ControlGroupProps = ThemedClassName<PropsWithChildren<{}>>;
+
+export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
+  <div
+    role='none'
+    className={mx('group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4', classNames)}
+  >
     {children}
   </div>
 );
