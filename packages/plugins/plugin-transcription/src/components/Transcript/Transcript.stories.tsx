@@ -5,13 +5,23 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
-import { hues } from '@dxos/react-ui-theme';
+import { useThemeContext } from '@dxos/react-ui';
+import {
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+  editorWidth,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
+import { hues, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcript } from './Transcript';
+import { transcript } from './transcript-extension';
 import translations from '../../translations';
 
 let start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
@@ -77,6 +87,46 @@ export const Default: Story = {
 };
 
 export const Empty: Story = {
+  args: {
+    ignoreAttention: true,
+    attendableId: 'story',
+  },
+};
+
+// TODO(burdon): Create component.
+
+const ExtensionStory = () => {
+  const { themeMode } = useThemeContext();
+  const blocks = useMemo(() => Array.from({ length: 100 }, createBlock), []);
+
+  const { parentRef } = useTextEditor({
+    initialValue: blocks
+      // TODO(burdon): Author DID.
+      .map((block) => ['\n###### ' + block.authorName, ...block.segments.map((segment) => segment.text)].join('\n'))
+      .join('\n'),
+    extensions: [
+      createBasicExtensions(),
+      createMarkdownExtensions({ themeMode }),
+      createThemeExtensions({
+        themeMode,
+        syntaxHighlighting: true,
+      }),
+      decorateMarkdown(),
+      transcript({
+        getTimestamp: (line) => {
+          const pad = (n: number) => n.toString().padStart(2, '0');
+          const now = new Date();
+          return `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        },
+      }),
+    ],
+  });
+
+  return <div ref={parentRef} className={mx('w-full', editorWidth)} />;
+};
+
+export const Extension: Story = {
+  render: () => <ExtensionStory />,
   args: {
     ignoreAttention: true,
     attendableId: 'story',
