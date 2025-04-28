@@ -12,7 +12,7 @@ export default [
         'automation panel label': 'Automations',
         'script automation label': 'Automation',
 
-        'trigger editor title': 'New Trigger',
+        'trigger editor title': 'Configure Trigger',
         'new trigger label': 'Add Trigger',
         'trigger type timer': 'Timer',
         'trigger type webhook': 'Webhook',
