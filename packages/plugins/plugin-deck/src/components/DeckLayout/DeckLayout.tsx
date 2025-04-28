@@ -214,10 +214,10 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
         onComplementarySidebarStateChange={(next) => (context.complementarySidebarState = next)}
       >
         {/* Left sidebar. */}
-        {!fullscreen && <Sidebar />}
+        <Sidebar />
 
         {/* Right sidebar. */}
-        {!fullscreen && <ComplementarySidebar current={complementarySidebarPanel} />}
+        <ComplementarySidebar current={complementarySidebarPanel} />
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
