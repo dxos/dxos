@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, type Live } from '@dxos/live-object';
 import { type Label, type ThemedClassName } from '@dxos/react-ui';
 import {
   type MenuSeparator,
@@ -37,7 +37,7 @@ export type EditorToolbarFeatureFlags = Partial<{
 }>;
 
 export type EditorToolbarActionGraphProps = {
-  state: ReactiveObject<EditorToolbarState>;
+  state: Live<EditorToolbarState>;
   // TODO(wittjosiah): Control positioning.
   customActions?: () => ActionGraphProps;
   onAction: (action: EditorAction) => void;

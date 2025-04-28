@@ -14,7 +14,7 @@ import {
   ScriptType,
 } from '@dxos/functions/types';
 import { type Client, useClient } from '@dxos/react-client';
-import { create, Filter, useQuery, type Space, type ReactiveObject, getSpace } from '@dxos/react-client/echo';
+import { create, Filter, useQuery, type Space, type Live, getSpace } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
@@ -28,7 +28,7 @@ const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = {
   space: Space;
-  object?: ReactiveObject<any>;
+  object?: Live<any>;
   initialTrigger?: FunctionTriggerType;
   onDone?: () => void;
 };

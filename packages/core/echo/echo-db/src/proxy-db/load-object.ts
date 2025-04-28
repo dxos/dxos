@@ -4,15 +4,15 @@
 
 import { asyncTimeout } from '@dxos/async';
 
-import { type ReactiveEchoObject } from '../echo-handler';
-import { getObjectCore } from '../echo-handler';
+import type { BaseEchoObject } from '@dxos/echo-schema';
+import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 
 /**
  * @param obj
  */
 // TODO(burdon): Rename/review SDK.
-export const loadObject = <T extends ReactiveEchoObject<any>>(obj: T): T => {
-  return getObjectCore(obj).getDecoded(['data']) as T;
+export const loadObject = <T extends BaseEchoObject>(obj: T): T => {
+  return getObjectCore(obj).getDecoded(['data']) as any;
 };
 
 /**
@@ -38,7 +38,7 @@ export const loadObjectReferences = async <
 ): Promise<T extends T[] ? Array<DerefType> : DerefType> => {
   const objectArray = Array.isArray(objOrArray) ? objOrArray : [objOrArray];
   const tasks = objectArray.map((obj) => {
-    const core = getObjectCore(obj);
+    const core = getObjectCore(obj as any);
     const value = valueAccessor(obj);
     if (core.database == null) {
       return value;

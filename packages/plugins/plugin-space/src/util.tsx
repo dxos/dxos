@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, type PromiseIntentDispatcher, LayoutAction } from '@dxos/app-framework';
-import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
+import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
@@ -53,7 +53,7 @@ const EMPTY_ARRAY: never[] = [];
  * @param options
  * @returns
  */
-export const memoizeQuery = <T extends ReactiveEchoObject<any>>(
+export const memoizeQuery = <T extends BaseObject>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,

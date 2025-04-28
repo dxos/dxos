@@ -12,7 +12,7 @@ import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
 import { Expando, type HasId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
-import { create, type ReactiveObject, makeRef } from '@dxos/live-object';
+import { create, type Live, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
@@ -556,7 +556,7 @@ describe('Spaces', () => {
     client.addTypes([DocumentType, TextV0Type]);
   };
 
-  const createDocument = (): ReactiveObject<DocumentType> => {
+  const createDocument = (): Live<DocumentType> => {
     const text = create(TextV0Type, { content: 'Hello, world!' });
     return create(DocumentType, {
       title: 'Test document',
@@ -564,7 +564,7 @@ describe('Spaces', () => {
     });
   };
 
-  const createObject = <T extends {}>(props: T): ReactiveObject<Expando> => {
+  const createObject = <T extends {}>(props: T): Live<Expando> => {
     return create(Expando, props);
   };
 

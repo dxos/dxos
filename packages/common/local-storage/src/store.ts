@@ -7,7 +7,7 @@ import { effect, untracked } from '@preact/signals-core';
 import { AST, type S } from '@dxos/echo-schema';
 import { findNode, isLiteralUnion, isSimpleType, type Path } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { create, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
+import { create, isReactiveObject, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep, hyphenize, setDeep } from '@dxos/util';
 
@@ -23,7 +23,7 @@ export type SettingsValue = Record<string, any>;
 export type SettingsProps<T extends SettingsValue> = {
   schema: S.Schema<T>;
   prefix: string;
-  value?: ReactiveObject<T> | T;
+  value?: Live<T> | T;
 };
 
 export interface SettingsStoreFactory {
@@ -90,14 +90,14 @@ export class RootSettingsStore implements SettingsStoreFactory {
  * Reactive key-value property store.
  */
 export class SettingsStore<T extends SettingsValue> {
-  private readonly _value: ReactiveObject<T>;
+  private readonly _value: Live<T>;
   private readonly _defaults: T;
   private _unsubscribe?: () => void;
 
   constructor(
     private readonly _schema: S.Schema<T>,
     private readonly _prefix: string,
-    value: ReactiveObject<T> | T = {} as T,
+    value: Live<T> | T = {} as T,
     private readonly _storage: Storage = localStorage,
   ) {
     this._value = isReactiveObject(value) ? value : create(value);

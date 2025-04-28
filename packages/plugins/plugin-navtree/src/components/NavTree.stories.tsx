@@ -10,7 +10,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { isActionLike, type NodeArg } from '@dxos/app-graph';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-list';
@@ -22,7 +22,7 @@ import { createTree, updateState } from '../testing';
 faker.seed(1234);
 
 const tree = create<NodeArg<any>>(createTree());
-const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>();
+const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
 const meta: Meta<typeof StorybookNavTree> = {
   title: 'plugins/plugin-navtree/NavTree',

@@ -4,7 +4,7 @@
 
 import { type NodeArg } from '@dxos/app-graph';
 import { S, TypedObject } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -19,7 +19,7 @@ type ObjectDataGenerator = {
   createData: () => any;
 };
 
-type ObjectFactory<T extends ReactiveObject<any>> = {
+type ObjectFactory<T extends Live<any>> = {
   schema?: S.Schema.AnyNoContext; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };

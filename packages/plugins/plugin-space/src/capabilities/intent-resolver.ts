@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-framework';
 import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
+import { create, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -333,7 +333,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
                 props: {
                   target,
                   shouldNavigate: navigable
-                    ? (object: ReactiveObject<any>) => !(object instanceof CollectionType) || state.navigableCollections
+                    ? (object: Live<any>) => !(object instanceof CollectionType) || state.navigableCollections
                     : () => false,
                 } satisfies Partial<CreateObjectDialogProps>,
               },

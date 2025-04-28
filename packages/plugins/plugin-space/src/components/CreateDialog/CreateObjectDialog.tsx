@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isReactiveObject, isSpace, type ReactiveObject, useSpaces } from '@dxos/react-client/echo';
+import { getSpace, isReactiveObject, isSpace, type Live, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
@@ -27,7 +27,7 @@ import { type ObjectForm, SpaceAction } from '../../types';
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'name'> & {
-  shouldNavigate?: (object: ReactiveObject<any>) => boolean;
+  shouldNavigate?: (object: Live<any>) => boolean;
 };
 
 export const CreateObjectDialog = ({

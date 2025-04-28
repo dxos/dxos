@@ -9,7 +9,7 @@ import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-a
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect } from 'react';
 
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -22,7 +22,7 @@ import { Path } from '../../util';
 faker.seed(1234);
 
 const tree = create<TestItem>(createTree());
-const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>();
+const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
 const meta: Meta<typeof Tree> = {
   title: 'ui/react-ui-list/Tree',

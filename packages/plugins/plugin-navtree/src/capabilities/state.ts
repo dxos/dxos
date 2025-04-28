@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
-import { type ReactiveObject, create } from '@dxos/live-object';
+import { type Live, create } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from './capabilities';
@@ -24,7 +24,7 @@ const getInitialState = () => {
     return cached.map(
       ([key, value]): [
         string,
-        ReactiveObject<{
+        Live<{
           open: boolean;
           current: boolean;
         }>,
@@ -36,11 +36,11 @@ const getInitialState = () => {
 export default (context: PluginsContext) => {
   const layout = context.requestCapability(Capabilities.Layout);
 
-  // TODO(wittjosiah): This currently needs to be not a ReactiveObject at the root.
-  //   If it is a ReactiveObject then React errors when initializing new paths because of state change during render.
-  //   Ideally this could be a ReactiveObject but be able to access and update the root level without breaking render.
+  // TODO(wittjosiah): This currently needs to be not a Live at the root.
+  //   If it is a Live then React errors when initializing new paths because of state change during render.
+  //   Ideally this could be a Live but be able to access and update the root level without breaking render.
   //   Wrapping accesses and updates in `untracked` didn't seem to work in all cases.
-  const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>(
+  const state = new Map<string, Live<{ open: boolean; current: boolean }>>(
     getInitialState() ?? [
       // TODO(thure): Initialize these dynamically.
       ['root', create({ open: true, current: false })],

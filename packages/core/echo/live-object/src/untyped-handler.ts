@@ -139,5 +139,5 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 }
 
 const toJSON = (target: any): any => {
-  return { '@type': 'ReactiveObject', ...target };
+  return { '@type': 'Live', ...target };
 };

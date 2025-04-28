@@ -6,7 +6,7 @@ import { batch, effect, untracked } from '@preact/signals-core';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { type ReactiveObject, create } from '@dxos/live-object';
+import { type Live, create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable, pick } from '@dxos/util';
 
@@ -87,12 +87,12 @@ export class Graph {
   /**
    * @internal
    */
-  readonly _nodes: Record<string, ReactiveObject<NodeInternal>> = {};
+  readonly _nodes: Record<string, Live<NodeInternal>> = {};
 
   /**
    * @internal
    */
-  readonly _edges: Record<string, ReactiveObject<{ inbound: string[]; outbound: string[] }>> = {};
+  readonly _edges: Record<string, Live<{ inbound: string[]; outbound: string[] }>> = {};
 
   constructor({ nodes, edges, onInitialNode, onInitialNodes, onRemoveNode }: GraphParams = {}) {
     this._onInitialNode = onInitialNode;

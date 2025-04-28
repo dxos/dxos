@@ -9,7 +9,7 @@ import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
 
-import { create, type ReactiveObject } from './object';
+import { create, type Live } from './object';
 import { objectData } from './proxy';
 
 registerSignalsRuntime();
@@ -24,9 +24,7 @@ const TEST_OBJECT: Testing.TestSchema = {
 };
 
 for (const schema of [undefined, Testing.TestSchemaWithClass]) {
-  const createObject = (
-    props: Partial<Testing.TestSchemaWithClass> = {},
-  ): ReactiveObject<Testing.TestSchemaWithClass> => {
+  const createObject = (props: Partial<Testing.TestSchemaWithClass> = {}): Live<Testing.TestSchemaWithClass> => {
     return schema == null ? (create(props) as Testing.TestSchemaWithClass) : create(schema, props);
   };
 
@@ -41,7 +39,7 @@ for (const schema of [undefined, Testing.TestSchemaWithClass]) {
       const obj = createObject({ ...TEST_OBJECT });
       const objData: any = (obj as any)[objectData];
       expect(objData).to.deep.contain({
-        '@type': `${schema ? 'Typed' : ''}ReactiveObject`,
+        '@type': `${schema ? 'Typed' : ''}Live`,
         ...TEST_OBJECT,
       });
     });

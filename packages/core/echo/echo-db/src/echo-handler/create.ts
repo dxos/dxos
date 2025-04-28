@@ -19,7 +19,7 @@ import {
   RelationTargetId,
 } from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { getRefSavedTarget, type ReactiveObject } from '@dxos/live-object';
+import { getRefSavedTarget, type Live } from '@dxos/live-object';
 import {
   createProxy,
   getMeta,
@@ -37,7 +37,7 @@ import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
-export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
+export type ReactiveEchoObject<T extends BaseObject> = Live<T> & HasId;
 
 /**
  * @returns True if `value` is a reactive object with an EchoHandler backend.
@@ -62,7 +62,7 @@ export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
  * @returns True if `value` is a reactive object with an EchoHandler backend or a schema that has an `Object` annotation.
  */
 // TODO(dmaretskyi): Reconcile with `isEchoObject`.
-export const isTypedObjectProxy = (value: any): value is ReactiveObject<any> => {
+export const isTypedObjectProxy = (value: any): value is Live<any> => {
   if (isEchoObject(value)) {
     return true;
   }

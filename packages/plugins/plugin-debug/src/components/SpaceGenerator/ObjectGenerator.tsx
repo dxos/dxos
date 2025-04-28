@@ -6,7 +6,7 @@ import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { ObjectId, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
+import { create, makeRef, type Live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
@@ -31,8 +31,8 @@ const generator: ValueGenerator = faker as any;
 export type ObjectGenerator<T extends BaseObject> = (
   space: Space,
   n: number,
-  cb?: (objects: ReactiveObject<any>[]) => void,
-) => Promise<ReactiveObject<T>[]>;
+  cb?: (objects: Live<any>[]) => void,
+) => Promise<Live<T>[]>;
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
@@ -139,11 +139,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
 ]);
 
 export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): ObjectGenerator<T> => {
-  return async (
-    space: Space,
-    n: number,
-    cb?: (objects: ReactiveObject<any>[]) => void,
-  ): Promise<ReactiveObject<T>[]> => {
+  return async (space: Space, n: number, cb?: (objects: Live<any>[]) => void): Promise<Live<T>[]> => {
     // Find or create mutable schema.
     const schema =
       (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??

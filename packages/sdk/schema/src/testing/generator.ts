@@ -18,7 +18,7 @@ import {
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
+import { create, makeRef, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
@@ -42,8 +42,8 @@ export type TypeSpec = {
  */
 export const createObjectFactory =
   (db: EchoDatabase, generator: ValueGenerator) =>
-  async (specs: TypeSpec[]): Promise<Map<string, ReactiveObject<any>[]>> => {
-    const map = new Map<string, ReactiveObject<any>[]>();
+  async (specs: TypeSpec[]): Promise<Map<string, Live<any>[]>> => {
+    const map = new Map<string, Live<any>[]>();
     for (const { type, count } of specs) {
       try {
         const pipeline = createObjectPipeline(generator, type, { db });
@@ -113,7 +113,7 @@ export const createReactiveObject = <T extends BaseObject>(type: S.Schema<T>) =>
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
-  return <T extends BaseObject>(obj: ReactiveObject<T>): ReactiveEchoObject<T> => db.add(obj);
+  return <T extends BaseObject>(obj: Live<T>): ReactiveEchoObject<T> => db.add(obj);
 };
 
 export const noop = (obj: any) => obj;
@@ -125,7 +125,7 @@ export const createObjectArray = <T extends BaseObject>(n: number): ExcludeId<T>
 
 export const createArrayPipeline = <T extends BaseObject>(
   n: number,
-  pipeline: (obj: ExcludeId<T>) => Effect.Effect<ReactiveObject<T>, never, never>,
+  pipeline: (obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>,
 ) => {
   return Effect.forEach(createObjectArray<T>(n), pipeline);
 };
@@ -146,10 +146,10 @@ export const createObjectPipeline = <T extends BaseObject>(
   generator: ValueGenerator,
   type: S.Schema<T>,
   { db, optional }: CreateOptions,
-): ((obj: ExcludeId<T>) => Effect.Effect<ReactiveObject<T>, never, never>) => {
+): ((obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>) => {
   if (!db) {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<ReactiveObject<T>> = pipe(
+      const pipeline: Effect.Effect<Live<T>> = pipe(
         Effect.succeed(obj),
         // Effect.tap(logObject('before')),
         Effect.map((obj) => createProps(generator, type, optional)(obj)),
@@ -177,8 +177,8 @@ export const createObjectPipeline = <T extends BaseObject>(
 };
 
 export type ObjectGenerator<T extends BaseObject> = {
-  createObject: () => ReactiveObject<T>;
-  createObjects: (n: number) => ReactiveObject<T>[];
+  createObject: () => Live<T>;
+  createObjects: (n: number) => Live<T>[];
 };
 
 export const createGenerator = <T extends BaseObject>(
@@ -195,8 +195,8 @@ export const createGenerator = <T extends BaseObject>(
 };
 
 export type AsyncObjectGenerator<T extends BaseObject> = {
-  createObject: () => Promise<ReactiveObject<T>>;
-  createObjects: (n: number) => Promise<ReactiveObject<T>[]>;
+  createObject: () => Promise<Live<T>>;
+  createObjects: (n: number) => Promise<Live<T>[]>;
 };
 
 export const createAsyncGenerator = <T extends BaseObject>(

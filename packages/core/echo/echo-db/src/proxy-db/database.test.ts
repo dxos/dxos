@@ -10,15 +10,7 @@ import { type BaseObject, Expando } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import {
-  create,
-  dangerouslySetProxyId,
-  getMeta,
-  getSchema,
-  getType,
-  makeRef,
-  type ReactiveObject,
-} from '@dxos/live-object';
+import { create, dangerouslySetProxyId, getMeta, getSchema, getType, makeRef, type Live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -435,7 +427,7 @@ describe('Database', () => {
     return { db, graph };
   };
 
-  const addToDatabase = async <T extends BaseObject>(obj: ReactiveObject<T>) => {
+  const addToDatabase = async <T extends BaseObject>(obj: Live<T>) => {
     const { db } = await createDbWithTypes();
     db.add(obj);
     await db.flush();

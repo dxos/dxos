@@ -12,7 +12,7 @@ import React, { useEffect } from 'react';
 
 import { Graph, ROOT_ID, type Node } from '@dxos/app-graph';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-list';
@@ -49,7 +49,7 @@ const createGraph = () => {
 };
 
 const graph = createGraph();
-const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>();
+const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
 export const Default = {};
 

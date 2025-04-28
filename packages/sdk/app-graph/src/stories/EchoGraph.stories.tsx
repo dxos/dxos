@@ -30,6 +30,7 @@ import { Tree } from './Tree';
 import { type Graph } from '../graph';
 import { GraphBuilder, cleanup, createExtension, memoize, toSignal } from '../graph-builder';
 import { type Node } from '../node';
+import type { BaseObject } from '@dxos/echo-schema';
 
 const DEFAULT_PERIOD = 500;
 
@@ -54,7 +55,7 @@ const actionWeights = {
 };
 
 // TODO(wittjosiah): Factor out.
-const memoizeQuery = <T extends ReactiveEchoObject<any>>(
+const memoizeQuery = <T extends BaseObject>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,

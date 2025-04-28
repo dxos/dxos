@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
 import { toEffectSchema } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
@@ -27,7 +27,7 @@ import { presets } from './presets';
 
 export type SpaceGeneratorProps = {
   space: Space;
-  onCreateObjects?: (objects: ReactiveObject<any>[]) => void;
+  onCreateObjects?: (objects: Live<any>[]) => void;
 };
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {

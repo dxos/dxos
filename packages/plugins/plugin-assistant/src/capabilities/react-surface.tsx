@@ -47,7 +47,9 @@ export default () =>
       id: `${ASSISTANT_PLUGIN}/object-chat`,
       role: 'article',
       filter: (data): data is { companionTo: AIChatType; subject: 'assistant-chat' } =>
-        isReactiveObject(data.companionTo) && data.companionTo.assistantChatQueue && data.subject === 'assistant-chat',
+        isReactiveObject(data.companionTo) &&
+        (data as any).companionTo.assistantChatQueue &&
+        data.subject === 'assistant-chat',
       component: ({ data, role }) => {
         const associatedArtifact = useMemo(
           () => ({

@@ -10,7 +10,7 @@ import React, { useEffect, useMemo } from 'react';
 import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
-import { create, makeRef, type ReactiveObject } from '@dxos/react-client/echo';
+import { create, makeRef, type Live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { createView, ViewProjection, ViewType } from '@dxos/schema';
 import { createGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
@@ -18,7 +18,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
-import { TablePresentation } from '../../model';
+import { TablePresentation, type TableRow } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 
@@ -47,14 +47,14 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     return new ViewProjection(schema.jsonSchema, table.view.target);
   }, [schema, table]);
 
-  const model = useTableModel({ table, projection, rows: [] });
+  const model = useTableModel<TableRow>({ table, projection, rows: [] });
   useEffect(() => {
     if (!model) {
       return;
     }
 
     const objectGenerator = createGenerator(generator, schema, { optional: true });
-    const objects: ReactiveObject<T>[] = Array.from({ length: count }).map(() => objectGenerator.createObject());
+    const objects: Live<T>[] = Array.from({ length: count }).map(() => objectGenerator.createObject());
     model.setRows(objects);
   }, [model]);
 

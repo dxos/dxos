@@ -4,7 +4,7 @@
 
 import { untracked } from '@preact/signals-core';
 
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, type Live } from '@dxos/live-object';
 
 /**
  * Manages selection state for different contexts.
@@ -22,7 +22,7 @@ export class SelectionManager {
     }
   }
 
-  get selections(): ReactiveObject<Record<string, Set<string>>> {
+  get selections(): Live<Record<string, Set<string>>> {
     return this._state.selections;
   }
 

@@ -20,7 +20,7 @@ export class ReadonlyGraphModel<
   protected readonly _graph: Graph;
 
   /**
-   * NOTE: Pass in simple Graph or ReactiveObject.
+   * NOTE: Pass in simple Graph or Live.
    */
   constructor(graph?: Graph) {
     this._graph = graph ?? { nodes: [], edges: [] };

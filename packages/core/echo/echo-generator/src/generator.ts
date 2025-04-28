@@ -6,7 +6,7 @@ import { Filter, type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { getTypeAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, getSchema, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
+import { create, getSchema, isReactiveObject, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -42,7 +42,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     this._schemas[type] = schema;
   }
 
-  async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveObject<any>> {
+  async createObject({ types }: { types?: T[] } = {}): Promise<Live<any>> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = await this._generators[type](this._provider);
     if (isReactiveObject(data)) {
