@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useEffect, useRef, useState } from 'reac
 
 import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { createGraph } from '@dxos/graph';
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -51,7 +51,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     // Load objects.
     const t = setTimeout(async () => {
       const { objects } = await space.db
-        .query((object: ReactiveObject<any>) => types.some((type) => type.typename === getTypename(object)))
+        .query((object: Live<any>) => types.some((type) => type.typename === getTypename(object)))
         .run();
 
       const model = await doLayout(createGraph(objects));

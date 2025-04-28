@@ -59,7 +59,7 @@ export default () =>
           return false;
         }
 
-        const companionTo = data.companionTo;
+        const companionTo = data.companionTo as any;
         // TODO(ZaymonFC): Unify the path of view between table and kanban.
         const hasValidView = companionTo.view?.target instanceof ViewType;
         const hasValidCardView = companionTo.cardView?.target instanceof ViewType;

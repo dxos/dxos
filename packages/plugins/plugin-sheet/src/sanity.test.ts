@@ -11,7 +11,7 @@ import { describe, test, expect } from 'vitest';
 //    - throws "process.nextTick is not a function" (if browser)
 
 import { Client } from '@dxos/client';
-import { create } from '@dxos/client/echo';
+import { live } from '@dxos/client/echo';
 import { FunctionType } from '@dxos/functions/types';
 
 // TODO(burdon): Fix test infrastructure:
@@ -34,7 +34,7 @@ describe('test', () => {
     //  - ERROR "process.nextTick is not a function"
     //  - ERROR "Identifier 'Buffer' has already been declared" if { nodeExternal: true }
     const space = await client.spaces.create();
-    const fn = space.db.add(create(FunctionType, { name: 'test', version: '0.0.1', binding: 'HELLO' }));
+    const fn = space.db.add(live(FunctionType, { name: 'test', version: '0.0.1', binding: 'HELLO' }));
     expect(fn).to.exist;
   });
 });

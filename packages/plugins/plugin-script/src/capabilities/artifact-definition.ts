@@ -9,7 +9,7 @@ import { ObjectId, S } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { create, makeRef, type Space } from '@dxos/react-client/echo';
+import { live, makeRef, type Space } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -152,10 +152,10 @@ export default () => {
         execute: async ({ name, code }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
-          const script = create(ScriptType, {
+          const script = live(ScriptType, {
             name,
             source: makeRef(
-              create(TextType, {
+              live(TextType, {
                 content: code,
               }),
             ),

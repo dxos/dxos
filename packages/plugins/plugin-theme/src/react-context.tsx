@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { type ThemeContextValue, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
@@ -17,7 +17,7 @@ export type ThemePluginOptions = Partial<Pick<ThemeContextValue, 'tx' | 'noCache
 };
 
 export default ({ appName, tx: propsTx = defaultTx, ...rest }: ThemePluginOptions = { appName: 'test' }) => {
-  const state = create<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+  const state = live<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
 
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
     document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');

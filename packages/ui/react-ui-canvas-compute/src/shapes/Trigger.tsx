@@ -24,7 +24,7 @@ import {
   type WebhookTrigger,
 } from '@dxos/functions/types';
 import { DXN, SpaceId } from '@dxos/keys';
-import { create, makeRef, useSpace } from '@dxos/react-client/echo';
+import { live, makeRef, useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
@@ -46,7 +46,7 @@ export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTr
 };
 
 export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
-  const functionTrigger = create(FunctionTrigger, {
+  const functionTrigger = live(FunctionTrigger, {
     enabled: true,
     spec: createTriggerSpec(props),
   });

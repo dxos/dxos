@@ -3,7 +3,7 @@
 //
 
 import { AST, createObjectId, Format, S, type StoredSchema, toJsonSchema, TypedObject } from '@dxos/echo-schema';
-import { createStoredSchema, type ReactiveObject } from '@dxos/live-object';
+import { createStoredSchema, type Live } from '@dxos/live-object';
 
 import { createView, type ViewType } from '../view';
 
@@ -34,7 +34,7 @@ export class TestSchema extends TypedObject({
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 
-export const testSchema: ReactiveObject<StoredSchema> = createStoredSchema(
+export const testSchema: Live<StoredSchema> = createStoredSchema(
   {
     typename: 'example.com/type/Test',
     version: '0.1.0',
@@ -42,7 +42,7 @@ export const testSchema: ReactiveObject<StoredSchema> = createStoredSchema(
   toJsonSchema(TestSchema),
 );
 
-export const testView: ReactiveObject<ViewType> = createView({
+export const testView: Live<ViewType> = createView({
   name: 'Test',
   typename: testSchema.typename,
   jsonSchema: toJsonSchema(TestSchema),

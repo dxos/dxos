@@ -19,7 +19,7 @@ import {
   RelationTargetId,
 } from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { getRefSavedTarget, type ReactiveObject } from '@dxos/live-object';
+import { getRefSavedTarget, type Live } from '@dxos/live-object';
 import {
   createProxy,
   getMeta,
@@ -27,7 +27,7 @@ import {
   getProxySlot,
   getProxyTarget,
   getSchema,
-  isReactiveObject,
+  isLiveObject,
 } from '@dxos/live-object';
 import { deepMapValues } from '@dxos/util';
 
@@ -37,14 +37,14 @@ import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
-export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
+export type ReactiveEchoObject<T extends BaseObject> = Live<T> & HasId;
 
 /**
  * @returns True if `value` is a reactive object with an EchoHandler backend.
  */
 // TODO(dmaretskyi): Reconcile with `isTypedObjectProxy`.
 export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
-  if (!isReactiveObject(value)) {
+  if (!isLiveObject(value)) {
     return false;
   }
 
@@ -62,7 +62,7 @@ export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
  * @returns True if `value` is a reactive object with an EchoHandler backend or a schema that has an `Object` annotation.
  */
 // TODO(dmaretskyi): Reconcile with `isEchoObject`.
-export const isTypedObjectProxy = (value: any): value is ReactiveObject<any> => {
+export const isTypedObjectProxy = (value: any): value is Live<any> => {
   if (isEchoObject(value)) {
     return true;
   }
@@ -89,7 +89,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
   validateInitialProps(obj);
 
   const core = new ObjectCore();
-  if (isReactiveObject(obj)) {
+  if (isLiveObject(obj)) {
     // Already an echo-schema reactive object.
     const meta = getProxyTarget<ObjectMeta>(getMeta(obj));
 
@@ -206,10 +206,10 @@ const setRelationSourceAndTarget = (
     if (!sourceRef || !targetRef) {
       throw new TypeError('Relation source and target must be specified');
     }
-    if (!isReactiveObject(sourceRef)) {
+    if (!isLiveObject(sourceRef)) {
       throw new TypeError('source must be an ECHO object');
     }
-    if (!isReactiveObject(targetRef)) {
+    if (!isLiveObject(targetRef)) {
       throw new TypeError('target must be an ECHO object');
     }
 

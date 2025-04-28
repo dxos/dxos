@@ -12,7 +12,7 @@ import React, { useEffect } from 'react';
 
 import { Graph, ROOT_ID, type Node } from '@dxos/app-graph';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-list';
@@ -49,7 +49,7 @@ const createGraph = () => {
 };
 
 const graph = createGraph();
-const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>();
+const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
 export const Default = {};
 
@@ -98,7 +98,7 @@ const meta: Meta<typeof StorybookNavTree> = {
     },
     isOpen: (_path: string[]) => {
       const path = Path.create(..._path);
-      const value = state.get(path) ?? create({ open: false, current: false });
+      const value = state.get(path) ?? live({ open: false, current: false });
       if (!state.has(path)) {
         state.set(path, value);
       }
@@ -107,7 +107,7 @@ const meta: Meta<typeof StorybookNavTree> = {
     },
     isCurrent: (_path: string[]) => {
       const path = Path.create(..._path);
-      const value = state.get(path) ?? create({ open: false, current: false });
+      const value = state.get(path) ?? live({ open: false, current: false });
       if (!state.has(path)) {
         state.set(path, value);
       }

@@ -9,7 +9,7 @@ import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { range } from '@dxos/util';
 
 import { FunctionRegistry } from './function-registry';
@@ -67,7 +67,7 @@ describe('function registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
-      const existing = space.db.add(create(FunctionDef, testManifest.functions![0]));
+      const existing = space.db.add(live(FunctionDef, testManifest.functions![0]));
       await registry.register(space, testManifest.functions);
       const { objects: definitions } = await space.db.query(Filter.schema(FunctionDef)).run();
       expect(definitions.length).to.eq(1);
@@ -80,7 +80,7 @@ describe('function registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
-      const definitions = range(3, () => create(FunctionDef, testManifest.functions![0]));
+      const definitions = range(3, () => live(FunctionDef, testManifest.functions![0]));
       definitions.forEach((def) => space.db.add(def));
 
       const functionRegistered = new Trigger<FunctionDef[]>();

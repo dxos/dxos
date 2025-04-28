@@ -7,7 +7,7 @@ import { isNotNullable } from 'effect/Predicate';
 
 import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions/types';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
 import { TextType } from '@dxos/schema';
 
@@ -47,9 +47,9 @@ export default () =>
 
         return {
           data: {
-            object: create(ScriptType, {
+            object: live(ScriptType, {
               name,
-              source: makeRef(create(TextType, { content })),
+              source: makeRef(live(TextType, { content })),
             }),
           },
         };

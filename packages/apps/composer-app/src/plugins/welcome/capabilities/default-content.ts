@@ -12,7 +12,7 @@ import { SPACES } from '@dxos/plugin-space';
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 
 export default async (context: PluginsContext) => {
-  const { fullyQualifiedId, create, makeRef } = await import('@dxos/react-client/echo');
+  const { fullyQualifiedId, live, makeRef } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { DocumentType } = await import('@dxos/plugin-markdown/types');
   const { CollectionType } = await import('@dxos/plugin-space/types');
@@ -23,10 +23,10 @@ export default async (context: PluginsContext) => {
   const client = context.requestCapability(ClientCapabilities.Client);
   const defaultSpace = client.spaces.default;
 
-  const readme = create(DocumentType, {
+  const readme = live(DocumentType, {
     name: INITIAL_DOC_TITLE,
     content: makeRef(
-      create(TextType, {
+      live(TextType, {
         content: INITIAL_CONTENT.join('\n\n'),
       }),
     ),

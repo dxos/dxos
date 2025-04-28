@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { create, Filter, type Space } from '@dxos/client/echo';
+import { live, Filter, type Space } from '@dxos/client/echo';
 import { type Context, Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -57,7 +57,7 @@ export class FunctionRegistry extends Resource {
     const { objects: existing } = await space.db.query(Filter.schema(FunctionDef)).run();
     const { added } = diff(existing, functions, (a, b) => a.uri === b.uri);
     // TODO(burdon): Update existing templates.
-    added.forEach((def) => space.db.add(create(FunctionDef, def)));
+    added.forEach((def) => space.db.add(live(FunctionDef, def)));
 
     if (added.length > 0) {
       await space.db.flush({ indexes: true, updates: true });

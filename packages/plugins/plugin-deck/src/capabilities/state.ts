@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type SidebarState } from '@dxos/react-ui';
 
@@ -67,7 +67,7 @@ export default () => {
     .prop({ key: 'activeDeck', type: LocalStorageStore.string() })
     .prop({ key: 'previousDeck', type: LocalStorageStore.string() });
 
-  const layout = create<Capabilities.Layout>({
+  const layout = live<Capabilities.Layout>({
     get mode() {
       return getMode(state.values.deck);
     },
