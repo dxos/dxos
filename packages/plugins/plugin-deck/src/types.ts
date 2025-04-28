@@ -4,6 +4,7 @@
 
 import { LayoutAction } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
+import { type DeepReadonly } from '@dxos/util';
 
 import { DECK_PLUGIN } from './meta';
 
@@ -65,7 +66,7 @@ const LayoutMode = S.Literal('deck', 'solo', 'solo--fullscreen');
 export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
 
-export const getMode = (deck: DeckState): LayoutMode => {
+export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode => {
   if (deck.solo) {
     return deck.fullscreen ? 'solo--fullscreen' : 'solo';
   }

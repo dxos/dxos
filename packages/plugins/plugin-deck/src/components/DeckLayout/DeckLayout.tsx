@@ -67,8 +67,9 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   } = context;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint);
-  const hoistStatusbar = useHoistStatusbar(breakpoint);
+  const layoutMode = getMode(deck);
+  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
   const pluginManager = usePluginManager();
 
   const scrollLeftRef = useRef<number | null>();
@@ -143,8 +144,6 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
       deckRef.current.scrollLeft = scrollLeftRef.current;
     }
   }, []);
-
-  const layoutMode = getMode(deck);
   useOnTransition(layoutMode, (mode) => mode !== 'deck', 'deck', restoreScroll);
 
   /**
@@ -315,7 +314,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
         {topbar && <Topbar />}
 
         {/* Status bar. */}
-        {hoistStatusbar && !fullscreen && <StatusBar showHints={settings.showHints} />}
+        {hoistStatusbar && <StatusBar showHints={settings.showHints} />}
       </Main.Root>
 
       {/* Global popovers. */}
