@@ -40,7 +40,7 @@ for (const schema of [undefined, Testing.TestSchemaWithClass]) {
       const obj = createObject({ ...TEST_OBJECT });
       const objData: any = (obj as any)[objectData];
       expect(objData).to.deep.contain({
-        '@type': `${schema ? 'Typed' : ''}Live`,
+        '@type': `${schema ? 'Typed' : ''}ReactiveObject`,
         ...TEST_OBJECT,
       });
     });
