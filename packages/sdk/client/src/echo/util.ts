@@ -8,7 +8,7 @@ import { getDatabaseFromObject, isEchoObject, type ReactiveEchoObject } from '@d
 import { type ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { isReactiveObject, type Live } from '@dxos/live-object';
+import { isLiveObject, type Live } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
 
@@ -25,7 +25,7 @@ export const SpaceSchema: S.Schema<Space> = S.Any.pipe(
 
 // TODO(dmaretskyi): Move to @dxos/echo-schema.
 export const ReactiveObjectSchema: S.Schema<Live<any>> = S.Any.pipe(
-  S.filter((x) => isReactiveObject(x)),
+  S.filter((x) => isLiveObject(x)),
   S.annotations({ title: 'Live' }),
 );
 export const EchoObjectSchema: S.Schema<ReactiveEchoObject<any>> = S.Any.pipe(

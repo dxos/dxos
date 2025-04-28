@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isReactiveObject, isSpace, type Live, useSpaces } from '@dxos/react-client/echo';
+import { getSpace, isLiveObject, isSpace, type Live, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
@@ -72,7 +72,7 @@ export const CreateObjectDialog = ({
       invariant(space, 'Missing space');
       const result = await dispatch(form.getIntent(data, { space }));
       const object = result.data?.object;
-      if (isReactiveObject(object)) {
+      if (isLiveObject(object)) {
         const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden: form.hidden });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (shouldNavigate(object)) {

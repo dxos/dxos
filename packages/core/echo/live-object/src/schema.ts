@@ -17,8 +17,8 @@ import {
   type TypeAnnotation,
 } from '@dxos/echo-schema';
 
-import { create, type Live } from './object';
-
+import { create } from './object';
+import type { Live } from './live';
 /**
  * Create ECHO object representing schema.
  */

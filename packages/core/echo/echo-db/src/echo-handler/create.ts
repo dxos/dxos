@@ -27,7 +27,7 @@ import {
   getProxySlot,
   getProxyTarget,
   getSchema,
-  isReactiveObject,
+  isLiveObject,
 } from '@dxos/live-object';
 import { deepMapValues } from '@dxos/util';
 
@@ -44,7 +44,7 @@ export type ReactiveEchoObject<T extends BaseObject> = Live<T> & HasId;
  */
 // TODO(dmaretskyi): Reconcile with `isTypedObjectProxy`.
 export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
-  if (!isReactiveObject(value)) {
+  if (!isLiveObject(value)) {
     return false;
   }
 
@@ -89,7 +89,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
   validateInitialProps(obj);
 
   const core = new ObjectCore();
-  if (isReactiveObject(obj)) {
+  if (isLiveObject(obj)) {
     // Already an echo-schema reactive object.
     const meta = getProxyTarget<ObjectMeta>(getMeta(obj));
 
@@ -206,10 +206,10 @@ const setRelationSourceAndTarget = (
     if (!sourceRef || !targetRef) {
       throw new TypeError('Relation source and target must be specified');
     }
-    if (!isReactiveObject(sourceRef)) {
+    if (!isLiveObject(sourceRef)) {
       throw new TypeError('source must be an ECHO object');
     }
-    if (!isReactiveObject(targetRef)) {
+    if (!isLiveObject(targetRef)) {
       throw new TypeError('target must be an ECHO object');
     }
 

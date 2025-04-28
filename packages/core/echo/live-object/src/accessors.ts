@@ -6,7 +6,7 @@ import { type BaseObject, foreignKeyEquals, type ObjectMeta, Ref } from '@dxos/e
 import { invariant } from '@dxos/invariant';
 import { type Comparator, deepMapValues, intersection } from '@dxos/util';
 
-import type { Live } from './object';
+import type { Live } from './live';
 import { getProxyHandler } from './proxy';
 
 export const getMeta = <T extends BaseObject>(obj: T): ObjectMeta => {

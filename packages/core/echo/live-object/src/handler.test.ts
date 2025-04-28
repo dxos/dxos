@@ -9,7 +9,8 @@ import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
 
-import { create, type Live } from './object';
+import { create } from './object';
+import type { Live } from './live';
 import { objectData } from './proxy';
 
 registerSignalsRuntime();

@@ -12,7 +12,7 @@ export {
   getMeta,
   getSchema,
   getType,
-  isReactiveObject,
+  isLiveObject,
   compareForeignKeys,
   makeRef,
 } from '@dxos/live-object';

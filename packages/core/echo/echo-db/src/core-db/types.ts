@@ -8,7 +8,7 @@ import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/autome
 import { type Reference } from '@dxos/echo-protocol';
 import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isReactiveObject, type Live } from '@dxos/live-object';
+import { isLiveObject, type Live } from '@dxos/live-object';
 
 import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
 import { symbolPath, type ProxyTarget } from '../echo-handler/echo-proxy-target';
@@ -69,7 +69,7 @@ export const createDocAccessor = <T extends BaseObject>(obj: Live<T>, path: KeyP
     path = [path as any];
   }
 
-  invariant(isReactiveObject(obj));
+  invariant(isLiveObject(obj));
   invariant(path === undefined || isValidKeyPath(path));
   const core = getObjectCore(obj);
   const basePath = (obj as any as ProxyTarget)[symbolPath];

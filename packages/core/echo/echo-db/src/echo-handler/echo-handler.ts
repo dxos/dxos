@@ -34,7 +34,7 @@ import {
   getProxyHandler,
   getProxyTarget,
   getRefSavedTarget,
-  isReactiveObject,
+  isLiveObject,
   type ReactiveHandler,
   type Live,
   RefImpl,
@@ -350,7 +350,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // The value is a value-object field of another echo-object. We don't want to create a reference
         // to it or have shared mutability, we need to copy by value.
         return recurse({ ...value });
-      } else if (isReactiveObject(value)) {
+      } else if (isLiveObject(value)) {
         throw new Error('Object references must be wrapped with `makeRef`');
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
@@ -788,7 +788,7 @@ export const isRootDataObject = (target: ProxyTarget) => {
  */
 const isEchoObjectField = (value: any) => {
   return (
-    isReactiveObject(value) &&
+    isLiveObject(value) &&
     getProxyHandler(value) instanceof EchoReactiveHandler &&
     !isRootDataObject(getProxyTarget(value))
   );

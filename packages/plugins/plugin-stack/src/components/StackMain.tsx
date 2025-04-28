@@ -13,7 +13,7 @@ import {
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { create, getType, fullyQualifiedId, isReactiveObject, makeRef } from '@dxos/client/echo';
+import { create, getType, fullyQualifiedId, isLiveObject, makeRef } from '@dxos/client/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -78,7 +78,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
         .filter(isNonNullable)
         .findIndex((section) => fullyQualifiedId(section) === id);
       const object = collection.objects[index].target;
-      if (isReactiveObject(object)) {
+      if (isLiveObject(object)) {
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
 
         // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.

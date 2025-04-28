@@ -5,7 +5,7 @@
 import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
+import { getSchema, isLiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import {
@@ -542,7 +542,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   const node = graph.findNode(active);
-  if (!node || !isReactiveObject(node.data)) {
+  if (!node || !isLiveObject(node.data)) {
     return;
   }
 
