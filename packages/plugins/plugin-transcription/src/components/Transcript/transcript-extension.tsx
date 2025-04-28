@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, RangeSetBuilder, StateEffect, StateField, Text } from '@codemirror/state';
+import { type Extension, Line, RangeSetBuilder, StateEffect, StateField, Text } from '@codemirror/state';
 import { EditorView, GutterMarker, gutter } from '@codemirror/view';
 
 // TODO(burdon): Autoscroll.
@@ -15,7 +15,7 @@ import { EditorView, GutterMarker, gutter } from '@codemirror/view';
  */
 // TODO(burdon): Wrap queue.
 export class TranscriptModel extends Text {
-  constructor(readonly _lines: string[] = []) {
+  constructor(readonly _lines: string[] = ['']) {
     super();
   }
 
@@ -27,8 +27,12 @@ export class TranscriptModel extends Text {
   // Text abstract class.
   //
 
+  override get children() {
+    return null;
+  }
+
   override get length() {
-    return this._lines.join('\n').length;
+    return this._lines.reduce((acc, line) => acc + line.length + 1, -1); // +1 for '\n', -1 to remove last
   }
 
   override get lines() {
@@ -36,12 +40,43 @@ export class TranscriptModel extends Text {
   }
 
   override sliceString(from: number, to?: number, lineSep: string = '\n'): string {
-    return this._lines.join(lineSep).slice(from, to);
+    return this.toString().slice(from, to);
   }
 
-  get children() {
-    return null;
+  override toString(lineSep: string = '\n'): string {
+    return this._lines.join(lineSep);
   }
+
+  override lineAt(pos: number): Line {
+    let offset = 0;
+    for (let i = 0; i < this._lines.length; i++) {
+      const lineLength = this._lines[i].length + 1; // +1 for '\n'
+      if (pos < offset + lineLength) {
+        return new Line(offset, offset + this._lines[i].length, i + 1, this._lines[i]);
+      }
+      offset += lineLength;
+    }
+
+    // Fallback to last line.
+    const last = this._lines.length - 1;
+    return {
+      from: offset,
+      to: offset + this._lines[last].length,
+      number: last + 1,
+      text: this._lines[last],
+    };
+  }
+
+  // override replace(from: number, to: number, text: Text): Text {
+  //   const before = this.sliceString(0, from);
+  //   const after = this.sliceString(to);
+  //   const newText = before + text.toString() + after;
+  //   return new TranscriptModel(newText.split('\n'));
+  // }
+
+  // override append(other: Text): Text {
+  //   return new TranscriptModel((this.toString() + other.toString()).split('\n'));
+  // }
 }
 
 export type TranscriptOptions = {
