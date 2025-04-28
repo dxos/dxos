@@ -61,13 +61,13 @@ export const defaultDeck: DeckState = {
   companionFrameSizing: {},
 };
 
-const LayoutMode = S.Literal('deck', 'solo', 'fullscreen');
+const LayoutMode = S.Literal('deck', 'solo', 'solo--fullscreen');
 export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
 
 export const getMode = (deck: DeckState): LayoutMode => {
   if (deck.solo) {
-    return deck.fullscreen ? 'fullscreen' : 'solo';
+    return deck.fullscreen ? 'solo--fullscreen' : 'solo';
   }
 
   return 'deck';
@@ -113,6 +113,7 @@ export namespace DeckAction {
     S.Literal('close').annotations({ description: 'Close the plank.' }),
     S.Literal('companion').annotations({ description: 'Open the companion plank.' }),
     S.Literal('solo').annotations({ description: 'Solo the plank.' }),
+    S.Literal('solo--fullscreen').annotations({ description: 'Fullscreen the plank.' }),
     S.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
     S.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
   );

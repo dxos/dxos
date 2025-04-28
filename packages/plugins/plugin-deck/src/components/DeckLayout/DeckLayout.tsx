@@ -29,7 +29,6 @@ import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
 import { ContentEmpty } from './ContentEmpty';
-import { Fullscreen } from './Fullscreen';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
@@ -209,9 +208,21 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     <Popover.Root modal open={!!(popoverAnchorId && delayedPopoverVisibility)} onOpenChange={handlePopoverOpenChange}>
       <ActiveNode />
 
-      {fullscreen && <Fullscreen id={solo} />}
-
-      {!fullscreen && (
+      {fullscreen ? (
+        <Main.Root>
+          <Main.Content bounce>
+            <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
+              <Plank
+                id={solo}
+                companionId={solo ? activeCompanions?.[solo] : undefined}
+                part='solo'
+                layoutMode={layoutMode}
+                settings={settings}
+              />
+            </StackContext.Provider>
+          </Main.Content>
+        </Main.Root>
+      ) : (
         <Main.Root
           navigationSidebarState={context.sidebarState}
           onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
