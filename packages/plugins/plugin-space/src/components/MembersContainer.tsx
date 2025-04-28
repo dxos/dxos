@@ -117,39 +117,41 @@ export const MembersContainer = ({
   };
 
   return (
-    <StackItem.Content classNames='p-2 block overflow-y-auto'>
-      <ControlSection
-        title={t('members verbose label', { ns: SPACE_PLUGIN })}
-        description={t('members description', { ns: SPACE_PLUGIN })}
-      >
-        <ControlFrame>
-          <ControlFrameItem title={t('members label', { ns: SPACE_PLUGIN })}>
-            <SpaceMemberList spaceKey={space.key} includeSelf />
-          </ControlFrameItem>
-          <ControlFrameItem title={t('invitations label', { ns: SPACE_PLUGIN })}>
-            {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
-            {!selectedInvitation && (
-              <>
-                <p className='text-description mbe-2'>{t('space invitation description', { ns: SPACE_PLUGIN })}</p>
-                <InvitationList
-                  className='mb-2'
-                  send={handleSend}
-                  invitations={visibleInvitations ?? []}
-                  onClickRemove={(invitation) => invitation.cancel()}
-                  createInvitationUrl={createInvitationUrl}
-                />
-                <BifurcatedAction
-                  actions={inviteActions}
-                  activeAction={activeAction}
-                  onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                  data-testid='membersContainer.createInvitation'
-                />
-              </>
-            )}
-          </ControlFrameItem>
-        </ControlFrame>
-      </ControlSection>
-    </StackItem.Content>
+    <Clipboard.Provider>
+      <StackItem.Content classNames='p-2 block overflow-y-auto'>
+        <ControlSection
+          title={t('members verbose label', { ns: SPACE_PLUGIN })}
+          description={t('members description', { ns: SPACE_PLUGIN })}
+        >
+          <ControlFrame>
+            <ControlFrameItem title={t('members label', { ns: SPACE_PLUGIN })}>
+              <SpaceMemberList spaceKey={space.key} includeSelf />
+            </ControlFrameItem>
+            <ControlFrameItem title={t('invitations label', { ns: SPACE_PLUGIN })}>
+              {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
+              {!selectedInvitation && (
+                <>
+                  <p className='text-description mbe-2'>{t('space invitation description', { ns: SPACE_PLUGIN })}</p>
+                  <InvitationList
+                    className='mb-2'
+                    send={handleSend}
+                    invitations={visibleInvitations ?? []}
+                    onClickRemove={(invitation) => invitation.cancel()}
+                    createInvitationUrl={createInvitationUrl}
+                  />
+                  <BifurcatedAction
+                    actions={inviteActions}
+                    activeAction={activeAction}
+                    onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
+                    data-testid='membersContainer.createInvitation'
+                  />
+                </>
+              )}
+            </ControlFrameItem>
+          </ControlFrame>
+        </ControlSection>
+      </StackItem.Content>
+    </Clipboard.Provider>
   );
 };
 
@@ -203,7 +205,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const qrLabel = useId('members-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
-    <Clipboard.Provider>
+    <>
       <p className='text-description'>{t('qr code description', { ns: SPACE_PLUGIN })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] mlb-2 gap-2'>
         <div role='none' className='is-full aspect-square relative text-description'>
@@ -229,7 +231,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel label')}
       </Button>
-    </Clipboard.Provider>
+    </>
   );
 };
 
