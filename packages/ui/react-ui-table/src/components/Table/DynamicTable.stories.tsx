@@ -10,7 +10,7 @@ import React, { useMemo, useState } from 'react';
 import { FormatEnum, type JsonSchemaType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSchema, live } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
@@ -143,7 +143,7 @@ export const WithEchoSchema: StoryObj = {
       onSpaceCreated: async ({ space }) => {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            create(Testing.Contact, {
+            live(Testing.Contact, {
               name: faker.person.fullName(),
               email: faker.internet.email(),
             }),

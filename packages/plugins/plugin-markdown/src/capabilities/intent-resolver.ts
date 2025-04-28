@@ -12,7 +12,7 @@ import {
 import { next as A } from '@dxos/automerge/automerge';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { makeRef, create, refFromDXN } from '@dxos/live-object';
+import { makeRef, live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { createDocAccessor, parseFullyQualifiedId, parseId } from '@dxos/react-client/echo';
@@ -28,9 +28,9 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, spaceId, content }) => {
-        const doc = create(DocumentType, {
+        const doc = live(DocumentType, {
           name,
-          content: makeRef(create(TextType, { content: content ?? '' })),
+          content: makeRef(live(TextType, { content: content ?? '' })),
           assistantChatQueue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           threads: [],
         });

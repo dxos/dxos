@@ -3,12 +3,12 @@
 //
 
 import { contributes } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { TranscriptionCapabilities } from './capabilities';
 
 export default () => {
-  const state = create<TranscriptionCapabilities.MeetingTranscriptionState>({
+  const state = live<TranscriptionCapabilities.MeetingTranscriptionState>({
     enabled: false,
   });
 

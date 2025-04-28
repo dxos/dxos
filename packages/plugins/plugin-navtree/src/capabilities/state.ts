@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
-import { type Live, create } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from './capabilities';
@@ -28,7 +28,7 @@ const getInitialState = () => {
           open: boolean;
           current: boolean;
         }>,
-      ] => [key, create({ open: value.open, current: false })],
+      ] => [key, live({ open: value.open, current: false })],
     );
   } catch {}
 };
@@ -43,15 +43,15 @@ export default (context: PluginsContext) => {
   const state = new Map<string, Live<{ open: boolean; current: boolean }>>(
     getInitialState() ?? [
       // TODO(thure): Initialize these dynamically.
-      ['root', create({ open: true, current: false })],
-      ['root~dxos.org/plugin/space-spaces', create({ open: true, current: false })],
-      ['root~dxos.org/plugin/files', create({ open: true, current: false })],
+      ['root', live({ open: true, current: false })],
+      ['root~dxos.org/plugin/space-spaces', live({ open: true, current: false })],
+      ['root~dxos.org/plugin/files', live({ open: true, current: false })],
     ],
   );
 
   const getItem = (_path: string[]) => {
     const path = Path.create(..._path);
-    const value = state.get(path) ?? create({ open: false, current: false });
+    const value = state.get(path) ?? live({ open: false, current: false });
     if (!state.has(path)) {
       state.set(path, value);
     }

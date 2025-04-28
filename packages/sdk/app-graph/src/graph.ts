@@ -6,7 +6,7 @@ import { batch, effect, untracked } from '@preact/signals-core';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { type Live, create } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable, pick } from '@dxos/util';
 
@@ -119,7 +119,7 @@ export class Graph {
       });
     }
 
-    this._edges[ROOT_ID] = create({ inbound: [], outbound: [] });
+    this._edges[ROOT_ID] = live({ inbound: [], outbound: [] });
     if (edges) {
       Object.entries(edges).forEach(([source, edges]) => {
         edges.forEach((target) => {
@@ -410,7 +410,7 @@ export class Graph {
         }
       } else {
         this._nodes[node.id] = node;
-        this._edges[node.id] = create({ inbound: [], outbound: [] });
+        this._edges[node.id] = live({ inbound: [], outbound: [] });
       }
 
       const trigger = this._waitingForNodes[node.id];
@@ -492,10 +492,10 @@ export class Graph {
   private _addEdge({ source, target }: { source: string; target: string }) {
     untracked(() => {
       if (!this._edges[source]) {
-        this._edges[source] = create({ inbound: [], outbound: [] });
+        this._edges[source] = live({ inbound: [], outbound: [] });
       }
       if (!this._edges[target]) {
-        this._edges[target] = create({ inbound: [], outbound: [] });
+        this._edges[target] = live({ inbound: [], outbound: [] });
       }
 
       const sourceEdges = this._edges[source];
@@ -575,7 +575,7 @@ export class Graph {
   }
 
   private _constructNode = (node: Omit<Node, typeof graphSymbol>) => {
-    return create<NodeInternal>({ ...node, [graphSymbol]: this });
+    return live<NodeInternal>({ ...node, [graphSymbol]: this });
   };
 
   private _getNodes({

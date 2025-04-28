@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { SPACE_PLUGIN } from '../meta';
 import translations from '../translations';
@@ -63,7 +63,7 @@ export default (context: PluginsContext) =>
         const result = await dispatch(
           createIntent(SpaceAction.AddObject, {
             target: collection,
-            object: create(CollectionType, { name: data.name, objects: [], views: {} }),
+            object: live(CollectionType, { name: data.name, objects: [], views: {} }),
           }),
         );
 

@@ -9,7 +9,7 @@ import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
 
-import { create } from './object';
+import { live } from './object';
 import type { Live } from './live';
 import { objectData } from './proxy';
 
@@ -26,7 +26,7 @@ const TEST_OBJECT: Testing.TestSchema = {
 
 for (const schema of [undefined, Testing.TestSchemaWithClass]) {
   const createObject = (props: Partial<Testing.TestSchemaWithClass> = {}): Live<Testing.TestSchemaWithClass> => {
-    return schema == null ? (create(props) as Testing.TestSchemaWithClass) : create(schema, props);
+    return schema == null ? (live(props) as Testing.TestSchemaWithClass) : live(schema, props);
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -99,7 +99,7 @@ for (const schema of [undefined, Testing.TestSchemaWithClass]) {
 describe('getters', () => {
   test('add getter to object', () => {
     let value = 'foo';
-    const obj = create({
+    const obj = live({
       get getter() {
         return value;
       },
@@ -111,11 +111,11 @@ describe('getters', () => {
   });
 
   test('signal updates', () => {
-    const innerObj = create({
+    const innerObj = live({
       string: 'bar',
     });
 
-    const obj = create({
+    const obj = live({
       field: 1,
       get getter() {
         return innerObj.string;
@@ -137,7 +137,7 @@ describe('getters', () => {
 
   test('getter for array', () => {
     const value = [1];
-    const obj = create({
+    const obj = live({
       get getter() {
         return value;
       },

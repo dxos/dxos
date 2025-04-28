@@ -7,7 +7,7 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
 import { type S } from '@dxos/echo-schema';
-import { create, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -94,7 +94,7 @@ export const Main = () => {
       let object: Live<any>;
       switch (type) {
         case DocumentType.typename: {
-          object = create(DocumentType, {
+          object = live(DocumentType, {
             title: randWord(),
             content: randSentence(),
           });
@@ -103,7 +103,7 @@ export const Main = () => {
 
         case ItemType.typename:
         default: {
-          object = create(ItemType, {
+          object = live(ItemType, {
             content: randSentence(),
             // due: randBetweenDate(dateRange)
           });

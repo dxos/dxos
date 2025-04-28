@@ -13,7 +13,7 @@ import {
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { create, getType, fullyQualifiedId, isLiveObject, makeRef } from '@dxos/client/echo';
+import { live, getType, fullyQualifiedId, isLiveObject, makeRef } from '@dxos/client/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -43,7 +43,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const { graph } = useAppGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const allMetadata = useCapabilities(Capabilities.Metadata);
-  const defaultStack = useMemo(() => create(StackViewType, { sections: {} }), [collection]);
+  const defaultStack = useMemo(() => live(StackViewType, { sections: {} }), [collection]);
   const stack = (collection.views[StackViewType.typename]?.target as StackViewType | undefined) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 

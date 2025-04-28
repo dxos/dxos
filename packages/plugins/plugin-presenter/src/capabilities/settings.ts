@@ -3,13 +3,13 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { PRESENTER_PLUGIN } from '../meta';
 import { PresenterSettingsSchema, type PresenterSettingsProps } from '../types';
 
 export default () => {
-  const settings = create<PresenterSettingsProps>({});
+  const settings = live<PresenterSettingsProps>({});
 
   return contributes(Capabilities.Settings, {
     schema: PresenterSettingsSchema,

@@ -10,7 +10,7 @@ import React, { useEffect, useMemo } from 'react';
 import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
-import { create, makeRef, type Live } from '@dxos/react-client/echo';
+import { live, makeRef, type Live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { createView, ViewProjection, ViewType } from '@dxos/schema';
 import { createGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
@@ -35,7 +35,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     const typename = schema.typename;
     const name = getAnnotation<string>(AST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema: schema.jsonSchema });
-    return create(TableType, { view: makeRef(view) });
+    return live(TableType, { view: makeRef(view) });
   }, [schema]);
 
   const projection = useMemo(() => {

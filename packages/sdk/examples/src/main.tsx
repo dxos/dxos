@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
@@ -54,8 +54,8 @@ const main = async () => {
     types: [DocumentType, TextType],
     onSpaceCreated: ({ space }) => {
       space.db.add(
-        create(DocumentType, {
-          content: makeRef(create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' })),
+        live(DocumentType, {
+          content: makeRef(live(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' })),
           threads: [],
         }),
       );

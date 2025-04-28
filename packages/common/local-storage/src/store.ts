@@ -7,7 +7,7 @@ import { effect, untracked } from '@preact/signals-core';
 import { AST, type S } from '@dxos/echo-schema';
 import { findNode, isLiteralUnion, isSimpleType, type Path } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { create, isLiveObject, type Live } from '@dxos/live-object';
+import { live, isLiveObject, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep, hyphenize, setDeep } from '@dxos/util';
 
@@ -34,7 +34,7 @@ export interface SettingsStoreFactory {
  * Root store.
  */
 export class RootSettingsStore implements SettingsStoreFactory {
-  private readonly _stores = create<Record<string, SettingsStore<any>>>({});
+  private readonly _stores = live<Record<string, SettingsStore<any>>>({});
 
   constructor(private readonly _storage: Storage = localStorage) {}
 
@@ -100,7 +100,7 @@ export class SettingsStore<T extends SettingsValue> {
     value: Live<T> | T = {} as T,
     private readonly _storage: Storage = localStorage,
   ) {
-    this._value = isLiveObject(value) ? value : create(value);
+    this._value = isLiveObject(value) ? value : live(value);
     this._defaults = cloneObject(this._value);
     this.load();
   }

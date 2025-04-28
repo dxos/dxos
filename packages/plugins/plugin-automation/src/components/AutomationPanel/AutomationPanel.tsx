@@ -14,7 +14,7 @@ import {
   ScriptType,
 } from '@dxos/functions/types';
 import { type Client, useClient } from '@dxos/react-client';
-import { create, Filter, useQuery, type Space, type Live, getSpace } from '@dxos/react-client/echo';
+import { live, Filter, useQuery, type Space, type Live, getSpace } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
@@ -51,7 +51,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleAdd = () => {
-    setTrigger(create(FunctionTriggerSchema, {}));
+    setTrigger(live(FunctionTriggerSchema, {}));
     setSelected(undefined);
   };
 
@@ -65,7 +65,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
     if (selected) {
       Object.assign(selected, trigger);
     } else {
-      space.db.add(create(FunctionTrigger, trigger));
+      space.db.add(live(FunctionTrigger, trigger));
     }
 
     setTrigger(undefined);

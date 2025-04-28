@@ -8,7 +8,7 @@ export { getTypename, Expando, type TypedObject, type ObjectMeta } from '@dxos/e
 export {
   type Live,
   RefArray,
-  create,
+  live,
   getMeta,
   getSchema,
   getType,

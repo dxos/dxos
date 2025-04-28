@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { create, makeRef, useSpace } from '@dxos/react-client/echo';
+import { live, makeRef, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -25,7 +25,7 @@ const meta: Meta<typeof Journal.Root> = {
       if (space) {
         setJournal(
           space.db.add(
-            create(JournalType, {
+            live(JournalType, {
               name: 'Journal',
               entries: [makeRef(createJournalEntry(new Date(2025, 0, 1)))],
             }),

@@ -6,7 +6,7 @@ import { Filter, type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { getTypeAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, getSchema, isLiveObject, type Live } from '@dxos/live-object';
+import { live, getSchema, isLiveObject, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -50,7 +50,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     }
 
     const schema = this.getSchema(type);
-    return schema ? create(schema, data) : create(data);
+    return schema ? live(schema, data) : live(data);
   }
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).

@@ -16,7 +16,7 @@ import {
   TypedObject,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
-import { create, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { stripUndefined } from '@dxos/util';
 
 import { createFieldId } from './projection';
@@ -157,7 +157,7 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
     });
   }
 
-  return create(ViewType, {
+  return live(ViewType, {
     name,
     query: { typename },
     fields,

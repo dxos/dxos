@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 import { Expando } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { create, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { createSubscription } from './subscription';
@@ -184,5 +184,5 @@ const createUpdateCounter = (object: any) => {
 };
 
 const createExpando = <T extends Record<string, any>>(props: T = {} as T): Live<Expando> => {
-  return create(Expando, props);
+  return live(Expando, props);
 };

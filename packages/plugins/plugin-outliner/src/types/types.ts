@@ -3,7 +3,7 @@
 //
 
 import { EchoObject, Ref, S } from '@dxos/echo-schema';
-import { create, makeRef, RefArray } from '@dxos/live-object';
+import { live, makeRef, RefArray } from '@dxos/live-object';
 
 import { Tree, TreeType } from './tree';
 
@@ -37,7 +37,7 @@ export const JournalType = S.Struct({
 export interface JournalType extends S.Schema.Type<typeof JournalType> {}
 
 export const createJournalEntry = (date = new Date()): JournalEntryType => {
-  return create(JournalEntryType, {
+  return live(JournalEntryType, {
     date: getDateString(date),
     tree: makeRef(createTree()),
   });

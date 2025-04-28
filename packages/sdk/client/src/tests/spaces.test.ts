@@ -12,7 +12,7 @@ import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
 import { Expando, type HasId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
-import { create, type Live, makeRef } from '@dxos/live-object';
+import { live, type Live, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
@@ -314,7 +314,7 @@ describe('Spaces', () => {
     await hostSpace.db.flush();
     await waitForObject(guestSpace, hostDocument);
 
-    const text = create(TextV0Type, { content: 'Hello, world!' });
+    const text = live(TextV0Type, { content: 'Hello, world!' });
     hostDocument.content = makeRef(text);
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -406,7 +406,7 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = create(TextV0Type, { content: 'Hello, world!' });
+      const text = live(TextV0Type, { content: 'Hello, world!' });
       hostDocument.content = makeRef(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -419,7 +419,7 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = create(TextV0Type, { content: 'Hello, world!' });
+      const text = live(TextV0Type, { content: 'Hello, world!' });
       hostDocument.content = makeRef(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -557,15 +557,15 @@ describe('Spaces', () => {
   };
 
   const createDocument = (): Live<DocumentType> => {
-    const text = create(TextV0Type, { content: 'Hello, world!' });
-    return create(DocumentType, {
+    const text = live(TextV0Type, { content: 'Hello, world!' });
+    return live(DocumentType, {
       title: 'Test document',
       content: makeRef(text),
     });
   };
 
   const createObject = <T extends {}>(props: T): Live<Expando> => {
-    return create(Expando, props);
+    return live(Expando, props);
   };
 
   const waitForObject = async (space: Space, object: HasId) => {

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space, create, SpaceState } from '@dxos/client/echo';
+import { type Space, live, SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
@@ -21,7 +21,7 @@ export type Migration = {
 export class Migrations {
   static namespace?: string;
   static migrations: Migration[] = [];
-  private static _state = create<{ running: string[] }>({ running: [] });
+  private static _state = live<{ running: string[] }>({ running: [] });
 
   static get versionProperty() {
     return this.namespace && `${this.namespace}.version`;

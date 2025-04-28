@@ -3,11 +3,11 @@
 //
 
 import { contributes } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { InboxCapabilities } from './capabilities';
 
 export default () => {
-  const state = create<InboxCapabilities.MailboxState>({});
+  const state = live<InboxCapabilities.MailboxState>({});
   return contributes(InboxCapabilities.MailboxState, state);
 };

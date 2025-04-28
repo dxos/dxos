@@ -10,7 +10,7 @@ import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
 import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer, TestReplicator, TestReplicatorConnection } from '@dxos/echo-db/testing';
-import { create, type Live, TypedObject } from '@dxos/echo-schema';
+import { live, type Live, TypedObject } from '@dxos/echo-schema';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -91,7 +91,7 @@ export class EchoReplicant {
 
     invariant(this._db, 'Database not initialized.');
     for (let objIdx = 0; objIdx < amount; objIdx++) {
-      const doc = create(Text, { content: '' }) satisfies Live<Text>;
+      const doc = live(Text, { content: '' }) satisfies Live<Text>;
       this._db!.add(doc);
       const accessor = createDocAccessor(doc, ['content']);
       for (let mutationIdx = 0; mutationIdx < insertions; mutationIdx++) {

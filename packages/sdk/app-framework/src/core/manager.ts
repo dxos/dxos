@@ -6,7 +6,7 @@ import { untracked } from '@preact/signals-core';
 import { Array as A, Effect, Either, Match, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
-import { create, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
@@ -60,7 +60,7 @@ export class PluginManager {
     enabled = [],
   }: PluginManagerOptions) {
     this._pluginLoader = pluginLoader;
-    this._state = create({
+    this._state = live({
       plugins,
       core,
       enabled,

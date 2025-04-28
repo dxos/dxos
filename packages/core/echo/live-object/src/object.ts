@@ -27,7 +27,7 @@ import type { Live } from './live';
  */
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
-export const create: {
+export const live: {
   <T extends BaseObject>(obj: T): Live<T>;
   <T extends BaseObject>(schema: S.Schema<T, any, never>, obj: NoInfer<ExcludeId<T>>, meta?: ObjectMeta): Live<T>;
 } = <T extends BaseObject>(

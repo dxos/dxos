@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { RootSettingsStore, SettingsStore } from './store';
 import { createLocalStorageMock } from './testing';
@@ -42,7 +42,7 @@ describe('ObjectStore', () => {
   test('basic', () => {
     const mock = createLocalStorageMock();
 
-    const value = create<TestType>({ nums: [], services: [] });
+    const value = live<TestType>({ nums: [], services: [] });
     const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
     store.value.num = 42;
     expect(mock.store).to.deep.eq({
@@ -62,7 +62,7 @@ describe('ObjectStore', () => {
     const mock = createLocalStorageMock();
 
     {
-      const value = create<TestType>({ nums: [], services: [] });
+      const value = live<TestType>({ nums: [], services: [] });
       const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
       expect(store.value.activePreset).to.be.undefined;
 
@@ -95,7 +95,7 @@ describe('ObjectStore', () => {
     });
 
     {
-      const value = create<TestType>({ nums: [], services: [] });
+      const value = live<TestType>({ nums: [], services: [] });
       const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
 
       expect(store.value.activePreset).to.be.false;
@@ -123,7 +123,7 @@ describe('ObjectStore', () => {
     });
 
     {
-      const value = create<TestType>({ nums: [], services: [] });
+      const value = live<TestType>({ nums: [], services: [] });
       const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
 
       expect(store.value.activePreset).to.be.undefined;

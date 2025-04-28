@@ -7,7 +7,7 @@ import { effect } from '@preact/signals-core';
 import { type CleanupFn } from '@dxos/async';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
-import { create, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { hyphenize } from '@dxos/util';
 
 type PropType<T> = {
@@ -127,7 +127,7 @@ export class LocalStorageStore<T extends object> {
   ) {
     // TODO(burdon): Should this be externalized.
     registerSignalsRuntime();
-    this._values = create(defaults ?? ({} as T));
+    this._values = live(defaults ?? ({} as T));
   }
 
   get values(): Live<T> {

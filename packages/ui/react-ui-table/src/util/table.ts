@@ -14,7 +14,7 @@ import {
   TypeEnum,
 } from '@dxos/echo-schema';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { create, makeRef, type Space } from '@dxos/react-client/echo';
+import { live, makeRef, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
 
 import { type TableType } from '../types';
@@ -75,7 +75,7 @@ export const initializeTable = async ({
 
     if (initialRow) {
       // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
-      space.db.add(create(schema, {}));
+      space.db.add(live(schema, {}));
     }
 
     return schema;

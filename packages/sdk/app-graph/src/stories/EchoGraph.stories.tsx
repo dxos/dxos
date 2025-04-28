@@ -8,7 +8,7 @@ import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import {
-  create,
+  live,
   isSpace,
   type Echo,
   type FilterSource,
@@ -161,7 +161,7 @@ const runAction = async (client: Client, action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getRandomSpace(client)?.db.add(create({ type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace(client)?.db.add(live({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {

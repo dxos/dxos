@@ -4,7 +4,7 @@
 
 import { type NodeArg } from '@dxos/app-graph';
 import { S, TypedObject } from '@dxos/echo-schema';
-import { create, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -30,7 +30,7 @@ const createFactory = ({ createSchema, createData }: ObjectDataGenerator) => {
   const schema = createSchema?.();
   return {
     schema,
-    createObject: () => (schema ? create(schema, createData()) : create(createData())),
+    createObject: () => (schema ? live(schema, createData()) : live(createData())),
   };
 };
 

@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-framework';
 import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, makeRef, type Live } from '@dxos/live-object';
+import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -74,7 +74,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
         await space.waitUntilReady();
-        const collection = create(CollectionType, { objects: [], views: {} });
+        const collection = live(CollectionType, { objects: [], views: {} });
         space.properties[CollectionType.typename] = makeRef(collection);
 
         if (Migrations.versionProperty) {
@@ -390,7 +390,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
             collection.objects.push(makeRef(object as HasId));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-            const collection = create(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
+            const collection = live(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
             space.properties[CollectionType.typename] = makeRef(collection);
           }
         }
@@ -557,7 +557,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
     createResolver({
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
-        data: { object: create(CollectionType, { name, objects: [], views: {} }) },
+        data: { object: live(CollectionType, { name, objects: [], views: {} }) },
       }),
     }),
   ]);

@@ -9,7 +9,7 @@ import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-a
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect } from 'react';
 
-import { create, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -21,7 +21,7 @@ import { Path } from '../../util';
 
 faker.seed(1234);
 
-const tree = create<TestItem>(createTree());
+const tree = live<TestItem>(createTree());
 const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
 const meta: Meta<typeof Tree> = {
@@ -70,7 +70,7 @@ const meta: Meta<typeof Tree> = {
     }),
     isOpen: (_path: string[]) => {
       const path = Path.create(..._path);
-      const object = state.get(path) ?? create({ open: false, current: false });
+      const object = state.get(path) ?? live({ open: false, current: false });
       if (!state.has(path)) {
         state.set(path, object);
       }
@@ -79,7 +79,7 @@ const meta: Meta<typeof Tree> = {
     },
     isCurrent: (_path: string[]) => {
       const path = Path.create(..._path);
-      const object = state.get(path) ?? create({ open: false, current: false });
+      const object = state.get(path) ?? live({ open: false, current: false });
       if (!state.has(path)) {
         state.set(path, object);
       }

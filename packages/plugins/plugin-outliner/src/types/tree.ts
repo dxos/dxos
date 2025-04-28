@@ -4,7 +4,7 @@
 
 import { ObjectId, EchoObject, S, Ref, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 // TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
 
@@ -30,7 +30,7 @@ export interface TreeType extends S.Schema.Type<typeof TreeType> {}
 export class Tree {
   static create = (): TreeType => {
     const id = ObjectId.random();
-    return create(TreeType, {
+    return live(TreeType, {
       root: id,
       nodes: {
         [id]: {

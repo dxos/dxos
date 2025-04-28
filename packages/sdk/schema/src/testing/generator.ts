@@ -18,7 +18,7 @@ import {
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { create, makeRef, type Live } from '@dxos/live-object';
+import { live, makeRef, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
@@ -109,7 +109,7 @@ export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: 
 };
 
 export const createReactiveObject = <T extends BaseObject>(type: S.Schema<T>) => {
-  return (data: ExcludeId<T>) => create<T>(type, data);
+  return (data: ExcludeId<T>) => live<T>(type, data);
 };
 
 export const addToDatabase = (db: EchoDatabase) => {

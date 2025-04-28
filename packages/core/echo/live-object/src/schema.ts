@@ -17,7 +17,7 @@ import {
   type TypeAnnotation,
 } from '@dxos/echo-schema';
 
-import { create } from './object';
+import { live } from './object';
 import type { Live } from './live';
 /**
  * Create ECHO object representing schema.
@@ -26,7 +26,7 @@ export const createStoredSchema = (
   { typename, version }: TypeMeta,
   jsonSchema?: JsonSchemaType,
 ): Live<StoredSchema> => {
-  return create(StoredSchema, {
+  return live(StoredSchema, {
     typename,
     version,
     jsonSchema: jsonSchema ?? createJsonSchema(),
