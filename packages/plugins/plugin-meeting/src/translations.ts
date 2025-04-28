@@ -20,6 +20,11 @@ export default [
         'meetings label': 'All Meetings',
         'open meeting companions label': 'Meeting tools',
 
+        'display name label': 'Display name',
+        'display name description': 'Set your display name before joining a meeting.',
+        'display name input placeholder': 'Enter your name',
+        'set display name label': 'Continue',
+
         'call tab label': 'Call',
 
         'meeting summary label': 'Summary',
