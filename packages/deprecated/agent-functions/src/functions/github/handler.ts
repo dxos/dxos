@@ -4,7 +4,7 @@
 
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
-import { create, getMeta } from '@dxos/client/echo';
+import { live, getMeta } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { type ForeignKey } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
@@ -48,7 +48,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
       if (!project.org && repoData.organization) {
         const orgSchema = space.db.schemaRegistry.getSchema(SchemaType.organization);
         invariant(orgSchema, 'Missing organization schema.');
-        project.org = create(orgSchema, { name: repoData.organization?.login });
+        project.org = live(orgSchema, { name: repoData.organization?.login });
         getMeta(project.org).keys.push({ source: 'github.com', id: String(repoData.organization?.id) });
       }
     }
@@ -86,7 +86,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
           return;
         }
 
-        const contact = create(
+        const contact = live(
           contactSchema,
           {
             name: user.name,

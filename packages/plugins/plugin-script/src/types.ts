@@ -21,6 +21,7 @@ export namespace ScriptAction {
     name: S.optional(S.String),
     // TODO(wittjosiah): Placeholder annotation?
     gistUrl: S.optional(S.String.annotations({ [TitleAnnotationId]: 'Import from Gist (url)' })),
+    initialTemplateId: S.optional(S.String),
   });
 
   export type CreateScriptProps = S.Schema.Type<typeof CreateScriptSchema>;

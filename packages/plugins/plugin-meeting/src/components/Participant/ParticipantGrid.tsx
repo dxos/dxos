@@ -4,6 +4,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { useDynamicRef } from '@dxos/react-ui';
+
 import { Participant, SCREENSHARE_SUFFIX } from './Participant';
 import { type UserState } from '../../types';
 import { ResponsiveGrid } from '../ResponsiveGrid';
@@ -17,6 +19,9 @@ export type ParticipantGridProps = {
 };
 
 export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) => {
+  const [pinned, setPinned] = useState<string | undefined>();
+  const currentPinned = useDynamicRef(pinned);
+
   const allUsers = useMemo(() => {
     const allUsers: (UserState & { isSelf?: boolean })[] = [];
     users.forEach((user) => {
@@ -37,13 +42,17 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
         };
 
         allUsers.push(screenshare);
+
+        // Auto-pin when someone shares.
+        if (!currentPinned.current) {
+          setPinned(screenshare.id);
+        }
       }
     });
 
     return allUsers;
   }, [self, users]);
 
-  const [pinned, setPinned] = useState<string | undefined>();
   useEffect(() => {
     if (pinned) {
       // Check expanded user is still in call.
@@ -52,8 +61,6 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
       }
     }
   }, [pinned, allUsers]);
-
-  // TODO(burdon): Show ghost view of user for a second before leaving.
 
   // TODO(burdon): Put self last.
   const sortedUsers: UserState[] = allUsers.sort((a, b) => {
@@ -70,6 +77,7 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
     }
   });
 
+  // TODO(burdon): Show ghost view of user for a second before leaving.
   return (
     <ResponsiveGrid<UserState>
       Cell={Participant}

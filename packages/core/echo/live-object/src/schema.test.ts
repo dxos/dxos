@@ -8,7 +8,7 @@ import { test } from 'vitest';
 import { Ref, toJsonSchema, TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { create } from './object';
+import { live } from './object';
 import { getTypename } from './proxy';
 import { makeRef } from './ref';
 
@@ -24,8 +24,8 @@ test('static schema definitions with references', async ({ expect }) => {
     org: Ref(Org),
   }) {}
 
-  const org = create(Org, { name: 'Org' });
-  const person = create(Contact, { name: 'John', email: 'john@example.com', org: makeRef(org) });
+  const org = live(Org, { name: 'Org' });
+  const person = live(Contact, { name: 'John', email: 'john@example.com', org: makeRef(org) });
   log('schema', { org: toJsonSchema(Org), person: toJsonSchema(Contact) });
   log('objects', { org, person });
   expect(getTypename(org)).to.eq(Org.typename);

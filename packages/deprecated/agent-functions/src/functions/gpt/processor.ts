@@ -9,7 +9,7 @@ import { type Space } from '@dxos/client/echo';
 import { todo } from '@dxos/debug';
 import { Filter } from '@dxos/echo-db';
 import { type JSONSchema } from '@dxos/echo-schema';
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type TemplateInput, TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
@@ -52,7 +52,7 @@ export type RequestProcessorProps = {
 export type ProcessThreadResult = {
   success: boolean;
   text?: string;
-  parts?: ReactiveObject<any>[];
+  parts?: Live<any>[];
 };
 
 export class RequestProcessor {

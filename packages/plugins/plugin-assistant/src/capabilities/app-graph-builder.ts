@@ -12,11 +12,19 @@ import {
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { type Space, Filter, fullyQualifiedId, getSpace, isSpace, isReactiveObject } from '@dxos/react-client/echo';
+import {
+  type Space,
+  Filter,
+  fullyQualifiedId,
+  getSpace,
+  isSpace,
+  isLiveObject,
+  parseId,
+} from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
 import { AIChatType, AssistantAction, TemplateType } from '../types';
@@ -84,17 +92,42 @@ export default (context: PluginsContext) =>
     }),
 
     createExtension({
+      id: `${ASSISTANT_PLUGIN}/service-registry`,
+      filter: (node): node is Node<null> => node.id === 'root',
+      connector: ({ node }) => {
+        const layout = context.requestCapability(Capabilities.Layout);
+        const client = context.requestCapability(ClientCapabilities.Client);
+        const { spaceId } = parseId(layout.workspace);
+        const space = spaceId ? client.spaces.get(spaceId) : null;
+
+        return [
+          {
+            id: [node.id, 'service-registry'].join(ATTENDABLE_PATH_SEPARATOR),
+            type: DECK_COMPANION_TYPE,
+            data: space,
+            properties: {
+              label: ['service registry label', { ns: ASSISTANT_PLUGIN }],
+              icon: 'ph--plugs--regular',
+              disposition: 'hidden',
+            },
+          },
+        ];
+      },
+    }),
+
+    createExtension({
       id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
       filter: (node): node is Node<AIChatType> =>
-        isReactiveObject(node.data) && node.data.assistantChatQueue && node.data.type !== AIChatType.typename,
+        isLiveObject(node.data) && node.data.assistantChatQueue && node.data.type !== AIChatType.typename,
       connector: ({ node }) => [
         {
-          id: [node.id, 'assistant-chat'].join(SLUG_PATH_SEPARATOR),
-          type: COMPANION_TYPE,
-          data: node.data,
+          id: [node.id, 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
+          type: PLANK_COMPANION_TYPE,
+          data: 'assistant-chat',
           properties: {
             label: ['assistant chat label', { ns: ASSISTANT_PLUGIN }],
             icon: 'ph--star-four--regular',
+            position: 'hoist',
           },
         },
       ],
@@ -138,7 +171,7 @@ export default (context: PluginsContext) =>
             type: `${ASSISTANT_PLUGIN}/template`,
             data: template,
             properties: {
-              label: template.name ?? ['template title placeholder', { ns: ASSISTANT_PLUGIN }],
+              label: template.name ?? ['object placeholder', { ns: ASSISTANT_PLUGIN }],
               icon: 'ph--file-code--regular',
             },
           }));

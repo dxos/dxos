@@ -11,6 +11,7 @@ import { fullyQualifiedId, RefArray } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
+import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { isNonNullable } from '@dxos/util';
 
@@ -128,21 +129,24 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
 
   return (
-    <Tabs.Root
-      value={showResolvedThreads ? 'all' : 'unresolved'}
-      onValueChange={onChangeViewState}
-      orientation='horizontal'
-    >
-      <Tabs.Tablist classNames='p-1 gap-1 bs-[--rail-action] border-be border-separator'>
-        <Tabs.Tab value='unresolved' classNames='text-sm'>
-          {t('show unresolved label')}
-        </Tabs.Tab>
-        <Tabs.Tab value='all' classNames='text-sm'>
-          {t('show all label')}
-        </Tabs.Tab>
-      </Tabs.Tablist>
-      <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-      <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
-    </Tabs.Root>
+    <StackItem.Content toolbar>
+      <Tabs.Root
+        value={showResolvedThreads ? 'all' : 'unresolved'}
+        onValueChange={onChangeViewState}
+        orientation='horizontal'
+        classNames='contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin'
+      >
+        <Tabs.Tablist classNames='p-1 gap-1 bs-[--rail-action] border-be border-separator'>
+          <Tabs.Tab value='unresolved' classNames='text-sm'>
+            {t('show unresolved label')}
+          </Tabs.Tab>
+          <Tabs.Tab value='all' classNames='text-sm'>
+            {t('show all label')}
+          </Tabs.Tab>
+        </Tabs.Tablist>
+        <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
+        <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+      </Tabs.Root>
+    </StackItem.Content>
   );
 };

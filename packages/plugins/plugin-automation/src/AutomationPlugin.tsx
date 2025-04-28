@@ -5,9 +5,9 @@
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { FunctionType, FunctionTrigger } from '@dxos/functions/types';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckEvents } from '@dxos/plugin-deck';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
-import { AppGraphBuilder, ComplementaryPanel, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 
@@ -29,9 +29,18 @@ export const AutomationPlugin = () =>
       activate: AppGraphBuilder,
     }),
     defineModule({
-      id: `${meta.id}/module/complementary-panels`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: ComplementaryPanel,
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntentResolver,
+      activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/space-settings`,
+      activatesOn: SpaceEvents.SetupSettingsPanel,
+      activate: () =>
+        contributes(SpaceCapabilities.SettingsSection, {
+          id: 'automation',
+          label: ['automation panel label', { ns: meta.id }],
+        }),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

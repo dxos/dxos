@@ -4,24 +4,16 @@
 
 import { useCallback, useEffect, useMemo } from 'react';
 
-import {
-  FunctionType,
-  type ScriptType,
-  getInvocationUrl,
-  getUserFunctionUrlInMetadata,
-  incrementSemverPatch,
-  setUserFunctionUrlInMetadata,
-  uploadWorkerFunction,
-} from '@dxos/functions';
-import { Bundler } from '@dxos/functions/bundler';
+import { FunctionType, type ScriptType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Filter, create, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';
+import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { errorMessageColors } from '@dxos/react-ui-theme';
 
 import { SCRIPT_PLUGIN } from '../meta';
+import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
 
@@ -66,20 +58,22 @@ export const createDeploy = (state: Partial<DeployState>) => {
 };
 
 export const useDeployState = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
-  const { space, client, existingFunctionUrl } = useDeployDeps({ script });
+  const { space, client, fn, existingFunctionUrl } = useDeployDeps({ script });
   useEffect(() => {
     if (!existingFunctionUrl) {
       return;
     }
 
-    state.functionUrl = getInvocationUrl(existingFunctionUrl, client.config.values.runtime?.services?.edge?.url ?? '', {
-      spaceId: space?.id,
+    state.functionUrl = getFunctionUrl({
+      script,
+      fn,
+      edgeUrl: client.config.values.runtime?.services?.edge?.url ?? '',
     });
-  }, [existingFunctionUrl, space]);
+  }, [existingFunctionUrl, space, fn, script, client.config.values.runtime?.services?.edge?.url]);
 
   useEffect(() => {
-    state.deployed = Boolean(existingFunctionUrl) && !script.changed;
-  }, [script.changed, existingFunctionUrl]);
+    state.deployed = isScriptDeployed({ script, fn });
+  }, [script.changed, existingFunctionUrl, fn, script]);
 };
 
 export const useDeployDeps = ({ script }: { script: ScriptType }) => {
@@ -105,67 +99,15 @@ export const useDeployHandler = ({ state, script }: { state: Partial<DeployState
     state.error = undefined;
     state.deploying = true;
 
-    try {
-      const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
+    const result = await deployScript({ script, client, space, fn, existingFunctionUrl });
 
-      const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
-      const buildResult = await bundler.bundle({ source: script.source.target!.content });
-      if (buildResult.error || !buildResult.bundle) {
-        throw buildResult.error;
-      }
-
-      const { functionId, version, meta } = await uploadWorkerFunction({
-        client,
-        spaceId: space.id,
-        version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
-        functionId: existingFunctionId,
-        source: buildResult.bundle,
-      });
-      if (functionId === undefined || version === undefined) {
-        throw new Error(`Upload didn't return expected data: ${JSON.stringify({ functionId, version })}`);
-      }
-
-      let storedFunction = fn;
-      if (storedFunction) {
-        storedFunction.version = version;
-      } else {
-        storedFunction = space.db.add(
-          create(FunctionType, {
-            name: functionId,
-            version,
-            source: makeRef(script),
-          }),
-        );
-      }
-
-      script.changed = false;
-      if (script.description !== undefined && script.description.trim() !== '') {
-        storedFunction.description = script.description;
-      } else if (meta.description) {
-        storedFunction.description = meta.description;
-      } else {
-        log.verbose('no description in function metadata', { functionId });
-      }
-
-      if (meta.inputSchema) {
-        storedFunction.inputSchema = meta.inputSchema;
-      } else {
-        log.verbose('no input schema in function metadata', { functionId });
-      }
-
-      if (meta.outputSchema) {
-        storedFunction.outputSchema = meta.outputSchema;
-      } else {
-        log.verbose('no output schema in function metadata', { functionId });
-      }
-
-      setUserFunctionUrlInMetadata(getMeta(storedFunction), `/${space.id}/${functionId}`);
-    } catch (err: any) {
-      log.catch(err);
+    if (!result.success) {
+      log.catch(result.error);
       state.error = t('upload failed label');
     }
+
     state.deploying = false;
-  }, [fn, client, t, existingFunctionUrl, script, script.name, script.source, space?.id ?? null]);
+  }, [fn, client, t, existingFunctionUrl, script, space]);
 };
 
 export const useCopyHandler = ({ state }: { state: Partial<DeployState> }) =>

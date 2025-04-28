@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { Expando, create } from '@dxos/client/echo';
+import { Expando, live } from '@dxos/client/echo';
 
 const client = new Client();
 
@@ -26,9 +26,9 @@ async () => {
   });
 
   try {
-    const taskObject = create(Expando, { type: 'task', title: 'buy milk' });
+    const taskObject = live(Expando, { type: 'task', title: 'buy milk' });
     space.db.add(taskObject);
-    const eventObject = create(Expando, {
+    const eventObject = live(Expando, {
       type: 'event',
       title: 'arrived at store',
     });

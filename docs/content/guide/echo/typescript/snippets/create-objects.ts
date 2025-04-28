@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { Expando, create } from '@dxos/client/echo';
+import { Expando, live } from '@dxos/client/echo';
 
 const client = new Client();
 
@@ -15,7 +15,7 @@ const client = new Client();
 
   const space = client.spaces.get()[0];
 
-  const object = create(Expando, { type: 'task', name: 'buy milk' });
+  const object = live(Expando, { type: 'task', name: 'buy milk' });
 
   await space.db.add(object);
 })();

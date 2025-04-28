@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, type PromiseIntentDispatcher, LayoutAction } from '@dxos/app-framework';
-import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
+import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
+import { getSchema, isLiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import {
   ACTION_GROUP_TYPE,
   ACTION_TYPE,
@@ -52,7 +53,7 @@ const EMPTY_ARRAY: never[] = [];
  * @param options
  * @returns
  */
-export const memoizeQuery = <T extends ReactiveEchoObject<any>>(
+export const memoizeQuery = <T extends BaseObject>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,
@@ -212,6 +213,28 @@ export const constructSpaceNode = ({
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
+    nodes: [
+      {
+        id: `${space.id}${ATTENDABLE_PATH_SEPARATOR}members`,
+        type: `${SPACE_PLUGIN}/members`,
+        data: space,
+        properties: {
+          label: ['members panel label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--users--regular',
+          disposition: 'hidden',
+        },
+      },
+      {
+        id: `${space.id}${ATTENDABLE_PATH_SEPARATOR}settings`,
+        type: `${SPACE_PLUGIN}/settings`,
+        data: space,
+        properties: {
+          label: ['settings panel label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--gear--regular',
+          disposition: 'hidden',
+        },
+      },
+    ],
   };
 };
 
@@ -519,7 +542,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   const node = graph.findNode(active);
-  if (!node || !isReactiveObject(node.data)) {
+  if (!node || !isLiveObject(node.data)) {
     return;
   }
 

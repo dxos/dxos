@@ -18,7 +18,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.
  * This static version creates plain JavaScript objects that are not reactive/observable.
- * For reactive objects that automatically update UI when changed, use the regular create() function.
+ * For reactive objects that automatically update UI when changed, use the regular live() function.
  *
  * @param schema - The Effect schema that defines the object's structure and type, piped into EchoObject
  * @param data - The data to initialize the object with. The id and @type fields are handled automatically.

@@ -11,8 +11,9 @@ import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
+import { parseEntryId } from '../../layout';
 import { DECK_PLUGIN } from '../../meta';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR, DeckAction, type ResolvedPart } from '../../types';
+import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart } from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
@@ -25,7 +26,6 @@ export type PlankHeadingProps = {
   canIncrementEnd?: boolean;
   popoverAnchorId?: string;
   primaryId?: string;
-  surfaceVariant?: string;
   pending?: boolean;
   companioned?: 'primary' | 'companion';
   companions?: Node[];
@@ -42,7 +42,6 @@ export const PlankHeading = memo(
     canIncrementEnd,
     popoverAnchorId,
     primaryId,
-    surfaceVariant,
     pending,
     companioned,
     companions,
@@ -55,16 +54,9 @@ export const PlankHeading = memo(
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
       ? t('pending heading')
-      : toLocalizedString(
-          (surfaceVariant
-            ? Array.isArray(node?.properties?.label)
-              ? [`${surfaceVariant} plank heading`, node.properties.label[1]]
-              : ['companion plank heading fallback label', { ns: DECK_PLUGIN }]
-            : node?.properties?.label) ?? ['plank heading fallback label', { ns: DECK_PLUGIN }],
-          t,
-        );
+      : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
 
-    const isCompanionNode = node?.type === COMPANION_TYPE;
+    const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
@@ -75,8 +67,7 @@ export const PlankHeading = memo(
       return () => cancelAnimationFrame(frame);
     }, [node]);
 
-    // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
-    const attendableId = primaryId ?? id.split(SLUG_PATH_SEPARATOR).at(0);
+    const attendableId = primaryId ?? id;
     const capabilities = useMemo(
       () => ({
         deck: deckEnabled ?? true,
@@ -88,10 +79,16 @@ export const PlankHeading = memo(
       [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
     );
 
-    const sigilActions = useMemo(
-      () => node && [actions, graph.actions(node)].filter((a) => a.length > 0),
-      [actions, node, graph],
-    );
+    const { variant } = parseEntryId(id);
+    const sigilActions = useMemo(() => {
+      if (!node) {
+        return undefined;
+      } else if (variant) {
+        return [];
+      } else {
+        return [actions, graph.actions(node)].filter((a) => a.length > 0);
+      }
+    }, [actions, node, variant, graph]);
 
     const handleAction = useCallback((action: StackItemSigilAction) => {
       typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN });
@@ -121,10 +118,7 @@ export const PlankHeading = memo(
       [dispatch, id, part],
     );
 
-    const ActionRoot =
-      node && !surfaceVariant && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}`
-        ? Popover.Anchor
-        : Fragment;
+    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
 
     const handleTabClick = useCallback(
       (event: MouseEvent) => {
@@ -156,7 +150,7 @@ export const PlankHeading = memo(
                 key={id}
                 data-id={id}
                 icon={icon}
-                // iconOnly
+                iconOnly={node?.id !== id}
                 label={toLocalizedString(label, t)}
                 size={5}
                 variant={node?.id === id ? 'primary' : 'default'}

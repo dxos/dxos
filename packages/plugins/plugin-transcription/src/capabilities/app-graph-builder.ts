@@ -8,7 +8,7 @@ import { generateName } from '@dxos/display-name';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { MeetingCapabilities, type CallState, type MediaState } from '@dxos/plugin-meeting';
 import { MeetingType } from '@dxos/plugin-meeting/types';
@@ -60,7 +60,8 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${TRANSCRIPTION_PLUGIN}/meeting-transcript`,
-      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data) && node.type !== COMPANION_TYPE,
+      filter: (node): node is Node<MeetingType> =>
+        isInstanceOf(MeetingType, node.data) && node.type !== PLANK_COMPANION_TYPE,
       actions: ({ node }) => {
         const meeting = node.data;
         const state = context.requestCapability(TranscriptionCapabilities.MeetingTranscriptionState);
@@ -85,9 +86,9 @@ export default (context: PluginsContext) =>
               label: state.enabled
                 ? ['stop transcription label', { ns: TRANSCRIPTION_PLUGIN }]
                 : ['start transcription label', { ns: TRANSCRIPTION_PLUGIN }],
-              icon: 'ph--record--regular',
+              icon: 'ph--subtitles--regular',
               disposition: 'toolbar',
-              classNames: state.enabled ? 'text-activeInCall' : '',
+              classNames: state.enabled ? 'bg-callAlert' : '',
             },
           },
         ];
@@ -99,12 +100,13 @@ export default (context: PluginsContext) =>
 
         return [
           {
-            id: `${fullyQualifiedId(meeting)}${SLUG_PATH_SEPARATOR}${getSchemaTypename(TranscriptType)}`,
-            type: COMPANION_TYPE,
+            id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}${getSchemaTypename(TranscriptType)}`,
+            type: PLANK_COMPANION_TYPE,
             data: meeting.artifacts[getSchemaTypename(TranscriptType)!]?.target,
             properties: {
               label: ['transcript companion label', { ns: TRANSCRIPTION_PLUGIN }],
               icon: 'ph--subtitles--regular',
+              disposition: 'hidden',
               schema: TranscriptType,
               getIntent: ({ space }: { space: Space }) =>
                 createIntent(TranscriptionAction.Create, { spaceId: space.id }),

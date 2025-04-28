@@ -64,7 +64,7 @@ export const makeTypedEntityClass = (
 
     // TODO(burdon): Throw APIError.
     private constructor() {
-      throw new Error('Use create(Typename, { ...fields }) to instantiate an object.');
+      throw new Error('Use live(Typename, { ...fields }) to instantiate an object.');
     }
   } as any;
 };

@@ -10,7 +10,7 @@ import { Effect } from 'effect';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
@@ -97,6 +97,7 @@ export const lazy =
 /**
  * Context which is passed to plugins, allowing them to interact with each other.
  */
+// TOOD(burdon): Rename PluginContext.
 export class PluginsContext {
   private readonly _definedCapabilities = new Map<string, CapabilityImpl<unknown>[]>();
 
@@ -133,7 +134,7 @@ export class PluginsContext {
   }) {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
-      const object = create<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
+      const object = live<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
       current = untracked(() => object.value);
       this._definedCapabilities.set(interfaceDef.identifier, current);
     }
@@ -175,7 +176,7 @@ export class PluginsContext {
   ): U[] {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
-      const object = create<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
+      const object = live<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
       current = untracked(() => object.value);
       this._definedCapabilities.set(interfaceDef.identifier, current);
     }

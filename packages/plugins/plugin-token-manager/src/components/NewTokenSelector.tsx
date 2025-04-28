@@ -4,39 +4,25 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { type OAuthFlowResult, OAuthProvider } from '@dxos/protocols';
-import { create, type Space } from '@dxos/react-client/echo';
+import { type OAuthFlowResult } from '@dxos/protocols';
+import { live, type Space } from '@dxos/react-client/echo';
 import { useEdgeClient } from '@dxos/react-edge-client';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { AccessTokenType } from '@dxos/schema';
 
+import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
 import { TOKEN_MANAGER_PLUGIN } from '../meta';
 
-type OAuthPreset = {
-  label: string;
-  note: string;
-  source: string;
-  provider: OAuthProvider;
-  scopes: string[];
+type NewTokenSelectorProps = {
+  space: Space;
+  onAddAccessToken: (token: AccessTokenType) => void;
+  onCustomToken?: () => void;
 };
 
-const OAUTH_PRESETS: OAuthPreset[] = [
-  {
-    label: 'Gmail',
-    note: 'Email read access.',
-    source: 'gmail.com',
-    provider: OAuthProvider.GOOGLE,
-    scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
-  },
-];
-
-export const NewTokenSelector = ({ space, onCustomToken }: { space: Space; onCustomToken?: () => void }) => {
+export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: NewTokenSelectorProps) => {
   const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
   const edgeClient = useEdgeClient();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [tokenMap] = useState(new Map<string, AccessTokenType>());
 
   useEffect(() => {
@@ -49,9 +35,7 @@ export const NewTokenSelector = ({ space, onCustomToken }: { space: Space; onCus
           const token = tokenMap.get(data.accessTokenId);
           if (token) {
             token.token = data.accessToken;
-            dispatch(createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true })).catch((e) =>
-              log.catch(e),
-            );
+            onAddAccessToken(token);
           } else {
             log.warn('token object not found', data);
           }
@@ -73,7 +57,7 @@ export const NewTokenSelector = ({ space, onCustomToken }: { space: Space; onCus
       return;
     }
 
-    const token = create(AccessTokenType, {
+    const token = live(AccessTokenType, {
       source: preset.source,
       note: preset.note,
       token: '',

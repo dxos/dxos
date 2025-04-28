@@ -27,7 +27,7 @@ export const TokenManagerPlugin = () =>
       id: `${meta.id}/module/space-settings`,
       activatesOn: SpaceEvents.SetupSettingsPanel,
       activate: () =>
-        contributes(SpaceCapabilities.SettingsPanel, {
+        contributes(SpaceCapabilities.SettingsSection, {
           id: 'token-manager',
           label: ['space panel name', { ns: TOKEN_MANAGER_PLUGIN }],
         }),

@@ -34,6 +34,9 @@
       "@dxos/plugin-automation": [
         "packages/plugins/plugin-automation/src/index.ts"
       ],
+      "@dxos/plugin-automation/types": [
+        "packages/plugins/plugin-automation/src/types.ts"
+      ],
       "@dxos/plugin-chess": [
         "packages/plugins/plugin-chess/src/index.ts"
       ],
@@ -216,6 +219,9 @@
       ],
       "@dxos/plugin-token-manager": [
         "packages/plugins/plugin-token-manager/src/index.ts"
+      ],
+      "@dxos/plugin-token-manager/types": [
+        "packages/plugins/plugin-token-manager/src/types.ts"
       ],
       "@dxos/plugin-transcription": [
         "packages/plugins/plugin-transcription/src/index.ts"

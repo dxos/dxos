@@ -52,7 +52,7 @@ import {
   isSpace,
   isEchoObject,
   type ReactiveEchoObject,
-  type ReactiveObject,
+  type Live,
   type Space,
   parseId,
 } from '@dxos/react-client/echo';
@@ -97,7 +97,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
       component: ({ data }) => {
         const handleCreateObject = useCallback(
-          (objects: ReactiveObject<any>[]) => {
+          (objects: Live<any>[]) => {
             if (!isSpace(data.subject.space)) {
               return;
             }
@@ -141,10 +141,11 @@ export default (context: PluginsContext) =>
       ),
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/complementary`,
-      role: 'complementary--debug',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <DebugObjectPanel object={data.subject} />,
+      id: `${DEBUG_PLUGIN}/object-debug`,
+      role: 'article',
+      filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
+        data.subject === 'debug' && isEchoObject(data.companionTo),
+      component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,

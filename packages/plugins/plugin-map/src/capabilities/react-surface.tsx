@@ -57,8 +57,8 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MAP_PLUGIN}/plugin-settings`,
-      role: 'complementary--settings',
+      id: `${MAP_PLUGIN}/object-settings`,
+      role: 'object-settings',
       filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
       component: ({ data }) => <MapViewEditor map={data.subject} />,
     }),

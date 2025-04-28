@@ -5,48 +5,14 @@
 import { RangeSetBuilder } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { type CommandOptions } from './command';
 import { commandState } from './state';
 import { clientRectsFor, flattenRect } from '../../util';
 
-class CommandHint extends WidgetType {
-  constructor(readonly content: string | HTMLElement) {
-    super();
-  }
+export type HintOptions = {
+  onHint: () => string | undefined;
+};
 
-  toDOM() {
-    const wrap = document.createElement('span');
-    wrap.className = 'cm-placeholder';
-    wrap.style.pointerEvents = 'none';
-    wrap.appendChild(typeof this.content === 'string' ? document.createTextNode(this.content) : this.content);
-    if (typeof this.content === 'string') {
-      wrap.setAttribute('aria-label', 'placeholder ' + this.content);
-    } else {
-      wrap.setAttribute('aria-hidden', 'true');
-    }
-    return wrap;
-  }
-
-  override coordsAt(dom: HTMLElement) {
-    const rects = dom.firstChild ? clientRectsFor(dom.firstChild) : [];
-    if (!rects.length) {
-      return null;
-    }
-    const style = window.getComputedStyle(dom.parentNode as HTMLElement);
-    const rect = flattenRect(rects[0], style.direction !== 'rtl');
-    const lineHeight = parseInt(style.lineHeight);
-    if (rect.bottom - rect.top > lineHeight * 1.5) {
-      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.top + lineHeight };
-    }
-    return rect;
-  }
-
-  override ignoreEvent() {
-    return false;
-  }
-}
-
-export const hintViewPlugin = ({ onHint }: CommandOptions) =>
+export const hintViewPlugin = ({ onHint }: HintOptions) =>
   ViewPlugin.fromClass(
     class {
       deco = Decoration.none;
@@ -74,3 +40,43 @@ export const hintViewPlugin = ({ onHint }: CommandOptions) =>
       provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none)],
     },
   );
+
+class CommandHint extends WidgetType {
+  constructor(readonly content: string | HTMLElement) {
+    super();
+  }
+
+  toDOM() {
+    const wrap = document.createElement('span');
+    wrap.className = 'cm-placeholder';
+    wrap.style.pointerEvents = 'none';
+    wrap.appendChild(typeof this.content === 'string' ? document.createTextNode(this.content) : this.content);
+    if (typeof this.content === 'string') {
+      wrap.setAttribute('aria-label', 'placeholder ' + this.content);
+    } else {
+      wrap.setAttribute('aria-hidden', 'true');
+    }
+
+    return wrap;
+  }
+
+  override coordsAt(dom: HTMLElement) {
+    const rects = dom.firstChild ? clientRectsFor(dom.firstChild) : [];
+    if (!rects.length) {
+      return null;
+    }
+
+    const style = window.getComputedStyle(dom.parentNode as HTMLElement);
+    const rect = flattenRect(rects[0], style.direction !== 'rtl');
+    const lineHeight = parseInt(style.lineHeight);
+    if (rect.bottom - rect.top > lineHeight * 1.5) {
+      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.top + lineHeight };
+    }
+
+    return rect;
+  }
+
+  override ignoreEvent() {
+    return false;
+  }
+}

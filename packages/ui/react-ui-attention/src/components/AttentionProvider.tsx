@@ -13,7 +13,7 @@ import React, { useMemo, type FocusEvent, type PropsWithChildren, type Component
 import { useDefaultValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type Attention, AttentionManager, getAttendables } from '../attention';
+import { ATTENDABLE_PATH_SEPARATOR, type Attention, AttentionManager, getAttendables } from '../attention';
 
 const ATTENTION_NAME = 'Attention';
 const ATTENABLE_ATTRIBUTE = 'data-attendable-id';
@@ -37,7 +37,7 @@ const useAttention = (attendableId?: string): Attention => {
     return UNKNOWN_ATTENDABLE;
   }
 
-  const current = [attendableId, ...path];
+  const current = [...attendableId.split(ATTENDABLE_PATH_SEPARATOR), ...path];
   return attention.get(current);
 };
 

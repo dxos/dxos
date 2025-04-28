@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { Scheduler, type SchedulerOptions } from './scheduler';
 import { FunctionRegistry } from '../function';
@@ -143,7 +143,7 @@ describe.skip('scheduler', () => {
 
     setTimeout(() => {
       const space = client.spaces.default;
-      const object = create(TestType, { title: 'Hello world!' });
+      const object = live(TestType, { title: 'Hello world!' });
       space.db.add(object);
     }, 100);
 

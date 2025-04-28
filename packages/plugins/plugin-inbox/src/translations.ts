@@ -28,6 +28,12 @@ export default [
         'action delete': 'Delete',
         'action mark read': 'Mark as read',
         'message label': 'Message',
+        'no integrations label': 'No integrations configured',
+        'manage integrations button label': 'Manage Integrations',
+
+        'mailbox sync label': 'Mailbox Sync',
+        'mailbox object settings configure sync button label': 'Configure sync',
+        'mailbox object settings configure subscription button label': 'Configure subscription',
       },
     },
   },

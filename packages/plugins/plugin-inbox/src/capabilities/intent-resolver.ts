@@ -5,7 +5,7 @@
 import { contributes, Capabilities, createResolver, type PluginsContext } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { QueueSubspaceTags, DXN } from '@dxos/keys';
-import { create, refFromDXN } from '@dxos/live-object';
+import { live, refFromDXN } from '@dxos/live-object';
 import { MessageType } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
@@ -17,7 +17,7 @@ export default (context: PluginsContext) =>
       intent: InboxAction.CreateMailbox,
       resolve: ({ spaceId, name }) => ({
         data: {
-          object: create(MailboxType, {
+          object: live(MailboxType, {
             name,
             queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           }),
@@ -27,13 +27,13 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: InboxAction.CreateContacts,
       resolve: () => ({
-        data: { object: create(ContactsType, {}) },
+        data: { object: live(ContactsType, {}) },
       }),
     }),
     createResolver({
       intent: InboxAction.CreateCalendar,
       resolve: () => ({
-        data: { object: create(CalendarType, {}) },
+        data: { object: live(CalendarType, {}) },
       }),
     }),
     createResolver({
@@ -44,7 +44,7 @@ export default (context: PluginsContext) =>
           // TODO(wittjosiah): Static to live object fails.
           //  Needs to be a live object because graph is live and the current message is included in the companion.
           const { '@type': _, id, ...messageWithoutType } = { ...message } as any;
-          const liveMessage = create(MessageType, messageWithoutType);
+          const liveMessage = live(MessageType, messageWithoutType);
           liveMessage.id = id;
           state[mailboxId] = liveMessage;
         } else {

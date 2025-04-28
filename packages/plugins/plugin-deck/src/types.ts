@@ -4,13 +4,13 @@
 
 import { LayoutAction } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type Node } from '@dxos/plugin-graph';
-import { type Label } from '@dxos/react-ui';
-import { type Position } from '@dxos/util';
 
 import { DECK_PLUGIN } from './meta';
 
-export const COMPANION_TYPE = 'dxos.org/plugin/deck/companion';
+export { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+
+export const PLANK_COMPANION_TYPE = 'dxos.org/plugin/deck/plank-companion';
+export const DECK_COMPANION_TYPE = 'dxos.org/plugin/deck/deck-companion';
 
 // TODO(Zan): In the future we should consider adding new planks adjacent to the attended plank.
 export const NewPlankPositions = ['start', 'end'] as const;
@@ -21,16 +21,6 @@ export type Overscroll = (typeof OverscrollOptions)[number];
 
 export type Part = 'solo' | 'deck' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
-
-export type Panel = {
-  id: string;
-  label: Label;
-  icon: string;
-  position?: Position;
-  /** If true, the panel will not be wrapped in a scroll area. */
-  fixed?: boolean;
-  filter?: (node: Node) => boolean;
-};
 
 export const DeckSettingsSchema = S.Struct({
   showHints: S.optional(S.Boolean),
@@ -116,9 +106,6 @@ export const DeckPluginState = S.Struct({
 
 export type DeckPluginState = S.Schema.Type<typeof DeckPluginState>;
 
-// NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
-export const SLUG_PATH_SEPARATOR = '~';
-
 export const DECK_ACTION = `${DECK_PLUGIN}/action`;
 
 export namespace DeckAction {
@@ -133,9 +120,7 @@ export namespace DeckAction {
   export const Adjustment = S.mutable(S.Struct({ id: S.String, type: PartAdjustmentSchema }));
   export type Adjustment = S.Schema.Type<typeof Adjustment>;
 
-  /**
-   * An atomic transaction to apply to the deck, describing which element to move to which location.
-   */
+  // An atomic transaction to apply to the deck, describing which element to move to which location.
   export class Adjust extends S.TaggedClass<Adjust>()(`${DECK_ACTION}/adjust`, {
     input: Adjustment,
     output: S.Void,

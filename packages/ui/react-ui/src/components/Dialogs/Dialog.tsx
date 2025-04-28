@@ -115,6 +115,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
 
     return (
       <DialogContentPrimitive
+        aria-describedby={undefined}
         {...props}
         className={tx(
           'dialog.content',

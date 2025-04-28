@@ -3,4 +3,3 @@
 //
 
 export * from './Call';
-export * from './Toolbar';

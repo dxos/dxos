@@ -6,13 +6,13 @@ export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
 export { getTypename, Expando, type TypedObject, type ObjectMeta } from '@dxos/echo-schema';
 export {
-  type ReactiveObject,
+  type Live,
   RefArray,
-  create,
+  live,
   getMeta,
   getSchema,
   getType,
-  isReactiveObject,
+  isLiveObject,
   compareForeignKeys,
   makeRef,
 } from '@dxos/live-object';

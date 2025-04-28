@@ -4,7 +4,7 @@
 
 import { onTestFinished, describe, expect, test } from 'vitest';
 
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 
@@ -29,10 +29,10 @@ describe('RequestProcessor', () => {
     const language = 'japanese';
     {
       space.db.add(
-        create(TemplateType, {
+        live(TemplateType, {
           prompts: [
             makeRef(
-              create(TemplateType, {
+              live(TemplateType, {
                 command,
                 template,
                 inputs: [
@@ -55,8 +55,8 @@ describe('RequestProcessor', () => {
 
     const input = 'hello world';
     {
-      const thread = create(ThreadType, { messages: [] });
-      const message = create(MessageType, {
+      const thread = live(ThreadType, { messages: [] });
+      const message = live(MessageType, {
         sender: {},
         timestamp: new Date().toISOString(),
         text: `/${command} ${input}`,
@@ -86,10 +86,10 @@ describe('RequestProcessor', () => {
     // Add prompts.
     {
       space.db.add(
-        create(TemplateType, {
+        live(TemplateType, {
           prompts: [
             makeRef(
-              create(TemplateType, {
+              live(TemplateType, {
                 command: 'extract',
                 template: str(
                   'List all people and companies mentioned in the content section below.',
@@ -134,8 +134,8 @@ describe('RequestProcessor', () => {
         'Nadella worked at Sun Microsystems as a member of its technology staff before joining Microsoft in 1992.',
       ].join('\n');
 
-      const thread = create(ThreadType, { messages: [] });
-      const message = create(MessageType, {
+      const thread = live(ThreadType, { messages: [] });
+      const message = live(MessageType, {
         sender: {},
         timestamp: new Date().toISOString(),
         text: `/extract "${text}"`,

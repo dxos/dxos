@@ -47,7 +47,7 @@ export default () =>
     }),
     createSurface({
       id: `${MEETING_PLUGIN}/assistant`,
-      role: 'complementary--meeting',
+      role: 'deck-companion--active-meeting',
       component: () => <CallSidebar />,
     }),
   ]);

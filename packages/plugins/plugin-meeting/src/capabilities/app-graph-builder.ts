@@ -4,17 +4,43 @@
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { memoizeQuery } from '@dxos/plugin-space';
 import { Filter, type Space, fullyQualifiedId, isSpace } from '@dxos/react-client/echo';
 
+import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingAction, MeetingType } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    createExtension({
+      id: `${MEETING_PLUGIN}/active-meeting`,
+      filter: (node): node is Node<null> => node.id === 'root',
+      connector: ({ node }) => {
+        const call = context.requestCapability(MeetingCapabilities.CallManager);
+        if (!call.joined) {
+          return [];
+        }
+
+        return [
+          {
+            id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
+            type: DECK_COMPANION_TYPE,
+            data: null,
+            properties: {
+              label: ['meeting panel label', { ns: MEETING_PLUGIN }],
+              icon: 'ph--video-conference--regular',
+              position: 'hoist',
+              disposition: 'hidden',
+            },
+          },
+        ];
+      },
+    }),
+
     createExtension({
       id: `${MEETING_PLUGIN}/root`,
       filter: (node): node is Node<Space> => isSpace(node.data),
@@ -71,7 +97,8 @@ export default (context: PluginsContext) =>
 
     createExtension({
       id: `${MEETING_PLUGIN}/meeting-summary`,
-      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data) && node.type !== COMPANION_TYPE,
+      filter: (node): node is Node<MeetingType> =>
+        isInstanceOf(MeetingType, node.data) && node.type !== PLANK_COMPANION_TYPE,
       // TODO(wittjosiah): Only show the summarize action if the meeting plausibly completed.
       actions: ({ node }) => [
         {
@@ -89,13 +116,14 @@ export default (context: PluginsContext) =>
       // TODO(wittjosiah): Only show the summary companion if the meeting plausibly completed.
       connector: ({ node }) => [
         {
-          id: `${fullyQualifiedId(node.data)}${SLUG_PATH_SEPARATOR}summary`,
-          type: COMPANION_TYPE,
+          id: `${fullyQualifiedId(node.data)}${ATTENDABLE_PATH_SEPARATOR}summary`,
+          type: PLANK_COMPANION_TYPE,
           data: node.data,
           properties: {
             label: ['meeting summary label', { ns: MEETING_PLUGIN }],
             icon: 'ph--book-open-text--regular',
             position: 'fallback',
+            disposition: 'hidden',
             schema: DocumentType,
             getIntent: ({ meeting }: { meeting: MeetingType }) => createIntent(MeetingAction.Summarize, { meeting }),
           },

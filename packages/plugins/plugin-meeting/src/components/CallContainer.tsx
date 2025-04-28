@@ -4,9 +4,12 @@
 
 import React, { useCallback, useEffect, type FC } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
-import { useCompanions } from '@dxos/plugin-deck';
+import { useAppGraph, useCapability } from '@dxos/app-framework';
+import { log } from '@dxos/log';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { useNode } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Call } from './Call';
@@ -22,6 +25,10 @@ export type CallContainerProps = {
 export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId }) => {
   const call = useCapability(MeetingCapabilities.CallManager);
   const roomId = meeting ? fullyQualifiedId(meeting) : _roomId;
+  const { graph } = useAppGraph();
+  const node = useNode(graph, meeting && fullyQualifiedId(meeting));
+  const joinSound = useSoundEffect('JoinCall');
+  const leaveSound = useSoundEffect('LeaveCall');
 
   useEffect(() => {
     if (!call.joined && roomId) {
@@ -29,11 +36,78 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
     }
   }, [roomId, call.joined, call.roomId]);
 
-  const companions = useCompanions(meeting && fullyQualifiedId(meeting));
-  const handleJoin = useCallback(() => {
-    companions.forEach((companion) => {
-      companion.properties.onJoin?.(roomId);
+  // TODO(thure): Should these be intents rather than callbacks?
+  const companions = node ? graph.nodes(node, { type: PLANK_COMPANION_TYPE }) : [];
+  useEffect(() => {
+    const unsubscribeLeft = call.left.on((roomId) => {
+      companions.forEach((companion) => {
+        companion.properties.onLeave?.(roomId);
+      });
     });
+
+    const unsubscribeCallState = call.callStateUpdated.on((state) => {
+      companions.forEach((companion) => {
+        companion.properties.onCallStateUpdated?.(state);
+      });
+    });
+
+    const unsubscribeMediaState = call.mediaStateUpdated.on((state) => {
+      companions.forEach((companion) => {
+        companion.properties.onMediaStateUpdated?.(state);
+      });
+    });
+
+    return () => {
+      unsubscribeLeft();
+      unsubscribeCallState();
+      unsubscribeMediaState();
+    };
+  }, [call, companions]);
+
+  // TODO(burdon): Try/catch.
+
+  /**
+   * Join the call.
+   */
+  const handleJoin = useCallback(async () => {
+    if (!roomId) {
+      return;
+    }
+
+    if (call.joined) {
+      await call.leave();
+    }
+
+    try {
+      void joinSound.play();
+      call.setRoomId(roomId);
+      await call.join();
+
+      companions.forEach((companion) => {
+        companion.properties.onJoin?.(roomId);
+      });
+    } catch (err) {
+      log.catch(err);
+    }
+  }, [companions, roomId]);
+
+  /**
+   * Leave the call.
+   */
+  const handleLeave = useCallback(async () => {
+    try {
+      companions.forEach((companion) => {
+        companion.properties.onLeave?.(roomId);
+      });
+    } catch (err) {
+      log.catch(err);
+    } finally {
+      void call.turnAudioOff();
+      void call.turnVideoOff();
+      void call.turnScreenshareOff();
+      void call.leave();
+      void leaveSound.play();
+    }
   }, [companions, roomId]);
 
   if (!roomId) {
@@ -41,14 +115,18 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
   }
 
   return (
-    <StackItem.Content>
+    // TODO(burdon): Modify StackItem to support top and bottom toolbars.
+    <StackItem.Content classNames='h-full'>
       {call.joined && call.roomId === roomId ? (
-        <>
+        <Call.Root>
           <Call.Room />
-          <Call.Toolbar meeting={meeting} />
-        </>
+          <Call.Toolbar meeting={meeting} onLeave={handleLeave} />
+        </Call.Root>
       ) : (
-        <Lobby roomId={roomId} onJoin={handleJoin} />
+        <Lobby.Root>
+          <Lobby.Preview />
+          <Lobby.Toolbar roomId={roomId} onJoin={handleJoin} />
+        </Lobby.Root>
       )}
     </StackItem.Content>
   );

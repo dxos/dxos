@@ -3,12 +3,10 @@
 //
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { type Client } from '@dxos/react-client';
-import { isEchoObject, getSpace } from '@dxos/react-client/echo';
 
 import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
-import { DEBUG_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 
 // TODO(wittjosiah): Rename to DevtoolsPlugin?
@@ -25,17 +23,6 @@ export const DebugPlugin = () => {
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panel`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'debug',
-          label: ['debug label', { ns: DEBUG_PLUGIN }],
-          icon: 'ph--bug--regular',
-          filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
-        }),
     }),
     defineModule({
       id: `${meta.id}/module/react-context`,
