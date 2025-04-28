@@ -636,7 +636,7 @@ export const Preview = {
 
 const handlePreviewLookup = async (link: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   // Random text.
-  faker.seed(link.dxn.split(':').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+  faker.seed(link.dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
   const text = Array.from({ length: 2 }, () => faker.lorem.paragraphs()).join('\n\n');
   return {
     label: link.label,

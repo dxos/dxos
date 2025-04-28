@@ -50,7 +50,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
             label: 'View proposal',
             queueId: chat.assistantChatQueue.dxn.toString(),
             messageId: message.id,
-            associatedArtifact,
+            associatedArtifact, // TODO(burdon): ???
           }),
         );
       }

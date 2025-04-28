@@ -68,6 +68,7 @@ const MarkdownContainer = ({
       />
     );
   } else {
+    // TODO(burdon): Normalize with above.
     return (
       <MarkdownEditor
         id={id}
