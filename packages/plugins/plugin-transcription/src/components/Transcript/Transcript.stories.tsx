@@ -104,7 +104,7 @@ const ExtensionStory = () => {
   );
 
   const { parentRef } = useTextEditor({
-    doc: model,
+    doc: model.doc,
     extensions: [
       createBasicExtensions(),
       createMarkdownExtensions({ themeMode }),
