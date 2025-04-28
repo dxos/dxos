@@ -17,7 +17,7 @@ import React, { useEffect, useState, type FC, type KeyboardEvent } from 'react';
 import { Expando } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
@@ -268,7 +268,7 @@ const DefaultStory = ({
   lineNumbers,
   onReady,
 }: StoryProps) => {
-  const [object] = useState(createObject(create(Expando, { content: text ?? '' })));
+  const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
   const { themeMode } = useThemeContext();
   const [tree, setTree] = useState<DebugNode>();
   const { parentRef, focusAttributes, view } = useTextEditor(

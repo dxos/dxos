@@ -11,7 +11,7 @@ import { Expando, RelationSourceId, RelationTargetId, S, TypedObject, type Ref }
 import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, getMeta, makeRef } from '@dxos/live-object';
+import { live, getMeta, makeRef } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -22,7 +22,7 @@ import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {
-  return create(Expando, { idx, title: `Task ${idx}`, label });
+  return live(Expando, { idx, title: `Task ${idx}`, label });
 };
 
 describe('Queries', () => {
@@ -110,8 +110,8 @@ describe('Queries', () => {
     });
 
     test('filter by reference', async () => {
-      const objA = db.add(create(Expando, { label: 'obj a' }));
-      const objB = db.add(create(Expando, { label: 'obj b', ref: makeRef(objA) }));
+      const objA = db.add(live(Expando, { label: 'obj a' }));
+      const objB = db.add(live(Expando, { label: 'obj b', ref: makeRef(objA) }));
       await db.flush({ indexes: true });
 
       const { objects } = await db.query(Filter.schema(Expando, { ref: objA })).run();
@@ -119,7 +119,7 @@ describe('Queries', () => {
     });
 
     test('filter by foreign keys', async () => {
-      const obj = create(Expando, { label: 'has meta' });
+      const obj = live(Expando, { label: 'has meta' });
       getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
       await db.flush({ indexes: true });
@@ -335,8 +335,8 @@ describe('Queries', () => {
 
     graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
 
-    const contactV1 = db.add(create(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-    const contactV2 = db.add(create(ContactV2, { name: 'Brian Smith' }));
+    const contactV1 = db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+    const contactV2 = db.add(live(ContactV2, { name: 'Brian Smith' }));
     await db.flush({ indexes: true });
 
     const assertQueries = async (db: EchoDatabase) => {
@@ -361,17 +361,17 @@ describe('Queries', () => {
       graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
 
       const alice = db.add(
-        create(Testing.Contact, {
+        live(Testing.Contact, {
           name: 'Alice',
         }),
       );
       const bob = db.add(
-        create(Testing.Contact, {
+        live(Testing.Contact, {
           name: 'Bob',
         }),
       );
       const hasManager = db.add(
-        create(Testing.HasManager, {
+        live(Testing.HasManager, {
           [RelationSourceId]: bob,
           [RelationTargetId]: alice,
           since: '2022',
@@ -498,7 +498,7 @@ describe('Queries with types', () => {
     const { graph, db } = await testBuilder.createDatabase();
 
     graph.schemaRegistry.addSchema([Testing.Contact]);
-    const contact = db.add(create(Testing.Contact, {}));
+    const contact = db.add(live(Testing.Contact, {}));
     const name = 'DXOS User';
 
     const query = db.query(Filter.typename(Testing.Contact.typename));
@@ -519,7 +519,7 @@ describe('Queries with types', () => {
     onTestFinished(() => unsub());
 
     contact.name = name;
-    db.add(create(Testing.Contact, {}));
+    db.add(live(Testing.Contact, {}));
 
     await asyncTimeout(nameUpdate.wait(), 1000);
     await asyncTimeout(anotherContactAdded.wait(), 1000);
@@ -531,7 +531,7 @@ describe('Queries with types', () => {
     const { db } = await testBuilder.createDatabase();
 
     const [schema] = await db.schemaRegistry.register([Testing.Contact]);
-    const contact = db.add(create(schema, {}));
+    const contact = db.add(live(schema, {}));
 
     // NOTE: Must use `Filter.schema` with EchoSchema instance since matching is done by the object ID of the mutable schema.
     const query = db.query(Filter.schema(schema));
@@ -547,7 +547,7 @@ describe('Queries with types', () => {
 
     graph.schemaRegistry.addSchema([Testing.Contact]);
     const name = 'DXOS User';
-    const contact = create(Testing.Contact, { name });
+    const contact = live(Testing.Contact, { name });
     db.add(contact);
     expect(contact instanceof Testing.Contact).to.be.true;
 
@@ -563,7 +563,7 @@ describe('Queries with types', () => {
 test('map over refs in query result', async () => {
   const testBuilder = new EchoTestBuilder();
   const { db } = await testBuilder.createDatabase();
-  const folder = db.add(create(Expando, { name: 'folder', objects: [] as any[] }));
+  const folder = db.add(live(Expando, { name: 'folder', objects: [] as any[] }));
   const objects = range(3).map((idx) => createTestObject(idx));
   for (const object of objects) {
     folder.objects.push(makeRef(object));

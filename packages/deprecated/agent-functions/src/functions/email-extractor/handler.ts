@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create, makeRef } from '@dxos/client/echo';
+import { live, makeRef } from '@dxos/client/echo';
 import { Filter, hasType } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -31,7 +31,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
       );
 
     if (!contact) {
-      contact = create(ContactType, {
+      contact = live(ContactType, {
         name: recipient.name,
         identifiers: [{ type: 'email', value: recipient.email }],
       });

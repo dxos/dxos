@@ -10,7 +10,7 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { useClient } from '@dxos/react-client';
-import { create, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { live, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
@@ -44,7 +44,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
 
   const handleInsertRow = useCallback(() => {
     if (schema && space) {
-      space.db.add(create(schema, {}));
+      space.db.add(live(schema, {}));
     }
   }, [space, schema]);
 

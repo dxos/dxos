@@ -34,9 +34,9 @@ import {
   getProxyHandler,
   getProxyTarget,
   getRefSavedTarget,
-  isReactiveObject,
+  isLiveObject,
   type ReactiveHandler,
-  type ReactiveObject,
+  type Live,
   RefImpl,
   setRefResolver,
   symbolIsProxy,
@@ -350,7 +350,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // The value is a value-object field of another echo-object. We don't want to create a reference
         // to it or have shared mutability, we need to copy by value.
         return recurse({ ...value });
-      } else if (isReactiveObject(value)) {
+      } else if (isLiveObject(value)) {
         throw new Error('Object references must be wrapped with `makeRef`');
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
@@ -433,14 +433,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return false;
   }
 
-  arrayPush(target: ReactiveObject<ProxyTarget>, path: KeyPath, ...items: any[]): number {
+  arrayPush(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
     return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
   }
 
-  arrayPop(target: ReactiveObject<ProxyTarget>, path: KeyPath): any {
+  arrayPop(target: Live<ProxyTarget>, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -453,7 +453,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayShift(target: ReactiveObject<ProxyTarget>, path: KeyPath): any {
+  arrayShift(target: Live<ProxyTarget>, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -466,7 +466,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayUnshift(target: ReactiveObject<ProxyTarget>, path: KeyPath, ...items: any[]): number {
+  arrayUnshift(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
     const validatedItems = this._validateForArray(target, path, items, 0);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -483,13 +483,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return newLength;
   }
 
-  arraySplice(
-    target: ReactiveObject<ProxyTarget>,
-    path: KeyPath,
-    start: number,
-    deleteCount?: number,
-    ...items: any[]
-  ): any[] {
+  arraySplice(target: Live<ProxyTarget>, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
     const validatedItems = this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -510,7 +504,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return deletedElements;
   }
 
-  arraySort(target: ReactiveObject<ProxyTarget>, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
+  arraySort(target: Live<ProxyTarget>, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].core.change((doc) => {
@@ -523,7 +517,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target as EchoArray<any>;
   }
 
-  arrayReverse(target: ReactiveObject<ProxyTarget>, path: KeyPath): any[] {
+  arrayReverse(target: Live<ProxyTarget>, path: KeyPath): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].core.change((doc) => {
@@ -763,7 +757,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 };
 
 // TODO(burdon): Move ProxyTarget def to echo-schema and make ReactiveEchoObject inherit?
-export const getObjectCore = <T extends BaseObject>(obj: ReactiveObject<T>): ObjectCore => {
+export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore => {
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
     throw new Error('object is not an EchoObject');
   }
@@ -794,7 +788,7 @@ export const isRootDataObject = (target: ProxyTarget) => {
  */
 const isEchoObjectField = (value: any) => {
   return (
-    isReactiveObject(value) &&
+    isLiveObject(value) &&
     getProxyHandler(value) instanceof EchoReactiveHandler &&
     !isRootDataObject(getProxyTarget(value))
   );

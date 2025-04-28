@@ -5,7 +5,7 @@
 import { untracked } from '@preact/signals-core';
 
 import { S } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
 // NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
@@ -31,8 +31,8 @@ const stringKey = (key: string[]) => key.join(',');
 export class AttentionManager {
   // Each attention path is associated with an attention object.
   // The lookup is not a reactive object to ensure that attention for each path is subscribable independently.
-  private readonly _map = new ComplexMap<string[], ReactiveObject<Attention>>(stringKey);
-  private readonly _state = create<{ current: string[] }>({ current: [] });
+  private readonly _map = new ComplexMap<string[], Live<Attention>>(stringKey);
+  private readonly _state = live<{ current: string[] }>({ current: [] });
 
   constructor(initial: string[] = []) {
     if (initial.length > 0) {
@@ -45,7 +45,7 @@ export class AttentionManager {
    *
    * @reactive
    */
-  get current(): ReactiveObject<readonly string[]> {
+  get current(): Live<readonly string[]> {
     return this._state.current;
   }
 
@@ -59,13 +59,13 @@ export class AttentionManager {
   /**
    * Get the attention state for a given path.
    */
-  get(key: string[]): ReactiveObject<Attention> {
+  get(key: string[]): Live<Attention> {
     const object = this._map.get(key);
     if (object) {
       return object;
     }
 
-    const newObject = create(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
+    const newObject = live(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
     this._map.set(key, newObject);
     return newObject;
   }

@@ -22,7 +22,7 @@ import {
   getSchemaVersion,
   isInstanceOf,
 } from '@dxos/echo-schema';
-import { create as create$, makeRef } from '@dxos/live-object';
+import { live as create$, makeRef } from '@dxos/live-object';
 
 // NOTES:
 // - New Echo package and namespaces allow for incremental migration; vastly simplifies imports.

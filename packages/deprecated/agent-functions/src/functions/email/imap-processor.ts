@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { MessageType, type ActorType } from '@dxos/plugin-space/types';
-import { create, getMeta } from '@dxos/live-object';
+import { live, getMeta } from '@dxos/live-object';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -106,7 +106,7 @@ export class ImapProcessor {
       body = (await promisify(textract.fromBufferWithMime)('text/html', Buffer.from(textAsHtml))) as string;
     }
 
-    const message = create(MessageType, {
+    const message = live(MessageType, {
       timestamp: date.toISOString(),
       sender,
       text: body,

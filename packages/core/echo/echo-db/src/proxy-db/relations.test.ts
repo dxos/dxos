@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import type { EchoDatabase } from './database';
 import { getSource, getTarget, isRelation } from '../echo-handler/relations';
@@ -30,17 +30,17 @@ describe('Relations', () => {
 
   test('create relation between two objects', async () => {
     const alice = db.add(
-      create(Testing.Contact, {
+      live(Testing.Contact, {
         name: 'Alice',
       }),
     );
     const bob = db.add(
-      create(Testing.Contact, {
+      live(Testing.Contact, {
         name: 'Bob',
       }),
     );
     const hasManager = db.add(
-      create(Testing.HasManager, {
+      live(Testing.HasManager, {
         [RelationSourceId]: bob,
         [RelationTargetId]: alice,
         since: '2022',

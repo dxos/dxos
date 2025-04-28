@@ -14,7 +14,7 @@ import {
   toJsonSchema,
   type TypeAnnotation,
 } from '@dxos/echo-schema';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { Filter } from '../query';
@@ -121,7 +121,7 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = create(StoredSchema, {
+    const schemaToStore = live(StoredSchema, {
       typename: 'example.com/type/Test',
       version: '0.1.0',
       jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),

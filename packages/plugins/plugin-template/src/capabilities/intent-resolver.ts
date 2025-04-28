@@ -3,7 +3,7 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { create } from '@dxos/react-client/echo';
+import { live } from '@dxos/react-client/echo';
 
 import { TemplateAction, TemplateType } from '../types';
 
@@ -13,7 +13,7 @@ export default () =>
     createResolver({
       intent: TemplateAction.Create,
       resolve: ({ name }) => ({
-        data: { object: create(TemplateType, { name }) },
+        data: { object: live(TemplateType, { name }) },
       }),
     }),
   );

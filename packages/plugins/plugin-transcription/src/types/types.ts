@@ -3,7 +3,7 @@
 //
 
 import { S, isInstanceOf } from '@dxos/echo-schema';
-import { isReactiveObject } from '@dxos/react-client/echo';
+import { isLiveObject } from '@dxos/react-client/echo';
 
 import { TranscriptType } from './schema';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
@@ -32,5 +32,5 @@ export namespace TranscriptionAction {
 }
 
 export const isTranscript = (object: unknown): object is typeof TranscriptType => {
-  return isReactiveObject(object) && isInstanceOf(TranscriptType, object);
+  return isLiveObject(object) && isInstanceOf(TranscriptType, object);
 };

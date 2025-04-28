@@ -11,7 +11,7 @@ import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { create, makeRef, useSpace } from '@dxos/react-client/echo';
+import { live, makeRef, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -50,7 +50,7 @@ const meta: Meta<typeof Outliner.Root> = {
           switch (action.action) {
             case 'task': {
               invariant(space);
-              const task = space.db.add(create(TaskType, { text: action.node.data.text }));
+              const task = space.db.add(live(TaskType, { text: action.node.data.text }));
               action.node.ref = makeRef(task);
               action.node.data.text = '';
               break;

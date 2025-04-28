@@ -9,7 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
 import { FunctionType } from '@dxos/functions/types';
-import { create, useSpace, Filter } from '@dxos/react-client/echo';
+import { live, useSpace, Filter } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar, Button, Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -44,7 +44,7 @@ const Story = () => {
         setResult({ functions: { standard: f1.length, echo: f2.length } });
       });
 
-      space.db.add(create(FunctionType, { name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
+      space.db.add(live(FunctionType, { name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
     }
   }, [space, graph]);
 
