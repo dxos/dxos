@@ -6,3 +6,4 @@ export * from './provider';
 export * from './publish';
 export * from './supervisor';
 export * from './tunnel';
+export * from './function';

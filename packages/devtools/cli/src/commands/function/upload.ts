@@ -20,12 +20,12 @@ import {
   FunctionType,
   ScriptType,
 } from '@dxos/functions';
-import { Bundler } from '@dxos/functions/bundler';
 import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { TextType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
+import { bundleScript } from '../../util';
 
 // TODO: move to cli-composer
 
@@ -196,17 +196,6 @@ const makeObjectNavigableInComposer = async (client: Client, space: Space, obj: 
       composerCollection.objects.push(makeRef(obj));
     }
   }
-};
-
-const bundleScript = async (source: string): Promise<{ bundle?: string; error?: Error }> => {
-  const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-  const buildResult = await bundler.bundle({ source });
-
-  if (buildResult.error || !buildResult.bundle) {
-    return { error: buildResult.error || new Error('Bundle creation failed') };
-  }
-
-  return { bundle: buildResult.bundle };
 };
 
 const makeInvocationUrl = (space: Space, args: { functionId: string }) => `/${space.id}/${args.functionId}`;
