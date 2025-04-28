@@ -10,11 +10,9 @@ import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useState, type FC, type KeyboardEvent } from 'react';
-import { createRoot } from 'react-dom/client';
 
 import { Expando } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
@@ -23,12 +21,20 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, Icon, IconButton, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, defaultTx, getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, IconButton, Input, useThemeContext } from '@dxos/react-ui';
+import { mx, hoverableHidden } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { editorContent, editorGutter, editorMonospace } from './defaults';
+import { editorContent, editorGutter, editorMonospace, editorWidth } from './defaults';
 import {
+  type Action,
+  type DebugNode,
+  type EditorSelectionState,
+  InputModeExtensions,
+  type PreviewOptions,
+  type PreviewLinkRef,
+  type PreviewLinkTarget,
+  type PreviewRenderProps,
   annotations,
   autocomplete,
   blast,
@@ -46,22 +52,18 @@ import {
   folding,
   formattingKeymap,
   image,
-  InputModeExtensions,
   linkTooltip,
   listener,
   mention,
+  preview,
   selectionState,
   table,
   typewriter,
-  type CommandAction,
-  type CommentsOptions,
-  type DebugNode,
-  type EditorSelectionState,
 } from './extensions';
 import { useTextEditor, type UseTextEditorProps } from './hooks';
 import translations from './translations';
 import { type Comment } from './types';
-import { renderRoot } from './util';
+import { createRenderer } from './util';
 
 faker.seed(101);
 
@@ -69,7 +71,7 @@ const str = (...lines: string[]) => lines.join('\n');
 
 const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
-const img = '![dxos](https://pbs.twimg.com/profile_banners/1268328127673044992/1684766689/1500x500)';
+const img = '![dxos](https://dxos.network/dxos-logotype-blue.png)';
 
 const code = str(
   '// Code',
@@ -216,46 +218,27 @@ const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', '
 const hover =
   'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
-    {char}
-  </span>
-);
-
-const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
-  createRoot(el).render(
-    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
-      <div>Create comment</div>
-      <div className='flex gap-1'>
-        {keySymbols(parseShortcut(shortcut)).map((char) => (
-          <Key key={char} char={char} />
-        ))}
-      </div>
-    </div>,
-  );
-};
-
-const renderLinkTooltip = (el: Element, url: string) => {
+const LinkTooltip: FC<{ url: string }> = ({ url }) => {
   const web = new URL(url);
-  createRoot(el).render(
-    <ThemeProvider tx={defaultTx}>
-      <a href={url} target='_blank' rel='noreferrer' className={mx(hover, 'flex items-center gap-2')}>
-        {web.origin}
-        <Icon icon='ph--arrow-square-out--regular' size={4} />
-      </a>
-    </ThemeProvider>,
+  return (
+    <a href={url} target='_blank' rel='noreferrer' className={mx(hover, 'flex items-center gap-2')}>
+      {web.origin}
+      <Icon icon='ph--arrow-square-out--regular' size={4} />
+    </a>
   );
 };
 
-const renderLinkButton = (el: Element, url: string) => {
-  createRoot(el).render(
-    <ThemeProvider tx={defaultTx}>
-      <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
-        <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block mis-1 mb-[3px]' />
-      </a>
-    </ThemeProvider>,
+const renderLinkTooltip = createRenderer(LinkTooltip);
+
+const LinkButton: FC<{ url: string }> = ({ url }) => {
+  return (
+    <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
+      <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block mis-1 mb-[3px]' />
+    </a>
   );
 };
+
+const renderLinkButton = createRenderer(LinkButton);
 
 //
 // Story
@@ -356,7 +339,7 @@ const defaultExtensions: Extension[] = [
 ];
 
 const allExtensions: Extension[] = [
-  decorateMarkdown({ numberedHeadings: { from: 2, to: 4 }, renderLinkButton, selectionChangeDelay: 100 }),
+  decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100, numberedHeadings: { from: 2, to: 4 } }),
   formattingKeymap(),
   linkTooltip(renderLinkTooltip),
   image(),
@@ -619,64 +602,162 @@ export const Search = {
 };
 
 //
-// Command
+// Preview
 //
 
-export const Command = {
+export const Preview = {
   render: () => (
     <DefaultStory
-      text={str('# Command', '', '', '[Test](dxn:queue:data:123)', '', '', '')}
+      text={str(
+        '# Preview',
+        '',
+        'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
+        '',
+        '![DXOS][?dxn:queue:data:123]',
+        '',
+        'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
+        '',
+        '## Deep dive',
+        '',
+        '![ECHO][dxn:queue:data:echo]',
+        '',
+        '',
+      )}
       extensions={[
-        command({
-          onHint: () => 'Press / for commands.',
-          onRenderMenu: (el, onClick) => {
-            renderRoot(
-              el,
-              <ThemeProvider tx={defaultTx}>
-                <Button classNames='p-1 aspect-square' onClick={onClick}>
-                  <Icon icon={'ph--sparkle--regular'} size={5} />
-                </Button>
-              </ThemeProvider>,
-            );
-          },
-          onRenderDialog: (el, onClose) => {
-            renderRoot(el, <CommandDialog onClose={onClose} />);
-          },
-          onRenderPreview: (el, { text }) => {
-            faker.seed(text.length);
-            const data = Array.from({ length: 2 }, () => faker.lorem.sentences(2));
-            renderRoot(
-              el,
-              <ThemeProvider tx={defaultTx}>
-                <div className='flex flex-col gap-2'>
-                  <div className='flex items-center gap-4'>
-                    <div className='grow truncate'>
-                      <span className='text-xs text-subdued mie-2'>Prompt</span>
-                      {text}
-                    </div>
-                    <div className='flex gap-1'>
-                      <IconButton classNames='text-green-500' label='Apply' icon={'ph--check--regular'} />
-                      <IconButton classNames='text-red-500' label='Cancel' icon={'ph--x--regular'} />
-                    </div>
-                  </div>
-                  <div>{data.join('\n\n')}</div>
-                </div>
-              </ThemeProvider>,
-            );
-          },
+        image(),
+        preview({
+          renderBlock: createRenderer(PreviewBlock),
+          renderPopover: createRenderer(PreviewCard),
+          onLookup: handlePreviewLookup,
         }),
       ]}
     />
   ),
 };
 
-const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
+const handlePreviewLookup = async (link: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+  // Random text.
+  faker.seed(link.dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+  const text = Array.from({ length: 2 }, () => faker.lorem.paragraphs()).join('\n\n');
+  return {
+    label: link.label,
+    text,
+  };
+};
+
+// Async lookup.
+// TODO(burdon): Handle error.s
+const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']): PreviewLinkTarget | undefined => {
+  const [target, setTarget] = useState<PreviewLinkTarget>();
+  useEffect(() => {
+    void onLookup(link).then((target) => setTarget(target));
+  }, [link, onLookup]);
+
+  return target;
+};
+
+const PreviewCard: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
+  const target = useRefTarget(link, onLookup);
+  return (
+    <div className='flex flex-col gap-2'>
+      <div className='grow truncate'>{link.label}</div>
+      {target && <div className='line-clamp-3'>{target.text}</div>}
+    </div>
+  );
+};
+
+// TODO(burdon): Replace with card.
+const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
+  const target = useRefTarget(link, onLookup);
+  return (
+    <div className='group flex flex-col gap-2'>
+      <div className='flex items-center gap-4'>
+        <div className='grow truncate'>
+          {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
+          {link.label}
+        </div>
+        {!readonly && (
+          <div className='flex gap-1'>
+            {(link.suggest && (
+              <>
+                {target && (
+                  <IconButton
+                    classNames='text-green-500'
+                    label='Apply'
+                    icon={'ph--check--regular'}
+                    onClick={() => onAction({ type: 'insert', link, target })}
+                  />
+                )}
+                <IconButton
+                  classNames='text-red-500'
+                  label='Cancel'
+                  icon={'ph--x--regular'}
+                  onClick={() => onAction({ type: 'delete', link })}
+                />
+              </>
+            )) || (
+              <IconButton
+                iconOnly
+                label='Delete'
+                icon={'ph--x--regular'}
+                classNames={hoverableHidden}
+                onClick={() => onAction({ type: 'delete', link })}
+              />
+            )}
+          </div>
+        )}
+      </div>
+      {target && <div className='line-clamp-3'>{target.text}</div>}
+    </div>
+  );
+};
+
+//
+// Command
+//
+
+export const Command = {
+  render: () => (
+    <DefaultStory
+      text={str(
+        '# Preview',
+        '',
+        'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
+        '',
+        '![DXOS][dxn:queue:data:123]',
+        '',
+      )}
+      extensions={[
+        preview({
+          renderBlock: createRenderer(PreviewBlock),
+          renderPopover: createRenderer(PreviewCard),
+          onLookup: handlePreviewLookup,
+        }),
+        command({
+          renderMenu: createRenderer(CommandMenu),
+          renderDialog: createRenderer(CommandDialog),
+          onHint: () => 'Press / for commands.',
+        }),
+      ]}
+    />
+  ),
+};
+
+const CommandMenu = ({ onAction }: { onAction: () => void }) => {
+  return (
+    <Button classNames='p-1 aspect-square' onClick={onAction}>
+      <Icon icon='ph--sparkle--regular' size={5} />
+    </Button>
+  );
+};
+
+const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {
   const [text, setText] = useState('');
+
   const handleInsert = () => {
     // TODO(burdon): Use queue ref.
     const link = `[${text}](dxn:queue:data:123)`;
-    console.log({ link });
-    onClose(text.length ? { insert: link } : undefined);
+    onAction(text.length ? { type: 'insert', text: link } : undefined);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -686,7 +767,7 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
         break;
       }
       case 'Escape': {
-        onClose();
+        onAction();
         break;
       }
     }
@@ -696,9 +777,8 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
     <div className='flex w-full justify-center'>
       <div
         className={mx(
-          'flex w-full p-2 gap-2 items-center border border-separator rounded-md',
-          editorContent,
-          baseSurface,
+          'flex w-full p-2 gap-2 items-center bg-modalSurface border border-separator rounded-md',
+          editorWidth,
         )}
       >
         <Input.Root>
@@ -706,12 +786,12 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
             autoFocus={true}
             placeholder='Ask a question...'
             value={text}
-            onChange={({ target: { value } }) => setText(value)}
+            onChange={(ev) => setText(ev.target.value)}
             onKeyDown={handleKeyDown}
           />
         </Input.Root>
-        <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
-          <X className={getSize(5)} />
+        <Button variant='ghost' classNames='pli-0' onClick={() => onAction({ type: 'cancel' })}>
+          <Icon icon='ph--x--regular' size={5} />
         </Button>
       </div>
     </div>
@@ -736,7 +816,7 @@ export const Comments = {
           ),
           comments({
             id: 'test',
-            onHover: onCommentsHover,
+            renderTooltip: createRenderer(CommentTooltip),
             onCreate: ({ cursor }) => {
               const id = PublicKey.random().toHex();
               _comments.value = [..._comments.value, { id, cursor }];
@@ -760,6 +840,25 @@ export const Comments = {
       />
     );
   },
+};
+
+const Key: FC<{ char: string }> = ({ char }) => (
+  <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
+    {char}
+  </span>
+);
+
+const CommentTooltip: FC<{ shortcut: string }> = ({ shortcut }) => {
+  return (
+    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded'>
+      <div>Create comment</div>
+      <div className='flex gap-1'>
+        {keySymbols(parseShortcut(shortcut)).map((char) => (
+          <Key key={char} char={char} />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 //

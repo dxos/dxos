@@ -8,15 +8,15 @@ import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { useNode } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
-  Toolbar as NativeToolbar,
-  IconButton,
-  useTranslation,
-  toLocalizedString,
-  type ThemedClassName,
-  type IconButtonProps,
   Icon,
+  IconButton,
+  type IconButtonProps,
+  type ThemedClassName,
+  Toolbar as NativeToolbar,
+  toLocalizedString,
+  useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { hoverableHidden, mx } from '@dxos/react-ui-theme';
 
 import { MeetingCapabilities } from '../../capabilities';
 import { MEETING_PLUGIN } from '../../meta';
@@ -55,12 +55,7 @@ export const Toolbar = ({
   // TODO(burdon): Create large toolbar/button sizes.
   // TODO(wittjosiah): Use toolbar. In order to use toolbar, it needs to be updated to actually use the graph action callbacks directly.
   return (
-    <div
-      className={mx(
-        'flex justify-center m-4',
-        call.joined && autoHideControls && 'opacity-0 transition-opacity duration-300 group-hover:opacity-100',
-      )}
-    >
+    <div className={mx('flex justify-center m-4', call.joined && autoHideControls && hoverableHidden)}>
       <div className='bg-modalSurface p-2 rounded-lg shadow-lg'>
         <NativeToolbar.Root classNames={['!is-fit', classNames]}>
           <ToggleButton

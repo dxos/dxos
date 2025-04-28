@@ -4,12 +4,16 @@
 
 import { type BlockInfo, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { type CommandOptions } from './command';
-import { closeEffect, openCommand, openEffect } from './state';
+import { closeEffect, openCommand, openEffect } from './action';
+import { type RenderCallback } from '../../types';
+
+export type FloatingMenuOptions = {
+  renderMenu: RenderCallback<{ onAction: () => void }>;
+};
 
 // TODO(burdon): Trigger completion on click.
 // TODO(burdon): Hide when dialog is open.
-export const floatingMenu = (options: CommandOptions) =>
+export const floatingMenu = (options: FloatingMenuOptions) =>
   ViewPlugin.fromClass(
     class {
       button: HTMLElement;
@@ -31,13 +35,11 @@ export const floatingMenu = (options: CommandOptions) =>
         this.button.style.zIndex = '10';
         this.button.style.display = 'none';
 
-        options.onRenderMenu(this.button, () => {
-          openCommand(view);
-        });
+        options.renderMenu(this.button, { onAction: () => openCommand(view) }, view);
         container.appendChild(this.button);
 
         // Listen for scroll events.
-        container.addEventListener('scroll', this.scheduleUpdate);
+        container.addEventListener('scroll', this.scheduleUpdate.bind(this));
         this.scheduleUpdate();
       }
 
@@ -56,7 +58,8 @@ export const floatingMenu = (options: CommandOptions) =>
         if (this.rafId != null) {
           cancelAnimationFrame(this.rafId);
         }
-        this.rafId = requestAnimationFrame(() => this.updateButtonPosition());
+
+        this.rafId = requestAnimationFrame(this.updateButtonPosition.bind(this));
       }
 
       updateButtonPosition() {
