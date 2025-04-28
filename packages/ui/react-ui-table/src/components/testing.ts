@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { create, makeRef } from '@dxos/react-client/echo';
+import { live, makeRef } from '@dxos/react-client/echo';
 import { createView, type ViewProjection } from '@dxos/schema';
 
 import { TableType } from '../types';
@@ -20,7 +20,7 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/Test', versi
 });
 
 export const createTable = (schema = TestSchema) => {
-  return create(TableType, {
+  return live(TableType, {
     view: makeRef(
       createView({
         name: 'Test',
@@ -32,7 +32,7 @@ export const createTable = (schema = TestSchema) => {
 };
 
 export const createItems = (n: number) => {
-  const { data } = create({
+  const { data } = live({
     data: Array.from({ length: n }, () => ({
       name: faker.person.fullName(),
       age: faker.number.int({ min: 20, max: 70 }),

@@ -10,7 +10,7 @@ import { SettingsStore } from '@dxos/local-storage';
 import {
   getSpace,
   isEchoObject,
-  isReactiveObject,
+  isLiveObject,
   isSpace,
   SpaceState,
   type ReactiveEchoObject,
@@ -133,7 +133,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: POPOVER_RENAME_OBJECT,
       role: 'popover',
       filter: (data): data is { props: ReactiveEchoObject<any> } =>
-        data.component === POPOVER_RENAME_OBJECT && isReactiveObject(data.props),
+        data.component === POPOVER_RENAME_OBJECT && isLiveObject(data.props),
       component: ({ data }) => <PopoverRenameObject object={data.props} />,
     }),
     createSurface({

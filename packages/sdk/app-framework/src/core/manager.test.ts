@@ -11,7 +11,7 @@ import { raise } from '@dxos/debug';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { contributes, defineCapability, type PluginsContext } from './capabilities';
 import { allOf, defineEvent, oneOf } from './events';
@@ -358,14 +358,14 @@ describe('PluginManager', () => {
         id,
         activatesOn: Events.Startup,
         activatesAfter: [stateEvent],
-        activate: () => contributes(Number, create({ number: 1 })),
+        activate: () => contributes(Number, live({ number: 1 })),
       }),
       defineModule({
         id: 'dxos.org/test/doubler',
         activatesOn: stateEvent,
         activate: (context) => {
           const counter = context.requestCapability(Number);
-          const state = create({ total: counter.number * 2 });
+          const state = live({ total: counter.number * 2 });
           const unsubscribe = effect(() => {
             state.total = counter.number * 2;
           });

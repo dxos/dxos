@@ -15,7 +15,7 @@ import { refFromDXN } from '@dxos/live-object';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { create, type Space } from '@dxos/react-client/echo';
+import { live, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Thread } from '@dxos/react-ui-thread';
@@ -38,7 +38,7 @@ const Story = () => {
       setTimeout(async () => {
         const space = await client.spaces.create();
         const channel = space.db.add(
-          create(ChannelType, {
+          live(ChannelType, {
             queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()])),
           }),
         );

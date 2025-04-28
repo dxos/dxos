@@ -22,7 +22,7 @@ import {
   fullyQualifiedId,
   getSpace,
   isSpace,
-  isReactiveObject,
+  isLiveObject,
   parseId,
 } from '@dxos/react-client/echo';
 
@@ -118,7 +118,7 @@ export default (context: PluginsContext) =>
     createExtension({
       id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
       filter: (node): node is Node<AIChatType> =>
-        isReactiveObject(node.data) && node.data.assistantChatQueue && node.data.type !== AIChatType.typename,
+        isLiveObject(node.data) && node.data.assistantChatQueue && node.data.type !== AIChatType.typename,
       connector: ({ node }) => [
         {
           id: [node.id, 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),

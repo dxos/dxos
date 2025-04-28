@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import { useEffect, useState } from 'react';
 
-import { fullyQualifiedId, getSpace, type ReactiveObject } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, type Live } from '@dxos/react-client/echo';
 import { useSelectionActions } from '@dxos/react-ui-attention';
 import { type ViewProjection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -16,7 +16,7 @@ import { type TableType } from '../types';
 export type UseTableModelParams<T extends TableRow = TableRow> = {
   table?: TableType;
   projection?: ViewProjection;
-  rows?: ReactiveObject<T>[];
+  rows?: Live<T>[];
   rowActions?: TableRowAction[];
   onSelectionChanged?: (selection: string[]) => void;
   onRowAction?: (actionId: string, data: T) => void;

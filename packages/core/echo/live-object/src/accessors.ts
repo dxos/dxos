@@ -6,7 +6,7 @@ import { type BaseObject, foreignKeyEquals, type ObjectMeta, Ref } from '@dxos/e
 import { invariant } from '@dxos/invariant';
 import { type Comparator, deepMapValues, intersection } from '@dxos/util';
 
-import type { ReactiveObject } from './object';
+import type { Live } from './live';
 import { getProxyHandler } from './proxy';
 
 export const getMeta = <T extends BaseObject>(obj: T): ObjectMeta => {
@@ -15,13 +15,13 @@ export const getMeta = <T extends BaseObject>(obj: T): ObjectMeta => {
   return meta;
 };
 
-export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
+export const compareForeignKeys: Comparator<Live<any>> = (a: Live<any>, b: Live<any>) =>
   intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
 
 /**
  * Returns an immutable snapshot of the live object.
  */
-export const getSnapshot = <T extends BaseObject>(obj: ReactiveObject<T>): T => {
+export const getSnapshot = <T extends BaseObject>(obj: Live<T>): T => {
   return deepMapValues(obj, (value, recurse) => {
     // Do not recurse on references.
     if (Ref.isRef(value)) {

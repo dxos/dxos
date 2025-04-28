@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
@@ -38,7 +38,7 @@ faker.seed(101);
 
 const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(createObject(create(TextType, { content })));
+  const [text] = useState(createObject(live(TextType, { content })));
   const toolbarState = useEditorToolbarState({ viewMode: 'preview' });
   const formattingObserver = useFormattingState(toolbarState);
   const { parentRef, view } = useTextEditor(() => {

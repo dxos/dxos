@@ -8,7 +8,7 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { Config } from '@dxos/react-client';
-import { create, makeRef } from '@dxos/react-client/echo';
+import { live, makeRef } from '@dxos/react-client/echo';
 
 import { MeetingPlugin } from '../MeetingPlugin';
 
@@ -18,7 +18,7 @@ export const createMeetingPlugins = async () => [
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       await space.waitUntilReady();
-      space.properties[CollectionType.typename] = makeRef(create(CollectionType, { objects: [], views: {} }));
+      space.properties[CollectionType.typename] = makeRef(live(CollectionType, { objects: [], views: {} }));
     },
     config: new Config({
       runtime: {

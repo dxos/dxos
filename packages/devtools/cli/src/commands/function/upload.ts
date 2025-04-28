@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type ReactiveEchoObject, Filter, loadObjectReferences, makeRef } from '@dxos/client/echo';
-import { create, getMeta } from '@dxos/client/echo';
+import { live, getMeta } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import {
   getUserFunctionUrlInMetadata,
@@ -139,8 +139,8 @@ export default class Upload extends BaseCommand<typeof Upload> {
       } else {
         // Create new object
         // TODO: make object navigable in Composer.
-        const sourceObj = space.db.add(create(TextType, { content: scriptContent }));
-        const obj = space.db.add(create(ScriptType, { name: this.flags.name, source: makeRef(sourceObj) }));
+        const sourceObj = space.db.add(live(TextType, { content: scriptContent }));
+        const obj = space.db.add(live(ScriptType, { name: this.flags.name, source: makeRef(sourceObj) }));
         setUserFunctionUrlInMetadata(getMeta(obj), result.functionId);
         if (this.flags.verbose) {
           this.log(`Created object: ${this.flags.spaceKey}/${obj.id}`);

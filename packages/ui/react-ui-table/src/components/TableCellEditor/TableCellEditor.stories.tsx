@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ImmutableSchema, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { Filter, useQuery, create } from '@dxos/react-client/echo';
+import { Filter, useQuery, live } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { defaultSizeRow, Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { ViewProjection, ViewType } from '@dxos/schema';
@@ -95,11 +95,11 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(create(TableType, {}));
+        const table = space.db.add(live(TableType, {}));
         const schema = await initializeTable({ client, space, table });
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            create(schema, {
+            live(schema, {
               name: faker.person.fullName(),
             }),
           );

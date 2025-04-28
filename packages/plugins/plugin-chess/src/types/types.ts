@@ -3,7 +3,7 @@
 //
 
 import { isInstanceOf, S } from '@dxos/echo-schema';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 
 import { ChessType } from './schema';
 import { CHESS_PLUGIN } from '../meta';
@@ -23,5 +23,5 @@ export namespace ChessAction {
 }
 
 export const isObject = (object: unknown): object is typeof ChessType => {
-  return isReactiveObject(object) && isInstanceOf(ChessType, object);
+  return isLiveObject(object) && isInstanceOf(ChessType, object);
 };

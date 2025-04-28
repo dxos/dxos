@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Client, PublicKey } from '@dxos/client';
-import { create, createDocAccessor, Expando, Filter, makeRef, type Space, toCursorRange } from '@dxos/client/echo';
+import { live, createDocAccessor, Expando, Filter, makeRef, type Space, toCursorRange } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -62,21 +62,21 @@ describe('Composer migrations', () => {
 
   test(__COMPOSER_MIGRATIONS__[0].version.toString(), async () => {
     const doc1 = space.db.add(
-      create(LegacyTypes.DocumentType, {
-        content: makeRef(create(LegacyTypes.TextType, { content: 'object1' })),
+      live(LegacyTypes.DocumentType, {
+        content: makeRef(live(LegacyTypes.TextType, { content: 'object1' })),
         comments: [],
       }),
     );
     const thread1 = space.db.add(
-      create(LegacyTypes.ThreadType, {
+      live(LegacyTypes.ThreadType, {
         messages: [
           makeRef(
-            create(LegacyTypes.MessageType, {
+            live(LegacyTypes.MessageType, {
               from: { identityKey: PublicKey.random().toHex() },
               blocks: [
                 {
                   timestamp: new Date().toISOString(),
-                  content: makeRef(create(LegacyTypes.TextType, { content: 'comment1' })),
+                  content: makeRef(live(LegacyTypes.TextType, { content: 'comment1' })),
                 },
               ],
             }),
@@ -91,22 +91,20 @@ describe('Composer migrations', () => {
     expect(doc1.comments![0].thread!.target instanceof LegacyTypes.ThreadType).to.be.true;
 
     const folder1 = space.db.add(
-      create(LegacyTypes.FolderType, {
+      live(LegacyTypes.FolderType, {
         name: 'folder1',
         objects: [
           makeRef(
-            create(LegacyTypes.FolderType, {
+            live(LegacyTypes.FolderType, {
               name: 'folder2',
               objects: [
-                makeRef(create(LegacyTypes.FolderType, { name: 'folder3', objects: [] })),
+                makeRef(live(LegacyTypes.FolderType, { name: 'folder3', objects: [] })),
                 makeRef(
-                  create(LegacyTypes.StackType, {
+                  live(LegacyTypes.StackType, {
                     title: 'stack1',
                     sections: [
-                      makeRef(create(LegacyTypes.SectionType, { object: makeRef(doc1) })),
-                      makeRef(
-                        create(LegacyTypes.SectionType, { object: makeRef(create(Expando, { key: 'object2' })) }),
-                      ),
+                      makeRef(live(LegacyTypes.SectionType, { object: makeRef(doc1) })),
+                      makeRef(live(LegacyTypes.SectionType, { object: makeRef(live(Expando, { key: 'object2' })) })),
                     ],
                   }),
                 ),
@@ -150,21 +148,21 @@ describe('Composer migrations', () => {
 
   test(__COMPOSER_MIGRATIONS__[1].version.toString(), async () => {
     const doc1 = space.db.add(
-      create(LegacyTypes.DocumentType, {
-        content: makeRef(create(LegacyTypes.TextType, { content: 'object1' })),
+      live(LegacyTypes.DocumentType, {
+        content: makeRef(live(LegacyTypes.TextType, { content: 'object1' })),
         comments: [],
       }),
     );
     const thread1 = space.db.add(
-      create(LegacyTypes.ThreadType, {
+      live(LegacyTypes.ThreadType, {
         messages: [
           makeRef(
-            create(LegacyTypes.MessageType, {
+            live(LegacyTypes.MessageType, {
               from: { identityKey: PublicKey.random().toHex() },
               blocks: [
                 {
                   timestamp: new Date().toISOString(),
-                  content: makeRef(create(LegacyTypes.TextType, { content: 'comment1' })),
+                  content: makeRef(live(LegacyTypes.TextType, { content: 'comment1' })),
                 },
               ],
             }),
@@ -176,14 +174,14 @@ describe('Composer migrations', () => {
     doc1.comments?.push({ cursor, thread: makeRef(thread1) });
     expect(doc1.comments![0].thread?.target instanceof LegacyTypes.ThreadType).to.be.true;
     const sketch1 = space.db.add(
-      create(LegacyTypes.SketchType, {
+      live(LegacyTypes.SketchType, {
         title: 'My Sketch',
-        data: makeRef(create(Expando, { content: { id: 'test string' } })),
+        data: makeRef(live(Expando, { content: { id: 'test string' } })),
       }),
     );
     // TODO(wittjosiah): Include dynamic schema.
     const table1 = space.db.add(
-      create(LegacyTypes.TableType, {
+      live(LegacyTypes.TableType, {
         title: 'My Table',
         props: [
           {

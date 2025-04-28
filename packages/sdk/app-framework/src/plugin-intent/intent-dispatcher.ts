@@ -5,7 +5,7 @@
 import { Effect, Option, pipe, Ref } from 'effect';
 import { type Simplify } from 'effect/Types';
 
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { byPosition, type MaybePromise, type Position, type GuardedType } from '@dxos/util';
 
@@ -287,7 +287,7 @@ const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
 const defaultPromise = () => Effect.runPromise(defaultEffect());
 
 export default (context: PluginsContext) => {
-  const state = create<IntentContext>({
+  const state = live<IntentContext>({
     dispatch: defaultEffect,
     dispatchPromise: defaultPromise,
     undo: defaultEffect,

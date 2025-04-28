@@ -16,7 +16,7 @@ import {
   TypedObject,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { stripUndefined } from '@dxos/util';
 
 import { createFieldId } from './projection';
@@ -121,12 +121,7 @@ type CreateViewProps = {
 /**
  * Create view from existing schema.
  */
-export const createView = ({
-  name,
-  typename,
-  jsonSchema,
-  fields: include,
-}: CreateViewProps): ReactiveObject<ViewType> => {
+export const createView = ({ name, typename, jsonSchema, fields: include }: CreateViewProps): Live<ViewType> => {
   const fields: FieldType[] = [];
   if (jsonSchema) {
     // TODO(burdon): Property order is lost.
@@ -162,7 +157,7 @@ export const createView = ({
     });
   }
 
-  return create(ViewType, {
+  return live(ViewType, {
     name,
     query: { typename },
     fields,

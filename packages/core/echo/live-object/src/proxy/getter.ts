@@ -6,8 +6,10 @@ import { type Reference } from '@dxos/echo-protocol';
 import { type BaseObject } from '@dxos/echo-schema';
 import { getSchema, SchemaMetaSymbol } from '@dxos/echo-schema';
 
-import { getProxyHandler, isReactiveObject } from './proxy';
+import { getProxyHandler } from './proxy';
+import { isLiveObject } from '../live';
 
+// TODO(dmaretskyi): Change to isDeleted symbol property
 export const isDeleted = <T extends BaseObject>(obj: T): boolean => {
   return getProxyHandler(obj).isDeleted(obj) ?? false;
 };
@@ -17,13 +19,14 @@ export const isDeleted = <T extends BaseObject>(obj: T): boolean => {
  */
 // TODO(burdon): Can we remove this?
 export const getType = <T extends BaseObject>(obj: T | undefined): Reference | undefined => {
-  if (obj && isReactiveObject(obj)) {
+  if (obj && isLiveObject(obj)) {
     return getProxyHandler(obj).getTypeReference(obj);
   }
 
   return undefined;
 };
 
+// TODO(dmaretskyi): Use typename symbol
 export const getTypename = <T extends BaseObject>(obj: T): string | undefined => {
   const schema = getSchema(obj);
   // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.

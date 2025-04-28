@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSchema, live } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -73,7 +73,7 @@ const useTestTableModel = () => {
 
   const handleInsertRow = useCallback(() => {
     if (space && schema) {
-      space.db.add(create(schema, {}));
+      space.db.add(live(schema, {}));
     }
   }, [space, schema]);
 
@@ -222,11 +222,11 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(create(TableType, {}));
+        const table = space.db.add(live(TableType, {}));
         const schema = await initializeTable({ client, space, table, initialRow: false });
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            create(schema, {
+            live(schema, {
               name: faker.person.fullName(),
             }),
           );
@@ -251,7 +251,7 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(create(TableType, {}));
+        const table = space.db.add(live(TableType, {}));
         await initializeTable({ client, space, table, typename: Testing.Contact.typename });
 
         const factory = createObjectFactory(space.db, faker as any);
@@ -303,13 +303,13 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const table = space.db.add(create(TableType, {}));
+        const table = space.db.add(live(TableType, {}));
         await initializeTable({ client, space, table, initialRow: false, typename });
 
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            create(storedSchema, {
+            live(storedSchema, {
               single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: faker.helpers.randomSubset(selectOptionIds),
             }),

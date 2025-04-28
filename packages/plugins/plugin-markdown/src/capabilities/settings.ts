@@ -3,13 +3,13 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownSettingsProps, MarkdownSettingsSchema } from '../types';
 
 export default () => {
-  const settings = create<MarkdownSettingsProps>({
+  const settings = live<MarkdownSettingsProps>({
     defaultViewMode: 'preview',
     toolbar: true,
     numberedHeadings: true,

@@ -10,7 +10,7 @@ import process from 'node:process';
 import { type ReactiveEchoObject, Filter } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { create, getMeta } from '@dxos/live-object';
+import { live, getMeta } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { EventType } from '@dxos/plugin-inbox/types';
 import { type ActorType } from '@dxos/plugin-space/types';
@@ -83,7 +83,7 @@ export const handler = subscriptionHandler(async ({ event, response }) => {
       // TODO(burdon): Upsert.
       if (!existing) {
         space.db.add(
-          create(
+          live(
             EventType,
             {
               name: summary || '',

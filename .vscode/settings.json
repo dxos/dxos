@@ -40,13 +40,6 @@
     "build-cache.json": "jsonc",
     "command-versions.json": "jsonc"
   },
-  "files.exclude": {
-    "**/.nx": true,
-    "**/build": true,
-    "**/coverage": true,
-    "**/dist": true,
-    "**/node_modules": true
-  },
   "typescript.preferences.importModuleSpecifier": "relative",
   "search.followSymlinks": false,
   "editor.tabSize": 2,
