@@ -17,7 +17,7 @@ import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
 import { useMemo } from 'react';
 
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 
 import { type EditorToolbarState } from '../../components';
 
@@ -1250,7 +1250,7 @@ export const getFormatting = (state: EditorState): Formatting => {
 /**
  * Hook provides an extension to compute the current formatting state.
  */
-export const useFormattingState = (state: ReactiveObject<EditorToolbarState>): Extension => {
+export const useFormattingState = (state: Live<EditorToolbarState>): Extension => {
   return useMemo(
     () =>
       EditorView.updateListener.of((update) => {

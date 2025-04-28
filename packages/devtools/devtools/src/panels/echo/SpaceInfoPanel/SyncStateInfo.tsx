@@ -22,8 +22,8 @@ export const SyncStateInfo = () => {
   }, [space]);
 
   return (
-    <div>
-      <div className='flex w-full bg-gray-50 p-2'>Sync state</div>
+    <div className='p-2 text-sm'>
+      <p className='text-base'>Sync state</p>
       <JsonView data={syncState} />
     </div>
   );

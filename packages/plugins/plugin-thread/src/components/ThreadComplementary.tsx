@@ -6,11 +6,12 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { createIntent, LayoutAction, useCapability, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { ThreadCapabilities } from '@dxos/plugin-space';
-import { MessageType, type ThreadType } from '@dxos/plugin-space/types';
-import { create, fullyQualifiedId, makeRef, RefArray } from '@dxos/react-client/echo';
+import { type ThreadType } from '@dxos/plugin-space/types';
+import { fullyQualifiedId, RefArray } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
+import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { isNonNullable } from '@dxos/util';
 
@@ -42,7 +43,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
   const sort = useMemo(() => createSort?.(subject), [createSort, subject]);
 
-  const threadObjects = RefArray.allResolvedTargets(subject.threads ?? []);
+  const threadObjects = RefArray.targets(subject.threads ?? []);
 
   const threads = useMemo(() => {
     return threadObjects.concat(drafts ?? []).filter(isNonNullable) as ThreadType[];
@@ -87,20 +88,10 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
 
   const handleComment = useCallback(
-    async (thread: ThreadType, message: string) => {
-      thread.messages.push(
-        makeRef(
-          create(MessageType, {
-            sender: { identityKey: identity?.identityKey.toHex() },
-            timestamp: new Date().toISOString(),
-            text: message,
-            // TODO(wittjosiah): Context based on attention.
-            // context: context ? makeRef(context) : undefined,
-          }),
-        ),
+    async (thread: ThreadType, text: string) => {
+      await dispatch(
+        createIntent(ThreadAction.AddMessage, { thread, subject, sender: { identityDid: identity?.did }, text }),
       );
-
-      await dispatch(createIntent(ThreadAction.OnMessageAdd, { thread, subject }));
 
       state.current = fullyQualifiedId(thread);
     },
@@ -138,21 +129,24 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
 
   return (
-    <Tabs.Root
-      value={showResolvedThreads ? 'all' : 'unresolved'}
-      onValueChange={onChangeViewState}
-      orientation='horizontal'
-    >
-      <Tabs.Tablist classNames='p-1 gap-1 bs-[--rail-action] border-be border-separator'>
-        <Tabs.Tab value='unresolved' classNames='text-sm'>
-          {t('show unresolved label')}
-        </Tabs.Tab>
-        <Tabs.Tab value='all' classNames='text-sm'>
-          {t('show all label')}
-        </Tabs.Tab>
-      </Tabs.Tablist>
-      <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-      <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
-    </Tabs.Root>
+    <StackItem.Content toolbar>
+      <Tabs.Root
+        value={showResolvedThreads ? 'all' : 'unresolved'}
+        onValueChange={onChangeViewState}
+        orientation='horizontal'
+        classNames='contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin'
+      >
+        <Tabs.Tablist classNames='p-1 gap-1 bs-[--rail-action] border-be border-separator'>
+          <Tabs.Tab value='unresolved' classNames='text-sm'>
+            {t('show unresolved label')}
+          </Tabs.Tab>
+          <Tabs.Tab value='all' classNames='text-sm'>
+            {t('show all label')}
+          </Tabs.Tab>
+        </Tabs.Tablist>
+        <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
+        <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+      </Tabs.Root>
+    </StackItem.Content>
   );
 };

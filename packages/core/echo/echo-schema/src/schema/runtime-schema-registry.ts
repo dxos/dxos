@@ -17,22 +17,21 @@ import { getTypenameOrThrow } from '../types';
  */
 // TODO(burdon): Reconcile with EchoSchemaRegistry.
 export class RuntimeSchemaRegistry {
-  // TODO(burdon): Change to TypedObject
-  private readonly _schema = new Map<string, S.Schema.AnyNoContext[]>();
+  private readonly _registry = new Map<string, S.Schema.AnyNoContext[]>();
 
   constructor() {
-    this._schema.set(StoredSchema.typename, [StoredSchema]);
+    this._registry.set(StoredSchema.typename, [StoredSchema]);
   }
 
   // TODO(burdon): Rename types, hasType, etc.
   get schemas(): S.Schema.AnyNoContext[] {
-    return Array.from(this._schema.values()).flat();
+    return Array.from(this._registry.values()).flat();
   }
 
   // TODO(burdon): TypedObject
   hasSchema<S extends S.Schema.AnyNoContext>(schema: S): boolean {
     const typename = getTypenameOrThrow(schema);
-    const arr = this._schema.get(typename);
+    const arr = this._registry.get(typename);
     return arr?.some((s) => getSchemaVersion(s) === getSchemaVersion(schema)) ?? false;
   }
 
@@ -41,8 +40,9 @@ export class RuntimeSchemaRegistry {
     if (!components) {
       return undefined;
     }
+
     const { type, version } = components;
-    const allSchemas = this._schema.get(type) ?? [];
+    const allSchemas = this._registry.get(type) ?? [];
     if (version) {
       return allSchemas.find((s) => getSchemaVersion(s) === version);
     } else {
@@ -59,7 +59,7 @@ export class RuntimeSchemaRegistry {
    */
   // TODO(burdon): TypedObject
   getSchema(typename: string): S.Schema.AnyNoContext | undefined {
-    return this._schema.get(typename)?.[0];
+    return this._registry.get(typename)?.[0];
   }
 
   // TODO(burdon): TypedObject
@@ -67,12 +67,12 @@ export class RuntimeSchemaRegistry {
     types.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       const version = getSchemaVersion(schema) ?? raise(new TypeError('Schema has no version.'));
-      const arr = defaultMap(this._schema, typename, () => []);
-      if (arr.some((schema) => getSchemaVersion(schema) === version)) {
+      const versions = defaultMap(this._registry, typename, () => []);
+      if (versions.some((schema) => getSchemaVersion(schema) === version)) {
         throw new Error(`Schema version already registered: ${typename}:${version}`);
       }
 
-      arr.push(schema);
+      versions.push(schema);
     });
   }
 }

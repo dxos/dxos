@@ -132,11 +132,12 @@ export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTyp
   switch (format) {
     case FormatEnum.Markdown:
       return undefined;
+    case FormatEnum.Time:
     case FormatEnum.Timestamp:
     case FormatEnum.DateTime:
     case FormatEnum.Date:
-    case FormatEnum.Time:
-      return ['font-mono'];
+    case FormatEnum.Duration:
+      return ['font-mono', 'text-right'];
     case FormatEnum.Currency:
       return ['text-right'];
     case FormatEnum.JSON:
@@ -146,8 +147,6 @@ export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTyp
       return undefined;
   }
 };
-
-export const cellClassesForRowSelection = (selected: boolean) => (selected ? ['!bg-gridCellSelected'] : undefined);
 
 // TODO(ZaymonFC): How to do this with translations?
 export const pathNotUniqueError = (path: string): ValidationError => ({

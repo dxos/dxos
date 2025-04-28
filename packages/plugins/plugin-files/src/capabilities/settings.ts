@@ -3,13 +3,13 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { FILES_PLUGIN } from '../meta';
 import { FilesSettingsSchema, type FilesSettingsProps } from '../types';
 
 export default async () => {
-  const settings = create<FilesSettingsProps>({
+  const settings = live<FilesSettingsProps>({
     autoExport: false,
     autoExportInterval: 30_000,
   });

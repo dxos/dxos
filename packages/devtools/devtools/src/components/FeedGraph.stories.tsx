@@ -11,6 +11,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { FeedGraph } from './FeedGraph';
 
 export default {
+  title: 'devtools/devtools/FeedGraph',
   component: FeedGraph,
   decorators: [withTheme],
   argTypes: {},

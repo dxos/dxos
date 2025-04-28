@@ -12,10 +12,10 @@ import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
 import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
-import { PanelContainer, Searchbar } from '../../../components';
+import { PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
@@ -82,15 +82,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
   }, [selected]);
 
-  const onVersionClick = (version: HistoryRow) => {
-    setSelectedVersion(version);
-    setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
-  };
-
-  const objectProperties = useMemo(
+  const dataProperties = useMemo(
     () => [
       { name: 'id', format: FormatEnum.DID },
       { name: 'type', format: FormatEnum.String },
+      { name: 'version', format: FormatEnum.String, size: 100 },
       {
         name: 'deleted',
         format: FormatEnum.SingleSelect,
@@ -99,7 +95,6 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           options: [{ id: 'DELETED', title: 'DELETED', color: 'red' }],
         },
       },
-      { name: 'version', format: FormatEnum.String, size: 100 },
       {
         name: 'schemaAvailable',
         format: FormatEnum.SingleSelect,
@@ -115,35 +110,27 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     [],
   );
 
-  const tableData = useMemo(() => {
+  const dataRows = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
       id: item.id,
-      deleted: isDeleted(item) ? 'DELETED' : ' ',
       type: getTypename(item),
       version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
+      deleted: isDeleted(item) ? 'DELETED' : ' ',
       schemaAvailable: getSchema(item) ? 'YES' : 'NO',
       _original: item, // Store the original item for selection
     }));
   }, [items, filter]);
 
-  const handleObjectSelectionChanged = useCallback(
-    (selectedIds: string[]) => {
-      if (selectedIds.length === 0) {
-        setSelected(undefined);
-        setSelectedVersion(null);
-        setSelectedVersionObject(null);
-        return;
-      }
+  const handleObjectRowClicked = useCallback((row: any) => {
+    if (!row) {
+      setSelected(undefined);
+      setSelectedVersion(null);
+      setSelectedVersionObject(null);
+      return;
+    }
 
-      const selectedId = selectedIds[selectedIds.length - 1];
-      const selectedObject = items.find((item) => item.id === selectedId);
-
-      if (selectedObject) {
-        objectSelect(selectedObject);
-      }
-    },
-    [items],
-  );
+    objectSelect(row._original);
+  }, []);
 
   const historyProperties = useMemo(
     () => [
@@ -155,7 +142,8 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     ],
     [],
   );
-  const historyData = useMemo(() => {
+
+  const historyRows = useMemo(() => {
     return history.map((item) => ({
       id: item.hash,
       hash: item.hash.slice(0, 8),
@@ -163,71 +151,77 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }));
   }, [history, selectedVersion]);
 
-  const handleHistorySelectionChanged = useCallback(
-    (selectedHashes: string[]) => {
-      if (selectedHashes.length === 0 || !selected) {
+  const handleVersionClick = useCallback(
+    (version: HistoryRow) => {
+      setSelectedVersion(version);
+      setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
+    },
+    [selected],
+  );
+
+  const handleHistoryRowClicked = useCallback(
+    (row: any) => {
+      if (!row || !selected) {
         setSelectedVersion(null);
         setSelectedVersionObject(null);
         return;
       }
 
-      const selectedHash = selectedHashes[0];
-      const versionItem = history.find((item) => item.hash.slice(0, 8) === selectedHash);
+      const versionItem = history.find((item) => item.hash === row.id);
 
       if (versionItem) {
-        onVersionClick(versionItem);
+        handleVersionClick(versionItem);
       }
     },
-    [history, onVersionClick, selected],
+    [history, handleVersionClick, selected],
   );
+
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
     <PanelContainer
       toolbar={
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
-          <Searchbar onChange={setFilter} />
+          <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
       }
     >
       <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
-        <DynamicTable
-          data={tableData}
-          properties={objectProperties}
-          onSelectionChanged={handleObjectSelectionChanged}
-        />
+        <div className='flex flex-col w-full overflow-hidden'>
+          <DynamicTable
+            properties={dataProperties}
+            rows={dataRows}
+            features={features}
+            onRowClick={handleObjectRowClicked}
+          />
+          <div
+            className={mx(
+              'bs-[--statusbar-size]',
+              'flex shrink-0 justify-end items-center gap-2',
+              'bg-baseSurface text-description',
+            )}
+          >
+            <div className='text-sm pie-2'>Objects: {items.length}</div>
+          </div>
+        </div>
 
-        <div className='grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
-          <div className={mx('p-1 overflow-auto ')}>
+        <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
+          <div className={mx('p-1 min-bs-0 overflow-auto')}>
             {selected ? (
               <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
             ) : (
-              'Select an object to inspect the contents'
+              <Placeholder label='Data' />
             )}
           </div>
-          <div className={mx('overflow-auto', !selected && 'p-1 border-bs !border-separator')}>
+          <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
             {selected ? (
-              <DynamicTable
-                data={historyData}
-                properties={historyProperties}
-                onSelectionChanged={handleHistorySelectionChanged}
-              />
+              <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
             ) : (
-              'Select an object to inspect the contents'
+              <Placeholder label='History' />
             )}
           </div>
         </div>
-      </div>
-      <div
-        className={mx(
-          'bs-[--statusbar-size]',
-          'flex justify-end items-center gap-2',
-          'bg-baseSurface text-description',
-          'border-bs border-separator',
-          'text-lg pointer-fine:text-xs',
-        )}
-      >
-        <div>Objects: {items.length}</div>
       </div>
     </PanelContainer>
   );

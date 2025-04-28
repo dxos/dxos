@@ -28,7 +28,7 @@ export default () =>
       id: `${PRESENTER_PLUGIN}/collection`,
       role: 'main',
       position: 'hoist',
-      filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
       component: ({ data }) => {
         const state = useCapability(PresenterCapabilities.MutableState);
 
@@ -52,7 +52,7 @@ export default () =>
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
     createSurface({
-      id: `${PRESENTER_PLUGIN}/settings`,
+      id: `${PRESENTER_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<PresenterSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === PRESENTER_PLUGIN,

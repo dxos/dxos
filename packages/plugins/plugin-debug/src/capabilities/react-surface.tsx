@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
 import React, { useCallback } from 'react';
 
 import {
   Capabilities,
+  chain,
   contributes,
   createIntent,
   createSurface,
@@ -32,23 +34,25 @@ import {
   StoragePanel,
   SwarmPanel,
   TracingPanel,
-  DashboardPanel,
   EdgeDashboardPanel,
   AutomergePanel,
   WorkflowPanel,
   QueuesPanel,
   InvocationTracePanel,
+  TestingPanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
+import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import {
   SpaceState,
   isSpace,
   isEchoObject,
   type ReactiveEchoObject,
-  type ReactiveObject,
+  type Live,
   type Space,
   parseId,
 } from '@dxos/react-client/echo';
@@ -81,7 +85,7 @@ const useCurrentSpace = () => {
 export default (context: PluginsContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${DEBUG_PLUGIN}/settings`,
+      id: `${DEBUG_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<DebugSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === DEBUG_PLUGIN,
@@ -93,7 +97,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
       component: ({ data }) => {
         const handleCreateObject = useCallback(
-          (objects: ReactiveObject<any>[]) => {
+          (objects: Live<any>[]) => {
             if (!isSpace(data.subject.space)) {
               return;
             }
@@ -137,10 +141,11 @@ export default (context: PluginsContext) =>
       ),
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/complementary`,
-      role: 'complementary--debug',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <DebugObjectPanel object={data.subject} />,
+      id: `${DEBUG_PLUGIN}/object-debug`,
+      role: 'article',
+      filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
+        data.subject === 'debug' && isEchoObject(data.companionTo),
+      component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,
@@ -156,7 +161,7 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/client/config`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Config,
-      component: () => <ConfigPanel />,
+      component: () => <ConfigPanel vaultSelector={false} />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/client/storage`,
@@ -204,7 +209,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/halo/credentials`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Credentials,
-      component: () => <CredentialsPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <CredentialsPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/spaces`,
@@ -237,7 +245,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/feeds`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Feeds,
-      component: () => <FeedsPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <FeedsPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/objects`,
@@ -252,7 +263,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/automerge`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
-      component: () => <AutomergePanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <AutomergePanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/queues`,
@@ -264,7 +278,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/members`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Members,
-      component: () => <MembersPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <MembersPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/metadata`,
@@ -288,14 +305,18 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/mesh/network`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Mesh.Network,
-      component: () => <NetworkPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <NetworkPanel space={space} />;
+      },
     }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/agent/dashboard`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
-      component: () => <DashboardPanel />,
-    }),
+    // TODO(wittjosiah): Remove?
+    // createSurface({
+    //   id: `${DEBUG_PLUGIN}/agent/dashboard`,
+    //   role: 'article',
+    //   filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
+    //   component: () => <DashboardPanel />,
+    // }),
     createSurface({
       id: `${DEBUG_PLUGIN}/edge/dashboard`,
       role: 'article',
@@ -306,7 +327,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/edge/workflows`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
-      component: () => <WorkflowPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <WorkflowPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/edge/traces`,
@@ -315,6 +339,36 @@ export default (context: PluginsContext) =>
       component: () => {
         const space = useCurrentSpace();
         return <InvocationTracePanel space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/edge/testing`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Edge.Testing,
+      component: () => {
+        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const onSpaceCreate = useCallback(
+          async (space: Space) => {
+            await space.waitUntilReady();
+            await dispatch(createIntent(SpaceAction.Migrate, { space }));
+            await space.db.flush();
+          },
+          [dispatch],
+        );
+        const onScriptPluginOpen = useCallback(
+          async (space: Space) => {
+            await space.waitUntilReady();
+            const result = await dispatch(
+              pipe(createIntent(ScriptAction.Create, { space }), chain(SpaceAction.AddObject, { target: space })),
+            );
+            log.info('script created', { result });
+            await dispatch(
+              createIntent(LayoutAction.Open, { part: 'main', subject: [`${space.id}:${result.data?.object.id}`] }),
+            );
+          },
+          [dispatch],
+        );
+        return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
       },
     }),
   ]);

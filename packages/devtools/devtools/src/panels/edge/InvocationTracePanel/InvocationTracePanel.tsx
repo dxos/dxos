@@ -1,222 +1,196 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, type FC } from 'react';
 
-import { type Queue } from '@dxos/echo-db';
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
-import { type TraceEvent, type InvocationTraceEvent } from '@dxos/functions/types';
-import { useQueue, type Space } from '@dxos/react-client/echo';
+import { type InvocationSpan, type ScriptType } from '@dxos/functions/types';
+import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ControlledSelector, PanelContainer } from '../../../components';
+import { ExceptionPanel } from './ExceptionPanel';
+import { LogPanel } from './LogPanel';
+import { RawDataPanel } from './RawDataPanel';
+import { useScriptNameResolver, useInvocationSpans } from './hooks';
+import { formatDuration } from './utils';
+import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
-import { styles } from '../../../styles';
 
-export const InvocationTracePanel = (props: { space?: Space }) => {
+export type InvocationTracePanelProps = {
+  space?: Space;
+  script?: ScriptType;
+  detailAxis?: 'block' | 'inline';
+};
+
+export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: InvocationTracePanelProps) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue.dxn);
-  const [selectedInvocation, setSelectedInvocation] = useState<InvocationTraceEvent>();
+  const resolver = useScriptNameResolver({ space });
+  const invocationSpans = useInvocationSpans({ space, script: props.script });
 
-  const traceQueueDxn = useMemo(() => {
-    return selectedInvocation?.invocationTraceQueue
-      ? decodeReference(selectedInvocation.invocationTraceQueue).dxn
-      : undefined;
-  }, [selectedInvocation?.invocationTraceQueue]);
-
-  const eventQueue = useQueue<TraceEvent>(traceQueueDxn);
-
-  const [selectedObject, setSelectedObject] = useState<any>();
-  const invocationsByTarget = groupByInvocationTarget(invocationsQueue);
-  const [selectedTarget, setSelectedTarget] = useState<string>();
-
-  useEffect(() => {
-    if (selectedTarget && !invocationsByTarget.has(selectedTarget)) {
-      setSelectedTarget(undefined);
-    } else if (!selectedTarget && invocationsByTarget.size) {
-      setSelectedTarget([...invocationsByTarget.keys()][0]);
+  const [selectedId, setSelectedId] = useState<string>();
+  const selectedInvocation = useMemo(() => {
+    if (!selectedId) {
+      return undefined;
     }
-  }, [invocationsByTarget ?? null]);
 
-  const invocationProperties: TablePropertyDefinition[] = useMemo(
-    () => [
-      { name: 'time', format: FormatEnum.String, size: 120 },
-      { name: 'outcome', format: FormatEnum.String, size: 40 },
-      { name: 'queue', format: FormatEnum.String },
-    ],
-    [],
-  );
+    return invocationSpans.find((span) => selectedId === span.id);
+  }, [selectedId, invocationSpans]);
 
-  const invocationData = useMemo(() => {
-    return filterBySelected(invocationsQueue?.items ?? [], selectedTarget).map((item) => ({
-      id: `${item.timestampMs}-${Math.random()}`,
-      time: new Date(item.timestampMs).toISOString(),
-      outcome: item.outcome,
-      queue: decodeReference(item.invocationTraceQueue).dxn?.toString() ?? 'unknown',
-      _original: item,
-    }));
-  }, [invocationsQueue?.items, selectedTarget]);
-
-  const handleInvocationSelection = useCallback(
-    (ids: string[]) => {
-      if (ids.length === 0) {
-        return;
+  const properties: TablePropertyDefinition[] = useMemo(() => {
+    function* generateProperties() {
+      if (props.script === undefined) {
+        yield { name: 'target', title: 'Target', format: FormatEnum.String, size: 200 };
       }
-      const id = ids[ids.length - 1];
-      const selectedData = invocationData.find((item) => item.id === id);
-      if (selectedData) {
-        const invocation = selectedData._original;
-        setSelectedInvocation(invocation);
-        setSelectedObject(invocation);
-      }
-    },
-    [invocationData],
-  );
 
-  const traceEventProperties: TablePropertyDefinition[] = useMemo(
-    () => [
-      { name: 'time', format: FormatEnum.String, size: 120 },
-      { name: 'outcome', format: FormatEnum.String, size: 40 },
-      { name: 'unhandled', format: FormatEnum.Number, size: 40 },
-      { name: 'logs', format: FormatEnum.Number, size: 40 },
-    ],
-    [],
-  );
+      yield* [
+        {
+          name: 'time',
+          title: 'Started',
+          format: FormatEnum.DateTime,
+          sort: 'desc' as const,
+          size: 194,
+        },
+        {
+          name: 'status',
+          title: 'Status',
+          format: FormatEnum.SingleSelect,
+          size: 110,
+          config: {
+            options: [
+              { id: 'pending', title: 'Pending', color: 'blue' },
+              { id: 'success', title: 'Success', color: 'emerald' },
+              { id: 'failure', title: 'Failure', color: 'red' },
+              { id: 'unknown', title: 'Unknown', color: 'neutral' },
+            ],
+          },
+        },
+        {
+          name: 'duration',
+          title: 'Duration',
+          format: FormatEnum.Duration,
+          size: 110,
+        },
+        {
+          name: 'queue',
+          title: 'Queue',
+          format: FormatEnum.String,
+          // TODO(burdon): Add formatter.
+          // formatter: (value: string) => value.split(':').pop(),
+          size: 400,
+        },
+      ];
+    }
 
-  const traceEventData = useMemo(() => {
-    return (eventQueue?.items ?? []).map((item) => ({
-      id: `${item.ingestionTimestampMs}-${Math.random()}`,
-      time: new Date(item.ingestionTimestampMs).toISOString(),
-      outcome: item.outcome,
-      unhandled: item.exceptions.length,
-      logs: item.logs.length,
-      _original: item,
-    }));
-  }, [eventQueue?.items]);
+    return [...generateProperties()];
+  }, [props.script]);
 
-  const handleEventSelection = (ids: string[]) => {
-    if (ids.length === 0) {
+  const rows = useMemo(() => {
+    return invocationSpans.map((invocation) => {
+      const status = invocation.outcome;
+      const targetDxn = decodeReference(invocation.invocationTarget).dxn;
+
+      // TODO(burdon): Use InvocationTraceStartEvent.
+      return {
+        id: invocation.id,
+        target: resolver(targetDxn),
+        time: new Date(invocation.timestampMs),
+        status,
+        duration: formatDuration(invocation.durationMs),
+        queue: decodeReference(invocation.invocationTraceQueue).dxn?.toString() ?? 'unknown',
+        _original: invocation,
+      };
+    });
+  }, [invocationSpans, resolver]);
+
+  const handleRowClick = useCallback((row: any) => {
+    if (!row) {
       return;
     }
+    setSelectedId(row.id);
+  }, []);
 
-    const id = ids[ids.length - 1];
-    const selectedData = traceEventData.find((item) => item.id === id);
-    if (selectedData) {
-      setSelectedObject(selectedData._original);
+  const gridLayout = useMemo(() => {
+    if (selectedInvocation) {
+      switch (detailAxis) {
+        case 'inline':
+          return 'grid grid-cols-[1fr_30rem]';
+        case 'block':
+          return 'grid grid-rows-[1fr_2fr]';
+      }
     }
-  };
+
+    return 'grid grid-cols-1';
+  }, [selectedInvocation, detailAxis]);
+
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
     <PanelContainer
       toolbar={
-        <Toolbar.Root>
-          {!props.space && <DataSpaceSelector />}
-          <ControlledSelector
-            placeholder={'Invocation target'}
-            values={[...invocationsByTarget.keys()]}
-            value={selectedTarget ?? ''}
-            setValue={setSelectedTarget}
-          />
-        </Toolbar.Root>
+        !props.space && (
+          <Toolbar.Root classNames='border-be border-separator'>
+            <DataSpaceSelector />
+          </Toolbar.Root>
+        )
       }
     >
-      <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
-        <div className={mx('flex overflow-auto', 'h-1/4')}>
-          <DynamicTable
-            properties={invocationProperties}
-            data={invocationData}
-            onSelectionChanged={handleInvocationSelection}
-          />
-        </div>
-
-        <div className={mx('flex overflow-auto', 'h-1/4')}>
-          {eventQueue ? (
-            <DynamicTable
-              properties={traceEventProperties}
-              data={traceEventData}
-              onSelectionChanged={handleEventSelection}
-            />
-          ) : (
-            'Select an invocation to see events.'
-          )}
-        </div>
-
-        <div className={mx('flex overflow-auto', 'h-1/2')}>
-          {selectedObject ? <ObjectDataViewer object={selectedObject} /> : 'Select an event to see contents'}
-        </div>
+      <div className={mx('bs-full', gridLayout)}>
+        <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
+        {selectedInvocation && <Selected span={selectedInvocation} />}
       </div>
     </PanelContainer>
   );
 };
 
-export type ObjectDataViewerProps = {
-  object: any;
-};
-
-const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
-  const text = JSON.stringify(object, null, 2);
-
-  const rowRenderer = ({
-    rows,
-    stylesheet,
-    useInlineStyles,
-  }: {
-    rows: rendererNode[];
-    stylesheet: any;
-    useInlineStyles: any;
-  }) => {
-    return rows.map((row, index) => {
-      return createElement({
-        node: row,
-        stylesheet,
-        style: {},
-        useInlineStyles,
-        key: index,
-      });
-    });
-  };
+const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
+  const [activeTab, setActiveTab] = useState('input');
+  const data = useMemo(() => parseJsonString((span?.input as any)?.bodyText), [span]);
 
   return (
-    <SyntaxHighlighter language='json' renderer={rowRenderer}>
-      {text}
-    </SyntaxHighlighter>
+    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator'>
+      <Tabs.Root
+        classNames='grid grid-rows-[min-content_1fr] min-bs-0 [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid border-bs border-separator'
+        orientation='horizontal'
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
+        <Tabs.Tablist classNames='border-be border-separator'>
+          <Tabs.Tab value='input'>Input</Tabs.Tab>
+          <Tabs.Tab value='logs'>Logs</Tabs.Tab>
+          <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>
+          <Tabs.Tab value='raw'>Raw</Tabs.Tab>
+        </Tabs.Tablist>
+        <Tabs.Tabpanel value='input'>
+          <SyntaxHighlighter language='json'>{JSON.stringify(data, null, 2)}</SyntaxHighlighter>
+        </Tabs.Tabpanel>
+        <Tabs.Tabpanel value='logs'>
+          <LogPanel span={span} />
+        </Tabs.Tabpanel>
+        <Tabs.Tabpanel value='exceptions'>
+          <ExceptionPanel span={span} />
+        </Tabs.Tabpanel>
+        <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
+          <RawDataPanel classNames='text-xs' span={span} />
+        </Tabs.Tabpanel>
+      </Tabs.Root>
+    </div>
   );
 };
 
-const filterBySelected = (items: InvocationTraceEvent[], target: string | undefined) => {
-  if (!target) {
-    return [];
+const parseJsonString = (str: string): any => {
+  try {
+    // Handle double-quoted strings by removing outer quotes.
+    const cleaned = str.replace(/^"+|"+$/g, '');
+    return JSON.parse(cleaned);
+  } catch (err) {
+    return null;
   }
-  return items.filter((item) => decodeReference(item.invocationTarget).dxn?.toString() === target);
 };
-
-const groupByInvocationTarget = (queue?: Queue<InvocationTraceEvent>): Map<string, InvocationTraceEvent[]> => {
-  if (!queue) {
-    return new Map();
-  }
-  const result = new Map<string, InvocationTraceEvent[]>();
-  for (const item of queue.items) {
-    const key = decodeReference(item.invocationTarget).dxn?.toString();
-    if (key) {
-      const list = result.get(key) ?? [];
-      result.set(key, list);
-      list.push(item);
-    }
-  }
-  return result;
-};
-
-interface rendererNode {
-  type: 'element' | 'text';
-  value?: string | number | undefined;
-  tagName?: keyof React.JSX.IntrinsicElements | React.ComponentType<any> | undefined;
-  properties?: { className: any[]; [key: string]: any };
-  children?: rendererNode[];
-}

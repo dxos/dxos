@@ -4,12 +4,11 @@
 
 import { expect, test } from '@playwright/test';
 
-import { setupPage } from '@dxos/test-utils/playwright';
+import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { TableManager } from './TableManager';
 
-const storyId = 'ui-react-ui-table-table';
-const storyUrl = `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
+const storyUrl = storybookUrl('ui-react-ui-table-table--default');
 
 // NOTE(ZaymonFC): This test suite relies on the faker seed being set to 0 in the story.
 test.describe('Table', () => {

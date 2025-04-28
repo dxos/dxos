@@ -5,7 +5,7 @@
 import { Schema as S } from 'effect';
 
 import { Message } from '@dxos/artifact';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import type { AIServiceClient, GenerationStream } from './service';
@@ -47,7 +47,8 @@ export class AIServiceEdgeClient implements AIServiceClient {
    * Process request and open message stream.
    */
   async exec(request: GenerateRequest): Promise<GenerationStream> {
-    log.info('requesting', { endpoint: this._endpoint });
+    assertArgument(typeof request.model === 'string', 'model is required');
+    log('requesting', { endpoint: this._endpoint });
     const controller = new AbortController();
     const response = await fetch(`${this._endpoint}/generate`, {
       signal: controller.signal,

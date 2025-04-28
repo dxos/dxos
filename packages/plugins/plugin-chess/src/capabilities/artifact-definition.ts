@@ -26,7 +26,7 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: meta.id,
+    id: `artifact:${meta.id}`,
     name: meta.name,
     description: 'Provides a simple chess engine.',
     instructions: `

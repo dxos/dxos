@@ -39,7 +39,7 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../plugins/experimental/plugin-search"
+      "path": "../../plugins/plugin-search"
     },
     {
       "path": "../../plugins/plugin-space"

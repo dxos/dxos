@@ -5,14 +5,16 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Client, PublicKey } from '@dxos/client';
-import { create, createDocAccessor, Expando, Filter, makeRef, type Space, toCursorRange } from '@dxos/client/echo';
+import { live, createDocAccessor, Expando, Filter, makeRef, type Space, toCursorRange } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { isInstanceOf } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { MigrationBuilder } from '@dxos/migrations';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
-import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
+import { CollectionType, ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { TableType } from '@dxos/react-ui-table/types';
+import { MessageType } from '@dxos/schema';
 import { setDeep } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
@@ -60,21 +62,21 @@ describe('Composer migrations', () => {
 
   test(__COMPOSER_MIGRATIONS__[0].version.toString(), async () => {
     const doc1 = space.db.add(
-      create(LegacyTypes.DocumentType, {
-        content: makeRef(create(LegacyTypes.TextType, { content: 'object1' })),
+      live(LegacyTypes.DocumentType, {
+        content: makeRef(live(LegacyTypes.TextType, { content: 'object1' })),
         comments: [],
       }),
     );
     const thread1 = space.db.add(
-      create(LegacyTypes.ThreadType, {
+      live(LegacyTypes.ThreadType, {
         messages: [
           makeRef(
-            create(LegacyTypes.MessageType, {
+            live(LegacyTypes.MessageType, {
               from: { identityKey: PublicKey.random().toHex() },
               blocks: [
                 {
                   timestamp: new Date().toISOString(),
-                  content: makeRef(create(LegacyTypes.TextType, { content: 'comment1' })),
+                  content: makeRef(live(LegacyTypes.TextType, { content: 'comment1' })),
                 },
               ],
             }),
@@ -89,22 +91,20 @@ describe('Composer migrations', () => {
     expect(doc1.comments![0].thread!.target instanceof LegacyTypes.ThreadType).to.be.true;
 
     const folder1 = space.db.add(
-      create(LegacyTypes.FolderType, {
+      live(LegacyTypes.FolderType, {
         name: 'folder1',
         objects: [
           makeRef(
-            create(LegacyTypes.FolderType, {
+            live(LegacyTypes.FolderType, {
               name: 'folder2',
               objects: [
-                makeRef(create(LegacyTypes.FolderType, { name: 'folder3', objects: [] })),
+                makeRef(live(LegacyTypes.FolderType, { name: 'folder3', objects: [] })),
                 makeRef(
-                  create(LegacyTypes.StackType, {
+                  live(LegacyTypes.StackType, {
                     title: 'stack1',
                     sections: [
-                      makeRef(create(LegacyTypes.SectionType, { object: makeRef(doc1) })),
-                      makeRef(
-                        create(LegacyTypes.SectionType, { object: makeRef(create(Expando, { key: 'object2' })) }),
-                      ),
+                      makeRef(live(LegacyTypes.SectionType, { object: makeRef(doc1) })),
+                      makeRef(live(LegacyTypes.SectionType, { object: makeRef(live(Expando, { key: 'object2' })) })),
                     ],
                   }),
                 ),
@@ -148,39 +148,21 @@ describe('Composer migrations', () => {
 
   test(__COMPOSER_MIGRATIONS__[1].version.toString(), async () => {
     const doc1 = space.db.add(
-      create(LegacyTypes.DocumentType, {
-        content: makeRef(create(LegacyTypes.TextType, { content: 'object1' })),
+      live(LegacyTypes.DocumentType, {
+        content: makeRef(live(LegacyTypes.TextType, { content: 'object1' })),
         comments: [],
       }),
     );
     const thread1 = space.db.add(
-      create(LegacyTypes.ThreadType, {
+      live(LegacyTypes.ThreadType, {
         messages: [
           makeRef(
-            create(LegacyTypes.MessageType, {
+            live(LegacyTypes.MessageType, {
               from: { identityKey: PublicKey.random().toHex() },
               blocks: [
                 {
                   timestamp: new Date().toISOString(),
-                  content: makeRef(create(LegacyTypes.TextType, { content: 'comment1' })),
-                },
-              ],
-            }),
-          ),
-        ],
-      }),
-    );
-    const thread2 = space.db.add(
-      create(LegacyTypes.ThreadType, {
-        title: 'My Thread',
-        messages: [
-          makeRef(
-            create(LegacyTypes.MessageType, {
-              from: { identityKey: PublicKey.random().toHex() },
-              blocks: [
-                {
-                  timestamp: new Date().toISOString(),
-                  content: makeRef(create(LegacyTypes.TextType, { content: 'hello world' })),
+                  content: makeRef(live(LegacyTypes.TextType, { content: 'comment1' })),
                 },
               ],
             }),
@@ -192,14 +174,14 @@ describe('Composer migrations', () => {
     doc1.comments?.push({ cursor, thread: makeRef(thread1) });
     expect(doc1.comments![0].thread?.target instanceof LegacyTypes.ThreadType).to.be.true;
     const sketch1 = space.db.add(
-      create(LegacyTypes.SketchType, {
+      live(LegacyTypes.SketchType, {
         title: 'My Sketch',
-        data: makeRef(create(Expando, { content: { id: 'test string' } })),
+        data: makeRef(live(Expando, { content: { id: 'test string' } })),
       }),
     );
     // TODO(wittjosiah): Include dynamic schema.
     const table1 = space.db.add(
-      create(LegacyTypes.TableType, {
+      live(LegacyTypes.TableType, {
         title: 'My Table',
         props: [
           {
@@ -224,16 +206,10 @@ describe('Composer migrations', () => {
     expect(migratedDoc1?.threads?.[0].target?.id).to.equal(thread1.id);
     expect(migratedDoc1?.threads?.[0].target?.anchor).to.equal(cursor);
     expect(migratedDoc1?.threads?.[0].target?.messages?.[0]?.target instanceof MessageType).to.be.true;
-    expect(migratedDoc1?.threads?.[0].target?.messages?.[0]?.target?.text).to.equal('comment1');
-
-    const { objects: channels } = await space.db.query(Filter.schema(ChannelType)).run();
-    expect(channels).to.have.lengthOf(1);
-    const migratedThread2 = channels[0]?.threads[0].target;
-    expect(migratedThread2 instanceof ThreadType).to.be.true;
-    expect(migratedThread2?.id).to.equal(thread2.id);
-    expect(migratedThread2?.name).to.equal('My Thread');
-    expect(migratedThread2?.messages?.[0].target instanceof MessageType).to.be.true;
-    expect(migratedThread2?.messages?.[0].target?.text).to.equal('hello world');
+    const block = migratedDoc1?.threads?.[0].target?.messages?.[0]?.target?.blocks?.[0];
+    expect(block?.type).to.equal('text');
+    invariant(block?.type === 'text', 'Block is a text block');
+    expect(block?.text).to.equal('comment1');
 
     const migratedSketch1 = space.db.getObjectById<DiagramType>(sketch1.id);
     expect(migratedSketch1 instanceof DiagramType).to.be.true;

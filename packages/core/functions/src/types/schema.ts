@@ -16,16 +16,14 @@ export const ScriptType = S.Struct({
   changed: S.optional(S.Boolean),
   source: Ref(TextType),
 })
-  .annotations({
-    [LabelAnnotationId]: 'name',
-  })
-  .pipe(EchoObject('dxos.org/type/Script', '0.1.0'));
+  .annotations({ [LabelAnnotationId]: 'name' })
+  .pipe(EchoObject({ typename: 'dxos.org/type/Script', version: '0.1.0' }));
+
 export type ScriptType = S.Schema.Type<typeof ScriptType>;
 
 /**
  * Function deployment.
  */
-// TODO(burdon): Move to core/functions.
 export class FunctionType extends TypedObject({
   typename: 'dxos.org/type/Function',
   version: '0.1.0',

@@ -7,6 +7,7 @@ import React, { useState, useMemo } from 'react';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
@@ -54,8 +55,9 @@ type Data = {
   id: string;
 };
 
-export const AutomergePanel = () => {
-  const { space } = useDevtoolsState();
+export const AutomergePanel = (props: { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
 
   const client = useClient();
   const handles =
@@ -96,17 +98,12 @@ export const AutomergePanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <DataSpaceSelector />
+          {!props.space && <DataSpaceSelector />}
           <Searchbar onChange={setFilter} />
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable
-        properties={properties}
-        data={data}
-        statusBar={<div>Handles: {handles.length}</div>}
-        detailsTransform={({ accessor }) => accessor()}
-      />
+      <MasterDetailTable properties={properties} data={data} detailsTransform={({ accessor }) => accessor()} />
     </PanelContainer>
   );
 };

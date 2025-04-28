@@ -4,9 +4,9 @@
 
 import { Filter, type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { getObjectAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
+import { getTypeAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, getSchema, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
+import { live, getSchema, isLiveObject, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -35,22 +35,22 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   }
 
   getSchema(type: T): EchoSchema | S.Schema.AnyNoContext | undefined {
-    return this.schemas.find((schema) => getObjectAnnotation(schema)!.typename === type);
+    return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
   }
 
   protected setSchema(type: T, schema: EchoSchema | S.Schema.AnyNoContext) {
     this._schemas[type] = schema;
   }
 
-  async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveObject<any>> {
+  async createObject({ types }: { types?: T[] } = {}): Promise<Live<any>> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = await this._generators[type](this._provider);
-    if (isReactiveObject(data)) {
+    if (isLiveObject(data)) {
       return data;
     }
 
     const schema = this.getSchema(type);
-    return schema ? create(schema, data) : create(data);
+    return schema ? live(schema, data) : live(data);
   }
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
@@ -119,7 +119,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   async mutateObject(object: ReactiveEchoObject<any>, params: MutationsProviderParams) {
     invariant(this._mutations, 'Mutations not defined.');
-    const type = getObjectAnnotation(getSchema(object)!)!.typename as T;
+    const type = getTypeAnnotation(getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
 
     await this._mutations![type](object, params);

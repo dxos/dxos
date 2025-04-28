@@ -17,6 +17,7 @@ import {
   useLayout,
 } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
 import { useMediaQuery } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
@@ -45,6 +46,9 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
   <Surface role='navtree-item-end' data={{ id: node.id, subject: node.data, open }} limit={1} />
 );
 
+const getChildrenFilter = (node: Node): node is Node =>
+  untracked(() => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE);
+
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   topbar?: boolean;
@@ -64,12 +68,14 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       return graph.nodes(node ?? graph.root, {
         filter: (node): node is Node => {
           return untracked(() => {
-            const action = isAction(node);
-            if (!disposition) {
+            if (node.properties.disposition === 'hidden') {
+              return false;
+            } else if (!disposition) {
+              const action = isAction(node);
               return !action || node.properties.disposition === 'item';
+            } else {
+              return node.properties.disposition === disposition;
             }
-
-            return node.properties.disposition === disposition;
           });
         },
       });
@@ -79,7 +85,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const getProps = useCallback(
     (node: Node, path: string[]): PropsFromTreeItem => {
-      const children = getChildren(graph, node, undefined, path);
+      const children = getChildren(graph, node, getChildrenFilter, path);
       const parentOf =
         children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
       return {

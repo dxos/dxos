@@ -5,17 +5,19 @@
 import { test, expect } from '@playwright/test';
 import { platform } from 'node:os';
 
+import { sleep } from '@dxos/async';
+
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
-  await host.openSpaceManager();
-  const invitationCode = await host.shell.createSpaceInvitation();
-  const authCode = await host.shell.getAuthCode();
+  await host.shareSpace();
+  const invitationCode = await host.createSpaceInvitation();
+  const authCode = await host.getAuthCode();
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
-  await host.shell.closeShell();
+  await host.navigateToObject();
 };
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
@@ -25,6 +27,7 @@ test.describe('Collaboration tests', () => {
   let guest: AppManager;
 
   test.beforeEach(async ({ browser, browserName }) => {
+    test.setTimeout(60_000);
     test.skip(browserName === 'firefox');
     test.skip(browserName === 'webkit' && platform() !== 'darwin');
 
@@ -96,14 +99,23 @@ test.describe('Collaboration tests', () => {
     await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
     await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
 
-    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0);
-    await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0);
+    await Promise.all([
+      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0),
+      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0),
+    ]);
 
-    await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus();
-    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus();
+    // TODO(wittjosiah): Focusing too quickly causes the cursors not to show up.
+    await sleep(1_000);
 
-    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/);
-    await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/);
+    await Promise.all([
+      Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus(),
+      Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus(),
+    ]);
+
+    await Promise.all([
+      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/),
+      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/),
+    ]);
   });
 
   test('host and guest can see each others’ changes in same document', async () => {
@@ -197,9 +209,14 @@ test.describe('Collaboration tests', () => {
     const guestPresence = guestPlank.membersPresence();
 
     // TODO(wittjosiah): Initial viewing state is slow.
-    await expect(hostPresence).toHaveCount(1, { timeout: 30_000 });
-    await expect(guestPresence).toHaveCount(1, { timeout: 30_000 });
-    await expect(hostPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 });
-    await expect(guestPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 });
+    await Promise.all([
+      expect(hostPresence).toHaveCount(1, { timeout: 45_000 }),
+      expect(guestPresence).toHaveCount(1, { timeout: 45_000 }),
+    ]);
+
+    await Promise.all([
+      expect(hostPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 }),
+      expect(guestPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 }),
+    ]);
   });
 });

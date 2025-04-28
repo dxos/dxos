@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { EventSubscriptions } from '@dxos/async';
+import { SubscriptionList } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -82,7 +82,7 @@ export class DevicesServiceImpl implements DevicesService {
         }
       };
 
-      const subscriptions = new EventSubscriptions();
+      const subscriptions = new SubscriptionList();
 
       if (this._identityManager.identity) {
         subscribeIdentity();

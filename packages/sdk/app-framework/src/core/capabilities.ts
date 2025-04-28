@@ -6,11 +6,11 @@
 //
 
 import { effect, untracked } from '@preact/signals-core';
-import { type Effect } from 'effect';
+import { Effect } from 'effect';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
@@ -57,8 +57,8 @@ export type Capability<T> = {
 export type AnyCapability = Capability<any>;
 
 type PluginsContextOptions = {
-  activate: (event: ActivationEvent) => MaybePromise<boolean>;
-  reset: (event: ActivationEvent) => MaybePromise<boolean>;
+  activate: (event: ActivationEvent) => Effect.Effect<boolean, Error>;
+  reset: (event: ActivationEvent) => Effect.Effect<boolean, Error>;
 };
 
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
@@ -100,6 +100,7 @@ export const lazy =
  * It tracks the capabilities that are contributed in an in-memory live object.
  * This allows the application to subscribe to this state and incorporate plugins which are added dynamically.
  */
+// TOOD(burdon): Rename PluginContext.
 export class PluginsContext {
   private readonly _definedCapabilities = new Map<string, CapabilityImpl<unknown>[]>();
 
@@ -136,7 +137,7 @@ export class PluginsContext {
   }) {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
-      const object = create<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
+      const object = live<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
       current = untracked(() => object.value);
       this._definedCapabilities.set(interfaceDef.identifier, current);
     }
@@ -178,7 +179,7 @@ export class PluginsContext {
   ): U[] {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
-      const object = create<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
+      const object = live<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
       current = untracked(() => object.value);
       this._definedCapabilities.set(interfaceDef.identifier, current);
     }
@@ -221,5 +222,13 @@ export class PluginsContext {
     const capability = await trigger.wait();
     unsubscribe();
     return capability;
+  }
+
+  async activatePromise(event: ActivationEvent): Promise<boolean> {
+    return this.activate(event).pipe(Effect.runPromise);
+  }
+
+  async resetPromise(event: ActivationEvent): Promise<boolean> {
+    return this.reset(event).pipe(Effect.runPromise);
   }
 }

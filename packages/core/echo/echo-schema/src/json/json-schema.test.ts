@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type SchemaAST as AST, Schema as S } from 'effect';
+import { Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { type JsonProp } from '@dxos/effect';
-import { deepMapValues } from '@dxos/util';
+import { log } from '@dxos/log';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import {
   PropertyMeta,
   setSchemaProperty,
   getSchemaProperty,
-  getObjectAnnotation,
-  getEchoIdentifierAnnotation,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
   EntityKind,
   JsonSchemaType,
   createSchemaReference,
@@ -24,7 +24,7 @@ import {
 import { FormatAnnotationId, Email } from '../formats';
 import { TypedObject } from '../object';
 import { StoredSchema } from '../schema';
-import { Contact } from '../testing';
+import { Testing, prepareAstForCompare } from '../testing';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -59,6 +59,7 @@ describe('effect-to-json', () => {
       name: Ref(Nested),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
+    log('schema', { jsonSchema });
     const nested = jsonSchema.properties!.name;
     expectReferenceAnnotation(nested);
   });
@@ -124,7 +125,7 @@ describe('effect-to-json', () => {
   });
 
   test('handles suspend -- Contact schema serialization', () => {
-    const schema = toJsonSchema(Contact);
+    const schema = toJsonSchema(Testing.Contact);
     expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
   });
 
@@ -197,7 +198,7 @@ describe('effect-to-json', () => {
 
     // TODO(dmaretskyi): Currently unable to deserialize.
     // const effectSchema = toEffectSchema(jsonSchema);
-    // console.log(JSON.stringify(jsonSchema, null, 2));
+    log('schema', { jsonSchema });
   });
 
   test('tuple schema with description', () => {
@@ -208,8 +209,8 @@ describe('effect-to-json', () => {
       ),
     });
     const jsonSchema = toJsonSchema(schema);
+    log('schema', { jsonSchema });
 
-    // console.log(JSON.stringify(jsonSchema, null, 2));
     (S.asserts(JsonSchemaType) as any)(jsonSchema);
   });
 
@@ -263,7 +264,8 @@ describe('json-to-effect', () => {
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
-      // console.log(JSON.stringify(jsonSchema, null, 2));
+      log('schema', { jsonSchema });
+
       const schema = toEffectSchema(jsonSchema);
 
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
@@ -313,12 +315,12 @@ describe('json-to-effect', () => {
     };
 
     const schema = toEffectSchema(jsonSchema);
-    expect(getObjectAnnotation(schema)).to.deep.eq({
+    expect(getTypeAnnotation(schema)).to.deep.eq({
       kind: EntityKind.Object,
       typename: 'example.com/type/Project',
       version: '0.1.0',
     });
-    expect(getEchoIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
+    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
   });
 
   test('symbol annotations get compared', () => {
@@ -337,23 +339,4 @@ describe('json-to-effect', () => {
     const jsonSchema2 = toJsonSchema(effectSchema);
     expect(jsonSchema2.properties!.name.description).to.eq('Name');
   });
-
-  const prepareAstForCompare = (obj: AST.AST): any =>
-    deepMapValues(obj, (value: any, recurse, key) => {
-      if (typeof value === 'function') {
-        return null;
-      }
-
-      // Convert symbols to strings.
-      if (typeof value === 'object') {
-        const clone = { ...value };
-        for (const sym of Object.getOwnPropertySymbols(clone as any)) {
-          clone[sym.toString()] = clone[sym];
-          delete clone[sym];
-        }
-        return recurse(clone);
-      }
-
-      return recurse(value);
-    });
 });

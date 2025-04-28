@@ -6,7 +6,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientProvider } from '@dxos/react-client';
-import { Expando, create, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Expando, live, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 export const App = () => {
@@ -28,7 +28,7 @@ export const App = () => {
       <button
         name='add'
         onClick={() => {
-          const task = create(Expando, { type: 'task', name: 'buy milk' });
+          const task = live(Expando, { type: 'task', name: 'buy milk' });
           space?.db.add(task);
         }}
       >

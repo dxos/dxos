@@ -6,7 +6,7 @@ import { SchemaAST as AST, Schema as S } from 'effect';
 
 import { clamp } from '@dxos/util';
 
-import { FormatAnnotationId, FormatEnum } from './types';
+import { FormatAnnotation, FormatEnum } from './types';
 
 /**
  * GeoJSON Format
@@ -30,11 +30,13 @@ export const GeoPoint = S.Tuple(
   S.optionalElement(S.Number).annotations({
     [AST.TitleAnnotationId]: 'Height ASL (m)',
   }),
-).annotations({
-  [FormatAnnotationId]: FormatEnum.GeoPoint,
-  [AST.TitleAnnotationId]: 'GeoPoint',
-  [AST.DescriptionAnnotationId]: 'GeoJSON Position',
-});
+).pipe(
+  FormatAnnotation.set(FormatEnum.GeoPoint),
+  S.annotations({
+    [AST.TitleAnnotationId]: 'GeoPoint',
+    [AST.DescriptionAnnotationId]: 'GeoJSON Position',
+  }),
+);
 
 export type GeoPoint = S.Schema.Type<typeof GeoPoint>;
 

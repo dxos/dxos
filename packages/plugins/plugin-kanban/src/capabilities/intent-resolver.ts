@@ -14,8 +14,8 @@ export default () =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: KanbanAction.Create,
-      resolve: async ({ space, initialSchema, initialPivotColumn }) => ({
-        data: { object: await createKanban({ space, initialSchema, initialPivotColumn }) },
+      resolve: async ({ space, typename, initialPivotColumn }) => ({
+        data: { object: await createKanban({ space, typename, initialPivotColumn }) },
       }),
     }),
     createResolver({
@@ -28,7 +28,8 @@ export default () =>
           kanban.cardView.target &&
           getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.target.query.typename);
         invariant(schema);
-        const projection = new ViewProjection(schema, kanban.cardView.target!);
+        invariant(kanban.cardView.target);
+        const projection = new ViewProjection(schema.jsonSchema, kanban.cardView.target);
 
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);

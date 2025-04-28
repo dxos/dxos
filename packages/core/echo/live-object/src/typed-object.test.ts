@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { getSchema, TypedObject } from '@dxos/echo-schema';
 
-import { create } from './object';
+import { live } from './object';
 
 class Org extends TypedObject({
   typename: 'example.com/type/Org',
@@ -33,18 +33,18 @@ const TEST_ORG: Omit<Org, 'id'> = { name: 'Test' };
 
 describe('EchoObject class DSL', () => {
   test('static isInstance check', async () => {
-    const obj = create(Org, TEST_ORG);
+    const obj = live(Org, TEST_ORG);
     expect(obj instanceof Org).to.be.true;
   });
 
   test('can get object schema', async () => {
-    const obj = create(Org, TEST_ORG);
+    const obj = live(Org, TEST_ORG);
     expect(getSchema(obj)).to.deep.eq(Org);
   });
 
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
-      const person = create(Contact, { name: 'John' });
+      const person = live(Contact, { name: 'John' });
       person.name = undefined;
       person.recordField = 'hello';
       expect(person.name).to.be.undefined;
@@ -64,13 +64,13 @@ describe('EchoObject class DSL', () => {
     );
 
     {
-      const object = create(schema, {});
+      const object = live(schema, {});
       (object.meta ??= {}).test = 100;
       expect(object.meta.test).to.eq(100);
     }
 
     {
-      const object = create(schema, {});
+      const object = live(schema, {});
       object.meta = { test: { value: 300 } };
       expect(object.meta.test.value).to.eq(300);
     }
@@ -91,7 +91,7 @@ describe('EchoObject class DSL', () => {
         meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
       }) {}
 
-      const object = create(Test2, {});
+      const object = live(Test2, {});
       (object.meta ??= {}).test = 100;
       expect(object.meta.test).to.eq(100);
     }

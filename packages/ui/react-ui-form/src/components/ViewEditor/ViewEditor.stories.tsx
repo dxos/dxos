@@ -33,7 +33,7 @@ const DefaultStory = () => {
 
       const [schema] = await space.db.schemaRegistry.register([TestSchema]);
       const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(TestSchema) });
-      const projection = new ViewProjection(schema, view);
+      const projection = new ViewProjection(schema.jsonSchema, view);
 
       setSchema(schema);
       setView(view);

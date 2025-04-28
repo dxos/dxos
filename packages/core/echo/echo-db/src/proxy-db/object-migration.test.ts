@@ -17,7 +17,7 @@ import {
   TypedObject,
 } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { create, getSchema } from '@dxos/live-object';
+import { live, getSchema } from '@dxos/live-object';
 
 import { defineObjectMigration } from './object-migration';
 import { Filter } from '../query';
@@ -69,7 +69,7 @@ test('migrate 1 object', async () => {
   const { db, graph } = await builder.createDatabase();
   graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
 
-  db.add(create(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
@@ -88,7 +88,7 @@ test('incrementally migrates new objects', async () => {
   const { db, graph } = await builder.createDatabase();
   graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
 
-  db.add(create(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
@@ -98,7 +98,7 @@ test('incrementally migrates new objects', async () => {
     expect(objects[0].name).to.eq('John Doe');
   }
 
-  db.add(create(ContactV1, { firstName: 'Jane', lastName: 'Smith' }));
+  db.add(live(ContactV1, { firstName: 'Jane', lastName: 'Smith' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
@@ -123,7 +123,7 @@ test('chained migrations', async () => {
   const { db, graph } = await builder.createDatabase();
   graph.schemaRegistry.addSchema([ContactV1, ContactV2, ContactV3]);
 
-  db.add(create(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2, migrationV3]);
 
@@ -141,7 +141,7 @@ test('view migration', async () => {
   graph.schemaRegistry.addSchema([ViewTypeV1, ViewTypeV2]);
 
   db.add(
-    create(ViewTypeV1, {
+    live(ViewTypeV1, {
       fields: [
         { id: '8cb60541', path: 'name' as JsonPath },
         { id: '902dd8b5', path: 'email' as JsonPath },

@@ -175,7 +175,23 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
   const toolCall = toolCalls[0];
   const tool = tools.find((tool) => tool.name === toolCall.name);
   if (!tool) {
-    throw new Error(`Tool not found: ${toolCall.name}`);
+    const resultMessage = createStatic(Message, {
+      role: 'user',
+      content: [
+        {
+          type: 'tool_result',
+          toolUseId: toolCall.id,
+          content: `Tool not found: ${toolCall.name}`,
+          isError: true,
+        },
+      ],
+    });
+
+    // TODO(burdon): Retry count?
+    return {
+      type: 'continue',
+      message: resultMessage,
+    };
   }
 
   let toolResult: ToolResult;

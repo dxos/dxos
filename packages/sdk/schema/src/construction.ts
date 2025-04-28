@@ -2,10 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormatEnum, formatToType, S, TypedObject, TypeEnum, type SelectOptionSchema } from '@dxos/echo-schema';
+import {
+  formatToType,
+  type EchoSchema,
+  FormatEnum,
+  S,
+  TypedObject,
+  TypeEnum,
+  type SelectOptionSchema,
+} from '@dxos/echo-schema';
 import { createEchoSchema } from '@dxos/live-object/testing';
 
-import { makeSingleSelectAnnotations } from './util';
+import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';
 
 export type SelectOptionType = typeof SelectOptionSchema.Type;
 
@@ -17,7 +25,11 @@ export type SchemaPropertyDefinition = {
   config?: { options?: SelectOptionType[] };
 };
 
-export const echoSchemaFromPropertyDefinitions = (typename: string, properties: SchemaPropertyDefinition[]) => {
+export const getSchemaFromPropertyDefinitions = (
+  typename: string,
+  properties: SchemaPropertyDefinition[],
+): EchoSchema => {
+  // TODO(burdon): Move to echo-schema.
   const typeToSchema: Record<TypeEnum, S.Any> = {
     [TypeEnum.String]: S.String.pipe(S.optional),
     [TypeEnum.Number]: S.Number.pipe(S.optional),
@@ -33,8 +45,13 @@ export const echoSchemaFromPropertyDefinitions = (typename: string, properties: 
   const schema = createEchoSchema(TypedObject({ typename, version: '0.1.0' })(fields));
 
   for (const prop of properties) {
-    if (prop.format === FormatEnum.SingleSelect && prop.config?.options) {
-      makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+    if (prop.config?.options) {
+      if (prop.format === FormatEnum.SingleSelect) {
+        makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+      }
+      if (prop.format === FormatEnum.MultiSelect) {
+        makeMultiSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+      }
     }
 
     if (prop.format === FormatEnum.GeoPoint) {

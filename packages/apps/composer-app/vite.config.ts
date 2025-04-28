@@ -17,9 +17,10 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { mergeConfig } from 'vitest/config';
 import { baseConfig } from '../../../vitest.shared';
 
-import { appKey } from './src/constants';
+import { APP_KEY } from './src/constants';
 
 const rootDir = resolve(__dirname, '../../..');
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -32,7 +33,7 @@ const isFalse = (str?: string) => str === 'false' || str === '0';
  */
 export default defineConfig((env) => ({
   // Vitest config.
-  test: baseConfig({ cwd: __dirname })['test'] as any,
+  test: mergeConfig(baseConfig({ cwd: __dirname }), defineConfig({ test: { environment: 'jsdom' } }))['test'] as any,
   server: {
     host: true,
     https:
@@ -247,7 +248,7 @@ export default defineConfig((env) => ({
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
       disable: process.env.DX_ENVIRONMENT !== 'production',
       release: {
-        name: `${appKey}@${process.env.npm_package_version}`,
+        name: `${APP_KEY}@${process.env.npm_package_version}`,
       },
     }),
     ...(process.env.DX_STATS

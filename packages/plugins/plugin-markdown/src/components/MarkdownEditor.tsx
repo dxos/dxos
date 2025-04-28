@@ -7,11 +7,12 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { createIntent, type FileInfo, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, type FileInfo, useIntentDispatcher } from '@dxos/app-framework';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type EditorAction,
   type DNDOptions,
+  type EditorAction,
   type EditorViewMode,
   type EditorInputMode,
   type EditorSelectionState,
@@ -19,20 +20,20 @@ import {
   EditorToolbar,
   type UseTextEditorProps,
   createBasicExtensions,
+  createEditorAction,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
   editorContent,
   editorGutter,
   processEditorPayload,
+  stackItemContentEditorClassNames,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
-  stackItemContentEditorClassNames,
   useEditorToolbarState,
-  createEditorAction,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
@@ -70,7 +71,7 @@ export const MarkdownEditor = ({
   extensionProviders,
   scrollPastEnd,
   toolbar,
-  comment,
+  comment = true,
   viewMode,
   editorStateStore,
   onFileUpload,
@@ -96,10 +97,9 @@ export const MarkdownEditor = ({
   const commentObserver = useCommentState(toolbarState);
   const onCommentClick = useCallback(async () => {
     await dispatch(
-      createIntent(LayoutAction.UpdateComplementary, {
-        part: 'complementary',
-        subject: 'comments',
-        options: { state: 'expanded' },
+      createIntent(DeckAction.ChangeCompanion, {
+        primary: id,
+        companion: `${id}${ATTENDABLE_PATH_SEPARATOR}comments`,
       }),
     );
   }, [dispatch]);
@@ -127,7 +127,7 @@ export const MarkdownEditor = ({
         comment && commentObserver,
         comment && commentClickObserver,
         createBasicExtensions({
-          readonly: viewMode === 'readonly',
+          readOnly: viewMode === 'readonly',
           placeholder: t('editor placeholder'),
           scrollPastEnd: role === 'section' ? false : scrollPastEnd,
         }),
@@ -211,7 +211,7 @@ export const MarkdownEditor = ({
   );
 
   return (
-    <StackItem.Content toolbar={!!toolbar}>
+    <StackItem.Content toolbar={!!toolbar} classNames='w-full'>
       {toolbar && (
         <>
           <EditorToolbar

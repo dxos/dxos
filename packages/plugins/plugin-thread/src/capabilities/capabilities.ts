@@ -3,7 +3,6 @@
 //
 
 import { defineCapability } from '@dxos/app-framework';
-import { type MenuActionProperties } from '@dxos/react-ui-menu';
 import { type DeepReadonly } from '@dxos/util';
 
 import { THREAD_PLUGIN } from '../meta';
@@ -17,9 +16,4 @@ export namespace ThreadCapabilities {
   export const MutableState = defineCapability<{ state: ThreadState; getViewState: GetViewState }>(
     `${THREAD_PLUGIN}/capability/state`,
   );
-
-  export type Activity = Omit<MenuActionProperties, 'variant' | 'checked'> & {
-    id: string;
-  };
-  export const Activity = defineCapability<Activity>(`${THREAD_PLUGIN}/capability/activity`);
 }

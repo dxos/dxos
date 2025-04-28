@@ -5,6 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { contributes, Capabilities, createSurface } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { type S } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { type InputProps } from '@dxos/react-ui-form';
@@ -18,7 +19,7 @@ export default () =>
     createSurface({
       id: `${WNFS_PLUGIN}/article`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: FileType } => data.subject instanceof FileType,
+      filter: (data): data is { subject: FileType } => isInstanceOf(FileType, data.subject),
       component: ({ data, role }) => <FileContainer role={role} file={data.subject} />,
     }),
     createSurface({

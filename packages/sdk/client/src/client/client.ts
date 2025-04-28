@@ -95,7 +95,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
-  private readonly _echoClient = new EchoClient({});
+  private readonly _echoClient = new EchoClient();
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -211,6 +211,16 @@ export class Client {
   get mesh(): MeshProxy {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.mesh;
+  }
+
+  /**
+   * EDGE client.
+   *
+   * This API is experimental and subject to change.
+   */
+  get edge(): EdgeHttpClient {
+    invariant(this._edgeClient, 'Client not initialized.');
+    return this._edgeClient;
   }
 
   /**

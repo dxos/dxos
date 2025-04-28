@@ -2,20 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, Schema as S } from 'effect';
+import { Option, Schema as S, SchemaAST } from 'effect';
 import {
+  type Annotated,
   getDescriptionAnnotation,
   getIdentifierAnnotation,
   getTitleAnnotation,
-  type Annotated,
 } from 'effect/SchemaAST';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 
-import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
+import { getTypeIdentifierAnnotation, getTypeAnnotation, ReferenceAnnotationId } from './annotations';
 import { type JsonSchemaType } from './json-schema-type';
-import type { ObjectId } from '../object';
+import { type ObjectId } from '../object';
 import { type WithId } from '../types';
 
 /**
@@ -27,7 +27,7 @@ export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
-    return { typename: DXN.parse($ref).toTypename() };
+    return { typename: DXN.parse($ref).typename };
   }
 };
 
@@ -45,27 +45,43 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
 /**
  * Reference Schema.
  */
-//  Naming pattern (Ref$) is borrowed from effect-schema.
 export interface Ref$<T extends WithId> extends S.SchemaClass<Ref<T>, EncodedReference> {}
 
 interface RefFn {
   <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
 
+  /**
+   * @returns True if the object is a reference.
+   */
   isRef: (obj: any) => obj is Ref<any>;
+
+  /**
+   * @returns True if the reference points to the given object id.
+   */
   hasObjectId: (id: ObjectId) => (ref: Ref<any>) => boolean;
+
+  /**
+   * @returns True if the schema is a reference schema.
+   */
+  isRefSchema: (schema: S.Schema<any, any>) => schema is Ref$<any>;
+
+  /**
+   * @returns True if the schema AST is a reference schema.
+   */
+  isRefSchemaAST: (ast: SchemaAST.AST) => boolean;
 }
 
 /**
  * Schema builder for references.
  */
 export const Ref: RefFn = <T extends WithId>(schema: S.Schema<T, any>): Ref$<T> => {
-  const annotation = getObjectAnnotation(schema);
+  const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO schema.');
   }
 
   return createEchoReferenceSchema(
-    getEchoIdentifierAnnotation(schema),
+    getTypeIdentifierAnnotation(schema),
     annotation.typename,
     annotation.version,
     getSchemaExpectedName(schema.ast),
@@ -115,6 +131,14 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
 };
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
+
+Ref.isRefSchema = (schema: S.Schema<any, any>): schema is Ref$<any> => {
+  return Ref.isRefSchemaAST(schema.ast);
+};
+
+Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean => {
+  return SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome);
+};
 
 /**
  * `reference` field on the schema object.

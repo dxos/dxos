@@ -8,7 +8,7 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
@@ -75,7 +75,7 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
     };
   };
 
-  const data = useMemo(() => {
+  const rows = useMemo(() => {
     const controlKeys = Array.from(
       new ComplexSet(PublicKey.hash, [
         ...(state.controlFeeds ?? []),
@@ -152,27 +152,19 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
     return tableRows;
   }, [state, metadata]);
 
-  const handleSelectionChanged = useCallback(
-    (selectedIds: string[]) => {
-      if (selectedIds.length === 0) {
+  const handleRowClicked = useCallback(
+    (row: PipelineTableRow) => {
+      if (row) {
+        setContext((ctx) => ({ ...ctx, feedKey: row.feedKey }));
+        onSelect?.(row);
+      } else {
         setContext((ctx) => ({ ...ctx, feedKey: undefined }));
-        return;
-      }
-
-      const selectedId = selectedIds[selectedIds.length - 1];
-      const selected = data.find((row) => row.id === selectedId);
-
-      if (selected) {
-        setContext((ctx) => ({ ...ctx, feedKey: selected.feedKey }));
-        onSelect?.(selected);
       }
     },
-    [data, onSelect, setContext],
+    [onSelect, setContext],
   );
 
-  return (
-    <div className='bs-24'>
-      <DynamicTable properties={properties} data={data} onSelectionChanged={handleSelectionChanged} />
-    </div>
-  );
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
+  return <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClicked} />;
 };

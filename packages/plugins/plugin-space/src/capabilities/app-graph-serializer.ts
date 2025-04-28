@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { SPACE_PLUGIN } from '../meta';
 import translations from '../translations';
@@ -46,8 +46,8 @@ export default (context: PluginsContext) =>
       inputType: CollectionType.typename,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
-        data: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+        name: node.data.name ?? translations[0]['en-US'][CollectionType.typename]['object name placeholder'],
+        data: node.data.name ?? translations[0]['en-US'][CollectionType.typename]['object name placeholder'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data, ancestors) => {
@@ -63,7 +63,7 @@ export default (context: PluginsContext) =>
         const result = await dispatch(
           createIntent(SpaceAction.AddObject, {
             target: collection,
-            object: create(CollectionType, { name: data.name, objects: [], views: {} }),
+            object: live(CollectionType, { name: data.name, objects: [], views: {} }),
           }),
         );
 

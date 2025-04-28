@@ -6,10 +6,10 @@ import { type Command } from '@oclif/core';
 
 import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
-import { ECHO_ATTR_META, ECHO_ATTR_TYPE, getObjectAnnotation, type ObjectMeta, S } from '@dxos/echo-schema';
+import { ECHO_ATTR_META, ECHO_ATTR_TYPE, getTypeAnnotation, type ObjectMeta, S } from '@dxos/echo-schema';
 import { FUNCTION_TYPES } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { isNonNullable } from '@dxos/util';
 
 /**
@@ -42,7 +42,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
     const schemata = [...FUNCTION_TYPES]
       .map((schema) => {
         if (S.isSchema(schema)) {
-          const { typename } = getObjectAnnotation(schema as any) ?? {};
+          const { typename } = getTypeAnnotation(schema as any) ?? {};
           if (typename) {
             return [typename, schema];
           }
@@ -91,7 +91,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
         //   this.log(JSON.stringify({ object, meta }, undefined, 2));
         // }
 
-        return create(type, object, meta);
+        return live(type, object, meta);
       }
     }
 

@@ -2,16 +2,45 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { memoizeQuery } from '@dxos/plugin-space';
-import { Filter, type Space, isSpace } from '@dxos/react-client/echo';
+import { Filter, type Space, fullyQualifiedId, isSpace } from '@dxos/react-client/echo';
 
+import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
-import { MeetingType } from '../types';
+import { MeetingAction, MeetingType } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    createExtension({
+      id: `${MEETING_PLUGIN}/active-meeting`,
+      filter: (node): node is Node<null> => node.id === 'root',
+      connector: ({ node }) => {
+        const call = context.requestCapability(MeetingCapabilities.CallManager);
+        if (!call.joined) {
+          return [];
+        }
+
+        return [
+          {
+            id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
+            type: DECK_COMPANION_TYPE,
+            data: null,
+            properties: {
+              label: ['meeting panel label', { ns: MEETING_PLUGIN }],
+              icon: 'ph--video-conference--regular',
+              position: 'hoist',
+              disposition: 'hidden',
+            },
+          },
+        ];
+      },
+    }),
+
     createExtension({
       id: `${MEETING_PLUGIN}/root`,
       filter: (node): node is Node<Space> => isSpace(node.data),
@@ -25,7 +54,7 @@ export default (context: PluginsContext) =>
                 data: null,
                 properties: {
                   label: ['meetings label', { ns: MEETING_PLUGIN }],
-                  icon: 'ph--phone-list--regular',
+                  icon: 'ph--video-conference--regular',
                   space: node.data,
                 },
               },
@@ -34,10 +63,19 @@ export default (context: PluginsContext) =>
       },
     }),
 
+    // TODO(wittjosiah): Show presence dots for meetings based on active participants in the call.
+    // TODO(wittjosiah): Highlight active meetings in L1.
+    //  Separate section for active meetings, with different icons & labels.
+    //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
     createExtension({
       id: `${MEETING_PLUGIN}/meetings`,
       filter: (node): node is Node<null, { space: Space }> => node.id === `${MEETING_PLUGIN}/meetings`,
       connector: ({ node }) => {
+        const { metadata } = context.requestCapability(
+          Capabilities.Metadata,
+          (capability): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
+            capability.id === MeetingType.typename,
+        );
         const meetings = memoizeQuery(node.properties.space, Filter.schema(MeetingType));
         return meetings
           .toSorted((a, b) => {
@@ -46,14 +84,50 @@ export default (context: PluginsContext) =>
             return nameA.localeCompare(nameB);
           })
           .map((meeting) => ({
-            id: meeting.id,
+            id: fullyQualifiedId(meeting),
             type: `${MEETING_PLUGIN}/meeting`,
             data: meeting,
             properties: {
-              label: meeting.name ?? ['meeting label', { ns: MEETING_PLUGIN }],
-              icon: 'ph--voicemail--regular',
+              label: metadata.label(meeting) ?? ['meeting label', { ns: MEETING_PLUGIN }],
+              icon: metadata.icon,
             },
           }));
       },
+    }),
+
+    createExtension({
+      id: `${MEETING_PLUGIN}/meeting-summary`,
+      filter: (node): node is Node<MeetingType> =>
+        isInstanceOf(MeetingType, node.data) && node.type !== PLANK_COMPANION_TYPE,
+      // TODO(wittjosiah): Only show the summarize action if the meeting plausibly completed.
+      actions: ({ node }) => [
+        {
+          id: `${fullyQualifiedId(node.data)}/action/summarize`,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(MeetingAction.Summarize, { meeting: node.data }));
+          },
+          properties: {
+            label: ['summarize label', { ns: MEETING_PLUGIN }],
+            icon: 'ph--book-open-text--regular',
+          },
+        },
+      ],
+      // TODO(wittjosiah): Only show the summary companion if the meeting plausibly completed.
+      connector: ({ node }) => [
+        {
+          id: `${fullyQualifiedId(node.data)}${ATTENDABLE_PATH_SEPARATOR}summary`,
+          type: PLANK_COMPANION_TYPE,
+          data: node.data,
+          properties: {
+            label: ['meeting summary label', { ns: MEETING_PLUGIN }],
+            icon: 'ph--book-open-text--regular',
+            position: 'fallback',
+            disposition: 'hidden',
+            schema: DocumentType,
+            getIntent: ({ meeting }: { meeting: MeetingType }) => createIntent(MeetingAction.Summarize, { meeting }),
+          },
+        },
+      ],
     }),
   ]);

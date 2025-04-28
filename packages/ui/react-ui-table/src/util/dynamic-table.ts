@@ -2,17 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SortDirectionType } from '@dxos/echo-schema';
-import { create, makeRef } from '@dxos/live-object';
+import type { BaseSchema, JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
+import { live, makeRef } from '@dxos/live-object';
 import {
   createView,
-  echoSchemaFromPropertyDefinitions,
+  getSchemaFromPropertyDefinitions,
   ViewProjection,
+  type ViewType,
   type SchemaPropertyDefinition,
 } from '@dxos/schema';
 
-import { TableType } from '..';
+import { TableType } from '../types';
 
+// TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {
   size: number;
   title: string;
@@ -21,26 +23,63 @@ type PropertyDisplayProps = {
 
 export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<PropertyDisplayProps>;
 
-export const makeDynamicTable = (typename: string, properties: TablePropertyDefinition[]) => {
-  const table = create(TableType, { name: 'dynamic-table' });
-  const echoSchema = echoSchemaFromPropertyDefinitions(typename, properties);
-  const propertyNames = properties.map((property) => property.name);
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove variance.
+export const getBaseSchems = ({
+  typename,
+  properties,
+  jsonSchema,
+  schema,
+}: {
+  typename?: string;
+  properties?: TablePropertyDefinition[];
+  jsonSchema?: JsonSchemaType;
+  schema?: BaseSchema;
+}): { typename: string; jsonSchema: JsonSchemaType } => {
+  if (typename && properties) {
+    const schema = getSchemaFromPropertyDefinitions(typename, properties);
+    return { typename: schema.typename, jsonSchema: schema.jsonSchema };
+  } else if (schema) {
+    return { typename: schema.typename, jsonSchema: schema.jsonSchema };
+  } else if (typename && jsonSchema) {
+    return { typename, jsonSchema };
+  } else {
+    throw new Error('invalid properties');
+  }
+};
 
+export const makeDynamicTable = ({
+  typename,
+  jsonSchema,
+  properties,
+}: {
+  typename: string;
+  jsonSchema: JsonSchemaType;
+  properties?: TablePropertyDefinition[];
+}): { table: TableType; projection: ViewProjection } => {
   const view = createView({
     name: 'dynamic-table',
-    typename: echoSchema.typename,
-    jsonSchema: echoSchema.jsonSchema,
-    fields: propertyNames,
+    typename,
+    jsonSchema,
+    ...(properties && { fields: properties.map((property) => property.name) }),
   });
 
-  table.view = makeRef(view);
-  const viewProjection = new ViewProjection(echoSchema, view);
+  const table = live(TableType, { name: 'dynamic-table', view: makeRef(view) });
+  const projection = new ViewProjection(jsonSchema, view);
+  if (properties && view.fields) {
+    setProperties(view, projection, properties);
+  }
 
+  return {
+    table,
+    projection,
+  };
+};
+
+const setProperties = (view: ViewType, projection: ViewProjection, properties: TablePropertyDefinition[]) => {
   for (const property of properties) {
-    if (!view.fields) {
-      continue;
-    }
-
     const field = view.fields.find((field) => field.path === property.name);
     if (field) {
       if (property.size !== undefined) {
@@ -48,8 +87,8 @@ export const makeDynamicTable = (typename: string, properties: TablePropertyDefi
       }
 
       if (property.title !== undefined) {
-        const fieldProjection = viewProjection.getFieldProjection(field.id);
-        viewProjection.setFieldProjection({
+        const fieldProjection = projection.getFieldProjection(field.id);
+        projection.setFieldProjection({
           ...fieldProjection,
           props: { ...fieldProjection.props, title: property.title },
         });
@@ -61,11 +100,4 @@ export const makeDynamicTable = (typename: string, properties: TablePropertyDefi
       }
     }
   }
-
-  return {
-    table,
-    schema: echoSchema,
-    view,
-    viewProjection,
-  };
 };

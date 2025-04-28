@@ -7,7 +7,7 @@ import { AST, ObjectId, S, toJsonSchema } from '@dxos/echo-schema';
 import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -509,7 +509,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
 
 const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
   return space.db.add(
-    create(CanvasBoardType, {
+    live(CanvasBoardType, {
       name,
       computeGraph: makeRef(compute.root),
       layout: canvas.graph,

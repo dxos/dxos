@@ -3,14 +3,15 @@
 //
 
 import React, {
-  forwardRef,
+  type MouseEvent,
   type PropsWithChildren,
+  type WheelEvent,
+  forwardRef,
   useCallback,
   useImperativeHandle,
   useState,
-  type WheelEvent,
-  type MouseEvent,
   useMemo,
+  useEffect,
 } from 'react';
 
 import { getValue } from '@dxos/echo-schema';
@@ -18,9 +19,9 @@ import { invariant } from '@dxos/invariant';
 import { Filter } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type DxGridElement, Grid, type GridContentProps, closestCell, type DxGridPosition } from '@dxos/react-ui-grid';
+import { closestCell, type DxGridElement, type DxGridPosition, type GridContentProps, Grid } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
+import { isNotFalsy, safeParseInt } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
@@ -39,10 +40,8 @@ const inlineEndLine =
 const blockEndLine =
   '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
 
-const frozen = { frozenRowsStart: 1, frozenColsStart: 1, frozenColsEnd: 1 };
-
 //
-// Root
+// Table.Root
 //
 
 export type TableRootProps = PropsWithChildren<{ role?: string }>;
@@ -52,8 +51,8 @@ const TableRoot = ({ children, role }: TableRootProps) => {
     <div
       role='none'
       className={mx(
-        'relative border-bs !border-separator',
-        role === 'section'
+        'relative !border-separator',
+        role === 'section' // TODO(burdon): This leaks composer plugin concepts? Standardize for react-ui?
           ? 'attention-surface overflow-hidden [&_.dx-grid]:max-is-[--dx-grid-content-inline-size]'
           : 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
       )}
@@ -64,7 +63,7 @@ const TableRoot = ({ children, role }: TableRootProps) => {
 };
 
 //
-// Main
+// Table.Main
 //
 
 export type TableController = {
@@ -74,15 +73,45 @@ export type TableController = {
 export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
+  // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
+  onRowClick?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, onRowClick }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
     const modals = useMemo(() => new ModalController(), []);
+
+    const frozen = useMemo(() => {
+      const noActionColumn =
+        model?.features.dataEditable === false &&
+        model?.features.schemaEditable === false &&
+        model.rowActions.length === 0;
+
+      return {
+        frozenRowsStart: 1,
+        frozenColsStart: model?.features.selection.enabled ? 1 : 0,
+        frozenColsEnd: noActionColumn ? 0 : 1,
+      };
+    }, [model]);
+
+    // TODO(burdon): Replace useEffect below.
+    // const getCells = useCallback<GridContentProps['getCells']>(
+    //   (range: DxGridRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
+    //   [presentation],
+    // );
+
+    useEffect(() => {
+      if (!presentation || !dxGrid) {
+        return;
+      }
+
+      // TODO(burdon): Pass to Grid.Content?
+      dxGrid.getCells = (range, plane) => presentation.getCells(range, plane);
+    }, [presentation, dxGrid]);
 
     /**
      * Provides an external controller that can be called to repaint the table.
@@ -94,7 +123,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           return {};
         }
 
-        dxGrid.getCells = (range, plane) => presentation.getCells(range, plane);
         return {
           update: (cell) => {
             if (cell) {
@@ -111,6 +139,18 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
+        const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
+        if (rowIndex != null) {
+          if (onRowClick) {
+            const row = model?.getRowAt(rowIndex);
+            row && onRowClick(row);
+          }
+
+          if (model?.features.selection.enabled && model?.selection.selectionMode === 'single') {
+            model.selection.toggleSelectionForRowIndex(rowIndex);
+          }
+        }
+
         if (!modals) {
           return;
         }
@@ -197,6 +237,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
       (cell) => {
+        if (!model?.features.dataEditable) {
+          return;
+        }
+
         // TODO(burdon): Insert row only if bottom row isn't completely blank already.
         if (model && cell.row === model.getRowCount() - 1) {
           model.insertRow(cell.row);
@@ -213,6 +257,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
       (event) => {
+        if (!model?.features.dataEditable) {
+          return;
+        }
+
         const cell = closestCell(event.target);
         if (!model || !cell) {
           return;
@@ -291,7 +339,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
         return [];
       },
-      [model],
+      [model, t],
     );
 
     if (!model || !modals) {
@@ -308,31 +356,28 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onQuery={handleQuery}
         />
         <Grid.Content
-          onWheelCapture={handleWheel}
           className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
           frozen={frozen}
+          // getCells={getCells}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}
           limitColumns={model.view?.fields?.length ?? 0}
+          overscroll='trap'
           onAxisResize={handleAxisResize}
           onClick={handleGridClick}
           onKeyDown={handleKeyDown}
-          overscroll='trap'
+          onWheelCapture={handleWheel}
           ref={setDxGrid}
         />
         <RowActionsMenu model={model} modals={modals} />
         <ColumnActionsMenu model={model} modals={modals} />
         <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
-        <RefPanel model={model} modals={modals} />
         <CreateRefPanel model={model} modals={modals} />
+        <RefPanel model={model} modals={modals} />
       </Grid.Root>
     );
   },
 );
-
-//
-// CellEditor
-//
 
 export const Table = {
   Root: TableRoot,
