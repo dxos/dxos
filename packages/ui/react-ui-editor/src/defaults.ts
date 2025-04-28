@@ -17,7 +17,9 @@ const margin = '!mt-[1rem]';
  * NOTE: Max width - 4rem = 2rem left/right margin (or 2rem gutter plus 1rem left/right margin).
  */
 // TOOD(burdon): Adjust depending on
-export const editorContent = mx(margin, '!mli-auto w-full max-w-[min(50rem,100%-4rem)]');
+export const editorWidth = '!mli-auto is-full max-is-[min(50rem,100%-4rem)]';
+
+export const editorContent = mx(margin, editorWidth);
 
 /**
  * Margin for numbers.

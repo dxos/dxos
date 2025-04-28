@@ -34,7 +34,7 @@ import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
 import { ChatProcessor } from '../../hooks';
@@ -208,7 +208,6 @@ const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-automation/ThreadContainer',
   render: DefaultStory,
   decorators: [
-    withSignals,
     withClientProvider({
       createIdentity: true,
       createSpace: true,
