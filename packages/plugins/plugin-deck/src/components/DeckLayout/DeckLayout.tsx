@@ -209,7 +209,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
       <ActiveNode />
 
       {fullscreen ? (
-        <Main.Root>
+        <Main.Root navigationSidebarState='closed' complementarySidebarState='closed'>
           <Main.Content bounce>
             <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
               <Plank

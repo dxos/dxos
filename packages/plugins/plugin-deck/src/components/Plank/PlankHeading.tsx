@@ -98,7 +98,8 @@ export const PlankHeading = memo(
 
     const handlePlankAction = useCallback(
       (eventType: DeckAction.PartAdjustment) => {
-        if (eventType === 'solo') {
+        console.log('[plank action]', eventType);
+        if (eventType.startsWith('solo')) {
           return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
         } else if (eventType === 'close') {
           if (part === 'complementary') {
