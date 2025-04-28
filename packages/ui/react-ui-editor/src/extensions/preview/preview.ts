@@ -111,7 +111,7 @@ export const preview = (options: PreviewOptions): Extension => {
               );
 
               // NOTE: Align horizontally with title of card.
-              return { dom: el, offset: { x: 8, y: 0 } };
+              return { dom: el, offset: { x: 6, y: 0 } };
             },
           };
         },
