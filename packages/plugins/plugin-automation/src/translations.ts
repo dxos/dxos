@@ -12,6 +12,11 @@ export default [
         'automation panel label': 'Automations',
         'script automation label': 'Automation',
 
+        'function panel label': 'Deployed Functions',
+        'function copy id': 'Copy Function ID',
+        'no functions found': 'No functions found',
+        'go to function source button label': 'Show function source',
+
         'trigger editor title': 'Configure Trigger',
         'new trigger label': 'Add Trigger',
         'trigger type timer': 'Timer',
