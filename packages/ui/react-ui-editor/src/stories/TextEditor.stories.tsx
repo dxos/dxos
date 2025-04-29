@@ -25,7 +25,7 @@ import { Button, Icon, IconButton, Input, useThemeContext } from '@dxos/react-ui
 import { mx, hoverableHidden } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { editorContent, editorGutter, editorMonospace, editorWidth } from './defaults';
+import { editorContent, editorGutter, editorMonospace, editorWidth } from '../defaults';
 import {
   type Action,
   type DebugNode,
@@ -59,11 +59,11 @@ import {
   selectionState,
   table,
   typewriter,
-} from './extensions';
-import { useTextEditor, type UseTextEditorProps } from './hooks';
-import translations from './translations';
-import { type Comment } from './types';
-import { createRenderer } from './util';
+} from '../extensions';
+import { useTextEditor, type UseTextEditorProps } from '../hooks';
+import translations from '../translations';
+import { type Comment } from '../types';
+import { createRenderer } from '../util';
 
 faker.seed(101);
 
