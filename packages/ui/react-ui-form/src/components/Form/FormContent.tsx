@@ -129,7 +129,7 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
     if (typeLiteral) {
       return (
         <div role='none'>
-          {!inline && <div>{label}</div>}
+          {!inline && <h3 className='text-lg mlb-2'>{label}</h3>}
           <FormFields schema={S.make(typeLiteral)} path={path} readonly={readonly} Custom={Custom} />
         </div>
       );

@@ -35,7 +35,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div role='none' className='flex w-[350px] border border-separator overflow-hidden'>
+    <div role='none' className='w-[32rem] bs-fit border border-separator rounded-sm'>
       <TriggerEditor space={space} trigger={trigger} />
     </div>
   );

@@ -124,13 +124,15 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
   );
 
   return (
-    <Form<FunctionTriggerType>
-      schema={FunctionTriggerSchema}
-      values={trigger}
-      onSave={handleSave}
-      onCancel={onCancel}
-      Custom={Custom}
-    />
+    <div role='none' className='bs-full is-full'>
+      <Form<FunctionTriggerType>
+        schema={FunctionTriggerSchema}
+        values={trigger}
+        onSave={handleSave}
+        onCancel={onCancel}
+        Custom={Custom}
+      />
+    </div>
   );
 };
 
