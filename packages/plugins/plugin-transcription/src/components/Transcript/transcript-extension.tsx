@@ -12,10 +12,14 @@ import { type TranscriptBlock } from '../../types';
 
 const blockToMarkdown = (block: TranscriptBlock): string[] => {
   // TODO(burdon): Use link/reference markup for users (with popover).
-  return [`###### ${block.authorName}`, block.segments.map((segment) => segment.text).join(''), ''];
+  return [`###### ${block.authorName}` + '__' + block.id, block.segments.map((segment) => segment.text).join(' '), ''];
 };
 
 // TODO(burdon): Wrap queue.
+/**
+ * Ideally we would implement a custom virtual Text model for the View, but this currently isn't possible in Codemirror.
+ * Instead we use a simple model that maps blocks to lines.
+ */
 export class TranscriptModel {
   /** Ordered array of blocks. */
   private readonly _blocks: TranscriptBlock[] = [];
@@ -26,21 +30,21 @@ export class TranscriptModel {
   /** Map of block ids to line numbers. */
   private readonly _blockLine = new Map<number, TranscriptBlock>();
 
-  /** Current line number. */
-  private _line = 1;
+  /** Line number of the last block. */
+  private _lastBlockLine = 1;
 
   public readonly update = new Event<{ block: string; lines: string[] }>();
 
   constructor(blocks: TranscriptBlock[]) {
     blocks.forEach((block) => {
-      this.setBlock(block);
+      this.setBlock(block, false);
     });
   }
 
   toJSON() {
     return {
-      line: this._line,
       blocks: this._blocks.length,
+      lines: Array.from(this._blockLine.keys()),
     };
   }
 
@@ -59,26 +63,36 @@ export class TranscriptModel {
     return this;
   }
 
+  /**
+   * Upsert a block into the model and update the document.
+   */
+  // TODO(burdon): Adapt to queue to determine new or modified blocks.
   // TODO(burdon): Doesn't support out-of-order blocks or deleting blocks.
-  setBlock(block: TranscriptBlock, flush = false) {
+  setBlock(block: TranscriptBlock, flush = true) {
     if (this._blockMap.has(block.id)) {
       // Replace existing block.
       const idx = this._blocks.findIndex((b) => b.id === block.id);
       if (idx !== -1) {
         this._blocks[idx] = block;
       }
+
+      this._blockMap.set(block.id, block);
     } else {
+      // Add new block.
+      let line = this._lastBlockLine;
+      const lastBlock = this._blockLine.get(this._lastBlockLine);
+      if (lastBlock) {
+        line += blockToMarkdown(lastBlock).length;
+      }
+
+      this._blockMap.set(block.id, block);
       this._blocks.push(block);
+      this._blockLine.set(line, block);
+      this._lastBlockLine = line;
     }
 
-    const lines = blockToMarkdown(block);
-
-    this._blockMap.set(block.id, block);
-    this._blockLine.set(this._line, block);
-    this._line += lines.length;
-
     if (flush) {
-      this.update.emit({ block: block.id, lines });
+      this.update.emit({ block: block.id, lines: blockToMarkdown(block) });
     }
 
     return this;
@@ -125,6 +139,7 @@ export const transcript = (options: TranscriptOptions): Extension => {
     ViewPlugin.fromClass(
       class {
         /** Map of block ranges by id. */
+        // TODO(burdon): Change to track line ranges.
         private readonly _blockRange = new Map<string, { from: number; to: number }>();
         private readonly _controls?: HTMLDivElement;
         private readonly _cleanup: CleanupFn;
@@ -179,7 +194,10 @@ export const transcript = (options: TranscriptOptions): Extension => {
             }),
 
             // Listen for model updates.
+            // TODO(burdon): Generalize to support out-of-order blocks (e.g., insert lines).
             options.model.update.on(({ block, lines }) => {
+              console.log('INSERT');
+
               // Check if clamped to bottom.
               const autoScroll =
                 scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
@@ -265,7 +283,9 @@ class TimestampMarker extends GutterMarker {
     const el = document.createElement('div');
     el.className = 'text-sm text-subdued hover:bg-hoverSurface cursor-pointer';
     el.textContent = [
-      pad(this._timestamp.getHours()),
+      this._line,
+      ':',
+      // pad(this._timestamp.getHours()),
       pad(this._timestamp.getMinutes()),
       pad(this._timestamp.getSeconds()),
     ].join(':');
