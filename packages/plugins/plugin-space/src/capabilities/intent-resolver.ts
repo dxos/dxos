@@ -20,7 +20,8 @@ import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { isSpace, getSpace, SpaceState, type Space, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { isSpace, getSpace, SpaceState, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { SpaceCapabilities } from './capabilities';
 import {
@@ -121,10 +122,9 @@ export default ({ context, observability }: IntentResolverOptions) => {
     }),
     createResolver({
       intent: SpaceAction.Share,
-      filter: (data): data is { space: Space } => !data.space.properties[COMPOSER_SPACE_LOCK],
       resolve: ({ space }) => {
         const layout = context.requestCapability(Capabilities.Layout);
-        const id = `${space.id}-settings-members`;
+        const id = `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
         if (layout.active.includes(id)) {
           return {
             intents: [
@@ -240,7 +240,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
       intent: SpaceAction.OpenSettings,
       resolve: ({ space }) => {
         const layout = context.requestCapability(Capabilities.Layout);
-        const id = `${space.id}-settings-properties`;
+        const id = `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
         if (layout.active.includes(id)) {
           return {
             intents: [

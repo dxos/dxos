@@ -9,7 +9,7 @@ export * from './CollectionSection';
 export * from './JoinDialog';
 export * from './MembersContainer';
 export * from './MenuFooter';
-export * from './ObjectSettingsContainer';
+export * from './ObjectSettings';
 export * from './PersistenceStatus';
 export * from './PopoverAddSpace';
 export * from './PopoverRenameObject';

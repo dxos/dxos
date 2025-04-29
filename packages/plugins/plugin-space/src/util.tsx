@@ -282,7 +282,6 @@ export const constructSpaceActions = ({
   }
 
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
-    const locked = space.properties[COMPOSER_SPACE_LOCK];
     actions.push(
       {
         id: getId(SpaceAction.OpenCreateObject._tag),
@@ -295,41 +294,6 @@ export const constructSpaceActions = ({
           icon: 'ph--plus--regular',
           disposition: 'item',
           testId: 'spacePlugin.createObject',
-        },
-      },
-      {
-        id: getId(SpaceAction.Share._tag),
-        type: ACTION_TYPE,
-        data: async () => {
-          if (locked) {
-            return;
-          }
-          await dispatch(createIntent(SpaceAction.Share, { space }));
-        },
-        properties: {
-          label: ['share space label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--users--regular',
-          disabled: locked,
-          testId: 'spacePlugin.shareSpace',
-          keyBinding: {
-            macos: 'meta+.',
-            windows: 'alt+.',
-          },
-        },
-      },
-      {
-        id: locked ? getId(SpaceAction.Unlock._tag) : getId(SpaceAction.Lock._tag),
-        type: ACTION_TYPE,
-        data: async () => {
-          if (locked) {
-            await dispatch(createIntent(SpaceAction.Unlock, { space }));
-          } else {
-            await dispatch(createIntent(SpaceAction.Lock, { space }));
-          }
-        },
-        properties: {
-          label: [locked ? 'unlock space label' : 'lock space label', { ns: SPACE_PLUGIN }],
-          icon: locked ? 'ph--lock-simple-open--regular' : 'ph--lock-simple--regular',
         },
       },
       {
@@ -347,49 +311,7 @@ export const constructSpaceActions = ({
           },
         },
       },
-      {
-        id: getId(SpaceAction.OpenSettings._tag),
-        type: ACTION_TYPE,
-        data: async () => {
-          await dispatch(createIntent(SpaceAction.OpenSettings, { space }));
-        },
-        properties: {
-          label: ['open space settings label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--gear--regular',
-        },
-      },
     );
-  }
-
-  // TODO(wittjosiah): Consider moving close space into the space settings dialog.
-  if (state !== SpaceState.SPACE_INACTIVE && !hasPendingMigration) {
-    actions.push({
-      id: getId(SpaceAction.Close._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        await dispatch(createIntent(SpaceAction.Close, { space }));
-      },
-      properties: {
-        label: ['close space label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--x--regular',
-        disabled: personal,
-      },
-    });
-  }
-
-  if (state === SpaceState.SPACE_INACTIVE) {
-    actions.push({
-      id: getId(SpaceAction.Open._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        await dispatch(createIntent(SpaceAction.Open, { space }));
-      },
-      properties: {
-        label: ['open space label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--clock-counter-clockwise--regular',
-        disposition: 'list-item-primary',
-      },
-    });
   }
 
   return actions;
