@@ -10,7 +10,7 @@ import { ScriptType } from '@dxos/functions/types';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { AutomationPanel } from '../components';
+import { AutomationPanel, FunctionsPanel } from '../components';
 import { meta } from '../meta';
 
 export default () =>
@@ -20,6 +20,12 @@ export default () =>
       role: 'space-settings--automation',
       filter: (data): data is { subject: Space } => isSpace(data.subject),
       component: ({ data }) => <AutomationPanel space={data.subject} />,
+    }),
+    createSurface({
+      id: `${meta.id}/automation`,
+      role: 'space-settings--functions',
+      filter: (data): data is { subject: Space } => isSpace(data.subject),
+      component: ({ data }) => <FunctionsPanel space={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/companion/automation`,

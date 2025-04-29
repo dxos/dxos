@@ -115,12 +115,18 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/space-settings`,
       activatesOn: SpaceEvents.SetupSettingsPanel,
-      activate: () =>
+      activate: () => [
         contributes(SpaceCapabilities.SettingsSection, {
           id: 'properties',
           label: ['space settings properties label', { ns: SPACE_PLUGIN }],
           position: 'hoist',
         }),
+        contributes(SpaceCapabilities.SettingsSection, {
+          id: 'schemata',
+          label: ['space settings schema label', { ns: SPACE_PLUGIN }],
+          position: 'fallback',
+        }),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
