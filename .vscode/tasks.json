@@ -38,6 +38,7 @@
       "label": "install dependencies",
       "type": "shell",
       "command": "pnpm install",
+      "problemMatcher": [],
       "presentation": {
         "echo": true
       }

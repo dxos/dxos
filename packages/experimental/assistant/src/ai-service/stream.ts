@@ -15,6 +15,7 @@ import { iterSSEMessages } from './util';
 export const createGenerationStream = (response: Response, controller = new AbortController()): GenerationStream => {
   const iterator = async function* () {
     for await (const sse of iterSSEMessages(response, controller)) {
+      console.log('sse', { sse });
       if (sse.event === 'completion') {
         try {
           yield JSON.parse(sse.data);

@@ -61,7 +61,15 @@ export class AIServiceEdgeClient implements AIServiceClient {
       }),
     });
 
+    if (!response.ok) {
+      throw await parseErrorResponse(response);
+    }
+
     invariant(response.body instanceof ReadableStream);
     return createGenerationStream(response, controller);
   }
 }
+
+const parseErrorResponse = async (response: Response): Promise<Error> => {
+  throw new Error(`AI Service error: ${response.status} ${response.statusText} ${await response.text()}`);
+};
