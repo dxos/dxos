@@ -5,7 +5,6 @@
       "label": "build",
       "type": "typescript",
       "tsconfig": "tsconfig.all.json",
-      "isBackground": true,
       "problemMatcher": ["$tsc-watch"],
       "option": "watch",
       "presentation": {
@@ -23,7 +22,6 @@
       "label": "build current tsconfig",
       "type": "typescript",
       "tsconfig": "${relativeFile}",
-      "isBackground": true,
       "problemMatcher": ["$tsc-watch"],
       "option": "watch",
       "presentation": {
@@ -37,10 +35,17 @@
       }
     },
     {
+      "label": "install dependencies",
+      "type": "shell",
+      "command": "pnpm install",
+      "presentation": {
+        "echo": true
+      }
+    },
+    {
       "label": "test current file",
       "type": "shell",
       "command": "cd ${fileDirname} && pnpm vitest ${file}",
-      "isBackground": true,
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -90,7 +95,6 @@
       "label": "build and test all packages",
       "type": "shell",
       "command": "pnpm -w nx run-many --target=build,test --parallel 12",
-      "isBackground": true,
       "presentation": {
         "echo": true,
         "reveal": "always",
