@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe, Ref } from 'effect';
+import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { AST, Expando, getReferenceAnnotation, getTypeAnnotation, S, type TypeAnnotation } from '@dxos/echo-schema';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { makeRef, refFromDXN, RefImpl } from '@dxos/live-object';
+import { refFromDXN, RefImpl } from '@dxos/live-object';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
