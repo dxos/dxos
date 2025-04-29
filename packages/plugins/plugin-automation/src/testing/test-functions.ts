@@ -37,7 +37,9 @@ export const functions = [
     version: '0.0.1',
     inputSchema: toJsonSchema(
       S.Struct({
-        object: Ref(ContactType),
+        contact: Ref(ContactType).annotations({
+          [AST.TitleAnnotationId]: 'Contact',
+        }),
       }),
     ),
   },

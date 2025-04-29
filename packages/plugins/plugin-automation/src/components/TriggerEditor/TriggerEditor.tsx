@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { type JsonPath, toEffectSchema } from '@dxos/echo-schema';
+import { getDXN, type JsonPath, toEffectSchema, type TypeAnnotation } from '@dxos/echo-schema';
 import {
   FunctionType,
   FunctionTriggerSchema,
@@ -17,6 +17,7 @@ import {
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type CustomInputMap, Form, SelectInput, useFormValues } from '@dxos/react-ui-form';
+import { isNonNullable } from '@dxos/util';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
 
@@ -39,6 +40,23 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
 
   const handleSave = (values: FunctionTriggerType) => {
     onSave?.(values);
+  };
+
+  // TODO(ZaymonFC): We should have a hook that provisions this.
+  const handleRefQueryLookup = (typeInfo: TypeAnnotation) => {
+    // TODO(ZaymonFC): Use async, push async consumption down into form.
+    const query = space.db.query(Filter.typename(typeInfo.typename));
+    return query
+      .runSync()
+      .map((result) => {
+        const dxn = getDXN(result.object);
+        if (dxn) {
+          // TODO(Zaymon): Better fallback object names?
+          return { dxn, label: result?.object?.name ?? result?.object?.id ?? '' };
+        }
+        return undefined;
+      })
+      .filter(isNonNullable);
   };
 
   const Custom = useMemo(
@@ -94,7 +112,13 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
             <h3 className='text-md'>Function parameters</h3>
             {/* TODO(ZaymonFC): Try using <FormFields /> internal component for this nesting.
                                 This would allow errors to flow up to the root context. */}
-            <Form schema={effectSchema} values={values} classNames='p-0' onValuesChanged={handleSave} />
+            <Form
+              schema={effectSchema}
+              values={values}
+              classNames='p-0'
+              onValuesChanged={handleSave}
+              onQueryRefOptions={handleRefQueryLookup}
+            />
           </>
         );
       },
@@ -104,7 +128,14 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
 
   return (
     <div role='none' className='bs-full is-full'>
-      <Form schema={FunctionTriggerSchema} values={trigger} onSave={handleSave} onCancel={onCancel} Custom={Custom} />
+      <Form
+        schema={FunctionTriggerSchema}
+        values={trigger}
+        onSave={handleSave}
+        onCancel={onCancel}
+        Custom={Custom}
+        onQueryRefOptions={handleRefQueryLookup}
+      />
     </div>
   );
 };

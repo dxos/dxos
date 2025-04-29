@@ -9,8 +9,9 @@ import React, { useEffect, useState } from 'react';
 
 import { FunctionType, FunctionTrigger, TriggerKind } from '@dxos/functions/types';
 import { live } from '@dxos/live-object';
+import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { ContactType, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TriggerEditor } from './TriggerEditor';
@@ -49,11 +50,19 @@ const meta: Meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [FunctionType, FunctionTrigger],
+      types: [FunctionType, FunctionTrigger, ContactType],
       onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
           space.db.add(live(FunctionType, fn));
         }
+        Array.from({ length: 10 }).map(() => {
+          return space.db.add(
+            live(ContactType, {
+              name: faker.person.fullName(),
+              identifiers: [],
+            }),
+          );
+        });
       },
     }),
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center m-2' }),
