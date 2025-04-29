@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxos/lit-ui/dx-ref-tag.pcss';
+
 import { syntaxTree } from '@codemirror/language';
 import {
   type EditorState,
@@ -12,10 +14,8 @@ import {
   type Transaction,
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
-import { hoverTooltip } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { tooltipContent } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { type RenderCallback } from '../../types';
@@ -57,7 +57,6 @@ export type PreviewRenderProps = {
 
 export type PreviewOptions = {
   renderBlock: RenderCallback<PreviewRenderProps>;
-  renderPopover?: RenderCallback<PreviewRenderProps>;
   onLookup: PreviewLookup;
 };
 
@@ -77,68 +76,13 @@ export const preview = (options: PreviewOptions): Extension => {
       ],
     }),
 
-    // Popover.
-    options.renderPopover &&
-      hoverTooltip(
-        (view, pos, side) => {
-          const node = syntaxTree(view.state).resolveInner(pos, side);
-          if (node.name !== 'LinkMark') {
-            return null;
-          }
-
-          const link = node.parent!;
-          const ref = getLinkRef(view.state, link);
-          if (!ref) {
-            return null;
-          }
-
-          return {
-            pos: link.from,
-            end: link.to,
-            arrow: true,
-            create: () => {
-              const el = document.createElement('div');
-              el.className = tooltipContent({}, 'text-md');
-              options.renderPopover!(
-                el,
-                {
-                  readonly: view.state.readOnly,
-                  link: ref,
-                  onAction: () => {}, // TODO(burdon): ???
-                  onLookup: options.onLookup,
-                },
-                view,
-              );
-
-              // NOTE: Align horizontally with title of card.
-              return { dom: el, offset: { x: 6, y: 0 } };
-            },
-          };
-        },
-        {
-          // NOTE: 0 = default of 300ms.
-          hoverTime: 1,
-        },
-      ),
-
     EditorView.theme({
-      '.cm-preview-inline': {
-        padding: '0.25rem',
-        borderRadius: '0.25rem',
-        background: 'var(--dx-modalSurface)',
-        border: '1px solid var(--dx-separator)',
-        cursor: 'pointer',
-      },
       '.cm-preview-block': {
         marginLeft: '-1rem',
         marginRight: '-1rem',
         padding: '1rem',
         borderRadius: '0.5rem',
         background: 'var(--dx-modalSurface)',
-        border: '1px solid var(--dx-separator)',
-      },
-      '.cm-tooltip': {
-        borderRadius: '0.25rem',
         border: '1px solid var(--dx-separator)',
       },
     }),
@@ -243,9 +187,9 @@ class PreviewInlineWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView) {
-    const root = document.createElement('span');
-    root.classList.add('cm-preview-inline', 'hover:bg-hoverSurface');
-    root.innerHTML = this._link.label;
+    const root = document.createElement('dx-ref-tag');
+    root.setAttribute('label', this._link.label);
+    root.setAttribute('dxn', this._link.dxn);
     return root;
   }
 }

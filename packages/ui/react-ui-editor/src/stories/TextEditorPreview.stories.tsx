@@ -7,11 +7,12 @@ import '@dxos-theme';
 import React, { useState, useEffect, type FC, type KeyboardEvent } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button, Icon, IconButton, Input } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Input, Popover, Status } from '@dxos/react-ui';
 import { mx, hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { DefaultStory, str } from './story-utils';
+import { RefPopover, useRefPopover } from '../components/RefPopover';
 import { editorWidth } from '../defaults';
 import {
   preview,
@@ -40,31 +41,33 @@ export default meta;
 
 export const Preview = {
   render: () => (
-    <DefaultStory
-      text={str(
-        '# Preview',
-        '',
-        'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
-        '',
-        '![DXOS][?dxn:queue:data:123]',
-        '',
-        'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
-        '',
-        '## Deep dive',
-        '',
-        '![ECHO][dxn:queue:data:echo]',
-        '',
-        '',
-      )}
-      extensions={[
-        image(),
-        preview({
-          renderBlock: createRenderer(PreviewBlock),
-          renderPopover: createRenderer(PreviewCard),
-          onLookup: handlePreviewLookup,
-        }),
-      ]}
-    />
+    <RefPopover.Root onLookup={handlePreviewLookup}>
+      <DefaultStory
+        text={str(
+          '# Preview',
+          '',
+          'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
+          '',
+          '![DXOS][?dxn:queue:data:123]',
+          '',
+          'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
+          '',
+          '## Deep dive',
+          '',
+          '![ECHO][dxn:queue:data:echo]',
+          '',
+          '',
+        )}
+        extensions={[
+          image(),
+          preview({
+            renderBlock: createRenderer(PreviewBlock),
+            onLookup: handlePreviewLookup,
+          }),
+        ]}
+      />
+      <PreviewCard />
+    </RefPopover.Root>
   ),
 };
 
@@ -89,13 +92,22 @@ const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']
   return target;
 };
 
-const PreviewCard: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLookup }) => {
-  const target = useRefTarget(link, onLookup);
+const PreviewCard = () => {
+  const { link, target, pending } = useRefPopover('PreviewCard');
   return (
-    <div className='flex flex-col gap-2'>
-      <div className='grow truncate'>{link.label}</div>
-      {target && <div className='line-clamp-3'>{target.text}</div>}
-    </div>
+    <Popover.Content>
+      <Popover.Viewport>
+        {pending ? (
+          <Status indeterminate />
+        ) : (
+          <>
+            <div className='grow truncate'>{link?.label}</div>
+            {target && <div className='line-clamp-3'>{target.text}</div>}
+          </>
+        )}
+      </Popover.Viewport>
+      <Popover.Arrow />
+    </Popover.Content>
   );
 };
 
@@ -163,7 +175,6 @@ export const Command = {
       extensions={[
         preview({
           renderBlock: createRenderer(PreviewBlock),
-          renderPopover: createRenderer(PreviewCard),
           onLookup: handlePreviewLookup,
         }),
         command({

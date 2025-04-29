@@ -9,9 +9,13 @@ import { makeId } from '@dxos/react-hooks';
 
 export class DxRefTagActivate extends Event {
   public readonly dxn: string;
-  constructor(props: { dxn: string }) {
+  public readonly label: string;
+  public readonly trigger: HTMLButtonElement;
+  constructor(props: { dxn: string; label: string; trigger: HTMLButtonElement }) {
     super('dx-ref-tag-activate');
     this.dxn = props.dxn;
+    this.label = props.label;
+    this.trigger = props.trigger;
   }
 }
 
@@ -37,7 +41,9 @@ export class DxRefTag extends LitElement {
   private hoverTimer: number | null = null;
 
   private handleActivate() {
-    this.dispatchEvent(new DxRefTagActivate({ dxn: this.dxn }));
+    this.dispatchEvent(
+      new DxRefTagActivate({ dxn: this.dxn, label: this.label, trigger: this.querySelector('button')! }),
+    );
   }
 
   private handlePointerEnter() {
