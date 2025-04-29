@@ -3,3 +3,4 @@
 //
 
 export * from './bundle';
+export * from './lookup';

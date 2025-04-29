@@ -9,14 +9,14 @@ import path from 'path';
 import { asyncTimeout } from '@dxos/async';
 import { CollectionType } from '@dxos/cli-composer';
 import { type Client } from '@dxos/client';
-import { type ReactiveEchoObject, Filter, makeRef } from '@dxos/client/echo';
+import { type ReactiveEchoObject, makeRef } from '@dxos/client/echo';
 import { live, getMeta } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import {
-  getUserFunctionUrlInMetadata,
   incrementSemverPatch,
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
+  makeFunctionUrl,
   FunctionType,
   ScriptType,
 } from '@dxos/functions';
@@ -25,7 +25,7 @@ import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { TextType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
-import { bundleScript } from '../../util';
+import { bundleScript, findFunctionByDeploymentId } from '../../util';
 
 // TODO: move to cli-composer
 
@@ -87,23 +87,13 @@ export default class Upload extends BaseCommand<typeof Upload> {
   }
 
   private async _loadFunctionObject(space: Space) {
-    const functionId = this.flags.functionId;
-    if (!functionId) {
-      return undefined;
+    const matchingFunction = await findFunctionByDeploymentId(space, this.flags.functionId);
+
+    if (this.flags.functionId && !matchingFunction) {
+      this.warn(`Function ECHO object not found for ${this.flags.functionId}`);
     }
 
-    const invocationUrl = makeInvocationUrl(space, { functionId });
-    const functions = await space.db.query(Filter.schema(FunctionType)).run();
-    const matchingFunction = functions.objects.find(
-      (fn) => getUserFunctionUrlInMetadata(getMeta(fn)) === invocationUrl,
-    );
-
-    if (!matchingFunction) {
-      this.warn(`Function ECHO object not found for ${functionId}, checked ${functions.objects.length} objects`);
-      return undefined;
-    }
-
-    if (this.flags.verbose) {
+    if (this.flags.verbose && matchingFunction) {
       this.log(`Function ECHO object found, ID: ${matchingFunction.id}`);
     }
 
@@ -144,7 +134,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }
     functionObject.name = this.flags.name ?? functionObject.name;
     functionObject.version = uploadResult.version;
-    setUserFunctionUrlInMetadata(getMeta(functionObject), makeInvocationUrl(space, uploadResult));
+    setUserFunctionUrlInMetadata(getMeta(functionObject), makeFunctionUrl(space.id, uploadResult));
     return functionObject;
   }
 
@@ -197,5 +187,3 @@ const makeObjectNavigableInComposer = async (client: Client, space: Space, obj: 
     }
   }
 };
-
-const makeInvocationUrl = (space: Space, args: { functionId: string }) => `/${space.id}/${args.functionId}`;
