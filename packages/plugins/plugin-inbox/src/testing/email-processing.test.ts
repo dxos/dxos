@@ -14,16 +14,18 @@ const aiService = new AIServiceEdgeClient({
 });
 
 describe('Email Processing', () => {
-  test('content extraction and labeling', { timeout: 20_000 }, async () => {
-    const result = await processEmail({
-      email: emails[0],
-      aiService,
-      context: {
-        labels,
-        contacts: Object.values(contacts),
-        documents,
-      },
-    });
-    log.info('done', { result });
+  test('content extraction and labeling', { timeout: 180_000 }, async () => {
+    for (const email of emails) {
+      const result = await processEmail({
+        email,
+        aiService,
+        context: {
+          labels,
+          contacts: Object.values(contacts),
+          documents,
+        },
+      });
+      log.info('done', { email, result });
+    }
   });
 });
