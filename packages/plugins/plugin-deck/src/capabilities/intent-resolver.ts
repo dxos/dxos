@@ -174,10 +174,8 @@ export default (context: PluginsContext) =>
             deck.initialized = true;
           }
 
-          if (mode === 'fullscreen' && !deck.fullscreen) {
-            deck.fullscreen = true;
-          } else if (mode !== 'fullscreen' && deck.fullscreen) {
-            deck.fullscreen = false;
+          if (mode === 'solo--fullscreen') {
+            deck.fullscreen = !deck.fullscreen;
           }
         };
 
@@ -390,7 +388,7 @@ export default (context: PluginsContext) =>
             }
           }
 
-          if (adjustment.type === 'solo') {
+          if (adjustment.type.startsWith('solo')) {
             const entryId = adjustment.id;
             if (!state.deck.solo) {
               // Solo the entry.
@@ -399,21 +397,34 @@ export default (context: PluginsContext) =>
                   createIntent(LayoutAction.SetLayoutMode, {
                     part: 'mode',
                     subject: entryId,
-                    options: { mode: 'solo' },
+                    options: { mode: adjustment.type },
                   }),
                 ],
               };
             } else {
-              // Un-solo the current entry.
-              return {
-                intents: [
-                  // NOTE: The order of these is important.
-                  pipe(
-                    createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
-                    chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
-                  ),
-                ],
-              };
+              if (adjustment.type === 'solo--fullscreen') {
+                // Toggle fullscreen on the current entry.
+                return {
+                  intents: [
+                    createIntent(LayoutAction.SetLayoutMode, {
+                      part: 'mode',
+                      subject: entryId,
+                      options: { mode: 'solo--fullscreen' },
+                    }),
+                  ],
+                };
+              } else if (adjustment.type === 'solo') {
+                // Un-solo the current entry.
+                return {
+                  intents: [
+                    // NOTE: The order of these is important.
+                    pipe(
+                      createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
+                      chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
+                    ),
+                  ],
+                };
+              }
             }
           }
         });
