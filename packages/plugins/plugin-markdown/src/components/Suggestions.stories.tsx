@@ -16,12 +16,12 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { createStatic, ObjectId } from '@dxos/echo-schema';
+import { createStatic, ObjectId, type Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { createDocAccessor, createObject, useQueue } from '@dxos/react-client/echo';
+import { createDocAccessor, createObject, useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import {
@@ -37,6 +37,8 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor } from './MarkdownEditor';
 import translations from '../translations';
+import { useClient, type Client } from '@dxos/react-client';
+import { refFromDXN } from '@dxos/live-object';
 
 const PreviewBlock = () => {
   return <div>PreviewBlock</div>;
@@ -50,16 +52,56 @@ const PreviewCard = () => {
 const randomQueueDxn = () =>
   new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
 
+/**
+ * Temp API until this gets moved into ECHO.
+ */
+// TODO(dmaretskyi): Reactivity.
+const useRef = (ref: Ref<any>) => {
+  const client = useClient();
+
+  switch (ref.dxn.kind) {
+    case DXN.kind.ECHO: {
+      const { spaceId, echoId } = ref.dxn.asEchoDXN()!;
+      if (!spaceId) {
+        throw new Error('Local-space references are not supported');
+      }
+      const object = client.spaces.get(spaceId)?.db.getObjectById(echoId);
+      return object;
+    }
+    case DXN.kind.QUEUE: {
+      const { subspaceTag, spaceId, queueId, objectId } = ref.dxn.asQueueDXN()!;
+      const queue = client.spaces.get(spaceId)?.queues.get<Message>(ref.dxn);
+
+      if (!objectId) {
+        return queue;
+      }
+
+      return queue?.items.find((item) => item.id === objectId);
+    }
+    default:
+      throw new Error('Not supported');
+  }
+};
+
 const TestChat: FC<{ content: string }> = ({ content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
-  const [queueDxn] = useState<string>(() => randomQueueDxn());
-  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+  const client = useClient();
+  const [queueDxn] = useState(
+    () => new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, client.spaces.default.id, ObjectId.random()]),
+  );
+  const queue = useQueue<Message>(queueDxn);
 
   const handleInsert = () => {
     invariant(queue);
     queue.append([createStatic(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.items[queue.items.length - 1];
+
+    {
+      const ref = refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id]));
+
+      const message = deref(ref);
+    }
 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
