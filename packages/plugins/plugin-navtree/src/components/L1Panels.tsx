@@ -32,11 +32,16 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
   // TODO(wittjosiah): Support multiple alternate trees.
   const alternateTree = navTreeContext.getItems(item, 'alternate-tree')[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
-  const handleOpenChange = useCallback(
-    (open: boolean) => setAlternateTree?.(alternatePath, open),
-    [alternatePath, setAlternateTree],
-  );
+  const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
+
+  const handleBack = useCallback(() => {
+    if (isAlternate) {
+      setAlternateTree?.(alternatePath, false);
+    } else {
+      onBack?.();
+    }
+  }, [isAlternate, onBack, alternatePath, setAlternateTree]);
 
   return (
     <Tabs.Tabpanel
@@ -57,21 +62,23 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
               density='fine'
               classNames={mx(
                 'is-6 pli-0 dx-focus-ring-inset',
-                !item.id.startsWith('!') && 'invisible',
+                !item.id.startsWith('!') && !isAlternate && 'invisible',
                 hoverableControlItem,
                 hoverableOpenControlItem,
               )}
-              onClick={onBack}
+              onClick={handleBack}
             >
               <Icon icon='ph--caret-left--regular' size={3} />
             </Button>
             <span className='flex-1 truncate cursor-default'>{toLocalizedString(item.properties.label, t)}</span>
-            {alternateTree && (
-              <AlternateTree
+            {alternateTree && !isAlternate && (
+              <IconButton
+                variant='ghost'
+                classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
+                iconOnly
                 icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
                 label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
-                open={isAlternate}
-                onOpen={handleOpenChange}
+                onClick={handleOpen}
               />
             )}
             <NavTreeItemColumns path={path} item={item} open />
@@ -103,21 +110,6 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
         </>
       )}
     </Tabs.Tabpanel>
-  );
-};
-
-type AlternateTreeProps = { icon: string; label: string; open: boolean; onOpen: (open: boolean) => void };
-
-const AlternateTree = ({ icon, label, open, onOpen }: AlternateTreeProps) => {
-  return (
-    <IconButton
-      variant={open ? 'primary' : 'ghost'}
-      classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
-      iconOnly
-      icon={icon}
-      label={label}
-      onClick={() => onOpen(!open)}
-    />
   );
 };
 
