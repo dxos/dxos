@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
+import { type JsonPath, toEffectSchema } from '@dxos/echo-schema';
 import {
   FunctionType,
   FunctionTriggerSchema,
@@ -14,40 +15,19 @@ import {
   TriggerKind,
 } from '@dxos/functions/types';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
-import { type CustomInputMap, Form, type InputProps, SelectInput, TextInput, useInputProps } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { type CustomInputMap, Form, SelectInput, useFormValues } from '@dxos/react-ui-form';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
+
+// TODO(ZaymonFC):
+//   - Error changing trigger type once payload or other information is set.
 
 export type TriggerEditorProps = {
   space: Space;
   trigger: FunctionTriggerType;
   onSave?: (trigger: Omit<FunctionTrigger, 'id'>) => void;
   onCancel?: () => void;
-};
-
-const PayloadInput = (props: InputProps & { property: string }) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
-  // TODO(dmaretskyi): Prop name (`meta`) should be passed in.
-  const inputProps = useInputProps(['meta', props.property]);
-  return (
-    <div role='none' className='flex items-center mt-2 gap-1'>
-      <div role='none' className='flex-1'>
-        <TextInput {...inputProps} type='string' label={props.property} />
-      </div>
-      <IconButton
-        icon='ph--trash--regular'
-        iconOnly
-        classNames={'mt-6'}
-        label={t('trigger meta remove')}
-        onClick={() => {
-          const newValues: any = { ...props.getValue() };
-          delete newValues[props.property];
-          props.onValueChange('object', newValues);
-        }}
-      />
-    </div>
-  );
 };
 
 export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEditorProps) => {
@@ -80,42 +60,38 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
       ),
       // TODO(wittjosiah): Form should be able to handle arbitrary records by default.
       ['meta' as const]: (props) => {
-        const payload = props.getValue() ?? {};
-        useEffect(() => props.onValueChange('object', { ...payload }), []);
-        const [newPayloadFieldName, setNewPayloadFieldName] = useState('');
+        const selectedFunctionValue = useFormValues(['function' as JsonPath]);
+        const selectedFunctionName = useMemo(
+          () => selectedFunctionValue?.split('dxn:worker:').at(1),
+          [selectedFunctionValue],
+        );
+        const selectedFunction = useMemo(
+          () => functions.find((f) => f.name === selectedFunctionName),
+          [functions, selectedFunctionName],
+        );
 
-        const handleAddPayload = useCallback(() => {
-          if (newPayloadFieldName.length) {
-            const payload = props.getValue() ?? {};
-            const payloadWithNewProp = { ...payload, [newPayloadFieldName]: '' };
-            setNewPayloadFieldName('');
-            props.onValueChange('object', payloadWithNewProp);
-          }
-        }, [newPayloadFieldName, props.getValue, props.onValueChange]);
+        const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
+        const effectSchema = useMemo(() => (inputSchema ? toEffectSchema(inputSchema) : undefined), [inputSchema]);
+
+        const payload = useMemo(() => props.getValue() ?? {}, [props]);
+
+        const handleSave = useCallback(
+          (values: any) => {
+            props.onValueChange('object', values);
+          },
+          [props],
+        );
+
+        if (selectedFunction === undefined || effectSchema === undefined) {
+          return null;
+        }
 
         return (
           <>
-            <div>{/* TODO(wittjosiah): props.label */ 'Payload'}</div>
-            {[...Object.keys(payload)].map((key) => (
-              <PayloadInput key={key} property={key} {...props} />
-            ))}
-            <div role='none' className='flex items-center mt-2 gap-1 plb-1'>
-              <div role='none' className='flex-1'>
-                <Input.Root>
-                  <Input.TextInput
-                    placeholder={t('trigger payload prop name placeholder')}
-                    value={newPayloadFieldName}
-                    onChange={(event) => setNewPayloadFieldName(event.target.value)}
-                  />
-                </Input.Root>
-              </div>
-              <IconButton
-                icon='ph--plus--regular'
-                iconOnly
-                label={t('trigger payload add')}
-                onClick={handleAddPayload}
-              />
-            </div>
+            <h3 className='text-md'>Function parameters</h3>
+            {/* TODO(ZaymonFC): Try using <FormFields /> internal component for this nesting.
+                                This would allow errors to flow up to the root context. */}
+            <Form schema={effectSchema} values={payload} classNames='p-0' onSave={handleSave} autoSave></Form>
           </>
         );
       },
@@ -125,13 +101,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
 
   return (
     <div role='none' className='bs-full is-full'>
-      <Form<FunctionTriggerType>
-        schema={FunctionTriggerSchema}
-        values={trigger}
-        onSave={handleSave}
-        onCancel={onCancel}
-        Custom={Custom}
-      />
+      <Form schema={FunctionTriggerSchema} values={trigger} onSave={handleSave} onCancel={onCancel} Custom={Custom} />
     </div>
   );
 };

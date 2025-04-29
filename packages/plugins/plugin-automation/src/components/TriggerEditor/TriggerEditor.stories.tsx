@@ -36,7 +36,7 @@ const DefaultStory = () => {
 
   return (
     <div role='none' className='w-[32rem] bs-fit border border-separator rounded-sm'>
-      <TriggerEditor space={space} trigger={trigger} />
+      <TriggerEditor space={space} trigger={trigger} onSave={(values) => console.log('on save', values)} />
     </div>
   );
 };
