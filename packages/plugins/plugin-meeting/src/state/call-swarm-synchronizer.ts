@@ -162,7 +162,9 @@ export class CallSwarmSynchronizer extends Resource {
   @synchronized
   async join() {
     invariant(this._state.roomId);
-    this._stream = this._networkService.subscribeSwarmState({ topic: getTopic(this._state.roomId) });
+    const topic = getTopic(this._state.roomId);
+    log('joining swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
+    this._stream = this._networkService.subscribeSwarmState({ topic });
     this._stream.subscribe((event) => this._processSwarmEvent(event));
 
     this._notifyAndSchedule();
@@ -170,12 +172,16 @@ export class CallSwarmSynchronizer extends Resource {
 
   @synchronized
   async leave() {
-    const roomId = this._state.roomId;
-    void this._stream?.close();
+    if (!this._state.roomId) {
+      log.warn('leaving room without roomId');
+    }
+    const topic = this._state.roomId ? getTopic(this._state.roomId) : undefined;
+    await this._stream?.close();
     this._stream = undefined;
-    if (roomId && this._identityKey && this._deviceKey) {
-      void this._networkService.leaveSwarm({
-        topic: getTopic(roomId),
+    if (topic && this._identityKey && this._deviceKey) {
+      log('leaving swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
+      await this._networkService.leaveSwarm({
+        topic,
         peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
       });
     }
@@ -200,7 +206,7 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private async _sendState() {
-    if (!this._state.roomId || !this._identityKey || !this._deviceKey) {
+    if (!this._state.roomId || !this._identityKey || !this._deviceKey || !this._state.joined) {
       return;
     }
 
