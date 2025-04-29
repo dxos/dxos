@@ -33,7 +33,7 @@ import {
   SpaceState,
 } from './capabilities';
 import { SpaceEvents } from './events';
-import { meta, SPACE_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { CollectionAction, CollectionType, defineObjectForm } from './types';
 
@@ -111,16 +111,6 @@ export const SpacePlugin = ({
             getIntent: (props) => createIntent(CollectionAction.Create, props),
           }),
         ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/space-settings`,
-      activatesOn: SpaceEvents.SetupSettingsPanel,
-      activate: () =>
-        contributes(SpaceCapabilities.SettingsSection, {
-          id: 'properties',
-          label: ['space settings properties label', { ns: SPACE_PLUGIN }],
-          position: 'hoist',
-        }),
     }),
     defineModule({
       id: `${meta.id}/module/schema`,

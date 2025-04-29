@@ -102,6 +102,9 @@
       "path": "../../ui/react-ui-dnd"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-sfx"
     },
     {

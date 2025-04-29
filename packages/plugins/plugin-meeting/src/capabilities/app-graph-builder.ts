@@ -8,7 +8,8 @@ import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } 
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { memoizeQuery } from '@dxos/plugin-space';
-import { Filter, type Space, fullyQualifiedId, isSpace } from '@dxos/react-client/echo';
+import { SPACE_TYPE } from '@dxos/plugin-space/types';
+import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
@@ -43,7 +44,7 @@ export default (context: PluginsContext) =>
 
     createExtension({
       id: `${MEETING_PLUGIN}/root`,
-      filter: (node): node is Node<Space> => isSpace(node.data),
+      filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       connector: ({ node }) => {
         const meetings = memoizeQuery(node.data, Filter.schema(MeetingType));
         return meetings.length > 0

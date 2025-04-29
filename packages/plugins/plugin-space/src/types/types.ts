@@ -13,6 +13,7 @@ import { CollectionType } from './collection';
 import { SPACE_PLUGIN } from '../meta';
 
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
+export const SPACE_TYPE = 'dxos.org/type/Space';
 
 export type ObjectViewerProps = {
   lastSeen: number;
@@ -41,11 +42,6 @@ export type PluginState = {
    * Cached space names, used when spaces are closed or loading.
    */
   spaceNames: Record<string, string>;
-
-  /**
-   * Which sections of the space settings are open.
-   */
-  spaceSettingsOpenSections: string[];
 
   /**
    * Which spaces have an SDK migration running currently.
