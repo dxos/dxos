@@ -6,14 +6,15 @@ import { type Extension, RangeSetBuilder, Text } from '@codemirror/state';
 import { EditorView, GutterMarker, ViewPlugin, gutter } from '@codemirror/view';
 
 import { Event, type CleanupFn, addEventListener, combine } from '@dxos/async';
+import { type RenderCallback } from '@dxos/react-ui-editor';
 
 import { type TranscriptBlock } from '../../types';
 
-// TODO(burdon): Autoscroll.
 // TODO(burdon): Menu actions.
 // TODO(burdon): Edit/corrections.
 // TODO(burdon): Fade.
 
+// TODO(burdon): Wrap queue.
 export class TranscriptModel {
   private readonly _blocks: TranscriptBlock[] = [];
   private readonly _lines: string[] = [];
@@ -76,9 +77,9 @@ export class TranscriptModel {
 /**
  * Data structure that maps Blocks queue to lines with transcript state.
  */
-// TODO(burdon): Wrap queue.
 export type TranscriptOptions = {
   model: TranscriptModel;
+  renderButton?: RenderCallback<{ onClick: () => void }>;
 };
 
 export const transcript = (options: TranscriptOptions): Extension => {
@@ -111,43 +112,74 @@ export const transcript = (options: TranscriptOptions): Extension => {
     ViewPlugin.fromClass(
       class {
         private readonly _cleanup: CleanupFn;
+        private _controls?: HTMLDivElement;
 
         constructor(view: EditorView) {
+          const scroller = view.scrollDOM;
+          let isAutoScrolling = false;
+          let hasScrolled = false;
+
+          const scrollToBottom = () => {
+            // Temporarily hide scrollbar to prevent flicker.
+            scroller.classList.add('cm-hide-scrollbar');
+            isAutoScrolling = true;
+            setTimeout(() => {
+              this._controls?.classList.add('opacity-0');
+              scroller.classList.remove('cm-hide-scrollbar');
+              isAutoScrolling = false;
+            }, 1_000);
+
+            // Scroll to bottom.
+            view.dispatch({
+              effects: EditorView.scrollIntoView(view.state.doc.length, {
+                y: 'end',
+              }),
+            });
+          };
+
+          // Scroll button.
+          if (options.renderButton) {
+            this._controls = document.createElement('div');
+            this._controls.classList.add('cm-controls', 'transition-opacity', 'duration-300', 'opacity-0');
+            view.dom.appendChild(this._controls);
+            options.renderButton(
+              this._controls,
+              {
+                onClick: () => {
+                  scrollToBottom();
+                },
+              },
+              view,
+            );
+          }
+
+          // Event listeners.
           this._cleanup = combine(
-            addEventListener(view.scrollDOM, 'scroll', () => {
-              console.log('scroll');
+            addEventListener(view.scrollDOM, 'scroll', (ev) => {
+              if (!isAutoScrolling) {
+                hasScrolled = true;
+                this._controls?.classList.remove('opacity-0');
+              }
             }),
             options.model.update.on((lines) => {
-              const length = view.state.doc.length;
-              const text = '\n' + lines.join('\n');
-
-              const scroller = view.scrollDOM;
-              const dy = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-              console.log('scroller', scroller.scrollHeight, scroller.scrollTop, scroller.clientHeight, dy);
-              const autoScroll = dy === 0;
+              // Check if clamped to bottom.
+              const autoScroll = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0;
 
               // Append to document.
+              const length = view.state.doc.length;
               view.dispatch({
-                changes: { from: length, to: length, insert: text },
+                changes: { from: length, to: length, insert: '\n' + lines.join('\n') },
               });
 
-              if (autoScroll) {
-                // Temporarily hide scrollbar to prevent flicker.
-                scroller.classList.add('cm-hide-scrollbar');
-                setTimeout(() => {
-                  scroller.classList.remove('cm-hide-scrollbar');
-                }, 1_000);
-                view.dispatch({
-                  effects: EditorView.scrollIntoView(length + text.length, {
-                    y: 'end',
-                  }),
-                });
+              if (autoScroll || !hasScrolled) {
+                scrollToBottom();
               }
             }),
           );
         }
 
         destroy() {
+          this._controls?.remove();
           this._cleanup();
         }
       },
@@ -164,6 +196,12 @@ export const transcript = (options: TranscriptOptions): Extension => {
       },
       '.cm-hide-scrollbar::-webkit-scrollbar': {
         display: 'none',
+      },
+      '.cm-controls': {
+        position: 'absolute',
+        bottom: '0.5rem',
+        right: '0.5rem',
+        zIndex: 1000,
       },
       '.cm-line': {
         paddingRight: '1rem',

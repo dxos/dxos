@@ -9,10 +9,11 @@ import React, { useEffect, useState, useMemo } from 'react';
 
 import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { Button, useThemeContext } from '@dxos/react-ui';
+import { Button, IconButton, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
+  createRenderer,
   createThemeExtensions,
   decorateMarkdown,
   editorWidth,
@@ -100,7 +101,7 @@ export const Empty: Story = {
 
 const ExtensionStory = () => {
   const { themeMode } = useThemeContext();
-  const model = useMemo(() => new TranscriptModel(Array.from({ length: 10 }, createBlock)), []);
+  const model = useMemo(() => new TranscriptModel(Array.from({ length: 15 }, createBlock)), []);
   const [running, setRunning] = useState(true);
   const [, refresh] = useState({});
 
@@ -125,7 +126,12 @@ const ExtensionStory = () => {
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({ themeMode, slots: { editor: { className: '' } } }),
       decorateMarkdown(),
-      transcript({ model }),
+      transcript({
+        model,
+        renderButton: createRenderer(({ onClick }) => (
+          <IconButton icon='ph--arrow-line-down--regular' iconOnly label='Scroll to bottom' onClick={onClick} />
+        )),
+      }),
     ],
   });
 
