@@ -14,8 +14,8 @@ import { type TranscriptBlock } from '../../types';
 // TODO(burdon): Edit/corrections.
 // TODO(burdon): Fade.
 
-const blockToLines = (block: TranscriptBlock): string[] => {
-  return [`###### ${block.authorName}`, ...block.segments.map((segment) => segment.text), ''];
+const blockToMarkdown = (block: TranscriptBlock): string[] => {
+  return [`###### ${block.authorName}`, block.segments.map((segment) => segment.text).join(''), ''];
 };
 
 // TODO(burdon): Wrap queue.
@@ -30,7 +30,7 @@ export class TranscriptModel {
 
   constructor(blocks: TranscriptBlock[]) {
     blocks.forEach((block) => {
-      this.updateBlock(block);
+      this.setBlock(block);
     });
   }
 
@@ -41,7 +41,7 @@ export class TranscriptModel {
   }
 
   get doc() {
-    return Text.of(this._blocks.flatMap(blockToLines));
+    return Text.of([...this._blocks.flatMap(blockToMarkdown), '']);
   }
 
   getTimestamp(id: string): Date | undefined {
@@ -49,13 +49,13 @@ export class TranscriptModel {
   }
 
   reset() {
-    // this._lines.clear();
     this._blockMap.clear();
     this._blocks.length = 0;
     return this;
   }
 
-  updateBlock(block: TranscriptBlock, flush = false) {
+  // TODO(burdon): Doesn't support out-of-order blocks or deleting blocks.
+  setBlock(block: TranscriptBlock, flush = false) {
     if (this._blockMap.has(block.id)) {
       // Replace existing block.
       const idx = this._blocks.findIndex((b) => b.id === block.id);
@@ -69,7 +69,7 @@ export class TranscriptModel {
     this._blockMap.set(block.id, block);
 
     if (flush) {
-      this.update.emit({ block: block.id, lines: blockToLines(block) });
+      this.update.emit({ block: block.id, lines: blockToMarkdown(block) });
     }
 
     return this;
@@ -106,9 +106,11 @@ export const transcript = (options: TranscriptOptions): Extension => {
                 builder.add(line.from, line.from, new TimestampMarker(timestamp));
               }
             }
+
             if (line.to + 1 > view.state.doc.length) {
               break;
             }
+
             line = view.state.doc.lineAt(line.to + 1);
           }
         }
@@ -120,15 +122,17 @@ export const transcript = (options: TranscriptOptions): Extension => {
     // Listen for model updates.
     ViewPlugin.fromClass(
       class {
-        // Block positions.
-        private readonly _blocks = new Map<string, { from: number; to: number }>();
-        private readonly _cleanup: CleanupFn;
+        /** Map of block ranges by id. */
+        private readonly _blockRange = new Map<string, { from: number; to: number }>();
         private readonly _controls?: HTMLDivElement;
+        private readonly _cleanup: CleanupFn;
 
         constructor(view: EditorView) {
           const scroller = view.scrollDOM;
           let isAutoScrolling = false;
           let hasScrolled = false;
+
+          // TODO(burdon): Get initial timestamps; model should track line numbers.
 
           const scrollToBottom = () => {
             // Temporarily hide scrollbar to prevent flicker.
@@ -181,8 +185,7 @@ export const transcript = (options: TranscriptOptions): Extension => {
                 scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
 
               // Check if block was already inserted.
-              const text = '\n' + lines.join('\n');
-              const { from, to } = this._blocks.get(block) ?? {
+              const { from, to } = this._blockRange.get(block) ?? {
                 from: view.state.doc.length,
                 to: view.state.doc.length,
               };
@@ -191,7 +194,8 @@ export const transcript = (options: TranscriptOptions): Extension => {
               const line = view.state.doc.lineAt(from).number;
 
               // Append/insert into document and update state field with line number for block.
-              this._blocks.set(block, { from, to: from + text.length });
+              const text = lines.join('\n') + '\n';
+              this._blockRange.set(block, { from, to: from + text.length });
               view.dispatch({
                 changes: { from, to, insert: text },
                 effects: updateBlockEffect.of({ line, blockId: block }),
