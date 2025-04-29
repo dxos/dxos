@@ -3,7 +3,7 @@
 //
 
 import { html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 import { makeId } from '@dxos/react-hooks';
 
@@ -30,8 +30,31 @@ export class DxRefTag extends LitElement {
   @property({ type: String })
   rootClassName: string | undefined = undefined;
 
+  @property({ type: Number })
+  hoverDelay: number = 400;
+
+  @state()
+  private hoverTimer: number | null = null;
+
   private handleActivate() {
     this.dispatchEvent(new DxRefTagActivate({ itemId: this.itemId }));
+  }
+
+  private handlePointerEnter() {
+    if (this.hoverTimer !== null) {
+      window.clearTimeout(this.hoverTimer);
+    }
+    this.hoverTimer = window.setTimeout(() => {
+      this.handleActivate();
+      this.hoverTimer = null;
+    }, this.hoverDelay);
+  }
+
+  private handlePointerLeave() {
+    if (this.hoverTimer !== null) {
+      window.clearTimeout(this.hoverTimer);
+      this.hoverTimer = null;
+    }
   }
 
   override render() {
@@ -42,6 +65,8 @@ export class DxRefTag extends LitElement {
       id=${this.id}
       @click=${this.handleActivate}
       @focus=${this.handleActivate}
+      @pointerenter=${this.handlePointerEnter}
+      @pointerleave=${this.handlePointerLeave}
     >
       ${this.label}
     </button>`;
