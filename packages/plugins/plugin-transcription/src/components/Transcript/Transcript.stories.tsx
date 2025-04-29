@@ -59,6 +59,7 @@ const meta: Meta<typeof Transcript> = {
   render: ({ blocks: initialBlocks = [], ...args }) => {
     const [blocks, setBlocks] = useState(initialBlocks);
     useEffect(() => {
+      // TODO(burdon): Add segments.
       const i = setInterval(() => {
         setBlocks((blocks) => [...blocks, createBlock()]);
       }, 1_000);
@@ -111,7 +112,7 @@ const ExtensionStory = () => {
     }
 
     const i = setInterval(() => {
-      model.addBlock(createBlock(), true);
+      model.updateBlock(createBlock(), true);
       refresh({});
     }, 3_000);
 

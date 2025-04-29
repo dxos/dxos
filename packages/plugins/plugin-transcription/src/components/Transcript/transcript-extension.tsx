@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, RangeSetBuilder, Text } from '@codemirror/state';
+import { type Extension, RangeSetBuilder, StateEffect, StateField, Text } from '@codemirror/state';
 import { EditorView, GutterMarker, ViewPlugin, gutter } from '@codemirror/view';
 
 import { Event, type CleanupFn, addEventListener, combine } from '@dxos/async';
@@ -14,62 +14,64 @@ import { type TranscriptBlock } from '../../types';
 // TODO(burdon): Edit/corrections.
 // TODO(burdon): Fade.
 
+const blockToLines = (block: TranscriptBlock): string[] => {
+  return [`###### ${block.authorName}`, ...block.segments.map((segment) => segment.text), ''];
+};
+
 // TODO(burdon): Wrap queue.
 export class TranscriptModel {
+  /** Ordered array of blocks. */
   private readonly _blocks: TranscriptBlock[] = [];
-  private readonly _lines: string[] = [];
-  private readonly _timestamps: Map<number, Date> = new Map();
 
-  public readonly update = new Event<string[]>();
+  /** Map of blocks indexed by id. */
+  private readonly _blockMap = new Map<string, TranscriptBlock>();
+
+  public readonly update = new Event<{ block: string; lines: string[] }>();
 
   constructor(blocks: TranscriptBlock[]) {
     blocks.forEach((block) => {
-      this.addBlock(block, true);
+      this.updateBlock(block);
     });
   }
 
   toJSON() {
-    return { blocks: this._blocks.length, lines: this._lines.length };
+    return {
+      blocks: this._blocks.length,
+    };
   }
 
   get doc() {
-    return Text.of(this._lines);
+    return Text.of(this._blocks.flatMap(blockToLines));
   }
 
-  get blocks() {
-    return this._blocks;
-  }
-
-  get lines() {
-    return this._lines.length;
-  }
-
-  getTimestamp(line: number): Date | undefined {
-    return this._timestamps.get(line);
+  getTimestamp(id: string): Date | undefined {
+    return this._blockMap.get(id)?.segments[0]?.started;
   }
 
   reset() {
-    this._lines.length = 0;
-    this._timestamps.clear();
-    this.update.emit([]);
+    // this._lines.clear();
+    this._blockMap.clear();
+    this._blocks.length = 0;
     return this;
   }
 
-  // TOOD(burdon): Replace existing blocks.
-  // TODO(burdon): Rebuild document.
-  addBlock(block: TranscriptBlock, flush = false) {
-    this._blocks.push(block);
-    const line = this._lines.length;
-    const lines = [`###### ${block.authorName}`, ...block.segments.map((segment) => segment.text), ''];
-    if (block.segments.length > 0) {
-      this._timestamps.set(line, block.segments[0].started);
+  updateBlock(block: TranscriptBlock, flush = false) {
+    if (this._blockMap.has(block.id)) {
+      // Replace existing block.
+      const idx = this._blocks.findIndex((b) => b.id === block.id);
+      if (idx !== -1) {
+        this._blocks[idx] = block;
+      }
+    } else {
+      this._blocks.push(block);
     }
+
+    this._blockMap.set(block.id, block);
 
     if (flush) {
-      this.update.emit(lines);
+      this.update.emit({ block: block.id, lines: blockToLines(block) });
     }
 
-    this._lines.push(...lines);
     return this;
   }
 }
@@ -84,18 +86,25 @@ export type TranscriptOptions = {
 
 export const transcript = (options: TranscriptOptions): Extension => {
   return [
+    // State field to map lines to blocks.
+    blockStateField,
+
     // Show timestamps in the gutter.
     gutter({
       class: 'cm-timestamp-gutter',
       lineMarkerChange: (update) => update.docChanged || update.viewportChanged,
       markers: (view) => {
         const builder = new RangeSetBuilder<GutterMarker>();
+        const blockMap = view.state.field(blockStateField);
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            const timestamp = options.model.getTimestamp(line.number - 1);
-            if (timestamp) {
-              builder.add(line.from, line.from, new TimestampMarker(timestamp));
+            const blockId = blockMap.get(line.number);
+            if (blockId) {
+              const timestamp = options.model.getTimestamp(blockId);
+              if (timestamp) {
+                builder.add(line.from, line.from, new TimestampMarker(timestamp));
+              }
             }
             if (line.to + 1 > view.state.doc.length) {
               break;
@@ -111,8 +120,10 @@ export const transcript = (options: TranscriptOptions): Extension => {
     // Listen for model updates.
     ViewPlugin.fromClass(
       class {
+        // Block positions.
+        private readonly _blocks = new Map<string, { from: number; to: number }>();
         private readonly _cleanup: CleanupFn;
-        private _controls?: HTMLDivElement;
+        private readonly _controls?: HTMLDivElement;
 
         constructor(view: EditorView) {
           const scroller = view.scrollDOM;
@@ -155,23 +166,39 @@ export const transcript = (options: TranscriptOptions): Extension => {
 
           // Event listeners.
           this._cleanup = combine(
+            // Check if scrolled.
             addEventListener(view.scrollDOM, 'scroll', (ev) => {
               if (!isAutoScrolling) {
                 hasScrolled = true;
                 this._controls?.classList.remove('opacity-0');
               }
             }),
-            options.model.update.on((lines) => {
-              // Check if clamped to bottom.
-              const autoScroll = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0;
 
-              // Append to document.
-              const length = view.state.doc.length;
+            // Listen for model updates.
+            options.model.update.on(({ block, lines }) => {
+              // Check if clamped to bottom.
+              const autoScroll =
+                scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
+
+              // Check if block was already inserted.
+              const text = '\n' + lines.join('\n');
+              const { from, to } = this._blocks.get(block) ?? {
+                from: view.state.doc.length,
+                to: view.state.doc.length,
+              };
+
+              // Get current line number.
+              const line = view.state.doc.lineAt(from).number;
+
+              // Append/insert into document and update state field with line number for block.
+              this._blocks.set(block, { from, to: from + text.length });
               view.dispatch({
-                changes: { from: length, to: length, insert: '\n' + lines.join('\n') },
+                changes: { from, to, insert: text },
+                effects: updateBlockEffect.of({ line, blockId: block }),
               });
 
-              if (autoScroll || !hasScrolled) {
+              // Scroll.
+              if (autoScroll) {
                 scrollToBottom();
               }
             }),
@@ -219,6 +246,28 @@ export const transcript = (options: TranscriptOptions): Extension => {
   ];
 };
 
+/**
+ * Maintains a map of line numbers to block IDs.
+ */
+const blockStateField = StateField.define<Map<number, string>>({
+  create: () => new Map(),
+  update: (map, tr) => {
+    const newMap = new Map(map);
+    for (const effect of tr.effects) {
+      if (effect.is(updateBlockEffect)) {
+        const { line, blockId } = effect.value;
+        newMap.set(line, blockId);
+      }
+    }
+    return newMap;
+  },
+});
+
+const updateBlockEffect = StateEffect.define<{ line: number; blockId: string }>();
+
+/**
+ * Gutter marker that displays a timestamp.
+ */
 class TimestampMarker extends GutterMarker {
   constructor(readonly _timestamp: Date) {
     super();
