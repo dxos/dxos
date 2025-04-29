@@ -11,8 +11,12 @@ export default [
         'plugin name': 'Automation',
         'automation panel label': 'Automations',
         'script automation label': 'Automation',
+        'automation verbose label': 'Manage automations',
+        'automation description': 'You can manage all the triggers which automate your space here.',
 
-        'function panel label': 'Deployed Functions',
+        'functions panel label': 'Functions',
+        'functions verbose label': 'Manage deployed functions',
+        'functions description': 'You can manage all the functions deployed from your space on EDGE here.',
         'function copy id': 'Copy Function ID',
         'no functions found': 'No functions found',
         'go to function source button label': 'Show function source',

@@ -4,4 +4,5 @@
 
 import { FunctionsPanel } from './FunctionsPanel';
 
+export * from './FunctionsPanel';
 export default FunctionsPanel;

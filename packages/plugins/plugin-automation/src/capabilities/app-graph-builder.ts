@@ -8,11 +8,42 @@ import { ScriptType } from '@dxos/functions';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { SCRIPT_PLUGIN } from '@dxos/plugin-script/types';
+import { SPACE_PLUGIN } from '@dxos/plugin-space';
 
 import { meta } from '../meta';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    createExtension({
+      id: `${meta.id}/space-settings-automation`,
+      filter: (node): node is Node<null> => node.type === `${SPACE_PLUGIN}/settings`,
+      connector: ({ node }) => [
+        {
+          id: `automation-${node.id}`,
+          type: `${meta.id}/space-settings-automation`,
+          data: `${meta.id}/space-settings-automation`,
+          properties: {
+            label: ['automation panel label', { ns: meta.id }],
+            icon: 'ph--lightning--regular',
+          },
+        },
+      ],
+    }),
+    createExtension({
+      id: `${meta.id}/space-settings-functions`,
+      filter: (node): node is Node<null> => node.type === `${SPACE_PLUGIN}/settings`,
+      connector: ({ node }) => [
+        {
+          id: `functions-${node.id}`,
+          type: `${meta.id}/space-settings-functions`,
+          data: `${meta.id}/space-settings-functions`,
+          properties: {
+            label: ['functions panel label', { ns: meta.id }],
+            icon: 'ph--function--regular',
+          },
+        },
+      ],
+    }),
     createExtension({
       id: `${SCRIPT_PLUGIN}/script-companion`,
       filter: (node): node is Node<ScriptType> => isInstanceOf(ScriptType, node.data),

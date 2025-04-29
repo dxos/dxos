@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema as S } from 'effect';
+
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions/types';
 import { RefArray } from '@dxos/live-object';
@@ -65,7 +67,7 @@ export const ScriptPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: ScriptType,
-            formSchema: ScriptAction.CreateScriptSchema,
+            formSchema: ScriptAction.CreateScriptSchema.pipe(S.omit('initialTemplateId')),
             getIntent: (props, options) => createIntent(ScriptAction.Create, { ...props, space: options.space }),
           }),
         ),
