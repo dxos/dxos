@@ -45,6 +45,7 @@ import {
   SpacePropertiesForm,
   MembersContainer,
   ObjectSettingsContainer,
+  SchemaPanel,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, type SpaceSettingsProps } from '../types';
@@ -104,6 +105,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'space-settings--properties',
       filter: (data): data is { subject: Space } => isSpace(data.subject),
       component: ({ data }) => <SpacePropertiesForm space={data.subject} />,
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/space-settings--schemata`,
+      role: 'space-settings--schemata',
+      filter: (data): data is { subject: Space } => isSpace(data.subject),
+      component: ({ data }) => <SchemaPanel space={data.subject} />,
     }),
     createSurface({
       id: JOIN_DIALOG,

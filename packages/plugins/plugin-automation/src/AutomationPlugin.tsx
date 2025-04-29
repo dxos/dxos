@@ -36,11 +36,17 @@ export const AutomationPlugin = () =>
     defineModule({
       id: `${meta.id}/module/space-settings`,
       activatesOn: SpaceEvents.SetupSettingsPanel,
-      activate: () =>
+      activate: () => [
         contributes(SpaceCapabilities.SettingsSection, {
           id: 'automation',
           label: ['automation panel label', { ns: meta.id }],
         }),
+        contributes(SpaceCapabilities.SettingsSection, {
+          id: 'functions',
+          label: ['function panel label', { ns: meta.id }],
+          position: 'fallback',
+        }),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
