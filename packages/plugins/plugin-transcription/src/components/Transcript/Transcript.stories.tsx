@@ -41,16 +41,23 @@ const users = Array.from({ length: 5 }, () => ({
   authorHue: faker.helpers.arrayElement(hues),
 }));
 
-const createBlock = (): TranscriptBlock => {
+const createBlock = (numSegments = 1): TranscriptBlock => {
   const author = faker.helpers.arrayElement(users);
   return {
     id: ObjectId.random().toString(),
     ...author,
-    segments: Array.from({ length: 1 + Math.floor(Math.random() * 2) }, () => ({
+    segments: Array.from({ length: numSegments }, () => ({
       started: next(),
       text: faker.lorem.paragraph(),
     })),
   };
+};
+
+const createSegment = (block: TranscriptBlock) => {
+  block.segments.push({
+    started: next(),
+    text: faker.lorem.paragraph(),
+  });
 };
 
 const meta: Meta<typeof Transcript> = {
@@ -102,23 +109,37 @@ export const Empty: Story = {
 
 const ExtensionStory = () => {
   const { themeMode } = useThemeContext();
-  const model = useMemo(() => new TranscriptModel(Array.from({ length: 25 }, createBlock)), []);
-  const [running, setRunning] = useState(true);
+  const model = useMemo(() => new TranscriptModel(Array.from({ length: 0 }, createBlock)), []);
+  const [running, setRunning] = useState(false);
   const [, refresh] = useState({});
 
+  const [currentBlock, setCurrentBlock] = useState<TranscriptBlock | null>(null);
   useEffect(() => {
     if (!running) {
       return;
     }
 
-    // TODO(burdon): Add segment to current block.
+    if (!currentBlock) {
+      const block = createBlock(1);
+      setCurrentBlock(block);
+      model.setBlock(block, true);
+      return;
+    }
+
     const i = setInterval(() => {
-      model.setBlock(createBlock(), true);
+      if (currentBlock.segments.length >= 3) {
+        setCurrentBlock(null);
+        clearInterval(i);
+        return;
+      }
+
+      createSegment(currentBlock);
+      model.setBlock(currentBlock, true);
       refresh({});
     }, 3_000);
 
     return () => clearInterval(i);
-  }, [model, running]);
+  }, [model, currentBlock, running]);
 
   const doc = useMemo(() => model.doc, [model]);
   const { parentRef } = useTextEditor({
