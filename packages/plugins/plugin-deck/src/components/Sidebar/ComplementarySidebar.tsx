@@ -28,7 +28,7 @@ import { byPosition, type Position } from '@dxos/util';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
 import { DECK_PLUGIN } from '../../meta';
-import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '../../types';
+import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, getMode } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 import { PlankContentError, PlankLoading } from '../Plank';
 
@@ -65,9 +65,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const { t } = useTranslation(DECK_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layout = useCapability(DeckCapabilities.MutableDeckState);
+  const layoutMode = getMode(layout.deck);
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint);
-  const hoistStatusbar = useHoistStatusbar(breakpoint);
+  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
   const companions = useDeckCompanions();
   const activeCompanion = companions.find((companion) => getCompanionId(companion.id) === current) ?? companions.at(0);

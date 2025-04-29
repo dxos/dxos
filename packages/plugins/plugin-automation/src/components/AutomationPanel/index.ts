@@ -4,4 +4,6 @@
 
 import { AutomationPanel } from './AutomationPanel';
 
+export * from './AutomationPanel';
+
 export default AutomationPanel;
