@@ -6826,6 +6826,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
