@@ -16,16 +16,31 @@ import { meta } from '../meta';
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${meta.id}/space-settings`,
+      id: `${meta.id}/space-settings-automation`,
       filter: (node): node is Node<Space> => node.type === `${SPACE_PLUGIN}/settings`,
       connector: ({ node }) => [
         {
           id: `automation-${node.id}`,
-          type: `${meta.id}/space-settings`,
-          data: `${meta.id}/space-settings`,
+          type: `${meta.id}/space-settings-automation`,
+          data: `${meta.id}/space-settings-automation`,
           properties: {
             label: ['automation panel label', { ns: meta.id }],
             icon: 'ph--lightning--regular',
+          },
+        },
+      ],
+    }),
+    createExtension({
+      id: `${meta.id}/space-settings-functions`,
+      filter: (node): node is Node<Space> => node.type === `${SPACE_PLUGIN}/settings`,
+      connector: ({ node }) => [
+        {
+          id: `functions-${node.id}`,
+          type: `${meta.id}/space-settings-functions`,
+          data: `${meta.id}/space-settings-functions`,
+          properties: {
+            label: ['functions panel label', { ns: meta.id }],
+            icon: 'ph--function--regular',
           },
         },
       ],

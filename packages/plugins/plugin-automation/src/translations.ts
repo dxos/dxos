@@ -14,7 +14,14 @@ export default [
         'automation verbose label': 'Manage automations',
         'automation description': 'You can manage all the triggers which automate your space here.',
 
-        'trigger editor title': 'New Trigger',
+        'functions panel label': 'Functions',
+        'functions verbose label': 'Manage deployed functions',
+        'functions description': 'You can manage all the functions deployed from your space on EDGE here.',
+        'function copy id': 'Copy Function ID',
+        'no functions found': 'No functions found',
+        'go to function source button label': 'Show function source',
+
+        'trigger editor title': 'Configure Trigger',
         'new trigger label': 'Add Trigger',
         'trigger type timer': 'Timer',
         'trigger type webhook': 'Webhook',

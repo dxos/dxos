@@ -46,6 +46,7 @@ import {
   MembersContainer,
   ObjectSettingsContainer,
   SpaceSettingsContainer,
+  SchemaContainer,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, type SpaceSettingsProps } from '../types';
@@ -85,7 +86,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/space-settings--properties`,
+      id: `${SPACE_PLUGIN}/space-settings-properties`,
       role: 'article',
       filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/properties`,
       component: () => {
@@ -100,7 +101,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/members`,
+      id: `${SPACE_PLUGIN}/space-settings-members`,
       role: 'article',
       position: 'hoist',
       filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/members`,
@@ -113,6 +114,21 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         }
 
         return <MembersContainer space={space} createInvitationUrl={createInvitationUrl} />;
+      },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/space-settings-schema`,
+      role: 'article',
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/schema`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <SchemaContainer space={space} />;
       },
     }),
     createSurface({

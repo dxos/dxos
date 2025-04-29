@@ -243,6 +243,15 @@ export const constructSpaceNode = ({
               position: 'hoist',
             },
           },
+          {
+            id: `schema-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
+            type: `${SPACE_PLUGIN}/schema`,
+            data: `${SPACE_PLUGIN}/schema`,
+            properties: {
+              label: ['space settings schema label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--shapes--regular',
+            },
+          },
         ],
       },
     ],
