@@ -101,9 +101,9 @@ const PlankImpl = memo(
       }
     }, [id, scrollIntoView, layoutMode]);
 
-    const isSolo = layoutMode === 'solo' && part === 'solo';
+    const isSolo = layoutMode.startsWith('solo') && part === 'solo';
     const isAttendable =
-      (layoutMode === 'solo' && part.startsWith('solo')) || (layoutMode === 'deck' && part === 'deck');
+      (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'deck' && part === 'deck');
 
     const sizeAttrs = useMainSize();
 
@@ -157,6 +157,7 @@ const PlankImpl = memo(
               id={id}
               part={part.startsWith('solo-') ? 'solo' : part}
               node={node}
+              layoutMode={layoutMode}
               deckEnabled={settings?.enableDeck}
               canIncrementStart={canIncrementStart}
               canIncrementEnd={canIncrementEnd}
