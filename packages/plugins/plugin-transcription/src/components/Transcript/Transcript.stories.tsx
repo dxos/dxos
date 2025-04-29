@@ -9,7 +9,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 
 import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { useThemeContext } from '@dxos/react-ui';
+import { Button, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -18,6 +18,7 @@ import {
   editorWidth,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { hues, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
@@ -25,6 +26,8 @@ import { Transcript } from './Transcript';
 import { transcript, TranscriptModel } from './transcript-extension';
 import translations from '../../translations';
 import { type TranscriptBlock } from '../../types';
+
+faker.seed(1);
 
 let start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 const next = () => {
@@ -97,26 +100,50 @@ export const Empty: Story = {
 
 const ExtensionStory = () => {
   const { themeMode } = useThemeContext();
-  const blocks = useMemo(() => Array.from({ length: 100 }, createBlock), []);
-  const model = useMemo(
-    () => new TranscriptModel(blocks.flatMap((block) => block.segments.map((segment) => segment.text))),
-    [blocks],
-  );
+  const model = useMemo(() => new TranscriptModel(Array.from({ length: 10 }, createBlock)), []);
+  const [running, setRunning] = useState(true);
+  const [, refresh] = useState({});
+
+  useEffect(() => {
+    if (!running) {
+      return;
+    }
+
+    const i = setInterval(() => {
+      model.addBlock(createBlock(), true);
+      refresh({});
+    }, 3_000);
+
+    return () => clearInterval(i);
+  }, [model, running]);
 
   const { parentRef } = useTextEditor({
     doc: model.doc,
     extensions: [
-      createBasicExtensions(),
+      // TODO(burdon): Enable preview.
+      createBasicExtensions({ readOnly: true }),
       createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({ themeMode }),
+      createThemeExtensions({ themeMode, slots: { editor: { className: '' } } }),
       decorateMarkdown(),
-      transcript({
-        model,
-      }),
+      transcript({ model }),
     ],
   });
 
-  return <div ref={parentRef} className={mx('w-full', editorWidth)} />;
+  return (
+    <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
+      <div ref={parentRef} className={mx('flex grow overflow-hidden', editorWidth)} />
+      <div className='grid grid-cols-[8rem_1fr_8rem] overflow-hidden'>
+        <div className='flex items-center p-1'>
+          <Button onClick={() => setRunning(!running)}>{running ? 'Stop' : 'Start'}</Button>
+        </div>
+        <div className='flex items-center justify-center'>
+          <SyntaxHighlighter language='json' className='text-sm'>
+            {JSON.stringify(model.toJSON())}
+          </SyntaxHighlighter>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export const Extension: Story = {

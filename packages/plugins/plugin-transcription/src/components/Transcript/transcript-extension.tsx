@@ -2,19 +2,74 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, RangeSetBuilder, StateEffect, StateField, Text } from '@codemirror/state';
-import { EditorView, GutterMarker, gutter } from '@codemirror/view';
+import { type Extension, RangeSetBuilder, Text } from '@codemirror/state';
+import { EditorView, GutterMarker, ViewPlugin, gutter } from '@codemirror/view';
+
+import { Event, type CleanupFn, addEventListener, combine } from '@dxos/async';
+
+import { type TranscriptBlock } from '../../types';
 
 // TODO(burdon): Autoscroll.
-// TODO(burdon): Fade.
 // TODO(burdon): Menu actions.
 // TODO(burdon): Edit/corrections.
+// TODO(burdon): Fade.
 
 export class TranscriptModel {
-  constructor(private readonly _lines: string[]) {}
+  private readonly _blocks: TranscriptBlock[] = [];
+  private readonly _lines: string[] = [];
+  private readonly _timestamps: Map<number, Date> = new Map();
+
+  public readonly update = new Event<string[]>();
+
+  constructor(blocks: TranscriptBlock[]) {
+    blocks.forEach((block) => {
+      this.addBlock(block, true);
+    });
+  }
+
+  toJSON() {
+    return { blocks: this._blocks.length, lines: this._lines.length };
+  }
 
   get doc() {
     return Text.of(this._lines);
+  }
+
+  get blocks() {
+    return this._blocks;
+  }
+
+  get lines() {
+    return this._lines.length;
+  }
+
+  getTimestamp(line: number): Date | undefined {
+    return this._timestamps.get(line);
+  }
+
+  reset() {
+    this._lines.length = 0;
+    this._timestamps.clear();
+    this.update.emit([]);
+    return this;
+  }
+
+  // TOOD(burdon): Replace existing blocks.
+  // TODO(burdon): Rebuild document.
+  addBlock(block: TranscriptBlock, flush = false) {
+    this._blocks.push(block);
+    const line = this._lines.length;
+    const lines = [`###### ${block.authorName}`, ...block.segments.map((segment) => segment.text), ''];
+    if (block.segments.length > 0) {
+      this._timestamps.set(line, block.segments[0].started);
+    }
+
+    if (flush) {
+      this.update.emit(lines);
+    }
+
+    this._lines.push(...lines);
+    return this;
   }
 }
 
@@ -28,17 +83,16 @@ export type TranscriptOptions = {
 
 export const transcript = (options: TranscriptOptions): Extension => {
   return [
-    timestampField,
+    // Show timestamps in the gutter.
     gutter({
       class: 'cm-timestamp-gutter',
       lineMarkerChange: (update) => update.docChanged || update.viewportChanged,
       markers: (view) => {
         const builder = new RangeSetBuilder<GutterMarker>();
-        const timestamps = view.state.field(timestampField);
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            const timestamp = timestamps.get(line.number);
+            const timestamp = options.model.getTimestamp(line.number - 1);
             if (timestamp) {
               builder.add(line.from, line.from, new TimestampMarker(timestamp));
             }
@@ -52,39 +106,80 @@ export const transcript = (options: TranscriptOptions): Extension => {
         return builder.finish();
       },
     }),
+
+    // Listen for model updates.
+    ViewPlugin.fromClass(
+      class {
+        private readonly _cleanup: CleanupFn;
+
+        constructor(view: EditorView) {
+          this._cleanup = combine(
+            addEventListener(view.scrollDOM, 'scroll', () => {
+              console.log('scroll');
+            }),
+            options.model.update.on((lines) => {
+              const length = view.state.doc.length;
+              const text = '\n' + lines.join('\n');
+
+              const scroller = view.scrollDOM;
+              const dy = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+              console.log('scroller', scroller.scrollHeight, scroller.scrollTop, scroller.clientHeight, dy);
+              const autoScroll = dy === 0;
+
+              // Append to document.
+              view.dispatch({
+                changes: { from: length, to: length, insert: text },
+              });
+
+              if (autoScroll) {
+                // Temporarily hide scrollbar to prevent flicker.
+                scroller.classList.add('cm-hide-scrollbar');
+                setTimeout(() => {
+                  scroller.classList.remove('cm-hide-scrollbar');
+                }, 1_000);
+                view.dispatch({
+                  effects: EditorView.scrollIntoView(length + text.length, {
+                    y: 'end',
+                  }),
+                });
+              }
+            }),
+          );
+        }
+
+        destroy() {
+          this._cleanup();
+        }
+      },
+    ),
+
     EditorView.theme({
-      '.cm-timestamp-gutter': {
-        width: '6rem',
+      '.cm-scroller': {
+        overflowY: 'scroll',
+        scrollBehavior: 'smooth',
+      },
+      '.cm-hide-scrollbar': {
+        scrollbarWidth: 'none',
+        '-ms-overflow-style': 'none',
+      },
+      '.cm-hide-scrollbar::-webkit-scrollbar': {
+        display: 'none',
+      },
+      '.cm-line': {
         paddingRight: '1rem',
       },
-      '.cm-timestamp-gutter .cm-gutterElement': {
-        paddingTop: '2.5px',
+      '.cm-timestamp-gutter': {
+        width: '5rem',
+        paddingRight: '1rem',
+      },
+      '.cm-timestamp-gutter > .cm-gutterElement > div': {
+        display: 'inline-flex',
         textAlign: 'right',
+        padding: '5px',
       },
     }),
   ];
 };
-
-const setTimestampEffect = StateEffect.define<{ line: number; timestamp: Date }>();
-
-const setLineTimestamp = (meta: { line: number; timestamp: Date }) => setTimestampEffect.of(meta);
-
-/**
- * State tracks timestamps for each line.
- */
-const timestampField = StateField.define<Map<number, Date>>({
-  create: () => new Map(),
-  update: (timestamps, tr) => {
-    const updated = new Map(timestamps);
-    for (const effect of tr.effects) {
-      if (effect.is(setTimestampEffect)) {
-        updated.set(effect.value.line, effect.value.timestamp);
-      }
-    }
-
-    return updated;
-  },
-});
 
 class TimestampMarker extends GutterMarker {
   constructor(readonly _timestamp: Date) {
@@ -92,8 +187,9 @@ class TimestampMarker extends GutterMarker {
   }
 
   override toDOM(view: EditorView): HTMLElement {
-    const el = document.createElement('div');
     const pad = (n: number) => n.toString().padStart(2, '0');
+    const el = document.createElement('div');
+    el.className = 'hover:bg-hoverSurface cursor-pointer';
     el.textContent = [
       pad(this._timestamp.getHours()),
       pad(this._timestamp.getMinutes()),
