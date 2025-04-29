@@ -20,12 +20,13 @@ export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps
   const client = useClient();
   const spaces = useSpaces({ all: settings.showHidden });
 
+  // TODO(wittjosiah): Migrate to new form container.
   return (
     <DeprecatedFormContainer>
       <DeprecatedFormInput label={t('show hidden spaces label')}>
         <Input.Switch checked={settings.showHidden} onCheckedChange={(checked) => (settings.showHidden = !!checked)} />
       </DeprecatedFormInput>
-      <div>
+      <div role='none'>
         <h2 className='text-xl my-4'>Space Settings</h2>
         <List classNames='max-w-md mx-auto'>
           {spaces.map((space) => (
