@@ -29,7 +29,6 @@ import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
 import { ContentEmpty } from './ContentEmpty';
-import { Fullscreen } from './Fullscreen';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
@@ -68,8 +67,9 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   } = context;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint);
-  const hoistStatusbar = useHoistStatusbar(breakpoint);
+  const layoutMode = getMode(deck);
+  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
   const pluginManager = usePluginManager();
 
   const scrollLeftRef = useRef<number | null>();
@@ -144,8 +144,6 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
       deckRef.current.scrollLeft = scrollLeftRef.current;
     }
   }, []);
-
-  const layoutMode = getMode(deck);
   useOnTransition(layoutMode, (mode) => mode !== 'deck', 'deck', restoreScroll);
 
   /**
@@ -209,115 +207,115 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     <Popover.Root modal open={!!(popoverAnchorId && delayedPopoverVisibility)} onOpenChange={handlePopoverOpenChange}>
       <ActiveNode />
 
-      {fullscreen && <Fullscreen id={solo} />}
+      <Main.Root
+        navigationSidebarState={fullscreen ? 'closed' : context.sidebarState}
+        onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
+        complementarySidebarState={fullscreen ? 'closed' : context.complementarySidebarState}
+        onComplementarySidebarStateChange={(next) => (context.complementarySidebarState = next)}
+      >
+        {/* Left sidebar. */}
+        <Sidebar />
 
-      {!fullscreen && (
-        <Main.Root
-          navigationSidebarState={context.sidebarState}
-          onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
-          complementarySidebarState={context.complementarySidebarState}
-          onComplementarySidebarStateChange={(next) => (context.complementarySidebarState = next)}
-        >
-          {/* Left sidebar. */}
-          <Sidebar />
+        {/* Right sidebar. */}
+        <ComplementarySidebar current={complementarySidebarPanel} />
 
-          {/* Right sidebar. */}
-          <ComplementarySidebar current={complementarySidebarPanel} />
+        {/* Dialog overlay to dismiss dialogs. */}
+        <Main.Overlay />
 
-          {/* Dialog overlay to dismiss dialogs. */}
-          <Main.Overlay />
+        {/* No content. */}
+        {isEmpty && (
+          <Main.Content bounce handlesFocus classNames={mainPosition}>
+            <ContentEmpty />
+          </Main.Content>
+        )}
 
-          {/* No content. */}
-          {isEmpty && (
-            <Main.Content bounce handlesFocus classNames={mainPosition}>
-              <ContentEmpty />
-            </Main.Content>
-          )}
-
-          {/* Solo/deck mode. */}
-          {!isEmpty && (
-            <Main.Content
-              bounce
-              classNames={mainPosition}
-              handlesFocus
-              style={
-                {
-                  '--dx-main-sidebarWidth':
-                    sidebarState === 'expanded'
-                      ? 'var(--nav-sidebar-size)'
-                      : sidebarState === 'collapsed'
-                        ? 'var(--l0-size)'
-                        : '0',
-                  '--dx-main-complementaryWidth':
-                    complementarySidebarState === 'expanded'
-                      ? 'var(--complementary-sidebar-size)'
-                      : complementarySidebarState === 'collapsed'
-                        ? 'var(--rail-size)'
-                        : '0',
-                  '--dx-main-contentFirstWidth': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-                  '--dx-main-contentLastWidth': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-                } as MainProps['style']
-              }
+        {/* Solo/deck mode. */}
+        {!isEmpty && (
+          <Main.Content
+            bounce
+            classNames={mainPosition}
+            handlesFocus
+            style={
+              {
+                '--dx-main-sidebarWidth':
+                  sidebarState === 'expanded'
+                    ? 'var(--nav-sidebar-size)'
+                    : sidebarState === 'collapsed'
+                      ? 'var(--l0-size)'
+                      : '0',
+                '--dx-main-complementaryWidth':
+                  complementarySidebarState === 'expanded'
+                    ? 'var(--complementary-sidebar-size)'
+                    : complementarySidebarState === 'collapsed'
+                      ? 'var(--rail-size)'
+                      : '0',
+                '--dx-main-contentFirstWidth': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                '--dx-main-contentLastWidth': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+              } as MainProps['style']
+            }
+          >
+            <div
+              role='none'
+              className={!solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+              {...(solo && { inert: '' })}
             >
-              <div
-                role='none'
-                className={!solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
-                {...(solo && { inert: '' })}
+              {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
+              {!topbar && !fullscreen && (
+                <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
+              )}
+              <Stack
+                ref={deckRef}
+                orientation='horizontal'
+                size='contain'
+                classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
+                itemsCount={itemsCount - 1}
+                style={padding}
+                onScroll={handleScroll}
               >
-                {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
-                {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
-                <Stack
-                  ref={deckRef}
-                  orientation='horizontal'
-                  size='contain'
-                  classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
-                  itemsCount={itemsCount - 1}
-                  style={padding}
-                  onScroll={handleScroll}
-                >
-                  {active.map((entryId) => (
-                    <Fragment key={entryId}>
-                      <PlankSeparator order={order[entryId] - 1} />
-                      <Plank
-                        id={entryId}
-                        companionId={activeCompanions?.[entryId]}
-                        part='deck'
-                        order={order[entryId]}
-                        active={active}
-                        layoutMode={layoutMode}
-                        settings={settings}
-                      />
-                    </Fragment>
-                  ))}
-                </Stack>
-              </div>
-              <div
-                role='none'
-                className={solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
-                {...(!solo && { inert: '' })}
-              >
-                {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
-                {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
-                <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
-                  <Plank
-                    id={solo}
-                    companionId={solo ? activeCompanions?.[solo] : undefined}
-                    part='solo'
-                    layoutMode={layoutMode}
-                    settings={settings}
-                  />
-                </StackContext.Provider>
-              </div>
-            </Main.Content>
-          )}
+                {active.map((entryId) => (
+                  <Fragment key={entryId}>
+                    <PlankSeparator order={order[entryId] - 1} />
+                    <Plank
+                      id={entryId}
+                      companionId={activeCompanions?.[entryId]}
+                      part='deck'
+                      order={order[entryId]}
+                      active={active}
+                      layoutMode={layoutMode}
+                      settings={settings}
+                    />
+                  </Fragment>
+                ))}
+              </Stack>
+            </div>
+            <div
+              role='none'
+              className={solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+              {...(!solo && { inert: '' })}
+            >
+              {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
+              {!topbar && !fullscreen && (
+                <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
+              )}
+              <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
+                <Plank
+                  id={solo}
+                  companionId={solo ? activeCompanions?.[solo] : undefined}
+                  part='solo'
+                  layoutMode={layoutMode}
+                  settings={settings}
+                />
+              </StackContext.Provider>
+            </div>
+          </Main.Content>
+        )}
 
-          {/* Topbar. */}
-          {topbar && <Topbar />}
+        {/* Topbar. */}
+        {topbar && <Topbar />}
 
-          {/* Status bar. */}
-          {hoistStatusbar && <StatusBar showHints={settings.showHints} />}
-        </Main.Root>
-      )}
+        {/* Status bar. */}
+        {hoistStatusbar && <StatusBar showHints={settings.showHints} />}
+      </Main.Root>
 
       {/* Global popovers. */}
       <Popover.Portal>

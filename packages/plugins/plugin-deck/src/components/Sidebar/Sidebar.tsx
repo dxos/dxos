@@ -9,15 +9,17 @@ import { type Label, Main } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
 import { DECK_PLUGIN } from '../../meta';
+import { getMode } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 
 const label = ['sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
 
 export const Sidebar = () => {
-  const { popoverAnchorId, activeDeck: current } = useCapability(DeckCapabilities.DeckState);
+  const { popoverAnchorId, activeDeck: current, deck } = useCapability(DeckCapabilities.DeckState);
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint);
-  const hoistStatusbar = useHoistStatusbar(breakpoint);
+  const layoutMode = getMode(deck);
+  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
   const navigationData = useMemo(
     () => ({ popoverAnchorId, topbar, hoistStatusbar, current }),
