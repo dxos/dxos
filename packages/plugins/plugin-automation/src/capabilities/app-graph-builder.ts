@@ -9,7 +9,6 @@ import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-de
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { SCRIPT_PLUGIN } from '@dxos/plugin-script/types';
 import { SPACE_PLUGIN } from '@dxos/plugin-space';
-import { type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 
@@ -17,7 +16,7 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${meta.id}/space-settings-automation`,
-      filter: (node): node is Node<Space> => node.type === `${SPACE_PLUGIN}/settings`,
+      filter: (node): node is Node<null> => node.type === `${SPACE_PLUGIN}/settings`,
       connector: ({ node }) => [
         {
           id: `automation-${node.id}`,
@@ -32,7 +31,7 @@ export default (context: PluginsContext) =>
     }),
     createExtension({
       id: `${meta.id}/space-settings-functions`,
-      filter: (node): node is Node<Space> => node.type === `${SPACE_PLUGIN}/settings`,
+      filter: (node): node is Node<null> => node.type === `${SPACE_PLUGIN}/settings`,
       connector: ({ node }) => [
         {
           id: `functions-${node.id}`,
