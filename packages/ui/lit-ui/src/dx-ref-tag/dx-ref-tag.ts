@@ -8,10 +8,10 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { makeId } from '@dxos/react-hooks';
 
 export class DxRefTagActivate extends Event {
-  public readonly itemId: string;
-  constructor(props: { itemId: string }) {
+  public readonly dxn: string;
+  constructor(props: { dxn: string }) {
     super('dx-ref-tag-activate');
-    this.itemId = props.itemId;
+    this.dxn = props.dxn;
   }
 }
 
@@ -22,7 +22,7 @@ export class DxRefTag extends LitElement {
   hue: string = 'neutral';
 
   @property({ type: String })
-  itemId: string = makeId('dx-ref-tag');
+  dxn: string = makeId('dx-ref-tag');
 
   @property({ type: String })
   label: string = 'never';
@@ -37,7 +37,7 @@ export class DxRefTag extends LitElement {
   private hoverTimer: number | null = null;
 
   private handleActivate() {
-    this.dispatchEvent(new DxRefTagActivate({ itemId: this.itemId }));
+    this.dispatchEvent(new DxRefTagActivate({ dxn: this.dxn }));
   }
 
   private handlePointerEnter() {
