@@ -4,7 +4,8 @@
 
 import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
-import { type BaseObject, type S, type PropertyKey } from '@dxos/echo-schema';
+import { type BaseObject, type S, type PropertyKey, type TypeAnnotation } from '@dxos/echo-schema';
+import { type DXN } from '@dxos/keys';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty } from '@dxos/schema';
@@ -41,6 +42,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     autoSave?: boolean;
     testId?: string;
     onCancel?: () => void;
+    onQueryRefOptions?: (type: TypeAnnotation) => { dxn: DXN; label?: string }[];
     lookupComponent?: ComponentLookup;
     /**
      * Map of custom renderers for specific properties.
@@ -65,6 +67,7 @@ export const Form = <T extends BaseObject>({
   onValidate,
   onSave,
   onCancel,
+  onQueryRefOptions,
   lookupComponent,
   Custom,
 }: FormProps<T>) => {
@@ -100,6 +103,7 @@ export const Form = <T extends BaseObject>({
           readonly={readonly}
           filter={filter}
           sort={sort}
+          onQueryRefOptions={onQueryRefOptions}
           lookupComponent={lookupComponent}
           Custom={Custom}
         />
