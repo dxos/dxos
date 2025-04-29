@@ -27,7 +27,7 @@ export const UserAccountAvatar = (props: UserAccountAvatarProps) => {
           status={props.status ?? 'active'}
           hue={props.hue || fallbackValue.hue}
           fallback={props.emoji || fallbackValue.emoji}
-          data-testid='treeview.userAccount'
+          data-testid='treeView.userAccount'
         />
       </Avatar.Root>
     </div>
