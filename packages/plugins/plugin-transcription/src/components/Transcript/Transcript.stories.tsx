@@ -102,7 +102,7 @@ export const Empty: Story = {
 
 const ExtensionStory = () => {
   const { themeMode } = useThemeContext();
-  const model = useMemo(() => new TranscriptModel(Array.from({ length: 5 }, createBlock)), []);
+  const model = useMemo(() => new TranscriptModel(Array.from({ length: 25 }, createBlock)), []);
   const [running, setRunning] = useState(true);
   const [, refresh] = useState({});
 
@@ -111,6 +111,7 @@ const ExtensionStory = () => {
       return;
     }
 
+    // TODO(burdon): Add segment to current block.
     const i = setInterval(() => {
       model.setBlock(createBlock(), true);
       refresh({});
@@ -119,8 +120,10 @@ const ExtensionStory = () => {
     return () => clearInterval(i);
   }, [model, running]);
 
+  const doc = useMemo(() => model.doc, [model]);
   const { parentRef } = useTextEditor({
-    doc: model.doc,
+    doc,
+    // scrollTo: doc.length,
     extensions: [
       // TODO(burdon): Enable preview.
       createBasicExtensions({ readOnly: true }),

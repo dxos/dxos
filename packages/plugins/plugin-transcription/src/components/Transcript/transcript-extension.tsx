@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, RangeSetBuilder, StateEffect, StateField, Text } from '@codemirror/state';
+import { type Extension, RangeSetBuilder, Text } from '@codemirror/state';
 import { EditorView, GutterMarker, ViewPlugin, gutter } from '@codemirror/view';
 
 import { Event, type CleanupFn, addEventListener, combine } from '@dxos/async';
@@ -10,11 +10,8 @@ import { type RenderCallback } from '@dxos/react-ui-editor';
 
 import { type TranscriptBlock } from '../../types';
 
-// TODO(burdon): Menu actions.
-// TODO(burdon): Edit/corrections.
-// TODO(burdon): Fade.
-
 const blockToMarkdown = (block: TranscriptBlock): string[] => {
+  // TODO(burdon): Use link/reference markup for users (with popover).
   return [`###### ${block.authorName}`, block.segments.map((segment) => segment.text).join(''), ''];
 };
 
@@ -26,6 +23,12 @@ export class TranscriptModel {
   /** Map of blocks indexed by id. */
   private readonly _blockMap = new Map<string, TranscriptBlock>();
 
+  /** Map of block ids to line numbers. */
+  private readonly _blockLine = new Map<number, TranscriptBlock>();
+
+  /** Current line number. */
+  private _line = 1;
+
   public readonly update = new Event<{ block: string; lines: string[] }>();
 
   constructor(blocks: TranscriptBlock[]) {
@@ -36,6 +39,7 @@ export class TranscriptModel {
 
   toJSON() {
     return {
+      line: this._line,
       blocks: this._blocks.length,
     };
   }
@@ -44,8 +48,9 @@ export class TranscriptModel {
     return Text.of([...this._blocks.flatMap(blockToMarkdown), '']);
   }
 
-  getTimestamp(id: string): Date | undefined {
-    return this._blockMap.get(id)?.segments[0]?.started;
+  getTimestamp(line: number): Date | undefined {
+    const block = this._blockLine.get(line);
+    return block?.segments[0]?.started;
   }
 
   reset() {
@@ -66,10 +71,14 @@ export class TranscriptModel {
       this._blocks.push(block);
     }
 
+    const lines = blockToMarkdown(block);
+
     this._blockMap.set(block.id, block);
+    this._blockLine.set(this._line, block);
+    this._line += lines.length;
 
     if (flush) {
-      this.update.emit({ block: block.id, lines: blockToMarkdown(block) });
+      this.update.emit({ block: block.id, lines });
     }
 
     return this;
@@ -86,25 +95,18 @@ export type TranscriptOptions = {
 
 export const transcript = (options: TranscriptOptions): Extension => {
   return [
-    // State field to map lines to blocks.
-    blockStateField,
-
     // Show timestamps in the gutter.
     gutter({
       class: 'cm-timestamp-gutter',
       lineMarkerChange: (update) => update.docChanged || update.viewportChanged,
       markers: (view) => {
         const builder = new RangeSetBuilder<GutterMarker>();
-        const blockMap = view.state.field(blockStateField);
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            const blockId = blockMap.get(line.number);
-            if (blockId) {
-              const timestamp = options.model.getTimestamp(blockId);
-              if (timestamp) {
-                builder.add(line.from, line.from, new TimestampMarker(timestamp));
-              }
+            const timestamp = options.model.getTimestamp(line.number);
+            if (timestamp) {
+              builder.add(line.from, line.from, new TimestampMarker(line.number, timestamp));
             }
 
             if (line.to + 1 > view.state.doc.length) {
@@ -132,9 +134,9 @@ export const transcript = (options: TranscriptOptions): Extension => {
           let isAutoScrolling = false;
           let hasScrolled = false;
 
-          // TODO(burdon): Get initial timestamps; model should track line numbers.
-
           const scrollToBottom = () => {
+            scroller.style.scrollBehavior = 'smooth';
+
             // Temporarily hide scrollbar to prevent flicker.
             scroller.classList.add('cm-hide-scrollbar');
             isAutoScrolling = true;
@@ -146,9 +148,7 @@ export const transcript = (options: TranscriptOptions): Extension => {
 
             // Scroll to bottom.
             view.dispatch({
-              effects: EditorView.scrollIntoView(view.state.doc.length, {
-                y: 'end',
-              }),
+              effects: EditorView.scrollIntoView(view.state.doc.length, { y: 'end' }),
             });
           };
 
@@ -171,7 +171,7 @@ export const transcript = (options: TranscriptOptions): Extension => {
           // Event listeners.
           this._cleanup = combine(
             // Check if scrolled.
-            addEventListener(view.scrollDOM, 'scroll', (ev) => {
+            addEventListener(view.scrollDOM, 'scroll', () => {
               if (!isAutoScrolling) {
                 hasScrolled = true;
                 this._controls?.classList.remove('opacity-0');
@@ -190,15 +190,11 @@ export const transcript = (options: TranscriptOptions): Extension => {
                 to: view.state.doc.length,
               };
 
-              // Get current line number.
-              const line = view.state.doc.lineAt(from).number;
-
               // Append/insert into document and update state field with line number for block.
               const text = lines.join('\n') + '\n';
               this._blockRange.set(block, { from, to: from + text.length });
               view.dispatch({
                 changes: { from, to, insert: text },
-                effects: updateBlockEffect.of({ line, blockId: block }),
               });
 
               // Scroll.
@@ -219,7 +215,6 @@ export const transcript = (options: TranscriptOptions): Extension => {
     EditorView.theme({
       '.cm-scroller': {
         overflowY: 'scroll',
-        scrollBehavior: 'smooth',
       },
       '.cm-hide-scrollbar': {
         scrollbarWidth: 'none',
@@ -238,54 +233,51 @@ export const transcript = (options: TranscriptOptions): Extension => {
         paddingRight: '1rem',
       },
       '.cm-timestamp-gutter': {
-        width: '5rem',
+        width: '6rem',
         paddingRight: '1rem',
       },
       '.cm-timestamp-gutter > .cm-gutterElement > div': {
         display: 'inline-flex',
         textAlign: 'right',
-        padding: '5px',
+        padding: '3px',
       },
     }),
   ];
 };
 
 /**
- * Maintains a map of line numbers to block IDs.
- */
-const blockStateField = StateField.define<Map<number, string>>({
-  create: () => new Map(),
-  update: (map, tr) => {
-    const newMap = new Map(map);
-    for (const effect of tr.effects) {
-      if (effect.is(updateBlockEffect)) {
-        const { line, blockId } = effect.value;
-        newMap.set(line, blockId);
-      }
-    }
-    return newMap;
-  },
-});
-
-const updateBlockEffect = StateEffect.define<{ line: number; blockId: string }>();
-
-/**
  * Gutter marker that displays a timestamp.
  */
 class TimestampMarker extends GutterMarker {
-  constructor(readonly _timestamp: Date) {
+  constructor(
+    readonly _line: number,
+    readonly _timestamp: Date,
+  ) {
     super();
   }
 
-  override toDOM(view: EditorView): HTMLElement {
+  override eq(other: this) {
+    return other._timestamp === this._timestamp;
+  }
+
+  override toDOM(view: EditorView) {
     const pad = (n: number) => n.toString().padStart(2, '0');
     const el = document.createElement('div');
-    el.className = 'hover:bg-hoverSurface cursor-pointer';
+    el.className = 'text-sm text-subdued hover:bg-hoverSurface cursor-pointer';
     el.textContent = [
       pad(this._timestamp.getHours()),
       pad(this._timestamp.getMinutes()),
       pad(this._timestamp.getSeconds()),
     ].join(':');
+
+    // TODO(burdon): Click to bookmark or get hyperlink.
+    el.onclick = () => {
+      const pos = view.state.doc.line(this._line).from;
+      view.dispatch({
+        effects: EditorView.scrollIntoView(pos, { y: 'start' }),
+      });
+    };
+
     return el;
   }
 }
