@@ -5,7 +5,7 @@
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSchema, create } from '@dxos/live-object';
+import { getSchema, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSchemaProperties } from '@dxos/schema';
 
@@ -34,7 +34,7 @@ export const parseEdgeId = (id: string): EdgeMeta => {
  * References are mapped onto graph edges.
  */
 export const createGraph = (objects: ReactiveEchoObject<any>[]): GraphModel<GraphNode<ReactiveEchoObject<any>>> => {
-  const graph = new GraphModel<GraphNode<ReactiveEchoObject<any>>>(create(Graph, { nodes: [], edges: [] }));
+  const graph = new GraphModel<GraphNode<ReactiveEchoObject<any>>>(live(Graph, { nodes: [], edges: [] }));
 
   // Map objects.
   objects.forEach((object) => {

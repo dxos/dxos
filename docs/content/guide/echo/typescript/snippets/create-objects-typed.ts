@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { TaskType } from './schema';
 
@@ -17,7 +17,7 @@ void (async () => {
 
   const space = client.spaces.get()[0];
 
-  const object = create(TaskType, { name: 'buy milk' });
+  const object = live(TaskType, { name: 'buy milk' });
 
   space.db.add(object);
 })();

@@ -6,7 +6,7 @@ import { effect, type Signal, signal, untracked } from '@preact/signals-core';
 
 import { Trigger, type CleanupFn } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { byPosition, type Position, isNode, type MaybePromise, isNonNullable } from '@dxos/util';
 
@@ -201,7 +201,7 @@ export const flattenExtensions = (extension: ExtensionArg, acc: BuilderExtension
 //   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
 export class GraphBuilder {
   private readonly _dispatcher = new Dispatcher();
-  private readonly _extensions = create<Record<string, BuilderExtension>>({});
+  private readonly _extensions = live<Record<string, BuilderExtension>>({});
   private readonly _resolverSubscriptions = new Map<string, CleanupFn>();
   private readonly _connectorSubscriptions = new Map<string, CleanupFn>();
   private readonly _nodeChanged: Record<string, Signal<{}>> = {};

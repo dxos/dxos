@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useSpaces, useQuery, useSchema, create } from '@dxos/react-client/echo';
+import { Filter, useSpaces, useQuery, useSchema, live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -65,7 +65,7 @@ const StorybookKanban = () => {
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
       if (space && schema && path) {
-        const card = create(schema, {
+        const card = live(schema, {
           title: faker.commerce.productName(),
           description: faker.lorem.paragraph(),
           [path]: columnValue,
@@ -142,7 +142,7 @@ const meta: Meta<StoryProps> = {
         // TODO(burdon): Replace with sdk/schema/testing.
         Array.from({ length: 80 }).map(() => {
           return space.db.add(
-            create(schema, {
+            live(schema, {
               title: faker.commerce.productName(),
               description: faker.lorem.paragraph(),
             }),

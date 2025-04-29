@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   createGapSeparator,
@@ -60,7 +60,7 @@ const createTableToolbarActions = (state: TableToolbarState) => {
 };
 
 export const TableToolbar = ({ classNames, viewDirty, attendableId, onAction }: TableToolbarProps) => {
-  const state = useMemo(() => create<TableToolbarState>({ viewDirty }), []);
+  const state = useMemo(() => live<TableToolbarState>({ viewDirty }), []);
   const actionsCreator = useCallback(() => createTableToolbarActions(state), [state]);
   const menu = useMenuActions(actionsCreator);
 

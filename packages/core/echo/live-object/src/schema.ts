@@ -17,16 +17,16 @@ import {
   type TypeAnnotation,
 } from '@dxos/echo-schema';
 
-import { create, type ReactiveObject } from './object';
-
+import type { Live } from './live';
+import { live } from './object';
 /**
  * Create ECHO object representing schema.
  */
 export const createStoredSchema = (
   { typename, version }: TypeMeta,
   jsonSchema?: JsonSchemaType,
-): ReactiveObject<StoredSchema> => {
-  return create(StoredSchema, {
+): Live<StoredSchema> => {
+  return live(StoredSchema, {
     typename,
     version,
     jsonSchema: jsonSchema ?? createJsonSchema(),

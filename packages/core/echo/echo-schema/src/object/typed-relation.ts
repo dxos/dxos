@@ -66,7 +66,7 @@ export const TypedRelation = ({ typename: _typename, version: _version, disableV
 
     /**
      * Return class definition.
-     * NOTE: Actual reactive ECHO objects must be created via the `create(Type)` function.
+     * NOTE: Actual reactive ECHO objects must be created via the `live(Type)` function.
      */
     // TODO(burdon): This is missing fields required by TypedRelation (e.g., Type, Encoded, Context)?
     return class TypedRelation extends makeTypedEntityClass(typename, version, annotatedSchema as any) {} as any;

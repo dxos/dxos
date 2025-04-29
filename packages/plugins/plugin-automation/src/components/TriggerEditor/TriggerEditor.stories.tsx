@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { FunctionType, FunctionTrigger, TriggerKind } from '@dxos/functions/types';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -26,7 +26,7 @@ const DefaultStory = () => {
       return;
     }
 
-    const trigger = space.db.add(create(FunctionTrigger, { spec: { type: TriggerKind.Timer, cron: '' } }));
+    const trigger = space.db.add(live(FunctionTrigger, { spec: { type: TriggerKind.Timer, cron: '' } }));
     setTrigger(trigger);
   }, [space]);
 
@@ -52,7 +52,7 @@ const meta: Meta = {
       types: [FunctionType, FunctionTrigger],
       onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(create(FunctionType, fn));
+          space.db.add(live(FunctionType, fn));
         }
       },
     }),

@@ -4,7 +4,7 @@
 
 import { StoredSchema } from '@dxos/echo-schema';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
-import { create, getObjectCore } from '@dxos/react-client/echo';
+import { live, getObjectCore } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table/types';
 
 export const serializer: TypedObjectSerializer<TableType> = {
@@ -20,8 +20,8 @@ export const serializer: TypedObjectSerializer<TableType> = {
     } = JSON.parse(content);
     // TODO(wittjosiah): Should the rows also be copied?
     // TODO(wittjosiah): This is a hack to get the schema to be deserialized correctly.
-    const storedSchema = space.db.add(create(StoredSchema, parsedSchema));
-    const table = create(TableType, { name: parsed.name, view: parsed.view });
+    const storedSchema = space.db.add(live(StoredSchema, parsedSchema));
+    const table = live(TableType, { name: parsed.name, view: parsed.view });
 
     if (!newId) {
       const core = getObjectCore(table);

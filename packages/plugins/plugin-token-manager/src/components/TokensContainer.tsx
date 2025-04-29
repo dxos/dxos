@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { isInstanceOf, S } from '@dxos/echo-schema';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { create, Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { live, Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses, Form } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -51,7 +51,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
 
   const handleAdd = useCallback(
     async (form: TokenForm) => {
-      const token = create(AccessTokenType, form);
+      const token = live(AccessTokenType, form);
       await handleAddAccessToken(token);
       setAdding(false);
     },

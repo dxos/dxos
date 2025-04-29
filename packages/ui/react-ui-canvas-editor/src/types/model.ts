@@ -5,7 +5,7 @@
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { AbstractGraphBuilder, AbstractGraphModel, Graph } from '@dxos/graph';
-import { create, isReactiveObject } from '@dxos/live-object';
+import { live, isLiveObject } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from '.';
@@ -17,11 +17,11 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
   CanvasGraphBuilder<S>
 > {
   static create<S extends Shape>(graph?: Partial<Graph>) {
-    if (isReactiveObject(graph) as any) {
+    if (isLiveObject(graph) as any) {
       return new CanvasGraphModel<S>(graph as Graph);
     }
     return new CanvasGraphModel<S>(
-      create(Graph, {
+      live(Graph, {
         nodes: graph?.nodes ?? [],
         edges: graph?.edges ?? [],
       }),

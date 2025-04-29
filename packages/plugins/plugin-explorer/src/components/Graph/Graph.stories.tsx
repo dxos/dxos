@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { create } from '@dxos/react-client/echo';
+import { live } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -35,7 +35,7 @@ const Story = () => {
       });
     });
 
-    const view = space.db.add(create(ViewType, { name: '', type: '' }));
+    const view = space.db.add(live(ViewType, { name: '', type: '' }));
     setSpace(space);
     setView(view);
   }, []);

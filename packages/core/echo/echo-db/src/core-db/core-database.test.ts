@@ -12,7 +12,7 @@ import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, getType, makeRef } from '@dxos/live-object';
+import { live, getType, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -366,7 +366,7 @@ describe('CoreDatabase', () => {
       await openAndClose(testBuilder);
       const { db, graph } = await testBuilder.createDatabase();
       graph.schemaRegistry.addSchema([Testing.Contact]);
-      const contact = db.add(create(Testing.Contact, { name: 'Foo' }));
+      const contact = db.add(live(Testing.Contact, { name: 'Foo' }));
 
       await db._coreDatabase.atomicReplaceObject(contact.id, {
         type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),
@@ -407,11 +407,11 @@ const createClientDbInSpaceWithObject = async (
 };
 
 const createExpando = (props: any = {}): ReactiveEchoObject<Expando> => {
-  return create(Expando, props);
+  return live(Expando, props);
 };
 
 const createTextObject = (content: string = ''): ReactiveEchoObject<{ content: string }> => {
-  return create(Expando, { content }) as ReactiveEchoObject<{ content: string }>;
+  return live(Expando, { content }) as ReactiveEchoObject<{ content: string }>;
 };
 
 interface DocumentHandles {

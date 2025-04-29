@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { create } from '@dxos/client/echo';
+import { live } from '@dxos/client/echo';
 import { S } from '@dxos/echo-schema';
 import { BaseGraphNode, Graph } from '@dxos/graph';
 import {
@@ -29,7 +29,7 @@ describe('compute', () => {
     expect(S.is(Shape)(node)).toBe(true);
     expect(S.is(BaseGraphNode)(node)).toBe(true);
 
-    const graph = create(Graph, { nodes: [], edges: [] });
+    const graph = live(Graph, { nodes: [], edges: [] });
     graph.nodes.push(node); // Throws.
 
     // model.createNode(node);

@@ -25,7 +25,7 @@ import sortBy from 'lodash.sortby';
 import { useEffect, useMemo } from 'react';
 
 import { debounce, type CleanupFn } from '@dxos/async';
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
@@ -606,7 +606,7 @@ export const createExternalCommentSync = (
     },
   );
 
-export const useCommentState = (state: ReactiveObject<EditorToolbarState>): Extension => {
+export const useCommentState = (state: Live<EditorToolbarState>): Extension => {
   return useMemo(
     () =>
       EditorView.updateListener.of((update) => {
