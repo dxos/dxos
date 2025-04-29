@@ -5,7 +5,7 @@
 import React, { createContext, useContext, useEffect, useMemo, type FocusEvent, type PropsWithChildren } from 'react';
 
 import { raise } from '@dxos/debug';
-import { type BaseObject, getValue, type ReferenceAnnotationValue } from '@dxos/echo-schema';
+import { type BaseObject, getValue } from '@dxos/echo-schema';
 import { createJsonPath, type SimpleType } from '@dxos/effect';
 
 import { type FormHandler, type FormOptions, useForm } from '../../hooks';
@@ -54,7 +54,6 @@ export const FormProvider = ({
 }: PropsWithChildren<
   FormOptions<any> & {
     formRef?: React.RefObject<HTMLDivElement>;
-    onQueryRefOptions?: (refAnnotation: ReferenceAnnotationValue) => any;
     autoSave?: boolean;
   }
 >) => {

@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { pipe, Ref } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { AST, Expando, getReferenceAnnotation, getTypeAnnotation, S, type TypeAnnotation } from '@dxos/echo-schema';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { refFromDXN, RefImpl } from '@dxos/live-object';
+import { makeRef, refFromDXN, RefImpl } from '@dxos/live-object';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
@@ -121,6 +121,8 @@ export const FormField = ({
     );
   }
 
+  const { getValue, onValueChange, ...restInputProps } = inputProps;
+
   // TODO(ZaymonFC): Extract this to it's own component.
   if (format === 'ref') {
     const refTypeInfo = getReferenceAnnotation(S.make(ast));
@@ -130,9 +132,7 @@ export const FormField = ({
     }
 
     // If ref type is expando, fall back to taking a DXN in string format.
-    if (refTypeInfo.typename === getTypeAnnotation(Expando)?.typename) {
-      const { getValue, onValueChange, ...rest } = inputProps;
-
+    if (refTypeInfo.typename === getTypeAnnotation(Expando)?.typename || !onQueryRefOptions) {
       const handleOnValueChange = (_type: any, dxnString: string) => {
         const dxn = DXN.tryParse(dxnString);
         if (dxn) {
@@ -165,19 +165,32 @@ export const FormField = ({
           inputOnly={inline}
           getValue={handleGetValue as <V>() => V | undefined}
           onValueChange={handleOnValueChange}
-          {...rest}
+          {...restInputProps}
         />
       );
-    }
-
-    if (!onQueryRefOptions) {
-      return null;
     }
 
     const refOptions = onQueryRefOptions(refTypeInfo).map((option) => ({
       ...option,
       value: option.dxn.toString(),
     }));
+
+    const handleGetValue = () => {
+      const formValue = getValue();
+
+      if (formValue instanceof RefImpl) {
+        return formValue.dxn.toString();
+      }
+
+      return undefined;
+    };
+
+    const handleValueChanged = (_type: any, dxnString: string) => {
+      const dxn = DXN.parse(dxnString);
+      const ref = refFromDXN(dxn);
+
+      onValueChange('object', ref);
+    };
 
     return (
       <SelectInput
@@ -186,8 +199,10 @@ export const FormField = ({
         disabled={readonly}
         placeholder={placeholder}
         inputOnly={inline}
-        {...inputProps}
+        getValue={handleGetValue as <V>() => V | undefined}
+        onValueChange={handleValueChanged}
         options={refOptions}
+        {...restInputProps}
       />
     );
   }
