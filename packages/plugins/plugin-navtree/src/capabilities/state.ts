@@ -11,7 +11,7 @@ import { Path } from '@dxos/react-ui-list';
 import { NavTreeCapabilities } from './capabilities';
 import { NAVTREE_PLUGIN } from '../meta';
 
-const KEY = `${NAVTREE_PLUGIN}/state`;
+const KEY = `${NAVTREE_PLUGIN}/state/v1`;
 
 const getInitialState = () => {
   const stringified = localStorage.getItem(KEY);
