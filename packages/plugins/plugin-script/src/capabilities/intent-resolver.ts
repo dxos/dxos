@@ -8,7 +8,7 @@ import { isNotNullable } from 'effect/Predicate';
 import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions/types';
 import { live, makeRef } from '@dxos/live-object';
-import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
+import { IntegrationAction } from '@dxos/plugin-integration/types';
 import { TextType } from '@dxos/schema';
 
 import { DEPLOYMENT_DIALOG } from '../components';
@@ -56,7 +56,7 @@ export default () =>
       },
     }),
     createResolver({
-      intent: TokenManagerAction.AccessTokenCreated,
+      intent: IntegrationAction.AccessTokenCreated,
       resolve: async ({ accessToken }) => {
         const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
           .map((id) => templates.find((t) => t.id === id))

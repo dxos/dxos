@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { TOKEN_MANAGER_PLUGIN } from './meta';
+import { INTEGRATION_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
-      [TOKEN_MANAGER_PLUGIN]: {
-        'plugin name': 'Tokens',
+      [INTEGRATION_PLUGIN]: {
+        'plugin name': 'Integrations',
         'space panel name': 'Integrations',
         'integrations verbose label': 'Manage integrations',
         'integrations description': 'You can manage all the integrations for your space with external services here.',

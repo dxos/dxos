@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/plugin-token-manager",
+  "name": "@dxos/plugin-integration",
   "version": "0.8.0",
-  "description": "Composer plugin for managing access tokens to remote systems.",
+  "description": "Composer plugin for managing integrations with external systems.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

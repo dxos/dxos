@@ -15,8 +15,8 @@ import { AccessTokenSchema, AccessTokenType } from '@dxos/schema';
 
 import { NewTokenSelector } from './NewTokenSelector';
 import { TokenManager } from './TokenManager';
-import { TOKEN_MANAGER_PLUGIN } from '../meta';
-import { TokenManagerAction } from '../types';
+import { INTEGRATION_PLUGIN } from '../meta';
+import { IntegrationAction } from '../types';
 
 const initialValues = {
   note: '',
@@ -28,7 +28,7 @@ const FormSchema = AccessTokenSchema.pipe(S.omit('id'));
 type TokenForm = S.Schema.Type<typeof FormSchema>;
 
 export const TokensContainer = ({ space }: { space: Space }) => {
-  const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
+  const { t } = useTranslation(INTEGRATION_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [adding, setAdding] = useState(false);
   const tokens = useQuery(space, Filter.schema(AccessTokenType));
@@ -43,7 +43,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true }),
       );
       if (isInstanceOf(AccessTokenType, result.data?.object)) {
-        void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
+        void dispatch(createIntent(IntegrationAction.AccessTokenCreated, { accessToken: result.data?.object }));
       }
     },
     [space, dispatch],
@@ -62,10 +62,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
 
   return (
     <StackItem.Content classNames='block overflow-y-auto'>
-      <ControlSection
-        title={t('integrations verbose label', { ns: TOKEN_MANAGER_PLUGIN })}
-        description={t('integrations description', { ns: TOKEN_MANAGER_PLUGIN })}
-      >
+      <ControlSection title={t('integrations verbose label')} description={t('integrations description')}>
         {adding ? (
           <ControlItem title={t('new integration label')}>
             <Form

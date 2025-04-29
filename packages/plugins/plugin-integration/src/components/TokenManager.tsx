@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
 import { type AccessTokenType } from '@dxos/schema';
 
-import { TOKEN_MANAGER_PLUGIN } from '../meta';
+import { INTEGRATION_PLUGIN } from '../meta';
 
 export type TokenManagerProps = {
   tokens: AccessTokenType[];
@@ -30,7 +30,7 @@ type TokenItemProps = {
 };
 
 const TokenItem = ({ token, onDelete }: TokenItemProps) => {
-  const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
+  const { t } = useTranslation(INTEGRATION_PLUGIN);
 
   const handleDelete = useCallback(() => {
     onDelete?.(token);

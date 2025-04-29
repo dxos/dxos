@@ -10,7 +10,7 @@ import { ReactSurface, AppGraphBuilder } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 
-export const TokenManagerPlugin = () =>
+export const IntegrationPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/translations`,

@@ -549,6 +549,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-integration/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-kanban/package.json",
           "jsonpath": "$.version"
         },
@@ -665,11 +670,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-thread/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-token-manager/package.json",
           "jsonpath": "$.version"
         },
         {
