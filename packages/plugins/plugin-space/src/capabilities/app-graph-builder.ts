@@ -129,7 +129,7 @@ export default (context: PluginsContext) => {
             await dispatch(createIntent(SpaceAction.OpenSettings, { space }));
           },
           properties: {
-            label: ['open space settings label', { ns: SPACE_PLUGIN }],
+            label: ['open current space settings label', { ns: SPACE_PLUGIN }],
             icon: 'ph--gear--regular',
             keyBinding: {
               macos: 'meta+shift+,',

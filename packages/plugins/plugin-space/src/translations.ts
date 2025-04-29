@@ -117,6 +117,7 @@ export default [
         'advanced settings label': 'Advanced',
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',
+        'open space settings label': 'Open',
 
         'members panel label': 'Members',
         'members verbose label': 'Manage space members',
@@ -130,7 +131,7 @@ export default [
         'space locked description': 'Locking a space prevents new members from being invited to the space.',
 
         'settings panel label': 'Space Settings',
-        'open space settings label': 'Open current space settings',
+        'open current space settings label': 'Open current space settings',
         'space settings properties label': 'General',
         'space properties settings verbose label': 'Manage space properties',
         'space properties settings description': 'You can configure how this space is displayed in the app here.',
