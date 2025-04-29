@@ -59,6 +59,8 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         />
       ),
       // TODO(wittjosiah): Form should be able to handle arbitrary records by default.
+      // TODO(ZaymonFC): This should get it's own component.
+      // TODO(ZaymonFC): When the input schema changes, we should set values to {}.
       ['meta' as const]: (props) => {
         const selectedFunctionValue = useFormValues(['function' as JsonPath]);
         const selectedFunctionName = useMemo(
@@ -72,8 +74,9 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
 
         const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
         const effectSchema = useMemo(() => (inputSchema ? toEffectSchema(inputSchema) : undefined), [inputSchema]);
+        const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
 
-        const payload = useMemo(() => props.getValue() ?? {}, [props]);
+        const values = useMemo(() => props.getValue() ?? {}, [props]);
 
         const handleSave = useCallback(
           (values: any) => {
@@ -82,7 +85,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
           [props],
         );
 
-        if (selectedFunction === undefined || effectSchema === undefined) {
+        if (selectedFunction === undefined || effectSchema === undefined || propertyCount === 0) {
           return null;
         }
 
@@ -91,7 +94,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
             <h3 className='text-md'>Function parameters</h3>
             {/* TODO(ZaymonFC): Try using <FormFields /> internal component for this nesting.
                                 This would allow errors to flow up to the root context. */}
-            <Form schema={effectSchema} values={payload} classNames='p-0' onSave={handleSave} autoSave></Form>
+            <Form schema={effectSchema} values={values} classNames='p-0' onValuesChanged={handleSave} />
           </>
         );
       },
