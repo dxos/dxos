@@ -78,6 +78,7 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
                 iconOnly
                 icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
                 label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
+                data-testid='treeView.alternateTreeButton'
                 onClick={handleOpen}
               />
             )}
