@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { useState, useEffect, type FC, type KeyboardEvent } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button, Icon, IconButton, Input, Popover, Status } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Input, Popover } from '@dxos/react-ui';
 import { mx, hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
@@ -93,21 +93,17 @@ const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']
 };
 
 const PreviewCard = () => {
-  const { link, target, pending } = useRefPopover('PreviewCard');
+  const { link, target } = useRefPopover('PreviewCard');
   return (
-    <Popover.Content>
-      <Popover.Viewport>
-        {pending ? (
-          <Status indeterminate />
-        ) : (
-          <>
-            <div className='grow truncate'>{link?.label}</div>
-            {target && <div className='line-clamp-3'>{target.text}</div>}
-          </>
-        )}
-      </Popover.Viewport>
-      <Popover.Arrow />
-    </Popover.Content>
+    <Popover.Portal>
+      <Popover.Content onOpenAutoFocus={(e) => e.preventDefault()}>
+        <Popover.Viewport>
+          <div className='grow truncate'>{link?.label}</div>
+          {target && <div className='line-clamp-3'>{target.text}</div>}
+        </Popover.Viewport>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Portal>
   );
 };
 
