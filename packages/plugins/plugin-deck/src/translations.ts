@@ -45,6 +45,8 @@ export default [
         'increment end label': 'Move to the right',
         'show deck plank label': 'Return to deck',
         'show solo plank label': 'Maximize',
+        'exit fullscreen label': 'Exit fullscreen',
+        'show fullscreen plank label': 'Fullscreen',
         'close label': 'Close',
         'minify label': 'Minify',
         'open companion label': 'Open companion',

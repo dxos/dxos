@@ -6,8 +6,11 @@ import React, { useState, useEffect } from 'react';
 
 import { type EchoSchema } from '@dxos/echo-schema';
 import { type Space } from '@dxos/react-client/echo';
-import { controlItemClasses } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { controlItemClasses, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
+
+import { SPACE_PLUGIN } from '../meta';
 
 type SchemaPanelProps = { space: Space };
 
@@ -33,17 +36,23 @@ export const useQuerySpaceSchemas = (space: Space): EchoSchema[] => {
   return schemas;
 };
 
-export const SchemaPanel = ({ space }: SchemaPanelProps) => {
+export const SchemaContainer = ({ space }: SchemaPanelProps) => {
+  const { t } = useTranslation(SPACE_PLUGIN);
   const schemas = useQuerySpaceSchemas(space);
 
   return (
     <StackItem.Content classNames='block overflow-y-auto'>
-      <div role='none' className={controlItemClasses}>
-        {schemas.map((schema) => (
-          <div key={schema.id}>
-            <div>{schema.typename}</div>
+      <div role='none'>
+        <ControlSection title={t('schema verbose label')} description={t('schema description')}>
+          <div role='none' className={controlItemClasses}>
+            {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
+            {schemas.map((schema) => (
+              <div key={schema.id}>
+                <div>{schema.typename}</div>
+              </div>
+            ))}
           </div>
-        ))}
+        </ControlSection>
       </div>
     </StackItem.Content>
   );

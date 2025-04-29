@@ -77,7 +77,7 @@ export class AppManager {
 
   isAuthenticated({ timeout = 5_000 } = {}) {
     return this.page
-      .getByTestId('treeview.userAccount')
+      .getByTestId('treeView.userAccount')
       .waitFor({ timeout })
       .then(() => true)
       .catch(() => false);
@@ -169,7 +169,7 @@ export class AppManager {
   }
 
   async waitForSpaceReady(timeout = 30_000) {
-    await this.page.getByTestId('spacePlugin.shareSpace').waitFor({ timeout });
+    await this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout });
   }
 
   getSpacePresenceMembers() {
@@ -297,7 +297,7 @@ export class AppManager {
   async enablePlugin(plugin: string) {
     await this.getPluginToggle(plugin).click();
     await this.page.goto(INITIAL_URL);
-    await this.page.getByTestId('treeview.userAccount').waitFor();
+    await this.page.getByTestId('treeView.userAccount').waitFor();
   }
 
   async changeStorageVersionInMetadata(version: number) {

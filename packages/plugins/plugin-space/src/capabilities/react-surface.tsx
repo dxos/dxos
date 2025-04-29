@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, Surface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, Surface, useCapability, useLayout } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import {
@@ -12,7 +12,9 @@ import {
   isEchoObject,
   isLiveObject,
   isSpace,
+  parseId,
   SpaceState,
+  useSpace,
   type ReactiveEchoObject,
   type Space,
 } from '@dxos/react-client/echo';
@@ -41,11 +43,10 @@ import {
   type CreateObjectDialogProps,
   POPOVER_ADD_SPACE,
   PopoverAddSpace,
-  SpaceSettingsContainer,
-  SpacePropertiesForm,
   MembersContainer,
   ObjectSettingsContainer,
-  SchemaPanel,
+  SpaceSettingsContainer,
+  SchemaContainer,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, type SpaceSettingsProps } from '../types';
@@ -78,22 +79,6 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/members`,
-      role: 'article',
-      position: 'hoist',
-      filter: (data): data is { subject: Space; variant: 'members' } =>
-        isSpace(data.subject) && data.variant === 'members',
-      component: ({ data }) => <MembersContainer space={data.subject} createInvitationUrl={createInvitationUrl} />,
-    }),
-    createSurface({
-      id: `${SPACE_PLUGIN}/settings`,
-      role: 'article',
-      position: 'hoist',
-      filter: (data): data is { subject: Space; variant: 'settings' } =>
-        isSpace(data.subject) && data.variant === 'settings',
-      component: ({ data }) => <SpaceSettingsContainer space={data.subject} />,
-    }),
-    createSurface({
       id: `${SPACE_PLUGIN}/companion/object-settings`,
       role: 'article',
       filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
@@ -101,16 +86,50 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/space-settings--properties`,
-      role: 'space-settings--properties',
-      filter: (data): data is { subject: Space } => isSpace(data.subject),
-      component: ({ data }) => <SpacePropertiesForm space={data.subject} />,
+      id: `${SPACE_PLUGIN}/space-settings-properties`,
+      role: 'article',
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/properties`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <SpaceSettingsContainer space={space} />;
+      },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/space-settings--schemata`,
-      role: 'space-settings--schemata',
-      filter: (data): data is { subject: Space } => isSpace(data.subject),
-      component: ({ data }) => <SchemaPanel space={data.subject} />,
+      id: `${SPACE_PLUGIN}/space-settings-members`,
+      role: 'article',
+      position: 'hoist',
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/members`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <MembersContainer space={space} createInvitationUrl={createInvitationUrl} />;
+      },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/space-settings-schema`,
+      role: 'article',
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/schema`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <SchemaContainer space={space} />;
+      },
     }),
     createSurface({
       id: JOIN_DIALOG,

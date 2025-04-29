@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
-import { Button, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
@@ -17,12 +17,32 @@ import { useLoadDescendents } from '../hooks';
 import { NAVTREE_PLUGIN } from '../meta';
 import { l0ItemType } from '../util';
 
-export type L1PanelProps = { item: Node<any>; path: string[]; currentItemId: string; onBack?: () => void };
+export type L1PanelProps = {
+  item: Node<any>;
+  path: string[];
+  currentItemId: string;
+  onBack?: () => void;
+};
 
 const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
   const layout = useLayout();
-  const navTreeContext = useNavTreeContext();
+  const { isAlternateTree, setAlternateTree, ...navTreeContext } = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
+
+  // TODO(wittjosiah): Support multiple alternate trees.
+  const alternateTree = navTreeContext.getItems(item, 'alternate-tree')[0];
+  const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
+  const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
+  const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
+
+  const handleBack = useCallback(() => {
+    if (isAlternate) {
+      setAlternateTree?.(alternatePath, false);
+    } else {
+      onBack?.();
+    }
+  }, [isAlternate, onBack, alternatePath, setAlternateTree]);
+
   return (
     <Tabs.Tabpanel
       key={item.id}
@@ -42,28 +62,51 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
               density='fine'
               classNames={mx(
                 'is-6 pli-0 dx-focus-ring-inset',
-                !item.id.startsWith('!') && 'invisible',
+                !item.id.startsWith('!') && !isAlternate && 'invisible',
                 hoverableControlItem,
                 hoverableOpenControlItem,
               )}
-              onClick={onBack}
+              onClick={handleBack}
             >
               <Icon icon='ph--caret-left--regular' size={3} />
             </Button>
             <span className='flex-1 truncate cursor-default'>{toLocalizedString(item.properties.label, t)}</span>
+            {alternateTree && !isAlternate && (
+              <IconButton
+                variant='ghost'
+                classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
+                iconOnly
+                icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
+                label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
+                data-testid='treeView.alternateTreeButton'
+                onClick={handleOpen}
+              />
+            )}
             <NavTreeItemColumns path={path} item={item} open />
           </h2>
           <div role='none' className='overflow-y-auto'>
-            <Tree
-              {...navTreeContext}
-              id={item.id}
-              root={item}
-              path={path}
-              levelOffset={5}
-              draggable
-              gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-              renderColumns={NavTreeItemColumns}
-            />
+            {isAlternate ? (
+              <Tree
+                {...navTreeContext}
+                id={alternateTree.id}
+                root={alternateTree}
+                path={alternatePath}
+                levelOffset={5}
+                gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+                renderColumns={NavTreeItemColumns}
+              />
+            ) : (
+              <Tree
+                {...navTreeContext}
+                id={item.id}
+                root={item}
+                path={path}
+                levelOffset={5}
+                draggable
+                gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+                renderColumns={NavTreeItemColumns}
+              />
+            )}
           </div>
         </>
       )}
