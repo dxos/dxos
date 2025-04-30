@@ -10,6 +10,7 @@ import { SpaceId } from '@dxos/keys';
 // TODO(dmaretskyi): Extract IDs to protocols.
 // TODO(dmaretskyi): Dedupe package with dxos/edge.
 
+/** @deprecated */
 export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
 
 /** @deprecated */

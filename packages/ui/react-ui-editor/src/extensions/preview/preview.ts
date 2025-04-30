@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxos/lit-ui/dx-ref-tag.pcss';
+
 import { syntaxTree } from '@codemirror/language';
 import {
   type EditorState,
@@ -12,10 +14,8 @@ import {
   type Transaction,
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
-import { hoverTooltip } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { tooltipContent } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { type RenderCallback } from '../../types';
@@ -24,12 +24,13 @@ export type PreviewLinkRef = {
   suggest?: boolean;
   block?: boolean;
   label: string;
-  dxn: string;
+  ref: string;
 };
 
 export type PreviewLinkTarget = {
   label: string;
-  text: string;
+  text?: string;
+  object?: any;
 };
 
 export type PreviewAction =
@@ -44,7 +45,7 @@ export type PreviewAction =
     };
 
 // TODO(burdon): Handle error.
-export type PreviewLookup = (link: PreviewLinkRef) => Promise<PreviewLinkTarget | undefined>;
+export type PreviewLookup = (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;
 
 export type PreviewActionHandler = (action: PreviewAction) => void;
 
@@ -57,7 +58,6 @@ export type PreviewRenderProps = {
 
 export type PreviewOptions = {
   renderBlock: RenderCallback<PreviewRenderProps>;
-  renderPopover?: RenderCallback<PreviewRenderProps>;
   onLookup: PreviewLookup;
 };
 
@@ -77,68 +77,13 @@ export const preview = (options: PreviewOptions): Extension => {
       ],
     }),
 
-    // Popover.
-    options.renderPopover &&
-      hoverTooltip(
-        (view, pos, side) => {
-          const node = syntaxTree(view.state).resolveInner(pos, side);
-          if (node.name !== 'LinkMark') {
-            return null;
-          }
-
-          const link = node.parent!;
-          const ref = getLinkRef(view.state, link);
-          if (!ref) {
-            return null;
-          }
-
-          return {
-            pos: link.from,
-            end: link.to,
-            arrow: true,
-            create: () => {
-              const el = document.createElement('div');
-              el.className = tooltipContent({}, 'text-md');
-              options.renderPopover!(
-                el,
-                {
-                  readonly: view.state.readOnly,
-                  link: ref,
-                  onAction: () => {}, // TODO(burdon): ???
-                  onLookup: options.onLookup,
-                },
-                view,
-              );
-
-              // NOTE: Align horizontally with title of card.
-              return { dom: el, offset: { x: 6, y: 0 } };
-            },
-          };
-        },
-        {
-          // NOTE: 0 = default of 300ms.
-          hoverTime: 1,
-        },
-      ),
-
     EditorView.theme({
-      '.cm-preview-inline': {
-        padding: '0.25rem',
-        borderRadius: '0.25rem',
-        background: 'var(--dx-modalSurface)',
-        border: '1px solid var(--dx-separator)',
-        cursor: 'pointer',
-      },
       '.cm-preview-block': {
         marginLeft: '-1rem',
         marginRight: '-1rem',
         padding: '1rem',
         borderRadius: '0.5rem',
         background: 'var(--dx-modalSurface)',
-        border: '1px solid var(--dx-separator)',
-      },
-      '.cm-tooltip': {
-        borderRadius: '0.25rem',
         border: '1px solid var(--dx-separator)',
       },
     }),
@@ -157,12 +102,11 @@ const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | unde
   const label = node.getChild('LinkLabel');
   if (mark && label) {
     const ref = state.sliceDoc(label.from + 1, label.to - 1);
-    const dxn = ref.startsWith('?') ? ref.slice(1) : ref;
     return {
       suggest: ref.startsWith('?'),
       block: state.sliceDoc(mark.from, mark.from + 1) === '!',
       label: state.sliceDoc(mark.to, label.from - 1),
-      dxn,
+      ref: ref.startsWith('?') ? ref.slice(1) : ref,
     };
   }
 };
@@ -239,13 +183,13 @@ class PreviewInlineWidget extends WidgetType {
   // }
 
   override eq(other: this) {
-    return this._link.dxn === other._link.dxn && this._link.label === other._link.label;
+    return this._link.ref === other._link.ref && this._link.label === other._link.label;
   }
 
   override toDOM(view: EditorView) {
-    const root = document.createElement('span');
-    root.classList.add('cm-preview-inline', 'hover:bg-hoverSurface');
-    root.innerHTML = this._link.label;
+    const root = document.createElement('dx-ref-tag');
+    root.setAttribute('label', this._link.label);
+    root.setAttribute('ref', this._link.ref);
     return root;
   }
 }
@@ -267,7 +211,7 @@ class PreviewBlockWidget extends WidgetType {
   // }
 
   override eq(other: this) {
-    return this._link.dxn === other._link.dxn;
+    return this._link.ref === other._link.ref;
   }
 
   override toDOM(view: EditorView) {
@@ -283,7 +227,7 @@ class PreviewBlockWidget extends WidgetType {
       }
 
       const link = getLinkRef(view.state, node);
-      if (link?.dxn !== action.link.dxn) {
+      if (link?.ref !== action.link.ref) {
         return;
       }
 

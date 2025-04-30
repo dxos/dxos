@@ -12,13 +12,13 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { TextType } from '@dxos/schema';
 
 import {
+  AppGraphSerializer,
+  ArtifactDefinition,
+  IntentResolver,
   MarkdownState,
   MarkdownSettings,
   ReactSurface,
-  IntentResolver,
-  AppGraphSerializer,
   Thread,
-  ArtifactDefinition,
 } from './capabilities';
 import { MarkdownEvents } from './events';
 import { meta } from './meta';

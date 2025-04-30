@@ -106,7 +106,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                   <PlankControl
                     label={t('show fullscreen plank label')}
                     classNames={buttonClassNames}
-                    icon='ph--frame-corners--regular'
+                    icon='ph--corners-out--regular'
                     onClick={() => onClick?.('solo--fullscreen')}
                   />
                 )}
