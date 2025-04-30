@@ -97,11 +97,11 @@ const TestChat: FC<{ content: string }> = ({ content }) => {
     queue.append([createStatic(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.items[queue.items.length - 1];
 
-    {
-      const ref = refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id]));
+    // {
+    //   const ref = refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id]));
 
-      const message = deref(ref);
-    }
+    //   const message = deref(ref);
+    // }
 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {

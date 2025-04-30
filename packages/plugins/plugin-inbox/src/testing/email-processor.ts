@@ -39,8 +39,8 @@ export const processEmail = async (params: ProcessEmailParams): Promise<ProcessE
   - Use references in the summary text if they are relevant.
 
   The inline reference syntax is as follows:
-   - Two square brackets containing the id of the document or contact.
-   - Example: [[01JT0JP9AX0XKGZX4MV4B69VT6]]
+   - [<optional name>][<ID>] or just [<ID>]
+   - Example: [Earnings Report][01JT0JP9AX0XKGZX4MV4B69VT6]
 
   Labels available:
    ${JSON.stringify(params.context.labels)}
