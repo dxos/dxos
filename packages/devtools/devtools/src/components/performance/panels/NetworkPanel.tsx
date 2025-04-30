@@ -24,8 +24,8 @@ export const NetworkPanel = ({ network, ...props }: CustomPanelProps<{ network?:
       title='Network'
       info={
         <div className='flex items-center gap-2'>
-          <span title='Used (heap size)'>{swarmCount} Swarm(s)</span>
-          <span title='Used (heap size)'>{connectionCount} Connection(s)</span>
+          <span title='Active Swarm(s)'>{swarmCount} Swarm(s)</span>
+          <span title='Active Connection(s)'>{connectionCount} Connection(s)</span>
         </div>
       }
     />

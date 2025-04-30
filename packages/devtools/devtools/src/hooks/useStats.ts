@@ -10,6 +10,7 @@ import { type NetworkStatus } from '@dxos/client/mesh';
 import { type FilterParams } from '@dxos/echo-db';
 import { type EchoStatsDiagnostic, type EchoDataStats, type QueryMetrics } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
+import { QueryEdgeStatusResponse, type EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -62,6 +63,7 @@ export type Stats = {
   queries?: QueryInfo[];
   memory?: MemoryInfo;
   network?: NetworkStatus;
+  edge?: QueryEdgeStatusResponse;
 };
 
 /**
@@ -183,6 +185,21 @@ export const useStats = (): [Stats, () => void] => {
       setStats((stats) =>
         Object.assign({}, stats, {
           network,
+        }),
+      );
+    });
+
+    return () => {
+      void stream.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    const stream = client.services.services.EdgeAgentService!.queryEdgeStatus();
+    stream.subscribe((edge) => {
+      setStats((stats) =>
+        Object.assign({}, stats, {
+          edge,
         }),
       );
     });

@@ -9,6 +9,7 @@ import { Icon, Toggle } from '@dxos/react-ui';
 import { Panel, type PanelProps } from './Panel';
 import {
   DatabasePanel,
+  EdgePanel,
   MemoryPanel,
   NetworkPanel,
   PerformancePanel,
@@ -139,6 +140,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
       />
       <MemoryPanel id='memory' memory={stats?.memory} />
       <NetworkPanel id='network' network={stats?.network} />
+      <EdgePanel id='edge' edge={stats?.edge} />
     </div>
   );
 };
