@@ -35,6 +35,7 @@ export const lengthsFacet = {
       thickLine: { root: ['line', 2] },
       prose: { root: ['size', 5] },
       containerMaxWidth: { root: ['size', 5] },
+      popoverMaxWidth: { root: ['size', 2] },
     },
   },
 

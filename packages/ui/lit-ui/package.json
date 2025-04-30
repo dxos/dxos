@@ -15,7 +15,8 @@
       "node": "./dist/src/index.js"
     },
     "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss",
-    "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss"
+    "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss",
+    "./dx-ref-tag.pcss": "./src/dx-ref-tag/dx-ref-tag.pcss"
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

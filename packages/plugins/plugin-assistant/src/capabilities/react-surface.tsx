@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { getTypename } from '@dxos/live-object';
 import { SettingsStore } from '@dxos/local-storage';
-import { fullyQualifiedId, isLiveObject, isSpace, type Space } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, isLiveObject, isSpace, type Space, type SpaceId } from '@dxos/react-client/echo';
 
 import {
   AssistantDialog,
@@ -53,10 +53,9 @@ export default () =>
       component: ({ data, role }) => {
         const associatedArtifact = useMemo(
           () => ({
-            // id: data.subject.id,
-            // typename: getTypename(data.subject) ?? 'unknown',
             id: fullyQualifiedId(data.companionTo),
             typename: getTypename(data.companionTo) ?? 'unknown',
+            spaceId: (getSpace(data.companionTo)?.id ?? 'unknown') as SpaceId,
           }),
           [data.companionTo],
         );
