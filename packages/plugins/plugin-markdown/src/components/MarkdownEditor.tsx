@@ -211,7 +211,7 @@ export const MarkdownEditor = ({
   );
 
   return (
-    <StackItem.Content toolbar={!!toolbar} classNames='w-full'>
+    <StackItem.Content toolbar={!!toolbar} classNames='is-full min-bs-0'>
       {toolbar && (
         <>
           <EditorToolbar

@@ -7,6 +7,8 @@ import React, { useCallback, type FC, useEffect } from 'react';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
+import { makeRef, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -44,13 +46,13 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   useEffect(() => {
     if (!processor.streaming.value && messageQueue?.items) {
       const message = messageQueue.items[messageQueue.items.length - 1];
-      if (chat && message && dispatch && associatedArtifact) {
+      if (space && chat && message && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
+            spaceId: space.id,
+            target: makeRef(associatedArtifact),
+            object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.assistantChatQueue.dxn.parts, message.id])),
             label: 'View proposal',
-            queueId: chat.assistantChatQueue.dxn.toString(),
-            messageId: message.id,
-            associatedArtifact, // TODO(burdon): ???
           }),
         );
       }
