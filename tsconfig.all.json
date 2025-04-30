@@ -88,9 +88,6 @@
       "path": "packages/common/phoenix/tsconfig.json"
     },
     {
-      "path": "packages/common/plate/tsconfig.json"
-    },
-    {
       "path": "packages/common/process/tsconfig.json"
     },
     {
@@ -539,9 +536,6 @@
     },
     {
       "path": "packages/ui/react-ui-types/tsconfig.json"
-    },
-    {
-      "path": "tools/apidoc/tsconfig.json"
     },
     {
       "path": "tools/beast/tsconfig.json"

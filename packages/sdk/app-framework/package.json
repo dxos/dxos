@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,6 +36,9 @@
       ]
     }
   },
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
     "@dxos/artifact": "workspace:*",
@@ -60,7 +63,8 @@
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "effect": "3.13.3",
-    "react": "~18.2.0"
+    "react": "~18.2.0",
+    "typedoc": "0.28.1"
   },
   "peerDependencies": {
     "effect": "3.13.3",
