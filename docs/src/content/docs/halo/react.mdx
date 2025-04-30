@@ -1,0 +1,26 @@
+---
+title: Using HALO in React
+sidebar:
+  label: React
+  order: 2
+---
+
+import { Aside, Code } from '@astrojs/starlight/components';
+
+import useIdentity from './snippets-react/use-identity.tsx?raw';
+
+This section describes how to obtain [HALO identity](/halo/introduction) in `react`.
+
+## Obtaining identity
+
+The user's identity can be obtained by a react application with the `useIdentity` hook:
+
+<Code code={useIdentity.slice(34)} lang="tsx" />
+
+The object returned is of type `Identity`.
+
+<Aside type="note" title="Identity hook">
+  When first creating an identity, the `useIdentity` hook will fire twice. Once with `null`, and then again with an identity when one has been established.
+</Aside>
+
+Once identity is established, a [`space`](/echo/react/api) must be created or joined in order to manipulate data.
