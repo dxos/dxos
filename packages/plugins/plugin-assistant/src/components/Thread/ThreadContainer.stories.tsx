@@ -20,7 +20,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
 import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
-import { createStatic, ObjectId } from '@dxos/echo-schema';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -83,7 +83,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   useEffect(() => {
     if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
-        createStatic(Message, {
+        create(Message, {
           role: 'assistant',
           content: prompts.map(
             (prompt) =>
@@ -254,7 +254,7 @@ export const WithInitialItems: Story = {
   args: {
     debug: true,
     items: [
-      createStatic(ChessType, {
+      create(ChessType, {
         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       }),
     ],

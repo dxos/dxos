@@ -40,7 +40,7 @@ namespace Testing {
 
   export const Message = S.Struct({
     // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
-    // TODO(burdon): Support defaults (update create and createStatic).
+    // TODO(burdon): Support defaults (update create and create).
     timestamp: S.String.pipe(
       S.propertySignature,
       S.withConstructorDefault(() => new Date().toISOString()),
