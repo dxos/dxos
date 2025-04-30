@@ -18,6 +18,7 @@ export type PanelProps = {
   open?: boolean;
   className?: string;
   onToggle?: (id: string, open: boolean) => void;
+  maxHeight?: boolean;
 };
 
 export type CustomPanelProps<T> = Pick<PanelProps, 'id' | 'open' | 'onToggle'> & T;
@@ -32,6 +33,7 @@ export const Panel = ({
   className,
   onToggle,
   children,
+  maxHeight = true,
 }: PropsWithChildren<PanelProps>) => {
   return (
     <div className={mx('flex flex-col', styles.bgPanel)}>
@@ -41,14 +43,15 @@ export const Panel = ({
       >
         <div className='flex items-center gap-2 py-1'>
           <Icon icon={icon} size={4} />
-          <span>{title}</span>
+          <span className='truncate'>{title}</span>
         </div>
         {info}
       </div>
       {children && (
         <div
           className={mx(
-            'flex w-full overflow-x-hidden overflow-y-scroll transition-max-height max-h-[240px]',
+            'flex w-full overflow-x-hidden overflow-y-scroll transition-max-height',
+            maxHeight && 'max-h-[240px]',
             !open && 'max-h-0',
             padding && 'px-2',
             className,

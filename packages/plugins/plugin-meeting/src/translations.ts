@@ -26,6 +26,7 @@ export default [
         'set display name label': 'Continue',
 
         'call tab label': 'Call',
+        'meeting status title': 'Meeting',
 
         'meeting summary label': 'Summary',
         'summarize label': 'Summarize',

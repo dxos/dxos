@@ -72,6 +72,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../devtools/devtools"
+    },
+    {
       "path": "../../experimental/artifact"
     },
     {
