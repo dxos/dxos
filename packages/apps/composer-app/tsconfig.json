@@ -118,6 +118,9 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
+      "path": "../../plugins/plugin-integration"
+    },
+    {
       "path": "../../plugins/plugin-kanban"
     },
     {
@@ -188,9 +191,6 @@
     },
     {
       "path": "../../plugins/plugin-thread"
-    },
-    {
-      "path": "../../plugins/plugin-token-manager"
     },
     {
       "path": "../../plugins/plugin-transcription"

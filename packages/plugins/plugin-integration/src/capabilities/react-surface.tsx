@@ -7,7 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
 import { parseId, useSpace } from '@dxos/react-client/echo';
 
-import { TokensContainer } from '../components';
+import { ADD_TOKEN_DIALOG, AddTokenDialog, IntegrationsContainer, type AddTokenDialogProps } from '../components';
 import { meta } from '../meta';
 
 export default () =>
@@ -25,7 +25,13 @@ export default () =>
           return null;
         }
 
-        return <TokensContainer space={space} />;
+        return <IntegrationsContainer space={space} />;
       },
+    }),
+    createSurface({
+      id: `${meta.id}/add-token-dialog`,
+      role: 'dialog',
+      filter: (data): data is { props: AddTokenDialogProps } => data.component === ADD_TOKEN_DIALOG,
+      component: ({ data }) => <AddTokenDialog {...data.props} />,
     }),
   ]);
