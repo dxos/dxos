@@ -22,10 +22,10 @@ import {
   TypedObject,
   type ObjectId,
 } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { getSchema } from '@dxos/echo-schema';
 import { live, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';

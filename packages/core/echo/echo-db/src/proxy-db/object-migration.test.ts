@@ -15,9 +15,9 @@ import {
   QueryType,
   S,
   TypedObject,
+  getSchema,
 } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { getSchema } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 
 import { defineObjectMigration } from './object-migration';

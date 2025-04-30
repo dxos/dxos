@@ -5,8 +5,8 @@
 import { Filter, type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { getTypeAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { getSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { live, isLiveObject, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
