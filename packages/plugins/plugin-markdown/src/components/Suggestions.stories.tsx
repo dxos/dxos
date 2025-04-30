@@ -52,8 +52,7 @@ import { isNotFalsy } from '@dxos/util';
 import { MarkdownEditor } from './MarkdownEditor';
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import translations from '../translations';
-import { DocumentType, createDocument } from '../types';
-import { randomQueueDxn, resolveRef } from '../types/util';
+import { DocumentType, createDocument, randomQueueDxn, resolveRef } from '../types';
 
 faker.seed(1);
 
@@ -161,7 +160,9 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 
     const doc = space.db.add(
       createDocument({
-        name: 'Hello',
+        name: 'Test',
+
+        // Create links.
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
           const obj = space.db.add(live(TestItem, { title: label, description: faker.lorem.paragraph() }));
           const dxn = makeRef(obj).dxn.toString();

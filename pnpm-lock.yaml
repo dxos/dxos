@@ -5940,6 +5940,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-meeting':
+        specifier: workspace:*
+        version: link:../plugin-meeting
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../plugin-script
@@ -6692,6 +6695,9 @@ importers:
         specifier: ^12.0.2
         version: 12.0.2(react@18.2.0)
     devDependencies:
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -7061,6 +7067,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/devtools':
+        specifier: workspace:*
+        version: link:../../devtools/devtools
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name

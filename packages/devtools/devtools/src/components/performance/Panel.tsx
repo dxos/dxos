@@ -10,13 +10,14 @@ import { mx } from '@dxos/react-ui-theme';
 import { styles } from '../../styles';
 
 export type PanelProps = {
-  className?: string; // ThemedClassName
+  className?: string; // TODO(burdon): Change to ThemedClassName.
   id: string;
   icon: string;
   title: string;
   info?: JSX.Element;
   padding?: boolean;
   open?: boolean;
+  maxHeight?: boolean;
   onToggle?: (id: string, open: boolean) => void;
 };
 
@@ -31,6 +32,7 @@ export const Panel = ({
   info,
   padding = true,
   open = true,
+  maxHeight = true,
   onToggle,
 }: PropsWithChildren<PanelProps>) => {
   return (
@@ -41,14 +43,15 @@ export const Panel = ({
       >
         <div className='flex items-center gap-2 py-1'>
           <Icon icon={icon} size={4} />
-          <span>{title}</span>
+          <span className='truncate'>{title}</span>
         </div>
         {info}
       </div>
       {children && (
         <div
           className={mx(
-            'flex w-full overflow-x-hidden overflow-y-scroll transition-max-height max-h-[240px]',
+            'flex w-full overflow-x-hidden overflow-y-scroll transition-max-height',
+            maxHeight && 'max-h-[240px]',
             !open && 'max-h-0',
             padding && 'px-2',
             className,
