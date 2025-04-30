@@ -9,19 +9,17 @@ import {
   createResolver,
   type PluginsContext,
 } from '@dxos/app-framework';
-import { next as A } from '@dxos/automerge/automerge';
+// import { next as A } from '@dxos/automerge/automerge';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { makeRef, live, refFromDXN } from '@dxos/live-object';
-import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { createDocAccessor, parseFullyQualifiedId } from '@dxos/react-client/echo';
-import { type MessageType, TextType } from '@dxos/schema';
+// import { createDocAccessor } from '@dxos/react-client/echo';
+import { TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
 import { DocumentType, MarkdownAction } from '../types';
-
-// Import AssistantAction from plugin-assistant
+import { resolveRef } from '../types/util';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -48,50 +46,34 @@ export default (context: PluginsContext) =>
     // TODO(burdon): What is the error boundary for intents? Are errors reported back to caller?
     createResolver({
       intent: CollaborationActions.InsertContent,
-      resolve: async ({ target, message, label }) => {
+      resolve: async ({ target: targetRef, object: objectRef, label }) => {
         const client = context.requestCapability(ClientCapabilities.Client);
+        const object = await resolveRef(client, targetRef.dxn);
 
-        const { spaceId, queueId, objectId } = message.dxn.asQueueDXN()!;
-        const queue = client.spaces.get(spaceId)?.queues.get<MessageType>(message.dxn);
-        if (!objectId) {
-          return queue;
-        }
+        console.log('!!!', object);
 
-        const m = queue?.items.find((item) => item.id === objectId);
-        const x = await target.load();
+        // console.log('target', target, isInstanceOf(target as any, DocumentType));
+        // if (isInstanceOf(target as any, DocumentType)) {
+        //   return;
+        // }
 
-        // Only handle markdown documents.
-        log.info('processing proposal', { queueId, messageId, associatedArtifact });
-        if (typename !== DocumentType.typename) {
-          log.warn('invalid object type', { associatedArtifact });
-          return;
-        }
+        // const client = context.requestCapability(ClientCapabilities.Client);
+        // const message = getObject<MessageType>(client, messageRef.dxn);
+        // console.log('target', message);
 
-        // Get the document from the associatedArtifact.
-        let document;
-        const space = spaceId ? client.spaces.get(spaceId) : null;
-        if (space) {
-          const [objectSpaceId, objectId] = parseFullyQualifiedId(id);
-          if (objectSpaceId !== spaceId) {
-            log.warn('invalid space', { spaceId, associatedArtifact });
-            return;
-          }
-
-          document = await space.db.query({ id: objectId }).first();
-        }
-        if (!document) {
-          log.warn('document not found', { associatedArtifact });
-          return;
-        }
+        // const accessor = createDocAccessor(target, ['content']);
+        // accessor.handle.change((doc) => {
+        //   A.splice(doc, accessor.path.slice(), 0, 0, 'xxx');
+        // });
 
         // Load the document content and insert link.
-        const content = await document.content.load();
-        const proposalLink = `[${label ?? 'Generated content'}]](${queueId}#${messageId})\n`;
-        const accessor = createDocAccessor(content, ['content']);
-        accessor.handle.change((doc) => {
-          // TODO(burdon): Insert at current cursor position.
-          A.splice(doc, accessor.path.slice(), 0, 0, proposalLink);
-        });
+        // const content = await document.content.load();
+        // const proposalLink = `[${label ?? 'Generated content'}]](${queueId}#${messageId})\n`;
+        // const accessor = createDocAccessor(content, ['content']);
+        // accessor.handle.change((doc) => {
+        //   // TODO(burdon): Insert at current cursor position.
+        //   A.splice(doc, accessor.path.slice(), 0, 0, proposalLink);
+        // });
       },
     }),
   ]);

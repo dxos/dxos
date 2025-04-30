@@ -24,13 +24,13 @@ export type PreviewLinkRef = {
   suggest?: boolean;
   block?: boolean;
   label: string;
-  dxn: string;
+  ref: string;
 };
 
 export type PreviewLinkTarget = {
   label: string;
-  text: string;
-  [key: string]: any;
+  text?: string;
+  object?: any;
 };
 
 export type PreviewAction =
@@ -45,7 +45,7 @@ export type PreviewAction =
     };
 
 // TODO(burdon): Handle error.
-export type PreviewLookup = (link: PreviewLinkRef) => Promise<PreviewLinkTarget | undefined>;
+export type PreviewLookup = (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;
 
 export type PreviewActionHandler = (action: PreviewAction) => void;
 
@@ -102,12 +102,11 @@ const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | unde
   const label = node.getChild('LinkLabel');
   if (mark && label) {
     const ref = state.sliceDoc(label.from + 1, label.to - 1);
-    const dxn = ref.startsWith('?') ? ref.slice(1) : ref;
     return {
       suggest: ref.startsWith('?'),
       block: state.sliceDoc(mark.from, mark.from + 1) === '!',
       label: state.sliceDoc(mark.to, label.from - 1),
-      dxn,
+      ref: ref.startsWith('?') ? ref.slice(1) : ref,
     };
   }
 };
@@ -184,13 +183,13 @@ class PreviewInlineWidget extends WidgetType {
   // }
 
   override eq(other: this) {
-    return this._link.dxn === other._link.dxn && this._link.label === other._link.label;
+    return this._link.ref === other._link.ref && this._link.label === other._link.label;
   }
 
   override toDOM(view: EditorView) {
     const root = document.createElement('dx-ref-tag');
     root.setAttribute('label', this._link.label);
-    root.setAttribute('dxn', this._link.dxn);
+    root.setAttribute('ref', this._link.ref);
     return root;
   }
 }
@@ -212,7 +211,7 @@ class PreviewBlockWidget extends WidgetType {
   // }
 
   override eq(other: this) {
-    return this._link.dxn === other._link.dxn;
+    return this._link.ref === other._link.ref;
   }
 
   override toDOM(view: EditorView) {
@@ -228,7 +227,7 @@ class PreviewBlockWidget extends WidgetType {
       }
 
       const link = getLinkRef(view.state, node);
-      if (link?.dxn !== action.link.dxn) {
+      if (link?.ref !== action.link.ref) {
         return;
       }
 

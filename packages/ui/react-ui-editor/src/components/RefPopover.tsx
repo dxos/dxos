@@ -29,18 +29,18 @@ const RefPopoverRoot = ({ classNames, children, onLookup }: RefPopoverRootProps)
 
   const handleDxRefTagActivate = useCallback(
     (event: DxRefTagActivate) => {
-      const { dxn, label, trigger: dxTrigger } = event;
+      const { ref, label, trigger: dxTrigger } = event;
       setValue((value) => ({
         ...value,
-        link: { dxn, label },
+        link: { label, ref },
         pending: true,
       }));
       trigger.current = dxTrigger;
       queueMicrotask(() => setOpen(true));
-      void onLookup?.({ dxn, label }).then((target) =>
+      void onLookup?.({ label, ref }).then((target) =>
         setValue((value) => ({
           ...value,
-          target,
+          target: target ?? undefined,
           pending: false,
         })),
       );

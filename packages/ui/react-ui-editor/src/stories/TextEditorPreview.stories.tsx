@@ -71,12 +71,12 @@ export const Preview = {
   ),
 };
 
-const handlePreviewLookup = async (link: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   // Random text.
-  faker.seed(link.dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+  faker.seed(ref.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
   const text = Array.from({ length: 2 }, () => faker.lorem.paragraphs()).join('\n\n');
   return {
-    label: link.label,
+    label,
     text,
   };
 };
@@ -84,9 +84,9 @@ const handlePreviewLookup = async (link: PreviewLinkRef): Promise<PreviewLinkTar
 // Async lookup.
 // TODO(burdon): Handle error.s
 const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']): PreviewLinkTarget | undefined => {
-  const [target, setTarget] = useState<PreviewLinkTarget>();
+  const [target, setTarget] = useState<PreviewLinkTarget | undefined>();
   useEffect(() => {
-    void onLookup(link).then((target) => setTarget(target));
+    void onLookup(link).then((target) => setTarget(target ?? undefined));
   }, [link, onLookup]);
 
   return target;
