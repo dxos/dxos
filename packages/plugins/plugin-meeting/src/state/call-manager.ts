@@ -86,6 +86,11 @@ export class CallManager extends Resource {
   }
 
   /** @reactive */
+  get state() {
+    return this._state;
+  }
+
+  /** @reactive */
   getVideoStream(name?: EncodedTrackName): MediaStream | undefined {
     return name ? this._state.media.pulledVideoStreams[name]?.stream : undefined;
   }

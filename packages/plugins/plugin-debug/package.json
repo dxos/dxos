@@ -46,6 +46,7 @@
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-meeting": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
