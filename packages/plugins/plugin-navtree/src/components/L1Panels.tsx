@@ -115,13 +115,15 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
                 variant='ghost'
                 classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
                 iconOnly
+                size={5}
+                density='coarse'
                 icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
                 label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
                 data-testid='treeView.alternateTreeButton'
                 onClick={handleOpen}
               />
             )}
-            <NavTreeItemColumns path={path} item={item} open />
+            <NavTreeItemColumns path={path} item={item} open density='coarse' />
           </h2>
           <div role='none' className='overflow-y-auto'>
             {isAlternate ? (
