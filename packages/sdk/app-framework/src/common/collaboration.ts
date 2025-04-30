@@ -4,11 +4,13 @@
 
 import { SchemaAST as AST, Schema as S } from 'effect';
 
+import { SpaceIdSchema } from '@dxos/artifact';
 import { Expando, Ref } from '@dxos/echo-schema';
 
 export namespace CollaborationActions {
   export class InsertContent extends S.TaggedClass<InsertContent>()('assistant/intent-content', {
     input: S.Struct({
+      spaceId: SpaceIdSchema,
       target: Ref(Expando),
       object: Ref(Expando),
       label: S.String.pipe(S.optional),

@@ -109,12 +109,14 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   const queue = useQueue<Message>(queueDxn);
 
   const handleInsert = () => {
+    invariant(space);
     invariant(queue);
     queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.items[queue.items.length - 1];
 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
+        spaceId: space.id,
         target: makeRef(doc as any as Expando), // TODO(burdon): Comomon base type.
         object: refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
         label: 'Proposal',

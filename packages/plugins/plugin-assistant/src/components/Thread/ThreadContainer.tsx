@@ -46,9 +46,10 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   useEffect(() => {
     if (!processor.streaming.value && messageQueue?.items) {
       const message = messageQueue.items[messageQueue.items.length - 1];
-      if (chat && message && dispatch && associatedArtifact) {
+      if (space && chat && message && dispatch && associatedArtifact) {
         void dispatch(
           createIntent(CollaborationActions.InsertContent, {
+            spaceId: space.id,
             target: makeRef(associatedArtifact),
             object: refFromDXN(new DXN(DXN.kind.QUEUE, [...chat.assistantChatQueue.dxn.parts, message.id])),
             label: 'View proposal',
