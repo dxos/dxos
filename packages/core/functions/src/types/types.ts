@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, OptionsAnnotationId, RawObject, S, TypedObject, DXN } from '@dxos/echo-schema';
+import { AST, OptionsAnnotationId, RawObject, S, TypedObject, DXN, Ref } from '@dxos/echo-schema';
+import { FunctionType } from './schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -108,21 +109,34 @@ export type TriggerType = S.Schema.Type<typeof TriggerSchema>;
 
 /**
  * Function trigger.
+ * Function is invoked with the `payload` passed as input data.
+ * The event that triggers the function is available in the function context.
  */
 export const FunctionTriggerSchema = S.Struct({
-  // TODO(burdon): What type does this reference.
-  // TODO(wittjosiah): This should probably be a Ref?
-  function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
+  /**
+   * Function or workflow to invoke.
+   */
+  // TODO(dmaretskyi): Can also be a Ref(ComputeGraphType).
+  function: S.optional(Ref(FunctionType).annotations({ [AST.TitleAnnotationId]: 'Function' })),
+
+  /**
+   * Only used for workflows.
+   * Specifies the input node in the circuit.
+   * @deprecated Remove and enforce a single input node in all compute graphs.
+   */
+  inputNodeId: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Input Node ID' })),
 
   enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
 
   // TODO(burdon): Flatten entire schema.
   spec: S.optional(TriggerSchema),
 
-  // TODO(burdon): Get schema as partial from function.
-  // TODO(wittjosiah): Rename to payload.
-  // The `meta` property is merged into the event data passed to the function.
-  meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
+  /**
+   * Passed as the input data to the function.
+   * Must match the function's input schema.
+   * This does not get merged with the trigger event.
+   */
+  payload: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
 });
 
 export type FunctionTriggerType = S.Schema.Type<typeof FunctionTriggerSchema>;
