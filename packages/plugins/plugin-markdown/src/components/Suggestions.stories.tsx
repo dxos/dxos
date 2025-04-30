@@ -74,7 +74,7 @@ const TestChat: FC<{ content: string }> = ({ content }) => {
 
   return (
     <StackItem.Content toolbar classNames='w-full'>
-      <Toolbar.Root>
+      <Toolbar.Root classNames='border-be border-separator'>
         <IconButton icon='ph--plus--regular' disabled={!queue} label='Insert' onClick={handleInsert} />
       </Toolbar.Root>
       <div ref={parentRef} className='grow p-4' />
@@ -102,7 +102,7 @@ const TestDocument: FC<{ content: string }> = ({ content }) => {
 
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   return (
-    <div className='grow grid grid-cols-2 overflow-hidden divide-x divide-divider'>
+    <div className='grow grid grid-cols-2 overflow-hidden divide-x divide-separator'>
       <TestDocument content={document} />
       <TestChat content={chat} />
     </div>
