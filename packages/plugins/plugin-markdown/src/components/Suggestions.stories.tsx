@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { type FC, useMemo } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import {
   Capabilities,
@@ -27,6 +27,7 @@ import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space, createDocAccessor, getSpace, useQueue, useSpace } from '@dxos/react-client/echo';
@@ -38,7 +39,6 @@ import {
   automerge,
   command,
   createRenderer,
-  translations as editorTranslations,
   preview,
   useTextEditor,
   useRefPopover,
@@ -46,13 +46,13 @@ import {
 } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { defaultTx } from '@dxos/react-ui-theme';
+import { withLayout } from '@dxos/storybook-utils';
 import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownEditor } from './MarkdownEditor';
 import { MarkdownPlugin } from '../MarkdownPlugin';
-import translations from '../translations';
-import { DocumentType, createDocument, randomQueueDxn, resolveRef } from '../types';
+import { createDocument, DocumentType, randomQueueDxn, resolveRef } from '../types';
 
 faker.seed(1);
 
@@ -157,7 +157,9 @@ const TestDocument: FC<{ doc: DocumentType }> = ({ doc }) => {
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   const client = useClient();
   const space = useSpace();
-  const doc = useMemo(() => {
+  const [doc, setDoc] = useState<DocumentType>();
+
+  useEffect(() => {
     if (!space) {
       return undefined;
     }
@@ -174,7 +176,8 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
         }),
       }),
     );
-    return doc;
+
+    setDoc(doc);
   }, [space]);
 
   if (!space || !doc) {
@@ -206,6 +209,7 @@ const meta: Meta<typeof DefaultStory> = {
         SettingsPlugin(),
         IntentPlugin(),
         MarkdownPlugin(),
+        ThemePlugin({ tx: defaultTx }),
       ],
       capabilities: [
         contributes(
@@ -225,12 +229,8 @@ const meta: Meta<typeof DefaultStory> = {
         ),
       ],
     }),
-    withTheme,
     withLayout({ tooltips: true, fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],
-  parameters: {
-    translations: [...translations, ...editorTranslations],
-  },
 };
 
 export default meta;
