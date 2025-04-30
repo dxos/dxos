@@ -21,7 +21,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { createStatic, ObjectId, S, AST } from '@dxos/echo-schema';
+import { create, ObjectId, S, AST } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -119,7 +119,7 @@ const TestChat: FC<{ content: string }> = ({ content }) => {
 
   const handleInsert = () => {
     invariant(queue);
-    queue.append([createStatic(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
+    queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.items[queue.items.length - 1];
 
     void dispatch(

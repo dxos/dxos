@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -83,6 +83,7 @@
     "react-router-dom": "^6.4.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-vis": "^1.11.12",
+    "use-resize-observer": "^9.1.0",
     "ws": "^8.14.2"
   },
   "devDependencies": {

@@ -4,7 +4,7 @@
 
 import { Message } from '@dxos/artifact';
 import { DEFAULT_EDGE_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
@@ -32,7 +32,7 @@ export const summarizeTranscript = async (ai: AIServiceClient, content: string):
     await ai.exec({
       model: DEFAULT_EDGE_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
-      history: [createStatic(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
+      history: [create(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
     }),
   );
 

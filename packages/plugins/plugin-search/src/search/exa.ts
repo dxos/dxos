@@ -8,7 +8,7 @@ import Exa from 'exa-js';
 import { defineTool, Message, type TextContentBlock } from '@dxos/artifact';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest } from '@dxos/assistant';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { createStatic, getTypeAnnotation, ObjectId, ReferenceAnnotationId, S } from '@dxos/echo-schema';
+import { create, getTypeAnnotation, ObjectId, ReferenceAnnotationId, S } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -78,7 +78,7 @@ export const search = async <Schema extends S.Schema.AnyNoContext>(
     model: '@anthropic/claude-3-5-haiku-20241022',
     systemPrompt,
     history: [
-      createStatic(Message, {
+      create(Message, {
         role: 'user',
 
         content: context.results.map(
@@ -182,7 +182,7 @@ const getSearchTerms = async (aiService: AIServiceClient, context: string) => {
       Prefer own names of people, companies, and projects, technologies, and other entities.
     `,
     history: [
-      createStatic(Message, {
+      create(Message, {
         role: 'user',
         content: [
           {
@@ -227,7 +227,7 @@ const sanitizeObjects = (entries: { data: any; schema: S.Schema.AnyNoContext }[]
         return recurse(value);
       });
 
-      return createStatic(entry.schema, data);
+      return create(entry.schema, data);
     });
 };
 
