@@ -93,7 +93,7 @@ export const PluginItem = ({
           <IconButton
             aria-describedby={descriptionId}
             classNames='text-sm text-description cursor-pointer'
-            icon='ph--gear--regular'
+            icon='ph--faders--regular'
             label={t('settings label')}
             iconOnly
             size={4}
