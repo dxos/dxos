@@ -16,7 +16,7 @@ import { makeRef, live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { createDocAccessor, parseFullyQualifiedId } from '@dxos/react-client/echo';
-import { TextType } from '@dxos/schema';
+import { type MessageType, TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
 import { DocumentType, MarkdownAction } from '../types';
@@ -48,11 +48,19 @@ export default (context: PluginsContext) =>
     // TODO(burdon): What is the error boundary for intents? Are errors reported back to caller?
     createResolver({
       intent: CollaborationActions.InsertContent,
-      resolve: async ({ label, queueId, messageId, associatedArtifact }) => {
+      resolve: async ({ target, message, label }) => {
         const client = context.requestCapability(ClientCapabilities.Client);
 
+        const { spaceId, queueId, objectId } = message.dxn.asQueueDXN()!;
+        const queue = client.spaces.get(spaceId)?.queues.get<MessageType>(message.dxn);
+        if (!objectId) {
+          return queue;
+        }
+
+        const m = queue?.items.find((item) => item.id === objectId);
+        const x = await target.load();
+
         // Only handle markdown documents.
-        const { id, typename, spaceId } = associatedArtifact;
         log.info('processing proposal', { queueId, messageId, associatedArtifact });
         if (typename !== DocumentType.typename) {
           log.warn('invalid object type', { associatedArtifact });

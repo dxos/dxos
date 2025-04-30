@@ -5,41 +5,41 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { type FC, useMemo, useState } from 'react';
+import React, { type FC, useMemo } from 'react';
 
 import {
   Capabilities,
   CollaborationActions,
+  IntentPlugin,
+  SettingsPlugin,
+  Surface,
   contributes,
   createIntent,
   createResolver,
   createSurface,
-  IntentPlugin,
-  SettingsPlugin,
-  Surface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { createStatic, ObjectId, S, AST } from '@dxos/echo-schema';
+import { ObjectId, S, AST, create, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { DXN, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
+import { makeRef, refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { faker } from '@dxos/random';
-import { createDocAccessor, createObject, useQueue } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { faker } from '@dxos/random';makeRef, 
+import { createDocAccessor, createObject, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import {
+  type PreviewLinkRef,
+  type PreviewLinkTarget,
+  RefPopover,
   automerge,
   command,
   createRenderer,
   translations as editorTranslations,
   preview,
-  RefPopover,
   useTextEditor,
-  type PreviewLinkRef,
-  type PreviewLinkTarget,
   useRefPopover,
 } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
@@ -49,7 +49,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { MarkdownEditor } from './MarkdownEditor';
 import translations from '../translations';
 
-// Sample schema for ViewEditor
+// Sample schema for ViewEditor.
 const TaskSchema = S.Struct({
   title: S.String.annotations({
     [AST.TitleAnnotationId]: 'Title',
@@ -61,14 +61,14 @@ const TaskSchema = S.Struct({
   }),
 }).pipe(S.mutable);
 
-// Handler to resolve dxn:queue:data:123 to random data conforming to the schema
+// Handler to resolve dxn:queue:data:123 to random data conforming to the schema.
 const handlePreviewLookup = async (link: PreviewLinkRef): Promise<PreviewLinkTarget> => {
-  // Check if the link is for our specific data
+  // Check if the link is for our specific data.
   if (link.dxn === 'dxn:queue:data:123') {
-    // Seed the faker to get consistent results for the same link
+    // Seed the faker to get consistent results for the same link.
     faker.seed(link.dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
 
-    // Generate random data conforming to the schema
+    // Generate random data conforming to the schema.
     const data = {
       schema: TaskSchema,
       values: {
@@ -84,7 +84,7 @@ const handlePreviewLookup = async (link: PreviewLinkRef): Promise<PreviewLinkTar
     };
   }
 
-  // For other links, return a simple text response
+  // For other links, return a simple text response.
   return {
     label: link.label,
     text: `Data for ${link.dxn}`,
@@ -108,27 +108,27 @@ const PreviewCard = () => {
 };
 
 // TODO(burdon): Factor out (reconcile with ThreadContainer.stories.tsx)
-const randomQueueDxn = () =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
+const randomQueueDxn = (spaceId: SpaceId) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]);
 
-const TestChat: FC<{ content: string }> = ({ content }) => {
+const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
-  const [queueDxn] = useState<string>(() => randomQueueDxn());
-  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+
+  const space = useSpace();
+  const queueDxn = useMemo(() => space && randomQueueDxn(space.id), [space]);
+  const queue = useQueue<Message>(queueDxn);
 
   const handleInsert = () => {
     invariant(queue);
-    queue.append([createStatic(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
+    queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.items[queue.items.length - 1];
 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
+        target: makeRef(doc as any as Expando), // TODO(burdon): Comomon base type.
+        message: refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
         label: 'Proposal',
-        queueId: queue.dxn.toString(),
-        messageId: message.id,
-        // TODO(burdon): Why artifact?
-        associatedArtifact: {} as any,
       }),
     );
   };
@@ -162,11 +162,13 @@ const TestDocument: FC<{ content: string }> = ({ content }) => {
 
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   return (
-    <RefPopover.Root onLookup={handlePreviewLookup}>
-      <div className='grow grid grid-cols-2 overflow-hidden divide-x divide-separator'>
-        <TestDocument content={document} />
-        <TestChat content={chat} />
-      </div>
+    <RefPopover.Root
+      onLookup={handlePreviewLookup}
+      classNames='grow grid grid-cols-2 grow overflow-hidden divide-x divide-separator border-2 border-primary-500'
+    >
+      <TestDocument content={document} />
+      <TestChat content={chat} />
+
       <PreviewCard />
     </RefPopover.Root>
   );
@@ -176,10 +178,6 @@ const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
   render: DefaultStory,
   decorators: [
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-    }),
     withPluginManager({
       plugins: [
         ClientPlugin({

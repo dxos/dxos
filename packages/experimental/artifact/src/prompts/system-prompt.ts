@@ -10,9 +10,9 @@ import { createTemplate } from './template';
 import SYSTEM_PROMPT from './templates/system-prompt.tpl?raw';
 
 export type AssociatedArtifact = {
-  id: string;
-  typename: string;
   spaceId: SpaceId;
+  typename: string;
+  id: string;
 };
 
 export type SystemPromptOptions = {

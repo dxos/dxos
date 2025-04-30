@@ -5,7 +5,7 @@
 import { Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { Ref, TypedObject, createStatic, foreignKey, getSchema, isInstanceOf } from '@dxos/echo-schema';
+import { Ref, TypedObject, create, foreignKey, getSchema, isInstanceOf } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 
 import { getMeta } from './accessors';
@@ -67,11 +67,11 @@ describe('complex schema validations', () => {
   });
 
   test('nesting static objects with schema in the live object', () => {
-    const contact1 = createStatic(Testing.Contact, {
+    const contact1 = create(Testing.Contact, {
       name: 'Robert Smith',
       email: 'robert@example.com',
     } as any);
-    const contact2 = createStatic(Testing.Contact, {
+    const contact2 = create(Testing.Contact, {
       name: 'Katy Perry',
       email: 'katy@example.com',
     } as any);

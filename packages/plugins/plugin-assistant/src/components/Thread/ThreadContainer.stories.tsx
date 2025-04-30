@@ -20,7 +20,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
 import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
-import { createStatic, ObjectId } from '@dxos/echo-schema';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -31,7 +31,6 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -83,7 +82,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   useEffect(() => {
     if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
-        createStatic(Message, {
+        create(Message, {
           role: 'assistant',
           content: prompts.map(
             (prompt) =>
@@ -208,10 +207,6 @@ const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-automation/ThreadContainer',
   render: DefaultStory,
   decorators: [
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-    }),
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -254,7 +249,7 @@ export const WithInitialItems: Story = {
   args: {
     debug: true,
     items: [
-      createStatic(ChessType, {
+      create(ChessType, {
         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       }),
     ],

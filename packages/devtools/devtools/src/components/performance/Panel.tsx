@@ -10,28 +10,28 @@ import { mx } from '@dxos/react-ui-theme';
 import { styles } from '../../styles';
 
 export type PanelProps = {
+  className?: string; // ThemedClassName
   id: string;
   icon: string;
   title: string;
   info?: JSX.Element;
   padding?: boolean;
   open?: boolean;
-  className?: string;
   onToggle?: (id: string, open: boolean) => void;
 };
 
 export type CustomPanelProps<T> = Pick<PanelProps, 'id' | 'open' | 'onToggle'> & T;
 
 export const Panel = ({
+  children,
+  className,
   id,
   icon,
   title,
   info,
   padding = true,
   open = true,
-  className,
   onToggle,
-  children,
 }: PropsWithChildren<PanelProps>) => {
   return (
     <div className={mx('flex flex-col', styles.bgPanel)}>
