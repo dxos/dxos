@@ -18,7 +18,9 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
       title='Edge'
       info={
         <div className='flex items-center gap-2'>
-          <span title='Edge Router WebSocket status'>{status} WebSocket</span>
+          <span title='Edge Router WebSocket status'>
+            {status === EdgeStatus.CONNECTED ? 'Connected' : 'Disconnected'}
+          </span>
         </div>
       }
     />

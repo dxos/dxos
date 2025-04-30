@@ -55,7 +55,7 @@ export type QueryPanelProps = {
 };
 
 // TODO(burdon): Reconcile with TraceView in diagnostics.
-export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
+export const StatsPanel = ({ stats, onRefresh, children }: React.PropsWithChildren<QueryPanelProps>) => {
   const [live, setLive] = useState(false);
   const handleToggleLive = () => setLive((live) => !live);
 
@@ -141,6 +141,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
       <MemoryPanel id='memory' memory={stats?.memory} />
       <NetworkPanel id='network' network={stats?.network} />
       <EdgePanel id='edge' edge={stats?.edge} />
+      {children}
     </div>
   );
 };

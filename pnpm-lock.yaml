@@ -7262,6 +7262,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/devtools':
+        specifier: workspace:*
+        version: link:../../devtools/devtools
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name

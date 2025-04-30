@@ -15,8 +15,9 @@ export const DevtoolsOverviewContainer = ({ callState }: { callState?: GlobalSta
 
   return (
     <>
-      <StatsPanel stats={stats} onRefresh={refreshStats} />
-      <MeetingStatusDetail state={callState} />
+      <StatsPanel stats={stats} onRefresh={refreshStats}>
+        <MeetingStatusDetail state={callState} />
+      </StatsPanel>
       <SyncStatusDetail state={state} summary={summary} />
     </>
   );
