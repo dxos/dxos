@@ -5,7 +5,8 @@
 import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSchema, isLiveObject, makeRef } from '@dxos/live-object';
+import { getSchema } from '@dxos/echo-schema';
+import { isLiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,

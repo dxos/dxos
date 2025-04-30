@@ -25,7 +25,8 @@ import {
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { live, getSchema, makeRef } from '@dxos/live-object';
+import { getSchema } from '@dxos/echo-schema';
+import { live, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';

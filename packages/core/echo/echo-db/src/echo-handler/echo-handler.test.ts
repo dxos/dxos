@@ -7,6 +7,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
+import { getSchema } from '@dxos/echo-schema';
 import {
   EchoObject,
   Expando,
@@ -22,7 +23,7 @@ import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { getMeta, getSchema, live, getType, isDeleted, makeRef, refFromDXN } from '@dxos/live-object';
+import { getMeta, live, getType, isDeleted, makeRef, refFromDXN } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
