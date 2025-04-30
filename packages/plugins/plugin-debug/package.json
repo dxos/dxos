@@ -32,6 +32,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",

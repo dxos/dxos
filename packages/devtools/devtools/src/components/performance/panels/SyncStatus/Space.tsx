@@ -5,16 +5,28 @@
 import React, { type HTMLAttributes, useEffect, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { type SpaceId, useSpace } from '@dxos/react-client/echo';
+import {
+  type PeerSyncState,
+  type Progress,
+  type Space,
+  type SpaceId,
+  SpaceState,
+  useSpace,
+} from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type Progress, type PeerSyncState } from './sync-state';
-import { SPACE_PLUGIN } from '../../meta';
-import { getSpaceDisplayName } from '../../util';
+// TODO(wittjosiah): Copied from plugin-space. Factor out?
+export const getSpaceDisplayName = (space: Space, { personal }: { personal?: boolean } = {}): string => {
+  return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
+    ? space.properties.name
+    : personal
+      ? 'Personal Space'
+      : 'New space';
+};
 
-export const SYNC_STALLED_TIMEOUT = 5_000;
+const SYNC_STALLED_TIMEOUT = 5_000;
 
 // TODO(wittjosiah): Define sematic color tokens.
 const styles = {
@@ -48,7 +60,7 @@ const useActive = (count: number) => {
 export type SpaceRowContainerProps = Omit<SpaceRowProps, 'spaceName'>;
 
 export const SpaceRowContainer = ({ spaceId, state }: SpaceRowContainerProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation();
   const client = useClient();
   const space = useSpace(spaceId);
   if (!space) {

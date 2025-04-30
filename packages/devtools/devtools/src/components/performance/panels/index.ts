@@ -12,4 +12,5 @@ export * from './RawQueriesPanel';
 export * from './ReplicatorMessagesPanel';
 export * from './ReplicatorPanel';
 export * from './SpansPanel';
+export * from './SyncStatus';
 export * from './TimeSeries';

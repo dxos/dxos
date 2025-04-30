@@ -4,7 +4,7 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { getDatabaseFromObject, isEchoObject, type ReactiveEchoObject } from '@dxos/echo-db';
+import { getDatabaseFromObject, isEchoObject, type SpaceSyncState, type ReactiveEchoObject } from '@dxos/echo-db';
 import { type ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -82,4 +82,33 @@ export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId }
   } else {
     return {};
   }
+};
+
+//
+// EDGE Sync State
+//
+
+export type Progress = { count: number; total: number };
+
+export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
+
+export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
+
+export const createEmptyEdgeSyncState = (): PeerSyncState => ({
+  missingOnLocal: 0,
+  missingOnRemote: 0,
+  localDocumentCount: 0,
+  remoteDocumentCount: 0,
+  differentDocuments: 0,
+});
+
+export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState => {
+  return Object.entries(syncMap).reduce<PeerSyncState>((summary, [_spaceId, peerState]) => {
+    summary.missingOnLocal += peerState.missingOnLocal;
+    summary.missingOnRemote += peerState.missingOnRemote;
+    summary.localDocumentCount += peerState.localDocumentCount;
+    summary.remoteDocumentCount += peerState.remoteDocumentCount;
+    summary.differentDocuments += peerState.differentDocuments;
+    return summary;
+  }, createEmptyEdgeSyncState());
 };
