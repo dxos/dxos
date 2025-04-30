@@ -1,5 +1,34 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "legacy"]
+  "exclude": [
+    "dist",
+    "legacy"
+  ],
+  "include": [
+    "**/*",
+    ".astro/types.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../packages/core/echo/echo-schema"
+    },
+    {
+      "path": "../packages/core/echo/echo-signals"
+    },
+    {
+      "path": "../packages/sdk/app-framework"
+    },
+    {
+      "path": "../packages/sdk/client"
+    },
+    {
+      "path": "../packages/sdk/client-protocol"
+    },
+    {
+      "path": "../packages/sdk/config"
+    },
+    {
+      "path": "../packages/sdk/react-client"
+    }
+  ]
 }

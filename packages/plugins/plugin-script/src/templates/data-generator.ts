@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { defineFunction, S, createStatic, Expando } from 'dxos:functions';
+import { defineFunction, S, create, Expando } from 'dxos:functions';
 // @ts-ignore
 import { randText } from 'https://esm.sh/@ngneat/falso@7.1.1';
 
@@ -29,7 +29,7 @@ export default defineFunction({
     // Create objects.
     for (let i = 0; i < documentAmount; i++) {
       const obj = space.db.add(
-        createStatic(Expando, {
+        create(Expando, {
           name: 'scriptGenerated',
           content: randText({ charCount: textSize }),
         }),

@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { createStatic } from './create';
+import { create } from './create';
 import { serializeStatic } from './json-serializer';
 import { getTypename } from './typename';
 import { getSchema } from '../ast';
@@ -29,7 +29,7 @@ describe('create (static version)', () => {
   });
 
   test('create static object', () => {
-    const contact = createStatic(Testing.Contact, {
+    const contact = create(Testing.Contact, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -43,7 +43,7 @@ describe('create (static version)', () => {
   });
 
   test('JSON encoding', () => {
-    const contact = createStatic(Testing.Contact, {
+    const contact = create(Testing.Contact, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -59,7 +59,7 @@ describe('create (static version)', () => {
   });
 
   test('getSchema', () => {
-    const contact = createStatic(Testing.Contact, {
+    const contact = create(Testing.Contact, {
       name: 'Bot',
       email: 'bot@example.com',
     });

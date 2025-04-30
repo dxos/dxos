@@ -3,23 +3,11 @@
   "name": "docs",
   "projectType": "application",
   "targets": {
-    "prebuild": {
-      "dependsOn": [
-        "^typedoc"
-      ],
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/public/typedoc"
-      ]
-    },
     "build": {},
     "bundle": {
       "dependsOn": [
-        "build",
-        "^build"
+        "^build",
+        "build"
       ],
       "executor": "nx:run-script",
       "options": {
@@ -39,6 +27,18 @@
       }
     },
     "pack": {},
+    "prebuild": {
+      "dependsOn": [
+        "^typedoc"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "{projectRoot}/public/typedoc"
+      ]
+    },
     "serve": {
       "dependsOn": [
         "^build",

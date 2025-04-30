@@ -1,14 +1,19 @@
 {
-  "name": "docs",
+  "name": "@dxos/docs",
+  "version": "0.8.1",
+  "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "type": "module",
-  "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
-    "bundle": "astro build",
-    "preview": "astro preview",
     "astro": "astro",
-    "prebuild": "./scripts/collect-typedoc.sh"
+    "bundle": "astro build",
+    "dev": "astro dev",
+    "prebuild": "./scripts/collect-typedoc.sh",
+    "preview": "astro preview",
+    "start": "astro dev"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.32.5",
