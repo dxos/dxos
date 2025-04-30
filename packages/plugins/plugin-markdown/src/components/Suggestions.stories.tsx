@@ -93,7 +93,7 @@ const PreviewCard = () => {
   return (
     <Popover.Content
       onOpenAutoFocus={(event) => event.preventDefault()}
-      classNames='popover-max-width'
+      classNames='popover-max-width z-0'
       collisionPadding={48}
     >
       <Popover.Viewport>{target?.object && <Surface role='preview' data={target.object} />}</Popover.Viewport>

@@ -52,6 +52,6 @@ export const stackItemContentEditorClassNames = (role?: string) =>
 
 export const stackItemContentToolbarClassNames = (role?: string) =>
   mx(
-    'attention-surface is-full border-be !border-separator',
-    role === 'section' && 'sticky block-start-0 z-[1] -mbe-px min-is-0',
+    'attention-surface is-full border-be !border-separator relative z-[1]',
+    role === 'section' && 'sticky block-start-0 -mbe-px min-is-0',
   );
