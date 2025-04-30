@@ -10,6 +10,7 @@ import { Button, Icon, IconButton, toLocalizedString, useTranslation } from '@dx
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
+import { byPosition } from '@dxos/util';
 
 import { useNavTreeContext } from './NavTreeContext';
 import { NavTreeItemColumns } from './NavTreeItemColumns';
@@ -34,6 +35,17 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
+  const alternateGetItems = useCallback(
+    (node?: Node, disposition?: string) => {
+      const items = navTreeContext.getItems(node, disposition);
+      if (node === alternateTree) {
+        // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
+        return items.toSorted((a, b) => byPosition(a.properties, b.properties));
+      }
+      return items;
+    },
+    [navTreeContext, alternateTree],
+  );
 
   const handleBack = useCallback(() => {
     if (isAlternate) {
@@ -88,6 +100,7 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
             {isAlternate ? (
               <Tree
                 {...navTreeContext}
+                getItems={alternateGetItems}
                 id={alternateTree.id}
                 root={alternateTree}
                 path={alternatePath}
