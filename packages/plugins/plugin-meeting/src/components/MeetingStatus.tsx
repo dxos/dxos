@@ -53,7 +53,7 @@ export const MeetingStatusDetail = ({ state }: MeetingStatusDetailProps) => {
             readyState: receiver.track?.readyState,
             settings: receiver.track?.getSettings(),
           })),
-          callsServiceHistory: state?.media.peer?.negotiationHistory.get(),
+          callsServiceHistory: state?.media.peer?.history.get(),
         }}
       />
     </Panel>

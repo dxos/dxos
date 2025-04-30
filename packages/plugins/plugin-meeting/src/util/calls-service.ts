@@ -37,7 +37,7 @@ export type CallsServiceConfig = {
  */
 // TODO(mykola): Expose session errors.
 export class CallsServicePeer extends Resource {
-  public readonly negotiationHistory = new HistoryCache<
+  public readonly history = new HistoryCache<
     { type: 'request'; method: string; body: any } | { type: 'response'; status: number; text?: string; json?: any }
   >(100);
 
@@ -137,7 +137,7 @@ export class CallsServicePeer extends Resource {
   }
 
   private async _fetch<T extends ErrorResponse>(relativePath: string, requestInit?: RequestInit) {
-    this.negotiationHistory.push({ type: 'request', method: requestInit?.method ?? 'GET', body: requestInit?.body });
+    this.history.push({ type: 'request', method: requestInit?.method ?? 'GET', body: requestInit?.body });
     // TODO(mykola): Handle access control. Use EdgeClient.
     const response = await fetch(`${this._config.apiBase}${relativePath}`, { ...requestInit, redirect: 'manual' });
     if (response.status >= 400) {
@@ -147,7 +147,7 @@ export class CallsServicePeer extends Resource {
 
     try {
       const data = (await response.clone().json()) as T;
-      this.negotiationHistory.push({ type: 'response', status: response.status, json: data });
+      this.history.push({ type: 'response', status: response.status, json: data });
       if (data.errorCode) {
         throw new Error(data.errorDescription);
       }
@@ -155,7 +155,7 @@ export class CallsServicePeer extends Resource {
       return data;
     } catch (error) {
       const text = await response.text();
-      this.negotiationHistory.push({ type: 'response', status: response.status, text });
+      this.history.push({ type: 'response', status: response.status, text });
       log.error('Error parsing response from Calls service', {
         error,
         text,
