@@ -7,8 +7,10 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useState, useMemo } from 'react';
 
-import { ObjectId } from '@dxos/echo-schema';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+import { useQueue } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, IconButton, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -27,7 +29,8 @@ import { Transcript } from './Transcript';
 import { BlockModel } from './model';
 import { blockToMarkdown, transcript } from './transcript-extension';
 import translations from '../../translations';
-import { type TranscriptBlock } from '../../types';
+import { TranscriptBlock } from '../../types';
+import { randomQueueDxn } from '../../util';
 
 faker.seed(1);
 
@@ -56,41 +59,25 @@ const createSegment = () => ({
   text: faker.lorem.paragraph(),
 });
 
-const meta: Meta<typeof Transcript> = {
-  title: 'plugins/plugin-transcription/Transcript',
-  component: Transcript,
-  render: ({ blocks: initialBlocks = [], ...args }) => {
-    const [blocks, setBlocks] = useState(initialBlocks);
-    useEffect(() => {
-      const i = setInterval(() => setBlocks((blocks) => [...blocks, createBlock()]), 1_000);
-      return () => clearInterval(i);
-    }, []);
+const useTestTranscriptionQueue = (running = true, interval = 1_000) => {
+  const queueDxn = useMemo(() => randomQueueDxn(), []);
+  const queue = useQueue<TranscriptBlock>(queueDxn);
 
-    return <Transcript {...args} blocks={blocks} />;
-  },
-  decorators: [withTheme, withLayout({ tooltips: true, fullscreen: true })],
-  parameters: {
-    translations,
-  },
+  useEffect(() => {
+    if (!queue || !running) {
+      return;
+    }
+
+    const i = setInterval(() => queue.append([create(TranscriptBlock, createBlock())]), interval);
+    return () => clearInterval(i);
+  }, [queue, running, interval]);
+
+  return queue;
 };
 
-export default meta;
-
-type Story = StoryObj<typeof Transcript>;
-
-export const Default: Story = {
-  args: {
-    ignoreAttention: true,
-    attendableId: 'story',
-    blocks: Array.from({ length: 10 }, createBlock),
-  },
-};
-
-export const Empty: Story = {
-  args: {
-    ignoreAttention: true,
-    attendableId: 'story',
-  },
+const QueueStory = () => {
+  const queue = useTestTranscriptionQueue();
+  return <div>{JSON.stringify(queue?.items.length)}</div>;
 };
 
 const ExtensionStory = () => {
@@ -99,6 +86,7 @@ const ExtensionStory = () => {
     () => new BlockModel<TranscriptBlock>(blockToMarkdown, Array.from({ length: 5 }, createBlock)),
     [],
   );
+
   const [running, setRunning] = useState(true);
   const [currentBlock, setCurrentBlock] = useState<TranscriptBlock | null>(null);
   useEffect(() => {
@@ -158,6 +146,47 @@ const ExtensionStory = () => {
       </div>
     </div>
   );
+};
+
+const meta: Meta<typeof Transcript> = {
+  title: 'plugins/plugin-transcription/Transcript',
+  component: Transcript,
+  render: ({ blocks: initialBlocks = [], ...args }) => {
+    const [blocks, setBlocks] = useState(initialBlocks);
+    useEffect(() => {
+      const i = setInterval(() => setBlocks((blocks) => [...blocks, createBlock()]), 1_000);
+      return () => clearInterval(i);
+    }, []);
+
+    return <Transcript {...args} blocks={blocks} />;
+  },
+  decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true }),
+    withLayout({ tooltips: true, fullscreen: true }),
+    withTheme,
+  ],
+  parameters: {
+    translations,
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof Transcript>;
+
+export const Default: Story = {
+  args: {
+    ignoreAttention: true,
+    attendableId: 'story',
+    blocks: Array.from({ length: 10 }, createBlock),
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    ignoreAttention: true,
+    attendableId: 'story',
+  },
 };
 
 export const Extension: Story = {
