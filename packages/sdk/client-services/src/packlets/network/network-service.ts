@@ -28,26 +28,18 @@ export class NetworkServiceImpl implements NetworkService {
   ) {}
 
   queryStatus() {
-    return new Stream<NetworkStatus>(({ next }) => {
+    return new Stream<NetworkStatus>(({ ctx, next }) => {
       const update = () => {
         next({
           swarm: this.networkManager.connectionState,
-          edge: this.edgeConnection?.status,
           connectionInfo: this.networkManager.connectionLog?.swarms,
           signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
         });
       };
 
-      const unsubscribeSwarm = this.networkManager.connectionStateChanged.on(() => update());
-      const unsubscribeSignal = this.signalManager.statusChanged?.on(() => update());
-      const unsubscribeEdge = this.edgeConnection?.statusChanged.on(() => update());
+      this.networkManager.connectionStateChanged.on(ctx, () => update());
+      this.signalManager.statusChanged?.on(ctx, () => update());
       update();
-
-      return () => {
-        unsubscribeSwarm();
-        unsubscribeSignal?.();
-        unsubscribeEdge?.();
-      };
     });
   }
 
@@ -68,13 +60,12 @@ export class NetworkServiceImpl implements NetworkService {
   }
 
   subscribeSwarmState(request: SubscribeSwarmStateRequest): Stream<SwarmResponse> {
-    return new Stream<SwarmResponse>(({ next }) => {
-      const unsubscribe = this.signalManager.swarmState?.on((state) => {
+    return new Stream<SwarmResponse>(({ ctx, next }) => {
+      this.signalManager.swarmState?.on(ctx, (state) => {
         if (request.topic.equals(state.swarmKey)) {
           next(state);
         }
       });
-      return unsubscribe;
     });
   }
 
@@ -83,14 +74,12 @@ export class NetworkServiceImpl implements NetworkService {
   }
 
   subscribeMessages(peer: Peer): Stream<Message> {
-    return new Stream<Message>(({ next }) => {
-      const unsubscribe = this.signalManager.onMessage.on((message) => {
+    return new Stream<Message>(({ ctx, next }) => {
+      this.signalManager.onMessage.on(ctx, (message) => {
         if (message.recipient.peerKey === peer.peerKey) {
           next(message);
         }
       });
-
-      return unsubscribe;
     });
   }
 }
