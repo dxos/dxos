@@ -4,7 +4,7 @@
 
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { makeRef } from '@dxos/live-object';
 import { type Space, useMembers, useQueue } from '@dxos/react-client/echo';
@@ -84,7 +84,7 @@ export const ChatContainer = ({ space, dxn, context, current, autoFocusTextbox }
     }
 
     queue.append([
-      createStatic(MessageType, {
+      create(MessageType, {
         sender: { identityDid: identity.did },
         created: new Date().toISOString(),
         blocks: [{ type: 'text', text: messageRef.current }],

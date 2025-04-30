@@ -6,7 +6,7 @@ import { Schema as S } from 'effect';
 
 import { defineTool, Message, ToolResult, type ArtifactDefinition, type Tool } from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -240,7 +240,7 @@ export class AISession {
 
     this._history = [...options.history];
     this._pending = [
-      createStatic(Message, {
+      create(Message, {
         role: 'user',
         content: [{ type: 'text', text: options.prompt }],
       }),
