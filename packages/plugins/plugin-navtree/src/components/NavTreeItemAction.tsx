@@ -5,7 +5,7 @@
 import React, { type MutableRefObject, useRef } from 'react';
 
 import { type Action, type Node } from '@dxos/app-graph';
-import { useTranslation, toLocalizedString, IconButton } from '@dxos/react-ui';
+import { useTranslation, toLocalizedString, IconButton, useDensityContext } from '@dxos/react-ui';
 import { DropdownMenu, MenuProvider, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 
@@ -23,9 +23,13 @@ export type NavTreeItemActionMenuProps = ActionProperties & {
 
 const fallbackIcon = 'ph--placeholder--regular';
 
-const actionButtonProps = {
+const fineActionButtonProps = {
   size: 4 as const,
   density: 'fine' as const,
+};
+const coarseActionButtonProps = {
+  size: 5 as const,
+  density: 'coarse' as const,
 };
 
 export const NavTreeItemActionDropdownMenu = ({
@@ -37,12 +41,13 @@ export const NavTreeItemActionDropdownMenu = ({
 }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const suppressNextTooltip = useRef<boolean>(false);
+  const density = useDensityContext();
   return (
     <MenuProvider onAction={onAction}>
       <DropdownMenu.Root items={menuActions as MenuItem[]} suppressNextTooltip={suppressNextTooltip}>
         <DropdownMenu.Trigger asChild>
           <IconButton
-            {...actionButtonProps}
+            {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
             classNames={mx('shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem)}
             variant='ghost'
             icon={icon ?? fallbackIcon}
@@ -63,9 +68,10 @@ export const NavTreeItemMonolithicAction = ({
   data: invoke,
   baseLabel,
 }: Action & { parent: Node; onAction?: (action: Action) => void; baseLabel: string }) => {
+  const density = useDensityContext();
   return (
     <IconButton
-      {...actionButtonProps}
+      {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
       variant={variant}
       classNames={mx(
         'shrink-0',
