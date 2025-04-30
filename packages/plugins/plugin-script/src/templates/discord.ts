@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { createStatic, EchoObject, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
+import { create, EchoObject, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
 import {
   FetchHttpClient,
   // @ts-ignore
@@ -73,7 +73,7 @@ export default defineFunction({
           const messages = yield* rest.getChannelMessages(channelId, options).pipe((res: any) => res.json);
           const queueMessages = messages
             .map((message: any) =>
-              createStatic(MessageSchema, {
+              create(MessageSchema, {
                 id: ObjectId.random(),
                 foreignId: message.id,
                 from: message.author.username,

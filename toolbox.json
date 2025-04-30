@@ -33,7 +33,6 @@
       "@dxos/timeframe",
       "@dxos/tracing",
       "@dxos/lit-grid",
-      "@dxos/plate",
       "@dxos/gem-spore",
       "@dxos/test-utils",
       "@dxos/react-ui-stack",

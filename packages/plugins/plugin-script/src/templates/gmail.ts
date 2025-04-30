@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { createStatic, defineFunction, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
+import { create, defineFunction, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
 import {
   HttpClient,
   HttpClientRequest,
@@ -97,7 +97,7 @@ export default defineFunction({
             continue;
           }
           const subject = messageDetails.payload.headers.find((h: any) => h.name === 'Subject')?.value;
-          const object = createStatic(MessageType, {
+          const object = create(MessageType, {
             id: ObjectId.random(),
             created,
             sender,
