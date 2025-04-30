@@ -15,7 +15,7 @@ import {
   type MessageContentBlock,
 } from '@dxos/artifact';
 import { AIServiceEdgeClient } from '@dxos/assistant';
-import { createStatic, EchoObject, ObjectId } from '@dxos/echo-schema';
+import { create, EchoObject, ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -156,31 +156,31 @@ describe.skip('AISession with Ollama', () => {
 
 // Travel to rome, florence, livorno, siena, madrid for conferences
 const CALENDAR_EVENTS: CalendarEvent[] = [
-  createStatic(CalendarEventSchema, {
+  create(CalendarEventSchema, {
     title: 'Exploring Ancient Ruins in Rome',
     startTime: '2024-01-01T10:00:00Z',
     endTime: '2024-01-01T11:00:00Z',
     description: 'Tech conference at the historic Colosseum with networking opportunities',
   }),
-  createStatic(CalendarEventSchema, {
+  create(CalendarEventSchema, {
     title: 'Renaissance Tech Summit in Florence',
     startTime: '2024-01-01T11:00:00Z',
     endTime: '2024-01-01T12:00:00Z',
     description: 'Discussing AI innovations surrounded by Renaissance art',
   }),
-  createStatic(CalendarEventSchema, {
+  create(CalendarEventSchema, {
     title: 'Travel to Livorno',
     startTime: '2024-01-01T12:00:00Z',
     endTime: '2024-01-01T13:00:00Z',
     description: 'Travel to Livorno',
   }),
-  createStatic(CalendarEventSchema, {
+  create(CalendarEventSchema, {
     title: 'Travel to Siena',
     startTime: '2024-01-01T13:00:00Z',
     endTime: '2024-01-01T14:00:00Z',
     description: 'Travel to Siena',
   }),
-  createStatic(CalendarEventSchema, {
+  create(CalendarEventSchema, {
     title: 'Travel to Madrid',
     startTime: '2024-01-01T14:00:00Z',
     endTime: '2024-01-01T15:00:00Z',
