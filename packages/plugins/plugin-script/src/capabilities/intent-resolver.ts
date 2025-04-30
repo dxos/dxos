@@ -56,9 +56,9 @@ export default () =>
       },
     }),
     createResolver({
-      intent: IntegrationAction.AccessTokenCreated,
-      resolve: async ({ accessToken }) => {
-        const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
+      intent: IntegrationAction.IntegrationCreated,
+      resolve: async ({ object: integration }) => {
+        const scriptTemplates = (defaultScriptsForIntegration[integration.serviceId] ?? [])
           .map((id) => templates.find((t) => t.id === id))
           .filter(isNotNullable);
 
@@ -68,13 +68,11 @@ export default () =>
               createIntent(LayoutAction.UpdateDialog, {
                 part: 'dialog',
                 subject: DEPLOYMENT_DIALOG,
-                options: { blockAlign: 'start', state: true, props: { accessToken, scriptTemplates } },
+                options: { blockAlign: 'start', state: true, props: { integration, scriptTemplates } },
               }),
             ],
           };
         }
-
-        return { data: undefined };
       },
     }),
   ]);

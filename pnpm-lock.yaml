@@ -6969,6 +6969,9 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
     devDependencies:
+      '@dxos/artifact-testing':
+        specifier: workspace:*
+        version: link:../../experimental/artifact-testing
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
@@ -6990,6 +6993,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.13.3
+        version: 3.13.3
       react:
         specifier: ~18.2.0
         version: 18.2.0

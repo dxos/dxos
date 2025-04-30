@@ -101,7 +101,7 @@
         "packages/plugins/plugin-integration/src/index.ts"
       ],
       "@dxos/plugin-integration/types": [
-        "packages/plugins/plugin-integration/src/types.ts"
+        "packages/plugins/plugin-integration/src/types/index.ts"
       ],
       "@dxos/plugin-kanban": [
         "packages/plugins/plugin-kanban/src/index.ts"

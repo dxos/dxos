@@ -9,6 +9,7 @@ import { AccessTokenType } from '@dxos/schema';
 import { ReactSurface, AppGraphBuilder } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
+import { IntegrationType } from './types';
 
 export const IntegrationPlugin = () =>
   definePlugin(meta, [
@@ -20,7 +21,7 @@ export const IntegrationPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [AccessTokenType]),
+      activate: () => contributes(ClientCapabilities.Schema, [AccessTokenType, IntegrationType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
