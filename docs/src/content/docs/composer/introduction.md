@@ -25,7 +25,7 @@ The framework defines some [common activation events](/typedoc/app-framework/mod
 
 ### `Capability`
 
-A [`Capability`]() is a unique string identifier with a Typescript type associated with it.
+A [`Capability`](/typedoc/app-framework/types/Capability.html) is a unique string identifier with a Typescript type associated with it.
 When a capability is contributed to the application an implementation of the interface is provided.
 Many of the same capability can be contributed to the application and when they are requested all will be returned.
 The framework defines some [common capabilities](/typedoc/app-framework/modules/Capabilities.html), however plugins are free to define their own as well.
