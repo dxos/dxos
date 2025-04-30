@@ -100,7 +100,7 @@ const PreviewCard = () => {
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport>{target && <Surface role='preview' data={target.data} />}</Popover.Viewport>
+        <Popover.Viewport>{target?.data && <Surface role='preview' data={target.data} />}</Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
     </Popover.Portal>
@@ -163,7 +163,7 @@ const TestDocument: FC<{ content: string }> = ({ content }) => {
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   return (
     <RefPopover.Root onLookup={handlePreviewLookup}>
-      <div className='grow grid grid-cols-2 overflow-hidden divide-x divide-divider'>
+      <div className='grow grid grid-cols-2 overflow-hidden divide-x divide-separator'>
         <TestDocument content={document} />
         <TestChat content={chat} />
       </div>
