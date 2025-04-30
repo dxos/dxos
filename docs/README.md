@@ -1,29 +1,34 @@
-# DXOS Documentation Site
+# DXOS Docs
 
-This site is based on `vuepress`.
+- Current focus is around building a Composer plugin
+- later the docs for ECHO, HALO, App Framework, etc. should evolve independently
+- as more content is added, use https://diataxis.fr/ to guide structure
 
-To start the app:
+## Starlight Starter Kit: Basics
 
-```sh
-pnpm nx serve docs
-# pnpm serve if it were a standalone package
+### 🚀 Project Structure
+
+Inside of your Astro + Starlight project, you'll see the following folders and files:
+
+```
+.
+├── public/
+├── src/
+│   ├── assets/
+│   ├── content/
+│   │   ├── docs/
+│   └── content.config.ts
+├── astro.config.mjs
+├── package.json
+└── tsconfig.json
 ```
 
-Docs are written as markdown files in the `docs` folder of this app.
+Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
 
-Generated API docs are derived by first generating a json file using typedoc
-```sh
-pnpm nx typedoc docs
-```
+Images can be added to `src/assets/` and embedded in Markdown with a relative link.
 
-Then by templating that file into markdown in the `docs/api` folder
-```sh
-pnpm nx plate docs
-```
+Static assets, like favicons, can be placed in the `public/` directory.
 
-In case you want to remove the `docs/api` folder
-```sh
-pnpm nx clean:plate docs
-```
+### 👀 Want to learn more?
 
-The `@dxos/plate` template that generates the api docs is found in `src/templates/api`
+Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
