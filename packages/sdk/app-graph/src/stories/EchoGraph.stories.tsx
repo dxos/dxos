@@ -9,12 +9,12 @@ import React, { useEffect, useState } from 'react';
 
 import {
   create,
+  isSpace,
   type Echo,
-  type ReactiveEchoObject,
   type FilterSource,
+  type ReactiveEchoObject,
   type Space,
   SpaceState,
-  isSpace,
   type QueryOptions,
   type Query,
 } from '@dxos/client/echo';

@@ -3,4 +3,4 @@
 //
 
 export * from './DeckLayout';
-export * from './LayoutSettings';
+export * from './DeckSettings';

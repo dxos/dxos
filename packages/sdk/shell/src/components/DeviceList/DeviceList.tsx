@@ -21,7 +21,7 @@ export const DeviceList = ({
   onClickRecover,
   onClickJoinExisting,
   onAgentDestroy,
-}: DeviceListProps & Pick<AgentFormProps, 'onAgentDestroy'>) => {
+}: DeviceListProps & Partial<Pick<AgentFormProps, 'onAgentDestroy'>>) => {
   const { t } = useTranslation('os');
   return (
     <div role='none' className='p-1'>

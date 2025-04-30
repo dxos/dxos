@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useRope } from '../../hooks';
 
-const Render = () => {
+const DefaultStory = () => {
   const canvasRef = useRef<CanvasController>(null);
   useEffect(() => {
     // TODO(burdon): Pan up.
@@ -64,7 +64,7 @@ const Rope = () => {
 
 const meta: Meta = {
   title: 'ui/react-ui-canvas-editor/Path',
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type EchoSchema } from '@dxos/echo-schema';
+import { ImmutableSchema, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, create } from '@dxos/react-client/echo';
@@ -18,6 +18,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 import { useTableModel } from '../../hooks';
+import { type TableFeatures } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
@@ -44,11 +45,20 @@ const DefaultStory = ({ editing }: StoryProps) => {
 
   const projection = useMemo(() => {
     if (schema && table?.view) {
-      return new ViewProjection(schema, table.view.target!);
+      return new ViewProjection(schema.jsonSchema, table.view.target!);
     }
   }, [schema, table?.view]);
 
-  const model = useTableModel({ table, projection });
+  const features: Partial<TableFeatures> = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'multiple' },
+      dataEditable: true,
+      schemaEditable: !(schema instanceof ImmutableSchema),
+    }),
+    [],
+  );
+
+  const model = useTableModel({ table, projection, features });
 
   const handleQuery: TableCellEditorProps['onQuery'] = async ({ field }) => {
     const { objects } = await space.db.query(schema).run();
@@ -84,9 +94,9 @@ const meta: Meta<StoryProps> = {
       types: [TableType, ViewType],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
+      onSpaceCreated: async ({ client, space }) => {
         const table = space.db.add(create(TableType, {}));
-        const schema = await initializeTable({ space, table });
+        const schema = await initializeTable({ client, space, table });
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
             create(schema, {

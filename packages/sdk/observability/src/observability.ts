@@ -13,9 +13,9 @@ import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/
 import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
-import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
+import { getTelemetryIdentity, type IPData, mapSpaces } from './helpers';
 import { type OtelLogs, type OtelMetrics, type OtelTraces } from './otel';
-import { type SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
+import { type SegmentTelemetry, type TrackOptions, type PageOptions, TelemetryEvent } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
 import { type SentryLogProcessor } from './sentry/sentry-log-processor';
 
@@ -35,20 +35,28 @@ export type ObservabilitySecrets = {
   OTEL_AUTHORIZATION: string | null;
 };
 
-export type Mode = 'basic' | 'full' | 'disabled';
 export type TagScope = 'errors' | 'telemetry' | 'metrics' | 'all';
 
+/** Gathering mode. */
+export type Mode = 'basic' | 'full' | 'disabled';
+
 export type ObservabilityOptions = {
-  /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
-  namespace: string;
   mode: Mode;
-  // TODO(nf): make platform a required extension?
-  // platform: Platform;
-  release?: string;
+
+  /** Environment. */
   environment?: string;
+
+  /** Application namespace. */
+  namespace: string;
+
+  /** Application release. */
+  release?: string;
+
+  /** User group. */
+  group?: string;
+
   config?: Config;
   secrets?: Record<string, string>;
-  group?: string;
 
   telemetry?: {
     batchSize?: number;
@@ -62,8 +70,34 @@ export type ObservabilityOptions = {
 /*
  * Observability provides a common interface for error logging, metrics, and telemetry.
  * It currently provides these capabilities using Sentry, OpenTelemetry, and Segment.
+ *
+ * Segment:
+ * https://app.segment.com/dxos/sources/composer-app/debugger
+ * https://app.segment.com/dxos/sources/composer-app/settings/keys
+ *
+ * NOTE:
+ * - Segment maintains a set of admin creates Source (e.g., "composer-app").
+ * - Each source has at least one API_KEY, which is used by the client.
+ *
+ * Testing:
+ * https://app.segment.com/dxos/sources/composer-app/settings/keys
+ * - DX_TELEMETRY_API_KEY
+ * - DX_SENTRY_DESTINATION
+ *
+ * Sentry:
+ * https://sentry.io/organizations/dxos/issues
+ *
+ * OpenTelemetry:
+ * https://dxosorg.grafana.net/explore
  */
 export class Observability {
+  private _mode: Mode;
+  private readonly _namespace: string;
+  private readonly _config?: Config;
+  private readonly _group?: string;
+  private readonly _secrets: ObservabilitySecrets;
+  private readonly _tags = new Map<string, { value: string; scope: TagScope }>();
+
   // TODO(wittjosiah): Generic metrics interface.
   private _otelMetrics?: OtelMetrics;
   private _otelTraces?: OtelTraces;
@@ -75,47 +109,39 @@ export class Observability {
   private _otelLogs?: OtelLogs;
   private _errorReportingOptions?: InitOptions;
   private _captureException?: typeof SentryCaptureException;
-  private _captureUserFeedback?: (name: string, email: string, message: string) => Promise<void>;
-  private _setTag?: (key: string, value: string) => void;
-
-  private _secrets: ObservabilitySecrets;
-  private _namespace: string;
-  private _mode: Mode;
-  private _config?: Config;
-  private _group?: string;
-  // TODO(nf): accept upstream context?
-  private _ctx = new Context();
-  private _tags = new Map<string, { value: string; scope: TagScope }>();
+  private _captureUserFeedback?: (message: string) => Promise<void>;
   private _lastNetworkStatus?: NetworkStatus;
+
+  private _ctx = new Context();
 
   // TODO(nf): make platform a required extension?
   constructor({
+    mode,
     namespace,
     environment,
     release,
     config,
-    secrets,
     group,
-    mode,
+    secrets,
     telemetry,
     errorLog,
   }: ObservabilityOptions) {
-    this._namespace = namespace;
     this._mode = mode;
+    this._namespace = namespace;
     this._config = config;
     this._group = group;
     this._secrets = this._loadSecrets(config, secrets);
+
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
     this._errorReportingOptions = errorLog?.sentryInitOptions;
 
-    if (this._group) {
-      this.setTag('group', this._group);
-    }
-    this.setTag('namespace', this._namespace);
-    environment && this.setTag('environment', environment);
-    release && this.setTag('release', release);
+    // Tags.
     this.setTag('mode', this._mode);
+    this.setTag('namespace', this._namespace);
+    this.setTag('environment', environment);
+    this.setTag('release', release);
     this.setTag('session', PublicKey.random().toHex());
+    this.setTag('group', this._group);
   }
 
   get mode() {
@@ -139,7 +165,6 @@ export class Observability {
 
       process.env.DX_ENVIRONMENT && (mergedSecrets.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT);
       process.env.DX_RELEASE && (mergedSecrets.DX_RELEASE = process.env.DX_RELEASE);
-      // TODO: prefix these with DX_?
       process.env.SENTRY_DESTINATION && (mergedSecrets.SENTRY_DESTINATION = process.env.SENTRY_DESTINATION);
       process.env.TELEMETRY_API_KEY && (mergedSecrets.TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY);
       process.env.IPDATA_API_KEY && (mergedSecrets.IPDATA_API_KEY = process.env.IPDATA_API_KEY);
@@ -163,6 +188,7 @@ export class Observability {
   }
 
   async initialize() {
+    log('initializing...');
     await this._initLogs();
     await this._initMetrics();
     await this._initTelemetry();
@@ -171,6 +197,7 @@ export class Observability {
   }
 
   async close() {
+    log('closing...');
     const closes: Promise<void>[] = [];
     this._telemetry && closes.push(this._telemetry.close());
     this._otelMetrics && closes.push(this._otelMetrics.close());
@@ -178,8 +205,6 @@ export class Observability {
 
     await Promise.all(closes);
     await this._ctx.dispose();
-
-    // TODO(wittjosiah): Remove telemetry, etc. scripts.
   }
 
   setMode(mode: Mode) {
@@ -190,27 +215,29 @@ export class Observability {
   // Tags
   //
 
-  setTag(key: string, value: string, scope?: TagScope) {
+  /** Callback (e.g., to share tags with Sentry.) */
+  private _setTag?: (key: string, value: string) => void;
+
+  /**
+   * camelCase keys are converted to snake_case in Segment.
+   */
+  setTag(key: string, value: string | undefined, scope?: TagScope) {
+    if (value === undefined) {
+      return;
+    }
     if (this.enabled && (scope === undefined || scope === 'all' || scope === 'errors')) {
       this._setTag?.(key, value);
     }
     if (!scope) {
       scope = 'all';
     }
+
     this._tags.set(key, { value, scope });
   }
 
   getTag(key: string) {
     return this._tags.get(key);
   }
-
-  addIPDataTelemetryTags = (ipData: IPData) => {
-    this.setTag('city', ipData.city, 'telemetry');
-    this.setTag('region', ipData.region, 'telemetry');
-    this.setTag('country', ipData.country, 'telemetry');
-    ipData.latitude && this.setTag('latitude', ipData.latitude.toString(), 'telemetry');
-    ipData.longitude && this.setTag('longitude', ipData.longitude.toString(), 'telemetry');
-  };
 
   // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
   async setIdentityTags(clientServices: Partial<ClientServices>) {
@@ -220,7 +247,9 @@ export class Observability {
           log('empty response from identity service', { idqr });
           return;
         }
+
         this.setTag('did', idqr.identity.did);
+        this._telemetry?.identify({ userId: idqr.identity.did });
       });
     }
 
@@ -230,13 +259,14 @@ export class Observability {
           log('empty response from device service', { device: dqr });
           return;
         }
-        invariant(dqr, 'empty response from device service');
 
+        invariant(dqr, 'empty response from device service');
         const thisDevice = dqr.devices.find((device) => device.kind === DeviceKind.CURRENT);
         if (!thisDevice) {
           log('no current device', { device: dqr });
           return;
         }
+
         this.setTag('deviceKey', thisDevice.deviceKey.truncate());
         if (thisDevice.profile?.label) {
           this.setTag('deviceProfile', thisDevice.profile.label);
@@ -244,6 +274,14 @@ export class Observability {
       });
     }
   }
+
+  setIPDataTelemetryTags = (ipData: IPData) => {
+    this.setTag('city', ipData.city, 'telemetry');
+    this.setTag('region', ipData.region, 'telemetry');
+    this.setTag('country', ipData.country, 'telemetry');
+    ipData.latitude && this.setTag('latitude', ipData.latitude.toString(), 'telemetry');
+    ipData.longitude && this.setTag('longitude', ipData.longitude.toString(), 'telemetry');
+  };
 
   //
   // Logs
@@ -342,7 +380,6 @@ export class Observability {
           connectionStates.set(conn.state, (connectionStates.get(conn.state) ?? 0) + 1);
           totalReadBufferSize += conn.readBufferSize ?? 0;
           totalWriteBufferSize += conn.writeBufferSize ?? 0;
-
           for (const stream of conn.streams ?? []) {
             totalChannelBufferSize += stream.writeBufferSize ?? 0;
           }
@@ -387,9 +424,10 @@ export class Observability {
     updateSpaceTelemetry.on(this._ctx, async () => {
       log('send space telemetry');
       for (const data of mapSpaces(spaces, { truncateKeys: true })) {
-        this.event({
-          did: getTelemetryIdentifier(client),
-          name: `${namespace}.space.update`,
+        this.track({
+          ...getTelemetryIdentity(client),
+          event: TelemetryEvent.METRICS,
+          action: 'space.update',
           properties: data,
         });
       }
@@ -424,9 +462,8 @@ export class Observability {
     const platform = await client.services.services.SystemService?.getPlatform();
     invariant(platform, 'platform is required');
 
-    this.setTag('platform_type', Platform.PLATFORM_TYPE[platform.type as number].toLowerCase());
+    this.setTag('platformType', Platform.PLATFORM_TYPE[platform.type as number].toLowerCase());
     if (this._mode === 'full') {
-      // platform[foo] does not work?
       if (platform.platform) {
         this.setTag('platform', platform.platform);
       }
@@ -488,21 +525,19 @@ export class Observability {
   }
 
   /**
-   * A telemetry event.
-   *
-   * The default implementation uses Segment.
-   */
-  event(options: EventOptions) {
-    this._telemetry?.event(options);
-  }
-
-  /**
-   * A telemetry page view.
-   *
+   * Submit telemetry page view.
    * The default implementation uses Segment.
    */
   page(options: PageOptions) {
     this._telemetry?.page(options);
+  }
+
+  /**
+   * Submit telemetry user action.
+   * The default implementation uses Segment.
+   */
+  track(options: TrackOptions) {
+    this._telemetry?.track(options);
   }
 
   //
@@ -515,10 +550,9 @@ export class Observability {
       const { SentryLogProcessor } = await import('./sentry/sentry-log-processor');
       this._captureException = captureException;
       this._captureUserFeedback = captureUserFeedback;
-
       this._setTag = setTag;
 
-      // TODO(nf): refactor package into this one?
+      // TODO(nf): Refactor package into this one?
       log.info('Initializing Sentry', {
         dest: this._secrets.SENTRY_DESTINATION,
         options: this._errorReportingOptions,
@@ -530,9 +564,9 @@ export class Observability {
         scrubFilenames: this._mode !== 'full',
         onError: (event) => this._sentryLogProcessor!.addLogBreadcrumbsTo(event),
       });
-      // TODO(nf): set platform at instantiation? needed for node.
 
-      // TODO(nf): is this different than passing as properties in options?
+      // TODO(nf): Set platform at instantiation? needed for node.
+      // TODO(nf): Is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
         if (v.scope === 'all' || v.scope === 'errors') {
           setTag(k, v.value);
@@ -551,7 +585,7 @@ export class Observability {
     this._otelTraces && this._otelTraces.start();
   }
 
-  // TODO(nf): refactor init based on providers and their capabilities
+  // TODO(nf): Refactor init based on providers and their capabilities.
   private async _initTraces() {
     if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
       const { OtelTraces } = await import('./otel');
@@ -574,7 +608,6 @@ export class Observability {
 
   /**
    * Manually capture an exception.
-   *
    * The default implementation uses Sentry.
    */
   captureException(err: any) {
@@ -585,13 +618,17 @@ export class Observability {
 
   /**
    * Manually capture user feedback.
-   *
    * The default implementation uses Sentry.
    */
-  captureUserFeedback(name: string, email: string, message: string) {
+  captureUserFeedback(message: string) {
+    if (!this._secrets.SENTRY_DESTINATION) {
+      log.info('Feedback submitted without Sentry destination', { message });
+      return;
+    }
+
     // TODO(Zan): Should this respect telemetry mode? Sending feedback is explicitly user-initiated.
     // - Maybe if telemetry is disable we shouldn't enable replay.
     // - (Check the browser.ts implementation for reference).
-    void this._captureUserFeedback?.(name, email, message);
+    void this._captureUserFeedback?.(message);
   }
 }

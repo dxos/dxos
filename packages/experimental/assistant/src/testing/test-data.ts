@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
+import { type Schema as S } from 'effect';
 
 import { raise } from '@dxos/debug';
 import type { EchoDatabase } from '@dxos/echo-db';

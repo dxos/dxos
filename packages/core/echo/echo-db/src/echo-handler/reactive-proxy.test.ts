@@ -4,8 +4,8 @@
 
 import { describe } from 'vitest';
 
-import { EchoObject, getObjectAnnotation } from '@dxos/echo-schema';
-import { TestSchema } from '@dxos/echo-schema/testing';
+import { EchoObject, getTypeAnnotation } from '@dxos/echo-schema';
+import { Testing } from '@dxos/echo-schema/testing';
 import { create } from '@dxos/live-object';
 
 import { reactiveProxyTests } from './reactive-proxy.blueprint-test';
@@ -16,14 +16,14 @@ import { EchoTestBuilder } from '../testing';
 //  echo-schema cannot export the test blueprint because @dxos/test is not published.
 describe('Reactive proxy', () => {
   reactiveProxyTests((schema) => {
-    if (schema != null && getObjectAnnotation(schema) != null) {
+    if (schema != null && getTypeAnnotation(schema) != null) {
       return null;
     }
 
     return {
       objectsHaveId: false,
       createObjectFn: async (props = {}) => {
-        return (schema == null ? create(props) : create(schema as any, props)) as TestSchema;
+        return (schema == null ? create(props) : create(schema, props)) as Testing.TestSchema;
       },
     };
   });
@@ -46,13 +46,15 @@ describe('Echo reactive proxy', () => {
       },
       createObjectFn: async (props = {}) => {
         const testSchema =
-          schema === TestSchema ? schema.pipe(EchoObject('example.com/test/TestSchema', '0.1.0')) : schema;
-        const object = (schema == null ? create(props) : create(testSchema as any, props)) as TestSchema;
+          schema === Testing.TestSchema
+            ? schema.pipe(EchoObject({ typename: 'example.com/test/TestSchema', version: '0.1.0' }))
+            : schema;
+        const object = (schema == null ? create(props) : create(testSchema as any, props)) as Testing.TestSchema;
         if (testSchema && !db.graph.schemaRegistry.hasSchema(testSchema)) {
           db.graph.schemaRegistry.addSchema([testSchema]);
         }
 
-        return db.add(object) as TestSchema;
+        return db.add(object) as Testing.TestSchema;
       },
     };
   });

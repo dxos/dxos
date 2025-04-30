@@ -22,7 +22,7 @@ import {
   TriggerKind,
   type TriggerType,
   type WebhookTrigger,
-} from '@dxos/functions';
+} from '@dxos/functions/types';
 import { DXN, SpaceId } from '@dxos/keys';
 import { create, makeRef, useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';

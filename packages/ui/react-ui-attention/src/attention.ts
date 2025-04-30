@@ -8,6 +8,9 @@ import { S } from '@dxos/echo-schema';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
+// NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
+export const ATTENDABLE_PATH_SEPARATOR = '~';
+
 export const AttentionSchema = S.mutable(
   S.Struct({
     hasAttention: S.Boolean,
@@ -119,7 +122,7 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
   if (closestAttendable) {
     const attendableId = closestAttendable.getAttribute('data-attendable-id');
     if (!attendableId) {
-      // this has an id of an aria-controls elsewhere on the page, move cursor to that trigger
+      // This has an id of an aria-controls elsewhere on the page, move cursor to that trigger.
       const trigger = document.querySelector(`[aria-controls="${closestAttendable.getAttribute('id')}"]`);
       if (!trigger) {
         return acc;
@@ -127,8 +130,8 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
         return getAttendables(selector, trigger, acc);
       }
     } else {
-      acc.push(attendableId);
-      // (attempt tail recursion)
+      acc.push(...attendableId.split(ATTENDABLE_PATH_SEPARATOR));
+      // TODO: Attempt tail recursion.
       return !closestAttendable.parentElement ? acc : getAttendables(selector, closestAttendable.parentElement, acc);
     }
   }

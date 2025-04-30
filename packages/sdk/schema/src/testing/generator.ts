@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, pipe } from 'effect';
+import { SchemaAST as AST, Effect, pipe } from 'effect';
 
 import { type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
 import {
@@ -16,7 +16,7 @@ import {
   type S,
   type TypedObject,
 } from '@dxos/echo-schema';
-import { AST, findAnnotation } from '@dxos/effect';
+import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';

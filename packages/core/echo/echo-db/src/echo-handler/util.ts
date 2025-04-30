@@ -24,7 +24,7 @@ export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | 
 export const getReferenceWithSpaceKey = (obj: ReactiveEchoObject<any>): Reference | undefined => {
   invariant(obj);
   const db = getDatabaseFromObject(obj);
-  return db && new Reference(obj.id, undefined, db.spaceKey.toHex());
+  return db && Reference.fromObjectIdAndSpaceKey(obj.id, db.spaceKey);
 };
 
 // TODO(burdon): Factor out.

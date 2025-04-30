@@ -144,6 +144,7 @@ message RecoverIdentityRequest {
   oneof request {
     string recovery_code = 1;
     ExternalSignature external = 2;
+    string token = 3;
   }
 }
 
@@ -433,6 +434,28 @@ message JoinBySpaceKeyRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
+message SpaceArchive {
+  string filename = 1;
+  bytes contents = 2;
+}
+
+message ExportSpaceRequest {
+  string space_id = 1;
+}
+
+message ExportSpaceResponse {
+  SpaceArchive archive = 1;
+}
+
+message ImportSpaceRequest {
+  SpaceArchive archive = 1;
+}
+
+message ImportSpaceResponse {
+  /// the ID of the new space.
+  string new_space_id = 1;
+}
+
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
@@ -454,6 +477,9 @@ service SpacesService {
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 
   rpc CreateEpoch(CreateEpochRequest) returns (CreateEpochResponse);
+
+  rpc ExportSpace(ExportSpaceRequest) returns (ExportSpaceResponse);
+  rpc ImportSpace(ImportSpaceRequest) returns (ImportSpaceResponse);
 }
 
 //
@@ -555,6 +581,10 @@ service NetworkService {
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
   rpc JoinSwarm(dxos.edge.signal.JoinRequest) returns (google.protobuf.Empty);
   rpc LeaveSwarm(dxos.edge.signal.LeaveRequest) returns (google.protobuf.Empty);
+  /**
+   * Query the swarm state without joining it.
+   */ 
+  rpc QuerySwarm(dxos.edge.signal.QueryRequest) returns (dxos.edge.messenger.SwarmResponse);
   rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
   rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
   rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);

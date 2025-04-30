@@ -70,6 +70,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -116,6 +119,9 @@
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/react-ui-theme"

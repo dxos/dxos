@@ -9,7 +9,7 @@ import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { Markdown, Thread, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
-import { meta, SHEET_PLUGIN } from './meta';
+import { meta } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
 import { SheetAction, SheetType } from './types';
@@ -34,7 +34,6 @@ export const SheetPlugin = () =>
           id: SheetType.typename,
           metadata: {
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
-            placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
             serializer,
           },

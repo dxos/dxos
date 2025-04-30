@@ -28,7 +28,7 @@ const Total = defineCapability<{ total: number }>('dxos.org/test/total');
 const CountEvent = defineEvent('dxos.org/test/count');
 const FailEvent = defineEvent('dxos.org/test/fail');
 
-const testMeta = { id: 'dxos.org/plugin/test' };
+const testMeta = { id: 'dxos.org/plugin/test', name: 'Test' };
 
 describe('PluginManager', () => {
   let plugins: Plugin[] = [];
@@ -180,46 +180,46 @@ describe('PluginManager', () => {
   });
 
   it('should be able to fire custom activation events', async () => {
-    const One = definePlugin({ id: 'dxos.org/test/one' }, [
+    const Plugin1 = definePlugin({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }, [
       defineModule({
-        id: 'dxos.org/test/one',
+        id: 'dxos.org/test/plugin-1',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 1 })],
       }),
     ]);
-    const Two = definePlugin({ id: 'dxos.org/test/two' }, [
+    const Plugin2 = definePlugin({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }, [
       defineModule({
-        id: 'dxos.org/test/two',
+        id: 'dxos.org/test/plugin-2',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 2 })],
       }),
     ]);
-    const Three = definePlugin({ id: 'dxos.org/test/three' }, [
+    const Plugin3 = definePlugin({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }, [
       defineModule({
-        id: 'dxos.org/test/three',
+        id: 'dxos.org/test/plugin-3',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 3 })],
       }),
     ]);
-    plugins = [One, Two, Three];
+    plugins = [Plugin1, Plugin2, Plugin3];
 
     const manager = new PluginManager({ pluginLoader });
     expect(manager.active).toEqual([]);
     expect(manager.context.requestCapabilities(Number)).toHaveLength(0);
 
-    await manager.add(One.meta.id);
+    await manager.add(Plugin1.meta.id);
     await manager.activate(CountEvent);
-    expect(manager.active).toEqual([One.meta.id]);
+    expect(manager.active).toEqual([Plugin1.meta.id]);
     expect(manager.context.requestCapabilities(Number)).toHaveLength(1);
 
-    await manager.add(Two.meta.id);
+    await manager.add(Plugin2.meta.id);
     await manager.activate(CountEvent);
-    expect(manager.active).toEqual([One.meta.id, Two.meta.id]);
+    expect(manager.active).toEqual([Plugin1.meta.id, Plugin2.meta.id]);
     expect(manager.context.requestCapabilities(Number)).toHaveLength(2);
 
-    await manager.add(Three.meta.id);
+    await manager.add(Plugin3.meta.id);
     await manager.activate(CountEvent);
-    expect(manager.active).toEqual([One.meta.id, Two.meta.id, Three.meta.id]);
+    expect(manager.active).toEqual([Plugin1.meta.id, Plugin2.meta.id, Plugin3.meta.id]);
     expect(manager.context.requestCapabilities(Number)).toHaveLength(3);
   });
 
@@ -283,7 +283,7 @@ describe('PluginManager', () => {
       state.total = numbers.reduce((acc, n) => acc + n.number, 0);
     };
 
-    const Count = definePlugin({ id: 'dxos.org/test/count' }, [
+    const Count = definePlugin({ id: 'dxos.org/test/count', name: 'Count' }, [
       defineModule({
         id: 'dxos.org/test/count',
         activatesOn: Events.Startup,
@@ -297,17 +297,17 @@ describe('PluginManager', () => {
 
     const Test = definePlugin(testMeta, [
       defineModule({
-        id: 'dxos.org/test/one',
+        id: 'dxos.org/test/plugin-1',
         activatesOn: CountEvent,
         activate: () => contributes(Number, { number: 1 }),
       }),
       defineModule({
-        id: 'dxos.org/test/two',
+        id: 'dxos.org/test/plugin-2',
         activatesOn: CountEvent,
         activate: () => contributes(Number, { number: 2 }),
       }),
       defineModule({
-        id: 'dxos.org/test/three',
+        id: 'dxos.org/test/plugin-3',
         activatesOn: CountEvent,
         activate: () => contributes(Number, { number: 3 }),
       }),
@@ -390,28 +390,28 @@ describe('PluginManager', () => {
   });
 
   it('should be reactive', async () => {
-    const One = definePlugin({ id: 'dxos.org/test/one' }, [
+    const Plugin1 = definePlugin({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }, [
       defineModule({
-        id: 'dxos.org/test/one',
+        id: 'dxos.org/test/plugin-1',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 1 })],
       }),
     ]);
-    const Two = definePlugin({ id: 'dxos.org/test/two' }, [
+    const Plugin2 = definePlugin({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }, [
       defineModule({
-        id: 'dxos.org/test/two',
+        id: 'dxos.org/test/plugin-2',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 2 })],
       }),
     ]);
-    const Three = definePlugin({ id: 'dxos.org/test/three' }, [
+    const Plugin3 = definePlugin({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }, [
       defineModule({
-        id: 'dxos.org/test/three',
+        id: 'dxos.org/test/plugin-3',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 3 })],
       }),
     ]);
-    plugins = [One, Two, Three];
+    plugins = [Plugin1, Plugin2, Plugin3];
 
     const manager = new PluginManager({ pluginLoader });
     using pluginUpdates = updateCounter(() => {
@@ -439,7 +439,7 @@ describe('PluginManager', () => {
     expect(eventsFiredUpdates.count).toEqual(0);
     expect(pendingResetUpdates.count).toEqual(0);
 
-    await manager.add(One.meta.id);
+    await manager.add(Plugin1.meta.id);
     expect(pluginUpdates.count).toEqual(1);
     expect(enabledUpdates.count).toEqual(1);
     expect(modulesUpdates.count).toEqual(1);
@@ -455,7 +455,7 @@ describe('PluginManager', () => {
     expect(eventsFiredUpdates.count).toEqual(1);
     expect(pendingResetUpdates.count).toEqual(0);
 
-    await manager.add(Two.meta.id);
+    await manager.add(Plugin2.meta.id);
     expect(pluginUpdates.count).toEqual(2);
     expect(enabledUpdates.count).toEqual(2);
     expect(modulesUpdates.count).toEqual(2);
@@ -471,7 +471,7 @@ describe('PluginManager', () => {
     expect(eventsFiredUpdates.count).toEqual(1);
     expect(pendingResetUpdates.count).toEqual(2);
 
-    await manager.add(Three.meta.id);
+    await manager.add(Plugin3.meta.id);
     expect(pluginUpdates.count).toEqual(3);
     expect(enabledUpdates.count).toEqual(3);
     expect(modulesUpdates.count).toEqual(3);
@@ -488,7 +488,7 @@ describe('PluginManager', () => {
     expect(eventsFiredUpdates.count).toEqual(1);
     expect(pendingResetUpdates.count).toEqual(4);
 
-    await manager.disable(One.meta.id);
+    await manager.disable(Plugin1.meta.id);
     expect(pluginUpdates.count).toEqual(3);
     expect(enabledUpdates.count).toEqual(4);
     expect(modulesUpdates.count).toEqual(4);
@@ -496,7 +496,7 @@ describe('PluginManager', () => {
     expect(eventsFiredUpdates.count).toEqual(1);
     expect(pendingResetUpdates.count).toEqual(4);
 
-    await manager.remove(One.meta.id);
+    await manager.remove(Plugin1.meta.id);
     expect(pluginUpdates.count).toEqual(4);
     expect(enabledUpdates.count).toEqual(4);
     expect(modulesUpdates.count).toEqual(4);

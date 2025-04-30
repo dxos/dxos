@@ -35,7 +35,7 @@ export const chat = (model: BaseChatModel<BaseLanguageModelCallOptions>): Pipeli
 };
 
 export type JSONChatOptions = {
-  schema?: S.Schema<any>;
+  schema?: S.Schema.AnyNoContext;
 };
 
 export const jsonChat = (

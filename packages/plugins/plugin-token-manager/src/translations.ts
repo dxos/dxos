@@ -9,8 +9,11 @@ export default [
     'en-US': {
       [TOKEN_MANAGER_PLUGIN]: {
         'plugin name': 'Tokens',
-        'add token': 'Add Token',
+        'space panel name': 'Integrations',
+        'add token': 'Add Integration',
+        'add custom token': 'Custom Token',
         'delete token': 'Delete Token',
+        'new integration label': 'New Integration',
       },
     },
   },

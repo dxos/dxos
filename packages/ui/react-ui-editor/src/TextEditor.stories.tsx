@@ -4,12 +4,13 @@
 
 import '@dxos-theme';
 
+import { type Completion } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { ArrowSquareOut, X } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import { effect, useSignal } from '@preact/signals-react';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useState, type FC, type KeyboardEvent } from 'react';
@@ -22,9 +23,9 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { Button, Input, useThemeContext } from '@dxos/react-ui';
-import { baseSurface, getSize, mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { Button, Icon, IconButton, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
+import { baseSurface, defaultTx, getSize, mx } from '@dxos/react-ui-theme';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorContent, editorGutter, editorMonospace } from './defaults';
 import {
@@ -202,7 +203,7 @@ const text = str(
   '=== LAST LINE ===',
 );
 
-const links = [
+const links: Completion[] = [
   { label: 'DXOS', apply: '[DXOS](https://dxos.org)' },
   { label: 'GitHub', apply: '[DXOS GitHub](https://github.com/dxos)' },
   { label: 'Automerge', apply: '[Automerge](https://automerge.org/)' },
@@ -214,16 +215,6 @@ const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', '
 
 const hover =
   'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
-
-const renderLinkTooltip = (el: Element, url: string) => {
-  const web = new URL(url);
-  createRoot(el).render(
-    <a href={url} target='_blank' rel='noreferrer' className={hover}>
-      {web.origin}
-      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1')} />
-    </a>,
-  );
-};
 
 const Key: FC<{ char: string }> = ({ char }) => (
   <span className='flex justify-center items-center w-[24px] h-[24px] rounded text-xs bg-neutral-200 text-black'>
@@ -244,11 +235,25 @@ const onCommentsHover: CommentsOptions['onHover'] = (el, shortcut) => {
   );
 };
 
+const renderLinkTooltip = (el: Element, url: string) => {
+  const web = new URL(url);
+  createRoot(el).render(
+    <ThemeProvider tx={defaultTx}>
+      <a href={url} target='_blank' rel='noreferrer' className={mx(hover, 'flex items-center gap-2')}>
+        {web.origin}
+        <Icon icon='ph--arrow-square-out--regular' size={4} />
+      </a>
+    </ThemeProvider>,
+  );
+};
+
 const renderLinkButton = (el: Element, url: string) => {
   createRoot(el).render(
-    <a href={url} target='_blank' rel='noreferrer' className={hover}>
-      <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 mb-[2px]')} />
-    </a>,
+    <ThemeProvider tx={defaultTx}>
+      <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
+        <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block mis-1 mb-[3px]' />
+      </a>
+    </ThemeProvider>,
   );
 };
 
@@ -262,7 +267,7 @@ type StoryProps = {
   id?: string;
   debug?: DebugMode;
   text?: string;
-  readonly?: boolean;
+  readOnly?: boolean;
   placeholder?: string;
   lineNumbers?: boolean;
   onReady?: (view: EditorView) => void;
@@ -273,7 +278,7 @@ const DefaultStory = ({
   debug,
   text,
   extensions,
-  readonly,
+  readOnly,
   placeholder = 'New document.',
   scrollTo,
   selection,
@@ -289,7 +294,7 @@ const DefaultStory = ({
       initialValue: text,
       extensions: [
         createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-        createBasicExtensions({ readonly, placeholder, lineNumbers, scrollPastEnd: true }),
+        createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({
           themeMode,
@@ -335,26 +340,22 @@ const DefaultStory = ({
   );
 };
 
-export default {
+const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-editor/TextEditor',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: DefaultStory,
   parameters: { translations, layout: 'fullscreen' },
 };
 
+export default meta;
+
 const defaultExtensions: Extension[] = [
-  autocomplete({
-    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-  }),
   decorateMarkdown({ renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
   linkTooltip(renderLinkTooltip),
 ];
 
 const allExtensions: Extension[] = [
-  autocomplete({
-    onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
-  }),
   decorateMarkdown({ numberedHeadings: { from: 2, to: 4 }, renderLinkButton, selectionChangeDelay: 100 }),
   formattingKeymap(),
   linkTooltip(renderLinkTooltip),
@@ -363,25 +364,49 @@ const allExtensions: Extension[] = [
   folding(),
 ];
 
+//
+// Default
+//
+
 export const Default = {
   render: () => <DefaultStory text={text} extensions={defaultExtensions} />,
 };
+
+//
+// Everything
+//
 
 export const Everything = {
   render: () => <DefaultStory text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
+//
+// Empty
+//
+
 export const Empty = {
   render: () => <DefaultStory extensions={defaultExtensions} />,
 };
 
+//
+// Readonly
+//
+
 export const Readonly = {
-  render: () => <DefaultStory text={text} extensions={defaultExtensions} readonly />,
+  render: () => <DefaultStory text={text} extensions={defaultExtensions} readOnly />,
 };
+
+//
+// No Extensions
+//
 
 export const NoExtensions = {
   render: () => <DefaultStory text={text} />,
 };
+
+//
+// Vim
+//
 
 export const Vim = {
   render: () => (
@@ -511,6 +536,10 @@ export const Table = {
   render: () => <DefaultStory text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
 };
 
+//
+// Commented out
+//
+
 export const CommentedOut = {
   render: () => (
     <DefaultStory
@@ -523,6 +552,10 @@ export const CommentedOut = {
     />
   ),
 };
+
+//
+// Typescript
+//
 
 export const Typescript = {
   render: () => (
@@ -545,12 +578,18 @@ export const Autocomplete = {
       extensions={[
         decorateMarkdown({ renderLinkButton }),
         autocomplete({
-          onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
+          onSearch: (text) => {
+            return links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
+          },
         }),
       ]}
     />
   ),
 };
+
+//
+// Mention
+//
 
 export const Mention = {
   render: () => (
@@ -565,6 +604,10 @@ export const Mention = {
   ),
 };
 
+//
+// Search
+//
+
 export const Search = {
   render: () => (
     <DefaultStory
@@ -575,10 +618,65 @@ export const Search = {
   ),
 };
 
+//
+// Command
+//
+
+export const Command = {
+  render: () => (
+    <DefaultStory
+      text={str('# Command', '', '', '[Test](dxn:queue:data:123)', '', '', '')}
+      extensions={[
+        command({
+          onHint: () => 'Press / for commands.',
+          onRenderMenu: (el, onClick) => {
+            renderRoot(
+              el,
+              <ThemeProvider tx={defaultTx}>
+                <Button classNames='p-1 aspect-square' onClick={onClick}>
+                  <Icon icon={'ph--sparkle--regular'} size={5} />
+                </Button>
+              </ThemeProvider>,
+            );
+          },
+          onRenderDialog: (el, onClose) => {
+            renderRoot(el, <CommandDialog onClose={onClose} />);
+          },
+          onRenderPreview: (el, { text }) => {
+            faker.seed(text.length);
+            const data = Array.from({ length: 2 }, () => faker.lorem.sentences(2));
+            renderRoot(
+              el,
+              <ThemeProvider tx={defaultTx}>
+                <div className='flex flex-col gap-2'>
+                  <div className='flex items-center gap-4'>
+                    <div className='grow truncate'>
+                      <span className='text-xs text-subdued mie-2'>Prompt</span>
+                      {text}
+                    </div>
+                    <div className='flex gap-1'>
+                      <IconButton classNames='text-green-500' label='Apply' icon={'ph--check--regular'} />
+                      <IconButton classNames='text-red-500' label='Cancel' icon={'ph--x--regular'} />
+                    </div>
+                  </div>
+                  <div>{data.join('\n\n')}</div>
+                </div>
+              </ThemeProvider>,
+            );
+          },
+        }),
+      ]}
+    />
+  ),
+};
+
 const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void }) => {
   const [text, setText] = useState('');
   const handleInsert = () => {
-    onClose(text.length ? { insert: text + '\n' } : undefined);
+    // TODO(burdon): Use queue ref.
+    const link = `[${text}](dxn:queue:data:123)`;
+    console.log({ link });
+    onClose(text.length ? { insert: link } : undefined);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -595,38 +693,34 @@ const CommandDialog = ({ onClose }: { onClose: (action?: CommandAction) => void 
   };
 
   return (
-    <div className={mx('flex items-center p-2 gap-2 border rounded-md', baseSurface)}>
-      <Input.Root>
-        <Input.TextInput
-          autoFocus={true}
-          placeholder='Enter command.'
-          value={text}
-          onChange={({ target: { value } }) => setText(value)}
-          onKeyDown={handleKeyDown}
-        />
-      </Input.Root>
-      <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
-        <X className={getSize(5)} />
-      </Button>
+    <div className='flex w-full justify-center'>
+      <div
+        className={mx(
+          'flex w-full p-2 gap-2 items-center border border-separator rounded-md',
+          editorContent,
+          baseSurface,
+        )}
+      >
+        <Input.Root>
+          <Input.TextInput
+            autoFocus={true}
+            placeholder='Ask a question...'
+            value={text}
+            onChange={({ target: { value } }) => setText(value)}
+            onKeyDown={handleKeyDown}
+          />
+        </Input.Root>
+        <Button variant='ghost' classNames='pli-0' onClick={() => onClose()}>
+          <X className={getSize(5)} />
+        </Button>
+      </div>
     </div>
   );
 };
 
-export const Command = {
-  render: () => (
-    <DefaultStory
-      text={str('# Command', '')}
-      extensions={[
-        command({
-          onRender: (el, onClose) => {
-            renderRoot(el, <CommandDialog onClose={onClose} />);
-          },
-          onHint: () => 'Press / for commands.',
-        }),
-      ]}
-    />
-  ),
-};
+//
+// Comments
+//
 
 export const Comments = {
   render: () => {
@@ -668,11 +762,19 @@ export const Comments = {
   },
 };
 
+//
+// Annotations
+//
+
 export const Annotations = {
   render: () => (
     <DefaultStory text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />
   ),
 };
+
+//
+// DND
+//
 
 export const DND = {
   render: () => (
@@ -688,6 +790,10 @@ export const DND = {
     />
   ),
 };
+
+//
+// Listener
+//
 
 export const Listener = {
   render: () => (
@@ -707,6 +813,10 @@ export const Listener = {
   ),
 };
 
+//
+// Typewriter
+//
+
 const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
 
 export const Typewriter = {
@@ -717,6 +827,10 @@ export const Typewriter = {
     />
   ),
 };
+
+//
+// Blast
+//
 
 export const Blast = {
   render: () => (

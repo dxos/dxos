@@ -21,7 +21,6 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 
 export const DebugSettingsSchema = S.mutable(
   S.Struct({
-    debug: S.optional(S.Boolean),
     wireframe: S.optional(S.Boolean),
   }),
 );
@@ -78,5 +77,7 @@ export namespace Devtools {
     export const id = `${Devtools.id}.edge`;
     export const Dashboard = `${Devtools.Edge.id}.dashboard`;
     export const Workflows = `${Devtools.Edge.id}.workflows`;
+    export const Traces = `${Devtools.Edge.id}.traces`;
+    export const Testing = `${Devtools.Edge.id}.testing`;
   }
 }

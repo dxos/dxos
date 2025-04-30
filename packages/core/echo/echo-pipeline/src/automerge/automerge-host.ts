@@ -23,6 +23,7 @@ import {
   type PeerId,
   type StorageAdapterInterface,
   type StorageKey,
+  interpretAsDocumentId,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
@@ -34,6 +35,7 @@ import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
+import { bufferToArray } from '@dxos/util';
 
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
@@ -228,17 +230,33 @@ export class AutomergeHost extends Resource {
     return handle;
   }
 
+  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
+    const documentId = interpretAsDocumentId(id);
+
+    const chunks = await this._storage.loadRange([documentId]);
+    return bufferToArray(Buffer.concat(chunks.map((c) => c.data!)));
+  }
+
   /**
    * Create new persisted document.
    */
-  createDoc<T>(initialValue?: T | Doc<T>, opts?: CreateDocOptions): DocHandle<T> {
+  createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): DocHandle<T> {
     if (opts?.preserveHistory) {
+      if (initialValue instanceof Uint8Array) {
+        return this._repo.import(initialValue);
+      }
+
       if (!isAutomerge(initialValue)) {
         throw new TypeError('Initial value must be an Automerge document');
       }
+
       // TODO(dmaretskyi): There's a more efficient way.
       return this._repo.import(save(initialValue as Doc<T>));
     } else {
+      if (initialValue instanceof Uint8Array) {
+        throw new Error('Cannot create document from Uint8Array without preserving history');
+      }
+
       return this._repo.create(initialValue);
     }
   }

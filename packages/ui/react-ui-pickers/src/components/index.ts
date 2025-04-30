@@ -5,4 +5,4 @@
 export * from './EmojiPicker';
 export * from './HuePicker';
 export * from './IconPicker';
-export * from './ToolbarPicker';
+export * from './PickerButton';

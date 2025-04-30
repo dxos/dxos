@@ -5,12 +5,14 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { CloseSidebarButton, ToggleSidebarButton } from './SidebarButton';
+import { DECK_PLUGIN } from '../../meta';
+import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
+  const { t } = useTranslation(DECK_PLUGIN);
   return (
     <header
       className={mx(
@@ -21,7 +23,7 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       )}
     >
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
-      <span className='self-center grow mis-1'>Composer</span>
+      <span className='self-center grow mis-1'>{t('current app name', { ns: 'appkit' })}</span>
       {variant === 'topbar' && (
         <div role='none' className='absolute inset-0 pointer-events-none'>
           <div role='none' className='grid bs-full pointer-fine:p-1 max-is-md mli-auto pointer-events-auto'>

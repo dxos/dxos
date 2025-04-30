@@ -25,7 +25,7 @@ import { type CanvasGraphModel, RectangleShape } from '../../types';
 
 const generator: ValueGenerator = faker as any;
 
-const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
+const types = [Testing.Org, Testing.Project, Testing.Contact];
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
@@ -37,7 +37,7 @@ type RenderProps = EditorRootProps &
     computeGraph?: CanvasGraphModel;
   }>;
 
-const Render = ({ id = 'test', init, sidebar, children, ...props }: RenderProps) => {
+const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
   const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
@@ -102,7 +102,7 @@ const Render = ({ id = 'test', init, sidebar, children, ...props }: RenderProps)
 const meta: Meta<EditorRootProps> = {
   title: 'ui/react-ui-canvas-editor/Editor',
   component: Editor.Root,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withClientProvider({
       createIdentity: true,
@@ -142,7 +142,7 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolea
 export const Default: Story = {
   args: {
     init: true,
-    spec: [{ type: Testing.OrgType, count: 1 }],
+    spec: [{ type: Testing.Org, count: 1 }],
   },
 };
 
@@ -160,9 +160,9 @@ export const Query: Story = {
     sidebar: 'selected',
     init: true,
     spec: [
-      { type: Testing.OrgType, count: 4 },
-      { type: Testing.ProjectType, count: 0 },
-      { type: Testing.ContactType, count: 16 },
+      { type: Testing.Org, count: 4 },
+      { type: Testing.Project, count: 0 },
+      { type: Testing.Contact, count: 16 },
     ],
   },
 };

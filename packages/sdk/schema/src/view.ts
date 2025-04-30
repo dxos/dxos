@@ -70,6 +70,12 @@ export class ViewType extends TypedObject({
   fields: S.mutable(S.Array(FieldSchema)),
 
   /**
+   * Array of fields that are part of the view's schema but hidden from UI display.
+   * These fields follow the FieldSchema structure but are marked for exclusion from visual rendering.
+   */
+  hiddenFields: S.optional(S.mutable(S.Array(FieldSchema))),
+
+  /**
    * Additional metadata for the view.
    */
   metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
@@ -125,7 +131,9 @@ export const createView = ({
   if (jsonSchema) {
     // TODO(burdon): Property order is lost.
     const schema = toEffectSchema(jsonSchema);
-    for (const property of getSchemaProperties(schema.ast)) {
+    const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
+    const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
+    for (const property of properties) {
       if (include && !include.includes(property.name)) {
         continue;
       }

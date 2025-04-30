@@ -4,10 +4,14 @@
 
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
-import { type PublicKey } from '@dxos/keys';
-import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type Message, type SwarmEvent } from '@dxos/protocols/proto/dxos/edge/signal';
+import { type SwarmResponse, type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import {
+  type LeaveRequest,
+  type Message,
+  type SwarmEvent,
+  type JoinRequest,
+  type QueryRequest,
+} from '@dxos/protocols/proto/dxos/edge/signal';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 export type { Message, SwarmEvent };
@@ -47,12 +51,17 @@ export interface SignalMethods {
   /**
    * Join topic on signal network, to be discoverable by other peers.
    */
-  join: (params: { topic: PublicKey; peer: PeerInfo }) => Promise<void>;
+  join: (params: JoinRequest) => Promise<void>;
 
   /**
    * Leave topic on signal network, to stop being discoverable by other peers.
    */
-  leave: (params: { topic: PublicKey; peer: PeerInfo }) => Promise<void>;
+  leave: (params: LeaveRequest) => Promise<void>;
+
+  /**
+   * Query peers in the swarm without joining it.
+   */
+  query: (params: QueryRequest) => Promise<SwarmResponse>;
 
   /**
    * Send message to peer.

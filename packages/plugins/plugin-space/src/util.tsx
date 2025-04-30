@@ -3,10 +3,11 @@
 //
 
 import { createIntent, type PromiseIntentDispatcher, LayoutAction } from '@dxos/app-framework';
-import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import {
   ACTION_GROUP_TYPE,
   ACTION_TYPE,
@@ -101,7 +102,6 @@ const getCollectionGraphNodePartials = ({
   resolve: (typename: string) => Record<string, any>;
 }) => {
   return {
-    disabled: !navigable,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
@@ -213,6 +213,28 @@ export const constructSpaceNode = ({
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
+    nodes: [
+      {
+        id: `${space.id}${ATTENDABLE_PATH_SEPARATOR}members`,
+        type: `${SPACE_PLUGIN}/members`,
+        data: space,
+        properties: {
+          label: ['members panel label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--users--regular',
+          disposition: 'hidden',
+        },
+      },
+      {
+        id: `${space.id}${ATTENDABLE_PATH_SEPARATOR}settings`,
+        type: `${SPACE_PLUGIN}/settings`,
+        data: space,
+        properties: {
+          label: ['settings panel label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--gear--regular',
+          disposition: 'hidden',
+        },
+      },
+    ],
   };
 };
 
@@ -242,7 +264,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
         icon: 'ph--database--regular',
-        disposition: 'toolbar',
+        disposition: 'list-item-primary',
         disabled: migrating || Migrations.running(space),
       },
     });
@@ -277,7 +299,7 @@ export const constructSpaceActions = ({
           label: ['share space label', { ns: SPACE_PLUGIN }],
           icon: 'ph--users--regular',
           disabled: locked,
-          disposition: 'toolbar',
+          disposition: 'list-item-primary',
           iconOnly: false,
           variant: 'default',
           testId: 'spacePlugin.shareSpace',
@@ -357,7 +379,7 @@ export const constructSpaceActions = ({
       properties: {
         label: ['open space label', { ns: SPACE_PLUGIN }],
         icon: 'ph--clock-counter-clockwise--regular',
-        disposition: 'toolbar',
+        disposition: 'list-item-primary',
       },
     });
   }
@@ -399,8 +421,7 @@ export const createObjectNode = ({
     properties: {
       ...partials,
       label: metadata.label?.(object) ||
-        object.name ||
-        metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
+        object.name || ['object name placeholder', { ns: type, default: 'New object' }],
       icon: metadata.icon ?? 'ph--placeholder--regular',
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
@@ -434,7 +455,7 @@ export const constructObjectActions = ({
             properties: {
               label: ['create object in collection label', { ns: SPACE_PLUGIN }],
               icon: 'ph--plus--regular',
-              disposition: 'toolbar',
+              disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
             },
           },
@@ -561,7 +582,7 @@ export const cloneObject = async (
   newSpace: Space,
 ): Promise<Expando> => {
   const schema = getSchema(object);
-  const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
+  const typename = schema ? getTypeAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

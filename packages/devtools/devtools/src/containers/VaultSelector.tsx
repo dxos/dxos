@@ -13,19 +13,20 @@ const targets: Target[] = ['default', 'ws://localhost:5001', 'http://localhost:3
   label: value,
 }));
 
-const getTarget = (value: string): Target => targets.find((target) => target.value === value) ?? targets[0];
+const parseTarget = (value?: string): Target => targets.find((target) => target.value === value) ?? targets[0];
 
-// TODO(burdon): Configurable (remember custom values).
+export const getTarget = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const target = searchParams.get('target');
+  return parseTarget(target ?? '');
+};
+
 export const VaultSelector = () => {
-  const vault = useMemo(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const target = searchParams.get('target');
-    return getTarget(target ?? '');
-  }, [window.location.search]);
+  const vault = useMemo(() => getTarget(), [window.location.search]);
 
   const handleSetVault = (value: string) => {
     const url = new URL(window.location.href);
-    const target = getTarget(value);
+    const target = parseTarget(value);
     url.searchParams.set('target', target.value);
     window.location.href = url.href;
   };

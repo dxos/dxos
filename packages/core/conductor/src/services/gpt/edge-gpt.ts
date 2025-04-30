@@ -6,7 +6,14 @@ import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
 import { type Tool, type Message, type ImageContentBlock } from '@dxos/artifact';
-import { DEFAULT_LLM_MODEL, type AIServiceClient } from '@dxos/assistant';
+import {
+  DEFAULT_EDGE_MODEL,
+  MixedStreamParser,
+  type AIServiceClient,
+  type GenerateRequest,
+  type GenerationStreamEvent,
+} from '@dxos/assistant';
+import { makePushIterable } from '@dxos/async';
 import { ObjectId, ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -19,10 +26,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
   public readonly imageCache = new Map<string, ImageContentBlock>();
 
-  constructor(private readonly _client: AIServiceClient) {}
-
-  // TODO(burdon): Not used?
-  getAiServiceClient = () => this._client;
+  constructor(private readonly _ai: AIServiceClient) {}
 
   public invoke(input: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
     return Effect.gen(this, function* () {
@@ -38,62 +42,75 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
       ];
 
       log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
-      const result = yield* Effect.promise(() =>
-        this._client.exec({
-          model: DEFAULT_LLM_MODEL,
+      const generationStream = yield* Effect.promise(() =>
+        generate(this._ai, {
+          model: DEFAULT_EDGE_MODEL,
           history: messages,
           systemPrompt,
           tools: tools as Tool[],
         }),
       );
-
-      const stream = Stream.fromAsyncIterable(result, (e) => new Error(String(e)));
-      const [stream1, stream2] = yield* Stream.broadcast(stream, 2, { capacity: 'unbounded' });
-      const outputMessagesEffect = Effect.promise(async () => {
-        await result.complete();
-        return [] as Message[]; // TODO(burdon): !!!
-      });
-
-      const outputWithAPrompt = Effect.gen(function* () {
-        const outputMessages = yield* outputMessagesEffect;
-        return [messages.at(-1)!, ...outputMessages].map((msg) => ({
-          [ECHO_ATTR_TYPE]: `dxn:type:${MESSAGE_TYPENAME}:0.1.0`,
-          ...msg,
-        }));
-      });
-
       const logger = yield* EventLogger;
 
-      const text = Effect.gen(this, function* () {
-        // Drain the stream
-        yield* stream1.pipe(
-          Stream.tap((event) => {
-            logger.log({
-              type: 'custom',
-              nodeId: logger.nodeId!,
-              event,
-            });
+      const stream = Stream.fromAsyncIterable(generationStream, (e) => new Error(String(e))).pipe(
+        Stream.tap((event) => {
+          logger.log({
+            type: 'custom',
+            nodeId: logger.nodeId!,
+            event,
+          });
+          return Effect.void;
+        }),
+      );
 
-            return Effect.void;
-          }),
-          Stream.runDrain,
-        );
+      // Separate tokens into a separate stream.
+      const [resultStream, tokenStream] = yield* Stream.broadcast(stream, 2, { capacity: 'unbounded' });
 
-        const messages = yield* outputMessagesEffect;
+      const outputMessages = yield* resultStream.pipe(
+        Stream.runDrain,
+        Effect.map(() => generationStream.result),
+        Effect.cached, // Cache the result to avoid re-draining the stream.
+      );
 
-        log.info('messages', { messages });
-        return messages
-          .map((message) => message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])))
-          .join('');
-      });
+      const outputWithAPrompt = outputMessages.pipe(
+        Effect.map((messages) =>
+          // TODO(dmaretskyi): Why do we need to prepend the last message
+          [messages.at(-1)!, ...messages].map((msg) => ({
+            [ECHO_ATTR_TYPE]: `dxn:type:${MESSAGE_TYPENAME}:0.1.0`,
+            ...msg,
+          })),
+        ),
+      );
+
+      const text = outputWithAPrompt.pipe(
+        Effect.map((messages) =>
+          messages
+            .map((message) => message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])))
+            .join(''),
+        ),
+      );
+
+      const cot = outputWithAPrompt.pipe(
+        Effect.map(
+          (messages) =>
+            messages
+              .at(-1)!
+              .content.filter((block) => block.type === 'text')
+              .find((block) => block.disposition === 'cot')?.text,
+        ),
+      );
 
       const artifact = Effect.gen(this, function* () {
-        const output = yield* outputMessagesEffect;
+        const output = yield* outputMessages;
         for (const message of output) {
           for (const content of message.content) {
             if (content.type === 'image') {
-              log.info('save image to cache', { id: content.id, mediaType: content.source?.mediaType });
-              this.imageCache.set(content.id!, content);
+              // TODO(dmaretskyi): Hardwired to return images as artifacts if they are present in the response,
+              return {
+                [ECHO_ATTR_TYPE]: IMAGE_TYPENAME,
+                id: content.id,
+                source: content.source,
+              };
             }
           }
         }
@@ -125,10 +142,54 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         messages: outputWithAPrompt,
         tokenCount: 0,
         text,
-        tokenStream: stream2,
-        cot: undefined,
+        tokenStream,
+        cot,
         artifact,
       });
     });
   }
 }
+
+interface GenerateResult extends AsyncIterable<GenerationStreamEvent> {
+  /**
+   * @throws If the iterable is not completed.
+   */
+  get result(): Message[];
+}
+
+const generate = async (
+  ai: AIServiceClient,
+  generationRequest: GenerateRequest,
+  { abort }: { abort?: AbortSignal } = {},
+): Promise<GenerateResult> => {
+  const stream = await ai.exec(generationRequest);
+  const parser = new MixedStreamParser();
+  const resultIterable = makePushIterable<GenerationStreamEvent>();
+
+  let completed = false;
+  parser.streamEvent.on((event) => {
+    log.info('stream event', { event });
+    resultIterable.next(event);
+  });
+  const messages = await parser.parse(stream);
+  completed = true;
+
+  resultIterable.return(messages);
+
+  abort?.addEventListener('abort', () => {
+    if (!completed) {
+      resultIterable.throw(new Error('Aborted'));
+    }
+  });
+
+  return {
+    [Symbol.asyncIterator]: resultIterable[Symbol.asyncIterator],
+    get result() {
+      if (!completed) {
+        throw new Error('Iterable not completed');
+      }
+
+      return messages;
+    },
+  };
+};

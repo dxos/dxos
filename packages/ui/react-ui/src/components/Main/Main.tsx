@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
-import { Root as DialogRoot, DialogContent } from '@radix-ui/react-dialog';
+import { Root as DialogRoot, DialogContent, DialogTitle } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -70,8 +69,9 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
     },
     [propsOnKeyDown],
   );
-  const focusableAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
-  return { onKeyDown: handleKeyDown, [landmarkAttr]: landmark, tabIndex: 0, ...focusableAttrs };
+  const focusableGroupAttrs = window ? {} : { tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } };
+
+  return { onKeyDown: handleKeyDown, [landmarkAttr]: landmark, tabIndex: 0, ...focusableGroupAttrs };
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
@@ -91,6 +91,7 @@ const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME
 const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
   const { setNavigationSidebarState, navigationSidebarState, setComplementarySidebarState, complementarySidebarState } =
     useMainContext(consumerName);
+
   return {
     navigationSidebarState,
     setNavigationSidebarState,
@@ -221,8 +222,10 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
       [props.onKeyDown],
     );
     const Root = isLg ? Primitive.div : DialogContent;
+
     return (
       <DialogRoot open={state !== 'closed'} aria-label={toLocalizedString(label, t)} modal={false}>
+        {!isLg && <DialogTitle className='sr-only'>{toLocalizedString(label, t)}</DialogTitle>}
         <Root
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
           {...props}
@@ -246,6 +249,7 @@ type MainNavigationSidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
 const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>((props, forwardedRef) => {
   const { navigationSidebarState, setNavigationSidebarState, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
   const mover = useLandmarkMover(props.onKeyDown, '0');
+
   return (
     <MainSidebar
       {...mover}
@@ -267,6 +271,7 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
   const { complementarySidebarState, setComplementarySidebarState, resizing } =
     useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
   const mover = useLandmarkMover(props.onKeyDown, '2');
+
   return (
     <MainSidebar
       {...mover}

@@ -5,7 +5,6 @@
 import { Context } from 'effect';
 
 import { ImageSource } from '@dxos/artifact';
-import { type AIServiceClient } from '@dxos/assistant';
 import { ECHO_ATTR_TYPE, S } from '@dxos/echo-schema';
 
 import { type GptInput, type GptOutput } from '../../nodes';
@@ -29,6 +28,5 @@ export class GptService extends Context.Tag('GptService')<
   GptService,
   {
     readonly invoke: (input: ValueBag<GptInput>) => ComputeEffect<ValueBag<GptOutput>>;
-    readonly getAiServiceClient?: () => AIServiceClient;
   }
 >() {}

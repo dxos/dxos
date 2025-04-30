@@ -69,7 +69,7 @@ export const parseFullyQualifiedId = (id: string): [string, string] => {
   return [spaceId, objectId];
 };
 
-export const parseId = (id?: string) => {
+export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId } => {
   if (!id) {
     return {};
   } else if (id.length === SPACE_ID_LENGTH) {

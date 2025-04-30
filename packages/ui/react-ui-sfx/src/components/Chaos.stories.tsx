@@ -18,7 +18,7 @@ import { type ShaderOptions } from '../shaders';
 
 type ControlsOptions = ShaderOptions & { preset: string; audio: boolean };
 
-const Render = (args: ChaosProps) => {
+const DefaultStory = (args: ChaosProps) => {
   const [{ preset, audio, ...options }, setProps] = useControls<ControlsOptions, () => ControlsOptions, any>(
     () =>
       defaultsDeep(
@@ -68,8 +68,8 @@ const Render = (args: ChaosProps) => {
 
 const meta: Meta<ChaosProps> = {
   title: 'ui/react-ui-sfx/Chaos',
-  render: Render,
   component: Chaos,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
