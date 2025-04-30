@@ -97,7 +97,17 @@ export type Location = {
 
 export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
 
-export const createKanban = async (props: { space: Space; typename?: string; initialPivotColumn?: string }) => {
-  const { kanban } = await initializeKanban(props);
+export const createKanban = async ({
+  space,
+  name,
+  typename,
+  initialPivotColumn,
+}: {
+  space: Space;
+  name?: string;
+  typename?: string;
+  initialPivotColumn?: string;
+}) => {
+  const { kanban } = await initializeKanban({ space, name, typename, initialPivotColumn });
   return kanban;
 };
