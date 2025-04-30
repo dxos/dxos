@@ -6138,6 +6138,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-meeting':
+        specifier: workspace:*
+        version: link:../plugin-meeting
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../plugin-script
