@@ -13,7 +13,7 @@ import {
   SpaceState,
   useSpace,
 } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -60,14 +60,13 @@ const useActive = (count: number) => {
 export type SpaceRowContainerProps = Omit<SpaceRowProps, 'spaceName'>;
 
 export const SpaceRowContainer = ({ spaceId, state }: SpaceRowContainerProps) => {
-  const { t } = useTranslation();
   const client = useClient();
   const space = useSpace(spaceId);
   if (!space) {
     return null;
   }
 
-  const spaceName = toLocalizedString(getSpaceDisplayName(space, { personal: space === client.spaces.default }), t);
+  const spaceName = getSpaceDisplayName(space, { personal: space === client.spaces.default });
 
   return <SpaceRow spaceId={spaceId} spaceName={spaceName} state={state} />;
 };
