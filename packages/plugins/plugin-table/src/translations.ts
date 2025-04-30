@@ -11,17 +11,16 @@ export default [
     'en-US': {
       [TableType.typename]: {
         'typename label': 'Table',
+        'object name placeholder': 'New table',
       },
       [TABLE_PLUGIN]: {
         'plugin name': 'Tables',
-        'object placeholder': 'New table',
-        'create object label': 'Create table',
         'table name placeholder': 'Table name',
         'settings title': 'Table settings',
         'table schema label': 'Schema',
+        'companion schema label': 'Schema',
         'new schema': 'New schema',
         'continue label': 'Continue',
-        'create stack section label': 'Create table',
         'add row label': 'Add row',
         'save view label': 'Save view',
         'create comment': 'Create thread',
@@ -34,7 +33,7 @@ export default [
         'column deleted label': 'Column deleted',
         'new column button label': 'Create column',
         'row details no selection label': 'No objects selected',
-        'objects label': 'Objects',
+        'companion selected objects label': 'Selected',
       },
     },
   },

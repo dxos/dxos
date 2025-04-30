@@ -3,6 +3,7 @@
 //
 
 import { contributes, type PluginsContext, Capabilities, createIntent } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -21,8 +22,8 @@ export default (context: PluginsContext) =>
           .requestCapabilities(Capabilities.SettingsStore)[0]
           ?.getStore<PresenterSettingsProps>(PRESENTER_PLUGIN)?.value;
         return settings?.presentCollections
-          ? node.data instanceof CollectionType || node.data instanceof DocumentType
-          : node.data instanceof DocumentType;
+          ? isInstanceOf(CollectionType, node.data) || isInstanceOf(DocumentType, node.data)
+          : isInstanceOf(DocumentType, node.data);
       },
       actions: ({ node }) => {
         const object = node.data;

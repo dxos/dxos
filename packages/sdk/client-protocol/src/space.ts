@@ -2,22 +2,23 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
-import type { SpecificCredential } from '@dxos/credentials';
-import { type CoreDatabase, type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
+import { type MulticastObservable, type CleanupFn } from '@dxos/async';
+import { type SpecificCredential } from '@dxos/credentials';
+import { type QueueFactory, type CoreDatabase, type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
+  type Contact,
   type CreateEpochRequest,
   type Invitation,
   type Space as SpaceData,
+  type SpaceArchive,
   type SpaceMember,
   type SpaceState,
   type UpdateMemberRoleRequest,
-  type Contact,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import type { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { type CancellableInvitation } from './invitations';
@@ -43,6 +44,8 @@ export interface SpaceInternal {
   migrate(): Promise<void>;
 
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
+
+  export(): Promise<SpaceArchive>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
@@ -63,9 +66,15 @@ export interface Space {
   get db(): EchoDatabase;
 
   /**
+   * Access to queues.
+   */
+  get queues(): QueueFactory;
+
+  /**
    * Echo database CRUD API.
    * @deprecated Use the database api with the `plain` format.
    */
+  // TODO(burdon): Remove.
   get crud(): CoreDatabase;
 
   get isOpen(): boolean;
@@ -127,5 +136,5 @@ export interface Space {
 
   // TODO(wittjosiah): Gather into messaging abstraction?
   postMessage: (channel: string, message: any) => Promise<void>;
-  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
+  listen: (channel: string, callback: (message: GossipMessage) => void) => CleanupFn;
 }

@@ -46,7 +46,7 @@ class Generator {
   }
 }
 
-const Render = ({ shrinkX, ...props }: ToggleContainerProps) => {
+const DefaultStory = ({ shrinkX, ...props }: ToggleContainerProps) => {
   const generator = useMemo(() => new Generator(), []);
   const [running, setRunning] = useState(false);
   useEffect(() => {
@@ -88,7 +88,7 @@ const Render = ({ shrinkX, ...props }: ToggleContainerProps) => {
 const meta: Meta<typeof ToggleContainer> = {
   title: 'ui/react-ui-components/ToggleContainer',
   component: ToggleContainer,
-  render: Render,
+  render: DefaultStory,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
 };
 

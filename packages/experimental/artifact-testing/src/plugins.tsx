@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
@@ -15,7 +15,7 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = S.Struct({
   coordinates: GeoPoint,
-}).pipe(EchoObject('example.com/type/Map', '0.1.0')) as any as S.Schema<{ id: ObjectId; coordinates: GeoPoint }>; // TODO(dmaretskyi): Fix the tuples/mutable issues.
+}).pipe(EchoObject({ typename: 'example.com/type/Map', version: '0.1.0' }));
 
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
@@ -62,7 +62,7 @@ export const capabilities: AnyCapability[] = [
   contributes(
     Capabilities.ArtifactDefinition,
     defineArtifact({
-      id: 'dxos.org/plugin/image',
+      id: 'artifact:dxos.org/plugin/image',
       name: 'Image',
       instructions: `
         - When presenting an image, you must use an artifact.

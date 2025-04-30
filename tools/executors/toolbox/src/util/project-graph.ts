@@ -72,13 +72,40 @@ export class ProjectGraph {
     return this.manifests.find((manifest) => manifest.name === name);
   }
 
-  getWorkspaceDependencies(name: string) {
+  getWorkspaceDependencies(
+    name: string,
+    { deps = true, devDeps = true }: { deps?: boolean; devDeps?: boolean } = {},
+  ): string[] {
     const manifest = this.getManifest(name);
     return Object.entries({
-      ...(manifest?.dependencies ?? {}),
-      ...(manifest?.devDependencies ?? {}),
+      ...(deps ? manifest?.dependencies ?? {} : {}),
+      ...(devDeps ? manifest?.devDependencies ?? {} : {}),
     })
       .filter(([name, version]) => version.startsWith('workspace:') && this.hasPackage(name))
       .map(([name]) => name);
+  }
+
+  getTransitiveWorkspaceDeps(roots: string[]) {
+    // Start with the root dependencies
+    const allDeps = new Set<string>(roots);
+
+    // Keep collecting dependencies until we reach a fixed point
+    let hasNewDeps = true;
+    while (hasNewDeps) {
+      const prevSize = allDeps.size;
+
+      // Collect all workspace dependencies for current deps
+      for (const dep of Array.from(allDeps)) {
+        const workspaceDeps = this.getWorkspaceDependencies(dep);
+        for (const transitiveDep of workspaceDeps) {
+          allDeps.add(transitiveDep);
+        }
+      }
+
+      // Check if we've found any new dependencies
+      hasNewDeps = allDeps.size > prevSize;
+    }
+
+    return Array.from(allDeps);
   }
 }

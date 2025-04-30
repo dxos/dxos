@@ -3,13 +3,13 @@
 //
 
 import '@dxos-theme';
-
 import React, { type PropsWithChildren } from 'react';
 
+import { type HuePalette } from '@dxos/react-ui-theme';
 import { type Size } from '@dxos/react-ui-types';
 import { hexToFallback } from '@dxos/util';
 
-import { Avatar, type AvatarVariant, type AvatarStatus, type AvatarAnimation, type AvatarRootProps } from './Avatar';
+import { Avatar, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
 import { withTheme } from '../../testing';
 
 type StorybookAvatarProps = {
@@ -22,7 +22,7 @@ type StorybookAvatarProps = {
   variant?: AvatarVariant;
   animation?: AvatarAnimation;
   size?: Size;
-  hue?: AvatarRootProps['hue'];
+  hue?: HuePalette;
 };
 
 const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
@@ -40,11 +40,10 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
   const { emoji, hue } = hexToFallback(id);
   return (
     <div className='flex flex-row gap-3 align-middle items-center'>
-      <Avatar.Root {...{ size, variant, status, animation, hue: props.hue || hue }}>
-        <Avatar.Frame>
-          {!imgSrc && (fallbackText || emoji) && <Avatar.Fallback text={fallbackText || emoji} />}
-          {imgSrc && <Avatar.Image href={imgSrc} />}
-        </Avatar.Frame>
+      <Avatar.Root>
+        <Avatar.Content
+          {...{ size, variant, status, animation, imgSrc, hue: props.hue || hue, fallback: fallbackText || emoji }}
+        />
         <div>
           <Avatar.Label classNames='block'>{label}</Avatar.Label>
           <Avatar.Description classNames='block'>

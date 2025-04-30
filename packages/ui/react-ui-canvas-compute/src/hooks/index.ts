@@ -3,5 +3,6 @@
 //
 
 export * from './compute-context';
+export * from './useComputeGraphController';
 export * from './useComputeNodeState';
 export * from './useGraphMonitor';

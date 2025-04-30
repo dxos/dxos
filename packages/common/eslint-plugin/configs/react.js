@@ -31,6 +31,7 @@ module.exports = {
     ],
     'react/jsx-wrap-multilines': 'off',
     'react/prop-types': 'off',
+    'mocha/handle-done-callback': 'off',
   },
   settings: {
     react: {

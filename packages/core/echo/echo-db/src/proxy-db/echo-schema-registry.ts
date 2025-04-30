@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, type UnsubscribeCallback } from '@dxos/async';
+import { Event, type CleanupFn } from '@dxos/async';
 import { Resource, type Context } from '@dxos/context';
 import {
-  EchoIdentifierAnnotationId,
+  TypeIdentifierAnnotationId,
   EchoSchema,
-  getEchoIdentifierAnnotation,
-  getObjectAnnotation,
-  ObjectAnnotationId,
+  getTypeIdentifierAnnotation,
+  getTypeAnnotation,
+  TypeAnnotationId,
   S,
   StoredSchema,
   toJsonSchema,
@@ -56,7 +56,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
   private readonly _schemaById: Map<string, EchoSchema> = new Map();
   private readonly _schemaByType: Map<string, EchoSchema> = new Map();
-  private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
+  private readonly _unsubscribeById: Map<string, CleanupFn> = new Map();
   private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
 
   constructor(
@@ -143,7 +143,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     };
 
     const changes = new Event();
-    let unsubscribe: UnsubscribeCallback | undefined;
+    let unsubscribe: CleanupFn | undefined;
     return new SchemaRegistryPreparedQueryImpl({
       changes,
       getResultsSync() {
@@ -197,7 +197,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return results;
   }
 
-  public hasSchema(schema: S.Schema<any>): boolean {
+  public hasSchema(schema: S.Schema.AnyNoContext): boolean {
     const schemaId = schema instanceof EchoSchema ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
@@ -223,7 +223,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       return undefined;
     }
 
-    if (!(typeObject instanceof StoredSchema)) {
+    if (!S.is(StoredSchema)(typeObject)) {
       log.warn('type object is not a stored schema', { id: typeObject?.id });
       return undefined;
     }
@@ -274,21 +274,20 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return echoSchema;
   }
 
-  // TODO(burdon): Tighten type signature to TypedObject?
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: S.Schema<any>): EchoSchema {
+  private _addSchema(schema: S.Schema.AnyNoContext): EchoSchema {
     if (schema instanceof EchoSchema) {
-      schema = schema.getSchemaSnapshot().annotations({
-        [EchoIdentifierAnnotationId]: undefined,
+      schema = schema.snapshot.annotations({
+        [TypeIdentifierAnnotationId]: undefined,
       });
     }
 
-    const meta = getObjectAnnotation(schema);
+    const meta = getTypeAnnotation(schema);
     invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
     const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
-      [ObjectAnnotationId]: meta,
-      [EchoIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
+      [TypeAnnotationId]: meta,
+      [TypeIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
     });
 
     schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
@@ -309,7 +308,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     }
   }
 
-  private _subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
+  private _subscribe(callback: SchemaSubscriptionCallback): CleanupFn {
     callback([...this._schemaById.values()]);
     this._schemaSubscriptionCallbacks.push(callback);
     return () => {
@@ -347,8 +346,8 @@ const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
   return true;
 };
 
-const getObjectIdFromSchema = (schema: S.Schema<any>): ObjectId | undefined => {
-  const echoIdentifier = getEchoIdentifierAnnotation(schema);
+const getObjectIdFromSchema = (schema: S.Schema.AnyNoContext): ObjectId | undefined => {
+  const echoIdentifier = getTypeIdentifierAnnotation(schema);
   if (!echoIdentifier) {
     return undefined;
   }

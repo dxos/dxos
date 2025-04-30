@@ -13,6 +13,7 @@ export const BaseGraphNode = S.Struct({
 
 /** Raw base type. */
 export type BaseGraphNode = S.Schema.Type<typeof BaseGraphNode>;
+
 /** Typed node data. */
 export type GraphNode<Data = any, Optional extends boolean = false> = Specialize<
   BaseGraphNode,

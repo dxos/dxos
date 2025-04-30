@@ -9,13 +9,9 @@ import * as THREE from 'three';
 // The ?raw suffix prevent vite from importing these as TypeScript files.
 //
 
-/** @ts-ignore */
 import dofFrag from './glsl/gen/dof.frag?raw';
-/** @ts-ignore */
 import dofVert from './glsl/gen/dof.vert?raw';
-/** @ts-ignore */
 import simFrag from './glsl/gen/sim.frag?raw';
-/** @ts-ignore */
 import simVert from './glsl/gen/sim.vert?raw';
 
 export type ShaderOptions = {

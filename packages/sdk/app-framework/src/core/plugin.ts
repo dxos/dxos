@@ -79,7 +79,7 @@ export type PluginMeta = {
   /**
    * Human-readable name.
    */
-  name?: string;
+  name: string;
 
   /**
    * Short description of plugin functionality.

@@ -11,11 +11,16 @@ import { DeckSettingsSchema, type DeckSettingsProps } from '../types';
 export default () => {
   const settings = create<DeckSettingsProps>({
     showHints: false,
+    enableDeck: true,
     enableNativeRedirect: false,
-    enableIdeStyleStatusbar: true,
+    enableStatusbar: false,
     newPlankPositioning: 'start',
     overscroll: 'none',
   });
 
-  return contributes(Capabilities.Settings, { schema: DeckSettingsSchema, prefix: DECK_PLUGIN, value: settings });
+  return contributes(Capabilities.Settings, {
+    schema: DeckSettingsSchema,
+    prefix: DECK_PLUGIN,
+    value: settings,
+  });
 };

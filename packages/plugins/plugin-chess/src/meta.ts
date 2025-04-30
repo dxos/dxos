@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const CHESS_PLUGIN = 'dxos.org/plugin/chess';
 
-export const meta = {
+export const meta: PluginMeta = {
   id: CHESS_PLUGIN,
   name: 'Chess',
   description:
@@ -14,4 +14,4 @@ export const meta = {
   icon: 'ph--shield-chevron--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess',
   screenshots: ['https://dxos.network/plugin-details-chess-dark.png'],
-} satisfies PluginMeta;
+};

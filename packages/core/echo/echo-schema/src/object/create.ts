@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
+import { type Schema as S } from 'effect';
 
 import { failedInvariant } from '@dxos/invariant';
 
 import { attachTypedJsonSerializer } from './json-serializer';
 import { ObjectId } from './object-id';
 import { setTypename } from './typename';
-import { setSchema, getObjectAnnotation } from '../ast';
+import { setSchema, getTypeAnnotation } from '../ast';
 import { getSchemaDXN } from '../types';
 
+// Make `id` optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
 
 /**
@@ -27,40 +28,37 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  *
  * @example
  * ```ts
- * const Contact = S.sSruct({
- *   name: S.string,
- *   email: S.string
- * }).pipe(
- *   EchoObject('example.com/type/Contact', '0.1.0')
- * )
+ * const Contact = S.Struct({
+ *   name: S.String,
+ *   email: S.String,
+ * }).pipe(Type.def({
+ *   typename: 'example.com/type/Contact',
+ *   version: '0.1.0',
+ * }))
  *
  * // Creates a non-reactive contact object
  * const contact = createStatic(Contact, {
  *   name: "John",
- *   email: "john@example.com"
+ *   email: "john@example.com",
  * })
  * ```
  */
+// TODO(burdon): Handle defaults (see S.make).
 // TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
 export const createStatic = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   data: CreateData<S.Schema.Type<Schema>>,
-  // TODO(burdon): Return type.
 ): CreateData<S.Schema.Type<Schema>> & { id: string } => {
-  const annotation = getObjectAnnotation(schema);
+  const annotation = getTypeAnnotation(schema);
   if (!annotation) {
     throw new Error('Schema is not an object schema');
   }
   if ('@type' in data) {
-    throw new TypeError('@type is not allowed in createStatic');
+    throw new TypeError('@type is not allowed');
   }
 
-  const obj = {
-    id: data.id ?? ObjectId.random(),
-    ...data,
-  };
-
-  setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Failed to get schema DXN'));
+  const obj = { ...data, id: data.id ?? ObjectId.random() };
+  setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Missing schema DXN'));
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
   return obj;

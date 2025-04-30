@@ -8,8 +8,10 @@ import { S } from '@dxos/echo-schema';
 // Base types
 //
 
-export const createInputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_INPUT]: schema });
-export const createOutputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_OUTPUT]: schema });
+export const createInputSchema = (schema: S.Schema.AnyNoContext): S.Schema.AnyNoContext =>
+  S.Struct({ [DEFAULT_INPUT]: schema });
+export const createOutputSchema = (schema: S.Schema.AnyNoContext): S.Schema.AnyNoContext =>
+  S.Struct({ [DEFAULT_OUTPUT]: schema });
 
 export type InputType<INPUT = any> = {
   [DEFAULT_INPUT]: INPUT;

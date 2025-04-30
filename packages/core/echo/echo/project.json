@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "echo",
+  "tags": [
+    "scope:echo"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "platforms": [
+          "browser",
+          "node"
+        ]
+      }
+    },
+    "lint": {},
+    "pack": {},
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "node-std"
+  ]
+}

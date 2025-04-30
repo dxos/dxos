@@ -38,7 +38,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
     node && graph.actions(node).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
 
   return (
-    <StackItem.Content toolbar={false}>
+    <StackItem.Content>
       <div role='none' className='overflow-auto p-8 grid place-items-center'>
         <p
           role='alert'

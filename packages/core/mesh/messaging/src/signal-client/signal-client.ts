@@ -8,6 +8,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
+import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type QueryRequest, type JoinRequest, type LeaveRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 import { SignalClientMonitor } from './signal-client-monitor';
@@ -170,17 +172,21 @@ export class SignalClient extends Resource implements SignalClientMethods {
     };
   }
 
-  async join(args: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async join(args: JoinRequest): Promise<void> {
     log('joining', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordJoin();
     this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
     this._reconcileTask?.schedule();
   }
 
-  async leave(args: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async leave(args: LeaveRequest): Promise<void> {
     log('leaving', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordLeave();
     this.localState.leave({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
+  }
+
+  async query(params: QueryRequest): Promise<SwarmResponse> {
+    throw new Error('Not implemented');
   }
 
   async sendMessage(msg: Message): Promise<void> {

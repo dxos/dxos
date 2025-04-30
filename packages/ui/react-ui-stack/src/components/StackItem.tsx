@@ -96,6 +96,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       if (!itemElement || !onRearrange || disableRearrange) {
         return;
       }
+
       return combine(
         draggable({
           element: itemElement,
@@ -146,14 +147,14 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       );
     }, [orientation, item, onRearrange, selfDragHandleElement, itemElement]);
 
-    const focusGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
     return (
       <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>
         <Root
           {...props}
           tabIndex={0}
-          {...focusGroupAttrs}
+          {...focusableGroupAttrs}
           className={mx(
             'group/stack-item grid relative',
             focusIndicatorVariant === 'over-all'

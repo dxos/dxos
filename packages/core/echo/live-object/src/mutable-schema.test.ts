@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { SchemaAST as AST, Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { PropertyMeta, getObjectAnnotation, getPropertyMetaAnnotation, TypedObject } from '@dxos/echo-schema';
-import { AST, S } from '@dxos/effect';
+import { PropertyMeta, getTypeAnnotation, getPropertyMetaAnnotation, TypedObject } from '@dxos/echo-schema';
 
 import { createEchoSchema } from './testing/echo-schema';
 
@@ -85,7 +85,7 @@ describe('dynamic schema', () => {
     registered.addFields({ field3: S.String });
     registered.updateFields({ field3: S.Boolean });
     registered.removeFields(['field2']);
-    expect(getObjectAnnotation(registered)).to.deep.contain({
+    expect(getTypeAnnotation(registered)).to.deep.contain({
       typename: 'example.com/type/Empty',
       version: '0.1.0',
     });
@@ -128,7 +128,7 @@ describe('dynamic schema', () => {
     expect(registered.typename).toBe(newTypename2);
     expect(registered.jsonSchema.$id).toBe(`dxn:type:${newTypename2}`);
     expect(registered.jsonSchema.typename).toBe(newTypename2);
-    expect(getObjectAnnotation(registered)).to.deep.contain({
+    expect(getTypeAnnotation(registered)).to.deep.contain({
       typename: 'example.com/type/Person',
       version: '0.1.0',
     });

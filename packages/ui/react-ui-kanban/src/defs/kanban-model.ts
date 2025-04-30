@@ -1,10 +1,11 @@
 //
 // Copyright 2025 DXOS.org
 //
+
 import { batch, effect, signal, untracked } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { type JsonProp, type EchoSchema } from '@dxos/echo-schema';
+import { type JsonProp, type BaseSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type ViewProjection } from '@dxos/schema';
@@ -22,40 +23,43 @@ export const UNCATEGORIZED_ATTRIBUTES = {
 
 export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 
+export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
+
 export type KanbanModelProps = {
   kanban: KanbanType;
-  cardSchema: EchoSchema;
+  schema: BaseSchema;
   projection: ViewProjection;
 };
 
-export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
-
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
-  // Properties
   private readonly _kanban: KanbanType;
-  private readonly _cardSchema: EchoSchema;
+  private readonly _schema: BaseSchema;
   private readonly _projection: ViewProjection;
   private _items = signal<T[]>([]);
   private _cards = signal<ArrangedCards<T>>([]);
 
-  constructor({ kanban, cardSchema, projection }: KanbanModelProps) {
+  constructor({ kanban, schema, projection }: KanbanModelProps) {
     super();
     this._kanban = kanban;
-    this._cardSchema = cardSchema;
+    this._schema = schema;
     this._projection = projection;
     this._computeArrangement();
+  }
+
+  get kanban() {
+    return this._kanban;
   }
 
   get id() {
     return this._kanban.id;
   }
 
-  get columnFieldPath() {
+  get columnFieldPath(): JsonProp | undefined {
     const columnFieldId = this._kanban.columnFieldId;
     if (columnFieldId === undefined) {
       return undefined;
     }
-    const columnFieldProjection = this._projection.getFieldProjection(columnFieldId);
+    const columnFieldProjection = this._projection.tryGetFieldProjection(columnFieldId);
     return columnFieldProjection?.props.property;
   }
 
@@ -74,8 +78,8 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     });
   }
 
-  get cardSchema() {
-    return this._cardSchema;
+  get schema() {
+    return this._schema;
   }
 
   /**
@@ -94,13 +98,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   private initializeEffects(): void {
-    // Effect to recompute arrangement when columnField changes
     const arrangementWatcher = effect(() => {
-      // Touch the field to subscribe to changes
       const _ = this._kanban.columnFieldId;
       this._cards.value = this._computeArrangement();
     });
-
     this._ctx.onDispose(arrangementWatcher);
   }
 
@@ -157,7 +158,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return [];
     }
 
-    return this._projection.getFieldProjection(this._kanban.columnFieldId).props.options ?? [];
+    return this._projection.tryGetFieldProjection(this._kanban.columnFieldId)?.props.options ?? [];
   }
 
   private _computeArrangement(): ArrangedCards<T> {
