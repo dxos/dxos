@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 // TODO(burdon): See Accept attribute (uses MIME types).
 // E.g., 'image/*': ['.jpg', '.jpeg', '.png', '.gif'],

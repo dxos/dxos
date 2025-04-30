@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { Tool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 
-import { DEFAULT_LLM_MODELS } from './defs';
+import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
 
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
-export const LLMModel = S.Literal(...DEFAULT_LLM_MODELS);
+export const LLMModel = S.Literal(...DEFAULT_EDGE_MODELS, ...DEFAULT_OLLAMA_MODELS);
 
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 

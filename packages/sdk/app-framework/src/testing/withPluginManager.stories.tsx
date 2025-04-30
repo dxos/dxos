@@ -12,7 +12,7 @@ import { Capabilities, createSurface } from '../common';
 import { contributes } from '../core';
 import { Surface } from '../react';
 
-const Render = () => {
+const DefaultStory = () => {
   console.log('Render');
   return (
     <div>
@@ -24,7 +24,7 @@ const Render = () => {
 
 const meta: Meta = {
   title: 'sdk/app-framework/withPluginManager',
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withTheme,
     withPluginManager({

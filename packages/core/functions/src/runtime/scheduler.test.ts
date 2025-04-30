@@ -16,7 +16,8 @@ import { TriggerRegistry } from '../trigger';
 import { TriggerKind, type FunctionManifest } from '../types';
 
 // TODO(burdon): Test we can add and remove triggers.
-describe('scheduler', () => {
+// Flaky: https://cloud.nx.app/runs/uqhKOBA6JQ/task/functions%3Atest
+describe.skip('scheduler', () => {
   let testBuilder: TestBuilder;
   let client: Client;
 

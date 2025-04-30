@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S } from '@dxos/effect';
+import { SchemaAST as AST, Schema as S } from 'effect';
+
 import { invariant } from '@dxos/invariant';
 
-import { getSchemaTypename } from './annotations';
 import { symbolSchema } from './schema';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
@@ -15,7 +15,7 @@ export class SchemaValidator {
    * Recursively check that schema specifies constructions we can handle.
    * Validates there are no ambiguous discriminated union types.
    */
-  public static validateSchema(schema: S.Schema<any>) {
+  public static validateSchema(schema: S.Schema.AnyNoContext) {
     const visitAll = (nodes: AST.AST[]) => nodes.forEach((node) => this.validateSchema(S.make(node)));
     if (AST.isUnion(schema.ast)) {
       const typeAstList = schema.ast.types.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
@@ -33,7 +33,11 @@ export class SchemaValidator {
     }
   }
 
-  public static hasTypeAnnotation(rootObjectSchema: S.Schema<any>, property: string, annotation: symbol): boolean {
+  public static hasTypeAnnotation(
+    rootObjectSchema: S.Schema.AnyNoContext,
+    property: string,
+    annotation: symbol,
+  ): boolean {
     try {
       let type = this.getPropertySchema(rootObjectSchema, [property]);
       if (AST.isTupleType(type.ast)) {
@@ -47,11 +51,11 @@ export class SchemaValidator {
   }
 
   public static getPropertySchema(
-    rootObjectSchema: S.Schema<any>,
+    rootObjectSchema: S.Schema.AnyNoContext,
     propertyPath: KeyPath,
     getProperty: (path: KeyPath) => any = () => null,
-  ): S.Schema<any> {
-    let schema: S.Schema<any> = rootObjectSchema;
+  ): S.Schema.AnyNoContext {
+    let schema: S.Schema.AnyNoContext = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
       const propertyName = propertyPath[i];
       const tupleAst = unwrapArray(schema.ast);
@@ -61,9 +65,8 @@ export class SchemaValidator {
         const propertyType = getPropertyType(schema.ast, propertyName.toString(), (propertyName) =>
           getProperty([...propertyPath.slice(0, i), propertyName]),
         );
-        if (!propertyType) {
-          const type = getSchemaTypename(rootObjectSchema);
-          invariant(propertyType, `unknown property: ${String(propertyName)} on ${type}. Path: ${propertyPath}`);
+        if (propertyType == null) {
+          throw new TypeError(`unknown property: ${String(propertyName)} on object. Path: ${propertyPath}`);
         }
 
         schema = S.make(propertyType).annotations(propertyType.annotations);
@@ -73,8 +76,8 @@ export class SchemaValidator {
     return schema;
   }
 
-  public static getTargetPropertySchema(target: any, prop: string | symbol): S.Schema<any> {
-    const schema: S.Schema<any> | undefined = (target as any)[symbolSchema];
+  public static getTargetPropertySchema(target: any, prop: string | symbol): S.Schema.AnyNoContext {
+    const schema: S.Schema.AnyNoContext | undefined = (target as any)[symbolSchema];
     invariant(schema, 'target has no schema');
     const arrayAst = unwrapArray(schema.ast);
     if (arrayAst != null) {
@@ -96,7 +99,7 @@ export class SchemaValidator {
  * fixed-length tuples ([string, number]) in which case AST will be { elements: [S.String, S.Number] }
  * variable-length arrays (Array<string | number>) in which case AST will be { rest: [S.Union(S.String, S.Number)] }
  */
-const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbol | number): S.Schema<any> => {
+const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbol | number): S.Schema.AnyNoContext => {
   const elementIndex = typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
   if (Number.isNaN(elementIndex)) {
     invariant(property === 'length', `invalid array property: ${String(property)}`);

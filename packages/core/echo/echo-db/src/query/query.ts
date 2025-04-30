@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, type CleanupFn } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
 import { type BaseObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -17,9 +17,6 @@ import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;
-
-// TODO(burdon): Change to SubscriptionHandle (standardize with common/async utils).
-export type Subscription = () => void;
 
 export type QueryResult<T extends BaseObject = any> = {
   id: string;
@@ -201,7 +198,7 @@ export class Query<T extends BaseObject = any> {
    * Queries that have at least one subscriber are updated reactively when the underlying data changes.
    */
   // TODO(burdon): Change to SubscriptionHandle (make uniform).
-  subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): Subscription {
+  subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
     log('subscribe', { filter: this._filter.type, active: this._isActive });

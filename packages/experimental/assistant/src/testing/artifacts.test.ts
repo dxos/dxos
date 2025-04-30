@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceClientImpl, Tool } from '../ai-service';
+import { AIServiceEdgeClient, Tool } from '../ai-service';
 import { defineTool, ToolResult } from '../conversation';
 
 // TODO(dmaretskyi): Effect schema.
@@ -108,7 +108,7 @@ If there's
 
 describe('Artifacts', () => {
   test('shopping list', async () => {
-    const client = new AIServiceClientImpl({
+    const client = new AIServiceEdgeClient({
       endpoint: ENDPOINT,
     });
 
@@ -136,17 +136,17 @@ describe('Artifacts', () => {
     ]);
 
     const stream = await client.generate({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a helpful assistant.',
       tools: [custodian],
     });
     for await (const event of stream) {
-      log.info('event', event);
+      log('event', event);
     }
     const [message] = await stream.complete();
-    log.info('full message', {
+    log('full message', {
       message,
     });
     await client.appendMessages([message]);
@@ -164,17 +164,17 @@ describe('Artifacts', () => {
     ]);
 
     const stream2 = await client.generate({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a helpful assistant.',
       tools: [custodian],
     });
     for await (const event of stream2) {
-      log.info('event', event);
+      log('event', event);
     }
     const [message2] = await stream2.complete();
-    log.info('full message', {
+    log('full message', {
       message: message2,
     });
   });

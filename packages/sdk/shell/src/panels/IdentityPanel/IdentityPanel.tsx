@@ -81,11 +81,16 @@ const IdentityHeading = ({
 
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={16} variant='circle' status={isConnected ? 'active' : 'error'} hue={hue || fallbackValue.hue}>
+      <Avatar.Root>
         <Toolbar.Root classNames='flex justify-center'>
-          <Avatar.Frame classNames='relative z-[2] -mli-4 chromatic-ignore'>
-            <Avatar.Fallback text={emoji || fallbackValue.emoji} />
-          </Avatar.Frame>
+          <Avatar.Content
+            size={16}
+            variant='circle'
+            status={isConnected ? 'active' : 'error'}
+            hue={hue || fallbackValue.hue}
+            fallback={emoji || fallbackValue.emoji}
+            classNames='relative z-[2] -mli-4 chromatic-ignore'
+          />
         </Toolbar.Root>
 
         <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
@@ -106,7 +111,13 @@ const IdentityHeading = ({
 
         <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
-          <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} classNames='bs-[--rail-action]' />
+          <HuePicker
+            value={hue}
+            onChange={setHue}
+            onReset={() => setHue(undefined)}
+            classNames='bs-[--rail-action]'
+            rootVariant='toolbar-button'
+          />
           <Clipboard.IconButton
             classNames='bs-[--rail-action]'
             data-testid='update-profile-form-copy-key'

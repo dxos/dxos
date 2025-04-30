@@ -6,9 +6,10 @@ import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment, useState } from 'react';
 
 import {
+  Capabilities,
   LayoutAction,
-  createIntent,
   Surface,
+  createIntent,
   useCapability,
   useIntentDispatcher,
   usePluginManager,
@@ -19,39 +20,37 @@ import {
   Dialog as NaturalDialog,
   Main,
   Popover,
-  useOnTransition,
   type MainProps,
   useMediaQuery,
+  useOnTransition,
 } from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
-import { ComplementarySidebar } from './ComplementarySidebar';
 import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
-import { Plank } from './Plank';
-import { Sidebar } from './Sidebar';
-import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 import { DeckCapabilities } from '../../capabilities';
-import { getMode, type Overscroll } from '../../types';
+import { DECK_PLUGIN } from '../../meta';
+import { type DeckSettingsProps, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
+import { Plank, PlankContentError } from '../Plank';
+import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
-  overscroll: Overscroll;
-  showHints: boolean;
   onDismissToast: (id: string) => void;
 };
 
-const PlankSeparator = ({ index }: { index: number }) =>
-  index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
+const PlankSeparator = ({ order }: { order: number }) =>
+  order > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: order }} /> : null;
 
-export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayoutProps) => {
+export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const {
     sidebarState,
@@ -67,7 +66,7 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
     deck,
     toasts,
   } = context;
-  const { active, fullscreen, solo, plankSizing } = deck;
+  const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);
@@ -119,6 +118,15 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
     }
   }, [isNotMobile, deck, dispatch]);
 
+  // If deck is disabled in settings, ensure that the layout is in solo mode.
+  useEffect(() => {
+    if (!settings.enableDeck) {
+      void dispatch(
+        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
+      );
+    }
+  }, [settings.enableDeck, dispatch, active]);
+
   /**
    * Clear scroll restoration state if the window is resized
    */
@@ -155,11 +163,11 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
   const isEmpty = !solo && active.length === 0;
 
   const padding = useMemo(() => {
-    if (!solo && overscroll === 'centering') {
+    if (!solo && settings.overscroll === 'centering') {
       return calculateOverscroll(active.length);
     }
     return {};
-  }, [solo, overscroll, deck]);
+  }, [solo, settings.overscroll, deck]);
 
   const mainPosition = useMemo(
     () => [
@@ -185,6 +193,17 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
     [context],
   );
   const handlePopoverClose = useCallback(() => handlePopoverOpenChange(false), [handlePopoverOpenChange]);
+
+  const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(() => {
+    return active.reduce(
+      (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
+        acc.order[entryId] = acc.itemsCount + 1;
+        acc.itemsCount += activeCompanions?.[entryId] ? 3 : 2;
+        return acc;
+      },
+      { order: {}, itemsCount: 0 },
+    );
+  }, [active, activeCompanions]);
 
   return (
     <Popover.Root modal open={!!(popoverAnchorId && delayedPopoverVisibility)} onOpenChange={handlePopoverOpenChange}>
@@ -248,18 +267,26 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                 {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
                 {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
                 <Stack
+                  ref={deckRef}
                   orientation='horizontal'
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
-                  onScroll={handleScroll}
-                  itemsCount={2 * (active.length ?? 0) - 1}
+                  itemsCount={itemsCount - 1}
                   style={padding}
-                  ref={deckRef}
+                  onScroll={handleScroll}
                 >
-                  {active.map((entryId, index) => (
+                  {active.map((entryId) => (
                     <Fragment key={entryId}>
-                      <PlankSeparator index={index} />
-                      <Plank id={entryId} part='deck' order={index * 2 + 1} active={active} layoutMode={layoutMode} />
+                      <PlankSeparator order={order[entryId] - 1} />
+                      <Plank
+                        id={entryId}
+                        companionId={activeCompanions?.[entryId]}
+                        part='deck'
+                        order={order[entryId]}
+                        active={active}
+                        layoutMode={layoutMode}
+                        settings={settings}
+                      />
                     </Fragment>
                   ))}
                 </Stack>
@@ -272,15 +299,23 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                 {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
                 {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
                 <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
-                  <Plank id={solo} part='solo' layoutMode={layoutMode} />
+                  <Plank
+                    id={solo}
+                    companionId={solo ? activeCompanions?.[solo] : undefined}
+                    part='solo'
+                    layoutMode={layoutMode}
+                    settings={settings}
+                  />
                 </StackContext.Provider>
               </div>
             </Main.Content>
           )}
 
-          {/* Status bar. */}
+          {/* Topbar. */}
           {topbar && <Topbar />}
-          {hoistStatusbar && <StatusBar showHints={showHints} />}
+
+          {/* Status bar. */}
+          {hoistStatusbar && <StatusBar showHints={settings.showHints} />}
         </Main.Root>
       )}
 
@@ -303,10 +338,11 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
         onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}
       >
         {dialogBlockAlign === 'end' ? (
-          <Surface role='dialog' data={dialogContent} limit={1} />
+          // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
+          <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} placeholder={<div />} />
         ) : (
           <Dialog.Overlay blockAlign={dialogBlockAlign}>
-            <Surface role='dialog' data={dialogContent} limit={1} />
+            <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} />
           </Dialog.Overlay>
         )}
       </Dialog.Root>

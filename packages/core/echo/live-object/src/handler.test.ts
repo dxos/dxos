@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
-import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '@dxos/echo-schema/testing';
+import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
 
@@ -14,7 +14,7 @@ import { objectData } from './proxy';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT: TestSchema = {
+const TEST_OBJECT: Testing.TestSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -23,9 +23,11 @@ const TEST_OBJECT: TestSchema = {
   object: { field: 'bar' },
 };
 
-for (const schema of [undefined, TestSchemaWithClass]) {
-  const createObject = (props: Partial<TestSchemaWithClass> = {}): ReactiveObject<TestSchemaWithClass> => {
-    return schema == null ? (create(props) as TestSchemaWithClass) : create(schema, props);
+for (const schema of [undefined, Testing.TestSchemaWithClass]) {
+  const createObject = (
+    props: Partial<Testing.TestSchemaWithClass> = {},
+  ): ReactiveObject<Testing.TestSchemaWithClass> => {
+    return schema == null ? (create(props) as Testing.TestSchemaWithClass) : create(schema, props);
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -47,25 +49,25 @@ for (const schema of [undefined, TestSchemaWithClass]) {
     test('can assign class instances', () => {
       const obj = createObject();
 
-      const classInstance = new TestClass();
+      const classInstance = new Testing.TestClass();
       obj.classInstance = classInstance;
-      expect(obj.classInstance.field).to.eq('value');
-      expect(obj.classInstance instanceof TestClass).to.eq(true);
+      expect(obj.classInstance!.field).to.eq('value');
+      expect(obj.classInstance instanceof Testing.TestClass).to.eq(true);
       expect(obj.classInstance === classInstance).to.be.true;
 
-      obj.classInstance.field = 'baz';
-      expect(obj.classInstance.field).to.eq('baz');
+      obj.classInstance!.field = 'baz';
+      expect(obj.classInstance!.field).to.eq('baz');
     });
 
     describe('class instance equality', () => {
       test('toJSON', () => {
-        const original = { classInstance: new TestClass() };
+        const original = { classInstance: new Testing.TestClass() };
         const reactive = createObject(original);
         expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
       });
 
       test('chai deep equal works', () => {
-        const original = { classInstance: new TestClass() };
+        const original = { classInstance: new Testing.TestClass() };
         const reactive = createObject(original);
         expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
         expect(reactive).to.deep.eq(original);
@@ -73,7 +75,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
       });
 
       test('jest deep equal works', () => {
-        const original = { classInstance: new TestClass() };
+        const original = { classInstance: new Testing.TestClass() };
         const reactive = createObject(original);
         expect(reactive).toEqual(original);
         expect(reactive).not.toEqual({ ...original, number: 11 });
@@ -82,7 +84,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
 
     describe('signal updates', () => {
       test('not in nested class instances', () => {
-        const obj = createObject({ classInstance: new TestClass() });
+        const obj = createObject({ classInstance: new Testing.TestClass() });
         using updates = updateCounter(() => {
           obj.classInstance!.field;
         });

@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { DescriptionAnnotationId } from '@effect/schema/AST';
+import { Schema as S } from 'effect';
+import { DescriptionAnnotationId } from 'effect/SchemaAST';
 
 import * as DateUtil from './date';
 import * as NumberUtil from './number';

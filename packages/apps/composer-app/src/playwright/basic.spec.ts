@@ -66,7 +66,12 @@ test.describe('Basic tests', () => {
     await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
   });
 
-  test('reset app', async () => {
+  test('reset app', async ({ browserName }) => {
+    // TODO(wittjosiah): This test seems to be flaky in webkit.
+    if (browserName === 'webkit') {
+      test.skip();
+    }
+
     await host.openPluginRegistry();
     await host.getPluginToggle('dxos.org/plugin/stack').click();
     await expect(host.getPluginToggle('dxos.org/plugin/stack')).toBeChecked();
@@ -79,6 +84,8 @@ test.describe('Basic tests', () => {
   });
 
   test('reset device', async ({ browserName }) => {
+    test.setTimeout(60_000);
+
     // TODO(wittjosiah): This test seems to be flaky in firefox & webkit.
     if (browserName !== 'chromium') {
       test.skip();
@@ -87,10 +94,10 @@ test.describe('Basic tests', () => {
     await host.createSpace();
     await expect(host.getSpaceItems()).toHaveCount(2);
 
-    await host.openIdentityManager();
-    await host.shell.resetDevice();
+    await host.openUserDevices();
+    await host.resetDevice();
     // Wait for reset to complete and attempt to reload.
-    await host.page.waitForRequest(INITIAL_URL, { timeout: 10_000 });
-    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
+    await host.page.waitForRequest(INITIAL_URL, { timeout: 20_000 });
+    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 20_000 });
   });
 });

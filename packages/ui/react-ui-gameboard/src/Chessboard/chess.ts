@@ -59,7 +59,7 @@ const styles = {
 export const boardStyles = styles.original;
 
 export const getSquareColor = ([row, col]: Location) => {
-  return (col + row) % 2 === 0 ? boardStyles.white : boardStyles.black;
+  return (col + row) % 2 === 0 ? boardStyles.black : boardStyles.white;
 };
 
 /**

@@ -4,12 +4,29 @@
 
 import { produce } from 'immer';
 
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+
 import { type DeckAction, type NewPlankPositioning } from './types';
 
-type OpenLayoutEntryOptions = { key?: string; positioning?: NewPlankPositioning; pivotId?: string };
+export const createEntryId = (entryId: string, variant?: string) =>
+  variant ? `${entryId}${ATTENDABLE_PATH_SEPARATOR}${variant}` : entryId;
 
-export const openEntry = (deck: string[], entryId: string, options?: OpenLayoutEntryOptions): string[] => {
+export const parseEntryId = (entryId: string) => {
+  const [id, variant] = entryId.split(ATTENDABLE_PATH_SEPARATOR);
+  return { id, variant };
+};
+
+type OpenLayoutEntryOptions = {
+  key?: string;
+  positioning?: NewPlankPositioning;
+  pivotId?: string;
+  variant?: string;
+};
+
+export const openEntry = (deck: string[], _entryId: string, options?: OpenLayoutEntryOptions): string[] => {
   return produce(deck, (draft) => {
+    const entryId = createEntryId(_entryId, options?.variant);
+
     // Check that the entry is not already in the part
     if (draft.find((id) => id === entryId)) {
       return;

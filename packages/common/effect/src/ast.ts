@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-import { Option, pipe } from 'effect';
+import { Option, pipe, SchemaAST as AST, Schema as S } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
@@ -232,7 +231,7 @@ export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.A
 /**
  * Get the AST node for the given property (dot-path).
  */
-export const findProperty = (schema: S.Schema<any>, path: JsonPath | JsonProp): AST.AST | undefined => {
+export const findProperty = (schema: S.Schema.AnyNoContext, path: JsonPath | JsonProp): AST.AST | undefined => {
   const getProp = (node: AST.AST, path: JsonProp[]): AST.AST | undefined => {
     const [name, ...rest] = path;
     const typeNode = findNode(node, AST.isTypeLiteral);
@@ -405,7 +404,7 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
  */
 export const mapAst = (ast: AST.AST, f: (ast: AST.AST, key: keyof any | undefined) => AST.AST): AST.AST => {
   switch (ast._tag) {
-    case 'TypeLiteral':
+    case 'TypeLiteral': {
       return new AST.TypeLiteral(
         ast.propertySignatures.map(
           (prop) =>
@@ -419,21 +418,25 @@ export const mapAst = (ast: AST.AST, f: (ast: AST.AST, key: keyof any | undefine
         ),
         ast.indexSignatures,
       );
-    case 'Union':
+    }
+    case 'Union': {
       return AST.Union.make(ast.types.map(f), ast.annotations);
-    case 'TupleType':
+    }
+    case 'TupleType': {
       return new AST.TupleType(
         ast.elements.map((t, index) => new AST.OptionalType(f(t.type, index), t.isOptional, t.annotations)),
         ast.rest.map((t) => new AST.Type(f(t.type, undefined), t.annotations)),
         ast.isReadonly,
         ast.annotations,
       );
+    }
     case 'Suspend': {
       const newAst = f(ast.f(), undefined);
       return new AST.Suspend(() => newAst, ast.annotations);
     }
-    default:
+    default: {
       // TODO(dmaretskyi): Support more nodes.
       return ast;
+    }
   }
 };

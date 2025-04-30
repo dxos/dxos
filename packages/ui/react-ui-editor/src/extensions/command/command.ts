@@ -6,6 +6,8 @@ import { type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
 import { hintViewPlugin } from './hint';
+import { floatingMenu } from './menu';
+import { preview, type PreviewOptions } from './preview';
 import { closeEffect, commandConfig, commandKeyBindings, commandState } from './state';
 
 // TODO(burdon): Create knowledge base for CM notes and ideas.
@@ -13,23 +15,40 @@ import { closeEffect, commandConfig, commandKeyBindings, commandState } from './
 // https://github.com/saminzadeh/codemirror-extension-inline-suggestion
 // https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/ui/components/text_editor/config.ts#L370
 
+// TODO(burdon): Discriminated union.
 export type CommandAction = {
   insert?: string;
 };
 
 export type CommandOptions = {
-  onRender: (el: HTMLElement, cb: (action?: CommandAction) => void) => void;
   onHint: () => string | undefined;
-};
+  onRenderDialog: (el: HTMLElement, cb: (action?: CommandAction) => void) => void;
+  onRenderMenu: (el: HTMLElement, cb: () => void) => void;
+} & Pick<PreviewOptions, 'onRenderPreview'>;
 
 export const command = (options: CommandOptions): Extension => {
   return [
     commandConfig.of(options),
     commandState,
     keymap.of(commandKeyBindings),
+    preview(options),
+    floatingMenu(options),
     hintViewPlugin(options),
     EditorView.focusChangeEffect.of((_, focusing) => {
       return focusing ? closeEffect.of(null) : null;
+    }),
+    EditorView.theme({
+      '.cm-tooltip': {
+        background: 'transparent',
+      },
+      '.cm-preview': {
+        marginLeft: '-1rem',
+        marginRight: '-1rem',
+        padding: '1rem',
+        borderRadius: '1rem',
+        background: 'var(--dx-modalSurface)',
+        border: '1px solid var(--dx-separator)',
+      },
     }),
   ];
 };

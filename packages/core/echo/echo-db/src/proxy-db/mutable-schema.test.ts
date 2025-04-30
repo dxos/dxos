@@ -6,17 +6,17 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   EchoSchema,
-  ObjectAnnotationId,
+  TypeAnnotationId,
   getTypeReference,
   Ref,
   TypedObject,
   S,
   getTypename,
-  EchoIdentifierAnnotationId,
-  type ObjectAnnotation,
+  TypeIdentifierAnnotationId,
+  type TypeAnnotation,
   EntityKind,
 } from '@dxos/echo-schema';
-import { EmptySchemaType } from '@dxos/echo-schema/testing';
+import { Testing } from '@dxos/echo-schema/testing';
 import { getSchema, getType, create, makeRef } from '@dxos/live-object';
 
 import { Filter } from '../query';
@@ -48,12 +48,12 @@ describe('EchoSchema', () => {
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     instanceWithSchemaRef.schema = makeRef(schema);
     const schemaWithId = GeneratedSchema.annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Test',
         version: '0.1.0',
-      } satisfies ObjectAnnotation,
-      [EchoIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.target?.id}`,
+      } satisfies TypeAnnotation,
+      [TypeIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.target?.id}`,
     });
     expect(instanceWithSchemaRef.schema?.target?.ast).to.deep.eq(schemaWithId.ast);
 
@@ -86,7 +86,7 @@ describe('EchoSchema', () => {
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([EmptySchemaType]);
+    const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
     const object = create(schema, {});
     schema.addFields({ field1: S.String });
     object.field1 = 'works';
@@ -102,7 +102,7 @@ describe('EchoSchema', () => {
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
     expect(getType(object)?.objectId).to.be.eq(schema.id);
-    expect(getTypename(object)).to.be.eq(EmptySchemaType.typename);
+    expect(getTypename(object)).to.be.eq(Testing.EmptySchemaType.typename);
 
     db.add(object);
     const queried = (await db.query(Filter.schema(schema)).run()).objects;
@@ -112,13 +112,13 @@ describe('EchoSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([EmptySchemaType]);
+    const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
 
   test('getTypeReference on schema with updated typename', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([EmptySchemaType]);
+    const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
     schema.updateTypename('example.com/type/Updated');
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });

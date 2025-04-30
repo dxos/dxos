@@ -4,10 +4,10 @@
 
 import { StateEffect, StateField } from '@codemirror/state';
 import {
+  showTooltip,
   type Command,
   type EditorView,
   type KeyBinding,
-  showTooltip,
   type Tooltip,
   type TooltipView,
 } from '@codemirror/view';
@@ -50,14 +50,17 @@ export const commandState = StateField.define<CommandState>({
                 }
 
                 // Render react component.
-                options.onRender(dom, (action) => {
+                options.onRenderDialog(dom, (action) => {
                   view.dispatch({ effects: closeEffect.of(null) });
                   if (action?.insert?.length) {
+                    // Insert into editor.
+                    const text = action.insert + '\n';
                     view.dispatch({
-                      changes: { from: pos, insert: action.insert },
-                      selection: { anchor: pos + action.insert.length },
+                      changes: { from: pos, insert: text },
+                      selection: { anchor: pos + text.length },
                     });
                   }
+
                   // NOTE: Truncates text if set focus immediately.
                   requestAnimationFrame(() => view.focus());
                 });
@@ -88,6 +91,7 @@ export const openCommand: Command = (view: EditorView) => {
       return true;
     }
   }
+
   return false;
 };
 
@@ -96,6 +100,7 @@ export const closeCommand: Command = (view: EditorView) => {
     view.dispatch({ effects: closeEffect.of(null) });
     return true;
   }
+
   return false;
 };
 

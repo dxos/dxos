@@ -38,7 +38,7 @@ export const PopoverRenameObject = ({ object: obj }: { object: ReactiveObject<an
         <Input.Root>
           <Input.Label srOnly>{t('object name label')}</Input.Label>
           <Input.TextInput
-            placeholder={t('object title placeholder')}
+            placeholder={t('object placeholder')}
             value={name}
             data-testid='spacePlugin.renameObject.input'
             onChange={({ target: { value } }) => setName(value)}

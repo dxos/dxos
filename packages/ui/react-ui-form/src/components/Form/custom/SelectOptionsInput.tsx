@@ -154,7 +154,11 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                               data-no-submit
                             />
                             <Toolbar.Root classNames='p-0 m-0 !is-auto'>
-                              <HuePicker value={item.color} onChange={handleColorChange(item.id)} />
+                              <HuePicker
+                                value={item.color}
+                                onChange={handleColorChange(item.id)}
+                                rootVariant='toolbar-button'
+                              />
                             </Toolbar.Root>
                             <IconButton
                               icon='ph--trash--fill'

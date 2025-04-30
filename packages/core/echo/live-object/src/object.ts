@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema as S } from 'effect';
+
 import {
-  type BaseObject,
   createObjectId,
   defineHiddenProperty,
+  getTypeAnnotation,
+  type BaseObject,
   type ExcludeId,
   Expando,
-  getObjectAnnotation,
   type ObjectMeta,
   ObjectMetaSchema,
 } from '@dxos/echo-schema';
-import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { createProxy, isValidProxyTarget } from './proxy';
@@ -23,6 +24,7 @@ import { UntypedReactiveHandler } from './untyped-handler';
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
+// TODO(burdon): Add WithId?
 // TODO(dmaretskyi): Rename LiveObject.
 export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
 
@@ -41,6 +43,7 @@ export const create: {
   ): ReactiveObject<T>;
 } = <T extends BaseObject>(
   objOrSchema: S.Schema<T, any> | T,
+  // TODO(burdon): Handle defaults.
   obj?: ExcludeId<T>,
   meta?: ObjectMeta,
 ): ReactiveObject<T> => {
@@ -64,7 +67,7 @@ const createReactiveObject = <T extends BaseObject>(
   }
 
   if (schema) {
-    const shouldGenerateId = options?.expando || getObjectAnnotation(schema);
+    const shouldGenerateId = options?.expando || getTypeAnnotation(schema);
     if (shouldGenerateId) {
       setIdOnTarget(obj);
     }

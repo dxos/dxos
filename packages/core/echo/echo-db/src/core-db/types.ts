@@ -8,9 +8,10 @@ import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/autome
 import { type Reference } from '@dxos/echo-protocol';
 import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isReactiveObject } from '@dxos/live-object';
+import { isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 
 import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
+import { symbolPath, type ProxyTarget } from '../echo-handler/echo-proxy-target';
 
 /**
  * @deprecated Use DecodedAutomergePrimaryValue instead.
@@ -63,9 +64,19 @@ export const DocAccessor = {
 export const isValidKeyPath = (value: unknown): value is KeyPath =>
   Array.isArray(value) && value.every((v) => typeof v === 'string' || typeof v === 'number');
 
-export const createDocAccessor = <T extends BaseObject>(obj: ReactiveEchoObject<T>, path: KeyPath): DocAccessor<T> => {
+export const createDocAccessor = <T extends BaseObject>(
+  obj: ReactiveObject<T>,
+  path: KeyPath | keyof T,
+): DocAccessor<T> => {
+  if (!Array.isArray(path)) {
+    path = [path as any];
+  }
+
   invariant(isReactiveObject(obj));
   invariant(path === undefined || isValidKeyPath(path));
   const core = getObjectCore(obj);
-  return core.getDocAccessor(path);
+  const basePath = (obj as any as ProxyTarget)[symbolPath];
+  const fullPath = basePath ? [...basePath, ...path] : path;
+
+  return core.getDocAccessor(fullPath);
 };

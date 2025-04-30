@@ -9,9 +9,9 @@ import {
   type Echo,
   type FilterSource,
   Filter,
-  type ReactiveEchoObject,
   type Query,
   type QueryOptions,
+  type ReactiveEchoObject,
   type Space,
 } from '@dxos/client/echo';
 

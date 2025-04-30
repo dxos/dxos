@@ -4,10 +4,10 @@
 
 import { type MessageValence } from '@dxos/react-ui-types';
 
-export const successText = 'text-xs font-medium text-emeraldText';
-export const infoText = 'text-xs font-medium text-cyanText';
-export const warningText = 'text-xs font-medium text-amberText';
-export const errorText = 'text-xs font-medium text-roseText';
+export const successText = 'text-xs font-medium text-successText';
+export const infoText = 'text-xs font-medium text-infoText';
+export const warningText = 'text-xs font-medium text-warningText';
+export const errorText = 'text-xs font-medium text-errorText';
 
 export const valenceColorText = (valence?: MessageValence) => {
   switch (valence) {
@@ -25,10 +25,10 @@ export const valenceColorText = (valence?: MessageValence) => {
 };
 
 export const neutralMessageColors = 'bg-neutral-25 dark:bg-neutral-850';
-export const successMessageColors = 'text-emeraldSurfaceText bg-emeraldSurface';
-export const infoMessageColors = 'text-cyanSurfaceText bg-cyanSurface';
-export const warningMessageColors = 'text-amberSurfaceText bg-amberSurface';
-export const errorMessageColors = 'text-roseSurfaceText bg-roseSurface';
+export const successMessageColors = 'text-successSurfaceText bg-successSurface';
+export const infoMessageColors = 'text-infoSurfaceText bg-infoSurface';
+export const warningMessageColors = 'text-warningSurfaceText bg-warningSurface';
+export const errorMessageColors = 'text-errorSurfaceText bg-errorSurface';
 
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {

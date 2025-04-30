@@ -9,9 +9,9 @@ import {
   Button,
   Icon,
   Toast as NaturalToast,
+  type ToastRootProps,
   toLocalizedString,
   useTranslation,
-  type ToastRootProps,
 } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../../meta';

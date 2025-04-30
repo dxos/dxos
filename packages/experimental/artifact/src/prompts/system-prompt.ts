@@ -5,8 +5,12 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { createTemplate } from './template';
-// @ts-ignore
 import SYSTEM_PROMPT from './templates/system-prompt.tpl?raw';
+
+export type AssociatedArtifact = {
+  id: string;
+  typename: string;
+};
 
 export type SystemPromptOptions = {
   /**
@@ -18,6 +22,11 @@ export type SystemPromptOptions = {
    * Whether to include suggestions in the prompt.
    */
   suggestions?: boolean;
+
+  /**
+   * Associated artifact to include in the prompt.
+   */
+  associatedArtifact?: AssociatedArtifact;
 };
 
 /**

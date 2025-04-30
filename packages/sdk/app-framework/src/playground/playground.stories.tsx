@@ -17,12 +17,16 @@ import { IntentPlugin } from '../plugin-intent';
 
 const plugins = [IntentPlugin(), LayoutPlugin(), DebugPlugin(), LoggerPlugin(), GeneratorPlugin()];
 
+const Placeholder = () => {
+  return <div>Loading...</div>;
+};
+
 const Story = createApp({
   pluginLoader: (id) => createNumberPlugin(id),
   plugins,
   core: plugins.map((plugin) => plugin.meta.id),
   // Having a non-empty placeholder makes it clear if it's taking a while to load.
-  placeholder: <div>Loading...</div>,
+  placeholder: Placeholder,
 });
 
 export const Playground = {};

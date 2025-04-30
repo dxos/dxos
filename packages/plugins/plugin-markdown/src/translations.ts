@@ -2,24 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
+import { getSchemaTypename } from '@dxos/echo-schema';
+
 import { MARKDOWN_PLUGIN } from './meta';
 import { DocumentType } from './types';
 
 export default [
   {
     'en-US': {
-      [DocumentType.typename]: {
+      [getSchemaTypename(DocumentType)!]: {
         'typename label': 'Document',
+        'object name placeholder': 'New document',
       },
       [MARKDOWN_PLUGIN]: {
         'plugin name': 'Editor',
-        'create stack section label': 'Create document',
-        'document title placeholder': 'New document',
         'choose markdown from space dialog title': 'Choose one or more documents to add',
         // TODO(burdon): Style-guide for user-facing text (e.g., hints, questions, capitalization, etc.)
         'empty choose markdown from space message': 'None available; try creating a new one instead?',
         'chooser done label': 'Add selected',
-        'create document label': 'Create document',
         'editor placeholder': '',
         'editor input mode label': 'Editor input mode',
         'select editor input mode placeholder': 'Select editor input mode…',

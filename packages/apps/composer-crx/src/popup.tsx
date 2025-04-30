@@ -6,19 +6,46 @@ import '@dxos-theme';
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { sendMessage } from 'webext-bridge/popup';
+import browser from 'webextension-polyfill';
 
-import { ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { log } from '@dxos/log';
 
-import { Popup } from './components';
+import { Popup, Container, type PopupProps } from './components';
 
 const Root = () => {
+  const handleAdd: PopupProps['onAdd'] = async () => {
+    log.info('sending...');
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id) {
+      log.error('no active tab found');
+      return null;
+    }
+
+    try {
+      const result = await sendMessage('ping', { debug: true }, { context: 'content-script', tabId: tab.id });
+      log.info('result', { result });
+      return result;
+    } catch (err) {
+      log.catch(err);
+    }
+
+    return null;
+  };
+
+  const handleSearch: PopupProps['onSearch'] = async (text) => {
+    log.info('search', { text });
+    return null;
+  };
+
+  const handleLaunch: PopupProps['onLaunch'] = async () => {
+    window.open('https://labs.composer.space');
+  };
+
   return (
-    <ThemeProvider tx={defaultTx} themeMode='dark'>
-      <div className='dark'>
-        <Popup />
-      </div>
-    </ThemeProvider>
+    <Container classNames='w-[300px]'>
+      <Popup onAdd={handleAdd} onSearch={handleSearch} onLaunch={handleLaunch} />
+    </Container>
   );
 };
 

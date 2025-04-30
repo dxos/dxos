@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
+import { type Schema as S } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type GraphBuilder } from '@dxos/app-graph';

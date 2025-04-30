@@ -4,15 +4,16 @@
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
-import { ChannelType, defineObjectForm, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { ChannelType, defineObjectForm, ThreadType } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
+import { MessageType, MessageTypeV1, MessageTypeV1ToV2 } from '@dxos/schema';
 
-import { IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
-import { meta, THREAD_ITEM, THREAD_PLUGIN } from './meta';
+import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
+import { ThreadEvents as LocalThreadEvents } from './events';
+import { meta, THREAD_ITEM } from './meta';
 import translations from './translations';
 import { ThreadAction } from './types';
 
@@ -46,10 +47,7 @@ export const ThreadPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ChannelType.typename,
           metadata: {
-            placeholder: ['channel name placeholder', { ns: THREAD_PLUGIN }],
-            icon: 'ph--chat--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (channel: ChannelType) => await RefArray.loadAll(channel.threads ?? []),
+            icon: 'ph--hash--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -91,33 +89,19 @@ export const ThreadPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: ChannelType,
-            getIntent: () => createIntent(ThreadAction.Create),
+            getIntent: (_, options) => createIntent(ThreadAction.CreateChannel, { spaceId: options.space.id }),
           }),
         ),
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, MessageType]),
+      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, MessageType, MessageTypeV1]),
     }),
     defineModule({
-      id: `${meta.id}/module/complementary-panel`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'comments',
-          label: ['comments panel label', { ns: THREAD_PLUGIN }],
-          icon: 'ph--chat-text--regular',
-          position: 'hoist',
-          // TODO(wittjosiah): Support comments on any object.
-          // filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
-          filter: (node) =>
-            !!node.data &&
-            typeof node.data === 'object' &&
-            'threads' in node.data &&
-            Array.isArray(node.data.threads) &&
-            !(node.data instanceof ChannelType),
-        }),
+      id: `${meta.id}/module/migration`,
+      activatesOn: ClientEvents.SetupMigration,
+      activate: () => contributes(ClientCapabilities.Migration, [MessageTypeV1ToV2]),
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,
@@ -128,12 +112,17 @@ export const ThreadPlugin = () =>
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
       // TODO(wittjosiah): Should occur before the comments thread is loaded when surfaces activation is more granular.
-      activatesBefore: [ThreadEvents.SetupThread],
+      activatesBefore: [ThreadEvents.SetupThread, LocalThreadEvents.SetupActivity],
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
   ]);

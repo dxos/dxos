@@ -8,6 +8,7 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { type ReactiveEchoObject, Filter, hasType } from '@dxos/echo-db';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -44,9 +45,9 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context, respon
       for (const object of objects) {
         let pageContent: string | undefined;
         log.info('processing', { object: { id: object.id, type: object.type } });
-        if (object instanceof DocumentType) {
+        if (isInstanceOf(DocumentType, object)) {
           pageContent = (await object.content.load()).content?.trim();
-        } else if (object instanceof FileType) {
+        } else if (isInstanceOf(FileType, object)) {
           const endpoint = client.config.values.runtime?.services?.ipfs?.gateway;
           if (endpoint && object.cid) {
             const url = join(endpoint, object.cid);

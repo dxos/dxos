@@ -119,7 +119,8 @@ export const FunctionTriggerSchema = S.Struct({
   // TODO(burdon): Flatten entire schema.
   spec: S.optional(TriggerSchema),
 
-  // TODO(burdon): Get meta from function.
+  // TODO(burdon): Get schema as partial from function.
+  // TODO(wittjosiah): Rename to payload.
   // The `meta` property is merged into the event data passed to the function.
   meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
 });

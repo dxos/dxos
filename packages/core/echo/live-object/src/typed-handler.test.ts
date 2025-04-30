@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { Ref, TypedObject, createStatic, foreignKey, getSchema, isInstanceOf } from '@dxos/echo-schema';
-import { Contact } from '@dxos/echo-schema/testing';
-import { S } from '@dxos/effect';
+import { Testing } from '@dxos/echo-schema/testing';
 
 import { getMeta } from './accessors';
 import { create } from './object';
@@ -67,24 +67,24 @@ describe('complex schema validations', () => {
   });
 
   test('nesting static objects with schema in the live object', () => {
-    const contact1 = createStatic(Contact, {
+    const contact1 = createStatic(Testing.Contact, {
       name: 'Robert Smith',
       email: 'robert@example.com',
-    });
-    const contact2 = createStatic(Contact, {
+    } as any);
+    const contact2 = createStatic(Testing.Contact, {
       name: 'Katy Perry',
       email: 'katy@example.com',
-    });
+    } as any);
 
     const contactBook = create({
       contacts: [contact1],
     });
 
-    expect(isInstanceOf(Contact, contactBook.contacts[0])).to.eq(true);
-    expect(getSchema(contactBook.contacts[0])).to.eq(Contact);
+    expect(isInstanceOf(Testing.Contact, contactBook.contacts[0])).to.eq(true);
+    expect(getSchema(contactBook.contacts[0])).to.eq(Testing.Contact);
 
     contactBook.contacts.push(contact2);
-    expect(isInstanceOf(Contact, contactBook.contacts[1])).to.eq(true);
-    expect(getSchema(contactBook.contacts[1])).to.eq(Contact);
+    expect(isInstanceOf(Testing.Contact, contactBook.contacts[1])).to.eq(true);
+    expect(getSchema(contactBook.contacts[1])).to.eq(Testing.Contact);
   });
 });

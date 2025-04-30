@@ -217,7 +217,11 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const level = parseInt(node.name['ATXHeading'.length]) as HeadingLevel;
         const headers = getHeaderLevels(node, level);
         if (options.numberedHeadings?.from !== undefined) {
-          headers[level - 1]!.number++;
+          const header = headers[level - 1];
+          // TODO(burdon): Header will be missing if headers are out of order (e.g., ## header then # header).
+          if (header) {
+            header.number++;
+          }
         }
 
         const editing = editingRange(state, node, focus);

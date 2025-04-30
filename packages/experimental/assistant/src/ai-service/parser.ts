@@ -9,8 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
 
-import { type GenerationStream } from './stream';
+import { type GenerationStream } from './service';
 import { StreamTransform, type StreamBlock } from './transform';
+import type { GenerationStreamEvent } from './types';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.
@@ -30,6 +31,8 @@ export class MixedStreamParser {
    * Update partial block (while streaming).
    */
   public update = new Event<MessageContentBlock>();
+
+  public streamEvent = new Event<GenerationStreamEvent>();
 
   /**
    * Current message.
@@ -77,7 +80,10 @@ export class MixedStreamParser {
     const messagesCollected: Message[] = [];
 
     for await (const event of stream) {
-      // log.info('event', { type: event.type, event });
+      log('streamEvent', { event });
+      this.streamEvent.emit(event);
+
+      // log('event', { type: event.type, event });
       switch (event.type) {
         //
         // Messages.
@@ -88,7 +94,7 @@ export class MixedStreamParser {
             log.warn('unexpected message_start');
           }
 
-          this._message = createStatic(Message, { role: 'assistant', content: [] });
+          this._message = createStatic(Message, { role: event.message.role, content: [...event.message.content] });
           this.message.emit(this._message);
           break;
         }
@@ -138,7 +144,7 @@ export class MixedStreamParser {
             case 'text_delta': {
               const chunks = transformer.transform(event.delta.text);
               for (const chunk of chunks) {
-                // log.info('text_delta', { chunk, current });
+                log('text_delta', { chunk });
 
                 switch (streamBlock?.type) {
                   //
@@ -152,6 +158,7 @@ export class MixedStreamParser {
                         if (stack.length > 0) {
                           const top = stack.pop();
                           invariant(top && top.type === 'tag');
+                          log('pop', { top });
                           top.content.push(streamBlock);
                           streamBlock = top;
                         } else {

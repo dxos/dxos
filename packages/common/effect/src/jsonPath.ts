@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import { isSome } from 'effect/Option';
+import { JSONPath } from 'jsonpath-plus';
 
 import { invariant } from '@dxos/invariant';
 
@@ -59,7 +60,7 @@ export const createJsonPath = (path: (string | number)[]): JsonPath => {
 
 /**
  * Converts Effect validation path format (e.g. "addresses.[0].zip")
- * to JsonPath format (e.g. "addresses[0].zip")
+ * to JsonPath format (e.g., "addresses[0].zip")
  */
 export const fromEffectValidationPath = (effectPath: string): JsonPath => {
   // Handle array notation: convert "prop.[0]" to "prop[0]"
@@ -82,4 +83,12 @@ export const splitJsonPath = (path: JsonPath): string[] => {
       .match(/[a-zA-Z_$][\w$]*|\[\d+\]/g)
       ?.map((part) => (part.startsWith('[') ? part.replace(/[[\]]/g, '') : part)) ?? []
   );
+};
+
+/**
+ * Applies a JsonPath to an object.
+ */
+export const getField = (object: any, path: JsonPath): any => {
+  // By default, JSONPath returns an array of results.
+  return JSONPath({ path, json: object })[0];
 };

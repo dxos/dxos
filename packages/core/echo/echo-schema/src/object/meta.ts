@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { IdentifierAnnotationId } from '@effect/schema/AST';
+import { Schema as S } from 'effect';
+import { IdentifierAnnotationId } from 'effect/SchemaAST';
 
 //
 // ForeignKey
