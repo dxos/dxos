@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JSONSchema, SchemaAST as AST, Schema as S, Option, type Types } from 'effect';
+import { SchemaAST as AST, JSONSchema, Option, Schema as S, type Types } from 'effect';
 
 import { mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -14,17 +14,17 @@ import {
   EntityKindSchema,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
-  type JsonSchemaReferenceInfo,
-  type JsonSchemaType,
   LabelAnnotationId,
-  TypeAnnotationId,
-  TypeIdentifierAnnotationId,
-  type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
   Ref,
+  TypeAnnotationId,
+  TypeIdentifierAnnotationId,
   createEchoReferenceSchema,
-  getTypeIdentifierAnnotation,
   getTypeAnnotation,
+  getTypeIdentifierAnnotation,
+  type JsonSchemaReferenceInfo,
+  type JsonSchemaType,
+  type PropertyMetaAnnotation,
   type TypeAnnotation,
 } from '../ast';
 import { CustomAnnotations } from '../formats';
@@ -178,6 +178,9 @@ const withEchoRefinements = (
         propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
       } satisfies JsonSchemaType,
     });
+  } else if (AST.isUndefinedKeyword(ast)) {
+    // Ignore undefined keyword that appears in the optional fields.
+    return ast;
   } else {
     recursiveResult = mapAst(ast, (ast, key) =>
       withEchoRefinements(
