@@ -11,7 +11,7 @@ import { create, ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useQueue } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, IconButton, useThemeContext } from '@dxos/react-ui';
+import { IconButton, Toolbar, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -62,7 +62,6 @@ const createSegment = () => ({
 const useTestTranscriptionQueue = (running = true, interval = 1_000) => {
   const queueDxn = useMemo(() => randomQueueDxn(), []);
   const queue = useQueue<TranscriptBlock>(queueDxn);
-
   useEffect(() => {
     if (!queue || !running) {
       return;
@@ -71,7 +70,6 @@ const useTestTranscriptionQueue = (running = true, interval = 1_000) => {
     const i = setInterval(() => queue.append([create(TranscriptBlock, createBlock())]), interval);
     return () => clearInterval(i);
   }, [queue, running, interval]);
-
   return queue;
 };
 
@@ -80,11 +78,12 @@ const QueueStory = () => {
   return <div>{JSON.stringify(queue?.items.length)}</div>;
 };
 
-const ExtensionStory = () => {
+const ExtensionStory = ({ blocks = 5 }: { blocks?: number }) => {
   const { themeMode } = useThemeContext();
+  const [reset, setReset] = useState({});
   const model = useMemo(
-    () => new BlockModel<TranscriptBlock>(blockToMarkdown, Array.from({ length: 5 }, createBlock)),
-    [],
+    () => new BlockModel<TranscriptBlock>(blockToMarkdown, Array.from({ length: blocks }, createBlock)),
+    [blocks, reset],
   );
 
   const [running, setRunning] = useState(true);
@@ -115,29 +114,42 @@ const ExtensionStory = () => {
     return () => clearInterval(i);
   }, [model, currentBlock, running]);
 
-  const { parentRef } = useTextEditor({
-    extensions: [
-      // TODO(burdon): Enable preview.
-      createBasicExtensions({ readOnly: true, lineWrapping: true }),
-      createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({ themeMode }),
-      decorateMarkdown(),
-      transcript({
-        model,
-        renderButton: createRenderer(({ onClick }) => (
-          <IconButton icon='ph--arrow-line-down--regular' iconOnly label='Scroll to bottom' onClick={onClick} />
-        )),
-      }),
-    ],
-  });
+  const { parentRef } = useTextEditor(() => {
+    return {
+      extensions: [
+        // TODO(burdon): Enable preview.
+        createBasicExtensions({ readOnly: true, lineWrapping: true }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({ themeMode }),
+        decorateMarkdown(),
+        transcript({
+          model,
+          renderButton: createRenderer(({ onClick }) => (
+            <IconButton icon='ph--arrow-line-down--regular' iconOnly label='Scroll to bottom' onClick={onClick} />
+          )),
+        }),
+      ],
+    };
+  }, [model]);
+
+  const handleReset = () => {
+    setCurrentBlock(null);
+    setRunning(false);
+    setReset({});
+  };
 
   return (
     <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
       <div ref={parentRef} className={mx('flex grow overflow-hidden', editorWidth)} />
-      <div className='grid grid-cols-[8rem_1fr_8rem] overflow-hidden'>
-        <div className='flex items-center p-1'>
-          <Button onClick={() => setRunning(!running)}>{running ? 'Stop' : 'Start'}</Button>
-        </div>
+      <div className='grid grid-cols-[16rem_1fr_16rem] overflow-hidden'>
+        <Toolbar.Root>
+          <IconButton
+            icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+            label={running ? 'Pause' : 'Start'}
+            onClick={() => setRunning(!running)}
+          />
+          <IconButton icon='ph--x--regular' label='Reset' onClick={handleReset} />
+        </Toolbar.Root>
         <div className='flex items-center justify-center'>
           <SyntaxHighlighter language='json' className='text-sm'>
             {JSON.stringify(model.toJSON())}
