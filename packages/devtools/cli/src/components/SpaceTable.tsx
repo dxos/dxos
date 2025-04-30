@@ -22,10 +22,13 @@ export const SpaceTable: FC<{ client: Client; interval?: number }> = ({ client, 
     const spaces = client.spaces.get();
     const data = mapSpaces(spaces, { truncateKeys: true });
     setData(
-      data.map(({ key, open, objects }) => ({
+      data.map(({ key, state, name, members, objects, startup }) => ({
         key,
-        open,
+        state,
+        name,
+        members,
         objects,
+        startup,
       })),
     );
   };

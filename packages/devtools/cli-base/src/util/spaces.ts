@@ -7,7 +7,7 @@
 import { ux } from '@oclif/core';
 
 import { asyncTimeout } from '@dxos/async';
-import { type Space, SpaceMember } from '@dxos/client/echo';
+import { type Space, SpaceMember, SpaceState } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
 import { maybeTruncateKey } from './keys';
@@ -69,31 +69,21 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
     // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
     // const host = client.services.services.DevtoolsHost!;
     const pipeline = space.internal.data.pipeline;
-    const startDataMutations = pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages() ?? 0;
     const epoch = pipeline?.currentEpoch?.subject.assertion.number;
-    // const appliedEpoch = pipeline?.appliedEpoch?.subject.assertion.number;
-    const currentDataMutations = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
-    const totalDataMutations = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
 
     return {
-      key: maybeTruncateKey(space.key, options.truncateKeys),
-      open: space.isOpen,
-      name: space.properties.name,
+      id: space.id,
+      state: SpaceState[space.state.get()],
+      name: space.state.get() === SpaceState.SPACE_READY ? space.properties.name : 'loading...',
+
       members: space.members.get().length,
       objects: space.db.coreDatabase.getAllObjectIds().length,
-      startup,
+
+      key: maybeTruncateKey(space.key, options.truncateKeys),
       epoch,
+      startup,
+      automergeRoot: space.internal.data.pipeline?.spaceRootUrl,
       // appliedEpoch,
-
-      startDataMutations,
-      currentDataMutations,
-      totalDataMutations, // TODO(burdon): Shows up lower than current.
-
-      // TODO(burdon): Negative?
-      progress: (
-        Math.min(Math.abs((currentDataMutations - startDataMutations) / (totalDataMutations - startDataMutations)), 1) *
-        100
-      ).toFixed(0),
     };
   });
 };
@@ -103,12 +93,12 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & TableOpti
     table(
       mapSpaces(spaces, { ...flags, truncateKeys: true }),
       {
-        key: {
-          header: 'key',
+        id: {
+          header: 'id',
+          width: 8,
         },
-        open: {
-          header: 'open',
-          width: 6,
+        state: {
+          header: 'state',
         },
         name: {
           header: 'name',
@@ -118,6 +108,10 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & TableOpti
         },
         objects: {
           header: 'objects',
+        },
+
+        key: {
+          header: 'key',
         },
         epoch: {
           header: 'epoch',
@@ -130,32 +124,9 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & TableOpti
           header: 'startup',
           extended: true,
         },
-        startDataMutations: {
-          header: 'stashed', // TODO(burdon): Stashed?
+        automergeRoot: {
+          header: 'automerge root doc',
           extended: true,
-        },
-        currentDataMutations: {
-          header: 'processed',
-          extended: true,
-        },
-        totalDataMutations: {
-          header: 'total',
-          extended: true,
-        },
-        progress: {
-          header: 'progress',
-          extended: true,
-          // TODO(burdon): Use `ink` to render progress bar (separate from list commands).
-          // get: (spaceInfo) => {
-          //   let progressValue = +spaceInfo.progress;
-          //   const subscription = spaces[0].pipeline.subscribe({
-          //     next: (value) => {
-          //       console.log('update', value);
-          //       progressValue += 1;
-          //     },
-          //   });
-          //   return progressValue;
-          // },
         },
       },
       flags,

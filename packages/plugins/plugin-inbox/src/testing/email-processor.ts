@@ -82,9 +82,10 @@ export const processEmail = async (params: ProcessEmailParams): Promise<ProcessE
       ],
     }),
   );
-  const result =
+  const result: any =
     messages.find((message) => message.role === 'assistant')?.content.find((content) => content.type === 'tool_use')
       ?.input ?? raise(new Error('failed to process email'));
+
   return {
     labels: result.labels,
     summary: result.summary,

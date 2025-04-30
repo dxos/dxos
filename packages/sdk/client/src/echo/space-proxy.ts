@@ -43,13 +43,18 @@ import {
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { SpaceMember as HaloSpaceMember, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  SpaceMember as HaloSpaceMember,
+  type Credential,
+  type Epoch,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
+import { Stream } from '@dxos/codec-protobuf/stream';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
@@ -136,6 +141,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         return self._data;
       },
       createEpoch: this._createEpoch.bind(this),
+      getCredentials: this._getCredentials.bind(this),
       getEpochs: this._getEpochs.bind(this),
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
@@ -528,26 +534,15 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
   }
 
-  private async _getEpochs(): Promise<SpecificCredential<Epoch>[]> {
+  private async _getCredentials(): Promise<Credential[]> {
     const stream = this._clientServices.services.SpacesService?.queryCredentials({ spaceKey: this.key, noTail: true });
+    invariant(stream, 'SpacesService not available');
+    return await Stream.consumeData(stream);
+  }
 
-    return new Promise<SpecificCredential<Epoch>[]>((resolve, reject) => {
-      const credentials: SpecificCredential<Epoch>[] = [];
-      stream?.subscribe(
-        (credential) => {
-          if (checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
-            credentials.push(credential);
-          }
-        },
-        (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(credentials);
-          }
-        },
-      );
-    });
+  private async _getEpochs(): Promise<SpecificCredential<Epoch>[]> {
+    const credentials = await this._getCredentials();
+    return credentials.filter((credential) => checkCredentialType(credential, 'dxos.halo.credentials.Epoch'));
   }
 
   private async _migrate() {

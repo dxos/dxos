@@ -21,6 +21,10 @@ export default class List extends BaseCommand<typeof List> {
     live: Flags.boolean({
       description: 'Live update.',
     }),
+    // TODO(dmaretskyi): Inverted flags?
+    noWait: Flags.boolean({
+      description: 'Do not wait for spaces to be ready.',
+    }),
     timeout: Flags.integer({
       description: 'Timeout (ms).',
       default: 1_000,
@@ -30,7 +34,7 @@ export default class List extends BaseCommand<typeof List> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async ({ client }) => {
-      const spaces = await this.getSpaces(client, { wait: true });
+      const spaces = await this.getSpaces(client, { wait: !this.flags.noWait });
       if (this.flags.json) {
         return mapSpaces(spaces);
       } else {
