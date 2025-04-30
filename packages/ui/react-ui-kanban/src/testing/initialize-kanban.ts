@@ -13,7 +13,8 @@ import { KanbanType } from '../defs';
 
 type InitializeKanbanProps = {
   space: Space;
-  initialSchema?: string;
+  name?: string;
+  typename?: string;
   initialPivotColumn?: string;
 };
 
@@ -42,12 +43,13 @@ const createDefaultTaskSchema = () => {
 
 export const initializeKanban = async ({
   space,
-  initialSchema,
+  name,
+  typename,
   initialPivotColumn,
 }: InitializeKanbanProps): Promise<{ kanban: KanbanType; schema: EchoSchema }> => {
-  if (initialSchema) {
-    const schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
-    invariant(schema, `Schema not found: ${initialSchema}`);
+  if (typename) {
+    const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+    invariant(schema, `Schema not found: ${typename}`);
 
     const fields = getSchemaProperties(schema.ast)
       .filter((prop) => prop.type !== 'object' || prop.format === FormatEnum.Ref)
@@ -60,7 +62,7 @@ export const initializeKanban = async ({
       fields,
     });
 
-    const kanban = create(KanbanType, { cardView: makeRef(view), columnFieldId: undefined });
+    const kanban = create(KanbanType, { cardView: makeRef(view), columnFieldId: undefined, name });
     if (initialPivotColumn) {
       const viewProjection = new ViewProjection(schema.jsonSchema, view);
       const fieldId = viewProjection.getFieldId(initialPivotColumn);
