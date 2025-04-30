@@ -7,7 +7,7 @@
 import { ux } from '@oclif/core';
 
 import { asyncTimeout } from '@dxos/async';
-import { type Space, SpaceMember, SpaceState } from '@dxos/client/echo';
+import { type Space, SpaceMember, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
 import { maybeTruncateKey } from './keys';
@@ -59,39 +59,47 @@ export type MapSpacesOptions = {
   truncateKeys?: boolean;
 };
 
-export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false, truncateKeys: false }) => {
-  return spaces.map((space) => {
-    // TODO(burdon): Factor out.
-    // TODO(burdon): Agent needs to restart before `ready` is available.
-    const { open, ready } = space.internal.data.metrics ?? {};
-    const startup = open && ready && ready.getTime() - open.getTime();
+export const mapSpaces = async (
+  spaces: Space[],
+  options: MapSpacesOptions = { verbose: false, truncateKeys: false },
+) => {
+  return await Promise.all(
+    spaces.map(async (space) => {
+      // TODO(burdon): Factor out.
+      // TODO(burdon): Agent needs to restart before `ready` is available.
+      const { open, ready } = space.internal.data.metrics ?? {};
+      const startup = open && ready && ready.getTime() - open.getTime();
 
-    // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
-    // const host = client.services.services.DevtoolsHost!;
-    const pipeline = space.internal.data.pipeline;
-    const epoch = pipeline?.currentEpoch?.subject.assertion.number;
+      // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
+      // const host = client.services.services.DevtoolsHost!;
+      const pipeline = space.internal.data.pipeline;
+      const epoch = pipeline?.currentEpoch?.subject.assertion.number;
 
-    return {
-      id: space.id,
-      state: SpaceState[space.state.get()],
-      name: space.state.get() === SpaceState.SPACE_READY ? space.properties.name : 'loading...',
+      const syncState = aggregateSyncState(await space.db.coreDatabase.getSyncState());
 
-      members: space.members.get().length,
-      objects: space.db.coreDatabase.getAllObjectIds().length,
+      return {
+        id: space.id,
+        state: SpaceState[space.state.get()],
+        name: space.state.get() === SpaceState.SPACE_READY ? space.properties.name : 'loading...',
 
-      key: maybeTruncateKey(space.key, options.truncateKeys),
-      epoch,
-      startup,
-      automergeRoot: space.internal.data.pipeline?.spaceRootUrl,
-      // appliedEpoch,
-    };
-  });
+        members: space.members.get().length,
+        objects: space.db.coreDatabase.getAllObjectIds().length,
+
+        key: maybeTruncateKey(space.key, options.truncateKeys),
+        epoch,
+        startup,
+        automergeRoot: space.internal.data.pipeline?.spaceRootUrl,
+        // appliedEpoch,
+        syncState: `${syncState.count} ${getSyncIndicator(syncState.up, syncState.down)} (${syncState.peers} peers)`,
+      };
+    }),
+  );
 };
 
-export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & TableOptions = {}) => {
+export const printSpaces = async (spaces: Space[], flags: MapSpacesOptions & TableOptions = {}) => {
   ux.stdout(
     table(
-      mapSpaces(spaces, { ...flags, truncateKeys: true }),
+      await mapSpaces(spaces, { ...flags, truncateKeys: true }),
       {
         id: {
           header: 'id',
@@ -108,6 +116,9 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & TableOpti
         },
         objects: {
           header: 'objects',
+        },
+        syncState: {
+          header: 'sync',
         },
 
         key: {
@@ -152,7 +163,7 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
     table(
       mapMembers(members, true),
       {
-        key: {
+        key: { 
           header: 'identity key',
         },
         name: {
@@ -165,4 +176,41 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
       flags,
     ),
   );
+};
+
+//
+// Sync
+//
+
+const aggregateSyncState = (syncState: SpaceSyncState) => {
+  const peers = Object.keys(syncState.peers ?? {}).length;
+  const missingOnLocal = Math.max(...Object.values(syncState.peers ?? {}).map((peer) => peer.missingOnLocal), 0);
+  const missingOnRemote = Math.max(...Object.values(syncState.peers ?? {}).map((peer) => peer.missingOnRemote), 0);
+  const differentDocuments = Math.max(
+    ...Object.values(syncState.peers ?? {}).map((peer) => peer.differentDocuments),
+    0,
+  );
+
+  return {
+    count: missingOnLocal + missingOnRemote + differentDocuments,
+    peers,
+    up: missingOnRemote > 0 || differentDocuments > 0,
+    down: missingOnLocal > 0 || differentDocuments > 0,
+  };
+};
+
+const getSyncIndicator = (up: boolean, down: boolean) => {
+  if (up) {
+    if (down) {
+      return '⇅';
+    } else {
+      return '↑';
+    }
+  } else {
+    if (down) {
+      return '↓';
+    } else {
+      return '✓';
+    }
+  }
 };
