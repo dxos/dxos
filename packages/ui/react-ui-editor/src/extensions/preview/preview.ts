@@ -30,6 +30,7 @@ export type PreviewLinkRef = {
 export type PreviewLinkTarget = {
   label: string;
   text: string;
+  [key: string]: any;
 };
 
 export type PreviewAction =
