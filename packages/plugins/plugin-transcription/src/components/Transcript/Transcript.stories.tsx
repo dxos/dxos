@@ -23,11 +23,14 @@ import { hues, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcript } from './Transcript';
-import { transcript, TranscriptModel } from './transcript-extension';
+import { BlockModel } from './model';
+import { blockToMarkdown, transcript } from './transcript-extension';
 import translations from '../../translations';
 import { type TranscriptBlock } from '../../types';
 
 faker.seed(1);
+
+// TODO(burdon): Story with queue.
 
 let start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 const next = () => {
@@ -74,13 +77,7 @@ const meta: Meta<typeof Transcript> = {
 
     return <Transcript {...args} blocks={blocks} />;
   },
-  decorators: [
-    withTheme,
-    withLayout({
-      tooltips: true,
-      fullscreen: true,
-    }),
-  ],
+  decorators: [withTheme, withLayout({ tooltips: true, fullscreen: true })],
   parameters: {
     translations,
   },
@@ -107,10 +104,10 @@ export const Empty: Story = {
 
 const ExtensionStory = () => {
   const { themeMode } = useThemeContext();
-  const model = useMemo(() => new TranscriptModel(Array.from({ length: 3 }, createBlock)), []);
-  useEffect(() => {
-    console.log('####');
-  }, [model]);
+  const model = useMemo(
+    () => new BlockModel<TranscriptBlock>(blockToMarkdown, Array.from({ length: 3 }, createBlock)),
+    [],
+  );
   const [running, setRunning] = useState(true);
   const [, refresh] = useState({});
 
@@ -121,28 +118,23 @@ const ExtensionStory = () => {
     }
 
     if (!currentBlock) {
-      const block = createBlock(1);
-      // TODO(burdon): Race condition.
-      // TODO(burdon): Wrap queue and flush.
-      const i = setTimeout(() => {
-        model.setBlock(block);
-      }, 1_000);
+      const block = createBlock();
+      model.appendBlock(block);
       setCurrentBlock(block);
-      return () => clearTimeout(i);
     }
 
     return;
-    const i = setInterval(() => {
-      if (currentBlock.segments.length >= 3) {
-        setCurrentBlock(null);
-        clearInterval(i);
-        return;
-      }
+    // const i = setInterval(() => {
+    //   if (currentBlock.segments.length >= 3) {
+    //     setCurrentBlock(null);
+    //     clearInterval(i);
+    //     return;
+    //   }
 
-      currentBlock.segments.push(createSegment());
-      model.setBlock(currentBlock);
-      refresh({});
-    }, 10_000);
+    //   currentBlock.segments.push(createSegment());
+    //   model.setBlock(currentBlock);
+    //   refresh({});
+    // }, 10_000);
 
     return () => clearInterval(i);
   }, [model, currentBlock, running]);

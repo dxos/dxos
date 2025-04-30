@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, RangeSetBuilder, Text } from '@codemirror/state';
+import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { EditorView, GutterMarker, ViewPlugin, gutter } from '@codemirror/view';
 
-import { Event, type CleanupFn, addEventListener, combine } from '@dxos/async';
+import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type RenderCallback } from '@dxos/react-ui-editor';
 
+import { type BlockModel } from './model';
 import { type TranscriptBlock } from '../../types';
 
-const blockToMarkdown = (block: TranscriptBlock, debug = true): string[] => {
+export const blockToMarkdown = (block: TranscriptBlock, debug = true): string[] => {
   // TODO(burdon): Use link/reference markup for users (with popover).
   return [
     `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
@@ -19,96 +20,11 @@ const blockToMarkdown = (block: TranscriptBlock, debug = true): string[] => {
   ];
 };
 
-// TODO(burdon): Wrap queue.
-/**
- * Ideally we would implement a custom virtual Text model for the View, but this currently isn't possible in Codemirror.
- * Instead we use a simple model that maps blocks to lines.
- */
-export class TranscriptModel {
-  /** Ordered array of blocks. */
-  private readonly _blocks: TranscriptBlock[] = [];
-
-  /** Map of blocks indexed by id. */
-  private readonly _blockMap = new Map<string, TranscriptBlock>();
-
-  /** Map of block ids to line numbers. */
-  private readonly _blockLine = new Map<number, TranscriptBlock>();
-
-  /** Line number of the last block. */
-  private _lastBlockLine = 1;
-
-  public readonly update = new Event<{ block: string; lines: string[] }>();
-
-  constructor(blocks: TranscriptBlock[]) {
-    blocks.forEach((block) => {
-      this.setBlock(block, false);
-    });
-  }
-
-  toJSON() {
-    return {
-      blocks: this._blocks.length,
-      lines: Array.from(this._blockLine.keys()),
-    };
-  }
-
-  get doc() {
-    return Text.of([...this._blocks.flatMap((block) => blockToMarkdown(block)), '']);
-  }
-
-  getTimestamp(line: number): Date | undefined {
-    const block = this._blockLine.get(line);
-    return block?.segments[0]?.started;
-  }
-
-  reset() {
-    this._blockMap.clear();
-    this._blocks.length = 0;
-    this._lastBlockLine = 1;
-    return this;
-  }
-
-  /**
-   * Upsert a block into the model and update the document.
-   */
-  // TODO(burdon): Adapt to queue to determine new or modified blocks.
-  // TODO(burdon): Doesn't support out-of-order blocks or deleting blocks.
-  setBlock(block: TranscriptBlock, flush = true) {
-    if (this._blockMap.has(block.id)) {
-      // Replace existing block.
-      const idx = this._blocks.findIndex((b) => b.id === block.id);
-      if (idx !== -1) {
-        this._blocks[idx] = block;
-      }
-
-      this._blockMap.set(block.id, block);
-    } else {
-      // Add new block.
-      let line = this._lastBlockLine;
-      const lastBlock = this._blockLine.get(this._lastBlockLine);
-      if (lastBlock) {
-        line += blockToMarkdown(lastBlock).length;
-      }
-
-      this._blockMap.set(block.id, block);
-      this._blocks.push(block);
-      this._blockLine.set(line, block);
-      this._lastBlockLine = line;
-    }
-
-    if (flush) {
-      this.update.emit({ block: block.id, lines: blockToMarkdown(block) });
-    }
-
-    return this;
-  }
-}
-
 /**
  * Data structure that maps Blocks queue to lines with transcript state.
  */
 export type TranscriptOptions = {
-  model: TranscriptModel;
+  model: BlockModel<TranscriptBlock>;
   renderButton?: RenderCallback<{ onClick: () => void }>;
 };
 
@@ -123,10 +39,10 @@ export const transcript = (options: TranscriptOptions): Extension => {
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            const timestamp = options.model.getTimestamp(line.number);
-            if (timestamp) {
-              builder.add(line.from, line.from, new TimestampMarker(line.number, timestamp));
-            }
+            // const timestamp = options.model.getTimestamp(line.number);
+            // if (timestamp) {
+            //   builder.add(line.from, line.from, new TimestampMarker(line.number, timestamp));
+            // }
 
             if (line.to + 1 > view.state.doc.length) {
               break;
@@ -200,31 +116,16 @@ export const transcript = (options: TranscriptOptions): Extension => {
 
             // Listen for model updates.
             // TODO(burdon): Generalize to support out-of-order blocks (e.g., insert lines).
-            options.model.update.on(({ block, lines }) => {
-              console.log('INSERT');
+            // options.model.update.on(({ block, lines }) => {
+            // Check if clamped to bottom.
+            // const autoScroll =
+            // scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
 
-              // Check if clamped to bottom.
-              const autoScroll =
-                scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
-
-              // Check if block was already inserted.
-              const { from, to } = this._blockRange.get(block) ?? {
-                from: view.state.doc.length,
-                to: view.state.doc.length,
-              };
-
-              // Append/insert into document and update state field with line number for block.
-              const text = lines.join('\n') + '\n';
-              this._blockRange.set(block, { from, to: from + text.length });
-              view.dispatch({
-                changes: { from, to, insert: text },
-              });
-
-              // Scroll.
-              if (autoScroll) {
-                scrollToBottom();
-              }
-            }),
+            // Scroll.
+            // if (autoScroll) {
+            //   scrollToBottom();
+            // }
+            // }),
           );
         }
 
