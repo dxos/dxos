@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useState, useMemo } from 'react';
 
+import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { Button, IconButton, useThemeContext } from '@dxos/react-ui';
 import {
@@ -23,11 +24,22 @@ import { hues, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcript } from './Transcript';
+<<<<<<< HEAD
 import { transcript, TranscriptModel } from './transcript-extension';
+=======
+import { BlockModel } from './model';
+import { blockToMarkdown, transcript } from './transcript-extension';
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
 import translations from '../../translations';
 import { type TranscriptBlock } from '../../types';
 
 faker.seed(1);
+<<<<<<< HEAD
+=======
+
+// TODO(burdon): Story with queue.
+// TODO(burdon): Create adapter that listens for updates to the queue.
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
 
 let start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 const next = () => {
@@ -40,6 +52,7 @@ const users = Array.from({ length: 5 }, () => ({
   authorHue: faker.helpers.arrayElement(hues),
 }));
 
+<<<<<<< HEAD
 let count = 0;
 const createBlock = (numSegments = 1): TranscriptBlock => {
   const author = faker.helpers.arrayElement(users);
@@ -57,6 +70,18 @@ const createSegment = () => {
     text: faker.lorem.word(),
   };
 };
+=======
+const createBlock = (numSegments = 1): TranscriptBlock => ({
+  id: ObjectId.random().toString(),
+  ...faker.helpers.arrayElement(users),
+  segments: Array.from({ length: numSegments }).map(() => createSegment()),
+});
+
+const createSegment = () => ({
+  started: next(),
+  text: faker.lorem.paragraph(),
+});
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
 
 const meta: Meta<typeof Transcript> = {
   title: 'plugins/plugin-transcription/Transcript',
@@ -64,23 +89,21 @@ const meta: Meta<typeof Transcript> = {
   render: ({ blocks: initialBlocks = [], ...args }) => {
     const [blocks, setBlocks] = useState(initialBlocks);
     useEffect(() => {
+<<<<<<< HEAD
       // TODO(burdon): Add segments.
       const i = setInterval(() => {
         setBlocks((blocks) => [...blocks, createBlock()]);
       }, 1_000);
 
+=======
+      const i = setInterval(() => setBlocks((blocks) => [...blocks, createBlock()]), 1_000);
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
       return () => clearInterval(i);
     }, []);
 
     return <Transcript {...args} blocks={blocks} />;
   },
-  decorators: [
-    withTheme,
-    withLayout({
-      tooltips: true,
-      fullscreen: true,
-    }),
-  ],
+  decorators: [withTheme, withLayout({ tooltips: true, fullscreen: true })],
   parameters: {
     translations,
   },
@@ -107,6 +130,7 @@ export const Empty: Story = {
 
 const ExtensionStory = () => {
   const { themeMode } = useThemeContext();
+<<<<<<< HEAD
   const model = useMemo(() => new TranscriptModel(Array.from({ length: 3 }, createBlock)), []);
   useEffect(() => {
     console.log('####');
@@ -114,6 +138,13 @@ const ExtensionStory = () => {
   const [running, setRunning] = useState(true);
   const [, refresh] = useState({});
 
+=======
+  const model = useMemo(
+    () => new BlockModel<TranscriptBlock>(blockToMarkdown, Array.from({ length: 5 }, createBlock)),
+    [],
+  );
+  const [running, setRunning] = useState(true);
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
   const [currentBlock, setCurrentBlock] = useState<TranscriptBlock | null>(null);
   useEffect(() => {
     if (!running) {
@@ -121,6 +152,7 @@ const ExtensionStory = () => {
     }
 
     if (!currentBlock) {
+<<<<<<< HEAD
       const block = createBlock(1);
       // TODO(burdon): Race condition.
       // TODO(burdon): Wrap queue and flush.
@@ -134,19 +166,35 @@ const ExtensionStory = () => {
     return;
     const i = setInterval(() => {
       if (currentBlock.segments.length >= 3) {
+=======
+      const block = createBlock();
+      model.appendBlock(block);
+      setCurrentBlock(block);
+      return;
+    }
+
+    const i = setInterval(() => {
+      if (currentBlock?.segments.length && currentBlock.segments.length >= 3) {
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
         setCurrentBlock(null);
         clearInterval(i);
         return;
       }
 
       currentBlock.segments.push(createSegment());
+<<<<<<< HEAD
       model.setBlock(currentBlock);
       refresh({});
     }, 10_000);
+=======
+      model.updateBlock(currentBlock);
+    }, 3_000);
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
 
     return () => clearInterval(i);
   }, [model, currentBlock, running]);
 
+<<<<<<< HEAD
   const doc = useMemo(() => model.doc, [model]);
   const { parentRef } = useTextEditor({
     doc,
@@ -156,6 +204,14 @@ const ExtensionStory = () => {
       createBasicExtensions({ readOnly: true, lineWrapping: false }),
       createMarkdownExtensions({ themeMode }),
       createThemeExtensions({ themeMode, slots: { editor: { className: '' } } }),
+=======
+  const { parentRef } = useTextEditor({
+    extensions: [
+      // TODO(burdon): Enable preview.
+      createBasicExtensions({ readOnly: true, lineWrapping: true }),
+      createMarkdownExtensions({ themeMode }),
+      createThemeExtensions({ themeMode }),
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
       decorateMarkdown(),
       transcript({
         model,

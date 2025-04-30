@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+<<<<<<< HEAD
 import { type Extension, RangeSetBuilder, Text } from '@codemirror/state';
 import { EditorView, GutterMarker, ViewPlugin, gutter } from '@codemirror/view';
 
@@ -12,6 +13,20 @@ import { type TranscriptBlock } from '../../types';
 
 const blockToMarkdown = (block: TranscriptBlock, debug = true): string[] => {
   // TODO(burdon): Use link/reference markup for users (with popover).
+=======
+import { type Extension, RangeSetBuilder } from '@codemirror/state';
+import { EditorView, GutterMarker, ViewPlugin, type ViewUpdate, gutter } from '@codemirror/view';
+
+import { type CleanupFn, addEventListener, combine } from '@dxos/async';
+import { type RenderCallback } from '@dxos/react-ui-editor';
+
+import { DocumentAdapter, type BlockModel } from './model';
+import { type TranscriptBlock } from '../../types';
+
+export const blockToMarkdown = (block: TranscriptBlock, debug = false): string[] => {
+  // TODO(burdon): Use link/reference markup for users (with popover).
+  // TODO(burdon): Color and avatar.
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
   return [
     `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
     block.segments.map((segment) => segment.text).join(' '),
@@ -19,6 +34,7 @@ const blockToMarkdown = (block: TranscriptBlock, debug = true): string[] => {
   ];
 };
 
+<<<<<<< HEAD
 // TODO(burdon): Wrap queue.
 /**
  * Ideally we would implement a custom virtual Text model for the View, but this currently isn't possible in Codemirror.
@@ -104,15 +120,28 @@ export class TranscriptModel {
   }
 }
 
+=======
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
 /**
  * Data structure that maps Blocks queue to lines with transcript state.
  */
 export type TranscriptOptions = {
+<<<<<<< HEAD
   model: TranscriptModel;
   renderButton?: RenderCallback<{ onClick: () => void }>;
 };
 
 export const transcript = (options: TranscriptOptions): Extension => {
+=======
+  model: BlockModel<TranscriptBlock>;
+  renderButton?: RenderCallback<{ onClick: () => void }>;
+};
+
+/**
+ * Scrolling transcript with timestamps.
+ */
+export const transcript = ({ model, renderButton }: TranscriptOptions): Extension => {
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
   return [
     // Show timestamps in the gutter.
     gutter({
@@ -123,7 +152,11 @@ export const transcript = (options: TranscriptOptions): Extension => {
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
+<<<<<<< HEAD
             const timestamp = options.model.getTimestamp(line.number);
+=======
+            const timestamp = model.getBlockAtLine(line.number)?.segments[0]?.started;
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
             if (timestamp) {
               builder.add(line.from, line.from, new TimestampMarker(line.number, timestamp));
             }
@@ -143,6 +176,7 @@ export const transcript = (options: TranscriptOptions): Extension => {
     // Listen for model updates.
     ViewPlugin.fromClass(
       class {
+<<<<<<< HEAD
         /** Map of block ranges by id. */
         // TODO(burdon): Change to track line ranges.
         private readonly _blockRange = new Map<string, { from: number; to: number }>();
@@ -150,6 +184,16 @@ export const transcript = (options: TranscriptOptions): Extension => {
         private readonly _cleanup: CleanupFn;
 
         constructor(view: EditorView) {
+=======
+        private readonly _controls?: HTMLDivElement;
+        private readonly _cleanup: CleanupFn;
+        private readonly _adapter: DocumentAdapter;
+        private _initialized = false;
+
+        constructor(view: EditorView) {
+          this._adapter = new DocumentAdapter(view);
+
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
           const scroller = view.scrollDOM;
           let isAutoScrolling = false;
           let hasScrolled = false;
@@ -173,11 +217,19 @@ export const transcript = (options: TranscriptOptions): Extension => {
           };
 
           // Scroll button.
+<<<<<<< HEAD
           if (options.renderButton) {
             this._controls = document.createElement('div');
             this._controls.classList.add('cm-controls', 'transition-opacity', 'duration-300', 'opacity-0');
             view.dom.appendChild(this._controls);
             options.renderButton(
+=======
+          if (renderButton) {
+            this._controls = document.createElement('div');
+            this._controls.classList.add('cm-controls', 'transition-opacity', 'duration-300', 'opacity-0');
+            view.dom.appendChild(this._controls);
+            renderButton(
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
               this._controls,
               {
                 onClick: () => {
@@ -190,7 +242,10 @@ export const transcript = (options: TranscriptOptions): Extension => {
 
           // Event listeners.
           this._cleanup = combine(
+<<<<<<< HEAD
             // Check if scrolled.
+=======
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
             addEventListener(view.scrollDOM, 'scroll', () => {
               if (!isAutoScrolling) {
                 hasScrolled = true;
@@ -198,15 +253,20 @@ export const transcript = (options: TranscriptOptions): Extension => {
               }
             }),
 
+<<<<<<< HEAD
             // Listen for model updates.
             // TODO(burdon): Generalize to support out-of-order blocks (e.g., insert lines).
             options.model.update.on(({ block, lines }) => {
               console.log('INSERT');
 
+=======
+            model.update.on(() => {
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
               // Check if clamped to bottom.
               const autoScroll =
                 scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
 
+<<<<<<< HEAD
               // Check if block was already inserted.
               const { from, to } = this._blockRange.get(block) ?? {
                 from: view.state.doc.length,
@@ -219,6 +279,10 @@ export const transcript = (options: TranscriptOptions): Extension => {
               view.dispatch({
                 changes: { from, to, insert: text },
               });
+=======
+              // Sync.
+              model.sync(this._adapter);
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
 
               // Scroll.
               if (autoScroll) {
@@ -228,6 +292,19 @@ export const transcript = (options: TranscriptOptions): Extension => {
           );
         }
 
+<<<<<<< HEAD
+=======
+        update(update: ViewUpdate) {
+          // Initial sync.
+          if (!this._initialized) {
+            this._initialized = true;
+            setTimeout(() => {
+              model.sync(this._adapter);
+            });
+          }
+        }
+
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
         destroy() {
           this._controls?.remove();
           this._cleanup();
@@ -288,14 +365,22 @@ class TimestampMarker extends GutterMarker {
     const el = document.createElement('div');
     el.className = 'text-sm text-subdued hover:bg-hoverSurface cursor-pointer';
     el.textContent = [
+<<<<<<< HEAD
       this._line,
       ':',
       // pad(this._timestamp.getHours()),
+=======
+      pad(this._timestamp.getHours()),
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
       pad(this._timestamp.getMinutes()),
       pad(this._timestamp.getSeconds()),
     ].join(':');
 
+<<<<<<< HEAD
     // TODO(burdon): Click to bookmark or get hyperlink.
+=======
+    // TODO(burdon): Click to bookmark or copy hyperlink.
+>>>>>>> 85b36d18db1a6e80897e80aa383ed71629042093
     el.onclick = () => {
       const pos = view.state.doc.line(this._line).from;
       view.dispatch({
