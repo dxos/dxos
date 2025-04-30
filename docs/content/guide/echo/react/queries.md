@@ -76,7 +76,7 @@ DXOS provides apis to define these types using [Effect Schema](https://effect.we
 Consider this expression of schema declared with Effect Schema:
 
 ```ts file=./snippets/schema.ts#L5-
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { TypedObject } from '@dxos/echo-schema';
 
