@@ -12,6 +12,16 @@ export const combine = (...cleanupFns: CleanupFn[]): CleanupFn => {
   };
 };
 
+export const addEventListener = (
+  el: HTMLElement,
+  event: string,
+  handler: EventListenerOrEventListenerObject,
+  options?: boolean | AddEventListenerOptions,
+): CleanupFn => {
+  el.addEventListener(event, handler, options);
+  return () => el.removeEventListener(event, handler, options);
+};
+
 export class SubscriptionList {
   private readonly _cleanups: CleanupFn[] = [];
 
