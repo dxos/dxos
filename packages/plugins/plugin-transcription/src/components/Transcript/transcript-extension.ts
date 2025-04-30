@@ -3,15 +3,15 @@
 //
 
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
-import { EditorView, GutterMarker, ViewPlugin, gutter } from '@codemirror/view';
+import { EditorView, GutterMarker, ViewPlugin, type ViewUpdate, gutter } from '@codemirror/view';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type RenderCallback } from '@dxos/react-ui-editor';
 
-import { type BlockModel } from './model';
+import { DocumentAdapter, type BlockModel } from './model';
 import { type TranscriptBlock } from '../../types';
 
-export const blockToMarkdown = (block: TranscriptBlock, debug = true): string[] => {
+export const blockToMarkdown = (block: TranscriptBlock, debug = false): string[] => {
   // TODO(burdon): Use link/reference markup for users (with popover).
   return [
     `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
@@ -39,10 +39,10 @@ export const transcript = (options: TranscriptOptions): Extension => {
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            // const timestamp = options.model.getTimestamp(line.number);
-            // if (timestamp) {
-            //   builder.add(line.from, line.from, new TimestampMarker(line.number, timestamp));
-            // }
+            const timestamp = options.model.getBlockAtLine(line.number)?.segments[0]?.started;
+            if (timestamp) {
+              builder.add(line.from, line.from, new TimestampMarker(line.number, timestamp));
+            }
 
             if (line.to + 1 > view.state.doc.length) {
               break;
@@ -59,13 +59,14 @@ export const transcript = (options: TranscriptOptions): Extension => {
     // Listen for model updates.
     ViewPlugin.fromClass(
       class {
-        /** Map of block ranges by id. */
-        // TODO(burdon): Change to track line ranges.
-        private readonly _blockRange = new Map<string, { from: number; to: number }>();
         private readonly _controls?: HTMLDivElement;
         private readonly _cleanup: CleanupFn;
+        private readonly _adapter: DocumentAdapter;
+        private _initialized = false;
 
         constructor(view: EditorView) {
+          this._adapter = new DocumentAdapter(view);
+
           const scroller = view.scrollDOM;
           let isAutoScrolling = false;
           let hasScrolled = false;
@@ -115,18 +116,29 @@ export const transcript = (options: TranscriptOptions): Extension => {
             }),
 
             // Listen for model updates.
-            // TODO(burdon): Generalize to support out-of-order blocks (e.g., insert lines).
-            // options.model.update.on(({ block, lines }) => {
-            // Check if clamped to bottom.
-            // const autoScroll =
-            // scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
+            options.model.update.on(() => {
+              // Check if clamped to bottom.
+              const autoScroll =
+                scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
 
-            // Scroll.
-            // if (autoScroll) {
-            //   scrollToBottom();
-            // }
-            // }),
+              // Sync.
+              options.model.sync(this._adapter);
+
+              // Scroll.
+              if (autoScroll) {
+                scrollToBottom();
+              }
+            }),
           );
+        }
+
+        update(update: ViewUpdate) {
+          if (!this._initialized) {
+            this._initialized = true;
+            setTimeout(() => {
+              options.model.sync(this._adapter);
+            });
+          }
         }
 
         destroy() {
@@ -189,9 +201,7 @@ class TimestampMarker extends GutterMarker {
     const el = document.createElement('div');
     el.className = 'text-sm text-subdued hover:bg-hoverSurface cursor-pointer';
     el.textContent = [
-      this._line,
-      ':',
-      // pad(this._timestamp.getHours()),
+      pad(this._timestamp.getHours()),
       pad(this._timestamp.getMinutes()),
       pad(this._timestamp.getSeconds()),
     ].join(':');

@@ -5,6 +5,7 @@
 import { Text } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
+import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -64,6 +65,9 @@ export class BlockModel<T extends Block> {
   /** Track block changes since last sync. */
   private readonly _changes: Array<BlockChange<T>> = [];
 
+  /** Emits when the document is updated. */
+  public readonly update = new Event<void>();
+
   constructor(
     private readonly _renderer: BlockRenderer<T>,
     blocks: T[] = [],
@@ -98,6 +102,7 @@ export class BlockModel<T extends Block> {
     this._blocks.length = 0;
     this._blockLineCounts.clear();
     this._lineToBlock.clear();
+    this.update.emit();
     return this;
   }
 
@@ -105,6 +110,7 @@ export class BlockModel<T extends Block> {
     const index = this._blocks.length;
     this._blocks.push(block);
     this._changes.push({ type: 'append', index, block });
+    this.update.emit();
     return this;
   }
 
@@ -113,6 +119,7 @@ export class BlockModel<T extends Block> {
     invariant(index !== -1);
     this._blocks[index] = block;
     this._changes.push({ type: 'update', index, block });
+    this.update.emit();
     return this;
   }
 
@@ -121,6 +128,7 @@ export class BlockModel<T extends Block> {
     invariant(index !== -1);
     this._blocks.splice(index, 1);
     this._changes.push({ type: 'delete', index, id });
+    this.update.emit();
     return this;
   }
 
@@ -128,7 +136,7 @@ export class BlockModel<T extends Block> {
    * Syncs the Document with the Queue.
    */
   sync(document: BlockDocument): this {
-    log.info('sync', { changes: this._changes });
+    log('sync', { changes: this._changes });
 
     // Process each change in order.
     for (const change of this._changes) {
@@ -196,15 +204,7 @@ export class BlockModel<T extends Block> {
  * Codemirror document adapter.
  */
 export class DocumentAdapter implements BlockDocument {
-  constructor(private readonly _view: EditorView) {
-    this._view.dispatch({
-      changes: {
-        from: 0,
-        to: this._view.state.doc.length,
-        insert: '',
-      },
-    });
-  }
+  constructor(private readonly _view: EditorView) {}
 
   /** The document must always have at least one line. */
   lineCount(): number {
@@ -212,7 +212,7 @@ export class DocumentAdapter implements BlockDocument {
   }
 
   replaceLines(from: number, remove: number, insert: string[]): void {
-    log.info('replaceLines', { from, remove, insert, total: this._view.state.doc.lines });
+    log('replaceLines', { from, remove, insert, total: this._view.state.doc.lines });
 
     const numLines = this._view.state.doc.lines;
     const posFrom = this._view.state.doc.line(from).from;

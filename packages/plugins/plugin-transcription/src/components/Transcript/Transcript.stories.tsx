@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useState, useMemo } from 'react';
 
+import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { Button, IconButton, useThemeContext } from '@dxos/react-ui';
 import {
@@ -43,12 +44,10 @@ const users = Array.from({ length: 5 }, () => ({
   authorHue: faker.helpers.arrayElement(hues),
 }));
 
-let count = 0;
 const createBlock = (numSegments = 1): TranscriptBlock => {
   const author = faker.helpers.arrayElement(users);
   return {
-    id: `block-${count++}`,
-    // id: ObjectId.random().toString(),
+    id: ObjectId.random().toString(),
     ...author,
     segments: Array.from({ length: numSegments }).map(() => createSegment()),
   };
@@ -57,7 +56,7 @@ const createBlock = (numSegments = 1): TranscriptBlock => {
 const createSegment = () => {
   return {
     started: next(),
-    text: faker.lorem.word(),
+    text: faker.lorem.paragraph(),
   };
 };
 
@@ -67,7 +66,6 @@ const meta: Meta<typeof Transcript> = {
   render: ({ blocks: initialBlocks = [], ...args }) => {
     const [blocks, setBlocks] = useState(initialBlocks);
     useEffect(() => {
-      // TODO(burdon): Add segments.
       const i = setInterval(() => {
         setBlocks((blocks) => [...blocks, createBlock()]);
       }, 1_000);
@@ -121,33 +119,30 @@ const ExtensionStory = () => {
       const block = createBlock();
       model.appendBlock(block);
       setCurrentBlock(block);
+      return;
     }
 
-    return;
-    // const i = setInterval(() => {
-    //   if (currentBlock.segments.length >= 3) {
-    //     setCurrentBlock(null);
-    //     clearInterval(i);
-    //     return;
-    //   }
+    const i = setInterval(() => {
+      if (currentBlock?.segments.length && currentBlock.segments.length >= 3) {
+        setCurrentBlock(null);
+        clearInterval(i);
+        return;
+      }
 
-    //   currentBlock.segments.push(createSegment());
-    //   model.setBlock(currentBlock);
-    //   refresh({});
-    // }, 10_000);
+      currentBlock.segments.push(createSegment());
+      model.updateBlock(currentBlock);
+      refresh({});
+    }, 3_000);
 
     return () => clearInterval(i);
   }, [model, currentBlock, running]);
 
-  const doc = useMemo(() => model.doc, [model]);
   const { parentRef } = useTextEditor({
-    doc,
-    // scrollTo: doc.length,
     extensions: [
       // TODO(burdon): Enable preview.
-      createBasicExtensions({ readOnly: true, lineWrapping: false }),
+      createBasicExtensions({ readOnly: true, lineWrapping: true }),
       createMarkdownExtensions({ themeMode }),
-      createThemeExtensions({ themeMode, slots: { editor: { className: '' } } }),
+      createThemeExtensions({ themeMode }),
       decorateMarkdown(),
       transcript({
         model,
