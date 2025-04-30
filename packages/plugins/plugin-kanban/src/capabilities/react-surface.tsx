@@ -61,8 +61,8 @@ export default () =>
         if (!space) {
           return null;
         }
-        const { initialSchema } = useFormValues();
-        const [selectedSchema] = space?.db.schemaRegistry.query({ typename: initialSchema }).runSync();
+        const { typename } = useFormValues();
+        const [selectedSchema] = space?.db.schemaRegistry.query({ typename }).runSync();
 
         const singleSelectColumns = useMemo(() => {
           if (!selectedSchema?.jsonSchema?.properties) {
@@ -79,7 +79,7 @@ export default () =>
           return columns;
         }, [selectedSchema?.jsonSchema]);
 
-        if (!initialSchema) {
+        if (!typename) {
           return null;
         }
 
