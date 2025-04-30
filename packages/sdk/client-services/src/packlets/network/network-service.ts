@@ -3,6 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
@@ -23,6 +24,7 @@ export class NetworkServiceImpl implements NetworkService {
   constructor(
     private readonly networkManager: SwarmNetworkManager,
     private readonly signalManager: SignalManager,
+    private readonly edgeConnection?: EdgeConnection,
   ) {}
 
   queryStatus() {
@@ -30,6 +32,7 @@ export class NetworkServiceImpl implements NetworkService {
       const update = () => {
         next({
           swarm: this.networkManager.connectionState,
+          edge: this.edgeConnection?.status,
           connectionInfo: this.networkManager.connectionLog?.swarms,
           signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
         });
@@ -37,11 +40,13 @@ export class NetworkServiceImpl implements NetworkService {
 
       const unsubscribeSwarm = this.networkManager.connectionStateChanged.on(() => update());
       const unsubscribeSignal = this.signalManager.statusChanged?.on(() => update());
+      const unsubscribeEdge = this.edgeConnection?.statusChanged.on(() => update());
       update();
 
       return () => {
         unsubscribeSwarm();
         unsubscribeSignal?.();
+        unsubscribeEdge?.();
       };
     });
   }

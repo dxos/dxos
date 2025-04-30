@@ -563,6 +563,8 @@ message NetworkStatus {
   }
 
   ConnectionState swarm = 1;
+  /// Edge websocket connection state.
+  optional EdgeStatus edge = 4;
   repeated Signal signaling = 2;
   repeated dxos.devtools.swarm.SwarmInfo connection_info = 3;
 }
@@ -596,12 +598,12 @@ service EdgeAgentService {
   rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
 }
 
-message QueryEdgeStatusResponse {
-  enum EdgeStatus {
-    NOT_CONNECTED = 0;
-    CONNECTED = 1;
-  }
+enum EdgeStatus {
+  NOT_CONNECTED = 0;
+  CONNECTED = 1;
+}
 
+message QueryEdgeStatusResponse {
   EdgeStatus status = 1;
 }
 
