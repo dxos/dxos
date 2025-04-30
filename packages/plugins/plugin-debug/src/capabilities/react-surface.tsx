@@ -45,7 +45,6 @@ import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
-import { MeetingCapabilities } from '@dxos/plugin-meeting';
 import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import {
@@ -159,10 +158,7 @@ export default (context: PluginsContext) =>
     createSurface({
       id: `${DEBUG_PLUGIN}/devtools-overview`,
       role: 'deck-companion--devtools',
-      component: () => {
-        const call = useCapability(MeetingCapabilities.CallManager);
-        return <DevtoolsOverviewContainer callState={call.state} />;
-      },
+      component: () => <DevtoolsOverviewContainer />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,

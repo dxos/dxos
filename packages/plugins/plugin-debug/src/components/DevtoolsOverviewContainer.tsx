@@ -4,15 +4,15 @@
 
 import React from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { StatsPanel, useStats } from '@dxos/devtools';
-import { type GlobalState, MeetingStatusDetail } from '@dxos/plugin-meeting';
 
-export const DevtoolsOverviewContainer = ({ callState }: { callState?: GlobalState }) => {
+export const DevtoolsOverviewContainer = () => {
   const [stats, refreshStats] = useStats();
 
   return (
     <StatsPanel stats={stats} onRefresh={refreshStats}>
-      <MeetingStatusDetail state={callState} />
+      <Surface role='devtools-overview' />
     </StatsPanel>
   );
 };
