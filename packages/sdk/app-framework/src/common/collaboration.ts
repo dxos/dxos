@@ -4,6 +4,8 @@
 
 import { SchemaAST as AST, Schema as S } from 'effect';
 
+import { SpaceIdSchema } from '@dxos/artifact';
+
 export namespace CollaborationActions {
   export class InsertContent extends S.TaggedClass<InsertContent>()('assistant/intent-content', {
     input: S.Struct({
@@ -14,6 +16,7 @@ export namespace CollaborationActions {
       // TODO(burdon): Use ref?
       associatedArtifact: S.Struct({
         typename: S.String,
+        spaceId: SpaceIdSchema,
         id: S.String,
       }),
     }).annotations({

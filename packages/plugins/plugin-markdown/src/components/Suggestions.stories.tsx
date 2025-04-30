@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { type FC, useMemo, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
 
 import {
   CollaborationActions,
@@ -18,10 +18,10 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { createDocAccessor, createObject, useQueue } from '@dxos/react-client/echo';
+import { createDocAccessor, type Live, live, makeRef, useQueue, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import {
@@ -33,10 +33,13 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
+import { TextType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor } from './MarkdownEditor';
+import { MarkdownPlugin } from '../MarkdownPlugin';
 import translations from '../translations';
+import { DocumentType } from '../types';
 
 const PreviewBlock = () => {
   return <div>PreviewBlock</div>;
@@ -47,13 +50,14 @@ const PreviewCard = () => {
 };
 
 // TODO(burdon): Factor out (reconcile with ThreadContainer.stories.tsx)
-const randomQueueDxn = () =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
+const randomQueueDxn = (spaceId: string) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]).toString();
 
-const TestChat: FC<{ content: string }> = ({ content }) => {
+const TestChat = ({ content, docId }: { content: string; docId: string }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
-  const [queueDxn] = useState<string>(() => randomQueueDxn());
+  const [space] = useSpaces();
+  const [queueDxn] = useState<string>(() => randomQueueDxn(space.id));
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   const handleInsert = () => {
@@ -66,8 +70,11 @@ const TestChat: FC<{ content: string }> = ({ content }) => {
         label: 'Proposal',
         queueId: queue.dxn.toString(),
         messageId: message.id,
-        // TODO(burdon): Why artifact?
-        associatedArtifact: {} as any,
+        associatedArtifact: {
+          id: docId,
+          typename: DocumentType.typename,
+          spaceId: space.id,
+        },
       }),
     );
   };
@@ -82,15 +89,13 @@ const TestChat: FC<{ content: string }> = ({ content }) => {
   );
 };
 
-const TestDocument: FC<{ content: string }> = ({ content }) => {
-  const doc = useMemo(() => createObject({ content }), []);
+const TestDocument = ({ doc }: { doc: Live<any> }) => {
   const extensions = useMemo(
     () => [
       automerge(createDocAccessor(doc, ['content'])),
       command(),
       preview({
         renderBlock: createRenderer(PreviewBlock),
-        renderPopover: createRenderer(PreviewCard),
         onLookup: async () => undefined,
       }),
     ],
@@ -101,11 +106,25 @@ const TestDocument: FC<{ content: string }> = ({ content }) => {
 };
 
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
-  return (
-    <div className='grow grid grid-cols-2 overflow-hidden divide-x divide-divider'>
-      <TestDocument content={document} />
-      <TestChat content={chat} />
+  const [doc, setDoc] = useState<Live<DocumentType>>();
+  const [space] = useSpaces();
+
+  useEffect(() => {
+    const doc = live(DocumentType, {
+      content: makeRef(live(TextType, { content: document ?? '#' })),
+      threads: [],
+    });
+    space.db.add(doc);
+    setDoc(doc);
+  }, [space]);
+
+  return doc ? (
+    <div className='grow grid grid-cols-2 overflow-hidden divide-x divide-separator'>
+      <TestDocument doc={doc} />
+      <TestChat content={chat} docId={doc!.id} />
     </div>
+  ) : (
+    <></>
   );
 };
 
@@ -116,6 +135,7 @@ const meta: Meta<typeof DefaultStory> = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
+      types: [DocumentType],
     }),
     withPluginManager({
       plugins: [
@@ -127,6 +147,7 @@ const meta: Meta<typeof DefaultStory> = {
         SpacePlugin(),
         SettingsPlugin(),
         IntentPlugin(),
+        MarkdownPlugin(),
       ],
     }),
     withTheme,
