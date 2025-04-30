@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { encodeReference, Reference } from '@dxos/echo-protocol';
-import { EchoObject, createStatic, Ref, S } from '@dxos/echo-schema';
+import { EchoObject, create, Ref, S } from '@dxos/echo-schema';
 
 import { makeRef } from './ref';
 
@@ -35,8 +35,8 @@ type Contact = S.Schema.Type<typeof Contact>;
 
 describe('ref encoding', () => {
   test('static object', () => {
-    const task = createStatic(Task, { title: 'Fix bugs' });
-    const contact = createStatic(Contact, { name: 'John Doe', tasks: [makeRef(task)] });
+    const task = create(Task, { title: 'Fix bugs' });
+    const contact = create(Contact, { name: 'John Doe', tasks: [makeRef(task)] });
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({

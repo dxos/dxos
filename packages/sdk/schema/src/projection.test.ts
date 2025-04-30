@@ -179,6 +179,7 @@ describe('ViewProjection', () => {
 
     expect(props).to.deep.eq({
       property: 'org',
+      title: 'Ref',
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
       referenceSchema: 'example.com/type/Org',
@@ -188,6 +189,7 @@ describe('ViewProjection', () => {
     // Note: `referencePath` is stripped from schema.
     expect(mutable.jsonSchema.properties?.['org' as const]).to.deep.eq({
       $id: '/schemas/echo/ref',
+      title: 'Ref',
       reference: {
         schema: {
           $ref: 'dxn:type:example.com/type/Org',

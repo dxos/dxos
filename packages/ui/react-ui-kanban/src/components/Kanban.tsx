@@ -73,7 +73,9 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 orientation='vertical'
                 size='contain'
                 rail={false}
-                classNames='!plb-0 !pbe-0 drag-preview-p-0'
+                classNames={
+                  /* NOTE(thure): Do not eliminate spacing here without ensuring this element will have a significant size, otherwise dropping items into an empty stack will be made difficult or impossible. See #9035. */ 'pbe-1 drag-preview-p-0'
+                }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >

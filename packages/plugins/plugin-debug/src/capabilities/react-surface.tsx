@@ -45,6 +45,7 @@ import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
+import { MeetingCapabilities } from '@dxos/plugin-meeting';
 import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import {
@@ -57,7 +58,15 @@ import {
   parseId,
 } from '@dxos/react-client/echo';
 
-import { DebugApp, DebugObjectPanel, DebugSettings, DebugStatus, SpaceGenerator, Wireframe } from '../components';
+import {
+  DebugApp,
+  DebugObjectPanel,
+  DebugSettings,
+  DebugStatus,
+  DevtoolsOverviewContainer,
+  SpaceGenerator,
+  Wireframe,
+} from '../components';
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps, Devtools } from '../types';
 
@@ -146,6 +155,14 @@ export default (context: PluginsContext) =>
       filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
         data.subject === 'debug' && isEchoObject(data.companionTo),
       component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/devtools-overview`,
+      role: 'deck-companion--devtools',
+      component: () => {
+        const call = useCapability(MeetingCapabilities.CallManager);
+        return <DevtoolsOverviewContainer callState={call.state} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,
