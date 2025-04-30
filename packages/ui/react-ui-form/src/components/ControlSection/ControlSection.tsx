@@ -5,17 +5,17 @@
 import React, { type PropsWithChildren } from 'react';
 
 import {
+  Button,
+  type ButtonProps,
   type Label,
-  toLocalizedString,
-  useTranslation,
   Input,
   type ThemedClassName,
-  type ButtonProps,
-  Button,
+  toLocalizedString,
+  useTranslation,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { translationKey } from '../translations';
+import { translationKey } from '../../translations';
 
 // TODO(wittjosiah): Copied from @dxos/plugin-client. Reconcile/factor out.
 
@@ -23,6 +23,15 @@ export type ControlSectionProps = PropsWithChildren<{
   title: Label;
   description?: Label;
 }>;
+
+export const ControlSection = ({ title, description, children }: ControlSectionProps) => {
+  return (
+    <>
+      <ControlSectionHeading title={title} description={description} />
+      {children}
+    </>
+  );
+};
 
 export const ControlSectionHeading = ({ title, description }: Omit<ControlSectionProps, 'children'>) => {
   const { t } = useTranslation(translationKey);
@@ -32,15 +41,6 @@ export const ControlSectionHeading = ({ title, description }: Omit<ControlSectio
       {description && (
         <p className='pli-4 mlb-4 container-max-width text-description'>{toLocalizedString(description, t)}</p>
       )}
-    </>
-  );
-};
-
-export const ControlSection = ({ title, description, children }: ControlSectionProps) => {
-  return (
-    <>
-      <ControlSectionHeading title={title} description={description} />
-      {children}
     </>
   );
 };
