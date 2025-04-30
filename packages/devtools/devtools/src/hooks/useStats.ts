@@ -10,7 +10,7 @@ import { type NetworkStatus } from '@dxos/client/mesh';
 import { type FilterParams } from '@dxos/echo-db';
 import { type EchoStatsDiagnostic, type EchoDataStats, type QueryMetrics } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
-import { QueryEdgeStatusResponse, type EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
