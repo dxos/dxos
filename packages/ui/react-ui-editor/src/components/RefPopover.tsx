@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, useRef, useState, useEffect, useCallback
 
 import { addEventListener } from '@dxos/async';
 import { type DxRefTagActivate } from '@dxos/lit-ui';
-import { Popover, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Popover } from '@dxos/react-ui';
 
 import { type PreviewLinkRef, type PreviewLinkTarget, type PreviewLookup } from '../extensions';
 
@@ -17,11 +16,11 @@ const customEventOptions = { capture: true, passive: false };
 // Create a context for the dxn value.
 type RefPopoverValue = Partial<{ link: PreviewLinkRef; target: PreviewLinkTarget; pending: boolean }>;
 const REF_POPOVER = 'RefPopover';
-const [RefPopoverProvider, useRefPopover] = createContext<RefPopoverValue>(REF_POPOVER, {});
+const [RefPopoverContextProvider, useRefPopover] = createContext<RefPopoverValue>(REF_POPOVER, {});
 
-type RefPopoverRootProps = ThemedClassName<PropsWithChildren<{ onLookup?: PreviewLookup }>>;
+type RefPopoverProviderProps = PropsWithChildren<{ onLookup?: PreviewLookup }>;
 
-const RefPopoverRoot = ({ classNames, children, onLookup }: RefPopoverRootProps) => {
+const RefPopoverProvider = ({ children, onLookup }: RefPopoverProviderProps) => {
   const trigger = useRef<HTMLButtonElement | null>(null);
   const [value, setValue] = useState<RefPopoverValue>({});
   const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
@@ -55,21 +54,21 @@ const RefPopoverRoot = ({ classNames, children, onLookup }: RefPopoverRootProps)
   }, [rootRef]);
 
   return (
-    <RefPopoverProvider pending={value.pending} link={value.link} target={value.target}>
+    <RefPopoverContextProvider pending={value.pending} link={value.link} target={value.target}>
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.VirtualTrigger virtualRef={trigger} />
-        <div role='none' className={mx('contents', classNames)} ref={setRootRef}>
+        <div role='none' className='contents' ref={setRootRef}>
           {children}
         </div>
       </Popover.Root>
-    </RefPopoverProvider>
+    </RefPopoverContextProvider>
   );
 };
 
 export const RefPopover = {
-  Root: RefPopoverRoot,
+  Provider: RefPopoverProvider,
 };
 
 export { useRefPopover };
 
-export type { RefPopoverRootProps, RefPopoverValue };
+export type { RefPopoverProviderProps, RefPopoverValue };

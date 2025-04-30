@@ -91,12 +91,14 @@ const PreviewBlock = () => {
 const PreviewCard = () => {
   const { target } = useRefPopover('PreviewCard');
   return (
-    <Popover.Portal>
-      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport>{target?.object && <Surface role='preview' data={target.object} />}</Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
+    <Popover.Content
+      onOpenAutoFocus={(event) => event.preventDefault()}
+      classNames='popover-max-width'
+      collisionPadding={48}
+    >
+      <Popover.Viewport>{target?.object && <Surface role='preview' data={target.object} />}</Popover.Viewport>
+      <Popover.Arrow />
+    </Popover.Content>
   );
 };
 
@@ -125,11 +127,11 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   };
 
   return (
-    <StackItem.Content toolbar classNames='w-full'>
+    <StackItem.Content toolbar classNames='border-is border-separator'>
       <Toolbar.Root>
         <IconButton icon='ph--plus--regular' disabled={!queue} label='Insert' onClick={handleInsert} />
       </Toolbar.Root>
-      <div ref={parentRef} className='grow p-4' />
+      <div ref={parentRef} className='p-4' />
     </StackItem.Content>
   );
 };
@@ -180,16 +182,11 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   }
 
   return (
-    <RefPopover.Root
-      onLookup={(link) => handlePreviewLookup(client, space, link)}
-      classNames='grow grid grid-cols-2 grow overflow-hidden divide-x divide-separator'
-    >
-      <>
-        <TestDocument doc={doc} />
-        <TestChat doc={doc} content={chat} />
-      </>
+    <RefPopover.Provider onLookup={(link) => handlePreviewLookup(client, space, link)}>
+      <TestDocument doc={doc} />
+      <TestChat doc={doc} content={chat} />
       <PreviewCard />
-    </RefPopover.Root>
+    </RefPopover.Provider>
   );
 };
 
@@ -229,7 +226,7 @@ const meta: Meta<typeof DefaultStory> = {
       ],
     }),
     withTheme,
-    withLayout({ tooltips: true, fullscreen: true }),
+    withLayout({ tooltips: true, fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],
   parameters: {
     translations: [...translations, ...editorTranslations],

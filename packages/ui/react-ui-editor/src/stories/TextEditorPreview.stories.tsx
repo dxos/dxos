@@ -41,7 +41,7 @@ export default meta;
 
 export const Preview = {
   render: () => (
-    <RefPopover.Root onLookup={handlePreviewLookup}>
+    <RefPopover.Provider onLookup={handlePreviewLookup}>
       <DefaultStory
         text={str(
           '# Preview',
@@ -67,7 +67,7 @@ export const Preview = {
         ]}
       />
       <PreviewCard />
-    </RefPopover.Root>
+    </RefPopover.Provider>
   ),
 };
 
