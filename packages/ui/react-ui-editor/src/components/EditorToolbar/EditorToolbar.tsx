@@ -26,8 +26,8 @@ import {
   type EditorToolbarProps,
   editorToolbarSearch,
 } from './util';
-import { createViewMode } from './viewMode';
-import { stackItemContentToolbarClassNames } from '../../fragments';
+import { createViewMode } from './view-mode';
+import { stackItemContentToolbarClassNames } from '../../defaults';
 
 const createToolbar = ({
   state,

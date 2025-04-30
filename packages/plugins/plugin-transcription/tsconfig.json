@@ -99,6 +99,9 @@
       "path": "../../ui/react-ui-components"
     },
     {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/react-ui-grid"
     },
     {
@@ -106,6 +109,9 @@
     },
     {
       "path": "../../ui/react-ui-stack"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-theme"
