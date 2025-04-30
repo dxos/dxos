@@ -36,7 +36,7 @@ const HeadingBackButton = ({ title, onClick }: { title: string } & Pick<ButtonPr
       classNames='pli-1 flex-1 relative group text-start justify-start bs-[--rail-action] font-normal'
       onClick={onClick}
     >
-      <Icon icon='ph--caret-left--regular' size={3} />
+      <Icon icon='ph--caret-left--bold' size={3} />
       <span
         className={mx(
           headingBackButtonLabel,
