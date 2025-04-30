@@ -13,6 +13,7 @@ import { type TranscriptBlock } from '../../types';
 
 export const blockToMarkdown = (block: TranscriptBlock, debug = false): string[] => {
   // TODO(burdon): Use link/reference markup for users (with popover).
+  // TODO(burdon): Color and avatar.
   return [
     `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
     block.segments.map((segment) => segment.text).join(' '),
@@ -28,7 +29,10 @@ export type TranscriptOptions = {
   renderButton?: RenderCallback<{ onClick: () => void }>;
 };
 
-export const transcript = (options: TranscriptOptions): Extension => {
+/**
+ * Scrolling transcript with timestamps.
+ */
+export const transcript = ({ model, renderButton }: TranscriptOptions): Extension => {
   return [
     // Show timestamps in the gutter.
     gutter({
@@ -39,7 +43,7 @@ export const transcript = (options: TranscriptOptions): Extension => {
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            const timestamp = options.model.getBlockAtLine(line.number)?.segments[0]?.started;
+            const timestamp = model.getBlockAtLine(line.number)?.segments[0]?.started;
             if (timestamp) {
               builder.add(line.from, line.from, new TimestampMarker(line.number, timestamp));
             }
@@ -90,11 +94,11 @@ export const transcript = (options: TranscriptOptions): Extension => {
           };
 
           // Scroll button.
-          if (options.renderButton) {
+          if (renderButton) {
             this._controls = document.createElement('div');
             this._controls.classList.add('cm-controls', 'transition-opacity', 'duration-300', 'opacity-0');
             view.dom.appendChild(this._controls);
-            options.renderButton(
+            renderButton(
               this._controls,
               {
                 onClick: () => {
@@ -107,7 +111,6 @@ export const transcript = (options: TranscriptOptions): Extension => {
 
           // Event listeners.
           this._cleanup = combine(
-            // Check if scrolled.
             addEventListener(view.scrollDOM, 'scroll', () => {
               if (!isAutoScrolling) {
                 hasScrolled = true;
@@ -115,14 +118,13 @@ export const transcript = (options: TranscriptOptions): Extension => {
               }
             }),
 
-            // Listen for model updates.
-            options.model.update.on(() => {
+            model.update.on(() => {
               // Check if clamped to bottom.
               const autoScroll =
                 scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
 
               // Sync.
-              options.model.sync(this._adapter);
+              model.sync(this._adapter);
 
               // Scroll.
               if (autoScroll) {
@@ -133,10 +135,11 @@ export const transcript = (options: TranscriptOptions): Extension => {
         }
 
         update(update: ViewUpdate) {
+          // Initial sync.
           if (!this._initialized) {
             this._initialized = true;
             setTimeout(() => {
-              options.model.sync(this._adapter);
+              model.sync(this._adapter);
             });
           }
         }
@@ -206,7 +209,7 @@ class TimestampMarker extends GutterMarker {
       pad(this._timestamp.getSeconds()),
     ].join(':');
 
-    // TODO(burdon): Click to bookmark or get hyperlink.
+    // TODO(burdon): Click to bookmark or copy hyperlink.
     el.onclick = () => {
       const pos = view.state.doc.line(this._line).from;
       view.dispatch({

@@ -32,6 +32,7 @@ import { type TranscriptBlock } from '../../types';
 faker.seed(1);
 
 // TODO(burdon): Story with queue.
+// TODO(burdon): Create adapter that listens for updates to the queue.
 
 let start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 const next = () => {
@@ -44,21 +45,16 @@ const users = Array.from({ length: 5 }, () => ({
   authorHue: faker.helpers.arrayElement(hues),
 }));
 
-const createBlock = (numSegments = 1): TranscriptBlock => {
-  const author = faker.helpers.arrayElement(users);
-  return {
-    id: ObjectId.random().toString(),
-    ...author,
-    segments: Array.from({ length: numSegments }).map(() => createSegment()),
-  };
-};
+const createBlock = (numSegments = 1): TranscriptBlock => ({
+  id: ObjectId.random().toString(),
+  ...faker.helpers.arrayElement(users),
+  segments: Array.from({ length: numSegments }).map(() => createSegment()),
+});
 
-const createSegment = () => {
-  return {
-    started: next(),
-    text: faker.lorem.paragraph(),
-  };
-};
+const createSegment = () => ({
+  started: next(),
+  text: faker.lorem.paragraph(),
+});
 
 const meta: Meta<typeof Transcript> = {
   title: 'plugins/plugin-transcription/Transcript',
@@ -66,10 +62,7 @@ const meta: Meta<typeof Transcript> = {
   render: ({ blocks: initialBlocks = [], ...args }) => {
     const [blocks, setBlocks] = useState(initialBlocks);
     useEffect(() => {
-      const i = setInterval(() => {
-        setBlocks((blocks) => [...blocks, createBlock()]);
-      }, 1_000);
-
+      const i = setInterval(() => setBlocks((blocks) => [...blocks, createBlock()]), 1_000);
       return () => clearInterval(i);
     }, []);
 
@@ -103,12 +96,10 @@ export const Empty: Story = {
 const ExtensionStory = () => {
   const { themeMode } = useThemeContext();
   const model = useMemo(
-    () => new BlockModel<TranscriptBlock>(blockToMarkdown, Array.from({ length: 3 }, createBlock)),
+    () => new BlockModel<TranscriptBlock>(blockToMarkdown, Array.from({ length: 5 }, createBlock)),
     [],
   );
   const [running, setRunning] = useState(true);
-  const [, refresh] = useState({});
-
   const [currentBlock, setCurrentBlock] = useState<TranscriptBlock | null>(null);
   useEffect(() => {
     if (!running) {
@@ -131,7 +122,6 @@ const ExtensionStory = () => {
 
       currentBlock.segments.push(createSegment());
       model.updateBlock(currentBlock);
-      refresh({});
     }, 3_000);
 
     return () => clearInterval(i);
