@@ -8,8 +8,8 @@ import { live } from '@dxos/live-object';
 
 import { SPACE_PLUGIN } from '../meta';
 import translations from '../translations';
-import { CollectionType, SpaceAction } from '../types';
-import { SPACES, SPACE_TYPE } from '../util';
+import { CollectionType, SpaceAction, SPACE_TYPE } from '../types';
+import { SPACES } from '../util';
 
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
