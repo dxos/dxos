@@ -179,6 +179,7 @@ describe('ViewProjection', () => {
 
     expect(props).to.deep.eq({
       property: 'org',
+      title: 'Ref',
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
       referenceSchema: 'example.com/type/Org',
