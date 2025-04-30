@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { JSONSchema, Option, Schema as S, SchemaAST } from 'effect';
+import { Option, Schema as S, SchemaAST } from 'effect';
+import { TitleAnnotationId } from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
 import { type JsonProp } from '@dxos/effect';
@@ -25,7 +26,6 @@ import { FormatAnnotationId, Email } from '../formats';
 import { TypedObject } from '../object';
 import { StoredSchema } from '../schema';
 import { Testing, prepareAstForCompare } from '../testing';
-import { TitleAnnotationId } from 'effect/SchemaAST';
 
 const EXAMPLE_NAMESPACE = '@example';
 
