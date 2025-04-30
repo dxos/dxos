@@ -4,8 +4,7 @@
 
 import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
-import { type BaseObject, type S, type PropertyKey, type TypeAnnotation } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
+import { type BaseObject, type S, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty } from '@dxos/schema';
@@ -14,6 +13,7 @@ import { FormActions } from './FormActions';
 import { FormFields } from './FormContent';
 import { FormProvider } from './FormContext';
 import { type InputProps, type InputComponent } from './Input';
+import { type QueryRefOptions } from './RefField';
 import { type FormOptions } from '../../hooks';
 
 export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
@@ -42,7 +42,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     autoSave?: boolean;
     testId?: string;
     onCancel?: () => void;
-    onQueryRefOptions?: (type: TypeAnnotation) => { dxn: DXN; label?: string }[];
+    onQueryRefOptions?: QueryRefOptions;
     lookupComponent?: ComponentLookup;
     /**
      * Map of custom renderers for specific properties.

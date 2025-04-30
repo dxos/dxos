@@ -1,24 +1,23 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
-import { AST, Expando, getReferenceAnnotation, getTypeAnnotation, S, type TypeAnnotation } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
-import { refFromDXN, RefImpl } from '@dxos/live-object';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { ArrayField } from './ArrayField';
-import { SelectInput, TextInput } from './Defaults';
+import { SelectInput } from './Defaults';
 import { type ComponentLookup } from './Form';
 import { useInputProps, useFormValues } from './FormContext';
 import { type InputComponent } from './Input';
+import { RefField, type QueryRefOptions } from './RefField';
 import { getInputComponent } from './factory';
 
 export type FormFieldProps = {
@@ -27,7 +26,7 @@ export type FormFieldProps = {
   readonly?: boolean;
   /** Used to indicate if input should be presented inline (e.g. for array items). */
   inline?: boolean;
-  onQueryRefOptions?: (type: TypeAnnotation) => { dxn: DXN; label?: string }[];
+  onQueryRefOptions?: QueryRefOptions;
   lookupComponent?: ComponentLookup;
   Custom?: Partial<Record<string, InputComponent>>;
 };
@@ -121,88 +120,18 @@ export const FormField = ({
     );
   }
 
-  const { getValue, onValueChange, ...restInputProps } = inputProps;
-
   // TODO(ZaymonFC): Extract this to it's own component.
   if (format === 'ref') {
-    const refTypeInfo = getReferenceAnnotation(S.make(ast));
-
-    if (!refTypeInfo) {
-      return null;
-    }
-
-    // If ref type is expando, fall back to taking a DXN in string format.
-    if (refTypeInfo.typename === getTypeAnnotation(Expando)?.typename || !onQueryRefOptions) {
-      const handleOnValueChange = (_type: any, dxnString: string) => {
-        const dxn = DXN.tryParse(dxnString);
-        if (dxn) {
-          onValueChange?.('object', refFromDXN(dxn));
-        } else if (dxnString === '') {
-          onValueChange?.('object', undefined);
-        } else {
-          onValueChange?.('string', dxnString);
-        }
-      };
-
-      const handleGetValue = () => {
-        const formValue = getValue();
-        if (typeof formValue === 'string') {
-          return formValue;
-        }
-        if (formValue instanceof RefImpl) {
-          return formValue.dxn.toString();
-        }
-
-        return undefined;
-      };
-
-      return (
-        <TextInput
-          type={type}
-          label={label}
-          disabled={readonly}
-          placeholder={placeholder}
-          inputOnly={inline}
-          getValue={handleGetValue as <V>() => V | undefined}
-          onValueChange={handleOnValueChange}
-          {...restInputProps}
-        />
-      );
-    }
-
-    const refOptions = onQueryRefOptions(refTypeInfo).map((option) => ({
-      ...option,
-      value: option.dxn.toString(),
-    }));
-
-    const handleGetValue = () => {
-      const formValue = getValue();
-
-      if (formValue instanceof RefImpl) {
-        return formValue.dxn.toString();
-      }
-
-      return undefined;
-    };
-
-    const handleValueChanged = (_type: any, dxnString: string) => {
-      const dxn = DXN.parse(dxnString);
-      const ref = refFromDXN(dxn);
-
-      onValueChange('object', ref);
-    };
-
     return (
-      <SelectInput
+      <RefField
+        ast={ast}
         type={type}
         label={label}
-        disabled={readonly}
+        readonly={readonly}
         placeholder={placeholder}
-        inputOnly={inline}
-        getValue={handleGetValue as <V>() => V | undefined}
-        onValueChange={handleValueChanged}
-        options={refOptions}
-        {...restInputProps}
+        inline={inline}
+        onQueryRefOptions={onQueryRefOptions}
+        inputProps={inputProps}
       />
     );
   }
@@ -239,7 +168,7 @@ export type FormContentProps = {
   filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
   sort?: string[];
   readonly?: boolean;
-  onQueryRefOptions?: (type: TypeAnnotation) => { dxn: DXN; label?: string }[];
+  onQueryRefOptions?: QueryRefOptions;
   lookupComponent?: ComponentLookup;
   Custom?: Partial<Record<string, InputComponent>>;
 };

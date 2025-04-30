@@ -43,16 +43,23 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
   };
 
   // TODO(ZaymonFC): We should have a hook that provisions this.
-  const handleRefQueryLookup = (typeInfo: TypeAnnotation) => {
+  const handleRefQueryLookup = async (typeInfo: TypeAnnotation) => {
+    console.log({ ti: typeof typeInfo.typename });
     // TODO(ZaymonFC): Use async, push async consumption down into form.
     const query = space.db.query(Filter.typename(typeInfo.typename));
-    return query
-      .runSync()
+    const results = query.runSync();
+
+    console.log('Query results:', results);
+
+    return results
       .map((result) => {
+        console.log('Processing result:', result);
         const dxn = getDXN(result.object);
         if (dxn) {
           // TODO(Zaymon): Better fallback object names?
-          return { dxn, label: result?.object?.name ?? result?.object?.id ?? '' };
+          const item = { dxn, label: result?.object?.name ?? result?.object?.id ?? '' };
+          console.log('Created item:', item);
+          return item;
         }
         return undefined;
       })
