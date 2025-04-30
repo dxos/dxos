@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codemorph",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "description": "Large scale code refactoring.",
   "homepage": "https://dxos.org",
