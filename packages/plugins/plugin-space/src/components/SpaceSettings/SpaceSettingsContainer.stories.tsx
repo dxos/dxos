@@ -10,21 +10,21 @@ import React from 'react';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { SpacePropertiesForm, type SpacePropertiesFormProps } from './SpacePropertiesForm';
+import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './SpaceSettingsContainer';
 import translations from '../../translations';
 
-const Story = (args: Partial<SpacePropertiesFormProps>) => {
+const Story = (args: Partial<SpaceSettingsContainerProps>) => {
   const { space } = useClientProvider();
   return (
     <div role='none' className='p-2 border border-primary-500 rounded'>
-      <SpacePropertiesForm {...args} space={space!} />
+      <SpaceSettingsContainer {...args} space={space!} />
     </div>
   );
 };
 
 const meta: Meta = {
-  title: 'plugins/plugin-space/SpacePropertiesForm',
-  component: SpacePropertiesForm,
+  title: 'plugins/plugin-space/SpaceSettingsContainer',
+  component: SpaceSettingsContainer,
   render: Story,
   decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme],
   parameters: {
@@ -35,4 +35,4 @@ const meta: Meta = {
 
 export default meta;
 
-export const Default: StoryObj<typeof SpacePropertiesForm> = {};
+export const Default: StoryObj<typeof SpaceSettingsContainer> = {};

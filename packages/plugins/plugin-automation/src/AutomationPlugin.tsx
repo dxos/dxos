@@ -5,7 +5,6 @@
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { FunctionType, FunctionTrigger } from '@dxos/functions/types';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -32,21 +31,6 @@ export const AutomationPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/space-settings`,
-      activatesOn: SpaceEvents.SetupSettingsPanel,
-      activate: () => [
-        contributes(SpaceCapabilities.SettingsSection, {
-          id: 'automation',
-          label: ['automation panel label', { ns: meta.id }],
-        }),
-        contributes(SpaceCapabilities.SettingsSection, {
-          id: 'functions',
-          label: ['function panel label', { ns: meta.id }],
-          position: 'fallback',
-        }),
-      ],
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

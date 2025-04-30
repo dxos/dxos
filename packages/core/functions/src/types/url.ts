@@ -29,6 +29,11 @@ export const setUserFunctionUrlInMetadata = (meta: ObjectMeta, functionUrl: stri
   }
 };
 
+/**
+ * NOTE: functionId is backend ID, not ECHO object id.
+ */
+export const makeFunctionUrl = (spaceId: SpaceId, fn: { functionId: string }) => `/${spaceId}/${fn.functionId}`;
+
 export const getInvocationUrl = (functionUrl: string, edgeUrl: string, options: InvocationOptions = {}) => {
   const baseUrl = new URL('functions/', edgeUrl);
 
