@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
@@ -20,6 +20,7 @@ import {
   List,
   ListItem,
   useDefaultValue,
+  type DxAvatar,
 } from '@dxos/react-ui';
 import { AttentionGlyph, useAttended, useAttention, type AttentionGlyphProps } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
@@ -116,7 +117,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
       {members.slice(0, 3).map((member, i) => (
         <Tooltip.Root key={member.identity.identityKey.toHex()}>
           <Tooltip.Trigger>
-            <PrensenceAvatar
+            <PresenceAvatar
               identity={member.identity}
               match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
               index={members.length - i}
@@ -142,6 +143,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
                 status='inactive'
                 style={{ zIndex: members.length - 4 }}
                 fallback={`+${members.length - 3}`}
+                size={size}
               />
             </Avatar.Root>
           </Tooltip.Trigger>
@@ -157,7 +159,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
                     data-testid='identity-list-item'
                   >
                     {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                    <PrensenceAvatar identity={member.identity} size={size} showName match={member.currentlyAttended} />
+                    <PresenceAvatar identity={member.identity} size={size} showName match={member.currentlyAttended} />
                   </ListItem.Root>
                 ))}
               </List>
@@ -177,26 +179,28 @@ type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
   onClick?: () => void;
 };
 
-const PrensenceAvatar = ({ identity, showName, match, index, onClick, size }: PresenceAvatarProps) => {
-  const status = match ? 'current' : 'active';
-  const fallbackValue = keyToFallback(identity.identityKey);
-  return (
-    <Avatar.Root>
-      <Avatar.Content
-        status={status}
-        hue={identity.profile?.data?.hue || fallbackValue.hue}
-        data-testid='spacePlugin.presence.member'
-        data-status={status}
-        size={size}
-        classNames='mbs-2 mie-4'
-        {...(index ? { style: { zIndex: index } } : {})}
-        onClick={() => onClick?.()}
-        fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
-      />
-      <Avatar.Label classNames={showName ? 'text-sm truncate pli-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
-    </Avatar.Root>
-  );
-};
+const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
+  ({ identity, showName, match, index, onClick, size }, forwardedRef) => {
+    const status = match ? 'current' : 'active';
+    const fallbackValue = keyToFallback(identity.identityKey);
+    return (
+      <Avatar.Root>
+        <Avatar.Content
+          status={status}
+          hue={identity.profile?.data?.hue || fallbackValue.hue}
+          data-testid='spacePlugin.presence.member'
+          data-status={status}
+          size={size}
+          {...(index ? { style: { zIndex: index } } : {})}
+          onClick={onClick}
+          fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
+          ref={forwardedRef}
+        />
+        <Avatar.Label classNames={showName ? 'text-sm truncate pli-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
+      </Avatar.Root>
+    );
+  },
+);
 
 export type SmallPresenceLiveProps = {
   id?: string;
