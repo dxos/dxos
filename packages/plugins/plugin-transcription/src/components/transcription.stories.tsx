@@ -16,7 +16,7 @@ import React, {
   useState,
 } from 'react';
 
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Config } from '@dxos/react-client';
@@ -67,7 +67,7 @@ const Microphone = () => {
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
-      const block = createStatic(TranscriptBlock, { segments });
+      const block = create(TranscriptBlock, { segments });
       queue?.append([block]);
     },
     [queue],
@@ -121,7 +121,7 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
-      const block = createStatic(TranscriptBlock, { authorName: 'test', authorHue: 'cyan', segments });
+      const block = create(TranscriptBlock, { authorName: 'test', authorHue: 'cyan', segments });
       queue?.append([block]);
     },
     [queue],

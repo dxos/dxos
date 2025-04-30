@@ -5,7 +5,7 @@
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { QueueImpl, type Queue } from '@dxos/echo-db';
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
@@ -178,7 +178,7 @@ export class TranscriptionManager extends Resource {
       return;
     }
 
-    const block = createStatic(TranscriptBlock, { authorName: this._name, authorHue: this._hue, segments });
+    const block = create(TranscriptBlock, { authorName: this._name, authorHue: this._hue, segments });
     this._queue.append([block]);
   }
 }

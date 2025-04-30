@@ -37,7 +37,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  * }))
  *
  * // Creates a non-reactive contact object
- * const contact = createStatic(Contact, {
+ * const contact = create(Contact, {
  *   name: "John",
  *   email: "john@example.com",
  * })
@@ -45,7 +45,7 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  */
 // TODO(burdon): Handle defaults (see S.make).
 // TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
-export const createStatic = <Schema extends S.Schema.AnyNoContext>(
+export const create = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   data: CreateData<S.Schema.Type<Schema>>,
 ): CreateData<S.Schema.Type<Schema>> & { id: string } => {
