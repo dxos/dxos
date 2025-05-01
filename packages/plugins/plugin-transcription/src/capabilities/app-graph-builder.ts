@@ -117,7 +117,7 @@ export default (context: PluginsContext) =>
                 state.transcriptionManager = undefined;
                 state.enabled = false;
               },
-              onCallStateUpdated: async (callState: CallState) => {
+              onCallStateUpdated: (callState: CallState) => {
                 const typename = getSchemaTypename(TranscriptType);
                 const transcription = typename ? callState.activities?.[typename] : undefined;
                 if (!transcription?.payload) {
