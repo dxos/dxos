@@ -9,9 +9,8 @@ import React, { useEffect, useState, useMemo, type FC } from 'react';
 
 import { create, ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { resolveRef } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
+import { resolveRef, useClient } from '@dxos/react-client';
 import { type Queue, type Space, useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar, useThemeContext } from '@dxos/react-ui';

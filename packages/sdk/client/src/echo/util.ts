@@ -6,7 +6,7 @@ import { type Space } from '@dxos/client-protocol';
 import { type ReactiveEchoObject, getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
+import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { isLiveObject, type Live } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
@@ -85,5 +85,5 @@ export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId }
 };
 
 // TODO(burdon): Factor out.
-export const randomQueueDxn = (spaceId: SpaceId) =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]);
+export const randomQueueDxn = (spaceId?: SpaceId) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId ?? SpaceId.random(), ObjectId.random()]);

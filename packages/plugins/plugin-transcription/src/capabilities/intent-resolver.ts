@@ -3,9 +3,8 @@
 //
 
 import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
-import { randomQueueDxn } from '@dxos/client';
 import { live, refFromDXN } from '@dxos/live-object';
-import { type SpaceId } from '@dxos/react-client/echo';
+import { type SpaceId, randomQueueDxn } from '@dxos/react-client/echo';
 
 import { TranscriptionAction, TranscriptType } from '../types';
 import { getTimeStr } from '../util';
