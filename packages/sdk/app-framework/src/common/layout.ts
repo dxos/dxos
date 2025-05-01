@@ -110,7 +110,6 @@ export namespace LayoutAction {
       part: S.Literal('popover').annotations({ description: 'Updating the popover.' }),
       subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the popover.' })),
       options: S.Struct({
-        anchorId: S.String.annotations({ description: 'The id of the element to anchor the popover to.' }),
         side: S.optional(
           S.Literal('top', 'right', 'bottom', 'left').annotations({ description: 'The side of the anchor.' }),
         ),
@@ -120,7 +119,22 @@ export namespace LayoutAction {
             description: 'Additional props for the popover.',
           }),
         ),
-      }),
+      }).pipe(
+        S.extend(
+          S.Union(
+            S.Struct({
+              variant: S.Literal('virtual'),
+              anchor: S.Any.annotations({ description: 'The DOM element to anchor the popover to.' }),
+            }),
+            S.Struct({
+              variant: S.optional(S.Literal('react')),
+              anchorId: S.String.annotations({
+                description: 'An id that can be used to determine whether to render the anchor subcomponent.',
+              }),
+            }),
+          ),
+        ),
+      ),
     }),
     output: S.Void,
   }) {}
