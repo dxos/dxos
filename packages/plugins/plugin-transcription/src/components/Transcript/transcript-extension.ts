@@ -85,7 +85,7 @@ export const transcript = ({ model, renderButton }: TranscriptOptions): Extensio
               this._controls?.classList.add('opacity-0');
               scroller.classList.remove('cm-hide-scrollbar');
               isAutoScrolling = false;
-            }, 500);
+            }, 1_000);
 
             // Scroll to bottom.
             view.dispatch({
