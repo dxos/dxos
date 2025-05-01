@@ -6,7 +6,7 @@ import { Option, Schema as S, SchemaAST } from 'effect';
 import { TitleAnnotationId } from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
-import { type JsonProp } from '@dxos/effect';
+import { findAnnotation, type JsonProp } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
@@ -21,6 +21,7 @@ import {
   createSchemaReference,
   getSchemaReference,
   Ref,
+  FieldLookupAnnotationId,
 } from '../ast';
 import { FormatAnnotationId, Email } from '../formats';
 import { TypedObject } from '../object';
@@ -63,6 +64,20 @@ describe('effect-to-json', () => {
     log('schema', { jsonSchema });
     const nested = jsonSchema.properties!.name;
     expectReferenceAnnotation(nested);
+  });
+
+  test('reference annotation with lookup property', () => {
+    class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
+      name: S.String,
+    }) {}
+    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
+    }) {}
+    const jsonSchema = toJsonSchema(Schema);
+    const effectSchema = toEffectSchema(jsonSchema);
+
+    const annotation = findAnnotation<string>(effectSchema.ast, FieldLookupAnnotationId);
+    expect(annotation).to.not.toBeUndefined();
   });
 
   test('array of references', () => {
@@ -368,4 +383,14 @@ describe('json-to-effect', () => {
     const jsonSchema2 = toJsonSchema(effectSchema);
     expect(jsonSchema2.properties!.name.description).to.eq('Name');
   });
+
+  // test('fieldLookupId gets preserved', () => {
+  //   const schema = S.Struct({
+  //     name: S.Ref().annotations({ description: 'Name' }),
+  //   });
+  //   const jsonSchema = toJsonSchema(schema);
+  //   const effectSchema = toEffectSchema(jsonSchema);
+  //   const jsonSchema2 = toJsonSchema(effectSchema);
+  //   expect(jsonSchema2.properties!.name.description).to.eq('Name');
+  // });
 });

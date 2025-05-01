@@ -11,7 +11,6 @@ import { CurrencyAnnotationId } from './number';
 import * as ObjectUtil from './object';
 import * as StringUtil from './string';
 import { FormatAnnotationId } from './types';
-import { FieldLookupAnnotationId } from '../ast';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 // TODO(burdon): Media encoding.
@@ -60,5 +59,4 @@ export const CustomAnnotations = {
   description: DescriptionAnnotationId,
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,
-  fieldLookup: FieldLookupAnnotationId,
 };
