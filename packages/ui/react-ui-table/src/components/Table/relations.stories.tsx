@@ -56,16 +56,12 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 
   const model = useTableModel<TableRow>({ table, projection, rows: [], features });
   useEffect(() => {
-    if (!model) {
+    if (!model || !space) {
       return;
     }
 
-    if (!space?.db) {
-      model.setRows([]);
-    }
-
     const objectGenerator = createAsyncGenerator(generator, schema, { optional: true, db: space?.db });
-    void Promise.all(Array.from({ length: count }).map(() => objectGenerator.createObject())).then((objects) => {
+    void objectGenerator.createObjects(count).then((objects) => {
       model.setRows(objects);
     });
   }, [model, space]);

@@ -139,8 +139,6 @@ export type CreateOptions = {
 
 /**
  * Create an object creation pipeline.
- * - Allows for mix of sync and async transformations.
- * - Consistent error processing.
  */
 export const createObjectPipeline = <T extends BaseObject>(
   generator: ValueGenerator,
@@ -181,10 +179,12 @@ export type ObjectGenerator<T extends BaseObject> = {
   createObjects: (n: number) => Live<T>[];
 };
 
+// TODO(ZaymonFC): Sync generator doesn't work with db -- createReferences is async and
+//   can't be invoked with `Effect.runSync`.
 export const createGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
   type: S.Schema<T>,
-  options: CreateOptions = {},
+  options: Omit<CreateOptions, 'db'> = {},
 ): ObjectGenerator<T> => {
   const pipeline = createObjectPipeline(generator, type, options);
 
