@@ -23,7 +23,7 @@ export const SyncStatus = ({ classNames, state, summary, debug }: SyncStatusProp
 
   // TODO(burdon): Normalize to max document count?
   return (
-    <div className={mx('flex flex-col gap-3 p-2 text-xs min-w-[400px]', classNames)}>
+    <div className={mx('flex flex-col gap-3 p-2 text-xs', classNames)}>
       <div className='flex flex-col gap-2'>
         {entries.map(([spaceId, state]) => (
           <SpaceRowContainer key={spaceId} spaceId={spaceId as SpaceId} state={state} />
