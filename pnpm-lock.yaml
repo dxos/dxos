@@ -6934,6 +6934,9 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../core/echo/automerge
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -9820,6 +9823,9 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../core/echo/automerge
+      '@dxos/client':
+        specifier: workspace:*
+        version: 'link:'
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol

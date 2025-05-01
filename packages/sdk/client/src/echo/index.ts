@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Use @internal and export *.
+
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
 export { getTypename, Expando, type TypedObject, type ObjectMeta } from '@dxos/echo-schema';
@@ -17,6 +19,19 @@ export {
   makeRef,
 } from '@dxos/live-object';
 export {
+  DocAccessor,
+  type EchoDatabase,
+  Filter,
+  type FilterSource,
+  type Hypergraph,
+  type IDocHandle,
+  type ObjectMigration,
+  type Queue,
+  type Query,
+  type ReactiveEchoObject,
+  ResultFormat,
+  type Selection,
+  type SubscriptionHandle,
   createDocAccessor,
   createObject,
   createSubscription,
@@ -31,19 +46,6 @@ export {
   toCursor,
   toCursorRange,
   updateText,
-  DocAccessor,
-  type EchoDatabase,
-  type ReactiveEchoObject,
-  Filter,
-  type FilterSource,
-  type Hypergraph,
-  type IDocHandle,
-  type ObjectMigration,
-  type Queue,
-  type Query,
-  ResultFormat,
-  type Selection,
-  type SubscriptionHandle,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.
@@ -62,6 +64,8 @@ export {
   fullyQualifiedId,
   parseFullyQualifiedId,
   parseId,
+  resolveRef,
+  randomQueueDxn,
   EchoObjectSchema,
   ReactiveObjectSchema,
   SpaceSchema,

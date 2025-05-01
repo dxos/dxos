@@ -20,7 +20,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { type Client } from '@dxos/client';
+import { type Client, randomQueueDxn, resolveRef } from '@dxos/client';
 import { S, AST, create, type Expando, EchoObject, getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -39,7 +39,6 @@ import {
   RefPopover,
   automerge,
   command,
-  createRenderer,
   preview,
   useTextEditor,
   useRefPopover,
@@ -52,7 +51,7 @@ import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownEditor } from './MarkdownEditor';
 import { MarkdownPlugin } from '../MarkdownPlugin';
-import { createDocument, DocumentType, randomQueueDxn, resolveRef } from '../types';
+import { createDocument, DocumentType } from '../types';
 
 faker.seed(1);
 
@@ -78,14 +77,7 @@ const handlePreviewLookup = async (
   }
 
   const object = await resolveRef(client, dxn, defaultSpace);
-  return {
-    label,
-    object,
-  };
-};
-
-const PreviewBlock = () => {
-  return <div>PreviewBlock</div>;
+  return { label, object };
 };
 
 const PreviewCard = () => {
@@ -145,7 +137,6 @@ const TestDocument: FC<{ doc: DocumentType }> = ({ doc }) => {
       command(),
       space &&
         preview({
-          renderBlock: createRenderer(PreviewBlock),
           onLookup: (link) => handlePreviewLookup(client, space, link),
         }),
     ].filter(isNotFalsy);

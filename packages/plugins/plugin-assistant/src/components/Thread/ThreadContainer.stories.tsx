@@ -22,7 +22,7 @@ import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifa
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { create, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -199,9 +199,6 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
     </div>
   );
 };
-
-const randomQueueDxn = () =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-automation/ThreadContainer',

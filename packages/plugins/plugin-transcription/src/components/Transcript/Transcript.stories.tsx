@@ -9,7 +9,9 @@ import React, { useEffect, useState, useMemo, type FC } from 'react';
 
 import { create, ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { resolveRef } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
+import { useClient } from '@dxos/react-client';
 import { type Queue, type Space, useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar, useThemeContext } from '@dxos/react-ui';
@@ -20,11 +22,13 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   editorWidth,
+  preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { hues, mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { isNotFalsy } from '@dxos/util';
 
 import { Transcript } from './Transcript';
 import { BlockModel } from './model';
@@ -101,11 +105,13 @@ const useQueueModel = (queue: Queue<TranscriptBlock> | undefined) => {
 };
 
 const Editor: FC<{
+  space?: Space;
   model: BlockModel<TranscriptBlock>;
   running: boolean;
   onRunningChange: (running: boolean) => void;
   onReset?: () => void;
-}> = ({ model, running, onRunningChange, onReset }) => {
+}> = ({ space, model, running, onRunningChange, onReset }) => {
+  const client = useClient();
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -115,13 +121,25 @@ const Editor: FC<{
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),
+        space &&
+          preview({
+            onLookup: async ({ label, ref }) => {
+              const dxn = DXN.parse(ref);
+              if (!dxn) {
+                return null;
+              }
+
+              const object = await resolveRef(client, dxn, space);
+              return { label, object };
+            },
+          }),
         transcript({
           model,
           renderButton: createRenderer(({ onClick }) => (
             <IconButton icon='ph--arrow-line-down--regular' iconOnly label='Scroll to bottom' onClick={onClick} />
           )),
         }),
-      ],
+      ].filter(isNotFalsy),
     };
   }, [model]);
 
@@ -191,15 +209,6 @@ const ExtensionStory = ({ blocks = 5 }: { blocks?: number }) => {
   return <Editor model={model} running={running} onRunningChange={setRunning} onReset={handleReset} />;
 };
 
-const QueueStory = () => {
-  const [running, setRunning] = useState(true);
-  const space = useSpace();
-  const queue = useTestTranscriptionQueue(space, running, 1_000);
-  const model = useQueueModel(queue);
-
-  return <Editor model={model} running={running} onRunningChange={setRunning} />;
-};
-
 const meta: Meta<typeof Transcript> = {
   title: 'plugins/plugin-transcription/Transcript',
   component: Transcript,
@@ -250,7 +259,13 @@ export const Extension: Story = {
 };
 
 export const WithQueue: Story = {
-  render: () => <QueueStory />,
+  render: () => {
+    const [running, setRunning] = useState(true);
+    const space = useSpace();
+    const queue = useTestTranscriptionQueue(space, running, 1_000);
+    const model = useQueueModel(queue);
+    return <Editor space={space} model={model} running={running} onRunningChange={setRunning} />;
+  },
   args: {
     ignoreAttention: true,
     attendableId: 'story',

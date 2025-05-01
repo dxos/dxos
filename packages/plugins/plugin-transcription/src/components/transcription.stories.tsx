@@ -16,6 +16,7 @@ import React, {
   useState,
 } from 'react';
 
+import { randomQueueDxn } from '@dxos/client';
 import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -30,7 +31,6 @@ import { Transcript } from './Transcript';
 import { useAudioFile, useAudioTrack, useTranscriber } from '../hooks';
 import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
-import { randomQueueDxn } from '../util';
 
 const TranscriptionStory: FC<{
   playing: boolean;

@@ -10,6 +10,7 @@ import {
   type PluginsContext,
 } from '@dxos/app-framework';
 import { next as A } from '@dxos/automerge/automerge';
+import { resolveRef } from '@dxos/client';
 import { isInstanceOf, ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { makeRef, live, refFromDXN } from '@dxos/live-object';
@@ -20,7 +21,6 @@ import { TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
 import { DocumentType, MarkdownAction } from '../types';
-import { resolveRef } from '../types/util';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [

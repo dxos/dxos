@@ -57,7 +57,7 @@ export type PreviewRenderProps = {
 };
 
 export type PreviewOptions = {
-  renderBlock: RenderCallback<PreviewRenderProps>;
+  renderBlock?: RenderCallback<PreviewRenderProps>;
   onLookup: PreviewLookup;
 };
 
@@ -146,7 +146,7 @@ const buildDecorations = (state: EditorState, options: PreviewOptions) => {
         //
         case 'Image': {
           const link = getLinkRef(state, node.node);
-          if (link) {
+          if (options.renderBlock && link) {
             builder.add(
               node.from,
               node.to,
@@ -257,7 +257,7 @@ class PreviewBlockWidget extends WidgetType {
       }
     };
 
-    this._options.renderBlock(
+    this._options.renderBlock!(
       root,
       {
         readonly: view.state.readOnly,
