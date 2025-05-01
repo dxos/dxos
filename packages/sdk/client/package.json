@@ -1,7 +1,7 @@
 {
   "name": "@dxos/client",
   "version": "0.8.1",
-  "description": "Core DXOS Client API.",
+  "description": "DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
@@ -95,7 +95,6 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",

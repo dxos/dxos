@@ -11,9 +11,6 @@
   ],
   "references": [
     {
-      "path": ""
-    },
-    {
       "path": "../../common/async"
     },
     {
