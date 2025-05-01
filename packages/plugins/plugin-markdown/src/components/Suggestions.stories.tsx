@@ -17,7 +17,6 @@ import {
   contributes,
   createIntent,
   definePlugin,
-  createSurface,
   useCapability,
   useIntentDispatcher,
   Events,
@@ -28,7 +27,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { S, AST, create, type Expando, EchoObject, getSchema } from '@dxos/echo-schema';
+import { S, AST, create, type Expando, EchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
@@ -36,10 +35,9 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { isEchoObject, type ReactiveEchoObject, randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
+import { randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { command, useTextEditor } from '@dxos/react-ui-editor';
-import { Form } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
@@ -289,25 +287,7 @@ const meta: Meta<typeof DefaultStory> = {
         IntentPlugin(),
         MarkdownPlugin(),
       ],
-      capabilities: [
-        contributes(MarkdownCapabilities.Extensions, [() => command()]),
-        contributes(
-          Capabilities.ReactSurface,
-          createSurface({
-            id: 'preview-test',
-            role: 'popover',
-            filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-            component: ({ data }) => {
-              const schema = getSchema(data.subject);
-              if (!schema) {
-                return null;
-              }
-
-              return <Form schema={schema} values={data.subject} />;
-            },
-          }),
-        ),
-      ],
+      capabilities: [contributes(MarkdownCapabilities.Extensions, [() => command()])],
     }),
     withLayout({ tooltips: true, fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],
