@@ -69,6 +69,9 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/react-ui-grid"
     },
     {
@@ -88,6 +91,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
