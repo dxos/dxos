@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-inbox",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "DXOS Email inbox plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -67,6 +67,7 @@
     "react-resize-detector": "^12.0.2"
   },
   "devDependencies": {
+    "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

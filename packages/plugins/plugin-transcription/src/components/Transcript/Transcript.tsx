@@ -94,14 +94,14 @@ export type TranscriptProps = ThemedClassName<{
 
 export const Transcript: FC<TranscriptProps> = ({ classNames, blocks, attendableId, ignoreAttention }) => {
   const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
-  const { hasAttention } = useAttention(attendableId);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);
   const [columns, setColumns] = useState<DxGridAxisMeta | undefined>(undefined);
-  const [autoScroll, setAutoScroll] = useState(true);
 
   const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
 
+  const { hasAttention } = useAttention(attendableId);
+  const [autoScroll, setAutoScroll] = useState(true);
   const handleWheel = useCallback(
     (event: WheelEvent) => {
       setAutoScroll(false);

@@ -16,11 +16,11 @@ import React, {
   useState,
 } from 'react';
 
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Config } from '@dxos/react-client';
-import { useQueue } from '@dxos/react-client/echo';
+import { randomQueueDxn, useQueue } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
@@ -30,7 +30,6 @@ import { Transcript } from './Transcript';
 import { useAudioFile, useAudioTrack, useTranscriber } from '../hooks';
 import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
-import { randomQueueDxn } from '../util';
 
 const TranscriptionStory: FC<{
   playing: boolean;
@@ -67,7 +66,7 @@ const Microphone = () => {
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
-      const block = createStatic(TranscriptBlock, { segments });
+      const block = create(TranscriptBlock, { segments });
       queue?.append([block]);
     },
     [queue],
@@ -121,7 +120,7 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
-      const block = createStatic(TranscriptBlock, { authorName: 'test', authorHue: 'cyan', segments });
+      const block = create(TranscriptBlock, { authorName: 'test', authorHue: 'cyan', segments });
       queue?.append([block]);
     },
     [queue],

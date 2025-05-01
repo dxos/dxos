@@ -3,7 +3,7 @@
 //
 
 import { Schema as S } from 'effect';
-import { DescriptionAnnotationId } from 'effect/SchemaAST';
+import { DescriptionAnnotationId, TitleAnnotationId } from 'effect/SchemaAST';
 
 import * as DateUtil from './date';
 import * as NumberUtil from './number';
@@ -55,6 +55,7 @@ export namespace Format {
  * List of annotations for JSON encoding/decoding.
  */
 export const CustomAnnotations = {
+  title: TitleAnnotationId,
   description: DescriptionAnnotationId,
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,

@@ -11,8 +11,6 @@ import { log } from '@dxos/log';
 
 export type Block = { id: string };
 
-// TODO(burdon): Create adapter that listens for updates to the queue.
-
 /**
  * Covert block to a set of markdown lines.
  */
@@ -24,6 +22,36 @@ export type BlockRenderer<T extends Block> = (block: T, debug?: boolean) => stri
 export interface BlockDocument {
   lineCount(): number;
   replaceLines(from: number, remove: number, insert: string[]): void;
+}
+
+/**
+ * Codemirror document adapter.
+ */
+export class DocumentAdapter implements BlockDocument {
+  constructor(private readonly _view: EditorView) {}
+
+  /** The document must always have at least one line. */
+  lineCount(): number {
+    return this._view.state.doc.lines - 1;
+  }
+
+  replaceLines(from: number, remove: number, insert: string[]): void {
+    log('replaceLines', { count: this._view.state.doc.lines, from, remove, insert });
+
+    const numLines = this._view.state.doc.lines;
+    const posFrom = this._view.state.doc.line(from).from;
+    const posTo = remove === 0 ? posFrom : this._view.state.doc.line(Math.min(numLines, from + remove)).from;
+
+    // Don't remove the last line.
+    let text = insert.join('\n');
+    if (posTo === this._view.state.doc.length) {
+      text += '\n';
+    }
+
+    this._view.dispatch({
+      changes: { from: posFrom, to: posTo, insert: text },
+    });
+  }
 }
 
 type BlockChange<T extends Block> =
@@ -44,13 +72,12 @@ type BlockChange<T extends Block> =
     };
 
 /**
- * Ideally we would implement a custom virtual Text model for the View, but this currently isn't possible in Codemirror.
- * Instead we use a simple model that maps blocks to lines.
- *
- * A Queue has a mutable ordered list of Blocks.
  * Each Block can be converted into a set of lines.
  * Blocks can be added, updated or deleted from the Queue.
  * A Document is an immutable projection that represents a flat list of lines corresponding to the Queue.
+ *
+ * Ideally we would implement a custom virtual Text model for the View, but this currently isn't possible in Codemirror.
+ * Instead this model tracks changes and syncs them with the BlockDocument.
  */
 export class BlockModel<T extends Block> {
   /** Ordered set of blocks. */
@@ -70,9 +97,9 @@ export class BlockModel<T extends Block> {
 
   constructor(
     private readonly _renderer: BlockRenderer<T>,
-    blocks: T[] = [],
+    initialBlocks: T[] = [],
   ) {
-    blocks.forEach((block) => {
+    initialBlocks.forEach((block) => {
       this.appendBlock(block);
     });
   }
@@ -80,6 +107,7 @@ export class BlockModel<T extends Block> {
   toJSON() {
     return {
       blocks: this._blocks.length,
+      changes: this._changes.length,
     };
   }
 
@@ -133,7 +161,7 @@ export class BlockModel<T extends Block> {
   }
 
   /**
-   * Syncs the Document with the Queue.
+   * Syncs the tracked changes with the BlockDocument.
    */
   sync(document: BlockDocument): this {
     log('sync', { changes: this._changes });
@@ -197,41 +225,5 @@ export class BlockModel<T extends Block> {
     // Clear changes after sync.
     this._changes.length = 0;
     return this;
-  }
-}
-
-/**
- * Codemirror document adapter.
- */
-export class DocumentAdapter implements BlockDocument {
-  constructor(private readonly _view: EditorView) {}
-
-  /** The document must always have at least one line. */
-  lineCount(): number {
-    return this._view.state.doc.lines - 1;
-  }
-
-  replaceLines(from: number, remove: number, insert: string[]): void {
-    log('replaceLines', { from, remove, insert, total: this._view.state.doc.lines });
-
-    const numLines = this._view.state.doc.lines;
-    const posFrom = this._view.state.doc.line(from).from;
-    const posTo = remove === 0 ? posFrom : this._view.state.doc.line(Math.min(numLines, from + remove)).from;
-
-    // Don't remove the last line.
-    let text = insert.join('\n');
-    if (posTo === this._view.state.doc.length) {
-      text += '\n';
-    }
-
-    this._view.dispatch({
-      changes: {
-        from: posFrom,
-        to: posTo,
-        insert: text,
-      },
-    });
-
-    // log.info('document', { lines: this._view.state.doc.lines, text: this._view.state.doc.toString() });
   }
 }
