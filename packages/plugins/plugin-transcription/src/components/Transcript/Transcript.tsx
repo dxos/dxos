@@ -30,7 +30,7 @@ export const renderMarkdown = (block: TranscriptBlock, debug = false): string[] 
   // TODO(burdon): Color and avatar.
   return [
     `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
-    block.segments.map((segment) => segment.text).join(' '),
+    block.segments.map((segment) => segment.text.trim()).join(' '),
     '',
   ];
 };

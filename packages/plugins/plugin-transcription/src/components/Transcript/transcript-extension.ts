@@ -32,13 +32,14 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
       class: 'cm-timestamp-gutter',
       lineMarkerChange: (update) => update.docChanged || update.viewportChanged,
       markers: (view) => {
+        const start = getStartTime(started, model.blocks[0]);
         const builder = new RangeSetBuilder<GutterMarker>();
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
             const timestamp = model.getBlockAtLine(line.number)?.segments[0]?.started;
             if (timestamp) {
-              builder.add(line.from, line.from, new TimestampMarker(line.number, new Date(timestamp), started));
+              builder.add(line.from, line.from, new TimestampMarker(line.number, new Date(timestamp), start));
             }
 
             if (line.to + 1 > view.state.doc.length) {
@@ -208,6 +209,18 @@ class TimestampMarker extends GutterMarker {
     return el;
   }
 }
+
+const getStartTime = (started?: Date, block?: TranscriptBlock): Date | undefined => {
+  if (started) {
+    return started;
+  }
+
+  if (block?.segments[0]?.started) {
+    return new Date(block.segments[0].started);
+  }
+
+  return undefined;
+};
 
 const formatTimestamp = (timestamp: Date, relative?: Date) => {
   if (!relative) {
