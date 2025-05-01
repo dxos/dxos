@@ -26,42 +26,44 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Transcript } from './Transcript';
-import { useAudioFile, useAudioTrack, useTranscriber } from '../hooks';
+import { renderMarkdown, Transcript } from './Transcript';
+import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } from '../hooks';
+import { type BlockModel } from '../model';
 import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
 
 const TranscriptionStory: FC<{
-  playing: boolean;
-  setPlaying: Dispatch<SetStateAction<boolean>>;
-  blocks?: TranscriptBlock[];
-}> = ({ playing, setPlaying, blocks }) => {
+  model: BlockModel<TranscriptBlock>;
+  running: boolean;
+  onRunningChange: Dispatch<SetStateAction<boolean>>;
+}> = ({ model, running, onRunningChange }) => {
   return (
     <div className='flex flex-col w-[30rem]'>
       <Toolbar.Root>
         <IconButton
           iconOnly
-          icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
-          label={playing ? 'Pause' : 'Play'}
-          onClick={() => setPlaying((playing) => !playing)}
+          icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+          label={running ? 'Pause' : 'Play'}
+          onClick={() => onRunningChange((running) => !running)}
         />
       </Toolbar.Root>
       <ScrollContainer>
-        <Transcript blocks={blocks} attendableId='story' />
+        <Transcript model={model} attendableId='story' />
       </ScrollContainer>
     </div>
   );
 };
 
 const Microphone = () => {
-  const [playing, setPlaying] = useState(false);
+  const [running, setRunning] = useState(false);
 
   // Audio.
-  const track = useAudioTrack(playing);
+  const track = useAudioTrack(running);
 
   // Queue.
   const queueDxn = useMemo(() => randomQueueDxn(), []);
   const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
+  const model = useQueueModelAdapter(renderMarkdown, queue);
 
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
@@ -81,18 +83,18 @@ const Microphone = () => {
 
   // Manage transcription state.
   useEffect(() => {
-    if (playing && transcriber?.isOpen) {
+    if (running && transcriber?.isOpen) {
       void transcriber?.startChunksRecording();
-    } else if (!playing) {
+    } else if (!running) {
       void transcriber?.stopChunksRecording();
     }
-  }, [transcriber, playing, transcriber?.isOpen]);
+  }, [transcriber, running, transcriber?.isOpen]);
 
-  return <TranscriptionStory playing={playing} setPlaying={setPlaying} blocks={queue?.items} />;
+  return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
 
 const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; transcriptUrl: string }) => {
-  const [playing, setPlaying] = useState(false);
+  const [running, setRunning] = useState(false);
 
   // Audio.
   const audioElement = useRef<HTMLAudioElement>(null);
@@ -109,15 +111,16 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
       return;
     }
 
-    if (playing) {
+    if (running) {
       void audio.play();
     } else {
       void audio.pause();
     }
-  }, [audio, playing]);
+  }, [audio, running]);
 
   // Transcriber.
   const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
+  const model = useQueueModelAdapter(renderMarkdown, queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
       const block = create(TranscriptBlock, { authorName: 'test', authorHue: 'cyan', segments });
@@ -132,13 +135,13 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   });
 
   useEffect(() => {
-    if (transcriber && playing) {
+    if (transcriber && running) {
       void transcriber.open();
-    } else if (!playing) {
+    } else if (!running) {
       transcriber?.stopChunksRecording();
       void transcriber?.close();
     }
-  }, [transcriber, playing]);
+  }, [transcriber, running]);
 
   useEffect(() => {
     if (track?.readyState === 'live' && transcriber?.isOpen) {
@@ -150,7 +153,7 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
     }
   }, [transcriber, track?.readyState, transcriber?.isOpen]);
 
-  return <TranscriptionStory playing={playing} setPlaying={setPlaying} blocks={queue?.items} />;
+  return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
 
 const meta: Meta<typeof AudioFile> = {

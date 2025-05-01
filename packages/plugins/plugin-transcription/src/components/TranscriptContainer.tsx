@@ -8,16 +8,15 @@ import { fullyQualifiedId, getSpace } from '@dxos/client/echo';
 import { useQueue } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Transcript } from './Transcript';
-import { blockToMarkdown } from './Transcript/transcript-extension';
+import { Transcript, renderMarkdown } from './Transcript';
 import { useQueueModelAdapter } from '../hooks';
 import { type TranscriptBlock, type TranscriptType } from '../types';
 
 export const TranscriptionContainer: FC<{ role: string; transcript: TranscriptType }> = ({ role, transcript }) => {
   const attendableId = fullyQualifiedId(transcript);
-  const queue = useQueue<TranscriptBlock>(transcript.queue.dxn, { pollInterval: 1_000 });
   const space = getSpace(transcript);
-  const model = useQueueModelAdapter(blockToMarkdown, queue);
+  const queue = useQueue<TranscriptBlock>(transcript.queue.dxn, { pollInterval: 1_000 });
+  const model = useQueueModelAdapter(renderMarkdown, queue);
 
   return (
     <StackItem.Content role={role} classNames='container-max-width pli-2'>

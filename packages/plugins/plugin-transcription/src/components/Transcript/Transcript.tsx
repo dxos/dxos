@@ -21,9 +21,19 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { type BlockModel } from './model';
 import { transcript } from './transcript-extension';
+import { type BlockModel } from '../../model';
 import { type TranscriptBlock } from '../../types';
+
+export const renderMarkdown = (block: TranscriptBlock, debug = false): string[] => {
+  // TODO(burdon): Use link/reference markup for users (with popover).
+  // TODO(burdon): Color and avatar.
+  return [
+    `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
+    block.segments.map((segment) => segment.text).join(' '),
+    '',
+  ];
+};
 
 export type TranscriptProps = ThemedClassName<{
   space?: Space;

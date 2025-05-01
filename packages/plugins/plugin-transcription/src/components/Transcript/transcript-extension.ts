@@ -11,16 +11,6 @@ import { type RenderCallback } from '@dxos/react-ui-editor';
 import { DocumentAdapter, type BlockModel } from '../../model';
 import { type TranscriptBlock } from '../../types';
 
-export const blockToMarkdown = (block: TranscriptBlock, debug = false): string[] => {
-  // TODO(burdon): Use link/reference markup for users (with popover).
-  // TODO(burdon): Color and avatar.
-  return [
-    `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
-    block.segments.map((segment) => segment.text).join(' '),
-    '',
-  ];
-};
-
 /**
  * Data structure that maps Blocks queue to lines with transcript state.
  */

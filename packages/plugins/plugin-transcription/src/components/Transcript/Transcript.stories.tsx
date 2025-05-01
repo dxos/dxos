@@ -21,9 +21,8 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { Transcript, type TranscriptProps } from './Transcript';
+import { Transcript, type TranscriptProps, renderMarkdown } from './Transcript';
 import { BlockBuilder, TestItem, useTestTranscriptionQueue } from './testings';
-import { blockToMarkdown } from './transcript-extension';
 import { useQueueModelAdapter } from '../../hooks';
 import { BlockModel } from '../../model';
 import translations from '../../translations';
@@ -71,7 +70,7 @@ type StoryProps = { blocks?: TranscriptBlock[] } & Pick<TranscriptProps, 'ignore
 const BasicStory = ({ blocks: initialBlocks = [], ...props }: StoryProps) => {
   const [reset, setReset] = useState({});
   const builder = useMemo(() => new BlockBuilder(), []);
-  const model = useMemo(() => new BlockModel<TranscriptBlock>(blockToMarkdown, initialBlocks), [initialBlocks, reset]);
+  const model = useMemo(() => new BlockModel<TranscriptBlock>(renderMarkdown, initialBlocks), [initialBlocks, reset]);
   const [running, setRunning] = useState(true);
   const [currentBlock, setCurrentBlock] = useState<TranscriptBlock | null>(null);
   useEffect(() => {
@@ -124,7 +123,7 @@ const QueueStory = ({ blocks: initialBlocks = [], ...props }: StoryProps) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
   const queue = useTestTranscriptionQueue(space, running, 2_000);
-  const model = useQueueModelAdapter(blockToMarkdown, queue, initialBlocks);
+  const model = useQueueModelAdapter(renderMarkdown, queue, initialBlocks);
 
   return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} {...props} />;
 };
