@@ -59,7 +59,9 @@
         "packages/sdk/shell",
         "packages/experimental/artifact-testing",
         "packages/experimental/assistant",
-        "packages/core/conductor"
+        "packages/core/conductor",
+        "packages/core/functions",
+        "packages/core/compute"
       ]
     },
     "noProjectReferences": false
