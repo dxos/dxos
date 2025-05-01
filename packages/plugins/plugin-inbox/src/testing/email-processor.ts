@@ -2,7 +2,7 @@ import { defineTool, Message } from '@dxos/artifact';
 import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { failedInvariant } from '@dxos/invariant';
 import type { ContactType, MessageType } from '@dxos/schema';
 import { Schema } from 'effect';
@@ -55,7 +55,7 @@ export const processEmail = async (params: ProcessEmailParams): Promise<ProcessE
       model: '@anthropic/claude-3-5-sonnet-20241022',
       systemPrompt,
       history: [
-        createStatic(Message, {
+        create(Message, {
           role: 'user',
           content: [
             {

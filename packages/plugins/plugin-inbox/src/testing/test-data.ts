@@ -1,9 +1,9 @@
-import { createStatic, EchoObject, ObjectId } from '@dxos/echo-schema';
+import { create, EchoObject, ObjectId } from '@dxos/echo-schema';
 import { ContactType, MessageType } from '@dxos/schema';
 import { Schema } from 'effect';
 
 const createContact = (name: string, email: string): ContactType => {
-  return createStatic(ContactType, {
+  return create(ContactType, {
     name,
     identifiers: [{ type: 'email', value: email }],
   });
@@ -26,7 +26,7 @@ export const DocumentType = Schema.Struct({
 export type DocumentType = typeof DocumentType.Type;
 
 const createDocument = (name: string, content: string): DocumentType => {
-  return createStatic(DocumentType, {
+  return create(DocumentType, {
     name,
     content,
   });
@@ -60,7 +60,7 @@ export const contacts = {
 
 export const emails: MessageType[] = [
   // Recent emails
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -72,7 +72,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Q3 Financial Review' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -84,7 +84,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Board Feedback and Next Steps' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -96,7 +96,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'New Feature Ready for Testing' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -108,7 +108,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'URGENT: Bitcoin Wallet Verification Required' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -120,7 +120,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Potential Strategic Partnership' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -132,7 +132,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'New Hires Starting Next Week' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -144,7 +144,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Security Incident Report' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -156,7 +156,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Acquisition Target Concerns' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -168,7 +168,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Quarterly Tax Filings' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -180,7 +180,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Speaking Opportunity: International Tech Summit' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -192,7 +192,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'MANDATORY: Security Update Required' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -204,7 +204,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Q2 Customer Satisfaction Results' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -216,7 +216,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Annual Company Retreat Planning' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -228,7 +228,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Competitor Price Change - Strategic Response Needed' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -240,7 +240,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Privacy Policy Update - Final Review' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -252,7 +252,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Series C Funding Update - Oversubscribed' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -264,7 +264,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Product Roadmap Finalized' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -276,7 +276,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'CONFIDENTIAL: Acquisition Offer Received' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
@@ -288,7 +288,7 @@ export const emails: MessageType[] = [
     properties: { subject: 'Annual Audit Preparation' },
   }),
 
-  createStatic(MessageType, {
+  create(MessageType, {
     blocks: [
       {
         type: 'text',
