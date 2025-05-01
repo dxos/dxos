@@ -2,9 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": [
-      "DOM"
-    ],
     "types": [
       "@dxos/typings",
       "node"
@@ -35,6 +32,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
     },
     {
       "path": "../../common/storybook-utils"

@@ -56,6 +56,8 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export {
+  createEmptyEdgeSyncState,
+  fullyQualifiedId,
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
@@ -63,10 +65,13 @@ export {
   ReactiveObjectSchema,
   SpaceSchema,
   getSpace,
+  getSyncSummary,
   isSpace,
-  fullyQualifiedId,
   parseFullyQualifiedId,
   parseId,
   randomQueueDxn,
+  type Progress,
+  type PeerSyncState,
+  type SpaceSyncStateMap,
 } from './util';
 export { importSpace } from './import';

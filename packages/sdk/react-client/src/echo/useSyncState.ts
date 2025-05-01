@@ -1,38 +1,15 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { useEffect, useState } from 'react';
 
-import { type Space, type SpaceId, type SpaceSyncState } from '@dxos/client/echo';
+import { type PeerSyncState, type SpaceSyncStateMap, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import { type SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
-import { useClient } from '@dxos/react-client';
 
-export type Progress = { count: number; total: number };
-
-export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
-
-export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
-
-export const createEmptyEdgeSyncState = (): PeerSyncState => ({
-  missingOnLocal: 0,
-  missingOnRemote: 0,
-  localDocumentCount: 0,
-  remoteDocumentCount: 0,
-  differentDocuments: 0,
-});
-
-export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState => {
-  return Object.entries(syncMap).reduce<PeerSyncState>((summary, [_spaceId, peerState]) => {
-    summary.missingOnLocal += peerState.missingOnLocal;
-    summary.missingOnRemote += peerState.missingOnRemote;
-    summary.localDocumentCount += peerState.localDocumentCount;
-    summary.remoteDocumentCount += peerState.remoteDocumentCount;
-    summary.differentDocuments += peerState.differentDocuments;
-    return summary;
-  }, createEmptyEdgeSyncState());
-};
+import { useClient } from '../client';
 
 const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
   peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);

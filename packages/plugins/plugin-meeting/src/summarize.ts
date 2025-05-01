@@ -29,7 +29,7 @@ export const summarizeTranscript = async (ai: AIServiceClient, content: string):
 
   const parser = new MixedStreamParser();
   const output = await parser.parse(
-    await ai.exec({
+    await ai.execStream({
       model: DEFAULT_EDGE_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
       history: [create(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
