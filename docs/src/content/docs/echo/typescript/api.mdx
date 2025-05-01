@@ -1,0 +1,45 @@
+---
+title: TypeScript API
+sidebar:
+  label: API
+  order: 0
+---
+
+import { Aside, Code } from '@astrojs/starlight/components';
+
+import createSpace from './snippets/create-space.ts?raw';
+import querySpaces from './snippets/query-spaces.ts?raw';
+import inviteToSpace from './snippets/invite-to-space.ts?raw';
+import joinSpace from './snippets/join-space.ts?raw';
+
+## Spaces
+
+A `space` is an instance of an ECHO database which can be replicated by a number of peers.
+
+This section describes how to create, join, and invite peers to [ECHO Spaces](/echo/introduction#spaces) with the TypeScript API.
+
+### Creating spaces
+
+Having established an [identity](/halo/typescript), a space can be created:
+
+<Code code={createSpace.slice(34)} lang="ts" />
+
+### Listing spaces
+
+Obtain a list of `Space` objects:
+
+<Code code={querySpaces.slice(34)} lang="ts" />
+
+## Creating an invitation
+
+See [ECHO Spaces](/echo/introduction#spaces) for a description of the way peers join spaces.
+
+<Code code={inviteToSpace.slice(34)} lang="ts" />
+
+## Accepting invitations
+
+See [ECHO Spaces](/echo/introduction#spaces) for a description of the way peers join spaces.
+
+<Code code={joinSpace.slice(34)} lang="ts" />
+
+Having obtained a `space`, it is now possible to [query](/echo/typescript/queries) and [mutate](/echo/typescript/mutations) objects in that space.

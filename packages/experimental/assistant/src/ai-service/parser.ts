@@ -4,7 +4,7 @@
 
 import { Message, type MessageContentBlock } from '@dxos/artifact';
 import { Event } from '@dxos/async';
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
@@ -80,9 +80,10 @@ export class MixedStreamParser {
     const messagesCollected: Message[] = [];
 
     for await (const event of stream) {
+      log('streamEvent', { event });
       this.streamEvent.emit(event);
 
-      // log.info('event', { type: event.type, event });
+      // log('event', { type: event.type, event });
       switch (event.type) {
         //
         // Messages.
@@ -93,7 +94,7 @@ export class MixedStreamParser {
             log.warn('unexpected message_start');
           }
 
-          this._message = createStatic(Message, { role: event.message.role, content: [...event.message.content] });
+          this._message = create(Message, { role: event.message.role, content: [...event.message.content] });
           this.message.emit(this._message);
           break;
         }
@@ -143,7 +144,7 @@ export class MixedStreamParser {
             case 'text_delta': {
               const chunks = transformer.transform(event.delta.text);
               for (const chunk of chunks) {
-                // log.info('text_delta', { chunk, current });
+                log('text_delta', { chunk });
 
                 switch (streamBlock?.type) {
                   //
@@ -157,6 +158,7 @@ export class MixedStreamParser {
                         if (stack.length > 0) {
                           const top = stack.pop();
                           invariant(top && top.type === 'tag');
+                          log('pop', { top });
                           top.content.push(streamBlock);
                           streamBlock = top;
                         } else {
@@ -308,6 +310,17 @@ export const mergeMessageBlock = (
             return {
               type: 'json',
               disposition: 'suggest',
+              json: JSON.stringify({ text: streamBlock.content[0].content }),
+            };
+          }
+          break;
+        }
+
+        case 'proposal': {
+          if (streamBlock.content.length === 1 && streamBlock.content[0].type === 'text') {
+            return {
+              type: 'json',
+              disposition: 'proposal',
               json: JSON.stringify({ text: streamBlock.content[0].content }),
             };
           }

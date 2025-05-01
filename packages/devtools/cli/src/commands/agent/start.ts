@@ -222,10 +222,10 @@ export default class Start extends BaseCommand<typeof Start> {
       // TODO(nf): move to observability
       const installationId = this._observability?.getTag('installationId');
       const did = this._observability?.getTag('did');
-      this._observability?.event({
+      this._observability?.track({
         installationId: installationId?.value,
         did: did?.value,
-        name: 'cli.command.run.agent',
+        action: 'cli.command.run.agent',
         properties: {
           profile: this.flags.profile,
           duration: this.duration,

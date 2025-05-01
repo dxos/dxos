@@ -10,7 +10,7 @@ import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceEdgeClient, ToolTypes, DEFAULT_LLM_MODEL } from '../ai-service';
+import { AIServiceEdgeClient, ToolTypes, DEFAULT_EDGE_MODEL } from '../ai-service';
 import { runLLM } from '../conversation';
 import {
   AI_SERVICE_ENDPOINT,
@@ -49,7 +49,7 @@ while (true) {
   await client.appendMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
   await runLLM({
-    model: DEFAULT_LLM_MODEL,
+    model: DEFAULT_EDGE_MODEL,
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
@@ -69,7 +69,7 @@ while (true) {
       onImage: (img) => {
         const path = `/tmp/image-${img.id}.jpeg`;
         writeFileSync(path, Buffer.from(img.source.data, 'base64'));
-        log.info('Saved image', { path });
+        log('Saved image', { path });
         // Print image in iTerm using ANSI escape sequence
         const imageData = img.source.data;
         process.stdout.write('\x1b]1337;File=inline=1:' + imageData + '\x07');

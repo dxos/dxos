@@ -3,18 +3,19 @@
 //
 
 import { SchemaAST as AST, Schema as S } from 'effect';
-import { inspect, type InspectOptionsStylized } from 'node:util';
+import { type InspectOptionsStylized } from 'node:util';
 
+import { inspectCustom } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
 import {
   defineHiddenProperty,
+  getTypeReference,
+  type ObjectMeta,
   SchemaMetaSymbol,
-  TYPENAME_SYMBOL,
   SchemaValidator,
   symbolSchema,
-  getTypeReference,
+  TYPENAME_SYMBOL,
 } from '@dxos/echo-schema';
-import { type ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
@@ -40,7 +41,7 @@ type ProxyTarget = {
   /**
    * Schema for the root.
    */
-  [symbolSchema]: S.Schema<any>;
+  [symbolSchema]: S.Schema.AnyNoContext;
 
   /**
    * For get and set operations on value properties.
@@ -83,8 +84,8 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Array reactivity is already handled by the schema validator.
     }
 
-    if (inspect.custom) {
-      defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+    if (inspectCustom) {
+      defineHiddenProperty(target, inspectCustom, this._inspect.bind(target));
     }
   }
 
@@ -208,7 +209,7 @@ const toJSON = (target: ProxyTarget): any => {
 /**
  * Recursively set AST on all potential proxy targets.
  */
-const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
+const setSchemaProperties = (obj: any, schema: S.Schema.AnyNoContext) => {
   defineHiddenProperty(obj, symbolSchema, schema);
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {

@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type HasId } from '@dxos/echo-schema';
+import { type BaseEchoObject, type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { type EdgeHttpClient } from '@dxos/edge-client';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
 
+import type { QueuesService } from './queue-service';
 import type { Queue } from './types';
 
 /**
  * Client-side view onto an EDGE queue.
  */
-// TODO(burdon): Need offline alternative.
-export class QueueImpl<T> implements Queue<T> {
+// TODO(burdon): Move to echo-queue.
+// TODO(burdon): T should be constrained to EchoObject.
+export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
 
   private readonly _subspaceTag: string;
@@ -27,7 +28,7 @@ export class QueueImpl<T> implements Queue<T> {
   private _refreshId = 0;
 
   constructor(
-    private readonly _client: EdgeHttpClient,
+    private readonly _service: QueuesService,
     private readonly _dxn: DXN,
   ) {
     const { subspaceTag, spaceId, queueId } = this._dxn.asQueueDXN() ?? {};
@@ -64,7 +65,7 @@ export class QueueImpl<T> implements Queue<T> {
     this._signal.notifyWrite();
 
     try {
-      await this._client.insertIntoQueue(this._subspaceTag, this._spaceId, this._queueId, items);
+      await this._service.insertIntoQueue(this._subspaceTag, this._spaceId, this._queueId, items);
     } catch (err) {
       this._error = err as Error;
       this._signal.notifyWrite();
@@ -78,7 +79,7 @@ export class QueueImpl<T> implements Queue<T> {
     this._signal.notifyWrite();
 
     try {
-      await this._client.deleteFromQueue(this._subspaceTag, this._spaceId, this._queueId, ids);
+      await this._service.deleteFromQueue(this._subspaceTag, this._spaceId, this._queueId, ids);
     } catch (err) {
       this._error = err as Error;
       this._signal.notifyWrite();
@@ -93,7 +94,7 @@ export class QueueImpl<T> implements Queue<T> {
   async refresh() {
     const thisRefreshId = ++this._refreshId;
     try {
-      const { objects } = await this._client.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
+      const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
       if (thisRefreshId !== this._refreshId) {
         return;
       }

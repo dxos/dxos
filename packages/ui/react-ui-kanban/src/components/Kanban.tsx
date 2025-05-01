@@ -24,7 +24,7 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const { select, clear } = useSelectionActions([model.id, model.cardSchema.typename]);
+  const { select, clear } = useSelectionActions([model.id, model.schema.typename]);
   const selectedItems = useSelectedItems(model.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
@@ -73,7 +73,9 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 orientation='vertical'
                 size='contain'
                 rail={false}
-                classNames='!plb-0 !pbe-0 drag-preview-p-0'
+                classNames={
+                  /* NOTE(thure): Do not eliminate spacing here without ensuring this element will have a significant size, otherwise dropping items into an empty stack will be made difficult or impossible. See #9035. */ 'pbe-1 drag-preview-p-0'
+                }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >
@@ -239,7 +241,7 @@ const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardForm
   return (
     <Form
       values={initialValue}
-      schema={model.cardSchema}
+      schema={model.schema}
       Custom={Custom}
       onSave={handleSave}
       autoFocus={autoFocus}

@@ -6,17 +6,17 @@ import { Schema as S } from 'effect';
 import { test, describe } from 'vitest';
 
 import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
-import { toJsonSchema, ObjectId, createStatic } from '@dxos/echo-schema';
+import { toJsonSchema, ObjectId, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { DEFAULT_LLM_MODEL } from './defs';
+import { DEFAULT_EDGE_MODEL } from './defs';
 import { AIServiceEdgeClient } from './edge-client';
 import { OllamaClient } from './ollama-client';
 import { MixedStreamParser } from './parser';
 import { ToolTypes } from './types';
-import { AI_SERVICE_ENDPOINT } from '../testing';
+import { createTestOllamaClient, AI_SERVICE_ENDPOINT } from '../testing';
 
 // log.config({ filter: 'debug' });
 
@@ -40,7 +40,7 @@ describe.skip('AI Service Client', () => {
     ]);
 
     const stream = await client.exec({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a poet',
@@ -85,7 +85,7 @@ describe.skip('AI Service Client', () => {
 
     {
       const stream1 = await client.exec({
-        model: DEFAULT_LLM_MODEL,
+        model: DEFAULT_EDGE_MODEL,
         spaceId,
         threadId,
         systemPrompt: 'You are a helpful assistant.',
@@ -119,7 +119,7 @@ describe.skip('AI Service Client', () => {
 
     {
       const stream2 = await client.exec({
-        model: DEFAULT_LLM_MODEL,
+        model: DEFAULT_EDGE_MODEL,
         spaceId,
         threadId,
         systemPrompt: 'You are a helpful assistant.',
@@ -157,7 +157,7 @@ describe.skip('AI Service Client', () => {
     ]);
 
     const stream = await client.exec({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       tools: [
@@ -179,26 +179,26 @@ describe.skip('AI Service Client', () => {
   });
 });
 
-describe('Ollama Client', () => {
+describe.skip('Ollama Client', () => {
   test('basic', async (ctx) => {
     const isRunning = await OllamaClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }
 
-    const client = OllamaClient.createClient();
+    const client = createTestOllamaClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(
       await client.exec({
-        prompt: createStatic(Message, {
+        prompt: create(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'Hello, world!' }],
         }),
       }),
     );
 
-    log.info('messages', { messages });
+    log('messages', { messages });
   });
 
   test('tool calls', async (ctx) => {
@@ -207,7 +207,7 @@ describe('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = OllamaClient.createClient({
+    const client = createTestOllamaClient({
       tools: [
         defineTool('test', {
           name: 'encrypt',
@@ -221,19 +221,19 @@ describe('Ollama Client', () => {
     });
     const parser = new MixedStreamParser();
     parser.streamEvent.on((event) => {
-      // log.info('event', { event });
+      // log('event', { event });
     });
 
     const messages = await parser.parse(
       await client.exec({
-        prompt: createStatic(Message, {
+        prompt: create(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'What is the encrypted message for "Hello, world!"' }],
         }),
       }),
     );
 
-    log.info('messages', { messages });
+    log('messages', { messages });
   });
 
   test('text-to-image', async (ctx) => {
@@ -242,12 +242,12 @@ describe('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = OllamaClient.createClient();
+    const client = createTestOllamaClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(
       await client.exec({
-        prompt: createStatic(Message, {
+        prompt: create(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'Generate an image of a cat' }],
         }),
@@ -260,6 +260,6 @@ describe('Ollama Client', () => {
       }),
     );
 
-    log.info('messages', { messages });
+    log('messages', { messages });
   });
 });

@@ -41,18 +41,17 @@ test.describe('HALO tests', () => {
     await expect(host.getSpaceItems()).toHaveCount(2);
     await expect(guest.getSpaceItems()).toHaveCount(1);
 
-    await host.openIdentityManager();
-    const invitationCode = await host.shell.createDeviceInvitation();
-    const authCode = await host.shell.getAuthCode();
-    await guest.openIdentityManager();
+    await host.openUserDevices();
+    const invitationCode = await host.createDeviceInvitation();
+    const authCode = await host.getAuthCode();
+    await guest.openUserDevices();
     await Promise.all([
       // Wait for reset to complete and attempt to reload.
       guest.page.waitForRequest(INITIAL_URL + '/?deviceInvitationCode=', { timeout: 10_000 }),
-      guest.shell.joinNewIdentity(invitationCode),
+      guest.joinNewIdentity(),
     ]);
     await guest.shell.acceptDeviceInvitation(invitationCode);
     await guest.shell.authenticateDevice(authCode);
-    await host.shell.closeShell();
 
     await expect(host.getSpaceItems()).toHaveCount(2);
     // TODO(wittjosiah): Why so slow?

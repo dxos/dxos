@@ -3,7 +3,7 @@
 //
 
 import { type Tool, ToolResult, Message } from '@dxos/artifact';
-import { createStatic, ObjectId } from '@dxos/echo-schema';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -175,7 +175,23 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
   const toolCall = toolCalls[0];
   const tool = tools.find((tool) => tool.name === toolCall.name);
   if (!tool) {
-    throw new Error(`Tool not found: ${toolCall.name}`);
+    const resultMessage = create(Message, {
+      role: 'user',
+      content: [
+        {
+          type: 'tool_result',
+          toolUseId: toolCall.id,
+          content: `Tool not found: ${toolCall.name}`,
+          isError: true,
+        },
+      ],
+    });
+
+    // TODO(burdon): Retry count?
+    return {
+      type: 'continue',
+      message: resultMessage,
+    };
   }
 
   let toolResult: ToolResult;
@@ -190,7 +206,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
   switch (toolResult.kind) {
     case 'error': {
       log('tool error', { message: toolResult.message });
-      const resultMessage = createStatic(Message, {
+      const resultMessage = create(Message, {
         role: 'user',
         content: [
           {
@@ -211,7 +227,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
 
     case 'success': {
       log('tool success', { result: toolResult.result });
-      const resultMessage = createStatic(Message, {
+      const resultMessage = create(Message, {
         role: 'user',
         content: [
           {

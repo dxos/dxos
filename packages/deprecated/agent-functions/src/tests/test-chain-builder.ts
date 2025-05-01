@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create, type Space } from '@dxos/client/echo';
+import { live, type Space } from '@dxos/client/echo';
 import { type TemplateInput, TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
 
 import { str } from '../util';
@@ -15,7 +15,7 @@ export type CreateTestTemplateInput = {
 
 export const createTestChain = (space: Space, args?: CreateTestTemplateInput) => {
   return space.db.add(
-    create(TemplateType, {
+    live(TemplateType, {
       command: args?.command ?? 'translate',
       template: args?.template ?? str('Translate the following into {language}:', '---', '{input}'),
       inputs: args?.inputs ?? [

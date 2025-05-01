@@ -20,7 +20,7 @@ export const IdentityDialog = (props: IdentityDialogProps) => {
     <Dialog.Root defaultOpen onOpenChange={(open) => open || props.onDone?.()}>
       <Dialog.Portal>
         <Dialog.Overlay>
-          <Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(e) => e.preventDefault()}>
+          <Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(ev) => ev.preventDefault()}>
             <Clipboard.Provider>
               <IdentityPanel
                 {...{

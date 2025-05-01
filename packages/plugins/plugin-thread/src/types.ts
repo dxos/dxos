@@ -3,29 +3,40 @@
 //
 
 import { S } from '@dxos/echo-schema';
-import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
+import { ActorSchema, MessageType } from '@dxos/schema';
 
 import { THREAD_PLUGIN } from './meta';
 
 export namespace ThreadAction {
   const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
 
+  export class CreateChannel extends S.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
+    input: S.Struct({
+      // TODO(wittjosiah): Should be SpaceId.
+      spaceId: S.String,
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: ChannelType,
+    }),
+  }) {}
+
   export class Create extends S.TaggedClass<Create>()(`${THREAD_ACTION}/create`, {
     input: S.Struct({
       name: S.optional(S.String),
-      cursor: S.optional(S.String),
-      subject: S.optional(EchoObjectSchema),
+      cursor: S.String,
+      subject: EchoObjectSchema,
     }),
     output: S.Struct({
-      object: S.Union(ChannelType, ThreadType),
+      object: ThreadType,
     }),
   }) {}
 
   export class Select extends S.TaggedClass<Select>()(`${THREAD_ACTION}/select`, {
     input: S.Struct({
       current: S.String,
-      skipOpen: S.optional(S.Boolean),
     }),
     output: S.Void,
   }) {}
@@ -46,11 +57,12 @@ export namespace ThreadAction {
     output: S.Void,
   }) {}
 
-  // TODO(wittjosiah): Rename?
-  export class OnMessageAdd extends S.TaggedClass<OnMessageAdd>()(`${THREAD_ACTION}/on-message-add`, {
+  export class AddMessage extends S.TaggedClass<AddMessage>()(`${THREAD_ACTION}/add-message`, {
     input: S.Struct({
-      thread: ThreadType,
       subject: EchoObjectSchema,
+      thread: ThreadType,
+      sender: ActorSchema,
+      text: S.String,
     }),
     output: S.Void,
   }) {}
@@ -80,6 +92,8 @@ export type ViewState = { showResolvedThreads: boolean };
 export type ViewStore = Record<SubjectId, ViewState>;
 
 export type ThreadState = {
+  /** Current channel activity. */
+  activities: Record<string, string | undefined>;
   /** In-memory draft threads. */
   drafts: Record<string, ThreadType[]>;
   current?: string | undefined;

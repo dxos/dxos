@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-space",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -59,6 +59,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
@@ -74,7 +75,8 @@
     "localforage": "^1.10.0",
     "lodash.get": "^4.4.2",
     "react-drag-drop-files": "^2.3.8",
-    "react-is": "~18.2.0"
+    "react-is": "~18.2.0",
+    "react-qr-rounded": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,6 +28,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/conductor": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -51,6 +52,7 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
@@ -66,7 +68,7 @@
     "chartjs-plugin-streaming": "^2.0.0",
     "date-fns": "^3.3.1",
     "effect": "3.13.3",
-    "flame-chart-js": "^2.3.1",
+    "flame-chart-js": "^3.3.0",
     "isomorphic-ws": "^5.0.0",
     "localforage": "^1.10.0",
     "lodash.defaultsdeep": "^4.6.1",
@@ -81,6 +83,7 @@
     "react-router-dom": "^6.4.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-vis": "^1.11.12",
+    "use-resize-observer": "^9.1.0",
     "ws": "^8.14.2"
   },
   "devDependencies": {

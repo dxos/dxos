@@ -35,6 +35,71 @@
       "group": {
         "kind": "build"
       }
+    },
+    {
+      "label": "test current file",
+      "type": "shell",
+      "command": "cd ${fileDirname} && pnpm vitest ${file}",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
+    },
+    {
+      "label": "storybook",
+      "type": "shell",
+      "command": "pnpm -w nx storybook stories",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
+    },
+    {
+      "label": "serve composer-app",
+      "type": "shell",
+      "command": "pnpm -w nx serve composer-app",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      },
+      "options": {
+        "env": {
+          "DX_LABS": "true"
+        }
+      }
+    },
+    {
+      "label": "build and test all packages",
+      "type": "shell",
+      "command": "pnpm -w nx run-many --target=build,test --parallel 12",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
     }
   ]
 }

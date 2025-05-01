@@ -5,7 +5,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { create } from '@dxos/client/echo';
+import { live } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 
 import { initFunctionsPlugin } from './plugin-init';
@@ -34,10 +34,10 @@ describe.skip('functions e2e', () => {
     await inviteMember(space, functionRuntime.client);
 
     const uri = 'example.com/function/test';
-    space.db.add(create(FunctionDef, { uri, route: '/test', handler: 'test' }));
+    space.db.add(live(FunctionDef, { uri, route: '/test', handler: 'test' }));
     const triggerMeta: FunctionTrigger['meta'] = { name: 'DXOS' };
     space.db.add(
-      create(FunctionTrigger, {
+      live(FunctionTrigger, {
         function: uri,
         enabled: true,
         meta: triggerMeta,
@@ -55,7 +55,7 @@ describe.skip('functions e2e', () => {
     });
 
     await functionRuntime.waitForActiveTriggers(space);
-    const addedObject = space.db.add(create(TestType, { title: '42' }));
+    const addedObject = space.db.add(live(TestType, { title: '42' }));
 
     const callArgs = await called.wait();
     expect(callArgs.meta).to.deep.eq(triggerMeta);

@@ -3,7 +3,7 @@
 //
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { AST, S, type Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { S, type Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -13,6 +13,7 @@ import { CollectionType } from './collection';
 import { SPACE_PLUGIN } from '../meta';
 
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
+export const SPACE_TYPE = 'dxos.org/type/Space';
 
 export type ObjectViewerProps = {
   lastSeen: number;
@@ -88,14 +89,18 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
 }
 
 export const SpaceForm = S.Struct({
-  name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
+  name: S.optional(S.String.annotations({ title: 'Name' })),
+  icon: S.optional(S.String.annotations({ title: 'Icon' })),
+  hue: S.optional(S.String.annotations({ title: 'Color' })),
   // TODO(wittjosiah): Make optional with default value.
-  edgeReplication: S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enable EDGE Replication' }),
+  edgeReplication: S.Boolean.annotations({ title: 'Enable EDGE Replication' }),
 });
 
 export type ObjectForm<T extends BaseObject = BaseObject> = {
+  // TODO(dmaretskyi): Change to S.Schema.AnyNoContext
   objectSchema: TypedObject;
   formSchema?: S.Schema<T, any>;
+  hidden?: boolean;
   getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
 };
 
@@ -165,10 +170,10 @@ export namespace SpaceAction {
     output: S.Void,
   }) {}
 
+  // TODO(wittjosiah): Handle scrolling to section.
+  //   This maybe motivates making the space settings its own deck?
   export class OpenSettings extends S.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {
-    input: S.Struct({
-      space: SpaceSchema,
-    }),
+    input: S.Struct({ space: SpaceSchema }),
     output: S.Void,
   }) {}
 
@@ -206,6 +211,7 @@ export namespace SpaceAction {
     input: S.Struct({
       object: ReactiveObjectSchema,
       target: S.Union(SpaceSchema, CollectionType),
+      hidden: S.optional(S.Boolean),
     }),
     output: S.Struct({
       id: S.String,

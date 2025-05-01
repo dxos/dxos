@@ -24,7 +24,7 @@ describe('schema-validator', () => {
     test('has annotation', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const TestSchema: S.Schema<any> = S.Struct({
+      const TestSchema: S.Schema.AnyNoContext = S.Struct({
         name: S.String.annotations({ [annotationId]: annotationValue }),
         parent: S.optional(S.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
         friends: S.suspend(() => S.mutable(S.Array(TestSchema.annotations({ [annotationId]: annotationValue })))),
@@ -36,7 +36,7 @@ describe('schema-validator', () => {
 
     test('no annotation', () => {
       const annotationId = Symbol('foo');
-      const Person: S.Schema<any> = S.Struct({
+      const Person: S.Schema.AnyNoContext = S.Struct({
         name: S.String,
         parent: S.optional(S.suspend(() => Person)),
         friends: S.suspend(() => S.mutable(S.Array(Person))),
@@ -49,7 +49,7 @@ describe('schema-validator', () => {
 
   describe('getPropertySchema', () => {
     const validateValueToAssign = (args: {
-      schema: S.Schema<any>;
+      schema: S.Schema.AnyNoContext;
       target: any;
       path: string[];
       valueToAssign: any;
@@ -83,7 +83,7 @@ describe('schema-validator', () => {
     test('preserves annotations', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const Person: S.Schema<any> = S.Struct({
+      const Person: S.Schema.AnyNoContext = S.Struct({
         parent: S.optional(S.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
         friends: S.suspend(() => S.mutable(S.Array(Person.annotations({ [annotationId]: annotationValue })))),
       });

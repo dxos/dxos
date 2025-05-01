@@ -10,6 +10,17 @@ import { invariant } from '@dxos/invariant';
 import type { SpaceId } from './space-id';
 
 /**
+ * Tags for ECHO DXNs that should resolve the object ID in the local space.
+ */
+export const LOCAL_SPACE_TAG = '@';
+
+// TODO(burdon): Namespace for.
+export const QueueSubspaceTags = Object.freeze({
+  DATA: 'data',
+  TRACE: 'trace',
+});
+
+/**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
  * Each DXN starts with a dxn prefix, followed by a resource kind.
  * Colon Symbol : is used a delimiter between parts.
@@ -17,7 +28,6 @@ import type { SpaceId } from './space-id';
  * '@' in the place of the space id is used to denote that the DXN should be resolved in the local space.
  *
  * @example
- *
  * ```
  * dxn:echo:<space key>:<echo id>
  * dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
@@ -35,11 +45,15 @@ export class DXN {
      * dxn:type:<type name>[:<version>]
      */
     TYPE: 'type',
+
     /**
      * dxn:echo:<space id>:<echo id>
      * dxn:echo:@:<echo id>
      */
+    // TODO(burdon): Rename to OBJECT? (BREAKING CHANGE).
+    // TODO(burdon): Add separate Kind for space.
     ECHO: 'echo',
+
     /**
      * The subspace tag enables us to partition queues by usage within the context of a space.
      * dxn:queue:<subspace_tag>:<space_id>:<queue_id>[:object_id]
@@ -53,6 +67,7 @@ export class DXN {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
   }
 
+  // TODO(burdon): Rename isValid.
   static isDXNString(dxn: string) {
     return dxn.startsWith('dxn:');
   }
@@ -75,7 +90,7 @@ export class DXN {
     return new DXN(kind, parts);
   }
 
-  static tryParse(dxn: string) {
+  static tryParse(dxn: string): DXN | undefined {
     try {
       return DXN.parse(dxn);
     } catch (error) {
@@ -86,16 +101,16 @@ export class DXN {
   /**
    * @example `dxn:type:example.com/type/Contact`
    */
-  static fromTypename(type: string) {
-    return new DXN(DXN.kind.TYPE, [type]);
+  static fromTypename(typename: string) {
+    return new DXN(DXN.kind.TYPE, [typename]);
   }
 
   /**
    * @example `dxn:type:example.com/type/Contact:0.1.0`
    */
   // TODO(dmaretskyi): Consider using @ as the version separator.
-  static fromTypenameAndVersion(type: string, version: string) {
-    return new DXN(DXN.kind.TYPE, [type, version]);
+  static fromTypenameAndVersion(typename: string, version: string) {
+    return new DXN(DXN.kind.TYPE, [typename, version]);
   }
 
   /**
@@ -138,13 +153,17 @@ export class DXN {
     return this.#parts;
   }
 
-  toTypename() {
+  get typename() {
     invariant(this.#kind === DXN.kind.TYPE);
     return this.#parts[0];
   }
 
   hasTypenameOf(typename: string) {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
+  }
+
+  isLocalObjectId() {
+    return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
   }
 
   asTypeDXN(): DXN.TypeDXN | undefined {
@@ -189,12 +208,8 @@ export class DXN {
     };
   }
 
-  isLocalObjectId() {
-    return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
-  }
-
-  toString() {
-    return `dxn:${this.#kind}:${this.#parts.join(':')}`;
+  toString(): DXN.String {
+    return `dxn:${this.#kind}:${this.#parts.join(':')}` as DXN.String;
   }
 
   /**
@@ -211,6 +226,9 @@ export class DXN {
   }
 }
 
+/**
+ * API namespace.
+ */
 export declare namespace DXN {
   export type TypeDXN = {
     type: string;
@@ -219,6 +237,7 @@ export declare namespace DXN {
 
   export type EchoDXN = {
     spaceId?: SpaceId;
+    // TODO(burdon): Rename objectId.
     echoId: string; // TODO(dmaretskyi): ObjectId.
   };
 
@@ -228,14 +247,12 @@ export declare namespace DXN {
     queueId: string; // TODO(dmaretskyi): ObjectId.
     objectId?: string; // TODO(dmaretskyi): ObjectId.
   };
+
+  /**
+   * DXN represented as a javascript string.
+   */
+  export type String = string & { __DXNString: never };
+  // TODO(burdon): Make brand.
+  // export const String = S.String.pipe(S.brand('DXN'));
+  // export type String = S.To(typoeof String);
 }
-
-/**
- * Tags for ECHO DXNs that should resolve the object ID in the local space.
- */
-export const LOCAL_SPACE_TAG = '@';
-
-export const QueueSubspaceTags = Object.freeze({
-  DATA: 'data',
-  TRACE: 'trace',
-});

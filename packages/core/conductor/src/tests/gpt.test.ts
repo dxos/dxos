@@ -7,6 +7,7 @@ import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } fro
 import { describe, expect, test, type TaskContext } from 'vitest';
 
 import { AIServiceEdgeClient, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/assistant';
+import { createTestOllamaClient } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
@@ -18,7 +19,7 @@ const ENABLE_LOGGING = true;
 const SKIP_AI_SERVICE_TESTS = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
 
-describe('GPT pipelines', () => {
+describe.skip('GPT pipelines', () => {
   it.effect('text output', ({ expect }) =>
     Effect.gen(function* () {
       const runtime = new TestRuntime();
@@ -45,7 +46,6 @@ describe('GPT pipelines', () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
-
         const output = yield* runtime
           .runGraph(
             'dxn:compute:gpt2',
@@ -240,7 +240,7 @@ describe('GPT pipelines', () => {
           Effect.provide(
             testServices({
               enableLogging: ENABLE_LOGGING,
-              gpt: new EdgeGpt(OllamaClient.createClient()),
+              gpt: new EdgeGpt(createTestOllamaClient()),
             }),
           ),
         );

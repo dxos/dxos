@@ -51,11 +51,15 @@ export type SchemaProperty<T extends BaseObject, V = any> = {
  * Get properties from the given AST node (typically from a Schema object).
  * Handle discriminated unions.
  */
-export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: any = {}): SchemaProperty<T>[] => {
+export const getSchemaProperties = <T extends BaseObject>(
+  ast: AST.AST,
+  value: any = {},
+  includeId: boolean = false,
+): SchemaProperty<T>[] => {
   if (AST.isUnion(ast)) {
     const baseType = getDiscriminatedType(ast, value);
     if (baseType) {
-      return getSchemaProperties(baseType);
+      return getSchemaProperties(baseType, value, includeId);
     }
 
     return [];
@@ -66,7 +70,7 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
     const name = prop.name.toString() as PropertyKey<T>;
     // TODO(burdon): Handle special case?
     const identifier = AST.getAnnotation(prop.type, AST.IdentifierAnnotationId).pipe(Option.getOrUndefined);
-    if (name === 'id' && identifier !== false) {
+    if (name === 'id' && identifier !== false && !includeId) {
       return props;
     }
     const processed = processProperty(name, prop);

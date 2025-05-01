@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
 import { toEffectSchema } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
@@ -27,20 +27,14 @@ import { presets } from './presets';
 
 export type SpaceGeneratorProps = {
   space: Space;
-  onCreateObjects?: (objects: ReactiveObject<any>[]) => void;
+  onCreateObjects?: (objects: Live<any>[]) => void;
 };
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
-  const mutableTypes = [
-    Testing.OrgType,
-    Testing.ProjectType,
-    Testing.ContactType,
-    Testing.EmailType,
-    Testing.MessageType,
-  ];
+  const mutableTypes = [Testing.Org, Testing.Project, Testing.Contact, Testing.Message];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
 
@@ -117,8 +111,8 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           schemas.map(async (schema) => {
             const parts = schema.typename.split('/');
             const name = parts[parts.length - 1];
-            const table = create(TableType, { name, threads: [] });
-            await initializeTable({ space, table, initialSchema: schema.typename });
+            const table = live(TableType, { name, threads: [] });
+            await initializeTable({ client, space, table, typename: schema.typename });
             await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: table }));
             return table;
           }),
@@ -131,7 +125,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
               log.warn('Missing schema for object', { id, typename });
               return;
             }
-            const object = create(schema, fields);
+            const object = live(schema, fields);
             space.db.add(object);
             return object;
           }),
@@ -145,7 +139,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   }, []);
 
   return (
-    <div role='none' className='flex flex-col divide-y divide-separator'>
+    <div role='none' className='flex flex-col divide-y divide-separator overflow-y-auto'>
       <Toolbar.Root classNames='p-1'>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
         <IconButton

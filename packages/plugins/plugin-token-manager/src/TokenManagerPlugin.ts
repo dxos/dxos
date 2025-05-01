@@ -4,11 +4,10 @@
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { AccessTokenType } from '@dxos/schema';
 
-import { ReactSurface } from './capabilities';
-import { meta, TOKEN_MANAGER_PLUGIN } from './meta';
+import { ReactSurface, AppGraphBuilder } from './capabilities';
+import { meta } from './meta';
 import translations from './translations';
 
 export const TokenManagerPlugin = () =>
@@ -24,17 +23,13 @@ export const TokenManagerPlugin = () =>
       activate: () => contributes(ClientCapabilities.Schema, [AccessTokenType]),
     }),
     defineModule({
-      id: `${meta.id}/module/space-settings`,
-      activatesOn: SpaceEvents.SetupSettingsPanel,
-      activate: () =>
-        contributes(SpaceCapabilities.SettingsPanel, {
-          id: 'token-manager',
-          label: ['plugin name', { ns: TOKEN_MANAGER_PLUGIN }],
-        }),
-    }),
-    defineModule({
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
   ]);

@@ -19,7 +19,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { Blockstore, FileUploader, IntentResolver, Markdown, ReactSurface, WnfsCapabilities } from './capabilities';
-import { meta, WNFS_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { FileType, WnfsAction } from './types';
 
@@ -51,7 +51,6 @@ export const WnfsPlugin = () =>
           id: FileType.typename,
           metadata: {
             label: (object: any) => (object instanceof FileType ? object.name : undefined),
-            placeholder: ['file title placeholder', { ns: WNFS_PLUGIN }],
             // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
             icon: 'ph--file--regular',
           },

@@ -1,17 +1,17 @@
-// TODO(burdon): Factor out to spaces.
 //
 // Copyright 2023 DXOS.org
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { getDatabaseFromObject, isEchoObject, type ReactiveEchoObject } from '@dxos/echo-db';
-import { type ObjectId, S } from '@dxos/echo-schema';
+import { type ReactiveEchoObject, getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
+import { ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
-import { isReactiveObject, type ReactiveObject } from '@dxos/live-object';
+import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { isLiveObject, type Live } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
 
+// TODO(burdon): Move to @dxos/keys.
 export const SPACE_ID_LENGTH = 33;
 export const OBJECT_ID_LENGTH = 26;
 export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
@@ -24,16 +24,16 @@ export const SpaceSchema: S.Schema<Space> = S.Any.pipe(
 );
 
 // TODO(dmaretskyi): Move to @dxos/echo-schema.
-export const ReactiveObjectSchema: S.Schema<ReactiveObject<any>> = S.Any.pipe(
-  S.filter((x) => isReactiveObject(x)),
-  S.annotations({ title: 'ReactiveObject' }),
+export const ReactiveObjectSchema: S.Schema<Live<any>> = S.Any.pipe(
+  S.filter((x) => isLiveObject(x)),
+  S.annotations({ title: 'Live' }),
 );
 export const EchoObjectSchema: S.Schema<ReactiveEchoObject<any>> = S.Any.pipe(
   S.filter((x) => isEchoObject(x)),
   S.annotations({ title: 'EchoObject' }),
 );
 
-export const getSpace = (object?: ReactiveObject<any>): Space | undefined => {
+export const getSpace = (object?: Live<any>): Space | undefined => {
   if (!object) {
     return undefined;
   }
@@ -55,7 +55,7 @@ export const getSpace = (object?: ReactiveObject<any>): Space | undefined => {
  * @returns Fully qualified id of a reactive object.
  * @deprecated Prefer DXNs.
  */
-export const fullyQualifiedId = (object: ReactiveObject<any>): string => {
+export const fullyQualifiedId = (object: Live<any>): string => {
   const space = getSpace(object);
   return space ? `${space.id}:${object.id}` : object.id;
 };
@@ -83,3 +83,7 @@ export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId }
     return {};
   }
 };
+
+// TODO(burdon): Factor out.
+export const randomQueueDxn = (spaceId?: SpaceId) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId ?? SpaceId.random(), ObjectId.random()]);

@@ -10,7 +10,7 @@ import { ToolTypes } from '@dxos/assistant';
 import { getTypename, isInstanceOf, ObjectId, S, toEffectSchema } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { KanbanType } from '@dxos/react-ui-kanban/types';
 import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
@@ -254,7 +254,7 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                spaceService.db.add(create(schema, rest));
+                spaceService.db.add(live(schema, rest));
               }
               yield* Effect.promise(() => spaceService.db.flush());
             } else if (isInstanceOf(KanbanType, container)) {
@@ -269,7 +269,7 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                spaceService.db.add(create(schema, rest));
+                spaceService.db.add(live(schema, rest));
               }
               yield* Effect.promise(() => spaceService.db.flush());
             } else {

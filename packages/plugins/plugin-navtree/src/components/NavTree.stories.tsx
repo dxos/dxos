@@ -10,7 +10,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { isActionLike, type NodeArg } from '@dxos/app-graph';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-list';
@@ -21,8 +21,8 @@ import { createTree, updateState } from '../testing';
 
 faker.seed(1234);
 
-const tree = create<NodeArg<any>>(createTree());
-const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>();
+const tree = live<NodeArg<any>>(createTree());
+const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
 const meta: Meta<typeof StorybookNavTree> = {
   title: 'plugins/plugin-navtree/NavTree',
@@ -73,7 +73,7 @@ const meta: Meta<typeof StorybookNavTree> = {
     }),
     isOpen: (_path: string[]) => {
       const path = Path.create(..._path);
-      const value = state.get(path) ?? create({ open: false, current: false });
+      const value = state.get(path) ?? live({ open: false, current: false });
       if (!state.has(path)) {
         state.set(path, value);
       }
@@ -82,7 +82,7 @@ const meta: Meta<typeof StorybookNavTree> = {
     },
     isCurrent: (_path: string[]) => {
       const path = Path.create(..._path);
-      const value = state.get(path) ?? create({ open: false, current: false });
+      const value = state.get(path) ?? live({ open: false, current: false });
       if (!state.has(path)) {
         state.set(path, value);
       }

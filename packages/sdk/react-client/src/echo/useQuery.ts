@@ -5,21 +5,21 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import {
+  Filter,
   isSpace,
   type Echo,
   type FilterSource,
-  Filter,
-  type ReactiveEchoObject,
   type Query,
   type QueryOptions,
   type Space,
 } from '@dxos/client/echo';
+import type { BaseObject } from '@dxos/echo-schema';
 
 /**
  * Create subscription.
  */
 // TODO(burdon): Support typed operator filters (e.g., Note.filter(note => ...)).
-export const useQuery = <T extends ReactiveEchoObject<any>>(
+export const useQuery = <T extends BaseObject>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,

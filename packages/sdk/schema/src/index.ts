@@ -10,3 +10,4 @@ export * from './properties';
 export * from './util';
 export * from './validate';
 export * from './view';
+export * from './annotations';

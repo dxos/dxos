@@ -16,8 +16,6 @@ import { S } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
-import { isEchoObject, getSpace } from '@dxos/react-client/echo';
 import { osTranslations } from '@dxos/shell/react';
 
 import {
@@ -35,7 +33,7 @@ import {
   SpaceState,
 } from './capabilities';
 import { SpaceEvents } from './events';
-import { meta, SPACE_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { CollectionAction, CollectionType, defineObjectForm } from './types';
 
@@ -59,7 +57,7 @@ export type SpacePluginOptions = {
 export const SpacePlugin = ({
   invitationUrl = window.location.origin,
   invitationParam = 'spaceInvitationCode',
-  observability = true,
+  observability = false,
 }: SpacePluginOptions = {}) => {
   const createInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
@@ -94,7 +92,6 @@ export const SpacePlugin = ({
         contributes(Capabilities.Metadata, {
           id: CollectionType.typename,
           metadata: {
-            placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (collection: CollectionType) =>
@@ -114,18 +111,6 @@ export const SpacePlugin = ({
             getIntent: (props) => createIntent(CollectionAction.Create, props),
           }),
         ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panel`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'settings',
-          label: ['settings panel label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--sliders--regular',
-          position: 'hoist',
-          filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
-        }),
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
@@ -148,7 +133,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
-      activate: (context) => IntentResolver({ createInvitationUrl, context, observability }),
+      activate: (context) => IntentResolver({ context, observability }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,

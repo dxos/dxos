@@ -132,6 +132,12 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-meeting"
+    },
+    {
+      "path": "../plugin-script"
+    },
+    {
       "path": "../plugin-sheet"
     },
     {

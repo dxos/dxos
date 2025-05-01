@@ -6,15 +6,15 @@ import { SchemaAST as AST, Schema as S } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { type ObjectAnnotation, ObjectAnnotationId } from '../ast';
+import { type TypeAnnotation, TypeAnnotationId } from '../ast';
 
 // TODO(ZaymonFC): Do this one at a time. This might be dangerous.
-export const addFieldsToSchema = (schema: S.Schema<any>, fields: S.Struct.Fields): S.Schema<any> => {
+export const addFieldsToSchema = (schema: S.Schema.AnyNoContext, fields: S.Struct.Fields): S.Schema.AnyNoContext => {
   const schemaExtension = S.partial(S.Struct(fields));
-  return S.extend(schema, schemaExtension).annotations(schema.ast.annotations) as any as S.Schema<any>;
+  return S.extend(schema, schemaExtension).annotations(schema.ast.annotations) as any as S.Schema.AnyNoContext;
 };
 
-export const updateFieldsInSchema = (schema: S.Schema<any>, fields: S.Struct.Fields): S.Schema<any> => {
+export const updateFieldsInSchema = (schema: S.Schema.AnyNoContext, fields: S.Struct.Fields): S.Schema.AnyNoContext => {
   const ast = schema.ast as AST.TypeLiteral;
   invariant(AST.isTypeLiteral(ast));
 
@@ -32,14 +32,14 @@ export const updateFieldsInSchema = (schema: S.Schema<any>, fields: S.Struct.Fie
   return S.make(new AST.TypeLiteral(updatedProperties, ast.indexSignatures, ast.annotations));
 };
 
-export const removeFieldsFromSchema = (schema: S.Schema<any>, fieldNames: string[]): S.Schema<any> => {
+export const removeFieldsFromSchema = (schema: S.Schema.AnyNoContext, fieldNames: string[]): S.Schema.AnyNoContext => {
   return S.make(AST.omit(schema.ast, fieldNames)).annotations(schema.ast.annotations);
 };
 
 export const updateFieldNameInSchema = (
-  schema: S.Schema<any>,
+  schema: S.Schema.AnyNoContext,
   { before, after }: { before: PropertyKey; after: PropertyKey },
-): S.Schema<any> => {
+): S.Schema.AnyNoContext => {
   const ast = schema.ast as AST.TypeLiteral;
   invariant(AST.isTypeLiteral(ast));
 
@@ -54,16 +54,16 @@ export const updateFieldNameInSchema = (
   );
 };
 
-export const setTypenameInSchema = (schema: S.Schema<any>, typename: string): S.Schema<any> => {
-  const existingAnnotation = schema.ast.annotations[ObjectAnnotationId] as ObjectAnnotation;
-  invariant(existingAnnotation, `Missing ${String(ObjectAnnotationId)}`);
+export const setTypenameInSchema = (schema: S.Schema.AnyNoContext, typename: string): S.Schema.AnyNoContext => {
+  const existingAnnotation = schema.ast.annotations[TypeAnnotationId] as TypeAnnotation;
+  invariant(existingAnnotation, `Missing ${String(TypeAnnotationId)}`);
 
   return schema.annotations({
     ...schema.ast.annotations,
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
       kind: existingAnnotation.kind,
       typename,
       version: existingAnnotation.version,
-    } satisfies ObjectAnnotation,
+    } satisfies TypeAnnotation,
   });
 };

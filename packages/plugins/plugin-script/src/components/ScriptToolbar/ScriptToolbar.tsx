@@ -1,0 +1,52 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { useCallback } from 'react';
+
+import { type ScriptType } from '@dxos/functions/types';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
+import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
+import { createGapSeparator, MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
+
+import {
+  type ScriptToolbarState,
+  createDeploy,
+  createFormat,
+  createTemplateSelect,
+  useToolbarAction,
+} from '../../hooks';
+
+export type ScriptToolbarProps = ThemedClassName<{
+  role?: string;
+  script: ScriptType;
+  state: ScriptToolbarState;
+}>;
+
+const createToolbar = (state: ScriptToolbarState) => {
+  const templateSelect = createTemplateSelect();
+  const format = createFormat();
+  const gap = createGapSeparator();
+  const deploy = createDeploy(state);
+  return {
+    nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
+    edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
+  };
+};
+
+export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
+  const handleAction = useToolbarAction({ state, script });
+  const toolbarCreator = useCallback(() => createToolbar(state), [state]);
+  const menu = useMenuActions(toolbarCreator);
+
+  return (
+    <div role='none' className={stackItemContentToolbarClassNames(role)}>
+      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+        <MenuProvider {...menu} onAction={handleAction} attendableId={fullyQualifiedId(script)}>
+          <ToolbarMenu classNames={classNames} />
+        </MenuProvider>
+      </ElevationProvider>
+    </div>
+  );
+};

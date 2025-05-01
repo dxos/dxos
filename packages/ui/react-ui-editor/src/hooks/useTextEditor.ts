@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorState, type EditorStateConfig } from '@codemirror/state';
+import { EditorState, type EditorStateConfig, type Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useFocusableGroup, type TabsterTypes } from '@fluentui/react-tabster';
 import {
@@ -43,6 +43,7 @@ export type CursorInfo = {
 
 export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
   id?: string;
+  doc?: Text;
   initialValue?: string;
   className?: string;
   autoFocus?: boolean;
@@ -61,7 +62,7 @@ export const useTextEditor = (
   props: MaybeProvider<UseTextEditorProps> = {},
   deps: DependencyList = [],
 ): UseTextEditor => {
-  const { id, initialValue, extensions, autoFocus, scrollTo, selection, moveToEndOfLine, debug } =
+  const { id, doc, initialValue, extensions, autoFocus, scrollTo, selection, moveToEndOfLine, debug } =
     useMemo<UseTextEditorProps>(() => getProviderValue(props), deps ?? []);
 
   // NOTE: Increments by 2 in strict mode.
@@ -87,7 +88,7 @@ export const useTextEditor = (
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
       const state = EditorState.create({
-        doc: initialValue,
+        doc: doc ?? initialValue,
         // selection: initialSelection,
         extensions: [
           id && documentId.of(id),

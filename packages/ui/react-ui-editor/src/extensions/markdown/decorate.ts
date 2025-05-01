@@ -15,6 +15,7 @@ import { image } from './image';
 import { formattingStyles, bulletListIndentationWidth, orderedListIndentationWidth } from './styles';
 import { table } from './table';
 import { theme, type HeadingLevel } from '../../styles';
+import { type RenderCallback } from '../../types';
 import { wrapWithCatch } from '../../util';
 
 /**
@@ -45,7 +46,7 @@ class HorizontalRuleWidget extends WidgetType {
 class LinkButton extends WidgetType {
   constructor(
     private readonly url: string,
-    private readonly render: (el: HTMLElement, url: string) => void,
+    private readonly render: RenderCallback<{ url: string }>,
   ) {
     super();
   }
@@ -57,7 +58,7 @@ class LinkButton extends WidgetType {
   // TODO(burdon): Create icon and link directly without react?
   override toDOM(view: EditorView) {
     const el = document.createElement('span');
-    this.render(el, this.url);
+    this.render(el, { url: this.url }, view);
     return el;
   }
 }
@@ -519,7 +520,7 @@ export interface DecorateOptions {
    */
   selectionChangeDelay?: number;
   numberedHeadings?: { from: number; to?: number };
-  renderLinkButton?: (el: Element, url: string) => void;
+  renderLinkButton?: RenderCallback<{ url: string }>;
 }
 
 export const decorateMarkdown = (options: DecorateOptions = {}) => {

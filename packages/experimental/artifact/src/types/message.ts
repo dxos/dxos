@@ -10,6 +10,7 @@ import { SpaceId } from '@dxos/keys';
 // TODO(dmaretskyi): Extract IDs to protocols.
 // TODO(dmaretskyi): Dedupe package with dxos/edge.
 
+/** @deprecated */
 export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
 
 /** @deprecated */
@@ -168,7 +169,7 @@ const MessageSchema = S.Struct({
  * @deprecated
  */
 // TODO(burdon): Reconcile with Chat/Message types?
-export const Message = MessageSchema.pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
+export const Message = MessageSchema.pipe(EchoObject({ typename: 'dxos.org/type/Message', version: '0.1.0' }));
 export type Message = S.Schema.Type<typeof Message>;
 
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({

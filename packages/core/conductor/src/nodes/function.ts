@@ -28,7 +28,7 @@ export const resolveFunctionPath = async (fnRef?: Ref<FunctionType>): Promise<{ 
 export const executeFunction = (
   path: string,
   input: any,
-  outputSchema: S.Schema<any>,
+  outputSchema: S.Schema.AnyNoContext,
 ): Effect.Effect<any, any, ComputeRequirements> => {
   return Effect.gen(function* () {
     const functionCallService = yield* FunctionCallService;

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -12,7 +12,7 @@ import { SPACE_PLUGIN } from '../meta';
 
 export const POPOVER_RENAME_OBJECT = `${SPACE_PLUGIN}/PopoverRenameObject`;
 
-export const PopoverRenameObject = ({ object: obj }: { object: ReactiveObject<any> }) => {
+export const PopoverRenameObject = ({ object: obj }: { object: Live<any> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);
   // TODO(wittjosiah): Use schema here.
@@ -38,7 +38,7 @@ export const PopoverRenameObject = ({ object: obj }: { object: ReactiveObject<an
         <Input.Root>
           <Input.Label srOnly>{t('object name label')}</Input.Label>
           <Input.TextInput
-            placeholder={t('object title placeholder')}
+            placeholder={t('object placeholder')}
             value={name}
             data-testid='spacePlugin.renameObject.input'
             onChange={({ target: { value } }) => setName(value)}
