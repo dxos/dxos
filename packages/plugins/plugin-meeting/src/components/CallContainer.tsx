@@ -60,7 +60,7 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
     });
 
     return () => {
-      ctx.dispose().catch((err) => log.catch(err));
+      void ctx.dispose();
     };
   }, [call, companions]);
 
