@@ -10,13 +10,12 @@ import React, { useState } from 'react';
 import { type Client } from '@dxos/client';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
+import { getSyncSummary, type SpaceSyncStateMap } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { SyncStatusDetail } from './SyncStatus';
-import { getSyncSummary, type SpaceSyncStateMap } from './sync-state';
-import translations from '../../translations';
+import { SyncStatus } from './SyncStatus';
 
 const random = ({ min, max }: { min: number; max: number }) => min + Math.floor(Math.random() * (max - min));
 
@@ -53,12 +52,11 @@ const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMa
   }, {});
 };
 
-const meta: Meta<typeof SyncStatusDetail> = {
-  title: 'plugins/plugin-space/SyncStatusDetail',
-  component: SyncStatusDetail,
+const meta: Meta<typeof SyncStatus> = {
+  title: 'devtools/devtools/SyncStatus',
+  component: SyncStatus,
   decorators: [withTheme, withLayout(), withClientProvider({ createIdentity: true })],
   parameters: {
-    translations,
     layout: 'centered',
   },
   args: {
@@ -68,11 +66,11 @@ const meta: Meta<typeof SyncStatusDetail> = {
 
 export default meta;
 
-type Story = StoryObj<typeof SyncStatusDetail>;
+type Story = StoryObj<typeof SyncStatus>;
 
 export const Default: Story = {
   render: (args) => {
-    return <SyncStatusDetail {...args} state={{}} />;
+    return <SyncStatus {...args} state={{}} />;
   },
 };
 
@@ -84,6 +82,6 @@ export const Sync: Story = {
       setState(await createSpaceSyncStateMap(client));
     });
 
-    return <SyncStatusDetail {...args} state={state} summary={getSyncSummary(state)} />;
+    return <SyncStatus {...args} state={state} summary={getSyncSummary(state)} />;
   },
 };
