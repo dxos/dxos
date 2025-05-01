@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Use @internal and export *.
-
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
 export { getTypename, Expando, type TypedObject, type ObjectMeta } from '@dxos/echo-schema';
