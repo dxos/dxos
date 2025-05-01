@@ -18,7 +18,6 @@ import { SPACE_PLUGIN } from '../../meta';
 const useEdgeStatus = (): EdgeStatus => {
   const [status, setStatus] = useState(EdgeStatus.NOT_CONNECTED);
   const client = useClient();
-
   useEffect(() => {
     client.services.services.EdgeAgentService?.queryEdgeStatus().subscribe(({ status }) => {
       setStatus(status);

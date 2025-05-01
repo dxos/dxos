@@ -20,7 +20,7 @@ import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Config } from '@dxos/react-client';
-import { useQueue } from '@dxos/react-client/echo';
+import { randomQueueDxn, useQueue } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
@@ -30,7 +30,6 @@ import { Transcript } from './Transcript';
 import { useAudioFile, useAudioTrack, useTranscriber } from '../hooks';
 import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
-import { randomQueueDxn } from '../util';
 
 const TranscriptionStory: FC<{
   playing: boolean;

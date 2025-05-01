@@ -95,7 +95,7 @@ export const SpaceRow = ({
     >
       <span className='is-1/2 truncate'>{spaceName}</span>
       <Icon
-        icon='ph--arrow-fat-line-left--regular'
+        icon='ph--arrow-fat-line-left--bold'
         size={3}
         classNames={mx(downActive && 'animate-[pulse_1s_infinite]')}
       />
@@ -105,7 +105,7 @@ export const SpaceRow = ({
         title={spaceId}
       />
       <Icon
-        icon='ph--arrow-fat-line-right--regular'
+        icon='ph--arrow-fat-line-right--bold'
         size={3}
         classNames={mx(upActive && 'animate-[pulse_1s_step-start_infinite]')}
       />

@@ -1,17 +1,17 @@
-// TODO(burdon): Factor out to spaces.
 //
 // Copyright 2023 DXOS.org
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { getDatabaseFromObject, isEchoObject, type SpaceSyncState, type ReactiveEchoObject } from '@dxos/echo-db';
+import { type SpaceSyncState, type ReactiveEchoObject, getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
 import { type ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
+import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { isLiveObject, type Live } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
 
+// TODO(burdon): Move to @dxos/keys.
 export const SPACE_ID_LENGTH = 33;
 export const OBJECT_ID_LENGTH = 26;
 export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
@@ -112,3 +112,7 @@ export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState => {
     return summary;
   }, createEmptyEdgeSyncState());
 };
+
+// TODO(burdon): Factor out.
+export const randomQueueDxn = (spaceId?: SpaceId) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId ?? SpaceId.random(), ObjectId.random()]);
