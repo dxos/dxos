@@ -10,6 +10,7 @@ import { getProxyHandler } from './proxy';
 import { isLiveObject } from '../live';
 
 // TODO(dmaretskyi): Change to isDeleted symbol property
+// TODO(dmaretskyi): Move to `@dxos/echo-schema`
 export const isDeleted = <T extends BaseObject>(obj: T): boolean => {
   return getProxyHandler(obj).isDeleted(obj) ?? false;
 };
@@ -18,21 +19,11 @@ export const isDeleted = <T extends BaseObject>(obj: T): boolean => {
  * @deprecated Use `getTypename` instead.
  */
 // TODO(burdon): Can we remove this?
+// TODO(dmaretskyi): Remove
 export const getType = <T extends BaseObject>(obj: T | undefined): Reference | undefined => {
   if (obj && isLiveObject(obj)) {
     return getProxyHandler(obj).getTypeReference(obj);
   }
 
   return undefined;
-};
-
-// TODO(dmaretskyi): Use typename symbol
-export const getTypename = <T extends BaseObject>(obj: T): string | undefined => {
-  const schema = getSchema(obj);
-  // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
-  if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
-    return (schema as any)[SchemaMetaSymbol].typename;
-  }
-
-  return getType(obj)?.objectId;
 };

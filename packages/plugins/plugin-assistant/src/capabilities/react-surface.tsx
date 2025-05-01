@@ -6,7 +6,6 @@ import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { getTypename } from '@dxos/live-object';
 import { SettingsStore } from '@dxos/local-storage';
 import { fullyQualifiedId, getSpace, isLiveObject, isSpace, type Space, type SpaceId } from '@dxos/react-client/echo';
 
@@ -20,6 +19,7 @@ import {
 } from '../components';
 import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
 import { AIChatType, type AssistantSettingsProps, TemplateType } from '../types';
+import { getTypename } from "@dxos/echo-schema";
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
