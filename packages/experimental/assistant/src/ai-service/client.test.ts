@@ -39,7 +39,7 @@ describe.skip('AI Service Client', () => {
       },
     ]);
 
-    const stream = await client.exec({
+    const stream = await client.execStream({
       model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
@@ -84,7 +84,7 @@ describe.skip('AI Service Client', () => {
     ]);
 
     {
-      const stream1 = await client.exec({
+      const stream1 = await client.execStream({
         model: DEFAULT_EDGE_MODEL,
         spaceId,
         threadId,
@@ -118,7 +118,7 @@ describe.skip('AI Service Client', () => {
     }
 
     {
-      const stream2 = await client.exec({
+      const stream2 = await client.execStream({
         model: DEFAULT_EDGE_MODEL,
         spaceId,
         threadId,
@@ -156,7 +156,7 @@ describe.skip('AI Service Client', () => {
       },
     ]);
 
-    const stream = await client.exec({
+    const stream = await client.execStream({
       model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
@@ -190,7 +190,7 @@ describe.skip('Ollama Client', () => {
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(
-      await client.exec({
+      await client.execStream({
         prompt: create(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'Hello, world!' }],
@@ -225,7 +225,7 @@ describe.skip('Ollama Client', () => {
     });
 
     const messages = await parser.parse(
-      await client.exec({
+      await client.execStream({
         prompt: create(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'What is the encrypted message for "Hello, world!"' }],
@@ -246,7 +246,7 @@ describe.skip('Ollama Client', () => {
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(
-      await client.exec({
+      await client.execStream({
         prompt: create(Message, {
           role: 'user',
           content: [{ type: 'text', text: 'Generate an image of a cat' }],

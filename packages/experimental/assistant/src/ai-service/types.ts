@@ -54,8 +54,20 @@ export const GenerateRequest = S.Struct({
    */
   prompt: S.optional(Message),
 });
-
 export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;
+
+/**
+ * Non-streaming response.
+ */
+export const GenerateResponse = S.Struct({
+  messages: S.Array(Message),
+
+  /**
+   * Number of tokens used in the response.
+   */
+  tokenCount: S.optional(S.Number),
+});
+export type GenerateResponse = S.Schema.Type<typeof GenerateResponse>;
 
 /**
  * Server-Sent Events (SSE) stream from the AI service.
