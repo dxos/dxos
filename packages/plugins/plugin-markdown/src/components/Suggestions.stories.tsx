@@ -190,6 +190,7 @@ const meta: Meta<typeof DefaultStory> = {
   decorators: [
     withPluginManager({
       plugins: [
+        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [DocumentType, TestItem],
           onClientInitialized: async (_, client) => {
@@ -200,7 +201,6 @@ const meta: Meta<typeof DefaultStory> = {
         SettingsPlugin(),
         IntentPlugin(),
         MarkdownPlugin(),
-        ThemePlugin({ tx: defaultTx }),
       ],
       capabilities: [
         contributes(
@@ -222,6 +222,9 @@ const meta: Meta<typeof DefaultStory> = {
     }),
     withLayout({ tooltips: true, fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;

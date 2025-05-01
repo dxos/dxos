@@ -7,12 +7,16 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useState, useMemo, type FC } from 'react';
 
-import { create, ObjectId } from '@dxos/echo-schema';
+import { contributes, Capabilities, SettingsPlugin, IntentPlugin, createSurface } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { AST, create, EchoObject, getSchema, ObjectId, S } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { SpacePlugin } from '@dxos/plugin-space';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { resolveRef, useClient } from '@dxos/react-client';
-import { type Queue, type Space, useQueue, useSpace } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { live, makeRef, type Queue, type Space, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -24,9 +28,10 @@ import {
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { Form } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { hues, mx } from '@dxos/react-ui-theme';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { defaultTx, hues, mx } from '@dxos/react-ui-theme';
+import { withLayout } from '@dxos/storybook-utils';
 import { isNotFalsy } from '@dxos/util';
 
 import { Transcript } from './Transcript';
@@ -37,30 +42,63 @@ import { TranscriptBlock } from '../../types';
 
 faker.seed(1);
 
-// TODO(burdon): Story with queue.
-// TODO(burdon): Create adapter that listens for updates to the queue.
+// TODO(burdon): Reconcile with plugin-markdown.
+const TestItem = S.Struct({
+  title: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Title',
+    [AST.DescriptionAnnotationId]: 'Product title',
+  }),
+  description: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Description',
+    [AST.DescriptionAnnotationId]: 'Product description',
+  }),
+}).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
 
-let start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
-const next = () => {
-  start = new Date(start.getTime() + Math.random() * 10_000);
-  return start;
-};
+/**
+ * Generator of transcript blocks.
+ */
+class BlockBuilder {
+  static readonly singleton = new BlockBuilder();
 
-const users = Array.from({ length: 5 }, () => ({
-  authorName: faker.person.fullName(),
-  authorHue: faker.helpers.arrayElement(hues),
-}));
+  users = Array.from({ length: 5 }, () => ({
+    authorName: faker.person.fullName(),
+    authorHue: faker.helpers.arrayElement(hues),
+  }));
 
-const createBlock = (numSegments = 1): TranscriptBlock => ({
-  id: ObjectId.random().toString(),
-  ...faker.helpers.arrayElement(users),
-  segments: Array.from({ length: numSegments }).map(() => createSegment()),
-});
+  start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 
-const createSegment = () => ({
-  started: next(),
-  text: faker.lorem.paragraph(),
-});
+  constructor(private readonly _space?: Space) {}
+
+  createBlock(numSegments = 1): TranscriptBlock {
+    return {
+      id: ObjectId.random().toString(),
+      ...faker.helpers.arrayElement(this.users),
+      segments: Array.from({ length: numSegments }).map(() => this.createSegment()),
+    };
+  }
+
+  createSegment() {
+    let text = faker.lorem.paragraph();
+    if (this._space) {
+      const label = faker.commerce.productName();
+      const obj = this._space.db.add(live(TestItem, { title: label, description: faker.lorem.paragraph() }));
+      const dxn = makeRef(obj).dxn.toString();
+      const words = text.split(' ');
+      words.splice(Math.floor(Math.random() * words.length), 0, `[${label}][${dxn}]`);
+      text = words.join(' ');
+    }
+
+    return {
+      started: this.next(),
+      text,
+    };
+  }
+
+  next() {
+    this.start = new Date(this.start.getTime() + Math.random() * 10_000);
+    return this.start;
+  }
+}
 
 /**
  * Test transcriptionqueue.
@@ -72,15 +110,15 @@ const useTestTranscriptionQueue = (space: Space | undefined, running = true, int
   );
   const queue = useQueue<TranscriptBlock>(queueDxn);
 
+  const builder = useMemo(() => new BlockBuilder(space), [space]);
   useEffect(() => {
     if (!queue || !running) {
       return;
     }
 
-    const i = setInterval(
-      () => queue.append([create(TranscriptBlock, createBlock(Math.ceil(Math.random() * 3)))]),
-      interval,
-    );
+    const i = setInterval(() => {
+      queue.append([create(TranscriptBlock, builder.createBlock(Math.ceil(Math.random() * 3)))]);
+    }, interval);
     return () => clearInterval(i);
   }, [queue, running, interval]);
 
@@ -123,6 +161,7 @@ const Editor: FC<{
         space &&
           preview({
             onLookup: async ({ label, ref }) => {
+              console.log('onLookup', label, ref);
               const dxn = DXN.parse(ref);
               if (!dxn) {
                 return null;
@@ -140,7 +179,7 @@ const Editor: FC<{
         }),
       ].filter(isNotFalsy),
     };
-  }, [model]);
+  }, [space, model]);
 
   return (
     <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
@@ -164,13 +203,25 @@ const Editor: FC<{
   );
 };
 
-const ExtensionStory = ({ blocks = 5 }: { blocks?: number }) => {
-  const [reset, setReset] = useState({});
-  const model = useMemo(
-    () => new BlockModel<TranscriptBlock>(blockToMarkdown, Array.from({ length: blocks }, createBlock)),
-    [blocks, reset],
-  );
+// TODO(burdon): Remove old component.
+const DefaultStory = ({ blocks: initialBlocks = [], ...args }) => {
+  const builder = useMemo(() => new BlockBuilder(), []);
+  const [blocks, setBlocks] = useState<TranscriptBlock[]>(initialBlocks);
+  useEffect(() => {
+    const i = setInterval(() => {
+      setBlocks((blocks) => [...blocks, builder.createBlock()]);
+    }, 1_000);
 
+    return () => clearInterval(i);
+  }, []);
+
+  return <Transcript {...args} blocks={blocks} />;
+};
+
+const ExtensionStory = ({ blocks: initialBlocks = [], ...args }) => {
+  const [reset, setReset] = useState({});
+  const builder = useMemo(() => new BlockBuilder(), []);
+  const model = useMemo(() => new BlockModel<TranscriptBlock>(blockToMarkdown, initialBlocks), [initialBlocks, reset]);
   const [running, setRunning] = useState(true);
   const [currentBlock, setCurrentBlock] = useState<TranscriptBlock | null>(null);
   useEffect(() => {
@@ -179,7 +230,7 @@ const ExtensionStory = ({ blocks = 5 }: { blocks?: number }) => {
     }
 
     if (!currentBlock) {
-      const block = createBlock();
+      const block = builder.createBlock();
       model.appendBlock(block);
       setCurrentBlock(block);
       return;
@@ -192,7 +243,7 @@ const ExtensionStory = ({ blocks = 5 }: { blocks?: number }) => {
         return;
       }
 
-      currentBlock.segments.push(createSegment());
+      currentBlock.segments.push(builder.createSegment());
       model.updateBlock(currentBlock);
     }, 3_000);
 
@@ -208,22 +259,52 @@ const ExtensionStory = ({ blocks = 5 }: { blocks?: number }) => {
   return <Editor model={model} running={running} onRunningChange={setRunning} onReset={handleReset} />;
 };
 
-const meta: Meta<typeof Transcript> = {
-  title: 'plugins/plugin-transcription/Transcript',
-  component: Transcript,
-  render: ({ blocks: initialBlocks = [], ...args }) => {
-    const [blocks, setBlocks] = useState(initialBlocks);
-    useEffect(() => {
-      const i = setInterval(() => setBlocks((blocks) => [...blocks, createBlock()]), 1_000);
-      return () => clearInterval(i);
-    }, []);
+const QueueStory = () => {
+  const [running, setRunning] = useState(true);
+  const space = useSpace();
+  const queue = useTestTranscriptionQueue(space, running, 2_000);
+  const model = useQueueModel(queue);
 
-    return <Transcript {...args} blocks={blocks} />;
-  },
+  return <Editor space={space} model={model} running={running} onRunningChange={setRunning} />;
+};
+
+const meta: Meta<typeof DefaultStory> = {
+  title: 'plugins/plugin-transcription/Transcript',
+  render: DefaultStory,
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true }),
+    withPluginManager({
+      plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        ClientPlugin({
+          types: [TestItem],
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
+          },
+        }),
+        SpacePlugin(),
+        SettingsPlugin(),
+        IntentPlugin(),
+      ],
+      capabilities: [
+        contributes(
+          Capabilities.ReactSurface,
+          createSurface({
+            id: 'preview-test',
+            role: 'preview',
+            component: ({ data }) => {
+              console.log('data', data);
+              const schema = getSchema(data);
+              if (!schema) {
+                return null;
+              }
+
+              return <Form schema={schema} values={data} />;
+            },
+          }),
+        ),
+      ],
+    }),
     withLayout({ tooltips: true, fullscreen: true }),
-    withTheme,
   ],
   parameters: {
     translations,
@@ -238,7 +319,7 @@ export const Default: Story = {
   args: {
     ignoreAttention: true,
     attendableId: 'story',
-    blocks: Array.from({ length: 10 }, createBlock),
+    blocks: Array.from({ length: 10 }, () => BlockBuilder.singleton.createBlock()),
   },
 };
 
@@ -250,7 +331,7 @@ export const Empty: Story = {
 };
 
 export const Extension: Story = {
-  render: () => <ExtensionStory />,
+  render: ExtensionStory,
   args: {
     ignoreAttention: true,
     attendableId: 'story',
@@ -258,13 +339,7 @@ export const Extension: Story = {
 };
 
 export const WithQueue: Story = {
-  render: () => {
-    const [running, setRunning] = useState(true);
-    const space = useSpace();
-    const queue = useTestTranscriptionQueue(space, running, 1_000);
-    const model = useQueueModel(queue);
-    return <Editor space={space} model={model} running={running} onRunningChange={setRunning} />;
-  },
+  render: QueueStory,
   args: {
     ignoreAttention: true,
     attendableId: 'story',

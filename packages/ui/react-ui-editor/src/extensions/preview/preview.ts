@@ -16,8 +16,6 @@ import {
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { isNonNullable } from '@dxos/util';
-
 import { type RenderCallback } from '../../types';
 
 export type PreviewLinkRef = {
@@ -87,7 +85,7 @@ export const preview = (options: PreviewOptions): Extension => {
         border: '1px solid var(--dx-separator)',
       },
     }),
-  ].filter(isNonNullable);
+  ];
 };
 
 /**
