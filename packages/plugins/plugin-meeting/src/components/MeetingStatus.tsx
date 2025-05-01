@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 
 import { Panel } from '@dxos/devtools';
-import { log } from '@dxos/log';
 import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
