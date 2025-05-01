@@ -4,10 +4,10 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Context } from '@dxos/context';
-
 import type { Space } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import type { SpaceSyncState } from '@dxos/echo-db';
+
 import { JsonView } from '../../../components';
 
 interface SyncStateInfoProps {
