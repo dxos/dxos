@@ -29,15 +29,15 @@ describe.skip('AI Service Client', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.appendMessages([
-      {
-        id: ObjectId.random(),
-        spaceId,
-        threadId,
-        role: 'user',
-        content: [{ type: 'text', text: 'Hello' }],
-      },
-    ]);
+    // await client.appendMessages([
+    //   {
+    //     id: ObjectId.random(),
+    //     spaceId,
+    //     threadId,
+    //     role: 'user',
+    //     content: [{ type: 'text', text: 'Hello' }],
+    //   },
+    //     ]);
 
     const stream = await client.execStream({
       model: DEFAULT_EDGE_MODEL,
@@ -73,15 +73,15 @@ describe.skip('AI Service Client', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.appendMessages([
-      {
-        id: ObjectId.random(),
-        spaceId,
-        threadId,
-        role: 'user',
-        content: [{ type: 'text', text: 'What is the password? Ask the custodian' }],
-      },
-    ]);
+    // await client.appendMessages([
+    //   {
+    //     id: ObjectId.random(),
+    //     spaceId,
+    //     threadId,
+    //     role: 'user',
+    //     content: [{ type: 'text', text: 'What is the password? Ask the custodian' }],
+    //   },
+    // ]);
 
     {
       const stream1 = await client.execStream({
@@ -102,19 +102,19 @@ describe.skip('AI Service Client', () => {
 
       const [message1] = messages;
       log('full message', { message: message1 });
-      await client.appendMessages([message1]);
+      // await client.appendMessages([message1]);
 
       const toolUse = message1.content.find(({ type }) => type === 'tool_use')!;
       invariant(toolUse.type === 'tool_use');
-      await client.appendMessages([
-        {
-          id: ObjectId.random(),
-          spaceId,
-          threadId,
-          role: 'user',
-          content: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is blue"' }],
-        },
-      ]);
+      // await client.appendMessages([
+      //   {
+      //     id: ObjectId.random(),
+      //     spaceId,
+      //     threadId,
+      //     role: 'user',
+      //     content: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is blue"' }],
+      //   },
+      // ]);
     }
 
     {
@@ -146,15 +146,15 @@ describe.skip('AI Service Client', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.appendMessages([
-      {
-        id: ObjectId.random(),
-        spaceId,
-        threadId,
-        role: 'user',
-        content: [{ type: 'text', text: 'Generate an image of a cat' }],
-      },
-    ]);
+    // await client.appendMessages([
+    //   {
+    //     id: ObjectId.random(),
+    //     spaceId,
+    //     threadId,
+    //     role: 'user',
+    //     content: [{ type: 'text', text: 'Generate an image of a cat' }],
+    //   },
+    // ]);
 
     const stream = await client.execStream({
       model: DEFAULT_EDGE_MODEL,

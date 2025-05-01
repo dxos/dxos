@@ -25,25 +25,6 @@ export class AIServiceEdgeClient implements AIServiceClient {
   }
 
   /**
-   * @deprecated
-   */
-  // TODO(burdon): Remove.
-  async appendMessages(messages: Message[]): Promise<void> {
-    const url = `${this._endpoint}/message`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: await S.encodePromise(S.Array(Message))(messages),
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`${await res.text()} [${url}]`);
-    }
-  }
-
-  /**
    * Generate non-streaming response.
    */
   async exec(request: GenerateRequest): Promise<GenerateResponse> {
