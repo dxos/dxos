@@ -12,11 +12,8 @@ import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-de
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { MeetingCapabilities, type CallState, type MediaState } from '@dxos/plugin-meeting';
 import { MeetingType } from '@dxos/plugin-meeting/types';
-import { buf } from '@dxos/protocols/buf';
-import {
-  TranscriptionPayloadSchema,
-  type TranscriptionPayload as TranscriptionPayloadProto,
-} from '@dxos/protocols/buf/dxos/edge/calls_pb';
+import { type buf } from '@dxos/protocols/buf';
+import { type TranscriptionPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { keyToFallback } from '@dxos/util';
 
 import { TranscriptionCapabilities } from './capabilities';
@@ -27,14 +24,6 @@ import { TranscriptionAction, TranscriptType } from '../types';
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type TranscriptionPayload = buf.MessageInitShape<typeof TranscriptionPayloadSchema>;
-const codec = {
-  encode: (message: TranscriptionPayload): Uint8Array => {
-    return buf.toBinary(TranscriptionPayloadSchema, buf.create(TranscriptionPayloadSchema, message));
-  },
-  decode: (message: Uint8Array): TranscriptionPayloadProto => {
-    return buf.fromBinary(TranscriptionPayloadSchema, message);
-  },
-};
 
 const getMeetingTranscript = async (
   context: PluginsContext,
@@ -69,17 +58,17 @@ export default (context: PluginsContext) =>
           {
             id: `${fullyQualifiedId(meeting)}/action/start-stop-transcription`,
             data: async () => {
-              const call = context.requestCapability(MeetingCapabilities.CallManager);
-              invariant(state.transcriptionManager);
-              state.enabled = !state.enabled;
-              void state.transcriptionManager.setEnabled(state.enabled);
+              // NOTE: We are not saving the state of the transcription manager here.
+              // We expect the state to be updated through `onCallStateUpdated` once it is propagated through Swarm.
+              // This is done to avoid race conditions and to not handle optimistic updates.
+
               const transcript = await getMeetingTranscript(context, meeting);
               invariant(transcript, 'Failed to create transcript');
+
+              const call = context.requestCapability(MeetingCapabilities.CallManager);
               call.setActivity(getSchemaTypename(TranscriptType)!, {
-                value: codec.encode({
-                  enabled: state.enabled,
-                  queueDxn: transcript.queue.dxn.toString(),
-                }),
+                enabled: !state.enabled,
+                queueDxn: transcript.queue.dxn.toString(),
               });
             },
             properties: {
@@ -131,12 +120,12 @@ export default (context: PluginsContext) =>
               onCallStateUpdated: (callState: CallState) => {
                 const typename = getSchemaTypename(TranscriptType);
                 const transcription = typename ? callState.activities?.[typename] : undefined;
-                if (!transcription?.payload?.value) {
+                if (!transcription?.payload) {
                   return;
                 }
 
-                const payload = codec.decode(transcription.payload.value);
-                state.enabled = payload.enabled;
+                const payload: TranscriptionPayload = transcription.payload;
+                state.enabled = !!payload.enabled;
                 void state.transcriptionManager?.setEnabled(payload.enabled);
                 void state.transcriptionManager?.setQueue(payload.queueDxn);
               },
