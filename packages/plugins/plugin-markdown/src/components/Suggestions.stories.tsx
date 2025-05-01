@@ -51,6 +51,7 @@ import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownEditor } from './MarkdownEditor';
 import { MarkdownPlugin } from '../MarkdownPlugin';
+import translations from '../translations';
 import { createDocument, DocumentType } from '../types';
 
 faker.seed(1);

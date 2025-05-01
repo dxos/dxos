@@ -203,8 +203,12 @@ const Editor: FC<{
   );
 };
 
+type StoryProps = {
+  blocks: TranscriptBlock[];
+};
+
 // TODO(burdon): Remove old component.
-const DefaultStory = ({ blocks: initialBlocks = [], ...args }) => {
+const DefaultStory = ({ blocks: initialBlocks = [] }: StoryProps) => {
   const builder = useMemo(() => new BlockBuilder(), []);
   const [blocks, setBlocks] = useState<TranscriptBlock[]>(initialBlocks);
   useEffect(() => {
@@ -215,10 +219,10 @@ const DefaultStory = ({ blocks: initialBlocks = [], ...args }) => {
     return () => clearInterval(i);
   }, []);
 
-  return <Transcript {...args} blocks={blocks} />;
+  return <Transcript blocks={blocks} />;
 };
 
-const ExtensionStory = ({ blocks: initialBlocks = [], ...args }) => {
+const ExtensionStory = ({ blocks: initialBlocks = [] }: StoryProps) => {
   const [reset, setReset] = useState({});
   const builder = useMemo(() => new BlockBuilder(), []);
   const model = useMemo(() => new BlockModel<TranscriptBlock>(blockToMarkdown, initialBlocks), [initialBlocks, reset]);
@@ -313,35 +317,35 @@ const meta: Meta<typeof DefaultStory> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Transcript>;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    ignoreAttention: true,
-    attendableId: 'story',
+    // ignoreAttention: true,
+    // attendableId: 'story',
     blocks: Array.from({ length: 10 }, () => BlockBuilder.singleton.createBlock()),
   },
 };
 
 export const Empty: Story = {
   args: {
-    ignoreAttention: true,
-    attendableId: 'story',
+    // ignoreAttention: true,
+    // attendableId: 'story',
   },
 };
 
 export const Extension: Story = {
   render: ExtensionStory,
   args: {
-    ignoreAttention: true,
-    attendableId: 'story',
+    // ignoreAttention: true,
+    // attendableId: 'story',
   },
 };
 
 export const WithQueue: Story = {
   render: QueueStory,
   args: {
-    ignoreAttention: true,
-    attendableId: 'story',
+    // ignoreAttention: true,
+    // attendableId: 'story',
   },
 };
