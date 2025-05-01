@@ -11,9 +11,9 @@ import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } fr
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
 import { live, makeRef, type Live } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { createView, ViewProjection, ViewType } from '@dxos/schema';
-import { createGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
+import { createAsyncGenerator, createGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -30,6 +30,8 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count: number) => {
+  const { space } = useClientProvider();
+
   const table = useMemo(() => {
     // const { typename } = pipe(schema.ast, AST.getAnnotation<TypeAnnotation>(TypeAnnotationId), Option.getOrThrow);
     const typename = schema.typename;
@@ -58,11 +60,15 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
       return;
     }
 
-    const objectGenerator = createGenerator(generator, schema, { optional: true });
-    const objects: Live<T>[] = Array.from({ length: count }).map(() => objectGenerator.createObject());
-    console.log(JSON.stringify(objects[0]));
-    model.setRows(objects);
-  }, [model]);
+    if (!space?.db) {
+      model.setRows([]);
+    }
+
+    const objectGenerator = createAsyncGenerator(generator, schema, { optional: true, db: space?.db });
+    void Promise.all(Array.from({ length: count }).map(() => objectGenerator.createObject())).then((objects) => {
+      model.setRows(objects);
+    });
+  }, [model, space]);
 
   const presentation = useMemo(() => {
     if (!model) {

@@ -19,7 +19,15 @@ import { invariant } from '@dxos/invariant';
 import { Filter } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { closestCell, type DxGridElement, type DxGridPosition, type GridContentProps, Grid } from '@dxos/react-ui-grid';
+import {
+  closestCell,
+  type DxGridElement,
+  type DxGridPosition,
+  type GridContentProps,
+  Grid,
+  type DxGridPlane,
+  type DxGridPlaneRange,
+} from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy, safeParseInt } from '@dxos/util';
 
@@ -98,20 +106,17 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       };
     }, [model]);
 
-    // TODO(burdon): Replace useEffect below.
-    // const getCells = useCallback<GridContentProps['getCells']>(
-    //   (range: DxGridRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
-    //   [presentation],
-    // );
+    const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
+      (range: DxGridPlaneRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
+      [presentation],
+    );
 
     useEffect(() => {
       if (!presentation || !dxGrid) {
         return;
       }
-
-      // TODO(burdon): Pass to Grid.Content?
-      dxGrid.getCells = (range, plane) => presentation.getCells(range, plane);
-    }, [presentation, dxGrid]);
+      dxGrid.getCells = getCells;
+    }, [presentation, dxGrid, getCells]);
 
     /**
      * Provides an external controller that can be called to repaint the table.
