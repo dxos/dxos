@@ -5,7 +5,7 @@
 import { Schema as S } from 'effect';
 
 import { Tool, Message, type MessageContentBlock } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/echo-schema';
 
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
 

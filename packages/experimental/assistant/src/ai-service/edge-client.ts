@@ -2,9 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
-
-import { Message } from '@dxos/artifact';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

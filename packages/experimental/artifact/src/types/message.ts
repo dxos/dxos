@@ -5,7 +5,7 @@
 import { Schema as S } from 'effect';
 
 import { EchoObject, ObjectId, SpaceIdSchema } from '@dxos/echo-schema';
-import { SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 
 // TODO(dmaretskyi): Extract IDs to protocols.
 // TODO(dmaretskyi): Dedupe package with dxos/edge.

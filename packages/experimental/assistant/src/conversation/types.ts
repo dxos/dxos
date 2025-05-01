@@ -6,7 +6,6 @@ import { Schema as S } from 'effect';
 
 import { type Message, type MessageContentBlock } from '@dxos/artifact';
 import { toJsonSchema, JsonSchemaType, ObjectId } from '@dxos/echo-schema';
-import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export const createUserMessage = (text: string): Message => ({

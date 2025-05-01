@@ -6,9 +6,8 @@ import { Schema as S } from 'effect';
 import { test, describe } from 'vitest';
 
 import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
-import { toJsonSchema, ObjectId, create } from '@dxos/echo-schema';
+import { toJsonSchema, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { DEFAULT_EDGE_MODEL } from './defs';

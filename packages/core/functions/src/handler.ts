@@ -5,6 +5,7 @@
 import { Schema as S } from 'effect';
 import { type Effect } from 'effect';
 
+import { type AIServiceClient } from '@dxos/assistant';
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import type { CoreDatabase, EchoDatabase, ReactiveEchoObject } from '@dxos/echo-db';
@@ -13,7 +14,6 @@ import { type SpaceId, type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryResult } from '@dxos/protocols';
 import { isNonNullable } from '@dxos/util';
-import { AIServiceClient } from '@dxos/assistant';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
