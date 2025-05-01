@@ -268,7 +268,7 @@ export class AISession {
         });
 
         // Open request stream.
-        this._stream = await options.client.exec({
+        this._stream = await options.client.execStream({
           ...(options.generationOptions ?? {}),
           // TODO(burdon): Rename messages or separate history/message.
           history: [...this._history, ...this._pending],

@@ -5,9 +5,10 @@
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Live, getProxyTarget, getSchema, getType, isLiveObject } from '@dxos/live-object';
+import { type Live, getProxyTarget, getType, isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';

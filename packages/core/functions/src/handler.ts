@@ -5,6 +5,7 @@
 import { Schema as S } from 'effect';
 import { type Effect } from 'effect';
 
+import { type AIServiceClient } from '@dxos/assistant';
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import type { CoreDatabase, EchoDatabase, ReactiveEchoObject } from '@dxos/echo-db';
@@ -42,7 +43,7 @@ export interface FunctionContext {
    */
   space: SpaceAPI | undefined;
 
-  ai: FunctionContextAi;
+  ai: AIServiceClient;
 
   /**
    * @deprecated
