@@ -20,7 +20,6 @@ export type MeetingStatusDetailProps = ThemedClassName<{
 export const MeetingStatusDetail = ({ state }: MeetingStatusDetailProps) => {
   const users = state?.call?.users;
   const self = state?.call?.self;
-  log.info('users', { users, self });
   const { t } = useTranslation(MEETING_PLUGIN);
 
   const [open, setOpen] = useState(false);
