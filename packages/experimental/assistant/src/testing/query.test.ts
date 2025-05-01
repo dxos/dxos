@@ -32,20 +32,19 @@ test.skip('cypher query', async () => {
   const spaceId = SpaceId.random();
   const threadId = ObjectId.random();
 
-  await client.appendMessages([
-    createUserMessage(
-      spaceId,
-      threadId,
-      'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
-    ),
-  ]);
-
   const result = await runLLM({
     model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
+    history: [
+      createUserMessage(
+        spaceId,
+        threadId,
+        'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
+      ),
+    ],
     client,
     logger: createLogger({ stream: false }),
   });
@@ -69,14 +68,6 @@ test.skip('query ECHO', async () => {
   const spaceId = SpaceId.random();
   const threadId = ObjectId.random();
 
-  await client.appendMessages([
-    createUserMessage(
-      spaceId,
-      threadId,
-      'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
-    ),
-  ]);
-
   const result = await runLLM({
     model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
@@ -84,6 +75,13 @@ test.skip('query ECHO', async () => {
     threadId,
     system: createSystemPrompt(schemaTypes),
     client,
+    history: [
+      createUserMessage(
+        spaceId,
+        threadId,
+        'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
+      ),
+    ],
     logger: createLogger({ stream: false }),
   });
 
