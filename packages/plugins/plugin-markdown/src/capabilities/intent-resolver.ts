@@ -15,12 +15,12 @@ import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { makeRef, live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { resolveRef } from '@dxos/react-client';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
 import { DocumentType, MarkdownAction } from '../types';
-import { resolveRef } from '../types/util';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
