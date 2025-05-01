@@ -45,8 +45,6 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
     const beginTs = Date.now();
     const stream = await params.client.execStream({
       model: params.model,
-      spaceId: params.spaceId,
-      threadId: params.threadId,
       history,
       systemPrompt: params.system,
       tools: params.tools as any,
@@ -88,8 +86,6 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
           log.warn('tool error', { message: toolResult.message });
           const resultMessage: Message = {
             id: ObjectId.random(),
-            spaceId: params.spaceId,
-            threadId: params.threadId,
             role: 'user',
             content: [
               {
@@ -110,8 +106,6 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
           log('tool success', { result: toolResult.result });
           const resultMessage: Message = {
             id: ObjectId.random(),
-            spaceId: params.spaceId,
-            threadId: params.threadId,
             role: 'user',
             content: [
               {

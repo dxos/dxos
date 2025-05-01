@@ -4,7 +4,7 @@
 
 import { Schema as S } from 'effect';
 
-import { Tool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
+import { Tool, Message, type MessageContentBlock } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
@@ -25,9 +25,6 @@ export const ToolTypes = Object.freeze({
  * Client GPT request.
  */
 export const GenerateRequest = S.Struct({
-  spaceId: S.optional(SpaceIdSchema),
-  threadId: S.optional(ObjectId),
-
   /**
    * Preferred model or system default.
    */

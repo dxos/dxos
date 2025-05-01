@@ -4,14 +4,11 @@
 
 import { Schema as S } from 'effect';
 
-import { EchoObject, ObjectId } from '@dxos/echo-schema';
+import { EchoObject, ObjectId, SpaceIdSchema } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
 // TODO(dmaretskyi): Extract IDs to protocols.
 // TODO(dmaretskyi): Dedupe package with dxos/edge.
-
-/** @deprecated */
-export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
 
 /** @deprecated */
 export const Space = S.Struct({
@@ -140,22 +137,6 @@ export type MessageRole = S.Schema.Type<typeof MessageRole>;
 const MessageSchema = S.Struct({
   id: ObjectId,
 
-  // TODO(burdon): Remove?
-  /** @deprecated */
-  spaceId: S.optional(SpaceIdSchema),
-  /** @deprecated */
-  threadId: S.optional(ObjectId),
-
-  /**
-   * ID of the message from the foreign provider.
-   */
-  // TODO(dmaretskyi): Should be in meta/keys.
-  foreignId: S.optional(S.String),
-
-  // TODO(dmaretskyi): Figure out how to deal with those.
-  // created: S.optional(S.DateFromString),
-  // updated: S.optional(S.DateFromString),
-
   role: MessageRole,
 
   /**
@@ -174,8 +155,6 @@ export type Message = S.Schema.Type<typeof Message>;
 
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
   id: ObjectId.random(),
-  spaceId,
-  threadId,
   role: 'user',
   content: [{ type: 'text', text }],
 });
