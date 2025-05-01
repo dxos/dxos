@@ -4,8 +4,7 @@
 
 import { SchemaAST as AST, Schema as S } from 'effect';
 
-import { SpaceIdSchema } from '@dxos/artifact';
-import { Expando, Ref } from '@dxos/echo-schema';
+import { Expando, Ref, SpaceIdSchema } from '@dxos/echo-schema';
 
 export namespace CollaborationActions {
   export class InsertContent extends S.TaggedClass<InsertContent>()('assistant/intent-content', {

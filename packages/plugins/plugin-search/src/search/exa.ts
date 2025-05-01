@@ -154,7 +154,7 @@ const getStructuredOutput = async <S extends S.Schema.AnyNoContext>(
   request: Omit<GenerateRequest, 'tools'> & { schema: S },
 ): Promise<S.Schema.Type<S>> => {
   const result = await new MixedStreamParser().parse(
-    await aiService.exec({
+    await aiService.execStream({
       ...request,
       systemPrompt:
         request.systemPrompt +

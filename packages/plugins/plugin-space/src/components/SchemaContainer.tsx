@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { type EchoSchema } from '@dxos/echo-schema';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { controlItemClasses, ControlSection } from '@dxos/react-ui-form';
+import { controlItemClasses, ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -42,7 +42,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
 
   return (
     <StackItem.Content classNames='block overflow-y-auto'>
-      <div role='none'>
+      <ControlPage>
         <ControlSection title={t('schema verbose label')} description={t('schema description')}>
           <div role='none' className={controlItemClasses}>
             {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
@@ -53,7 +53,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
             ))}
           </div>
         </ControlSection>
-      </div>
+      </ControlPage>
     </StackItem.Content>
   );
 };
