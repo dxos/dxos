@@ -12,6 +12,8 @@ const blockToMarkdown: BlockRenderer<TranscriptBlock> = (block: TranscriptBlock,
   return [`###### ${block.authorName}`, ...block.segments.map((segment) => segment.text), ''];
 };
 
+const createDate = () => new Date().toISOString();
+
 describe('BlockModel', () => {
   test('basic', ({ expect }) => {
     const model = new BlockModel<TranscriptBlock>(blockToMarkdown);
@@ -19,7 +21,11 @@ describe('BlockModel', () => {
     expect(model.doc.toString()).to.eq('');
 
     // Create block.
-    const block = { id: '1', authorName: 'Alice', segments: [{ started: new Date(), text: 'Hello world!' }] };
+    const block = {
+      id: '1',
+      authorName: 'Alice',
+      segments: [{ started: createDate(), text: 'Hello world!' }],
+    };
     model.appendBlock(block);
     {
       const text = model.doc.toString();
@@ -28,7 +34,7 @@ describe('BlockModel', () => {
     }
 
     // Update block.
-    block.segments.push({ started: new Date(), text: 'Hello again!' });
+    block.segments.push({ started: new Date().toISOString(), text: 'Hello again!' });
     model.updateBlock(block);
     {
       const text = model.doc.toString();
@@ -46,7 +52,11 @@ describe('BlockModel', () => {
 
     // Append block.
     {
-      const block = { id: '1', authorName: 'Alice', segments: [{ started: new Date(), text: 'Hello world!' }] };
+      const block = {
+        id: '1',
+        authorName: 'Alice',
+        segments: [{ started: createDate(), text: 'Hello world!' }],
+      };
       model.appendBlock(block);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n');
@@ -54,7 +64,11 @@ describe('BlockModel', () => {
 
     // Append block.
     {
-      const block = { id: '2', authorName: 'Bob', segments: [{ started: new Date(), text: 'Hello world!' }] };
+      const block = {
+        id: '2',
+        authorName: 'Bob',
+        segments: [{ started: createDate(), text: 'Hello world!' }],
+      };
       model.appendBlock(block);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n###### Bob\nHello world!\n\n');
@@ -69,13 +83,13 @@ describe('BlockModel', () => {
 
     // Append block.
     {
-      const block = { id: '1', authorName: 'Alice', segments: [{ started: new Date(), text: 'Hello world!' }] };
+      const block = { id: '1', authorName: 'Alice', segments: [{ started: createDate(), text: 'Hello world!' }] };
       model.appendBlock(block);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n');
 
       // Update block (add segment).
-      block.segments.push({ started: new Date(), text: 'Hello again!' });
+      block.segments.push({ started: createDate(), text: 'Hello again!' });
       model.updateBlock(block);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\nHello again!\n\n');
@@ -91,7 +105,7 @@ describe('BlockModel', () => {
 
     // Append block.
     {
-      const block = { id: '2', authorName: 'Bob', segments: [{ started: new Date(), text: 'Hello again!' }] };
+      const block = { id: '2', authorName: 'Bob', segments: [{ started: createDate(), text: 'Hello again!' }] };
       model.appendBlock(block);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello again!\n\n###### Bob\nHello again!\n\n');

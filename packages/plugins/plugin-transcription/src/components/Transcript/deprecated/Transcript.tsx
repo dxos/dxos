@@ -163,7 +163,10 @@ export const Transcript: FC<TranscriptProps> = ({ classNames, blocks, attendable
                 readonly: true,
                 value:
                   segmentIndex < 0
-                    ? formatTimestamp(transcriptStart, blocks[blockIndex]!.segments[Math.max(0, segmentIndex)]!.started)
+                    ? formatTimestamp(
+                        new Date(transcriptStart),
+                        new Date(blocks[blockIndex]!.segments[Math.max(0, segmentIndex)]!.started),
+                      )
                     : '',
                 className: timestampClasses,
               } satisfies DxGridCellValue;

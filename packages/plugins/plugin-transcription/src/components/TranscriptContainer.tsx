@@ -20,7 +20,7 @@ export const TranscriptionContainer: FC<{ role: string; transcript: TranscriptTy
 
   return (
     <StackItem.Content role={role} classNames='container-max-width pli-2'>
-      <Transcript attendableId={attendableId} space={space} model={model} />
+      <Transcript attendableId={attendableId} space={space} model={model} transcript={transcript} />
     </StackItem.Content>
   );
 };

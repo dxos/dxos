@@ -42,7 +42,7 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
     <Panel
       {...props}
       icon='ph--database--regular'
-      title='Database replicator messages'
+      title='DB messages'
       info={
         <span>
           last {formatNumber(receivedTotal)}-in & {formatNumber(sentTotal)}-out

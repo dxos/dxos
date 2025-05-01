@@ -23,7 +23,7 @@ import { isNotFalsy } from '@dxos/util';
 
 import { transcript } from './transcript-extension';
 import { type BlockModel } from '../../model';
-import { type TranscriptBlock } from '../../types';
+import { type TranscriptType, type TranscriptBlock } from '../../types';
 
 export const renderMarkdown = (block: TranscriptBlock, debug = false): string[] => {
   // TODO(burdon): Use link/reference markup for users (with popover).
@@ -36,6 +36,7 @@ export const renderMarkdown = (block: TranscriptBlock, debug = false): string[] 
 };
 
 export type TranscriptProps = ThemedClassName<{
+  transcript?: TranscriptType;
   space?: Space;
   model: BlockModel<TranscriptBlock>;
   attendableId?: string;
@@ -45,7 +46,14 @@ export type TranscriptProps = ThemedClassName<{
 /**
  * Transcript component implemented using the editor.
  */
-export const Transcript = ({ classNames, space, model, attendableId, ignoreAttention }: TranscriptProps) => {
+export const Transcript = ({
+  classNames,
+  transcript: object,
+  space,
+  model,
+  attendableId,
+  ignoreAttention,
+}: TranscriptProps) => {
   const client = useClient();
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
@@ -69,6 +77,7 @@ export const Transcript = ({ classNames, space, model, attendableId, ignoreAtten
           }),
         transcript({
           model,
+          started: object?.started ? new Date(object.started) : undefined,
           renderButton: createRenderer(({ onClick }) => (
             <IconButton icon='ph--arrow-line-down--regular' iconOnly label='Scroll to bottom' onClick={onClick} />
           )),

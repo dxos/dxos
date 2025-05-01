@@ -59,7 +59,7 @@ export class BlockBuilder {
     }
 
     return {
-      started: this.next(),
+      started: this.next().toISOString(),
       text,
     };
   }

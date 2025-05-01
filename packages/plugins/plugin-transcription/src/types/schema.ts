@@ -10,9 +10,9 @@ import { EchoObject, Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 export const TranscriptSchema = S.Struct({
   name: S.String,
 
-  // TODO(burdon): Use string for dates?
-  started: S.optional(S.Date),
-  ended: S.optional(S.Date),
+  // TODO(burdon): Use Date or string?
+  started: S.optional(S.String),
+  ended: S.optional(S.String),
 
   /**
    * Queue containing TranscriptBlock objects.
@@ -33,7 +33,7 @@ export class TranscriptType extends TypedObject({
  * Contains metadata for the recording and transcript.
  */
 const TranscriptHeader = S.Struct({
-  started: S.optional(S.Date),
+  started: S.optional(S.String),
 });
 
 export type TranscriptHeader = S.Schema.Type<typeof TranscriptHeader>;
@@ -43,7 +43,7 @@ export type TranscriptHeader = S.Schema.Type<typeof TranscriptHeader>;
  */
 const TranscriptSegment = S.Struct({
   // TODO(burdon): TS from service is not Unix TS (x1000).
-  started: S.Date,
+  started: S.String,
   text: S.String,
 });
 
