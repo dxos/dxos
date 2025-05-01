@@ -33,6 +33,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, createDocAccessor, getSpace, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import {
+  type Extension,
   type PreviewLinkRef,
   type PreviewLinkTarget,
   RefPopover,
@@ -42,7 +43,6 @@ import {
   preview,
   useTextEditor,
   useRefPopover,
-  type Extension,
 } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -181,7 +181,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   }, [space]);
 
   if (!space || !doc) {
-    return <div>Loading...</div>;
+    return <></>;
   }
 
   return (

@@ -5,11 +5,12 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, type FC } from 'react';
 
 import { create, ObjectId } from '@dxos/echo-schema';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { useQueue } from '@dxos/react-client/echo';
+import { type Queue, type Space, useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar, useThemeContext } from '@dxos/react-ui';
 import {
@@ -30,7 +31,6 @@ import { BlockModel } from './model';
 import { blockToMarkdown, transcript } from './transcript-extension';
 import translations from '../../translations';
 import { TranscriptBlock } from '../../types';
-import { randomQueueDxn } from '../../util';
 
 faker.seed(1);
 
@@ -59,27 +59,95 @@ const createSegment = () => ({
   text: faker.lorem.paragraph(),
 });
 
-const useTestTranscriptionQueue = (running = true, interval = 1_000) => {
-  const queueDxn = useMemo(() => randomQueueDxn(), []);
+/**
+ * Test transcriptionqueue.
+ */
+const useTestTranscriptionQueue = (space: Space | undefined, running = true, interval = 1_000) => {
+  const queueDxn = useMemo(
+    () => (space ? new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]) : undefined),
+    [space],
+  );
   const queue = useQueue<TranscriptBlock>(queueDxn);
+
   useEffect(() => {
     if (!queue || !running) {
       return;
     }
 
-    const i = setInterval(() => queue.append([create(TranscriptBlock, createBlock())]), interval);
+    const i = setInterval(
+      () => queue.append([create(TranscriptBlock, createBlock(Math.ceil(Math.random() * 3)))]),
+      interval,
+    );
     return () => clearInterval(i);
   }, [queue, running, interval]);
+
   return queue;
 };
 
-const QueueStory = () => {
-  const queue = useTestTranscriptionQueue();
-  return <div>{JSON.stringify(queue?.items.length)}</div>;
+/**
+ * Model adapter for a queue.
+ */
+const useQueueModel = (queue: Queue<TranscriptBlock> | undefined) => {
+  const model = useMemo(() => new BlockModel<TranscriptBlock>(blockToMarkdown), [queue]);
+  useEffect(() => {
+    if (!queue?.items.length) {
+      return;
+    }
+
+    const block = queue.items[queue.items.length - 1];
+    model.appendBlock(block);
+  }, [model, queue?.items.length]);
+  return model;
+};
+
+const Editor: FC<{
+  model: BlockModel<TranscriptBlock>;
+  running: boolean;
+  onRunningChange: (running: boolean) => void;
+  onReset?: () => void;
+}> = ({ model, running, onRunningChange, onReset }) => {
+  const { themeMode } = useThemeContext();
+  const { parentRef } = useTextEditor(() => {
+    return {
+      extensions: [
+        // TODO(burdon): Enable preview.
+        createBasicExtensions({ readOnly: true, lineWrapping: true }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({ themeMode }),
+        decorateMarkdown(),
+        transcript({
+          model,
+          renderButton: createRenderer(({ onClick }) => (
+            <IconButton icon='ph--arrow-line-down--regular' iconOnly label='Scroll to bottom' onClick={onClick} />
+          )),
+        }),
+      ],
+    };
+  }, [model]);
+
+  return (
+    <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
+      <div ref={parentRef} className={mx('flex grow overflow-hidden', editorWidth)} />
+      <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
+        <div className='flex items-center'>
+          <SyntaxHighlighter language='json' className='text-sm'>
+            {JSON.stringify(model.toJSON())}
+          </SyntaxHighlighter>
+        </div>
+        <Toolbar.Root classNames='justify-end'>
+          <IconButton
+            icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+            label={running ? 'Pause' : 'Start'}
+            onClick={() => onRunningChange(!running)}
+          />
+          {onReset && <IconButton icon='ph--x--regular' label='Reset' onClick={onReset} />}
+        </Toolbar.Root>
+      </div>
+    </div>
+  );
 };
 
 const ExtensionStory = ({ blocks = 5 }: { blocks?: number }) => {
-  const { themeMode } = useThemeContext();
   const [reset, setReset] = useState({});
   const model = useMemo(
     () => new BlockModel<TranscriptBlock>(blockToMarkdown, Array.from({ length: blocks }, createBlock)),
@@ -114,50 +182,22 @@ const ExtensionStory = ({ blocks = 5 }: { blocks?: number }) => {
     return () => clearInterval(i);
   }, [model, currentBlock, running]);
 
-  const { parentRef } = useTextEditor(() => {
-    return {
-      extensions: [
-        // TODO(burdon): Enable preview.
-        createBasicExtensions({ readOnly: true, lineWrapping: true }),
-        createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode }),
-        decorateMarkdown(),
-        transcript({
-          model,
-          renderButton: createRenderer(({ onClick }) => (
-            <IconButton icon='ph--arrow-line-down--regular' iconOnly label='Scroll to bottom' onClick={onClick} />
-          )),
-        }),
-      ],
-    };
-  }, [model]);
-
   const handleReset = () => {
     setCurrentBlock(null);
     setRunning(false);
     setReset({});
   };
 
-  return (
-    <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
-      <div ref={parentRef} className={mx('flex grow overflow-hidden', editorWidth)} />
-      <div className='grid grid-cols-[16rem_1fr_16rem] overflow-hidden'>
-        <Toolbar.Root>
-          <IconButton
-            icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
-            label={running ? 'Pause' : 'Start'}
-            onClick={() => setRunning(!running)}
-          />
-          <IconButton icon='ph--x--regular' label='Reset' onClick={handleReset} />
-        </Toolbar.Root>
-        <div className='flex items-center justify-center'>
-          <SyntaxHighlighter language='json' className='text-sm'>
-            {JSON.stringify(model.toJSON())}
-          </SyntaxHighlighter>
-        </div>
-      </div>
-    </div>
-  );
+  return <Editor model={model} running={running} onRunningChange={setRunning} onReset={handleReset} />;
+};
+
+const QueueStory = () => {
+  const [running, setRunning] = useState(true);
+  const space = useSpace();
+  const queue = useTestTranscriptionQueue(space, running, 1_000);
+  const model = useQueueModel(queue);
+
+  return <Editor model={model} running={running} onRunningChange={setRunning} />;
 };
 
 const meta: Meta<typeof Transcript> = {
@@ -203,6 +243,14 @@ export const Empty: Story = {
 
 export const Extension: Story = {
   render: () => <ExtensionStory />,
+  args: {
+    ignoreAttention: true,
+    attendableId: 'story',
+  },
+};
+
+export const WithQueue: Story = {
+  render: () => <QueueStory />,
   args: {
     ignoreAttention: true,
     attendableId: 'story',
