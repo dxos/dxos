@@ -7,6 +7,7 @@ import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { HistoryCache } from './history-cache';
 import { BulkRequestDispatcher, FIFOScheduler } from './task-scheduling';
 import {
   type SessionResponse,
@@ -36,6 +37,10 @@ export type CallsServiceConfig = {
  */
 // TODO(mykola): Expose session errors.
 export class CallsServicePeer extends Resource {
+  public readonly history = new HistoryCache<
+    { type: 'request'; method: string; body: any } | { type: 'response'; status: number; text?: string; json?: any }
+  >(100);
+
   private readonly _persistentLifecycle = new PersistentLifecycle<Session>({
     start: () => this._startSession(),
     stop: (session) => this._stopSession(session),
@@ -132,6 +137,7 @@ export class CallsServicePeer extends Resource {
   }
 
   private async _fetch<T extends ErrorResponse>(relativePath: string, requestInit?: RequestInit) {
+    this.history.push({ type: 'request', method: requestInit?.method ?? 'GET', body: requestInit?.body });
     // TODO(mykola): Handle access control. Use EdgeClient.
     const response = await fetch(`${this._config.apiBase}${relativePath}`, { ...requestInit, redirect: 'manual' });
     if (response.status >= 400) {
@@ -141,15 +147,18 @@ export class CallsServicePeer extends Resource {
 
     try {
       const data = (await response.clone().json()) as T;
+      this.history.push({ type: 'response', status: response.status, json: data });
       if (data.errorCode) {
         throw new Error(data.errorDescription);
       }
 
       return data;
     } catch (error) {
+      const text = await response.text();
+      this.history.push({ type: 'response', status: response.status, text });
       log.error('Error parsing response from Calls service', {
         error,
-        text: await response.text(),
+        text,
         status: response.status,
       });
       throw error;

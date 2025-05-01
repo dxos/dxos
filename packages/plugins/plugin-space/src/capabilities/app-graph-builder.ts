@@ -130,7 +130,7 @@ export default (context: PluginsContext) => {
           },
           properties: {
             label: ['open current space settings label', { ns: SPACE_PLUGIN }],
-            icon: 'ph--gear--regular',
+            icon: 'ph--faders--regular',
             keyBinding: {
               macos: 'meta+shift+,',
               windows: 'ctrl+shift+,',

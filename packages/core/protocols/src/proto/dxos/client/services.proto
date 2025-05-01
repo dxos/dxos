@@ -596,12 +596,12 @@ service EdgeAgentService {
   rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
 }
 
-message QueryEdgeStatusResponse {
-  enum EdgeStatus {
-    NOT_CONNECTED = 0;
-    CONNECTED = 1;
-  }
+enum EdgeStatus {
+  NOT_CONNECTED = 0;
+  CONNECTED = 1;
+}
 
+message QueryEdgeStatusResponse {
   EdgeStatus status = 1;
 }
 

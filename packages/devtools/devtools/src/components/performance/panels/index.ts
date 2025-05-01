@@ -3,6 +3,7 @@
 //
 
 export * from './DatabasePanel';
+export * from './EdgePanel';
 export * from './MemoryPanel';
 export * from './NetworkPanel';
 export * from './PerformancePanel';

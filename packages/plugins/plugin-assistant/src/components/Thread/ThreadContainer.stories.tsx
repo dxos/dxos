@@ -22,7 +22,7 @@ import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifa
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { create, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -30,8 +30,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { useQueue, useSpace } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -77,7 +76,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => randomQueueDxn());
+  const [queueDxn, setQueueDxn] = useState<string>(() => randomQueueDxn().toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   useEffect(() => {
@@ -160,7 +159,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(randomQueueDxn())}
+              onClick={() => setQueueDxn(randomQueueDxn().toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>
@@ -201,17 +200,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 };
 
-const randomQueueDxn = () =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
-
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-automation/ThreadContainer',
   render: DefaultStory,
   decorators: [
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-    }),
     withPluginManager({
       plugins: [
         ClientPlugin({

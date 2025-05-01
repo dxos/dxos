@@ -4,6 +4,19 @@
 
 export { type Echo, type PropertiesType, type PropertiesTypeProps, type Space } from '@dxos/client-protocol';
 export {
+  DocAccessor,
+  type EchoDatabase,
+  Filter,
+  type FilterSource,
+  type Hypergraph,
+  type IDocHandle,
+  type ObjectMigration,
+  type Queue,
+  type Query,
+  type ReactiveEchoObject,
+  ResultFormat,
+  type Selection,
+  type SubscriptionHandle,
   createDocAccessor,
   createObject,
   createSubscription,
@@ -21,16 +34,6 @@ export {
   toCursor,
   toCursorRange,
   updateText,
-  type EchoDatabase,
-  type FilterSource,
-  type Hypergraph,
-  type IDocHandle,
-  type ObjectMigration,
-  type Query,
-  type Queue,
-  type ReactiveEchoObject,
-  type Selection,
-  type SubscriptionHandle,
 } from '@dxos/echo-db';
 export { Expando, getSchema, getTypename, type ObjectMeta, type TypedObject } from '@dxos/echo-schema';
 export { SpaceId } from '@dxos/keys';
@@ -57,15 +60,16 @@ export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
 
 export { importSpace } from './import';
 export {
-  EchoObjectSchema,
   FQ_ID_LENGTH,
-  fullyQualifiedId,
+  OBJECT_ID_LENGTH,
+  SPACE_ID_LENGTH,
+  EchoObjectSchema,
+  ReactiveObjectSchema,
+  SpaceSchema,
   getSpace,
   isSpace,
   OBJECT_ID_LENGTH,
   parseFullyQualifiedId,
   parseId,
-  ReactiveObjectSchema,
-  SPACE_ID_LENGTH,
-  SpaceSchema,
+  randomQueueDxn,
 } from './util';

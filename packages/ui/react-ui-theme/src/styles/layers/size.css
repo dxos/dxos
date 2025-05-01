@@ -2,6 +2,10 @@
   @apply is-full max-is-containerMaxWidth mli-auto;
 }
 
+.popover-max-width {
+  @apply is-max max-is-popoverMaxWidth;
+}
+
 @layer dx-components {
 
   /* Block size */

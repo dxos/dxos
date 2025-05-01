@@ -4,12 +4,15 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
+import { type SpaceId } from '@dxos/keys';
+
 import { createTemplate } from './template';
 import SYSTEM_PROMPT from './templates/system-prompt.tpl?raw';
 
 export type AssociatedArtifact = {
-  id: string;
+  spaceId: SpaceId;
   typename: string;
+  id: string;
 };
 
 export type SystemPromptOptions = {
