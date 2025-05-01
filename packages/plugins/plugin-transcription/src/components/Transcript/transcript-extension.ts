@@ -8,7 +8,7 @@ import { EditorView, GutterMarker, ViewPlugin, type ViewUpdate, gutter } from '@
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type RenderCallback } from '@dxos/react-ui-editor';
 
-import { DocumentAdapter, type BlockModel } from './model';
+import { DocumentAdapter, type BlockModel } from '../../model';
 import { type TranscriptBlock } from '../../types';
 
 export const blockToMarkdown = (block: TranscriptBlock, debug = false): string[] => {

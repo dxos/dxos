@@ -8,6 +8,7 @@ import { invariant } from '@dxos/invariant';
 
 export const createTemplate = (template: string) => {
   invariant(template);
+
   let section = 0;
   handlebars.registerHelper('section', () => String(++section));
   return handlebars.compile(template);
