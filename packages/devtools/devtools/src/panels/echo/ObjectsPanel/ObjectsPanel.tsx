@@ -6,9 +6,9 @@ import React, { useMemo, useState, useCallback } from 'react';
 
 import type { State as AmState } from '@dxos/automerge/automerge';
 import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
-import { FormatEnum, getSchemaVersion } from '@dxos/echo-schema';
+import { FormatEnum, getSchemaVersion, getSchema, getTypename } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
+import { getType, isDeleted } from '@dxos/live-object';
 import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';

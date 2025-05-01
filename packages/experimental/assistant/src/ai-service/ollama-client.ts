@@ -13,7 +13,7 @@ import { DEFAULT_OLLAMA_ENDPOINT } from './defs';
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AIServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
-import { ToolTypes, type GenerateRequest, type GenerationStreamEvent } from './types';
+import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from './types';
 import { isToolUse, runTools } from '../conversation';
 
 export type OllamaClientParams = {
@@ -300,7 +300,14 @@ export class OllamaClient implements AIServiceClient {
     }
   }
 
-  async exec(request: GenerateRequest): Promise<GenerationStream> {
+  /**
+   * Generate non-streaming response.
+   */
+  async exec(request: GenerateRequest): Promise<GenerateResponse> {
+    throw new Error('Not implemented');
+  }
+
+  async execStream(request: GenerateRequest): Promise<GenerationStream> {
     const controller = new AbortController();
 
     try {

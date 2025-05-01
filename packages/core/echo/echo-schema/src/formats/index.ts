@@ -10,3 +10,4 @@ export * from './select';
 export * from './format';
 export * from './string';
 export * from './types';
+export * from './space-id';
