@@ -138,6 +138,11 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
           ? findAnnotation<JsonPath>(property.ast, FieldLookupAnnotationId)
           : undefined;
 
+      if (property.name === 'employer') {
+        console.log({ prop: property.name, referencePath, format: property.format });
+        console.log(JSON.stringify(property.ast));
+      }
+
       fields.push(
         stripUndefined({
           id: createFieldId(),

@@ -10,10 +10,10 @@ import React, { useEffect, useMemo } from 'react';
 import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
-import { live, makeRef, type Live } from '@dxos/react-client/echo';
+import { live, makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { createView, ViewProjection, ViewType } from '@dxos/schema';
-import { createAsyncGenerator, createGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
+import { createAsyncGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -65,6 +65,8 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
       model.setRows(objects);
     });
   }, [model, space]);
+
+  console.log(projection?.getFieldProjections());
 
   const presentation = useMemo(() => {
     if (!model) {

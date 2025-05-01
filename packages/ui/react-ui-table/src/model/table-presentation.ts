@@ -4,7 +4,7 @@
 
 import { signal } from '@preact/signals-core';
 
-import { FormatEnum, getValue } from '@dxos/echo-schema';
+import { FormatEnum, getValue, type JsonPath } from '@dxos/echo-schema';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridPlane,
