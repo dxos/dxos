@@ -51,6 +51,7 @@ export const MeetingStatusDetail = ({ state }: MeetingStatusDetailProps) => {
             readyState: receiver.track?.readyState,
             settings: receiver.track?.getSettings(),
           })),
+          activities: state?.call?.activities,
           callsServiceHistory: state?.media.peer?.history.get(),
         }}
       />
