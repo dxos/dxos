@@ -1,4 +1,4 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 
 import { Project, ts } from 'ts-morph';
 import yargs from 'yargs';
@@ -16,8 +16,19 @@ const argv = yargs(hideBin(process.argv))
     type: 'string',
     demandOption: true,
   })
+  .option('verbose', {
+    type: 'boolean',
+    default: false,
+    description: 'Show detailed logs',
+  })
   .help()
   .parse();
+
+function log(...args) {
+  if (argv.verbose) {
+    console.log(...args);
+  }
+}
 
 // Parse rename mappings
 const renameMappings = argv.rename.map((mapping) => {
@@ -55,26 +66,46 @@ for (const filePath of tsFiles) {
   // Process each import declaration
   sourceFile.getImportDeclarations().forEach((importDecl) => {
     const moduleSpecifier = importDecl.getModuleSpecifierValue();
+    log(`Checking imports in ${filePath} from ${moduleSpecifier}`);
 
     // Check each rename mapping
     for (const mapping of renameMappings) {
       if (moduleSpecifier === mapping.fromPackage) {
+        log(`Found matching package ${mapping.fromPackage}`);
         const namedImports = importDecl.getNamedImports();
 
         // Find and rename matching imports
         namedImports.forEach((namedImport) => {
           const importName = namedImport.getName();
+          const importAlias = namedImport.getAliasNode()?.getText();
+
+          log(`Checking import ${importName}${importAlias ? ` as ${importAlias}` : ''}`);
+
           if (importName === mapping.fromSymbol) {
-            // Update import name if different
+            log(`Found matching symbol ${mapping.fromSymbol}`);
+
+            // Update the import name
             if (mapping.fromSymbol !== mapping.toSymbol) {
               namedImport.setName(mapping.toSymbol);
+              log(`Renamed import from ${mapping.fromSymbol} to ${mapping.toSymbol}`);
             }
 
-            // Update alias references in the file
-            const alias = namedImport.getAliasNode()?.getText() || importName;
-            const refs = namedImport.getNameNode().findReferencesAsNodes();
-            refs.forEach((ref) => {
-              ref.replaceWithText(mapping.toSymbol);
+            // Get the local name (either the alias or the original name)
+            const localName = importAlias || importName;
+
+            // Find all identifiers in the file
+            sourceFile.getDescendants().forEach((node) => {
+              if (ts.isIdentifier(node.compilerNode)) {
+                const identifier = node.asKind(ts.SyntaxKind.Identifier);
+                if (identifier && identifier.getText() === localName) {
+                  // Make sure this identifier is not part of the import declaration
+                  if (!ts.isImportSpecifier(identifier.getParent()?.compilerNode)) {
+                    identifier.replaceWithText(mapping.toSymbol);
+                    log(`Renamed usage of ${localName} to ${mapping.toSymbol}`);
+                    hasChanges = true;
+                  }
+                }
+              }
             });
 
             hasChanges = true;
@@ -84,6 +115,7 @@ for (const filePath of tsFiles) {
         // Update package name if different
         if (mapping.fromPackage !== mapping.toPackage) {
           importDecl.setModuleSpecifier(mapping.toPackage);
+          log(`Updated import from ${mapping.fromPackage} to ${mapping.toPackage}`);
           hasChanges = true;
         }
       }
