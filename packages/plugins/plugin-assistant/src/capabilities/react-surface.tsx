@@ -5,8 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
-import { getTypename } from '@dxos/live-object';
+import { isInstanceOf, getTypename } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { fullyQualifiedId, getSpace, isLiveObject, isSpace, type Space, type SpaceId } from '@dxos/react-client/echo';
 
