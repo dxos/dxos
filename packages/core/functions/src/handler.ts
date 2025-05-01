@@ -13,6 +13,7 @@ import { type SpaceId, type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryResult } from '@dxos/protocols';
 import { isNonNullable } from '@dxos/util';
+import { AIServiceClient } from '@dxos/assistant';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -42,7 +43,7 @@ export interface FunctionContext {
    */
   space: SpaceAPI | undefined;
 
-  ai: FunctionContextAi;
+  ai: AIServiceClient;
 
   /**
    * @deprecated
