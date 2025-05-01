@@ -5,25 +5,17 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import {
   Capabilities,
   CollaborationActions,
   IntentPlugin,
-  type PluginMeta,
   SettingsPlugin,
-  Surface,
   contributes,
   createIntent,
-  definePlugin,
   useCapability,
   useIntentDispatcher,
-  Events,
-  defineModule,
-  createResolver,
-  LayoutAction,
-  defineCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
@@ -33,10 +25,11 @@ import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
-import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
+import { IconButton, Toolbar } from '@dxos/react-ui';
 import { command, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -50,140 +43,6 @@ import translations from '../translations';
 import { createDocument, DocumentType, type MarkdownSettingsProps } from '../types';
 
 faker.seed(1);
-
-// TODO(wittjosiah): Factor out.
-//   Cannot go in storybook-utils because it creates a circular dependency.
-//   Cannot go in app-framework because it exports react-ui components.
-const layoutMeta: PluginMeta = {
-  id: 'dxos.org/plugin/storybook-layout',
-  name: 'Storybook Layout',
-};
-
-type LayoutState = {
-  popoverContent?: any;
-  popoverOpen?: boolean;
-  popoverSide?: 'top' | 'right' | 'bottom' | 'left';
-  popoverVariant?: 'virtual' | 'react';
-  popoverAnchor?: HTMLButtonElement;
-  popoverAnchorId?: string;
-};
-const LayoutState = defineCapability<LayoutState>('dxos.org/plugin/storybook-layout/state');
-
-const LayoutPlugin = () =>
-  definePlugin(layoutMeta, [
-    defineModule({
-      id: `${layoutMeta.id}/state`,
-      activatesOn: Events.Startup,
-      activate: () => {
-        const state = live<LayoutState>({});
-
-        const layout = live<Capabilities.Layout>({
-          get mode() {
-            return 'storybook';
-          },
-          get dialogOpen() {
-            return false;
-          },
-          get sidebarOpen() {
-            return false;
-          },
-          get complementarySidebarOpen() {
-            return false;
-          },
-          get workspace() {
-            return 'default';
-          },
-          get active() {
-            return [];
-          },
-          get inactive() {
-            return [];
-          },
-          get scrollIntoView() {
-            return undefined;
-          },
-        });
-
-        return [contributes(LayoutState, state), contributes(Capabilities.Layout, layout)];
-      },
-    }),
-    defineModule({
-      id: `${layoutMeta.id}/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: (context) =>
-        contributes(Capabilities.IntentResolver, [
-          createResolver({
-            intent: LayoutAction.UpdateLayout,
-            // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdatePopover.fields.input)`
-            //  but the filter is not being applied correctly.
-            filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
-              S.is(LayoutAction.UpdatePopover.fields.input)(data),
-            resolve: ({ subject, options }) => {
-              const layout = context.requestCapability(LayoutState);
-              layout.popoverContent =
-                typeof subject === 'string'
-                  ? { component: subject, props: options.props }
-                  : subject
-                    ? { subject }
-                    : undefined;
-              layout.popoverOpen = options.state ?? Boolean(subject);
-              layout.popoverSide = options.side;
-              layout.popoverVariant = options.variant;
-              if (options.variant === 'virtual') {
-                layout.popoverAnchor = options.anchor;
-              } else {
-                layout.popoverAnchorId = options.anchorId;
-              }
-            },
-          }),
-        ]),
-    }),
-    defineModule({
-      id: `${layoutMeta.id}/react-root`,
-      activatesOn: Events.Startup,
-      activate: () =>
-        contributes(Capabilities.ReactContext, {
-          id: 'storybook-layout',
-          context: ({ children }) => {
-            const trigger = useRef<HTMLButtonElement | null>(null);
-            const layout = useCapability(LayoutState);
-
-            useEffect(() => {
-              trigger.current = layout.popoverAnchor ?? null;
-            }, [layout.popoverAnchor]);
-
-            const handlePopoverOpenChange = useCallback(
-              (nextOpen: boolean) => {
-                if (nextOpen && layout.popoverAnchorId) {
-                  layout.popoverOpen = true;
-                } else {
-                  layout.popoverOpen = false;
-                  layout.popoverAnchorId = undefined;
-                  layout.popoverSide = undefined;
-                }
-              },
-              [layout],
-            );
-            const handlePopoverClose = useCallback(() => handlePopoverOpenChange(false), [handlePopoverOpenChange]);
-
-            return (
-              <Popover.Root open={layout.popoverOpen} onOpenChange={handlePopoverOpenChange}>
-                <Popover.VirtualTrigger virtualRef={trigger} />
-                <Popover.Portal>
-                  <Popover.Content side={layout.popoverSide} onEscapeKeyDown={handlePopoverClose}>
-                    <Popover.Viewport>
-                      <Surface role='popover' data={layout.popoverContent} limit={1} />
-                    </Popover.Viewport>
-                    <Popover.Arrow />
-                  </Popover.Content>
-                </Popover.Portal>
-                {children}
-              </Popover.Root>
-            );
-          },
-        }),
-    }),
-  ]);
 
 const TestItem = S.Struct({
   title: S.String.annotations({
@@ -275,7 +134,7 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
-        LayoutPlugin(),
+        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [DocumentType, TestItem],
           onClientInitialized: async (_, client) => {
