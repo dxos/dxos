@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { ControlSection } from '@dxos/react-ui-form';
+import { ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { FunctionsPanel } from './FunctionsPanel';
@@ -16,14 +16,14 @@ export const FunctionsContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   return (
     <StackItem.Content classNames='block overflow-y-auto'>
-      <div role='none'>
+      <ControlPage>
         <ControlSection
           title={t('functions verbose label', { ns: AUTOMATION_PLUGIN })}
           description={t('functions description', { ns: AUTOMATION_PLUGIN })}
         >
           <FunctionsPanel space={space} />
         </ControlSection>
-      </div>
+      </ControlPage>
     </StackItem.Content>
   );
 };

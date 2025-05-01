@@ -4,48 +4,42 @@
 
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { EditorView, GutterMarker, ViewPlugin, type ViewUpdate, gutter } from '@codemirror/view';
+import { format } from 'date-fns/format';
+import { intervalToDuration } from 'date-fns/intervalToDuration';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type RenderCallback } from '@dxos/react-ui-editor';
 
-import { DocumentAdapter, type BlockModel } from './model';
+import { DocumentAdapter, type BlockModel } from '../../model';
 import { type TranscriptBlock } from '../../types';
-
-export const blockToMarkdown = (block: TranscriptBlock, debug = false): string[] => {
-  // TODO(burdon): Use link/reference markup for users (with popover).
-  // TODO(burdon): Color and avatar.
-  return [
-    `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
-    block.segments.map((segment) => segment.text).join(' '),
-    '',
-  ];
-};
 
 /**
  * Data structure that maps Blocks queue to lines with transcript state.
  */
 export type TranscriptOptions = {
   model: BlockModel<TranscriptBlock>;
+  started?: Date;
   renderButton?: RenderCallback<{ onClick: () => void }>;
 };
 
 /**
  * Scrolling transcript with timestamps.
  */
-export const transcript = ({ model, renderButton }: TranscriptOptions): Extension => {
+export const transcript = ({ model, started, renderButton }: TranscriptOptions): Extension => {
   return [
     // Show timestamps in the gutter.
     gutter({
       class: 'cm-timestamp-gutter',
       lineMarkerChange: (update) => update.docChanged || update.viewportChanged,
       markers: (view) => {
+        const start = getStartTime(started, model.blocks[0]);
         const builder = new RangeSetBuilder<GutterMarker>();
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
             const timestamp = model.getBlockAtLine(line.number)?.segments[0]?.started;
             if (timestamp) {
-              builder.add(line.from, line.from, new TimestampMarker(line.number, timestamp));
+              builder.add(line.from, line.from, new TimestampMarker(line.number, new Date(timestamp), start));
             }
 
             if (line.to + 1 > view.state.doc.length) {
@@ -191,6 +185,7 @@ class TimestampMarker extends GutterMarker {
   constructor(
     readonly _line: number,
     readonly _timestamp: Date,
+    readonly _started?: Date,
   ) {
     super();
   }
@@ -200,15 +195,9 @@ class TimestampMarker extends GutterMarker {
   }
 
   override toDOM(view: EditorView) {
-    const pad = (n: number) => n.toString().padStart(2, '0');
     const el = document.createElement('div');
     el.className = 'text-sm text-subdued hover:bg-hoverSurface cursor-pointer';
-    el.textContent = [
-      pad(this._timestamp.getHours()),
-      pad(this._timestamp.getMinutes()),
-      pad(this._timestamp.getSeconds()),
-    ].join(':');
-
+    el.textContent = formatTimestamp(this._timestamp, this._started);
     // TODO(burdon): Click to bookmark or copy hyperlink.
     el.onclick = () => {
       const pos = view.state.doc.line(this._line).from;
@@ -220,3 +209,25 @@ class TimestampMarker extends GutterMarker {
     return el;
   }
 }
+
+const getStartTime = (started?: Date, block?: TranscriptBlock): Date | undefined => {
+  if (started) {
+    return started;
+  }
+
+  if (block?.segments[0]?.started) {
+    return new Date(block.segments[0].started);
+  }
+
+  return undefined;
+};
+
+const formatTimestamp = (timestamp: Date, relative?: Date) => {
+  if (!relative) {
+    return format(timestamp, 'HH:mm:ss');
+  } else {
+    const pad = (n = 0) => String(n).padStart(2, '0');
+    const { hours, minutes, seconds } = intervalToDuration({ start: relative, end: timestamp });
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  }
+};

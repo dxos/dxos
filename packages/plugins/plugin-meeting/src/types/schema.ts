@@ -14,15 +14,18 @@ export const MeetingSchema = S.Struct({
    * User-defined name of the meeting.
    */
   name: S.optional(S.String),
+
   /**
    * The time the meeting was created.
    * Used to generate a fallback name if one is not provided.
    */
   created: S.String.annotations({ description: 'ISO timestamp' }),
+
   /**
    * List of dids of identities which joined some portion of the meeting.
    */
   participants: S.mutable(S.Array(IdentityDidSchema)),
+
   /**
    * Set of artifacts created during the meeting.
    * Keys are the typename of the artifact.
