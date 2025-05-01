@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Effect, pipe } from 'effect';
+import { SchemaAST as AST, Effect } from 'effect';
 
 import { type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
 import {
@@ -149,27 +149,27 @@ export const createObjectPipeline = <T extends BaseObject>(
 ): ((obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>) => {
   if (!db) {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<Live<T>> = pipe(
-        Effect.succeed(obj),
-        // Effect.tap(logObject('before')),
-        Effect.map((obj) => createProps(generator, type, optional)(obj)),
-        Effect.map((obj) => createReactiveObject(type)(obj)),
-        // Effect.tap(logObject('after')),
-      );
+      const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* (_) {
+        // logObject('before')(obj);
+        const withProps = createProps(generator, type, optional)(obj);
+        const liveObj = createReactiveObject(type)(withProps);
+        // logObject('after')(liveObj);
+        return liveObj;
+      });
 
       return pipeline;
     };
   } else {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<ReactiveEchoObject<any>, never, never> = pipe(
-        Effect.succeed(obj),
-        // Effect.tap(logObject('before')),
-        Effect.map((obj) => createProps(generator, type, optional)(obj)),
-        Effect.map((obj) => createReactiveObject(type)(obj)),
-        Effect.flatMap((obj) => Effect.promise(() => createReferences(type, db)(obj))),
-        Effect.map((obj) => addToDatabase(db)(obj)),
-        // Effect.tap(logObject('after')),
-      );
+      const pipeline: Effect.Effect<ReactiveEchoObject<any>, never, never> = Effect.gen(function* (_) {
+        // logObject('before')(obj);
+        const withProps = createProps(generator, type, optional)(obj);
+        const liveObj = createReactiveObject(type)(withProps);
+        const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));
+        const dbObj = addToDatabase(db)(withRefs);
+        // logObject('after')(dbObj);
+        return dbObj;
+      });
 
       return pipeline;
     };
