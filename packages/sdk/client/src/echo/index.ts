@@ -4,13 +4,12 @@
 
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
-export { getTypename, Expando, type TypedObject, type ObjectMeta } from '@dxos/echo-schema';
+export { getTypename, Expando, type TypedObject, type ObjectMeta, getSchema } from '@dxos/echo-schema';
 export {
   type Live,
   RefArray,
   live,
   getMeta,
-  getSchema,
   getType,
   isLiveObject,
   compareForeignKeys,
