@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework';
 import { Popover } from '@dxos/react-ui';
@@ -13,6 +13,7 @@ export type DeckPopoverRootProps = PropsWithChildren<{}>;
 
 export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
   const context = useCapability(DeckCapabilities.MutableDeckState);
+  const virtualRef = useRef<HTMLButtonElement | null>(null);
 
   // TODO(thure): This is a workaround for the difference in `React`ion time between displaying a Popover and rendering
   //  the anchor further down the tree. Refactor to use VirtualTrigger or some other approach which does not cause a lag.
@@ -23,10 +24,11 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
 
   const handlePopoverOpenChange = useCallback(
     (nextOpen: boolean) => {
-      if (nextOpen && context.popoverAnchorId) {
+      if (nextOpen && (context.popoverAnchor || context.popoverAnchorId)) {
         context.popoverOpen = true;
       } else {
         context.popoverOpen = false;
+        context.popoverAnchor = undefined;
         context.popoverAnchorId = undefined;
         context.popoverSide = undefined;
       }
@@ -34,12 +36,21 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
     [context],
   );
 
+  useEffect(() => {
+    if (context.popoverAnchor) {
+      virtualRef.current = context.popoverAnchor as HTMLButtonElement;
+    } else {
+      virtualRef.current = null;
+    }
+  }, [context.popoverAnchor]);
+
   return (
     <Popover.Root
       modal
-      open={!!(context.popoverAnchorId && delayedPopoverVisibility)}
+      open={!!((context.popoverAnchor || context.popoverAnchorId) && delayedPopoverVisibility)}
       onOpenChange={handlePopoverOpenChange}
     >
+      {context.popoverAnchor && <Popover.VirtualTrigger virtualRef={virtualRef} />}
       {children}
     </Popover.Root>
   );
@@ -49,6 +60,7 @@ export const PopoverContent = () => {
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const handlePopoverClose = useCallback(() => {
     context.popoverOpen = false;
+    context.popoverAnchor = undefined;
     context.popoverAnchorId = undefined;
     context.popoverSide = undefined;
   }, [context]);
