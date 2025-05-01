@@ -39,4 +39,4 @@ export {
 export * from './client';
 export * from './services';
 export * from './util';
-export { DXOS_VERSION } from './version';
+export * from './version';

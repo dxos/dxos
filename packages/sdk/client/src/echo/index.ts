@@ -57,17 +57,17 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export {
+  FQ_ID_LENGTH,
+  OBJECT_ID_LENGTH,
+  SPACE_ID_LENGTH,
+  EchoObjectSchema,
+  ReactiveObjectSchema,
+  SpaceSchema,
   getSpace,
   isSpace,
   fullyQualifiedId,
   parseFullyQualifiedId,
   parseId,
   randomQueueDxn,
-  EchoObjectSchema,
-  ReactiveObjectSchema,
-  SpaceSchema,
-  FQ_ID_LENGTH,
-  OBJECT_ID_LENGTH,
-  SPACE_ID_LENGTH,
 } from './util';
 export { importSpace } from './import';
