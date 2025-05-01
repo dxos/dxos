@@ -29,7 +29,7 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
       const el = createElement('div', { className: 'flex h-full items-center' });
       return renderRoot(
         el,
-        <Icon icon='ph--caret-right--regular' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,
+        <Icon icon='ph--caret-right--bold' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,
       );
     },
   }),

@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
-import { Button, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, type ButtonProps, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
@@ -23,6 +23,38 @@ export type L1PanelProps = {
   path: string[];
   currentItemId: string;
   onBack?: () => void;
+};
+
+const headingBackButtonLabel =
+  'absolute inset-0 min-is-0 truncate flex items-center pis-6 transition-[transform,opacity] ease-in-out duration-200';
+
+const HeadingBackButton = ({ title, onClick }: { title: string } & Pick<ButtonProps, 'onClick'>) => {
+  const { t } = useTranslation(NAVTREE_PLUGIN);
+  return (
+    <Button
+      variant='ghost'
+      classNames='pli-1 flex-1 relative group text-start justify-start bs-[--rail-action] font-normal'
+      onClick={onClick}
+    >
+      <Icon icon='ph--caret-left--bold' size={3} />
+      <span
+        className={mx(
+          headingBackButtonLabel,
+          'translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-focus:translate-y-0 group-focus:opacity-100',
+        )}
+      >
+        {t('back label')}
+      </span>
+      <span
+        className={mx(
+          headingBackButtonLabel,
+          'translate-y-0 opacity-100 group-hover:-translate-y-2 group-hover:opacity-0 group-focus:-translate-y-2 group-focus:opacity-0',
+        )}
+      >
+        {title}
+      </span>
+    </Button>
+  );
 };
 
 const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
@@ -55,6 +87,9 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
     }
   }, [isAlternate, onBack, alternatePath, setAlternateTree]);
 
+  const title = toLocalizedString(item.properties.label, t);
+  const backCapable = item.id.startsWith('!') || isAlternate;
+
   return (
     <Tabs.Tabpanel
       key={item.id}
@@ -64,37 +99,31 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
         item.id === currentItemId && 'grid',
       ]}
       tabIndex={-1}
+      aria-label={title}
       {...(!layout.sidebarOpen && { inert: 'true' })}
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='flex items-center border-be border-separator app-drag'>
-            <Button
-              variant='ghost'
-              density='fine'
-              classNames={mx(
-                'is-6 pli-0 dx-focus-ring-inset',
-                !item.id.startsWith('!') && !isAlternate && 'invisible',
-                hoverableControlItem,
-                hoverableOpenControlItem,
-              )}
-              onClick={handleBack}
-            >
-              <Icon icon='ph--caret-left--regular' size={3} />
-            </Button>
-            <span className='flex-1 truncate cursor-default'>{toLocalizedString(item.properties.label, t)}</span>
+          <h2 className='flex items-center border-be border-separator app-drag pis-1'>
+            {backCapable ? (
+              <HeadingBackButton title={title} onClick={handleBack} />
+            ) : (
+              <span className='flex-1 truncate min-is-0 pis-6'>{title}</span>
+            )}
             {alternateTree && !isAlternate && (
               <IconButton
                 variant='ghost'
                 classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
                 iconOnly
+                size={5}
+                density='coarse'
                 icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
                 label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
                 data-testid='treeView.alternateTreeButton'
                 onClick={handleOpen}
               />
             )}
-            <NavTreeItemColumns path={path} item={item} open />
+            <NavTreeItemColumns path={path} item={item} open density='coarse' />
           </h2>
           <div role='none' className='overflow-y-auto'>
             {isAlternate ? (

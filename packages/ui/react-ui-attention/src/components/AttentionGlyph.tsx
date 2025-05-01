@@ -60,7 +60,7 @@ export const Syncing = () => {
   return (
     <div role='status' className='flex items-center'>
       <Icon
-        icon='ph--circle-notch--regular'
+        icon='ph--circle-notch--bold'
         size={3}
         style={animationProps}
         classNames='text-subdued animate-[spin_2s_linear_infinite]'

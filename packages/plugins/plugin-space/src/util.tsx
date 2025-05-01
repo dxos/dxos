@@ -219,7 +219,7 @@ export const constructSpaceNode = ({
         data: null,
         properties: {
           label: ['settings panel label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--gear--regular',
+          icon: 'ph--faders--regular',
           disposition: 'alternate-tree',
         },
         nodes: [
