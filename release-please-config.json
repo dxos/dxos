@@ -459,6 +459,11 @@
         },
         {
           "type": "json",
+          "path": "packages/gravity/am-bench/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/gravity/blade-runner/package.json",
           "jsonpath": "$.version"
         },

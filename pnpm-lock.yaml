@@ -5071,6 +5071,12 @@ importers:
         specifier: ^0.0.36
         version: 0.0.36
 
+  packages/gravity/am-bench:
+    dependencies:
+      '@automerge/automerge':
+        specifier: ^2.0.0
+        version: 2.2.2
+
   packages/gravity/blade-runner:
     dependencies:
       '@dxos/async':
