@@ -4,10 +4,17 @@ import { SystemError, UnknownError } from './errors';
 
 class MyError extends Schema.TaggedError<MyError>()('MyError', {
   extraData: Schema.String,
-}) {}
+}) {
+  override toJSON(): unknown {
+    return {
+      ...(super.toJSON() as any),
+      message: this.message,
+    };
+  }
+}
 
 describe('effect error handling', () => {
-  test.only('default error class', () => {
+  test('default error class', () => {
     function throwError() {
       throw new MyError({ extraData: 'extra data' });
     }
@@ -15,7 +22,7 @@ describe('effect error handling', () => {
     throwError();
   });
 
-  test('error causes', () => {
+  test.only('error causes', () => {
     function libFn() {
       throw new Error('lib error');
     }
@@ -32,8 +39,18 @@ describe('effect error handling', () => {
   });
 });
 
+class MyError2 extends Error {
+  toJSON() {
+    return {
+      ...this,
+      message: this.message,
+      cause: this.cause,
+    };
+  }
+}
+
 describe.skip('normal errors', () => {
-  test('error causes', () => {
+  test.only('error causes', () => {
     function libFn() {
       throw new Error('lib error');
     }
@@ -42,7 +59,7 @@ describe.skip('normal errors', () => {
       try {
         libFn();
       } catch (error) {
-        throw new SystemError('Unknown error', { foo: 'bar', cause: error });
+        throw new MyError2('Unknown error', { cause: error });
       }
     }
 
