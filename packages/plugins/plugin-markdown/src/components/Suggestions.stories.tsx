@@ -20,7 +20,6 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { type Client, randomQueueDxn, resolveRef } from '@dxos/client';
 import { S, AST, create, type Expando, EchoObject, getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -29,6 +28,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
+import { type Client, randomQueueDxn, resolveRef } from '@dxos/react-client';
 import { useClient } from '@dxos/react-client';
 import { type Space, createDocAccessor, getSpace, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';

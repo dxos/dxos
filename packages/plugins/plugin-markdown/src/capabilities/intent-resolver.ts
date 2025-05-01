@@ -10,12 +10,12 @@ import {
   type PluginsContext,
 } from '@dxos/app-framework';
 import { next as A } from '@dxos/automerge/automerge';
-import { resolveRef } from '@dxos/client';
 import { isInstanceOf, ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { makeRef, live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { resolveRef } from '@dxos/react-client';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
 
