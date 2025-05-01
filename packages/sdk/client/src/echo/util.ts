@@ -4,7 +4,7 @@
 
 import { type Space } from '@dxos/client-protocol';
 import { type SpaceSyncState, type ReactiveEchoObject, getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
-import { type ObjectId, S } from '@dxos/echo-schema';
+import { ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { isLiveObject, type Live } from '@dxos/live-object';
