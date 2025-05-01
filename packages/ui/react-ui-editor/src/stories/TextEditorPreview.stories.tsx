@@ -12,7 +12,6 @@ import { mx, hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { DefaultStory, str } from './story-utils';
-import { RefPopover, useRefPopover } from '../components/RefPopover';
 import { editorWidth } from '../defaults';
 import {
   preview,
@@ -24,6 +23,7 @@ import {
   type PreviewRenderProps,
   type Action,
 } from '../extensions';
+import { RefPopover, useRefPopover } from '../testing';
 import { createRenderer } from '../util';
 
 const meta: Meta<typeof DefaultStory> = {

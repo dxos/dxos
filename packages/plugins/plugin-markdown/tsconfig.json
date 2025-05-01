@@ -67,6 +67,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../ui/lit-ui"
+    },
+    {
       "path": "../../ui/primitives/react-hooks"
     },
     {

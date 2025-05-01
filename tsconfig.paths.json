@@ -316,6 +316,9 @@
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
       ],
+      "@dxos/react-ui-editor/testing": [
+        "packages/ui/react-ui-editor/src/testing/index.ts"
+      ],
       "@dxos/react-ui-form": [
         "packages/ui/react-ui-form/src/index.ts"
       ],
