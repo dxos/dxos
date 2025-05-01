@@ -32,7 +32,7 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
-import { AgentQuerySourceProvider } from './agent-query-source-provider';
+import { AgentQuerySourceProvider } from './agent';
 import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
 import { type HaloProxy } from '../halo/halo-proxy';

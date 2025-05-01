@@ -28,7 +28,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { type Client, randomQueueDxn, resolveRef } from '@dxos/react-client';
+import { type Client, resolveRef } from '@dxos/react-client';
 import { useClient } from '@dxos/react-client';
 import { type Space, createDocAccessor, getSpace, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
