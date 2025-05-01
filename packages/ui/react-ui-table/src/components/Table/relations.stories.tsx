@@ -18,7 +18,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
-import { TablePresentation, type TableRow } from '../../model';
+import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 
@@ -47,7 +47,12 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     return new ViewProjection(schema.jsonSchema, table.view.target);
   }, [schema, table]);
 
-  const model = useTableModel<TableRow>({ table, projection, rows: [] });
+  const features = useMemo<TableFeatures>(
+    () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
+    [],
+  );
+
+  const model = useTableModel<TableRow>({ table, projection, rows: [], features });
   useEffect(() => {
     if (!model) {
       return;
@@ -55,6 +60,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 
     const objectGenerator = createGenerator(generator, schema, { optional: true });
     const objects: Live<T>[] = Array.from({ length: count }).map(() => objectGenerator.createObject());
+    console.log(JSON.stringify(objects[0]));
     model.setRows(objects);
   }, [model]);
 
