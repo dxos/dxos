@@ -62,7 +62,6 @@ export {
   fullyQualifiedId,
   parseFullyQualifiedId,
   parseId,
-  resolveRef,
   randomQueueDxn,
   EchoObjectSchema,
   ReactiveObjectSchema,
