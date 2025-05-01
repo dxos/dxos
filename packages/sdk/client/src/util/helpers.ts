@@ -9,7 +9,8 @@ import { type DXN } from '@dxos/keys';
 import { type Client } from '../client';
 import { type Space } from '../echo';
 
-// TODO(burdon): Do type check.
+// TODO(burdon): Type check?
+// TOOD(burdon): Move to client class?
 export const resolveRef = async <T extends BaseEchoObject = BaseEchoObject>(
   client: Client,
   dxn: DXN,

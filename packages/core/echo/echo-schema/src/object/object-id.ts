@@ -5,6 +5,7 @@
 import { Schema as S } from 'effect';
 import { ulid } from 'ulidx';
 
+// TODO(burdon): Move to @dxos/keys?
 export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
 
 // TODO(dmaretskyi): Make brand. (RB: Yes!)

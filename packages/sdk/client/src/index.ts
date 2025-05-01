@@ -36,6 +36,7 @@ export {
 // TODO(burdon): Use "export *" and @internal to restrict exports.
 // TODO(wittjosiah): Should all api errors be exported here?
 
+export { type Client } from './client';
 export * from './client';
 export * from './services';
 export * from './util';
