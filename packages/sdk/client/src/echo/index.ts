@@ -2,7 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-export { type Echo, type PropertiesType, type PropertiesTypeProps, type Space } from '@dxos/client-protocol';
+export { SpaceId } from '@dxos/keys';
+export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
+export { getTypename, Expando, type TypedObject, type ObjectMeta, getSchema } from '@dxos/echo-schema';
+export {
+  type Live,
+  RefArray,
+  live,
+  getMeta,
+  getType,
+  isLiveObject,
+  compareForeignKeys,
+  makeRef,
+} from '@dxos/live-object';
 export {
   DocAccessor,
   type EchoDatabase,
@@ -21,8 +33,6 @@ export {
   createObject,
   createSubscription,
   defineObjectMigration,
-  DocAccessor,
-  Filter,
   fromCursor,
   getObjectCore,
   getRangeFromCursor,
@@ -30,35 +40,21 @@ export {
   hasType,
   isEchoObject,
   loadObjectReferences,
-  ResultFormat,
   toCursor,
   toCursorRange,
   updateText,
 } from '@dxos/echo-db';
-export { Expando, getSchema, getTypename, type ObjectMeta, type TypedObject } from '@dxos/echo-schema';
-export { SpaceId } from '@dxos/keys';
-export {
-  compareForeignKeys,
-  getMeta,
-  getType,
-  isLiveObject,
-  live,
-  makeRef,
-  RefArray,
-  type Live,
-} from '@dxos/live-object';
 
 // TODO(dmaretskyi): Remove this export.
 export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';
 
-export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
-export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-export { importSpace } from './import';
 export {
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
@@ -68,8 +64,9 @@ export {
   SpaceSchema,
   getSpace,
   isSpace,
-  OBJECT_ID_LENGTH,
+  fullyQualifiedId,
   parseFullyQualifiedId,
   parseId,
   randomQueueDxn,
 } from './util';
+export { importSpace } from './import';
