@@ -116,7 +116,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
     <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
       {members.slice(0, 3).map((member, i) => (
         <Tooltip.Root key={member.identity.identityKey.toHex()}>
-          <Tooltip.Trigger>
+          <Tooltip.Trigger className='grid focus:outline-none'>
             <PresenceAvatar
               identity={member.identity}
               match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
@@ -136,7 +136,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
 
       {members.length > 3 && (
         <Tooltip.Root>
-          <Tooltip.Trigger>
+          <Tooltip.Trigger className='grid focus:outline-none'>
             <Avatar.Root>
               {/* TODO(wittjosiah): Make text fit. */}
               <Avatar.Content
