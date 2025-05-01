@@ -5,22 +5,29 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   Capabilities,
   CollaborationActions,
   IntentPlugin,
+  type PluginMeta,
   SettingsPlugin,
   Surface,
   contributes,
   createIntent,
-  createSurface,
+  definePlugin,
+  useCapability,
   useIntentDispatcher,
+  Events,
+  defineModule,
+  createResolver,
+  LayoutAction,
+  defineCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { S, AST, create, type Expando, EchoObject, getSchema } from '@dxos/echo-schema';
+import { S, AST, create, type Expando, EchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
@@ -28,33 +35,155 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { type Client, resolveRef } from '@dxos/react-client';
-import { useClient } from '@dxos/react-client';
-import { type Space, createDocAccessor, getSpace, randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
+import { randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import {
-  type Extension,
-  type PreviewLinkRef,
-  type PreviewLinkTarget,
-  RefPopover,
-  automerge,
-  command,
-  preview,
-  useTextEditor,
-  useRefPopover,
-} from '@dxos/react-ui-editor';
-import { Form } from '@dxos/react-ui-form';
+import { command, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
-import { isNotFalsy } from '@dxos/util';
 
-import { MarkdownEditor } from './MarkdownEditor';
+import MarkdownContainer from './MarkdownContainer';
 import { MarkdownPlugin } from '../MarkdownPlugin';
+import { MarkdownCapabilities } from '../capabilities';
+import { MARKDOWN_PLUGIN } from '../meta';
 import translations from '../translations';
-import { createDocument, DocumentType } from '../types';
+import { createDocument, DocumentType, type MarkdownSettingsProps } from '../types';
 
 faker.seed(1);
+
+// TODO(wittjosiah): Factor out.
+//   Cannot go in storybook-utils because it creates a circular dependency.
+//   Cannot go in app-framework because it exports react-ui components.
+const layoutMeta: PluginMeta = {
+  id: 'dxos.org/plugin/storybook-layout',
+  name: 'Storybook Layout',
+};
+
+type LayoutState = {
+  popoverContent?: any;
+  popoverOpen?: boolean;
+  popoverSide?: 'top' | 'right' | 'bottom' | 'left';
+  popoverVariant?: 'virtual' | 'react';
+  popoverAnchor?: HTMLButtonElement;
+  popoverAnchorId?: string;
+};
+const LayoutState = defineCapability<LayoutState>('dxos.org/plugin/storybook-layout/state');
+
+const LayoutPlugin = () =>
+  definePlugin(layoutMeta, [
+    defineModule({
+      id: `${layoutMeta.id}/state`,
+      activatesOn: Events.Startup,
+      activate: () => {
+        const state = live<LayoutState>({});
+
+        const layout = live<Capabilities.Layout>({
+          get mode() {
+            return 'storybook';
+          },
+          get dialogOpen() {
+            return false;
+          },
+          get sidebarOpen() {
+            return false;
+          },
+          get complementarySidebarOpen() {
+            return false;
+          },
+          get workspace() {
+            return 'default';
+          },
+          get active() {
+            return [];
+          },
+          get inactive() {
+            return [];
+          },
+          get scrollIntoView() {
+            return undefined;
+          },
+        });
+
+        return [contributes(LayoutState, state), contributes(Capabilities.Layout, layout)];
+      },
+    }),
+    defineModule({
+      id: `${layoutMeta.id}/intent-resolver`,
+      activatesOn: Events.SetupIntentResolver,
+      activate: (context) =>
+        contributes(Capabilities.IntentResolver, [
+          createResolver({
+            intent: LayoutAction.UpdateLayout,
+            // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdatePopover.fields.input)`
+            //  but the filter is not being applied correctly.
+            filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
+              S.is(LayoutAction.UpdatePopover.fields.input)(data),
+            resolve: ({ subject, options }) => {
+              const layout = context.requestCapability(LayoutState);
+              layout.popoverContent =
+                typeof subject === 'string'
+                  ? { component: subject, props: options.props }
+                  : subject
+                    ? { subject }
+                    : undefined;
+              layout.popoverOpen = options.state ?? Boolean(subject);
+              layout.popoverSide = options.side;
+              layout.popoverVariant = options.variant;
+              if (options.variant === 'virtual') {
+                layout.popoverAnchor = options.anchor;
+              } else {
+                layout.popoverAnchorId = options.anchorId;
+              }
+            },
+          }),
+        ]),
+    }),
+    defineModule({
+      id: `${layoutMeta.id}/react-root`,
+      activatesOn: Events.Startup,
+      activate: () =>
+        contributes(Capabilities.ReactContext, {
+          id: 'storybook-layout',
+          context: ({ children }) => {
+            const trigger = useRef<HTMLButtonElement | null>(null);
+            const layout = useCapability(LayoutState);
+
+            useEffect(() => {
+              trigger.current = layout.popoverAnchor ?? null;
+            }, [layout.popoverAnchor]);
+
+            const handlePopoverOpenChange = useCallback(
+              (nextOpen: boolean) => {
+                if (nextOpen && layout.popoverAnchorId) {
+                  layout.popoverOpen = true;
+                } else {
+                  layout.popoverOpen = false;
+                  layout.popoverAnchorId = undefined;
+                  layout.popoverSide = undefined;
+                }
+              },
+              [layout],
+            );
+            const handlePopoverClose = useCallback(() => handlePopoverOpenChange(false), [handlePopoverOpenChange]);
+
+            return (
+              <Popover.Root open={layout.popoverOpen} onOpenChange={handlePopoverOpenChange}>
+                <Popover.VirtualTrigger virtualRef={trigger} />
+                <Popover.Portal>
+                  <Popover.Content side={layout.popoverSide} onEscapeKeyDown={handlePopoverClose}>
+                    <Popover.Viewport>
+                      <Surface role='popover' data={layout.popoverContent} limit={1} />
+                    </Popover.Viewport>
+                    <Popover.Arrow />
+                  </Popover.Content>
+                </Popover.Portal>
+                {children}
+              </Popover.Root>
+            );
+          },
+        }),
+    }),
+  ]);
 
 const TestItem = S.Struct({
   title: S.String.annotations({
@@ -66,34 +195,6 @@ const TestItem = S.Struct({
     [AST.DescriptionAnnotationId]: 'Product description',
   }),
 }).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
-
-const handlePreviewLookup = async (
-  client: Client,
-  defaultSpace: Space,
-  { ref, label }: PreviewLinkRef,
-): Promise<PreviewLinkTarget | null> => {
-  const dxn = DXN.parse(ref);
-  if (!dxn) {
-    return null;
-  }
-
-  const object = await resolveRef(client, dxn, defaultSpace);
-  return { label, object };
-};
-
-const PreviewCard = () => {
-  const { target } = useRefPopover('PreviewCard');
-  return (
-    <Popover.Content
-      onOpenAutoFocus={(event) => event.preventDefault()}
-      classNames='popover-max-width z-0'
-      collisionPadding={48}
-    >
-      <Popover.Viewport>{target?.object && <Surface role='preview' data={target.object} />}</Popover.Viewport>
-      <Popover.Arrow />
-    </Popover.Content>
-  );
-};
 
 const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -129,27 +230,10 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   );
 };
 
-const TestDocument: FC<{ doc: DocumentType }> = ({ doc }) => {
-  const client = useClient();
-  const extensions = useMemo<Extension[]>(() => {
-    const space = getSpace(doc);
-    return [
-      automerge(createDocAccessor(doc, ['content'])),
-      command(),
-      space &&
-        preview({
-          onLookup: (link) => handlePreviewLookup(client, space, link),
-        }),
-    ].filter(isNotFalsy);
-  }, [doc]);
-
-  return <MarkdownEditor id='document' initialValue={doc.content?.target?.content} extensions={extensions} toolbar />;
-};
-
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
-  const client = useClient();
   const space = useSpace();
   const [doc, setDoc] = useState<DocumentType>();
+  const settings = useCapability(Capabilities.SettingsStore).getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
 
   useEffect(() => {
     if (!space) {
@@ -177,11 +261,10 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   }
 
   return (
-    <RefPopover.Provider onLookup={(link) => handlePreviewLookup(client, space, link)}>
-      <TestDocument doc={doc} />
+    <>
+      <MarkdownContainer id={doc.id} object={doc} settings={settings} />
       <TestChat doc={doc} content={chat} />
-      <PreviewCard />
-    </RefPopover.Provider>
+    </>
   );
 };
 
@@ -192,6 +275,7 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
+        LayoutPlugin(),
         ClientPlugin({
           types: [DocumentType, TestItem],
           onClientInitialized: async (_, client) => {
@@ -203,23 +287,7 @@ const meta: Meta<typeof DefaultStory> = {
         IntentPlugin(),
         MarkdownPlugin(),
       ],
-      capabilities: [
-        contributes(
-          Capabilities.ReactSurface,
-          createSurface({
-            id: 'preview-test',
-            role: 'preview',
-            component: ({ data }) => {
-              const schema = getSchema(data);
-              if (!schema) {
-                return null;
-              }
-
-              return <Form schema={schema} values={data} />;
-            },
-          }),
-        ),
-      ],
+      capabilities: [contributes(MarkdownCapabilities.Extensions, [() => command()])],
     }),
     withLayout({ tooltips: true, fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],

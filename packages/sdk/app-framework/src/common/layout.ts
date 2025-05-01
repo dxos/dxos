@@ -108,7 +108,11 @@ export namespace LayoutAction {
   export class UpdatePopover extends S.TaggedClass<UpdatePopover>()(UPDATE_LAYOUT, {
     input: S.Struct({
       part: S.Literal('popover').annotations({ description: 'Updating the popover.' }),
-      subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the popover.' })),
+      subject: S.optional(
+        S.Any.annotations({
+          description: 'URI of the component to display in the popover or data to pass to the popover.',
+        }),
+      ),
       options: S.Struct({
         side: S.optional(
           S.Literal('top', 'right', 'bottom', 'left').annotations({ description: 'The side of the anchor.' }),
