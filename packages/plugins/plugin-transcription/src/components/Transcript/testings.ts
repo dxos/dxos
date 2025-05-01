@@ -24,6 +24,7 @@ export const TestItem = S.Struct({
   }),
 }).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
 
+// TODO(ZaymonFC): Generalize builder for enriched markdown.
 /**
  * Generator of transcript blocks.
  */

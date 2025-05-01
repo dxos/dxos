@@ -10,43 +10,24 @@ import React, { useMemo, useState } from 'react';
 
 import { IntentPlugin, Surface, SettingsPlugin, useCapability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ObjectId, create } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
+import { makeRef, refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { Filter, fullyQualifiedId, live, type Space, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { MessageType } from '@dxos/schema';
+import { ContactType, MessageType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
+import { initializeMailbox } from './testing';
 
 import { Mailbox } from './Mailbox';
 import { InboxPlugin } from '../../InboxPlugin';
 import { InboxCapabilities } from '../../capabilities/capabilities';
 import { createMessages } from '../../testing';
 import { MailboxType } from '../../types';
-
-const createMessage = () => {
-  return create(MessageType, {
-    created: faker.date.recent().toISOString(),
-    sender: {
-      email: faker.internet.email(),
-      name: faker.person.fullName(),
-    },
-    blocks: [{ type: 'text', text: faker.lorem.paragraphs(5) }],
-  });
-};
-
-const initializeMailbox = async (space: Space) => {
-  const queueDxn = new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]);
-  const queue = space.queues.get<MessageType>(queueDxn);
-  queue.append([...new Array(30)].map(createMessage));
-  const mailbox = live(MailboxType, { queue: refFromDXN(queueDxn) });
-  space.db.add(mailbox);
-  return mailbox;
-};
 
 const DefaultStory = () => {
   const [messages] = useState(() => createMessages(100));
@@ -82,7 +63,7 @@ export const WithCompanion = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [MailboxType, MessageType],
+          types: [MailboxType, MessageType, ContactType],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
