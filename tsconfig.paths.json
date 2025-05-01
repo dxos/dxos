@@ -4,11 +4,32 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dxos/compute": [
+        "packages/core/compute/src/index.ts"
+      ],
+      "@dxos/compute/testing": [
+        "packages/core/compute/src/testing/index.ts"
+      ],
       "@dxos/conductor": [
         "packages/core/conductor/src/index.ts"
       ],
       "@dxos/conductor/testing": [
         "packages/core/conductor/src/testing/index.ts"
+      ],
+      "@dxos/functions/bundler": [
+        "packages/core/functions/src/bundler/index.ts"
+      ],
+      "@dxos/functions/edge": [
+        "packages/core/functions/src/edge/index.ts"
+      ],
+      "@dxos/functions": [
+        "packages/core/functions/src/index.ts"
+      ],
+      "@dxos/functions/testing": [
+        "packages/core/functions/src/testing/index.ts"
+      ],
+      "@dxos/functions/types": [
+        "packages/core/functions/src/types/index.ts"
       ],
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"

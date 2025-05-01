@@ -46,7 +46,6 @@ while (true) {
       message: 'Enter a message:',
     },
   ]);
-  await client.appendMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
   await runLLM({
     model: DEFAULT_EDGE_MODEL,
@@ -61,6 +60,7 @@ while (true) {
       },
     ],
     client,
+    history: [createUserMessage(spaceId, threadId, prompt.message)],
     logger: createLogger({
       stream: true,
       filter: (e) => {
