@@ -12738,6 +12738,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       '@types/jsonpath':
         specifier: ^0.2.4
         version: 0.2.4

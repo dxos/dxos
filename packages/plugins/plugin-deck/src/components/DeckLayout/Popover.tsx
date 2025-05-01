@@ -19,6 +19,7 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
   //  the anchor further down the tree. Refactor to use VirtualTrigger or some other approach which does not cause a lag.
   const [delayedPopoverVisibility, setDelayedPopoverVisibility] = useState(false);
   useEffect(() => {
+    console.log('[popover open]');
     context.popoverOpen ? setTimeout(() => setDelayedPopoverVisibility(true), 40) : setDelayedPopoverVisibility(false);
   }, [context.popoverOpen]);
 
@@ -38,6 +39,7 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
 
   useEffect(() => {
     if (context.popoverAnchor) {
+      console.log('[got popoveranchor]', context);
       virtualRef.current = context.popoverAnchor as HTMLButtonElement;
     } else {
       virtualRef.current = null;
@@ -64,6 +66,8 @@ export const PopoverContent = () => {
     context.popoverAnchorId = undefined;
     context.popoverSide = undefined;
   }, [context]);
+
+  console.log('[rendering popover]', context.popoverContent, context.popoverAnchorId, context.popoverSide);
 
   return (
     <Popover.Portal>
