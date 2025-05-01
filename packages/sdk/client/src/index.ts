@@ -2,12 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Use "export *" and @internal to restrict exports.
-
 export { type ClientServices, type ClientServicesProvider, type ShellRuntime } from '@dxos/client-protocol';
 export { Config, Defaults, Dynamics, Envs, Local, Remote, Storage } from '@dxos/config';
 export { PublicKey, type PublicKeyLike } from '@dxos/keys';
-// TODO(wittjosiah): Should all api errors be exported here?
 export {
   AlreadyJoinedError,
   ApiError,
@@ -35,6 +32,9 @@ export {
   ShellDisplay,
   ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';
+
+// TODO(burdon): Use "export *" and @internal to restrict exports.
+// TODO(wittjosiah): Should all api errors be exported here?
 
 export * from './client';
 export * from './services';
