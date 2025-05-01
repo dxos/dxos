@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 
 import { Panel } from '@dxos/devtools';
-import { log } from '@dxos/log';
 import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
@@ -20,7 +19,6 @@ export type MeetingStatusDetailProps = ThemedClassName<{
 export const MeetingStatusDetail = ({ state }: MeetingStatusDetailProps) => {
   const users = state?.call?.users;
   const self = state?.call?.self;
-  log.info('users', { users, self });
   const { t } = useTranslation(MEETING_PLUGIN);
 
   const [open, setOpen] = useState(false);
