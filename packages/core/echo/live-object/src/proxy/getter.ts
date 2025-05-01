@@ -4,7 +4,6 @@
 
 import { type Reference } from '@dxos/echo-protocol';
 import { type BaseObject } from '@dxos/echo-schema';
-import { getSchema, SchemaMetaSymbol } from '@dxos/echo-schema';
 
 import { getProxyHandler } from './proxy';
 import { isLiveObject } from '../live';

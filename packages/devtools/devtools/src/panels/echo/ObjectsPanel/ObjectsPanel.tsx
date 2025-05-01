@@ -6,7 +6,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 
 import type { State as AmState } from '@dxos/automerge/automerge';
 import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
-import { FormatEnum, getSchemaVersion, getSchema } from '@dxos/echo-schema';
+import { FormatEnum, getSchemaVersion, getSchema, getTypename } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { getType, isDeleted } from '@dxos/live-object';
 import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
@@ -19,7 +19,6 @@ import { PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
-import { getTypename } from "@dxos/echo-schema";
 
 const textFilter = (text?: string) => {
   if (!text) {
