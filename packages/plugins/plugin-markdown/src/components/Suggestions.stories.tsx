@@ -20,7 +20,6 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { type Client } from '@dxos/client';
 import { S, AST, create, type Expando, EchoObject, getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -29,20 +28,20 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
+import { type Client, resolveRef } from '@dxos/react-client';
 import { useClient } from '@dxos/react-client';
-import { type Space, createDocAccessor, getSpace, useQueue, useSpace } from '@dxos/react-client/echo';
+import { type Space, createDocAccessor, getSpace, randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import {
+  type Extension,
   type PreviewLinkRef,
   type PreviewLinkTarget,
   RefPopover,
   automerge,
   command,
-  createRenderer,
   preview,
   useTextEditor,
   useRefPopover,
-  type Extension,
 } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -52,7 +51,8 @@ import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownEditor } from './MarkdownEditor';
 import { MarkdownPlugin } from '../MarkdownPlugin';
-import { createDocument, DocumentType, randomQueueDxn, resolveRef } from '../types';
+import translations from '../translations';
+import { createDocument, DocumentType } from '../types';
 
 faker.seed(1);
 
@@ -78,14 +78,7 @@ const handlePreviewLookup = async (
   }
 
   const object = await resolveRef(client, dxn, defaultSpace);
-  return {
-    label,
-    object,
-  };
-};
-
-const PreviewBlock = () => {
-  return <div>PreviewBlock</div>;
+  return { label, object };
 };
 
 const PreviewCard = () => {
@@ -127,8 +120,8 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   };
 
   return (
-    <StackItem.Content toolbar classNames='border-is border-separator'>
-      <Toolbar.Root>
+    <StackItem.Content toolbar classNames='w-full'>
+      <Toolbar.Root classNames='border-be border-separator'>
         <IconButton icon='ph--plus--regular' disabled={!queue} label='Insert' onClick={handleInsert} />
       </Toolbar.Root>
       <div ref={parentRef} className='p-4' />
@@ -145,7 +138,6 @@ const TestDocument: FC<{ doc: DocumentType }> = ({ doc }) => {
       command(),
       space &&
         preview({
-          renderBlock: createRenderer(PreviewBlock),
           onLookup: (link) => handlePreviewLookup(client, space, link),
         }),
     ].filter(isNotFalsy);
@@ -181,7 +173,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   }, [space]);
 
   if (!space || !doc) {
-    return <div>Loading...</div>;
+    return <></>;
   }
 
   return (
@@ -199,6 +191,7 @@ const meta: Meta<typeof DefaultStory> = {
   decorators: [
     withPluginManager({
       plugins: [
+        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [DocumentType, TestItem],
           onClientInitialized: async (_, client) => {
@@ -209,7 +202,6 @@ const meta: Meta<typeof DefaultStory> = {
         SettingsPlugin(),
         IntentPlugin(),
         MarkdownPlugin(),
-        ThemePlugin({ tx: defaultTx }),
       ],
       capabilities: [
         contributes(
@@ -231,6 +223,9 @@ const meta: Meta<typeof DefaultStory> = {
     }),
     withLayout({ tooltips: true, fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;

@@ -16,8 +16,6 @@ import {
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { isNonNullable } from '@dxos/util';
-
 import { type RenderCallback } from '../../types';
 
 export type PreviewLinkRef = {
@@ -57,7 +55,7 @@ export type PreviewRenderProps = {
 };
 
 export type PreviewOptions = {
-  renderBlock: RenderCallback<PreviewRenderProps>;
+  renderBlock?: RenderCallback<PreviewRenderProps>;
   onLookup: PreviewLookup;
 };
 
@@ -87,7 +85,7 @@ export const preview = (options: PreviewOptions): Extension => {
         border: '1px solid var(--dx-separator)',
       },
     }),
-  ].filter(isNonNullable);
+  ];
 };
 
 /**
@@ -146,7 +144,7 @@ const buildDecorations = (state: EditorState, options: PreviewOptions) => {
         //
         case 'Image': {
           const link = getLinkRef(state, node.node);
-          if (link) {
+          if (options.renderBlock && link) {
             builder.add(
               node.from,
               node.to,
@@ -257,7 +255,7 @@ class PreviewBlockWidget extends WidgetType {
       }
     };
 
-    this._options.renderBlock(
+    this._options.renderBlock!(
       root,
       {
         readonly: view.state.readOnly,
