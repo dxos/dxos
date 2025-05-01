@@ -4,8 +4,7 @@
 
 import { raise } from '@dxos/debug';
 import { type EchoDatabase, Filter, type ReactiveEchoObject } from '@dxos/echo-db';
-import { type S, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
-import { getSchema } from '@dxos/live-object';
+import { getSchema, getSchemaTypename, type S, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import type { DataSource, Node, Relationship } from './query-executor';
