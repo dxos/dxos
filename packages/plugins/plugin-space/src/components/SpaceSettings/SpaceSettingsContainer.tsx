@@ -11,7 +11,14 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { useClient } from '@dxos/react-client';
 import { SpaceState, type Space } from '@dxos/react-client/echo';
 import { Button, Input, useMulticastObservable, useTranslation } from '@dxos/react-ui';
-import { Form, type InputComponent, ControlItem, ControlItemInput, ControlSection } from '@dxos/react-ui-form';
+import {
+  Form,
+  type InputComponent,
+  ControlItem,
+  ControlItemInput,
+  ControlSection,
+  ControlPage,
+} from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -153,20 +160,22 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto'>
-      <ControlSection
-        title={t('space properties settings verbose label', { ns: SPACE_PLUGIN })}
-        description={t('space properties settings description', { ns: SPACE_PLUGIN })}
-      >
-        <Form
-          schema={FormSchema}
-          values={values}
-          autoSave
-          onSave={handleSave}
-          Custom={customElements}
-          classNames='p-0 container-max-width [&_[role="form"]]:grid [&_[role="form"]]:grid-cols-1 md:[&_[role="form"]]:grid-cols-[1fr_min-content] [&_[role="form"]]:gap-4'
-        />
-      </ControlSection>
+    <StackItem.Content classNames='block overflow-y-auto pli-2'>
+      <ControlPage>
+        <ControlSection
+          title={t('space properties settings verbose label', { ns: SPACE_PLUGIN })}
+          description={t('space properties settings description', { ns: SPACE_PLUGIN })}
+        >
+          <Form
+            schema={FormSchema}
+            values={values}
+            autoSave
+            onSave={handleSave}
+            Custom={customElements}
+            classNames='p-0 container-max-width [&_[role="form"]]:grid [&_[role="form"]]:grid-cols-1 md:[&_[role="form"]]:grid-cols-[1fr_min-content] [&_[role="form"]]:gap-4'
+          />
+        </ControlSection>
+      </ControlPage>
     </StackItem.Content>
   );
 };

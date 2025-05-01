@@ -24,6 +24,8 @@ export default [
         'feedback text area label': 'Feedback',
         'feedback text area placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'send feedback label': 'Send Feedback',
+        'feedback toast label': 'Thank you for your feedback!',
+        'feedback toast description': 'We will review your feedback and get back to you as soon as possible.',
       },
     },
   },
