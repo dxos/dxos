@@ -240,7 +240,7 @@ export class Transcriber extends Resource {
 
     // Add absolute timestamp to each segment.
     return filteredSegments.map((segment) => ({
-      started: new Date(zeroTimestamp + segment.start * 1_000),
+      started: new Date(zeroTimestamp + segment.start * 1_000).toISOString(),
       text: segment.text,
     }));
   }

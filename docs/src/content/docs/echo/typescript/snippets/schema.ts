@@ -9,4 +9,4 @@ import { EchoObject } from '@dxos/echo-schema';
 export const TaskType = S.Struct({
   name: S.String,
   completed: S.optional(S.Boolean),
-}).pipe(EchoObject('dxos.org/type/Task', '0.1.0'));
+}).pipe(EchoObject({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
