@@ -6,12 +6,16 @@ import React, { useEffect, useState } from 'react';
 
 import { Context } from '@dxos/context';
 
+import type { Space } from '@dxos/client/echo';
+import type { SpaceSyncState } from '@dxos/echo-db';
 import { JsonView } from '../../../components';
-import { useDevtoolsState } from '../../../hooks';
 
-export const SyncStateInfo = () => {
-  const { space } = useDevtoolsState();
-  const [syncState, setSyncState] = useState({});
+interface SyncStateInfoProps {
+  space: Space;
+}
+
+export const SyncStateInfo = ({ space }: SyncStateInfoProps) => {
+  const [syncState, setSyncState] = useState<SpaceSyncState>({});
 
   useEffect(() => {
     if (space) {
