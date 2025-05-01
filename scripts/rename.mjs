@@ -1,9 +1,44 @@
 #!/usr/bin/env node
 
+/**
+ * Symbol Renaming Script
+ *
+ * This script renames TypeScript import symbols across the entire monorepo.
+ * It updates both the imported symbol name and its package source, creating
+ * separate import statements when necessary.
+ *
+ * Usage:
+ *   ./scripts/rename.mjs --rename=oldPackage#oldSymbol:newPackage#newSymbol
+ *
+ * Multiple renames can be specified:
+ *   ./scripts/rename.mjs \
+ *     --rename=pkg-a#foo:pkg-b#bar \
+ *     --rename=pkg-x#old:pkg-y#new
+ *
+ * Examples:
+ *
+ * 1. Basic symbol rename:
+ *    Input:  import { foo } from 'pkg-a';
+ *    Command: ./scripts/rename.mjs --rename=pkg-a#foo:pkg-b#bar
+ *    Output: import { bar } from 'pkg-b';
+ *
+ * 2. Preserving other imports:
+ *    Input:  import { foo, other } from 'pkg-a';
+ *    Command: ./scripts/rename.mjs --rename=pkg-a#foo:pkg-b#bar
+ *    Output: import { other } from 'pkg-a';
+ *            import { bar } from 'pkg-b';
+ *
+ * Features:
+ * - Processes all .ts and .tsx files in the monorepo
+ * - Respects .gitignore
+ * - Preserves other imports in the same import statement
+ * - Only modifies files that contain the exact symbol to be renamed
+ * - Creates separate import statements for renamed symbols
+ */
+
 import { Project, ts } from 'ts-morph';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import path from 'path';
 import { globby } from 'globby';
 import fs from 'fs/promises';
 import chalk from 'chalk';
@@ -16,19 +51,8 @@ const argv = yargs(hideBin(process.argv))
     type: 'string',
     demandOption: true,
   })
-  .option('verbose', {
-    type: 'boolean',
-    default: false,
-    description: 'Show detailed logs',
-  })
   .help()
   .parse();
-
-function log(...args) {
-  if (argv.verbose) {
-    console.log(...args);
-  }
-}
 
 // Parse rename mappings
 const renameMappings = argv.rename.map((mapping) => {
@@ -66,56 +90,29 @@ for (const filePath of tsFiles) {
   // Process each import declaration
   sourceFile.getImportDeclarations().forEach((importDecl) => {
     const moduleSpecifier = importDecl.getModuleSpecifierValue();
-    log(`Checking imports in ${filePath} from ${moduleSpecifier}`);
 
     // Check each rename mapping
     for (const mapping of renameMappings) {
       if (moduleSpecifier === mapping.fromPackage) {
-        log(`Found matching package ${mapping.fromPackage}`);
+        // Find matching named imports
         const namedImports = importDecl.getNamedImports();
+        const matchingImport = namedImports.find((imp) => imp.getName() === mapping.fromSymbol);
 
-        // Find and rename matching imports
-        namedImports.forEach((namedImport) => {
-          const importName = namedImport.getName();
-          const importAlias = namedImport.getAliasNode()?.getText();
+        if (matchingImport) {
+          // Remove the old import
+          matchingImport.remove();
 
-          log(`Checking import ${importName}${importAlias ? ` as ${importAlias}` : ''}`);
-
-          if (importName === mapping.fromSymbol) {
-            log(`Found matching symbol ${mapping.fromSymbol}`);
-
-            // Update the import name
-            if (mapping.fromSymbol !== mapping.toSymbol) {
-              namedImport.setName(mapping.toSymbol);
-              log(`Renamed import from ${mapping.fromSymbol} to ${mapping.toSymbol}`);
-            }
-
-            // Get the local name (either the alias or the original name)
-            const localName = importAlias || importName;
-
-            // Find all identifiers in the file
-            sourceFile.getDescendants().forEach((node) => {
-              if (ts.isIdentifier(node.compilerNode)) {
-                const identifier = node.asKind(ts.SyntaxKind.Identifier);
-                if (identifier && identifier.getText() === localName) {
-                  // Make sure this identifier is not part of the import declaration
-                  if (!ts.isImportSpecifier(identifier.getParent()?.compilerNode)) {
-                    identifier.replaceWithText(mapping.toSymbol);
-                    log(`Renamed usage of ${localName} to ${mapping.toSymbol}`);
-                    hasChanges = true;
-                  }
-                }
-              }
-            });
-
-            hasChanges = true;
+          // If this was the only import, remove the entire declaration
+          if (namedImports.length === 1) {
+            importDecl.remove();
           }
-        });
 
-        // Update package name if different
-        if (mapping.fromPackage !== mapping.toPackage) {
-          importDecl.setModuleSpecifier(mapping.toPackage);
-          log(`Updated import from ${mapping.fromPackage} to ${mapping.toPackage}`);
+          // Add a new import declaration for the renamed symbol
+          sourceFile.addImportDeclaration({
+            moduleSpecifier: mapping.toPackage,
+            namedImports: [{ name: mapping.toSymbol }],
+          });
+
           hasChanges = true;
         }
       }
