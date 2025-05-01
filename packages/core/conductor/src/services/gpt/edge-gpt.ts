@@ -162,7 +162,7 @@ const generate = async (
   generationRequest: GenerateRequest,
   { abort }: { abort?: AbortSignal } = {},
 ): Promise<GenerateResult> => {
-  const stream = await ai.exec(generationRequest);
+  const stream = await ai.execStream(generationRequest);
   const parser = new MixedStreamParser();
   const resultIterable = makePushIterable<GenerationStreamEvent>();
 

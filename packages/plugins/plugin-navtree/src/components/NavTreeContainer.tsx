@@ -59,7 +59,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
   const layout = useLayout();
-  const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
+  const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
@@ -68,7 +68,10 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       return graph.nodes(node ?? graph.root, {
         filter: (node): node is Node => {
           return untracked(() => {
-            if (node.properties.disposition === 'hidden') {
+            if (
+              !disposition &&
+              (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')
+            ) {
               return false;
             } else if (!disposition) {
               const action = isAction(node);
@@ -262,6 +265,13 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     });
   }, [graph]);
 
+  const setAlternateTree = useCallback(
+    (path: string[], open: boolean) => {
+      setItem(path, 'alternateTree', open);
+    },
+    [setItem],
+  );
+
   const navTreeContextValue = useMemo(
     () => ({
       tab,
@@ -279,6 +289,8 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       onOpenChange,
       canDrop,
       onSelect: handleSelect,
+      isAlternateTree,
+      setAlternateTree,
     }),
     [
       tab,
@@ -296,6 +308,8 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       onOpenChange,
       canDrop,
       handleSelect,
+      isAlternateTree,
+      setAlternateTree,
     ],
   );
 

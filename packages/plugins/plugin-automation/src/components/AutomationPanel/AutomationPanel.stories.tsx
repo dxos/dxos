@@ -21,7 +21,7 @@ const DefaultStory = () => {
   const space = spaces[1];
 
   return (
-    <div role='none' className='flex w-[350px] border border-separator overflow-hidden'>
+    <div role='none' className='w-96'>
       <AutomationPanel space={space} />
     </div>
   );
@@ -42,7 +42,7 @@ const meta: Meta = {
         }
       },
     }),
-    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center m-2' }),
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex juastify-center m-2' }),
     withTheme,
   ],
   parameters: {

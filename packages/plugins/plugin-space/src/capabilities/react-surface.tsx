@@ -2,20 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import { type Schema as S } from 'effect';
+import React, { useCallback } from 'react';
 
-import { Capabilities, contributes, createSurface, Surface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, Surface, useCapability, useLayout } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
+import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import {
   getSpace,
   isEchoObject,
   isLiveObject,
   isSpace,
+  parseId,
   SpaceState,
+  useSpace,
   type ReactiveEchoObject,
   type Space,
 } from '@dxos/react-client/echo';
+import { Input } from '@dxos/react-ui';
+import { type InputProps } from '@dxos/react-ui-form';
+import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { SpaceCapabilities } from './capabilities';
@@ -41,13 +48,13 @@ import {
   type CreateObjectDialogProps,
   POPOVER_ADD_SPACE,
   PopoverAddSpace,
-  SpaceSettingsContainer,
-  SpacePropertiesForm,
   MembersContainer,
   ObjectSettingsContainer,
+  SpaceSettingsContainer,
+  SchemaContainer,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
-import { CollectionType, type SpaceSettingsProps } from '../types';
+import { CollectionType, HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -77,20 +84,11 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/members`,
+      id: `${SPACE_PLUGIN}/plugin-settings`,
       role: 'article',
-      position: 'hoist',
-      filter: (data): data is { subject: Space; variant: 'members' } =>
-        isSpace(data.subject) && data.variant === 'members',
-      component: ({ data }) => <MembersContainer space={data.subject} createInvitationUrl={createInvitationUrl} />,
-    }),
-    createSurface({
-      id: `${SPACE_PLUGIN}/settings`,
-      role: 'article',
-      position: 'hoist',
-      filter: (data): data is { subject: Space; variant: 'settings' } =>
-        isSpace(data.subject) && data.variant === 'settings',
-      component: ({ data }) => <SpaceSettingsContainer space={data.subject} />,
+      filter: (data): data is { subject: SettingsStore<SpaceSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === SPACE_PLUGIN,
+      component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/companion/object-settings`,
@@ -100,10 +98,50 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/space-settings--properties`,
-      role: 'space-settings--properties',
-      filter: (data): data is { subject: Space } => isSpace(data.subject),
-      component: ({ data }) => <SpacePropertiesForm space={data.subject} />,
+      id: `${SPACE_PLUGIN}/space-settings-properties`,
+      role: 'article',
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/properties`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <SpaceSettingsContainer space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/space-settings-members`,
+      role: 'article',
+      position: 'hoist',
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/members`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <MembersContainer space={space} createInvitationUrl={createInvitationUrl} />;
+      },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/space-settings-schema`,
+      role: 'article',
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/schema`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <SchemaContainer space={space} />;
+      },
     }),
     createSurface({
       id: JOIN_DIALOG,
@@ -124,6 +162,44 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <CreateObjectDialog {...data.props} />,
     }),
     createSurface({
+      id: `${SPACE_PLUGIN}/create-initial-space-form-[hue]`,
+      role: 'form-input',
+      filter: (data): data is { prop: string; schema: S.Schema<any> } => {
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, HueAnnotationId);
+        return !!annotation;
+      },
+      component: ({ data: _, ...inputProps }) => {
+        const { label, disabled, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange]);
+        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
+        return (
+          <Input.Root>
+            <Input.Label>{label}</Input.Label>
+            <HuePicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
+          </Input.Root>
+        );
+      },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/create-initial-space-form-[icon]`,
+      role: 'form-input',
+      filter: (data): data is { prop: string; schema: S.Schema<any> } => {
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, IconAnnotationId);
+        return !!annotation;
+      },
+      component: ({ data: _, ...inputProps }) => {
+        const { label, disabled, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const handleChange = useCallback((nextIcon: string) => onValueChange(type, nextIcon), [onValueChange]);
+        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
+        return (
+          <Input.Root>
+            <Input.Label>{label}</Input.Label>
+            <IconPicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
+          </Input.Root>
+        );
+      },
+    }),
+    createSurface({
       id: POPOVER_RENAME_SPACE,
       role: 'popover',
       filter: (data): data is { props: Space } => data.component === POPOVER_RENAME_SPACE && isSpace(data.props),
@@ -141,6 +217,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'popover',
       filter: (data): data is any => data.component === POPOVER_ADD_SPACE,
       component: () => <PopoverAddSpace />,
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/menu-footer`,
+      role: 'menu-footer',
+      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+      component: ({ data }) => <MenuFooter object={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-presence`,
@@ -190,19 +272,6 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'section',
       filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
       component: ({ data }) => <CollectionSection collection={data.subject} />,
-    }),
-    createSurface({
-      id: `${SPACE_PLUGIN}/plugin-settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<SpaceSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === SPACE_PLUGIN,
-      component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: `${SPACE_PLUGIN}/menu-footer`,
-      role: 'menu-footer',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <MenuFooter object={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/status`,

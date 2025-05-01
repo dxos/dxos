@@ -35,6 +35,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../experimental/assistant"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

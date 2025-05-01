@@ -18,10 +18,10 @@ import { invariant } from '@dxos/invariant';
 import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { isSpace, getSpace, SpaceState, type Space, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { isSpace, getSpace, SpaceState, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { SpaceCapabilities } from './capabilities';
 import {
@@ -67,9 +67,9 @@ export default ({ context, observability }: IntentResolverOptions) => {
     }),
     createResolver({
       intent: SpaceAction.Create,
-      resolve: async ({ name, edgeReplication }) => {
+      resolve: async ({ name, hue, icon, edgeReplication }) => {
         const client = context.requestCapability(ClientCapabilities.Client);
-        const space = await client.spaces.create({ name });
+        const space = await client.spaces.create({ name, hue, icon });
         if (edgeReplication) {
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
@@ -122,10 +122,9 @@ export default ({ context, observability }: IntentResolverOptions) => {
     }),
     createResolver({
       intent: SpaceAction.Share,
-      filter: (data): data is { space: Space } => !data.space.properties[COMPOSER_SPACE_LOCK],
       resolve: ({ space }) => {
         const layout = context.requestCapability(Capabilities.Layout);
-        const id = `${space.id}${ATTENDABLE_PATH_SEPARATOR}members`;
+        const id = `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
         if (layout.active.includes(id)) {
           return {
             intents: [
@@ -146,10 +145,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
               }),
               chain(LayoutAction.Open, {
                 part: 'main',
-                subject: [space.id],
-                options: {
-                  variant: 'members',
-                },
+                subject: [id],
               }),
             ),
             ...(observability
@@ -244,7 +240,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
       intent: SpaceAction.OpenSettings,
       resolve: ({ space }) => {
         const layout = context.requestCapability(Capabilities.Layout);
-        const id = `${space.id}${ATTENDABLE_PATH_SEPARATOR}settings`;
+        const id = `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
         if (layout.active.includes(id)) {
           return {
             intents: [
@@ -265,10 +261,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
               }),
               chain(LayoutAction.Open, {
                 part: 'main',
-                subject: [space.id],
-                options: {
-                  variant: 'settings',
-                },
+                subject: [id],
               }),
             ),
           ],

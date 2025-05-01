@@ -86,6 +86,11 @@ export class CallManager extends Resource {
   }
 
   /** @reactive */
+  get state() {
+    return this._state;
+  }
+
+  /** @reactive */
   getVideoStream(name?: EncodedTrackName): MediaStream | undefined {
     return name ? this._state.media.pulledVideoStreams[name]?.stream : undefined;
   }
@@ -186,8 +191,8 @@ export class CallManager extends Resource {
 
   @synchronized
   async leave() {
-    await this._swarmSynchronizer.leave();
     this._swarmSynchronizer.setJoined(false);
+    await this._swarmSynchronizer.leave();
     await this._mediaManager.leave();
   }
 

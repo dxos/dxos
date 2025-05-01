@@ -4,15 +4,19 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework';
 
+import { DeckCapabilities } from '../../capabilities';
+import { getMode } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { ToggleSidebarButton } from '../Sidebar';
 import { fixedSidebarToggleStyles } from '../fragments';
 
 export const ContentEmpty = () => {
   const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint);
+  const { deck } = useCapability(DeckCapabilities.MutableDeckState);
+  const layoutMode = getMode(deck);
+  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   return (
     <div
       role='none'

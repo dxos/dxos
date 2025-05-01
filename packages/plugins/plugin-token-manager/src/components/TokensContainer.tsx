@@ -9,7 +9,7 @@ import { isInstanceOf, S } from '@dxos/echo-schema';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { live, Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
-import { ControlItem, controlItemClasses, Form } from '@dxos/react-ui-form';
+import { ControlItem, controlItemClasses, ControlPage, ControlSection, Form } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { AccessTokenSchema, AccessTokenType } from '@dxos/schema';
 
@@ -62,23 +62,30 @@ export const TokensContainer = ({ space }: { space: Space }) => {
 
   return (
     <StackItem.Content classNames='block overflow-y-auto'>
-      {adding ? (
-        <ControlItem title={t('new integration label')}>
-          <Form
-            classNames='p-0'
-            schema={FormSchema}
-            values={initialValues}
-            onCancel={handleCancel}
-            onSave={handleAdd}
-          />
-        </ControlItem>
-      ) : (
-        <div role='none' className={controlItemClasses}>
-          <TokenManager tokens={tokens} onDelete={handleDelete} />
-          {tokens.length > 0 && <Separator classNames='mlb-4' />}
-          <NewTokenSelector space={space} onAddAccessToken={handleAddAccessToken} onCustomToken={handleNew} />
-        </div>
-      )}
+      <ControlPage>
+        <ControlSection
+          title={t('integrations verbose label', { ns: TOKEN_MANAGER_PLUGIN })}
+          description={t('integrations description', { ns: TOKEN_MANAGER_PLUGIN })}
+        >
+          {adding ? (
+            <ControlItem title={t('new integration label')}>
+              <Form
+                classNames='p-0'
+                schema={FormSchema}
+                values={initialValues}
+                onCancel={handleCancel}
+                onSave={handleAdd}
+              />
+            </ControlItem>
+          ) : (
+            <div role='none' className={controlItemClasses}>
+              <TokenManager tokens={tokens} onDelete={handleDelete} />
+              {tokens.length > 0 && <Separator classNames='mlb-4' />}
+              <NewTokenSelector space={space} onAddAccessToken={handleAddAccessToken} onCustomToken={handleNew} />
+            </div>
+          )}
+        </ControlSection>
+      </ControlPage>
     </StackItem.Content>
   );
 };

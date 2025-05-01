@@ -13,13 +13,14 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { parseEntryId } from '../../layout';
 import { DECK_PLUGIN } from '../../meta';
-import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart } from '../../types';
+import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart, type LayoutMode } from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 export type PlankHeadingProps = {
   id: string;
   part: ResolvedPart;
+  layoutMode?: LayoutMode;
   node?: Node;
   deckEnabled?: boolean;
   canIncrementStart?: boolean;
@@ -45,6 +46,7 @@ export const PlankHeading = memo(
     pending,
     companioned,
     companions,
+    layoutMode,
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
@@ -96,7 +98,7 @@ export const PlankHeading = memo(
 
     const handlePlankAction = useCallback(
       (eventType: DeckAction.PartAdjustment) => {
-        if (eventType === 'solo') {
+        if (eventType.startsWith('solo')) {
           return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
         } else if (eventType === 'close') {
           if (part === 'complementary') {
@@ -139,7 +141,7 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 layout-contain',
+          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
           part === 'solo' ? soloInlinePadding : 'pli-1',
         ]}
       >
@@ -196,7 +198,7 @@ export const PlankHeading = memo(
         ) : (
           <PlankControls
             capabilities={capabilities}
-            isSolo={part === 'solo'}
+            layoutMode={layoutMode}
             close={part === 'complementary' ? 'minify-end' : true}
             onClick={handlePlankAction}
           />

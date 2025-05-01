@@ -10,9 +10,9 @@ import { EchoObject, Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 export const TranscriptSchema = S.Struct({
   name: S.String,
 
-  // TODO(burdon): Use string for dates?
-  started: S.optional(S.Date),
-  ended: S.optional(S.Date),
+  // TODO(burdon): Use Date or string?
+  started: S.optional(S.String),
+  ended: S.optional(S.String),
 
   /**
    * Queue containing TranscriptBlock objects.
@@ -33,7 +33,7 @@ export class TranscriptType extends TypedObject({
  * Contains metadata for the recording and transcript.
  */
 const TranscriptHeader = S.Struct({
-  started: S.optional(S.Date),
+  started: S.optional(S.String),
 });
 
 export type TranscriptHeader = S.Schema.Type<typeof TranscriptHeader>;
@@ -43,7 +43,7 @@ export type TranscriptHeader = S.Schema.Type<typeof TranscriptHeader>;
  */
 const TranscriptSegment = S.Struct({
   // TODO(burdon): TS from service is not Unix TS (x1000).
-  started: S.Date,
+  started: S.String,
   text: S.String,
 });
 
@@ -54,8 +54,8 @@ export type TranscriptSegment = S.Schema.Type<typeof TranscriptSegment>;
  */
 export const TranscriptBlock = S.Struct({
   id: S.String,
-  authorName: S.optional(S.String), // TODO(burdon): IdentityDid.
-  authorHue: S.optional(S.String),
+  authorName: S.optional(S.String), // TODO(burdon): Replace with identityDid.
+  authorHue: S.optional(S.String), // TOOD(burdon): Remove.
   segments: S.Array(TranscriptSegment),
 }).pipe(EchoObject({ typename: 'dxos.org/type/TranscriptBlock', version: '0.1.0' }));
 

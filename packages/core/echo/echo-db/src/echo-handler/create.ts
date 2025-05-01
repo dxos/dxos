@@ -3,6 +3,7 @@
 //
 
 import { Reference } from '@dxos/echo-protocol';
+import { getSchema } from '@dxos/echo-schema';
 import {
   type BaseObject,
   getTypeAnnotation,
@@ -20,15 +21,7 @@ import {
 } from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getRefSavedTarget, type Live } from '@dxos/live-object';
-import {
-  createProxy,
-  getMeta,
-  getProxyHandler,
-  getProxySlot,
-  getProxyTarget,
-  getSchema,
-  isLiveObject,
-} from '@dxos/live-object';
+import { createProxy, getMeta, getProxyHandler, getProxySlot, getProxyTarget, isLiveObject } from '@dxos/live-object';
 import { deepMapValues } from '@dxos/util';
 
 import { DATA_NAMESPACE, EchoReactiveHandler, isRootDataObject, PROPERTY_ID, throwIfCustomClass } from './echo-handler';

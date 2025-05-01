@@ -12,7 +12,6 @@ Before responding, explain your reasoning and include your detailed chain-of-tho
 
 Include the following steps:
 
-
 - Analyze the structure and type of the content in the user's message.
 - Can you complete the task using the available artifact definitions?
 - If you can't complete the task using the available artifact definitions, query the list of available artifact definitions using the appropriate tool.

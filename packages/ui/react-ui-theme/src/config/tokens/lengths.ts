@@ -16,6 +16,35 @@ export const lengthsFacet = {
           slope: 1,
         },
       },
+    },
+  } satisfies LinearPhysicalLayer,
+
+  semantic: {
+    namespace: 'dx-',
+    conditions: { root: [':root'] },
+    sememes: {
+      noLine: { root: ['line', 0] },
+      hairLine: { root: ['line', 1] },
+      thickLine: { root: ['line', 2] },
+    },
+  },
+
+  alias: {
+    namespace: 'dx-',
+    conditions: { root: [':root'] },
+    aliases: {
+      noLine: { root: ['focusOffset'] },
+      hairLine: { root: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
+      thickLine: { root: ['focusLine'] },
+    },
+  },
+} satisfies Facet;
+
+export const maxSizesFacet = {
+  physical: {
+    namespace: 'dx-',
+    conditions: { root: [':root'] },
+    series: {
       size: {
         root: {
           unit: 'rem',
@@ -30,21 +59,9 @@ export const lengthsFacet = {
     namespace: 'dx-',
     conditions: { root: [':root'] },
     sememes: {
-      noLine: { root: ['line', 0] },
-      hairLine: { root: ['line', 1] },
-      thickLine: { root: ['line', 2] },
       prose: { root: ['size', 5] },
       containerMaxWidth: { root: ['size', 5] },
-    },
-  },
-
-  alias: {
-    namespace: 'dx-',
-    conditions: { root: [':root'] },
-    aliases: {
-      noLine: { root: ['focusOffset'] },
-      hairLine: { root: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
-      thickLine: { root: ['focusLine'] },
+      popoverMaxWidth: { root: ['size', 2] },
     },
   },
 } satisfies Facet;

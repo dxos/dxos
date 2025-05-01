@@ -16,8 +16,9 @@ import {
   type TypeAnnotation,
   EntityKind,
 } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
-import { getSchema, getType, live, makeRef } from '@dxos/live-object';
+import { getType, live, makeRef } from '@dxos/live-object';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';

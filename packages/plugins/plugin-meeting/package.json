@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-meeting",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Video calls plugin for DXOS Composer",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,6 +40,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/devtools": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -58,6 +59,7 @@
     "@dxos/react-edge-client": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

@@ -1,17 +1,17 @@
-// TODO(burdon): Factor out to spaces.
 //
 // Copyright 2023 DXOS.org
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { getDatabaseFromObject, isEchoObject, type ReactiveEchoObject } from '@dxos/echo-db';
-import { type ObjectId, S } from '@dxos/echo-schema';
+import { type SpaceSyncState, type ReactiveEchoObject, getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
+import { ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
+import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { isLiveObject, type Live } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
 
+// TODO(burdon): Move to @dxos/keys.
 export const SPACE_ID_LENGTH = 33;
 export const OBJECT_ID_LENGTH = 26;
 export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
@@ -83,3 +83,36 @@ export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId }
     return {};
   }
 };
+
+//
+// EDGE Sync State
+//
+
+export type Progress = { count: number; total: number };
+
+export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
+
+export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
+
+export const createEmptyEdgeSyncState = (): PeerSyncState => ({
+  missingOnLocal: 0,
+  missingOnRemote: 0,
+  localDocumentCount: 0,
+  remoteDocumentCount: 0,
+  differentDocuments: 0,
+});
+
+export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState => {
+  return Object.entries(syncMap).reduce<PeerSyncState>((summary, [_spaceId, peerState]) => {
+    summary.missingOnLocal += peerState.missingOnLocal;
+    summary.missingOnRemote += peerState.missingOnRemote;
+    summary.localDocumentCount += peerState.localDocumentCount;
+    summary.remoteDocumentCount += peerState.remoteDocumentCount;
+    summary.differentDocuments += peerState.differentDocuments;
+    return summary;
+  }, createEmptyEdgeSyncState());
+};
+
+// TODO(burdon): Factor out.
+export const randomQueueDxn = (spaceId?: SpaceId) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId ?? SpaceId.random(), ObjectId.random()]);

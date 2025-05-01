@@ -16,30 +16,30 @@ import {
   type PluginsContext,
 } from '@dxos/app-framework';
 import {
+  AutomergePanel,
   ConfigPanel,
   CredentialsPanel,
   DeviceListPanel,
   DiagnosticsPanel,
+  EdgeDashboardPanel,
   FeedsPanel,
   IdentityPanel,
+  InvocationTracePanel,
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
   MetadataPanel,
   NetworkPanel,
   ObjectsPanel,
+  QueuesPanel,
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
   StoragePanel,
   SwarmPanel,
-  TracingPanel,
-  EdgeDashboardPanel,
-  AutomergePanel,
-  WorkflowPanel,
-  QueuesPanel,
-  InvocationTracePanel,
   TestingPanel,
+  TracingPanel,
+  WorkflowPanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -57,7 +57,15 @@ import {
   parseId,
 } from '@dxos/react-client/echo';
 
-import { DebugApp, DebugObjectPanel, DebugSettings, DebugStatus, SpaceGenerator, Wireframe } from '../components';
+import {
+  DebugApp,
+  DebugObjectPanel,
+  DebugSettings,
+  DebugStatus,
+  DevtoolsOverviewContainer,
+  SpaceGenerator,
+  Wireframe,
+} from '../components';
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps, Devtools } from '../types';
 
@@ -146,6 +154,11 @@ export default (context: PluginsContext) =>
       filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
         data.subject === 'debug' && isEchoObject(data.companionTo),
       component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/devtools-overview`,
+      role: 'deck-companion--devtools',
+      component: () => <DevtoolsOverviewContainer />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,

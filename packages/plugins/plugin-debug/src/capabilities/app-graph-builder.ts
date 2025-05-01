@@ -3,10 +3,11 @@
 //
 
 import { contributes, Capabilities, type PluginsContext } from '@dxos/app-framework';
-import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
-import { CollectionType } from '@dxos/plugin-space/types';
-import { isEchoObject, isSpace, type ReactiveEchoObject, SpaceState, type Space } from '@dxos/react-client/echo';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { createExtension, type Node } from '@dxos/plugin-graph';
+import { SPACE_PLUGIN } from '@dxos/plugin-space';
+import { isEchoObject, type ReactiveEchoObject, parseId } from '@dxos/react-client/echo';
 
 import { DEBUG_PLUGIN } from '../meta';
 import { Devtools } from '../types';
@@ -18,43 +19,31 @@ export default (context: PluginsContext) =>
     // Devtools node.
     createExtension({
       id: 'dxos.org/plugin/debug/devtools',
-      filter: (node): node is Node<null | Space> => node.id === 'root' || isSpace(node.data),
+      filter: (node): node is Node<null> => node.id === 'root' || node.type === `${SPACE_PLUGIN}/settings`,
       connector: ({ node }) => {
-        const space = node.data;
-        const state = toSignal(
-          (onChange) => space?.state.subscribe(() => onChange()).unsubscribe ?? (() => {}),
-          () => space?.state.get(),
-          space?.id,
-        );
-        if (node.id !== 'root' && state !== SpaceState.SPACE_READY) {
-          return;
-        }
-
-        // Not adding the debug node until the root collection is available aligns the behaviour of this
-        // extension with that of the space plugin adding objects. This ensures that the debug node is added at
-        // the same time as objects and prevents order from changing as the nodes are added.
-        const collection = space?.properties[CollectionType.typename]?.target as CollectionType | undefined;
-        if (node.id !== 'root' && !collection) {
-          return;
-        }
+        const layout = context.requestCapability(Capabilities.Layout);
+        const client = context.requestCapability(ClientCapabilities.Client);
+        const { spaceId } = parseId(layout.workspace);
+        const space = spaceId && client.spaces.get(spaceId);
 
         return [
           {
-            id: `${node.id}-${Devtools.id}`,
+            id: `${Devtools.id}-${node.id}`,
             data: null,
             type: DEVTOOLS_TYPE,
             properties: {
               label: ['devtools label', { ns: DEBUG_PLUGIN }],
-              disposition: 'workspace',
               icon: 'ph--hammer--regular',
+              disposition: 'workspace',
+              position: 'fallback',
             },
             nodes: [
-              ...(isSpace(node.data)
+              ...(space
                 ? [
                     {
-                      id: `${node.data.id}-debug`,
+                      id: `debug-${node.id}`,
                       type: 'dxos.org/plugin/debug/space',
-                      data: { space: node.data, type: 'dxos.org/plugin/debug/space' },
+                      data: { space, type: 'dxos.org/plugin/debug/space' },
                       properties: {
                         label: ['debug label', { ns: DEBUG_PLUGIN }],
                         icon: 'ph--bug--regular',
@@ -63,7 +52,7 @@ export default (context: PluginsContext) =>
                   ]
                 : []),
               {
-                id: `${node.id}-${Devtools.Client.id}`,
+                id: `${Devtools.Client.id}-${node.id}`,
                 data: null,
                 type: DEVTOOLS_TYPE,
                 properties: {
@@ -72,7 +61,7 @@ export default (context: PluginsContext) =>
                 },
                 nodes: [
                   {
-                    id: `${node.id}-${Devtools.Client.Config}`,
+                    id: `${Devtools.Client.Config}-${node.id}`,
                     data: Devtools.Client.Config,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -81,7 +70,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Client.Storage}`,
+                    id: `${Devtools.Client.Storage}-${node.id}`,
                     data: Devtools.Client.Storage,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -90,7 +79,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Client.Logs}`,
+                    id: `${Devtools.Client.Logs}-${node.id}`,
                     data: Devtools.Client.Logs,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -99,7 +88,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Client.Diagnostics}`,
+                    id: `${Devtools.Client.Diagnostics}-${node.id}`,
                     data: Devtools.Client.Diagnostics,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -108,7 +97,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Client.Tracing}`,
+                    id: `${Devtools.Client.Tracing}-${node.id}`,
                     data: Devtools.Client.Tracing,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -119,7 +108,7 @@ export default (context: PluginsContext) =>
                 ],
               },
               {
-                id: `${node.id}-${Devtools.Halo.id}`,
+                id: `${Devtools.Halo.id}-${node.id}`,
                 data: null,
                 type: DEVTOOLS_TYPE,
                 properties: {
@@ -128,7 +117,7 @@ export default (context: PluginsContext) =>
                 },
                 nodes: [
                   {
-                    id: `${node.id}-${Devtools.Halo.Identity}`,
+                    id: `${Devtools.Halo.Identity}-${node.id}`,
                     data: Devtools.Halo.Identity,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -137,7 +126,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Halo.Devices}`,
+                    id: `${Devtools.Halo.Devices}-${node.id}`,
                     data: Devtools.Halo.Devices,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -146,7 +135,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Halo.Keyring}`,
+                    id: `${Devtools.Halo.Keyring}-${node.id}`,
                     data: Devtools.Halo.Keyring,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -155,7 +144,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Halo.Credentials}`,
+                    id: `${Devtools.Halo.Credentials}-${node.id}`,
                     data: Devtools.Halo.Credentials,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -166,7 +155,7 @@ export default (context: PluginsContext) =>
                 ],
               },
               {
-                id: `${node.id}-${Devtools.Echo.id}`,
+                id: `${Devtools.Echo.id}-${node.id}`,
                 data: null,
                 type: DEVTOOLS_TYPE,
                 properties: {
@@ -175,7 +164,7 @@ export default (context: PluginsContext) =>
                 },
                 nodes: [
                   {
-                    id: `${node.id}-${Devtools.Echo.Spaces}`,
+                    id: `${Devtools.Echo.Spaces}-${node.id}`,
                     data: Devtools.Echo.Spaces,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -184,7 +173,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Echo.Space}`,
+                    id: `${Devtools.Echo.Space}-${node.id}`,
                     data: Devtools.Echo.Space,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -193,7 +182,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Echo.Feeds}`,
+                    id: `${Devtools.Echo.Feeds}-${node.id}`,
                     data: Devtools.Echo.Feeds,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -202,7 +191,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Echo.Objects}`,
+                    id: `${Devtools.Echo.Objects}-${node.id}`,
                     data: Devtools.Echo.Objects,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -211,7 +200,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Echo.Automerge}`,
+                    id: `${Devtools.Echo.Automerge}-${node.id}`,
                     data: Devtools.Echo.Automerge,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -220,7 +209,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Echo.Queues}`,
+                    id: `${Devtools.Echo.Queues}-${node.id}`,
                     data: Devtools.Echo.Queues,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -229,7 +218,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Echo.Members}`,
+                    id: `${Devtools.Echo.Members}-${node.id}`,
                     data: Devtools.Echo.Members,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -238,7 +227,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Echo.Metadata}`,
+                    id: `${Devtools.Echo.Metadata}-${node.id}`,
                     data: Devtools.Echo.Metadata,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -249,7 +238,7 @@ export default (context: PluginsContext) =>
                 ],
               },
               {
-                id: `${node.id}-${Devtools.Mesh.id}`,
+                id: `${Devtools.Mesh.id}-${node.id}`,
                 data: null,
                 type: DEVTOOLS_TYPE,
                 properties: {
@@ -258,7 +247,7 @@ export default (context: PluginsContext) =>
                 },
                 nodes: [
                   {
-                    id: `${node.id}-${Devtools.Mesh.Signal}`,
+                    id: `${Devtools.Mesh.Signal}-${node.id}`,
                     data: Devtools.Mesh.Signal,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -267,7 +256,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Mesh.Swarm}`,
+                    id: `${Devtools.Mesh.Swarm}-${node.id}`,
                     data: Devtools.Mesh.Swarm,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -276,7 +265,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Mesh.Network}`,
+                    id: `${Devtools.Mesh.Network}-${node.id}`,
                     data: Devtools.Mesh.Network,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -288,7 +277,7 @@ export default (context: PluginsContext) =>
               },
               // TODO(wittjosiah): Remove?
               // {
-              //   id: `${node.id}-${Devtools.Agent.id}`,
+              //   id: `${prefix}-${Devtools.Agent.id}`,
               //   data: null,
               //   type: DEVTOOLS_TYPE,
               //   properties: {
@@ -297,7 +286,7 @@ export default (context: PluginsContext) =>
               //   },
               //   nodes: [
               //     {
-              //       id: `${node.id}-${Devtools.Agent.Dashboard}`,
+              //       id: `${prefix}-${Devtools.Agent.Dashboard}`,
               //       data: Devtools.Agent.Dashboard,
               //       type: DEVTOOLS_TYPE,
               //       properties: {
@@ -308,7 +297,7 @@ export default (context: PluginsContext) =>
               //   ],
               // },
               {
-                id: `${node.id}-${Devtools.Edge.id}`,
+                id: `${Devtools.Edge.id}-${node.id}`,
                 data: null,
                 type: DEVTOOLS_TYPE,
                 properties: {
@@ -317,7 +306,7 @@ export default (context: PluginsContext) =>
                 },
                 nodes: [
                   {
-                    id: `${node.id}-${Devtools.Edge.Dashboard}`,
+                    id: `${Devtools.Edge.Dashboard}-${node.id}`,
                     data: Devtools.Edge.Dashboard,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -326,7 +315,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Edge.Workflows}`,
+                    id: `${Devtools.Edge.Workflows}-${node.id}`,
                     data: Devtools.Edge.Workflows,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -335,7 +324,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Edge.Traces}`,
+                    id: `${Devtools.Edge.Traces}-${node.id}`,
                     data: Devtools.Edge.Traces,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -344,7 +333,7 @@ export default (context: PluginsContext) =>
                     },
                   },
                   {
-                    id: `${node.id}-${Devtools.Edge.Testing}`,
+                    id: `${Devtools.Edge.Testing}-${node.id}`,
                     data: Devtools.Edge.Testing,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -404,6 +393,25 @@ export default (context: PluginsContext) =>
           properties: {
             label: ['debug label', { ns: DEBUG_PLUGIN }],
             icon: 'ph--bug--regular',
+            disposition: 'hidden',
+            position: 'fallback',
+          },
+        },
+      ],
+    }),
+
+    // Devtools deck companion.
+    createExtension({
+      id: `${DEBUG_PLUGIN}/devtools-overview`,
+      filter: (node): node is Node<null> => node.id === 'root',
+      connector: ({ node }) => [
+        {
+          id: [node.id, 'devtools'].join(ATTENDABLE_PATH_SEPARATOR),
+          type: DECK_COMPANION_TYPE,
+          data: null,
+          properties: {
+            label: ['devtools overview label', { ns: DEBUG_PLUGIN }],
+            icon: 'ph--hammer--regular',
             disposition: 'hidden',
             position: 'fallback',
           },

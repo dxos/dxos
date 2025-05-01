@@ -76,9 +76,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
       }
     >
       <IconButton icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
-      <div className='border-t border-separator'>
-        <SyncStateInfo />
-      </div>
+      <div className='border-t border-separator'>{space && <SyncStateInfo space={space} />}</div>
     </PanelContainer>
   );
 };

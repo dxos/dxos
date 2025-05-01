@@ -4,11 +4,12 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, Surface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, Surface, useCapability } from '@dxos/app-framework';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 
-import { CallSidebar, MeetingContainer, MissingArtifact } from '../components';
+import { MeetingCapabilities } from './capabilities';
+import { CallSidebar, MeetingContainer, MeetingStatusDetail, MissingArtifact } from '../components';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingType } from '../types';
 
@@ -49,5 +50,13 @@ export default () =>
       id: `${MEETING_PLUGIN}/assistant`,
       role: 'deck-companion--active-meeting',
       component: () => <CallSidebar />,
+    }),
+    createSurface({
+      id: `${MEETING_PLUGIN}/devtools-overview`,
+      role: 'devtools-overview',
+      component: () => {
+        const call = useCapability(MeetingCapabilities.CallManager);
+        return <MeetingStatusDetail state={call.state} />;
+      },
     }),
   ]);
