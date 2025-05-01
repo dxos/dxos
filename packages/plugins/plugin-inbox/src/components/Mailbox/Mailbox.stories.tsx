@@ -10,20 +10,16 @@ import React, { useMemo, useState } from 'react';
 
 import { IntentPlugin, Surface, SettingsPlugin, useCapability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { makeRef, refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { faker } from '@dxos/random';
-import { Filter, fullyQualifiedId, live, type Space, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { ContactType, MessageType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
-import { initializeMailbox } from './testing';
 
 import { Mailbox } from './Mailbox';
+import { initializeMailbox } from './testing';
 import { InboxPlugin } from '../../InboxPlugin';
 import { InboxCapabilities } from '../../capabilities/capabilities';
 import { createMessages } from '../../testing';
