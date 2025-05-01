@@ -383,14 +383,4 @@ describe('json-to-effect', () => {
     const jsonSchema2 = toJsonSchema(effectSchema);
     expect(jsonSchema2.properties!.name.description).to.eq('Name');
   });
-
-  // test('fieldLookupId gets preserved', () => {
-  //   const schema = S.Struct({
-  //     name: S.Ref().annotations({ description: 'Name' }),
-  //   });
-  //   const jsonSchema = toJsonSchema(schema);
-  //   const effectSchema = toEffectSchema(jsonSchema);
-  //   const jsonSchema2 = toJsonSchema(effectSchema);
-  //   expect(jsonSchema2.properties!.name.description).to.eq('Name');
-  // });
 });
