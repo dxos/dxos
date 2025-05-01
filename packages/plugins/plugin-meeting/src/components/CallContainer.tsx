@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, type FC } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { useNode } from '@dxos/plugin-graph';
@@ -39,28 +40,27 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
   // TODO(thure): Should these be intents rather than callbacks?
   const companions = node ? graph.nodes(node, { type: PLANK_COMPANION_TYPE }) : [];
   useEffect(() => {
-    const unsubscribeLeft = call.left.on((roomId) => {
+    const ctx = new Context();
+    call.left.on(ctx, (roomId) => {
       companions.forEach((companion) => {
         companion.properties.onLeave?.(roomId);
       });
     });
 
-    const unsubscribeCallState = call.callStateUpdated.on((state) => {
+    call.callStateUpdated.on(ctx, (state) => {
       companions.forEach((companion) => {
         companion.properties.onCallStateUpdated?.(state);
       });
     });
 
-    const unsubscribeMediaState = call.mediaStateUpdated.on((state) => {
+    call.mediaStateUpdated.on(ctx, (state) => {
       companions.forEach((companion) => {
         companion.properties.onMediaStateUpdated?.(state);
       });
     });
 
     return () => {
-      unsubscribeLeft();
-      unsubscribeCallState();
-      unsubscribeMediaState();
+      void ctx.dispose();
     };
   }, [call, companions]);
 
