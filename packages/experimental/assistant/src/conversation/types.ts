@@ -9,10 +9,8 @@ import { toJsonSchema, JsonSchemaType, ObjectId } from '@dxos/echo-schema';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
+export const createUserMessage = (text: string): Message => ({
   id: ObjectId.random(),
-  spaceId,
-  threadId,
   role: 'user',
   content: [{ type: 'text', text }],
 });

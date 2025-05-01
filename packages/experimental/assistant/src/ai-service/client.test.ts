@@ -26,9 +26,6 @@ describe.skip('AI Service Client', () => {
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
-    const spaceId = SpaceId.random();
-    const threadId = ObjectId.random();
-
     // await client.appendMessages([
     //   {
     //     id: ObjectId.random(),
@@ -41,8 +38,6 @@ describe.skip('AI Service Client', () => {
 
     const stream = await client.execStream({
       model: DEFAULT_EDGE_MODEL,
-      spaceId,
-      threadId,
       systemPrompt: 'You are a poet',
       tools: [],
     });
@@ -70,9 +65,6 @@ describe.skip('AI Service Client', () => {
       ),
     };
 
-    const spaceId = SpaceId.random();
-    const threadId = ObjectId.random();
-
     // await client.appendMessages([
     //   {
     //     id: ObjectId.random(),
@@ -86,8 +78,6 @@ describe.skip('AI Service Client', () => {
     {
       const stream1 = await client.execStream({
         model: DEFAULT_EDGE_MODEL,
-        spaceId,
-        threadId,
         systemPrompt: 'You are a helpful assistant.',
         tools: [custodian],
       });
@@ -120,8 +110,6 @@ describe.skip('AI Service Client', () => {
     {
       const stream2 = await client.execStream({
         model: DEFAULT_EDGE_MODEL,
-        spaceId,
-        threadId,
         systemPrompt: 'You are a helpful assistant.',
         tools: [custodian],
       });
@@ -143,9 +131,6 @@ describe.skip('AI Service Client', () => {
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
-    const spaceId = SpaceId.random();
-    const threadId = ObjectId.random();
-
     // await client.appendMessages([
     //   {
     //     id: ObjectId.random(),
@@ -158,8 +143,6 @@ describe.skip('AI Service Client', () => {
 
     const stream = await client.execStream({
       model: DEFAULT_EDGE_MODEL,
-      spaceId,
-      threadId,
       tools: [
         {
           name: 'text-to-image',
