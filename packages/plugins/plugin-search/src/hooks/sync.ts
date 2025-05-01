@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, type S } from '@dxos/echo-schema';
-import { getSchema } from '@dxos/live-object';
+import { AST, getSchema, type S } from '@dxos/echo-schema';
 import { TextType } from '@dxos/schema';
 
 import { type SearchResult } from '../types';

@@ -21,6 +21,7 @@ export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
    */
   init(target: T): void;
 
+  // TODO(dmaretskyi): Remove, change to symbol getter.
   isDeleted(target: T): boolean;
 
   // TODO(dmaretskyi): Remove and use schemaSymbol.
@@ -33,6 +34,7 @@ export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
   // TODO(dmaretskyi): Remove and use typenameSymbol.
   getTypeReference(target: T): Reference | undefined;
 
+  // TODO(dmaretskyi): Remove and change to symbol getter.
   getMeta(target: T): ObjectMeta;
 }
 
