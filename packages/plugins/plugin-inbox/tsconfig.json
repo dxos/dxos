@@ -21,6 +21,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/display-name"
     },
     {
@@ -52,6 +55,9 @@
     },
     {
       "path": "../../experimental/artifact"
+    },
+    {
+      "path": "../../experimental/assistant"
     },
     {
       "path": "../../sdk/app-framework"
