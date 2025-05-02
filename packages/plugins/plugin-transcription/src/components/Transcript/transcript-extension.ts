@@ -225,11 +225,11 @@ const getStartTime = (started?: Date, block?: TranscriptBlock): Date | undefined
 };
 
 const formatTimestamp = (timestamp: Date, relative?: Date) => {
-  if (!relative) {
-    return format(timestamp, 'HH:mm:ss');
-  } else {
+  if (relative) {
     const pad = (n = 0) => String(n).padStart(2, '0');
     const { hours, minutes, seconds } = intervalToDuration({ start: relative, end: timestamp });
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  } else {
+    return format(timestamp, 'HH:mm:ss');
   }
 };
