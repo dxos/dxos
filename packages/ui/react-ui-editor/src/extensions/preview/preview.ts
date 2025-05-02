@@ -186,7 +186,7 @@ class PreviewInlineWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const root = document.createElement('dx-ref-tag');
-    root.setAttribute('label', this._link.label);
+    root.textContent = this._link.label;
     root.setAttribute('ref', this._link.ref);
     return root;
   }

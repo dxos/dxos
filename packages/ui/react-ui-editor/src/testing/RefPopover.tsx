@@ -3,10 +3,10 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useRef, useState, useEffect, useCallback } from 'react';
+import React, { type PropsWithChildren, useRef, useState, useEffect, useCallback, type RefObject } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { type DxRefTagActivate } from '@dxos/lit-ui';
+import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';
 import { Popover } from '@dxos/react-ui';
 
 import { type PreviewLinkRef, type PreviewLinkTarget, type PreviewLookup } from '../extensions';
@@ -21,7 +21,7 @@ const [RefPopoverContextProvider, useRefPopover] = createContext<RefPopoverValue
 type RefPopoverProviderProps = PropsWithChildren<{ onLookup?: PreviewLookup }>;
 
 const RefPopoverProvider = ({ children, onLookup }: RefPopoverProviderProps) => {
-  const trigger = useRef<HTMLButtonElement | null>(null);
+  const trigger = useRef<DxRefTag | null>(null);
   const [value, setValue] = useState<RefPopoverValue>({});
   const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -56,7 +56,7 @@ const RefPopoverProvider = ({ children, onLookup }: RefPopoverProviderProps) => 
   return (
     <RefPopoverContextProvider pending={value.pending} link={value.link} target={value.target}>
       <Popover.Root open={open} onOpenChange={setOpen}>
-        <Popover.VirtualTrigger virtualRef={trigger} />
+        <Popover.VirtualTrigger virtualRef={trigger as unknown as RefObject<HTMLButtonElement>} />
         <div role='none' className='contents' ref={setRootRef}>
           {children}
         </div>
