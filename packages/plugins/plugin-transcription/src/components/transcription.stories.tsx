@@ -16,17 +16,24 @@ import React, {
   useState,
 } from 'react';
 
+import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { MemoryQueue } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Config } from '@dxos/react-client';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { SpacePlugin } from '@dxos/plugin-space';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { randomQueueDxn, useQueue } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
+import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript } from './Transcript';
+import { TestItem } from './Transcript/testings';
+import { TranscriptionPlugin } from '../TranscriptionPlugin';
 import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } from '../hooks';
 import { type BlockModel } from '../model';
 import { type TranscriberParams } from '../transcriber';
@@ -62,33 +69,48 @@ const Microphone = () => {
 
   // Queue.
   const queueDxn = useMemo(() => randomQueueDxn(), []);
-  const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
+  const queue = useMemo(() => new MemoryQueue<TranscriptBlock>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown, queue);
 
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
       const block = create(TranscriptBlock, { segments });
-      queue?.append([block]);
+      void queue.append([block]);
     },
     [queue],
   );
-  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments });
+
+  const config = useRef<TranscriberParams['config']>({
+    transcribeAfterChunksAmount: 20,
+    prefixBufferChunksAmount: 5,
+  });
+
+  const transcriber = useTranscriber({
+    audioStreamTrack: track,
+    onSegments: handleSegments,
+    config: config.current,
+  });
+  const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
-    void transcriber?.open();
+    void transcriber?.open().then(() => setIsOpen(true));
+    log.info('transcriber open');
     return () => {
-      void transcriber?.close();
+      void transcriber?.close().then(() => setIsOpen(false));
+      log.info('transcriber close');
     };
   }, [transcriber]);
 
   // Manage transcription state.
   useEffect(() => {
     if (running && transcriber?.isOpen) {
-      void transcriber?.startChunksRecording();
+      transcriber?.startChunksRecording();
+      log.info('transcriber startChunksRecording');
     } else if (!running) {
-      void transcriber?.stopChunksRecording();
+      transcriber?.stopChunksRecording();
+      log.info('transcriber stopChunksRecording');
     }
-  }, [transcriber, running, transcriber?.isOpen]);
+  }, [transcriber, running, isOpen]);
 
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
@@ -136,14 +158,14 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
 
   useEffect(() => {
     if (transcriber && running) {
-      void transcriber.open();
+      void transcriber.open().then(manageChunkRecording);
     } else if (!running) {
       transcriber?.stopChunksRecording();
       void transcriber?.close();
     }
   }, [transcriber, running]);
 
-  useEffect(() => {
+  const manageChunkRecording = () => {
     if (track?.readyState === 'live' && transcriber?.isOpen) {
       log.info('starting transcription');
       transcriber.startChunksRecording();
@@ -151,6 +173,9 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
       log.info('stopping transcription');
       transcriber.stopChunksRecording();
     }
+  };
+  useEffect(() => {
+    manageChunkRecording();
   }, [transcriber, track?.readyState, transcriber?.isOpen]);
 
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
@@ -159,16 +184,38 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
 const meta: Meta<typeof AudioFile> = {
   title: 'plugins/plugin-transcription/transcription',
   decorators: [
-    withClientProvider({
-      config: new Config({
-        runtime: {
-          client: { edgeFeatures: { signaling: true } },
-          services: {
-            edge: { url: 'https://edge.dxos.workers.dev/' },
-            iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+    withPluginManager({
+      plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        ClientPlugin({
+          types: [TestItem],
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
           },
-        },
-      }),
+        }),
+        SpacePlugin(),
+        SettingsPlugin(),
+        IntentPlugin(),
+        TranscriptionPlugin(),
+      ],
+      fireEvents: [Events.SetupAppGraph],
+      // capabilities: [
+      //   contributes(
+      //     Capabilities.ReactSurface,
+      //     createSurface({
+      //       id: 'preview-test',
+      //       role: 'preview',
+      //       component: ({ data }) => {
+      //         const schema = getSchema(data);
+      //         if (!schema) {
+      //           return null;
+      //         }
+
+      //         return <Form schema={schema} values={data} />;
+      //       },
+      //     }),
+      //   ),
+      // ],
     }),
     withTheme,
     withLayout({
