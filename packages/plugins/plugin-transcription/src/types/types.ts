@@ -36,7 +36,7 @@ export const isTranscript = (object: unknown): object is typeof TranscriptType =
 
 export const TranscriptionSettingsSchema = S.mutable(
   S.Struct({
-    entityExtractor: S.optional(S.Boolean),
+    entityExtraction: S.optional(S.Boolean),
   }),
 );
 

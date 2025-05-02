@@ -31,9 +31,11 @@ export namespace AssistantAction {
   }) {}
 }
 
+export const LLM_PROVIDERS = ['edge', 'ollama', 'lmstudio'] as const;
+
 export const AssistantSettingsSchema = S.mutable(
   S.Struct({
-    llmProvider: S.optional(S.Literal('edge', 'ollama', 'lmstudio')),
+    llmProvider: S.optional(S.Literal(...LLM_PROVIDERS)),
     edgeModel: S.optional(S.String),
     ollamaModel: S.optional(S.String),
     lmstudioModel: S.optional(S.String),

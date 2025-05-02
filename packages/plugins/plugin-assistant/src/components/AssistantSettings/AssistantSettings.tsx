@@ -9,14 +9,13 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { ASSISTANT_PLUGIN } from '../../meta';
-import { type AssistantSettingsProps } from '../../types';
+import { LLM_PROVIDERS, type AssistantSettingsProps } from '../../types';
 
 // TODO(burdon): Factor out default Selector.
 const DEFAULT_VALUE = '__default';
 
-const LLM_PROVIDERS = ['edge', 'ollama', 'lmstudio'] as const;
 const LLM_PROVIDER_LABELS = {
-  edge: 'Edge',
+  edge: 'DXOS',
   ollama: 'Ollama',
   lmstudio: 'LM Studio',
 } as const;
@@ -37,7 +36,7 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
         <Select.Root
           value={settings.llmProvider ?? 'edge'}
           onValueChange={(value) => {
-            settings.llmProvider = value === DEFAULT_VALUE ? undefined : value;
+            settings.llmProvider = value === DEFAULT_VALUE ? undefined : (value as any);
           }}
         >
           <Select.TriggerButton placeholder={t('settings llm provider label')} />
