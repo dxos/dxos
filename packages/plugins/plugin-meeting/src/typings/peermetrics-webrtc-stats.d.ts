@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EventEmitter } from 'events';
-
 declare module '@peermetrics/webrtc-stats' {
   export interface WebRTCStatsOptions {
     getStatsInterval: number;
@@ -15,7 +13,7 @@ declare module '@peermetrics/webrtc-stats' {
     connectionId: string;
   }
 
-  export class WebRTCStats extends EventEmitter {
+  export class WebRTCStats {
     constructor(options: WebRTCStatsOptions);
     addConnection(info: ConnectionInfo): void;
     removeConnection(info: Pick<ConnectionInfo, 'pc'>): void;
