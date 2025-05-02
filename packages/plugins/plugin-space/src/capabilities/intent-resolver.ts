@@ -67,9 +67,9 @@ export default ({ context, observability }: IntentResolverOptions) => {
     }),
     createResolver({
       intent: SpaceAction.Create,
-      resolve: async ({ name, edgeReplication }) => {
+      resolve: async ({ name, hue, icon, edgeReplication }) => {
         const client = context.requestCapability(ClientCapabilities.Client);
-        const space = await client.spaces.create({ name });
+        const space = await client.spaces.create({ name, hue, icon });
         if (edgeReplication) {
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
@@ -228,6 +228,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
               part: 'popover',
               subject: POPOVER_ADD_SPACE,
               options: {
+                variant: 'react',
                 anchorId: SpaceAction.AddSpace._tag,
                 side: 'right',
               },

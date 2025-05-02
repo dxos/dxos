@@ -42,6 +42,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",

@@ -202,7 +202,7 @@ export class BlockModel<T extends Block> {
       }
     }
 
-    // Clear the line-to-block mapping
+    // Clear the line-to-block mapping.
     this._lineToBlock.clear();
 
     // Update all block line counts and line-to-block mapping after processing changes.

@@ -71,8 +71,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
   const companions = useDeckCompanions();
-  const activeCompanion = companions.find((companion) => getCompanionId(companion.id) === current) ?? companions.at(0);
-  const activeId = getCompanionId(activeCompanion?.id ?? 'never');
+  const activeCompanion = companions.find((companion) => getCompanionId(companion.id) === current);
+  const activeId = activeCompanion && getCompanionId(activeCompanion.id);
   const [internalValue, setInternalValue] = useState(activeId);
 
   useEffect(() => {
@@ -101,6 +101,14 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       },
     [activeCompanion?.id, activeCompanion?.data],
   );
+
+  useEffect(() => {
+    if (!activeId) {
+      void dispatch(
+        createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
+      );
+    }
+  }, [activeId, dispatch]);
 
   return (
     <Main.ComplementarySidebar
@@ -146,21 +154,22 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             <ToggleComplementarySidebarButton />
           </div>
         </div>
-        {companions.map((companion) => (
-          <Tabs.Tabpanel
-            key={getCompanionId(companion.id)}
-            value={getCompanionId(companion.id)}
-            classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]'
-            {...(layout.complementarySidebarState !== 'expanded' && { inert: 'true' })}
-          >
-            <ComplementarySidebarPanel
-              companion={companion}
-              activeId={activeId}
-              data={data}
-              hoistStatusbar={hoistStatusbar}
-            />
-          </Tabs.Tabpanel>
-        ))}
+        {activeId &&
+          companions.map((companion) => (
+            <Tabs.Tabpanel
+              key={getCompanionId(companion.id)}
+              value={getCompanionId(companion.id)}
+              classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]'
+              {...(layout.complementarySidebarState !== 'expanded' && { inert: 'true' })}
+            >
+              <ComplementarySidebarPanel
+                companion={companion}
+                activeId={activeId}
+                data={data}
+                hoistStatusbar={hoistStatusbar}
+              />
+            </Tabs.Tabpanel>
+          ))}
       </Tabs.Root>
     </Main.ComplementarySidebar>
   );

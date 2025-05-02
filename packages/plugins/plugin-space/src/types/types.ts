@@ -88,10 +88,14 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
   deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
 }
 
+// TODO(burdon): Move to FormatEnum or SDK.
+export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
+export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
+
 export const SpaceForm = S.Struct({
   name: S.optional(S.String.annotations({ title: 'Name' })),
-  icon: S.optional(S.String.annotations({ title: 'Icon' })),
-  hue: S.optional(S.String.annotations({ title: 'Color' })),
+  icon: S.optional(S.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
+  hue: S.optional(S.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
   // TODO(wittjosiah): Make optional with default value.
   edgeReplication: S.Boolean.annotations({ title: 'Enable EDGE Replication' }),
 });

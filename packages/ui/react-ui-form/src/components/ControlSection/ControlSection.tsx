@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren } from 'react';
 
 import {
   Button,
@@ -17,7 +17,15 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 
-// TODO(wittjosiah): Copied from @dxos/plugin-client. Reconcile/factor out.
+export type ControlPageProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+
+export const ControlPage = ({ children, classNames, ...props }: ControlPageProps) => {
+  return (
+    <div role='none' className={mx('pli-2', classNames)} {...props}>
+      {children}
+    </div>
+  );
+};
 
 export type ControlSectionProps = PropsWithChildren<{
   title: Label;

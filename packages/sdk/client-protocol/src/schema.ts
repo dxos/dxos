@@ -13,10 +13,13 @@ export class PropertiesType extends TypedObject({
 })(
   {
     name: S.optional(S.String),
+    // TODO(wittjosiah): Make generic?
+    hue: S.optional(S.String),
+    icon: S.optional(S.String),
     invocationTraceQueue: S.optional(Ref(Expando)),
   },
   { record: true },
 ) {}
 
 // TODO(burdon): Remove? Use PropertiesType instead?
-export type PropertiesTypeProps = Pick<PropertiesType, 'name' | 'invocationTraceQueue'>;
+export type PropertiesTypeProps = Pick<PropertiesType, 'name' | 'hue' | 'icon' | 'invocationTraceQueue'>;
