@@ -68,4 +68,14 @@
   .message__tag-row {
     @apply flex flex-row mlb-0.5 gap-1 flex-nowrap is-full overflow-hidden;
   }
+
+  .message__tag-row__item {
+    @apply cursor-pointer;
+    transition-property: transform;
+    transition-duration: 80ms;
+  }
+
+  .message__tag-row__item:active {
+    transform: scale(0.97);
+  }
 }

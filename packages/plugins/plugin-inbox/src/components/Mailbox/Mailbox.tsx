@@ -68,7 +68,7 @@ const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean)
   ${
     message.properties?.tags
       ? `<div class="message__tag-row">
-    ${message.properties.tags.map((tag: any) => `<div class="dx-tag" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
+    ${message.properties.tags.map((tag: any) => `<div class="dx-tag message__tag-row__item" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
   </div>`
       : ''
   }
