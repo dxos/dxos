@@ -119,10 +119,10 @@ export default (context: PluginsContext) =>
       filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
         S.is(LayoutAction.UpdatePopover.fields.input)(data),
       resolve: ({ subject, options }) => {
-        console.log('got update layout', options);
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
         layout.popoverOpen = options.state ?? Boolean(subject);
-        layout.popoverContent = subject ? { component: subject, props: options.props } : null;
+        layout.popoverContent =
+          typeof subject === 'string' ? { component: subject, props: options.props } : subject ? { subject } : null;
         layout.popoverAnchor = options.variant === 'virtual' ? options.anchor : undefined;
         layout.popoverAnchorId = options.variant === 'react' ? options.anchorId : undefined;
         layout.popoverSide = options.side;
