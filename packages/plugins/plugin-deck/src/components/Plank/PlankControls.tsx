@@ -119,7 +119,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                         : 'show deck plank label',
                   )}
                   classNames={buttonClassNames}
-                  icon={layoutIsAnySolo ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
+                  icon={layoutIsAnySolo ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
                   onClick={() => onClick?.(layoutMode === 'solo--fullscreen' ? 'solo--fullscreen' : 'solo')}
                 />
               </>
