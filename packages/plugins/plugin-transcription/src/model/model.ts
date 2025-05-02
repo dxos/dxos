@@ -9,17 +9,17 @@ import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-export type Block = { id: string };
+export type Chunk = { id: string };
 
 /**
  * Covert block to a set of markdown lines.
  */
-export type BlockRenderer<T extends Block> = (block: T, debug?: boolean) => string[];
+export type ChunkRenderer<T extends Chunk> = (chunk: T, debug?: boolean) => string[];
 
 /**
  * Abstract representation of the document model.
  */
-export interface BlockDocument {
+export interface ChunkDocument {
   lineCount(): number;
   replaceLines(from: number, remove: number, insert: string[]): void;
 }
@@ -27,7 +27,7 @@ export interface BlockDocument {
 /**
  * Codemirror document adapter.
  */
-export class DocumentAdapter implements BlockDocument {
+export class DocumentAdapter implements ChunkDocument {
   constructor(private readonly _view: EditorView) {}
 
   /** The document must always have at least one line. */
@@ -54,16 +54,16 @@ export class DocumentAdapter implements BlockDocument {
   }
 }
 
-type BlockChange<T extends Block> =
+type ChunkChange<T extends Chunk> =
   | {
       type: 'append';
       index: number;
-      block: T;
+      chunk: T;
     }
   | {
       type: 'update';
       index: number;
-      block: T;
+      chunk: T;
     }
   | {
       type: 'delete';
@@ -72,98 +72,98 @@ type BlockChange<T extends Block> =
     };
 
 /**
- * Each Block can be converted into a set of lines.
- * Blocks can be added, updated or deleted from the Queue.
+ * Each Chunk can be converted into a set of lines.
+ * Chunks can be added, updated or deleted from the Queue.
  * A Document is an immutable projection that represents a flat list of lines corresponding to the Queue.
  *
  * Ideally we would implement a custom virtual Text model for the View, but this currently isn't possible in Codemirror.
- * Instead this model tracks changes and syncs them with the BlockDocument.
+ * Instead this model tracks changes and syncs them with the ChunkDocument.
  */
-export class BlockModel<T extends Block> {
-  /** Ordered set of blocks. */
-  private readonly _blocks: T[] = [];
+export class SerializationModel<T extends Chunk> {
+  /** Ordered set of chunks. */
+  private readonly _chunks: T[] = [];
 
-  /** Map of block IDs to their current line counts. */
-  private readonly _blockLineCounts = new Map<string, number>();
+  /** Map of chunk IDs to their current line counts. */
+  private readonly _chunkLineCounts = new Map<string, number>();
 
-  /** Map of line numbers to block IDs. */
-  private readonly _lineToBlock = new Map<number, T>();
+  /** Map of line numbers to chunk IDs. */
+  private readonly _lineToChunk = new Map<number, T>();
 
-  /** Track block changes since last sync. */
-  private readonly _changes: Array<BlockChange<T>> = [];
+  /** Track chunk changes since last sync. */
+  private readonly _changes: Array<ChunkChange<T>> = [];
 
   /** Emits when the document is updated. */
   public readonly update = new Event<void>();
 
   constructor(
-    private readonly _renderer: BlockRenderer<T>,
-    initialBlocks: T[] = [],
+    private readonly _renderer: ChunkRenderer<T>,
+    initialChunks: T[] = [],
   ) {
-    initialBlocks.forEach((block) => {
-      this.appendBlock(block);
+    initialChunks.forEach((chunk) => {
+      this.appendChunk(chunk);
     });
   }
 
   toJSON() {
     return {
-      blocks: this._blocks.length,
+      chunks: this._chunks.length,
       changes: this._changes.length,
     };
   }
 
   get doc() {
-    return Text.of([...this._blocks.flatMap((block) => this._renderer(block)), '']);
+    return Text.of([...this._chunks.flatMap((chunk) => this._renderer(chunk)), '']);
   }
 
-  get blocks() {
-    return this._blocks;
+  get chunks() {
+    return this._chunks;
   }
 
   /**
    * Get the block ID at the given line number.
    */
-  getBlockAtLine(line: number): T | undefined {
-    return this._lineToBlock.get(line);
+  getChunkAtLine(line: number): T | undefined {
+    return this._lineToChunk.get(line);
   }
 
   reset(): this {
-    this._blocks.length = 0;
-    this._blockLineCounts.clear();
-    this._lineToBlock.clear();
+    this._chunks.length = 0;
+    this._chunkLineCounts.clear();
+    this._lineToChunk.clear();
     this.update.emit();
     return this;
   }
 
-  appendBlock(block: T): this {
-    const index = this._blocks.length;
-    this._blocks.push(block);
-    this._changes.push({ type: 'append', index, block });
+  appendChunk(chunk: T): this {
+    const index = this._chunks.length;
+    this._chunks.push(chunk);
+    this._changes.push({ type: 'append', index, chunk });
     this.update.emit();
     return this;
   }
 
-  updateBlock(block: T): this {
-    const index = this._blocks.findIndex((b) => b.id === block.id);
+  updateChunk(chunk: T): this {
+    const index = this._chunks.findIndex((c) => c.id === chunk.id);
     invariant(index !== -1);
-    this._blocks[index] = block;
-    this._changes.push({ type: 'update', index, block });
+    this._chunks[index] = chunk;
+    this._changes.push({ type: 'update', index, chunk });
     this.update.emit();
     return this;
   }
 
   deleteBlock(id: string): this {
-    const index = this._blocks.findIndex((b) => b.id === id);
+    const index = this._chunks.findIndex((c) => c.id === id);
     invariant(index !== -1);
-    this._blocks.splice(index, 1);
+    this._chunks.splice(index, 1);
     this._changes.push({ type: 'delete', index, id });
     this.update.emit();
     return this;
   }
 
   /**
-   * Syncs the tracked changes with the BlockDocument.
+   * Syncs the tracked changes with the ChunkDocument.
    */
-  sync(document: BlockDocument): this {
+  sync(document: ChunkDocument): this {
     log('sync', { changes: this._changes });
 
     // Process each change in order.
@@ -171,7 +171,7 @@ export class BlockModel<T extends Block> {
       switch (change.type) {
         case 'append': {
           // For appends, convert block to lines and add at the end.
-          const lines = this._renderer(change.block);
+          const lines = this._renderer(change.chunk);
           const lastLine = document.lineCount();
           document.replaceLines(lastLine + 1, 0, lines);
           break;
@@ -181,10 +181,10 @@ export class BlockModel<T extends Block> {
           // For updates, find the block's line range and replace with new lines.
           let lineStart = 1;
           for (let i = 0; i < change.index; i++) {
-            lineStart += this._blockLineCounts.get(this._blocks[i].id)!;
+            lineStart += this._chunkLineCounts.get(this._chunks[i].id)!;
           }
-          const previousLineCount = this._blockLineCounts.get(change.block.id)!;
-          const newLines = this._renderer(change.block);
+          const previousLineCount = this._chunkLineCounts.get(change.chunk.id)!;
+          const newLines = this._renderer(change.chunk);
           document.replaceLines(lineStart, previousLineCount, newLines);
           break;
         }
@@ -193,9 +193,9 @@ export class BlockModel<T extends Block> {
           // For deletes, find the block's line range and remove those lines.
           let lineStart = 1;
           for (let i = 0; i < change.index; i++) {
-            lineStart += this._blockLineCounts.get(this._blocks[i].id)!;
+            lineStart += this._chunkLineCounts.get(this._chunks[i].id)!;
           }
-          const previousLineCount = this._blockLineCounts.get(change.id)!;
+          const previousLineCount = this._chunkLineCounts.get(change.id)!;
           document.replaceLines(lineStart, previousLineCount, []);
           break;
         }
@@ -203,22 +203,22 @@ export class BlockModel<T extends Block> {
     }
 
     // Clear the line-to-block mapping.
-    this._lineToBlock.clear();
+    this._lineToChunk.clear();
 
     // Update all block line counts and line-to-block mapping after processing changes.
     let currentLine = 1;
-    for (const block of this._blocks) {
-      const lineCount = this._renderer(block).length;
-      this._blockLineCounts.set(block.id, lineCount);
-      this._lineToBlock.set(currentLine, block);
+    for (const chunk of this._chunks) {
+      const lineCount = this._renderer(chunk).length;
+      this._chunkLineCounts.set(chunk.id, lineCount);
+      this._lineToChunk.set(currentLine, chunk);
       currentLine += lineCount;
     }
 
     // Clean up deleted blocks.
-    const blockIds = new Set(this._blocks.map((block) => block.id));
-    for (const id of this._blockLineCounts.keys()) {
-      if (!blockIds.has(id)) {
-        this._blockLineCounts.delete(id);
+    const chunkIds = new Set(this._chunks.map((chunk) => chunk.id));
+    for (const id of this._chunkLineCounts.keys()) {
+      if (!chunkIds.has(id)) {
+        this._chunkLineCounts.delete(id);
       }
     }
 

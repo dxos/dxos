@@ -9,16 +9,14 @@ import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { DXN, IdentityDid, QueueSubspaceTags } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
 import { SpaceId } from '@dxos/react-client/echo';
-import { hues } from '@dxos/react-ui-theme';
-import { ContactType } from '@dxos/schema';
+import { ContactType, MessageType, type TranscriptionContentBlock } from '@dxos/schema';
 
-import { processTranscriptBlock } from '../../entity-extraction';
+import { processTranscriptMessage } from '../../entity-extraction';
 import * as TestData from '../../testing/test-data';
-import { TranscriptBlock } from '../../types';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to schema-testing.
 export const TestItem = S.Struct({
@@ -32,30 +30,33 @@ export const TestItem = S.Struct({
   }),
 }).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
 
+// TODO(wittjosiah): Make builder generic and reuse for all message types.
 /**
- * Generator of transcript blocks.
+ * Generator of transcript messages.
  */
-export class BlockBuilder {
-  static readonly singleton = new BlockBuilder();
+export class MessageBuilder {
+  static readonly singleton = new MessageBuilder();
 
   users = Array.from({ length: 5 }, () => ({
-    authorName: faker.person.fullName(),
-    authorHue: faker.helpers.arrayElement(hues),
+    identityDid: IdentityDid.random().toString(),
+    name: faker.person.fullName(),
+    email: faker.internet.email(),
   }));
 
   start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 
   constructor(private readonly _space?: Space) {}
 
-  createBlock(numSegments = 1): TranscriptBlock {
+  createMessage(numSegments = 1): MessageType {
     return {
       id: ObjectId.random().toString(),
-      ...faker.helpers.arrayElement(this.users),
-      segments: Array.from({ length: numSegments }).map(() => this.createSegment()),
+      created: this.next().toISOString(),
+      sender: faker.helpers.arrayElement(this.users),
+      blocks: Array.from({ length: numSegments }).map(() => this.createBlock()),
     };
   }
 
-  createSegment() {
+  createBlock(): TranscriptionContentBlock {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();
@@ -67,6 +68,7 @@ export class BlockBuilder {
     }
 
     return {
+      type: 'transcription',
       started: this.next().toISOString(),
       text,
     };
@@ -86,16 +88,16 @@ export const useTestTranscriptionQueue = (space: Space | undefined, running = tr
     () => (space ? new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]) : undefined),
     [space],
   );
-  const queue = useQueue<TranscriptBlock>(queueDxn);
+  const queue = useQueue<MessageType>(queueDxn);
 
-  const builder = useMemo(() => new BlockBuilder(space), [space]);
+  const builder = useMemo(() => new MessageBuilder(space), [space]);
   useEffect(() => {
     if (!queue || !running) {
       return;
     }
 
     const i = setInterval(() => {
-      queue.append([create(TranscriptBlock, builder.createBlock(Math.ceil(Math.random() * 3)))]);
+      queue.append([create(MessageType, builder.createMessage(Math.ceil(Math.random() * 3)))]);
     }, interval);
     return () => clearInterval(i);
   }, [queue, running, interval]);
@@ -103,12 +105,12 @@ export const useTestTranscriptionQueue = (space: Space | undefined, running = tr
   return queue;
 };
 
-class EntityExtractionBlockBuilder {
+class EntityExtractionMessageBuilder {
   aiService = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
 
-  currentBlock: number = 0;
+  currentMessage: number = 0;
 
   seedData(space: Space) {
     space.db.graph.schemaRegistry.addSchema([ContactType]);
@@ -123,19 +125,19 @@ class EntityExtractionBlockBuilder {
     }
   }
 
-  async createBlock(): Promise<TranscriptBlock> {
-    const block = TestData.transcriptBlocks[this.currentBlock];
-    this.currentBlock++;
-    this.currentBlock = this.currentBlock % TestData.transcriptBlocks.length;
+  async createMessage(): Promise<MessageType> {
+    const message = TestData.transcriptMessages[this.currentMessage];
+    this.currentMessage++;
+    this.currentMessage = this.currentMessage % TestData.transcriptMessages.length;
 
-    const { block: enhancedBlock } = await processTranscriptBlock({
-      block,
+    const { message: enhancedMessage } = await processTranscriptMessage({
+      message,
       aiService: this.aiService,
       context: {
         objects: [...TestData.documents, ...Object.values(TestData.contacts)],
       },
     });
-    return enhancedBlock;
+    return enhancedMessage;
   }
 }
 
@@ -151,8 +153,8 @@ export const useTestTranscriptionQueueWithEntityExtraction = (
   interval = 1_000,
 ) => {
   const queueDxn = useMemo(() => (space ? randomQueueDXN(space.id) : undefined), [space]);
-  const queue = useQueue<TranscriptBlock>(queueDxn);
-  const [builder] = useState(() => new EntityExtractionBlockBuilder());
+  const queue = useQueue<MessageType>(queueDxn);
+  const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
   useEffect(() => {
     if (!queue || !running) {
@@ -167,8 +169,8 @@ export const useTestTranscriptionQueueWithEntityExtraction = (
     scheduleTaskInterval(
       ctx,
       async () => {
-        const block = await builder.createBlock();
-        queue.append([create(TranscriptBlock, block)]);
+        const message = await builder.createMessage();
+        queue.append([create(MessageType, message)]);
       },
       interval,
     );

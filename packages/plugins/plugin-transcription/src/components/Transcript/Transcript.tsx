@@ -8,6 +8,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { resolveRef, useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
+import { type Identity } from '@dxos/react-client/halo';
 import { IconButton, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -20,26 +21,37 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
+import { type MessageType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { transcript } from './transcript-extension';
-import { type BlockModel } from '../../model';
-import { type TranscriptType, type TranscriptBlock } from '../../types';
+import { type SerializationModel } from '../../model';
+import { type TranscriptType } from '../../types';
 
-export const renderMarkdown = (block: TranscriptBlock, debug = false): string[] => {
-  // TODO(burdon): Use link/reference markup for users (with popover).
-  // TODO(burdon): Color and avatar.
-  return [
-    `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
-    block.segments.map((segment) => segment.text.trim()).join(' '),
-    '',
-  ];
-};
+export const renderMarkdown =
+  (identities: Identity[]) =>
+  (message: MessageType, debug = false): string[] => {
+    // TODO(burdon): Use link/reference markup for users (with popover).
+    // TODO(burdon): Color and avatar.
+    const identity = identities.find((identity) => identity.did === message.sender.identityDid);
+    const name =
+      identity?.profile?.displayName ??
+      message.sender.contact?.target?.name ??
+      message.sender.name ??
+      message.sender.email ??
+      message.sender.identityDid;
+    const blocks = message.blocks.filter((block) => block.type === 'transcription');
+    return [
+      `###### ${name}` + (debug ? ` (${message.id})` : ''),
+      blocks.map((block) => block.text.trim()).join(' '),
+      '',
+    ];
+  };
 
 export type TranscriptProps = ThemedClassName<{
   transcript?: TranscriptType;
   space?: Space;
-  model: BlockModel<TranscriptBlock>;
+  model: SerializationModel<MessageType>;
   // TODO(wittjosiah): Move to container.
   attendableId?: string;
   ignoreAttention?: boolean;

@@ -9,11 +9,10 @@ import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { type HuePalette } from '@dxos/react-ui-theme';
+import { MessageType, type TranscriptionContentBlock } from '@dxos/schema';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
-import { TranscriptBlock, type TranscriptSegment } from '../types';
 
 /**
  * Length of the chunk in ms.
@@ -38,12 +37,11 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
-  private _name?: string = undefined;
-  private _hue?: HuePalette = undefined;
+  private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
   private _enabled = false;
-  private _queue?: Queue<TranscriptBlock> = undefined;
+  private _queue?: Queue<MessageType> = undefined;
 
   constructor(edgeClient: EdgeHttpClient) {
     super();
@@ -98,13 +96,13 @@ export class TranscriptionManager extends Resource {
    * @param queue - The queue to save the transcription to or the DXN of the queue.
    */
   @synchronized
-  setQueue(queue?: Queue<TranscriptBlock> | string) {
+  setQueue(queue?: Queue<MessageType> | string) {
     switch (typeof queue) {
       case 'string':
         if (this._queue?.dxn.toString() === queue) {
           return;
         }
-        this._queue = new QueueImpl<TranscriptBlock>(this._edgeClient, DXN.parse(queue));
+        this._queue = new QueueImpl<MessageType>(this._edgeClient, DXN.parse(queue));
         break;
       case 'object':
         if (this._queue === queue) {
@@ -120,19 +118,11 @@ export class TranscriptionManager extends Resource {
   }
 
   @synchronized
-  setName(name: string) {
-    if (this._name === name) {
+  setIdentityDid(did: string) {
+    if (this._identityDid === did) {
       return;
     }
-    this._name = name;
-  }
-
-  @synchronized
-  setHue(hue: HuePalette) {
-    if (this._hue === hue) {
-      return;
-    }
-    this._hue = hue;
+    this._identityDid = did;
   }
 
   private async _toggleTranscriber() {
@@ -173,12 +163,16 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _onSegments(segments: TranscriptSegment[]) {
+  private async _onSegments(segments: TranscriptionContentBlock[]) {
     if (!this.isOpen || !this._queue) {
       return;
     }
 
-    const block = create(TranscriptBlock, { authorName: this._name, authorHue: this._hue, segments });
+    const block = create(MessageType, {
+      created: new Date().toISOString(),
+      blocks: segments,
+      sender: { identityDid: this._identityDid },
+    });
     this._queue.append([block]);
   }
 }

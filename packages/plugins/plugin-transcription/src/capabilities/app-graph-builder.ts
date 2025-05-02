@@ -4,7 +4,6 @@
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { fullyQualifiedId, getSpace, makeRef, type Space } from '@dxos/client/echo';
-import { generateName } from '@dxos/display-name';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -14,7 +13,6 @@ import { MeetingCapabilities, type CallState, type MediaState } from '@dxos/plug
 import { MeetingType } from '@dxos/plugin-meeting/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type TranscriptionPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { keyToFallback } from '@dxos/util';
 
 import { TranscriptionCapabilities } from './capabilities';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
@@ -103,12 +101,7 @@ export default (context: PluginsContext) =>
                 const transcriptionManager = new TranscriptionManager(client.edge);
                 const identity = client.halo.identity.get();
                 invariant(identity);
-                transcriptionManager.setName(
-                  identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
-                );
-                const fallbackValue = keyToFallback(identity!.identityKey);
-                const userHue = identity!.profile?.data?.hue || fallbackValue.hue;
-                transcriptionManager.setHue(userHue);
+                transcriptionManager.setIdentityDid(identity.did);
                 void transcriptionManager.open();
                 state.transcriptionManager = transcriptionManager;
               },

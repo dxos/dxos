@@ -6,11 +6,14 @@ import { Capabilities, Events, contributes, defineModule, definePlugin } from '@
 import { QueueImpl } from '@dxos/echo-db';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { getSpace } from '@dxos/react-client/echo';
+import { MessageType } from '@dxos/schema';
 
 import { AppGraphBuilder, IntentResolver, MeetingTranscriptionState, ReactSurface, Transcriber } from './capabilities';
+import { renderMarkdown } from './components';
 import { meta } from './meta';
 import translations from './translations';
-import { TranscriptBlock, TranscriptType } from './types';
+import { TranscriptType } from './types';
 
 export const TranscriptionPlugin = () =>
   definePlugin(meta, [
@@ -40,11 +43,13 @@ export const TranscriptionPlugin = () =>
             // TODO(wittjosiah): Factor out. Artifact? Separate capability?
             getTextContent: async (transcript: TranscriptType) => {
               const client = context.requestCapability(ClientCapabilities.Client);
+              const space = getSpace(transcript);
+              const members = space?.members.get().map((member) => member.identity) ?? [];
               const queue = new QueueImpl(client.edge, transcript.queue.dxn);
               await queue.refresh();
               const content = queue.items
-                .filter((block) => isInstanceOf(TranscriptBlock, block))
-                .map((block) => `${block.authorName}: ${block.segments.map((segment) => segment.text).join('\n')}`)
+                .filter((message) => isInstanceOf(MessageType, message))
+                .flatMap((message) => renderMarkdown(members)(message))
                 .join('\n\n');
               return content;
             },
