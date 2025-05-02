@@ -19,7 +19,6 @@ import {
   MarkdownSettings,
   ReactSurface,
   Thread,
-  PreviewExtension,
 } from './capabilities';
 import { MarkdownEvents } from './events';
 import { meta } from './meta';
@@ -110,10 +109,5 @@ export const MarkdownPlugin = () =>
       id: `${meta.id}/module/artifact-definition`,
       activatesOn: Events.SetupArtifactDefinition,
       activate: ArtifactDefinition,
-    }),
-    defineModule({
-      id: `${meta.id}/module/preview-extension`,
-      activatesOn: MarkdownEvents.SetupExtensions,
-      activate: PreviewExtension,
     }),
   ]);

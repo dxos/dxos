@@ -4,25 +4,39 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useState, useMemo, type FC } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react';
+import React, { useEffect, useMemo, useState, type FC } from 'react';
 
-import { contributes, Capabilities, SettingsPlugin, IntentPlugin, createSurface } from '@dxos/app-framework';
+import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+<<<<<<< HEAD
 import { getSchema, ObjectId } from '@dxos/echo-schema';
+=======
+>>>>>>> origin/main
 import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
 
+<<<<<<< HEAD
 import { Transcript, type TranscriptProps, renderMarkdown } from './Transcript';
 import { BlockBuilder, TestItem, useTestTranscriptionQueue } from './testing';
+=======
+import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
+import {
+  BlockBuilder,
+  TestItem,
+  useTestTranscriptionQueue,
+  useTestTranscriptionQueueWithEntityExtraction,
+} from './testings';
+>>>>>>> origin/main
 import { useQueueModelAdapter } from '../../hooks';
 import { BlockModel } from '../../model';
 import translations from '../../translations';
@@ -155,38 +169,32 @@ const QueueStoryWrapper = () => {
   return <QueueStory key={key} queueId={queueId} onReset={handleReset} />;
 };
 
-const meta: Meta<StoryProps> = {
+const EntityExtractionQueueStory = () => {
+  const [running, setRunning] = useState(true);
+  const space = useSpace();
+  const queue = useTestTranscriptionQueueWithEntityExtraction(space, running, 2_000);
+  const model = useQueueModelAdapter(renderMarkdown, queue, []);
+
+  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
+};
+
+const meta: Meta<typeof QueueStory> = {
   title: 'plugins/plugin-transcription/Transcript',
   decorators: [
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },
         }),
+        PreviewPlugin(),
         SpacePlugin(),
         SettingsPlugin(),
         IntentPlugin(),
-      ],
-      capabilities: [
-        contributes(
-          Capabilities.ReactSurface,
-          createSurface({
-            id: 'preview-test',
-            role: 'preview',
-            component: ({ data }) => {
-              const schema = getSchema(data);
-              if (!schema) {
-                return null;
-              }
-
-              return <Form schema={schema} values={data} />;
-            },
-          }),
-        ),
       ],
     }),
     withLayout({ tooltips: true, fullscreen: true }),
@@ -222,5 +230,13 @@ export const WithQueue: Story = {
   args: {
     ignoreAttention: true,
     attendableId: 'story',
+  },
+};
+
+export const WithEntityExtractionQueue: Story = {
+  render: EntityExtractionQueueStory,
+  args: {
+    // ignoreAttention: true,
+    // attendableId: 'story',
   },
 };
