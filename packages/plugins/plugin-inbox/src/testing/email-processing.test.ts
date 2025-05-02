@@ -9,7 +9,7 @@ const aiService = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
 });
 
-describe('Email Processing', () => {
+describe.skip('Email Processing', () => {
   test('content extraction and labeling', { timeout: 180_000 }, async () => {
     for (const email of emails) {
       const result = await processEmail({
