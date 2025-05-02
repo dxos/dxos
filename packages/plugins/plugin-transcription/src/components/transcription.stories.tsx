@@ -29,18 +29,18 @@ import { createQueueDxn, useQueue } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { MessageType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript } from './Transcript';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
 import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } from '../hooks';
-import { type BlockModel } from '../model';
+import { type SerializationModel } from '../model';
 import { TestItem } from '../testing';
 import { type TranscriberParams } from '../transcriber';
-import { TranscriptBlock } from '../types';
 
 const TranscriptionStory: FC<{
-  model: BlockModel<TranscriptBlock>;
+  model: SerializationModel<MessageType>;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
 }> = ({ model, running, onRunningChange }) => {
@@ -69,14 +69,14 @@ const Microphone = () => {
 
   // Queue.
   const queueDxn = useMemo(() => createQueueDxn(), []);
-  const queue = useMemo(() => new MemoryQueue<TranscriptBlock>(queueDxn), [queueDxn]);
-  const model = useQueueModelAdapter(renderMarkdown, queue);
+  const queue = useMemo(() => new MemoryQueue<MessageType>(queueDxn), [queueDxn]);
+  const model = useQueueModelAdapter(renderMarkdown([]), queue);
 
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
-    async (segments) => {
-      const block = create(TranscriptBlock, { segments });
-      void queue.append([block]);
+    async (blocks) => {
+      const message = create(MessageType, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      void queue.append([message]);
     },
     [queue],
   );
@@ -137,12 +137,12 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   }, [audio, running]);
 
   // Transcriber.
-  const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
-  const model = useQueueModelAdapter(renderMarkdown, queue);
+  const queue = useQueue<MessageType>(queueDxn, { pollInterval: 500 });
+  const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
-    async (segments) => {
-      const block = create(TranscriptBlock, { authorName: 'test', authorHue: 'cyan', segments });
-      queue?.append([block]);
+    async (blocks) => {
+      const message = create(MessageType, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      void queue?.append([message]);
     },
     [queue],
   );
