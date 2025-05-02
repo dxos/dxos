@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S, isInstanceOf } from '@dxos/echo-schema';
+import { S, isInstanceOf, SpaceIdSchema } from '@dxos/echo-schema';
 import { isLiveObject } from '@dxos/react-client/echo';
 
 import { TranscriptType } from './schema';
@@ -22,8 +22,7 @@ export namespace TranscriptionAction {
   export class Create extends S.TaggedClass<Create>()(`${TRANSCRIPTION_ACTION}/create`, {
     input: S.Struct({
       name: S.optional(S.String),
-      // TODO(wittjosiah): SpaceId.
-      spaceId: S.String,
+      spaceId: SpaceIdSchema,
     }),
     output: S.Struct({
       object: TranscriptType,
@@ -34,3 +33,11 @@ export namespace TranscriptionAction {
 export const isTranscript = (object: unknown): object is typeof TranscriptType => {
   return isLiveObject(object) && isInstanceOf(TranscriptType, object);
 };
+
+export const TranscriptionSettingsSchema = S.mutable(
+  S.Struct({
+    entityExtractor: S.optional(S.Boolean),
+  }),
+);
+
+export type TranscriptionSettingsProps = S.Schema.Type<typeof TranscriptionSettingsSchema>;
