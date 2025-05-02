@@ -88,6 +88,7 @@ export class TranscriptionManager extends Resource {
     }
 
     this._enabled = enabled ?? false;
+    // TODO(burdon): Why is toggle called here?
     this.isOpen && (await this._toggleTranscriber());
   }
 
