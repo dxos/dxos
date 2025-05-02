@@ -113,6 +113,6 @@ export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState => {
   }, createEmptyEdgeSyncState());
 };
 
-// TODO(burdon): Factor out.
-export const randomQueueDxn = (spaceId?: SpaceId) =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId ?? SpaceId.random(), ObjectId.random()]);
+// TODO(burdon): Move to @dxos/keys once ObjectId is moved there.
+export const createQueueDxn = (spaceId = SpaceId.random(), queueId = ObjectId.random()) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, queueId]);
