@@ -32,6 +32,7 @@ export const TestItem = S.Struct({
   }),
 }).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
 
+// TODO(ZaymonFC): Generalize builder for enriched markdown.
 /**
  * Generator of transcript blocks.
  */
@@ -111,7 +112,9 @@ class EntityExtractionBlockBuilder {
   currentBlock: number = 0;
 
   seedData(space: Space) {
-    space.db.graph.schemaRegistry.addSchema([ContactType]);
+    if (!space.db.graph.schemaRegistry.hasSchema(ContactType)) {
+      space.db.graph.schemaRegistry.addSchema([ContactType]);
+    }
     // for (const document of TestData.documents) {
     //   const obj = space.db.add(live(Document, document));
     //   const dxn = makeRef(obj).dxn.toString();

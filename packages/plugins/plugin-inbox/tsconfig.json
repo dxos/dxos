@@ -75,6 +75,9 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/react-ui-grid"
     },
     {
@@ -99,7 +102,13 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-storybook-layout"
     },
     {
       "path": "../plugin-theme"
