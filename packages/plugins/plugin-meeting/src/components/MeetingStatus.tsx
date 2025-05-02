@@ -68,8 +68,8 @@ export const MeetingStatusDetail = ({ state }: MeetingStatusDetailProps) => {
       maxHeight={false}
       info={
         <div className='flex items-center gap-2'>
-          <span title='Joined'>{self?.joined ? 'On' : 'Off'}</span>
-          <span title='Users'>{users?.length ?? 0} User(s)</span>
+          <span title='Joined'>{self?.joined ? 'Active' : 'Inactive'}</span>
+          {users?.length !== undefined && <span title='Users'>{users?.length ?? 0} User(s)</span>}
         </div>
       }
     >

@@ -30,7 +30,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
+import { createQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -76,7 +76,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => randomQueueDxn().toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn().toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   useEffect(() => {
@@ -159,7 +159,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(randomQueueDxn().toString())}
+              onClick={() => setQueueDxn(createQueueDxn().toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>

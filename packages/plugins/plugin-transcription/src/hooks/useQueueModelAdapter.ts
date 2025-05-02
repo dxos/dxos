@@ -2,29 +2,62 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 
 import { type Queue } from '@dxos/react-client/echo';
 
-import { type Block, BlockModel, type BlockRenderer } from '../model';
+import { type Chunk, type ChunkRenderer, SerializationModel } from '../model';
 
 /**
  * Model adapter for a queue.
  */
-export const useQueueModelAdapter = <T extends Block>(
-  renderer: BlockRenderer<T>,
+export const useQueueModelAdapter = <T extends Chunk>(
+  renderer: ChunkRenderer<T>,
   queue: Queue<T> | undefined,
-  initialBlocks: T[] = [],
-): BlockModel<T> => {
-  const model = useMemo(() => new BlockModel<T>(renderer, initialBlocks), [queue]);
+  initialChunks: T[] = [],
+): SerializationModel<T> => {
+  const model = useMemo(() => new SerializationModel<T>(renderer, initialChunks), [queue]);
+  const [loaded, setLoaded] = useState(false);
+
+  // Set initial blocks.
   useEffect(() => {
-    if (!queue?.items.length) {
+    if (!queue) {
       return;
     }
 
-    const block = queue.items[queue.items.length - 1];
-    model.appendBlock(block);
-  }, [model, queue?.items.length]);
+    const update = () => {
+      for (const block of queue?.items ?? []) {
+        model.appendChunk(block);
+      }
+
+      setLoaded(true);
+    };
+
+    // TODO(burdon): This is a hack to ensure the queue is loaded.
+    let i: NodeJS.Timeout | undefined;
+    if (queue.isLoading) {
+      i = setInterval(() => {
+        if (!queue?.isLoading) {
+          clearInterval(i);
+          update();
+        }
+      }, 1_000);
+    } else {
+      update();
+    }
+
+    return () => clearTimeout(i);
+  }, [model, queue]);
+
+  // TODO(burdon): Can we listen for queue events?
+  useEffect(() => {
+    if (!loaded || !queue || model.chunks.length === queue.items.length) {
+      return;
+    }
+
+    const chunk = queue.items[queue.items.length - 1];
+    model.appendChunk(chunk);
+  }, [model, loaded, queue?.items.length]);
 
   return model;
 };

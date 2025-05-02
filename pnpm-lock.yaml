@@ -7783,18 +7783,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-form
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
     devDependencies:
       react:
         specifier: ~18.2.0
@@ -9468,6 +9459,9 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9504,6 +9498,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-grid':
         specifier: workspace:*
         version: link:../../ui/react-ui-grid
@@ -9578,9 +9575,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-form
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter

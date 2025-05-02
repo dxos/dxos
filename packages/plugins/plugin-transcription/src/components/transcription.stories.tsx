@@ -25,22 +25,22 @@ import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { randomQueueDxn, useQueue } from '@dxos/react-client/echo';
+import { createQueueDxn, useQueue } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { MessageType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript } from './Transcript';
-import { TestItem } from './Transcript/testings';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
 import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } from '../hooks';
-import { type BlockModel } from '../model';
+import { type SerializationModel } from '../model';
+import { TestItem } from '../testing';
 import { type TranscriberParams } from '../transcriber';
-import { TranscriptBlock } from '../types';
 
 const TranscriptionStory: FC<{
-  model: BlockModel<TranscriptBlock>;
+  model: SerializationModel<MessageType>;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
 }> = ({ model, running, onRunningChange }) => {
@@ -68,15 +68,15 @@ const Microphone = () => {
   const track = useAudioTrack(running);
 
   // Queue.
-  const queueDxn = useMemo(() => randomQueueDxn(), []);
-  const queue = useMemo(() => new MemoryQueue<TranscriptBlock>(queueDxn), [queueDxn]);
-  const model = useQueueModelAdapter(renderMarkdown, queue);
+  const queueDxn = useMemo(() => createQueueDxn(), []);
+  const queue = useMemo(() => new MemoryQueue<MessageType>(queueDxn), [queueDxn]);
+  const model = useQueueModelAdapter(renderMarkdown([]), queue);
 
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
-    async (segments) => {
-      const block = create(TranscriptBlock, { segments });
-      void queue.append([block]);
+    async (blocks) => {
+      const message = create(MessageType, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      void queue.append([message]);
     },
     [queue],
   );
@@ -94,10 +94,8 @@ const Microphone = () => {
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
     void transcriber?.open().then(() => setIsOpen(true));
-    log.info('transcriber open');
     return () => {
       void transcriber?.close().then(() => setIsOpen(false));
-      log.info('transcriber close');
     };
   }, [transcriber]);
 
@@ -105,10 +103,8 @@ const Microphone = () => {
   useEffect(() => {
     if (running && transcriber?.isOpen) {
       transcriber?.startChunksRecording();
-      log.info('transcriber startChunksRecording');
     } else if (!running) {
       transcriber?.stopChunksRecording();
-      log.info('transcriber stopChunksRecording');
     }
   }, [transcriber, running, isOpen]);
 
@@ -141,12 +137,12 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   }, [audio, running]);
 
   // Transcriber.
-  const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
-  const model = useQueueModelAdapter(renderMarkdown, queue);
+  const queue = useQueue<MessageType>(queueDxn, { pollInterval: 500 });
+  const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
-    async (segments) => {
-      const block = create(TranscriptBlock, { authorName: 'test', authorHue: 'cyan', segments });
-      queue?.append([block]);
+    async (blocks) => {
+      const message = create(MessageType, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      void queue?.append([message]);
     },
     [queue],
   );
@@ -237,7 +233,7 @@ export const Default: Story = {
 export const File: Story = {
   render: AudioFile,
   args: {
-    queueDxn: randomQueueDxn(),
+    queueDxn: createQueueDxn(),
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     transcriptUrl: 'https://dxos.network/audio-london.txt',
     audioUrl: 'https://dxos.network/audio-london.m4a',

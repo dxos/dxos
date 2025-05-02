@@ -8,7 +8,7 @@ import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
 
-import { processTranscriptBlock } from './entity-extraction';
+import { processTranscriptMessage } from './entity-extraction';
 import * as TestData from '../testing/test-data';
 
 const aiService = new AIServiceEdgeClient({
@@ -17,16 +17,16 @@ const aiService = new AIServiceEdgeClient({
 
 describe.skip('EntityExtraction', { timeout: 180_000 }, () => {
   test('should process a transcript block', async () => {
-    for (const block of TestData.transcriptBlocks) {
-      log.info('input', block);
-      const { block: enhancedBlock } = await processTranscriptBlock({
-        block,
+    for (const message of TestData.transcriptMessages) {
+      log.info('input', message);
+      const { message: enhancedMessage } = await processTranscriptMessage({
+        message,
         aiService,
         context: {
           objects: [...TestData.documents, ...Object.values(TestData.contacts)],
         },
       });
-      log.info('output', enhancedBlock);
+      log.info('output', enhancedMessage);
     }
   });
 });
