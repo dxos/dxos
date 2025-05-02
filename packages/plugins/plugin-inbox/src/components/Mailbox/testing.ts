@@ -26,7 +26,6 @@ export const createMessage = (space?: Space) => {
       const obj = space.db.add(live(ContactType, { name: label, identifiers: [] }));
       const dxn = makeRef(obj).dxn.toString();
 
-      // Find a random position to insert the link
       const position = Math.floor(Math.random() * words.length);
       words.splice(position, 0, `[${label}][${dxn}]`);
     }
