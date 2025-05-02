@@ -4,9 +4,9 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 
-import type { Queue } from '@dxos/client/echo';
+import { type Queue } from '@dxos/client/echo';
 import { raise } from '@dxos/debug';
-import type { BaseEchoObject } from '@dxos/echo-schema';
+import { type BaseEchoObject } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 
 import { useClient } from '../client';

@@ -69,13 +69,15 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
           let isAutoScrolling = false;
           let hasScrolled = false;
 
-          const scrollToBottom = () => {
-            scroller.style.scrollBehavior = 'smooth';
+          let timeout: NodeJS.Timeout | undefined;
+          const scrollToBottom = (smooth = false) => {
+            scroller.style.scrollBehavior = smooth ? 'smooth' : '';
 
             // Temporarily hide scrollbar to prevent flicker.
             scroller.classList.add('cm-hide-scrollbar');
             isAutoScrolling = true;
-            setTimeout(() => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
               this._controls?.classList.add('opacity-0');
               scroller.classList.remove('cm-hide-scrollbar');
               isAutoScrolling = false;
@@ -96,7 +98,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
               this._controls,
               {
                 onClick: () => {
-                  scrollToBottom();
+                  scrollToBottom(false);
                 },
               },
               view,
@@ -122,7 +124,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
 
               // Scroll.
               if (autoScroll) {
-                scrollToBottom();
+                scrollToBottom(true);
               }
             }),
           );
@@ -223,11 +225,11 @@ const getStartTime = (started?: Date, block?: TranscriptBlock): Date | undefined
 };
 
 const formatTimestamp = (timestamp: Date, relative?: Date) => {
-  if (!relative) {
-    return format(timestamp, 'HH:mm:ss');
-  } else {
+  if (relative) {
     const pad = (n = 0) => String(n).padStart(2, '0');
     const { hours, minutes, seconds } = intervalToDuration({ start: relative, end: timestamp });
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  } else {
+    return format(timestamp, 'HH:mm:ss');
   }
 };

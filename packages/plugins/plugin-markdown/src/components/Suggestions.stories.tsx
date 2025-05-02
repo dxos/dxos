@@ -28,7 +28,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
+import { createQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { command, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -60,7 +60,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   const { parentRef } = useTextEditor({ initialValue: content });
 
   const space = useSpace();
-  const queueDxn = useMemo(() => space && randomQueueDxn(space.id), [space]);
+  const queueDxn = useMemo(() => space && createQueueDxn(space.id), [space]);
   const queue = useQueue<Message>(queueDxn);
 
   const handleInsert = () => {
