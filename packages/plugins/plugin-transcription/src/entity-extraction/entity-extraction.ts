@@ -3,6 +3,7 @@ import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
+import type { BaseEchoObject } from '@dxos/echo-schema';
 import { failedInvariant } from '@dxos/invariant';
 import type { ContactType, MessageType } from '@dxos/schema';
 import { Schema } from 'effect';
@@ -14,8 +15,7 @@ type ProcessTranscriptBlockParams = {
   block: TranscriptBlock;
   aiService: AIServiceClient;
   context: {
-    documents?: DocumentType[];
-    contacts?: ContactType[];
+    objects?: BaseEchoObject[];
   };
 };
 
@@ -38,7 +38,7 @@ export const processTranscriptBlock = async (
   const systemPrompt = `
     ${createSystemPrompt()}
     Context:
-    ${JSON.stringify([...(params.context.contacts ?? []), ...(params.context.documents ?? [])])}
+    ${JSON.stringify(params.context.objects)}
   `;
 
   const outputParser = structuredOutputParser(

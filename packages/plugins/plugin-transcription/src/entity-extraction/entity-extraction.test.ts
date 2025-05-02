@@ -17,8 +17,7 @@ describe('EntityExtraction', { timeout: 180_000 }, () => {
         block,
         aiService,
         context: {
-          documents: TestData.documents,
-          contacts: Object.values(TestData.contacts),
+          objects: [...TestData.documents, ...Object.values(TestData.contacts)],
         },
       });
       log.info('output', enhancedBlock);

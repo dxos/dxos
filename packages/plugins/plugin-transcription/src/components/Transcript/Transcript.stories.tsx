@@ -4,37 +4,34 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useState, useMemo, type FC } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react';
+import React, { useEffect, useMemo, useState, type FC } from 'react';
 
-import { contributes, Capabilities, SettingsPlugin, IntentPlugin, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { create, getSchema, ObjectId, ObjectIdSchema } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { useQueue, type Space, SpaceId, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { Transcript, type TranscriptProps, renderMarkdown } from './Transcript';
-import { BlockBuilder, TestItem, useTestTranscriptionQueue } from './testings';
 import { useQueueModelAdapter } from '../../hooks';
 import { BlockModel } from '../../model';
 import translations from '../../translations';
 import { TranscriptBlock } from '../../types';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
-import { Context } from '@dxos/context';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { ContactType } from '@dxos/schema';
-import { processTranscriptBlock } from '../../entity-extraction';
-import * as TestData from '../../testing/test-data';
-import { AIServiceEdgeClient } from '@dxos/assistant';
-import { scheduleTaskInterval } from '@dxos/async';
+import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
+import {
+  BlockBuilder,
+  TestItem,
+  useTestTranscriptionQueue,
+  useTestTranscriptionQueueWithEntityExtraction,
+} from './testings';
 
 faker.seed(1);
 
@@ -122,80 +119,6 @@ const BasicStory = ({ blocks: initialBlocks = [], ...props }: StoryProps) => {
       {...props}
     />
   );
-};
-
-class EntityExtractionBlockBuilder {
-  aiService = new AIServiceEdgeClient({
-    endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-  });
-  currentBlock: number = 0;
-
-  seedData(space: Space) {
-    space.db.graph.schemaRegistry.addSchema([ContactType]);
-    // for (const document of TestData.documents) {
-    //   const obj = space.db.add(live(Document, document));
-    //   const dxn = makeRef(obj).dxn.toString();
-    //   document.dxn = dxn;
-    // }
-
-    for (const contact of Object.values(TestData.contacts)) {
-      space.db.add(contact);
-    }
-  }
-
-  async createBlock(): Promise<TranscriptBlock> {
-    const block = TestData.transcriptBlocks[this.currentBlock];
-    this.currentBlock++;
-    this.currentBlock = this.currentBlock % TestData.transcriptBlocks.length;
-
-    const { block: enhancedBlock } = await processTranscriptBlock({
-      block,
-      aiService: this.aiService,
-      context: {
-        documents: TestData.documents,
-        contacts: Object.values(TestData.contacts),
-      },
-    });
-    return enhancedBlock;
-  }
-}
-
-const randomQueueDXN = (spaceId = SpaceId.random()) =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]);
-
-/**
- * Test transcription queue.
- */
-const useTestTranscriptionQueueWithEntityExtraction = (space: Space | undefined, running = true, interval = 1_000) => {
-  const queueDxn = useMemo(() => (space ? randomQueueDXN(space.id) : undefined), [space]);
-  const queue = useQueue<TranscriptBlock>(queueDxn);
-  const [builder] = useState(() => new EntityExtractionBlockBuilder());
-
-  useEffect(() => {
-    if (!queue || !running) {
-      return;
-    }
-
-    if (space) {
-      builder.seedData(space);
-    }
-
-    const ctx = new Context();
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        const block = await builder.createBlock();
-        queue.append([create(TranscriptBlock, block)]);
-      },
-      interval,
-    );
-
-    return () => {
-      ctx.dispose();
-    };
-  }, [space, queue, running, interval]);
-
-  return queue;
 };
 
 /**
