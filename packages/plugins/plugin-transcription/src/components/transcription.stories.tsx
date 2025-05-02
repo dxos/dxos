@@ -16,29 +16,28 @@ import React, {
   useState,
 } from 'react';
 
+import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { MemoryQueue } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Config } from '@dxos/react-client';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { SpacePlugin } from '@dxos/plugin-space';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { randomQueueDxn, useQueue } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
+import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript } from './Transcript';
+import { TestItem } from './Transcript/testings';
+import { TranscriptionPlugin } from '../TranscriptionPlugin';
 import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } from '../hooks';
 import { type BlockModel } from '../model';
 import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { ThemePlugin } from '@dxos/plugin-theme';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { TestItem } from './Transcript/testings';
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
 
 const TranscriptionStory: FC<{
   model: BlockModel<TranscriptBlock>;
@@ -70,33 +69,42 @@ const Microphone = () => {
 
   // Queue.
   const queueDxn = useMemo(() => randomQueueDxn(), []);
-  const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
+  const queue = useMemo(() => new MemoryQueue<TranscriptBlock>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown, queue);
 
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
       const block = create(TranscriptBlock, { segments });
-      queue?.append([block]);
+      void queue.append([block]);
     },
     [queue],
   );
-  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments });
+
+  const transcriber = useTranscriber({
+    audioStreamTrack: track,
+    onSegments: handleSegments,
+  });
+  const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
-    void transcriber?.open();
+    void transcriber?.open().then(() => setIsOpen(true));
+    log.info('transcriber open');
     return () => {
-      void transcriber?.close();
+      void transcriber?.close().then(() => setIsOpen(false));
+      log.info('transcriber close');
     };
   }, [transcriber]);
 
   // Manage transcription state.
   useEffect(() => {
     if (running && transcriber?.isOpen) {
-      void transcriber?.startChunksRecording();
+      transcriber?.startChunksRecording();
+      log.info('transcriber startChunksRecording');
     } else if (!running) {
-      void transcriber?.stopChunksRecording();
+      transcriber?.stopChunksRecording();
+      log.info('transcriber stopChunksRecording');
     }
-  }, [transcriber, running, transcriber?.isOpen]);
+  }, [transcriber, running, isOpen]);
 
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
