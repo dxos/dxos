@@ -67,6 +67,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@peermetrics/webrtc-stats": "5.7.1",
     "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",
     "effect": "3.13.3",
