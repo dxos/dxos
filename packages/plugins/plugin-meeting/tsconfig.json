@@ -4,6 +4,7 @@
   ],
   "compilerOptions": {
     "types": [
+      "@dxos/typings",
       "node"
     ]
   },
