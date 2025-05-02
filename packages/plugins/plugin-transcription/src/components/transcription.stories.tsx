@@ -81,9 +81,15 @@ const Microphone = () => {
     [queue],
   );
 
+  const config = useRef<TranscriberParams['config']>({
+    transcribeAfterChunksAmount: 20,
+    prefixBufferChunksAmount: 5,
+  });
+
   const transcriber = useTranscriber({
     audioStreamTrack: track,
     onSegments: handleSegments,
+    config: config.current,
   });
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
