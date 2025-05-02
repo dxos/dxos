@@ -11,7 +11,9 @@ import React, { useMemo, useState } from 'react';
 import { IntentPlugin, Surface, SettingsPlugin, useCapability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -58,6 +60,8 @@ export const WithCompanion = {
   decorators: [
     withPluginManager({
       plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [MailboxType, MessageType, ContactType],
           onClientInitialized: async (_, client) => {
@@ -67,11 +71,11 @@ export const WithCompanion = {
             await initializeMailbox(client.spaces.default);
           },
         }),
-        InboxPlugin(),
+        PreviewPlugin(),
+        SpacePlugin(),
         IntentPlugin(),
         SettingsPlugin(),
-        SpacePlugin(),
-        ThemePlugin({ tx: defaultTx }),
+        InboxPlugin(),
       ],
     }),
   ],

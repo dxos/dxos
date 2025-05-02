@@ -54,6 +54,7 @@
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -68,6 +69,8 @@
     "react-resize-detector": "^12.0.2"
   },
   "devDependencies": {
+    "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-storybook-layout": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

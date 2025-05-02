@@ -46,6 +46,7 @@ const Message = ({ space, message, classNames }: MessageProps) => {
         decorateMarkdown(),
         preview({
           onLookup: async ({ label, ref }) => {
+            console.info('onLookup', { label, ref });
             const dxn = DXN.parse(ref);
             if (!dxn) {
               return null;
