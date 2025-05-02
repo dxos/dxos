@@ -27,6 +27,7 @@ export default [
 
         'call tab label': 'Call',
         'meeting status title': 'Meeting',
+        'show webrtc stats title': 'Detailed WebRTC Stats',
 
         'meeting summary label': 'Summary',
         'summarize label': 'Summarize',
