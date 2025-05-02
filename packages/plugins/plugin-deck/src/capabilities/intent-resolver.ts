@@ -123,9 +123,12 @@ export default (context: PluginsContext) =>
         layout.popoverOpen = options.state ?? Boolean(subject);
         layout.popoverContent =
           typeof subject === 'string' ? { component: subject, props: options.props } : subject ? { subject } : null;
-        layout.popoverAnchor = options.variant === 'virtual' ? options.anchor : undefined;
-        layout.popoverAnchorId = options.variant === 'react' ? options.anchorId : undefined;
         layout.popoverSide = options.side;
+        if (options.variant === 'virtual') {
+          layout.popoverAnchor = options.anchor;
+        } else {
+          layout.popoverAnchorId = options.anchorId;
+        }
       },
     }),
     createResolver({
