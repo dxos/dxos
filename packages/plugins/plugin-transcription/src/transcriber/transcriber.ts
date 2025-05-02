@@ -94,6 +94,9 @@ export class Transcriber extends Resource {
 
   protected override async _open(ctx: Context) {
     log.info('opening');
+    // this._queue?.append([
+    //   { id: ObjectId.random(), segments: [{ text: 'Started', started: new Date().toISOString() }] },
+    // ]);
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
     this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
@@ -105,6 +108,9 @@ export class Transcriber extends Resource {
     this._recording = false;
     this._transcribeTask = undefined;
     await this._recorder.stop();
+    // this._queue?.append([
+    //   { id: ObjectId.random(), segments: [{ text: 'Stopped', started: new Date().toISOString() }] },
+    // ]);
   }
 
   startChunksRecording() {

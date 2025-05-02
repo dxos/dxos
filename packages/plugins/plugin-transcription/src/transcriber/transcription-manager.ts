@@ -52,10 +52,16 @@ export class TranscriptionManager extends Resource {
 
   protected override async _open() {
     await this._toggleTranscriber();
+    this._queue?.append([
+      { id: ObjectId.random(), segments: [{ text: 'Started', started: new Date().toISOString() }] },
+    ]);
   }
 
   protected override async _close() {
     void this._transcriber?.close();
+    this._queue?.append([
+      { id: ObjectId.random(), segments: [{ text: 'Stopped', started: new Date().toISOString() }] },
+    ]);
   }
 
   @synchronized
@@ -65,14 +71,8 @@ export class TranscriptionManager extends Resource {
     }
 
     if (recording) {
-      this._queue?.append([
-        { id: ObjectId.random(), segments: [{ text: 'Started', started: new Date().toISOString() }] },
-      ]);
       this._transcriber?.startChunksRecording();
     } else {
-      this._queue?.append([
-        { id: ObjectId.random(), segments: [{ text: 'Stopped', started: new Date().toISOString() }] },
-      ]);
       this._transcriber?.stopChunksRecording();
     }
   }
@@ -102,10 +102,7 @@ export class TranscriptionManager extends Resource {
     this.isOpen && (await this._toggleTranscriber());
   }
 
-  /**
-   * Set the y  to save the transcription to.
-   * @param queue - The queue to save the transcription to or the DXN of the queue.
-   */
+  // TOOD(burdon): Always avoid functions that have A | B types.
   @synchronized
   setQueue(queue?: Queue<TranscriptBlock> | string) {
     switch (typeof queue) {
