@@ -364,6 +364,9 @@
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-storybook-layout/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-table/tsconfig.json"
     },
     {
