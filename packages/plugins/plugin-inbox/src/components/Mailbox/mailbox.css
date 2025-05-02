@@ -1,10 +1,11 @@
 .message {
   @apply grid grid-cols-[var(--rail-action)_1fr] gap-1 border-0;
-  body[data-is-keyboard="true"] article:focus-within & {
+  body[data-is-keyboard='true'] article:focus-within & {
     @apply border;
   }
 
-  &::before, &::after {
+  &::before,
+  &::after {
     content: '';
     position: absolute;
     z-index: 0;
@@ -18,10 +19,10 @@
   &::before {
     inset-block: 0;
     inset-inline-end: 0;
-    inline-size: .25rem;
+    inline-size: 0.25rem;
   }
 
-  &.message--current{
+  &.message--current {
     &::after {
       @apply bg-currentRelated;
     }
@@ -33,13 +34,14 @@
     }
   }
 
-  .message__thumb, .message__abstract {
+  .message__thumb,
+  .message__abstract {
     position: relative;
     z-index: 1;
   }
 
   .message__thumb {
-    @apply text-start pli-1;
+    @apply flex text-start pli-1 plb-1.5;
   }
 
   .message__abstract {
@@ -61,5 +63,9 @@
         @apply text-sm font-normal;
       }
     }
+  }
+
+  .message__tag-row {
+    @apply flex flex-row mlb-0.5 gap-1 flex-nowrap is-full overflow-hidden;
   }
 }

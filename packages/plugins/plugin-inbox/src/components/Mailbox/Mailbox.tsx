@@ -15,8 +15,13 @@ import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 import { type MailboxType } from '../../types';
 import { formatDate } from '../util';
 
+const ROW_SIZES = {
+  DEFAULT: 56,
+  WITH_TAG: 76,
+};
+
 const messageRowDefault = {
-  grid: { size: 56 },
+  grid: { size: ROW_SIZES.DEFAULT },
 };
 
 const messageColumnDefault = {
@@ -59,7 +64,15 @@ const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean)
         ><span class="message__abstract__date">${date}</span
       ></p
       ><p class="message__abstract__body">${subject}</p
-  ></button>`;
+  >
+  ${
+    message.properties?.tags
+      ? `<div class="message__tag-row">
+    ${message.properties.tags.map((tag: any) => `<div class="dx-tag" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
+  </div>`
+      : ''
+  }
+  </button>`;
 };
 
 const messageCellClassName = 'message';
@@ -148,12 +161,31 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     [messages, currentMessageId],
   );
 
+  const gridRows = React.useMemo(() => {
+    return messages.reduce(
+      (acc, _, idx) => {
+        const message = messages[idx];
+        const hasTags = message.properties?.tags && message.properties.tags.length > 0;
+
+        acc[idx] = {
+          size: hasTags ? ROW_SIZES.WITH_TAG : ROW_SIZES.DEFAULT,
+        };
+
+        return acc;
+      },
+      {} as Record<number, { size: number }>,
+    );
+  }, [messages]);
+
+  const rows = React.useMemo(() => ({ grid: gridRows }), [gridRows]);
+
   return (
     <Grid.Root id={`${id}__grid`}>
       <Grid.Content
         limitColumns={1}
         limitRows={messages.length}
         rowDefault={messageRowDefault}
+        rows={rows}
         columnDefault={columnDefault}
         onWheelCapture={handleWheel}
         onClick={handleClick}
