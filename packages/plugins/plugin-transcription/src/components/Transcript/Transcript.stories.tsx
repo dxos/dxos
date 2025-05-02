@@ -45,6 +45,7 @@ import { AIServiceEdgeClient } from '@dxos/assistant';
 import { processTranscriptBlock } from '../../entity-extraction';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { ContactType } from '@dxos/schema';
 
 faker.seed(1);
 
@@ -112,6 +113,19 @@ class EntityExtractionBlockBuilder {
   });
   currentBlock: number = 0;
 
+  seedData(space: Space) {
+    space.db.graph.schemaRegistry.addSchema([ContactType]);
+    // for (const document of TestData.documents) {
+    //   const obj = space.db.add(live(Document, document));
+    //   const dxn = makeRef(obj).dxn.toString();
+    //   document.dxn = dxn;
+    // }
+
+    for (const contact of Object.values(TestData.contacts)) {
+      space.db.add(contact);
+    }
+  }
+
   async createBlock(): Promise<TranscriptBlock> {
     const block = TestData.transcriptBlocks[this.currentBlock];
     this.currentBlock++;
@@ -167,8 +181,11 @@ const useTestTranscriptionQueueWithEntityExtraction = (space: Space | undefined,
       return;
     }
 
-    const ctx = new Context();
+    if (space) {
+      builder.seedData(space);
+    }
 
+    const ctx = new Context();
     scheduleTaskInterval(
       ctx,
       async () => {
@@ -336,6 +353,7 @@ const QueueStory = () => {
 const EntityExtractionQueueStory = () => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
+  console.log('space', space);
   const queue = useTestTranscriptionQueueWithEntityExtraction(space, running, 2_000);
   const model = useQueueModel(queue);
 
