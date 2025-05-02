@@ -15,7 +15,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts",
-    "src/typings/**/*.d.ts"
+    "typings/*.d.ts"
   ],
   "references": [
     {

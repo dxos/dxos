@@ -3,6 +3,8 @@
 //
 
 declare module '@peermetrics/webrtc-stats' {
+  import { EventEmitter } from 'events';
+
   export interface WebRTCStatsOptions {
     getStatsInterval: number;
   }
@@ -13,11 +15,9 @@ declare module '@peermetrics/webrtc-stats' {
     connectionId: string;
   }
 
-  export class WebRTCStats {
+  export class WebRTCStats extends EventEmitter {
     constructor(options: WebRTCStatsOptions);
     addConnection(info: ConnectionInfo): void;
     removeConnection(info: Pick<ConnectionInfo, 'pc'>): void;
-    on(event: 'stats', listener: (stats: { data: Record<string, any> }) => void): this;
-    removeListener(event: 'stats', listener: (stats: { data: Record<string, any> }) => void): this;
   }
 }
