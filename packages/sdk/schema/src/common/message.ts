@@ -83,12 +83,27 @@ export const ReferenceContentBlock = S.extend(
 ).pipe(S.mutable);
 export type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
 
+/**
+ * Transcription
+ */
+export const TranscriptionContentBlock = S.extend(
+  AbstractContentBlock,
+  S.Struct({
+    type: S.Literal('transcription'),
+    // TODO(burdon): TS from service is not Unix TS (x1000).
+    started: S.String,
+    text: S.String,
+  }),
+).pipe(S.mutable);
+export type TranscriptionContentBlock = S.Schema.Type<typeof TranscriptionContentBlock>;
+
 export const MessageContentBlock = S.Union(
   // prettier-ignore
   TextContentBlock,
   JsonContentBlock,
   ImageContentBlock,
   ReferenceContentBlock,
+  TranscriptionContentBlock,
 );
 
 // TODO(wittjosiah): Add read status:
@@ -103,10 +118,10 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
   created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
   }),
-  sender: ActorSchema.annotations({
+  sender: S.mutable(ActorSchema).annotations({
     description: 'Identity of the message sender.',
   }),
-  blocks: S.Array(MessageContentBlock).annotations({
+  blocks: S.mutable(S.Array(MessageContentBlock)).annotations({
     description: 'Contents of the message.',
   }),
   properties: S.optional(

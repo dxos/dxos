@@ -7,10 +7,11 @@ import { WaveFile } from 'wavefile';
 import { DeferredTask, Trigger } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
+import { type TranscriptionContentBlock } from '@dxos/schema';
 import { trace } from '@dxos/tracing';
 
 import { type AudioRecorder, type AudioChunk } from './audio-recorder';
-import { TRANSCRIPTION_URL, type TranscriptSegment } from '../types';
+import { TRANSCRIPTION_URL } from '../types';
 import { mergeFloat64Arrays } from '../util';
 
 type WhisperWord = {
@@ -64,7 +65,7 @@ export type TranscribeConfig = {
 export type TranscriberParams = {
   config: TranscribeConfig;
   recorder: AudioRecorder;
-  onSegments: (segments: TranscriptSegment[]) => Promise<void>;
+  onSegments: (segments: TranscriptionContentBlock[]) => Promise<void>;
 };
 
 /**
@@ -215,7 +216,7 @@ export class Transcriber extends Resource {
     return segments;
   }
 
-  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): TranscriptSegment[] {
+  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): TranscriptionContentBlock[] {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 
@@ -244,6 +245,7 @@ export class Transcriber extends Resource {
 
     // Add absolute timestamp to each segment.
     return filteredSegments.map((segment) => ({
+      type: 'transcription',
       started: new Date(zeroTimestamp + segment.start * 1_000).toISOString(),
       text: segment.text.trim(),
     }));

@@ -5,18 +5,20 @@
 import React, { type FC } from 'react';
 
 import { fullyQualifiedId, getSpace } from '@dxos/client/echo';
-import { useQueue } from '@dxos/react-client/echo';
+import { useMembers, useQueue } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { type MessageType } from '@dxos/schema';
 
 import { Transcript, renderMarkdown } from './Transcript';
 import { useQueueModelAdapter } from '../hooks';
-import { type TranscriptBlock, type TranscriptType } from '../types';
+import { type TranscriptType } from '../types';
 
 export const TranscriptionContainer: FC<{ role: string; transcript: TranscriptType }> = ({ role, transcript }) => {
   const attendableId = fullyQualifiedId(transcript);
   const space = getSpace(transcript);
-  const queue = useQueue<TranscriptBlock>(transcript.queue.dxn, { pollInterval: 1_000 });
-  const model = useQueueModelAdapter(renderMarkdown, queue);
+  const members = useMembers(space?.key).map((member) => member.identity);
+  const queue = useQueue<MessageType>(transcript.queue.dxn, { pollInterval: 1_000 });
+  const model = useQueueModelAdapter(renderMarkdown(members), queue);
 
   return (
     <StackItem.Content role={role} classNames='container-max-width pli-2'>

@@ -10,20 +10,20 @@ import { MixedStreamParser } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import type { BaseEchoObject } from '@dxos/echo-schema';
+import { type MessageType } from '@dxos/schema';
 
 import SYSTEM_PROMPT from './system-prompt.tpl?raw';
-import type { TranscriptBlock } from '../types';
 
-type ProcessTranscriptBlockParams = {
-  block: TranscriptBlock;
+type ProcessTranscriptMessageParams = {
+  message: MessageType;
   aiService: AIServiceClient;
   context: {
     objects?: BaseEchoObject[];
   };
 };
 
-type ProcessTranscriptBlockResult = {
-  block: TranscriptBlock;
+type ProcessTranscriptMessageResult = {
+  message: MessageType;
 };
 
 /**
@@ -34,9 +34,9 @@ const createSystemPrompt = (): string => {
   return template({});
 };
 
-export const processTranscriptBlock = async (
-  params: ProcessTranscriptBlockParams,
-): Promise<ProcessTranscriptBlockResult> => {
+export const processTranscriptMessage = async (
+  params: ProcessTranscriptMessageParams,
+): Promise<ProcessTranscriptMessageResult> => {
   // TODO(dmaretskyi): Move context to a vector search index.
   const systemPrompt = `
     ${createSystemPrompt()}
@@ -62,7 +62,7 @@ export const processTranscriptBlock = async (
             content: [
               {
                 type: 'text',
-                text: JSON.stringify(params.block),
+                text: JSON.stringify(params.message),
               },
             ],
           }),
@@ -73,10 +73,10 @@ export const processTranscriptBlock = async (
   );
 
   return {
-    block: {
-      ...params.block,
-      segments: params.block.segments.map((segment, i) => ({
-        ...segment,
+    message: {
+      ...params.message,
+      blocks: params.message.blocks.map((block, i) => ({
+        ...block,
         text: postprocessText(result?.segments[i] ?? raise(new Error('failed to process email'))),
       })),
     },
