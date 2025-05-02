@@ -4,8 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { DXN } from '@dxos/keys';
-import { resolveRef, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -44,18 +43,7 @@ const Message = ({ space, message, classNames }: MessageProps) => {
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),
-        preview({
-          onLookup: async ({ label, ref }) => {
-            console.info('onLookup', { label, ref });
-            const dxn = DXN.parse(ref);
-            if (!dxn) {
-              return null;
-            }
-
-            const object = await resolveRef(client, dxn, space);
-            return { label, object };
-          },
-        }),
+        preview(),
       ];
     }
     return [];
