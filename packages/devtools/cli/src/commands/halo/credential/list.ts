@@ -36,7 +36,7 @@ export default class List extends BaseCommand<typeof List> {
     return await this.execWithClient(async ({ client }) => {
       let credentials: Credential[];
 
-      if (this.flags.space == undefined) {
+      if (!this.flags.space) {
         const identity = client.halo.identity;
         if (!identity) {
           this.catch('Profile not initialized.');
