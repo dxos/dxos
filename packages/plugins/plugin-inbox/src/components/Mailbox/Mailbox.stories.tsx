@@ -49,8 +49,10 @@ const WithCompanionStory = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-2 overflow-hidden divide-x divide-divider'>
-      <Surface role='article' data={mailboxData} />
+    <div className='is-full grid grid-cols-[1fr_1fr] overflow-hidden divide-separator'>
+      <div role='none' className='relative border-ie border-separator'>
+        <Surface role='article' data={mailboxData} />
+      </div>
       <Surface role='article' data={companionData} />
     </div>
   );
