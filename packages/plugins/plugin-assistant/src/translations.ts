@@ -47,7 +47,7 @@ export default [
 
         'settings default label': 'Default',
         'settings custom prompts label': 'Use custom prompts',
-        'settings llm provider label': 'Enable Ollama integration',
+        'settings llm provider label': 'LLM provider',
         'settings edge llm model label': 'Remote language model',
         'settings ollama llm model label': 'Ollama language model',
       },
