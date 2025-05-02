@@ -9,7 +9,7 @@ import React, { useEffect, useState, useMemo, type FC } from 'react';
 
 import { contributes, Capabilities, SettingsPlugin, IntentPlugin, createSurface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { getSchema } from '@dxos/echo-schema';
+import { getSchema, ObjectId } from '@dxos/echo-schema';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
@@ -22,7 +22,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { Transcript, type TranscriptProps, renderMarkdown } from './Transcript';
-import { BlockBuilder, TestItem, useTestTranscriptionQueue } from './testings';
+import { BlockBuilder, TestItem, useTestTranscriptionQueue } from './testing';
 import { useQueueModelAdapter } from '../../hooks';
 import { BlockModel } from '../../model';
 import translations from '../../translations';
@@ -119,13 +119,40 @@ const BasicStory = ({ blocks: initialBlocks = [], ...props }: StoryProps) => {
 /**
  * Queue story mutates queue with model adapter.
  */
-const QueueStory = ({ blocks: initialBlocks = [], ...props }: StoryProps) => {
+const QueueStory = ({
+  blocks,
+  queueId,
+  onReset,
+  ...props
+}: StoryProps & { queueId: ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
-  const queue = useTestTranscriptionQueue(space, running, 2_000);
-  const model = useQueueModelAdapter(renderMarkdown, queue, initialBlocks);
+  const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
+  const model = useQueueModelAdapter((block, index) => renderMarkdown(block, index, true), queue);
 
-  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} {...props} />;
+  return (
+    <TranscriptContainer
+      space={space}
+      model={model}
+      running={running}
+      onRunningChange={setRunning}
+      onReset={onReset}
+      {...props}
+    />
+  );
+};
+
+/**
+ * Wrapper remounts on refresh to reload queue.
+ */
+const QueueStoryWrapper = () => {
+  const [queueId] = useState(ObjectId.random());
+  const [key, setKey] = useState(ObjectId.random().toString());
+  const handleReset = () => {
+    setKey(ObjectId.random().toString());
+  };
+
+  return <QueueStory key={key} queueId={queueId} onReset={handleReset} />;
 };
 
 const meta: Meta<StoryProps> = {
@@ -191,7 +218,7 @@ export const Empty: Story = {
 };
 
 export const WithQueue: Story = {
-  render: QueueStory,
+  render: QueueStoryWrapper,
   args: {
     ignoreAttention: true,
     attendableId: 'story',

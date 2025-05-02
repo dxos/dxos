@@ -18,7 +18,12 @@ export const useQueueModelAdapter = <T extends Block>(
 ): BlockModel<T> => {
   const model = useMemo(() => new BlockModel<T>(renderer, initialBlocks), [queue]);
   useEffect(() => {
-    if (!queue?.items.length) {
+    for (const block of queue?.items ?? []) {
+      model.appendBlock(block);
+    }
+  }, [model, queue]);
+  useEffect(() => {
+    if (!queue?.items.length || model.blocks.length === queue.items.length) {
       return;
     }
 

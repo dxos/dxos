@@ -14,7 +14,7 @@ export type Block = { id: string };
 /**
  * Covert block to a set of markdown lines.
  */
-export type BlockRenderer<T extends Block> = (block: T, debug?: boolean) => string[];
+export type BlockRenderer<T extends Block> = (block: T, index: number, debug?: boolean) => string[];
 
 /**
  * Abstract representation of the document model.
@@ -112,7 +112,7 @@ export class BlockModel<T extends Block> {
   }
 
   get doc() {
-    return Text.of([...this._blocks.flatMap((block) => this._renderer(block)), '']);
+    return Text.of([...this._blocks.flatMap((block, index) => this._renderer(block, index)), '']);
   }
 
   get blocks() {
@@ -171,7 +171,7 @@ export class BlockModel<T extends Block> {
       switch (change.type) {
         case 'append': {
           // For appends, convert block to lines and add at the end.
-          const lines = this._renderer(change.block);
+          const lines = this._renderer(change.block, change.index);
           const lastLine = document.lineCount();
           document.replaceLines(lastLine + 1, 0, lines);
           break;
@@ -184,7 +184,7 @@ export class BlockModel<T extends Block> {
             lineStart += this._blockLineCounts.get(this._blocks[i].id)!;
           }
           const previousLineCount = this._blockLineCounts.get(change.block.id)!;
-          const newLines = this._renderer(change.block);
+          const newLines = this._renderer(change.block, change.index);
           document.replaceLines(lineStart, previousLineCount, newLines);
           break;
         }
@@ -207,11 +207,13 @@ export class BlockModel<T extends Block> {
 
     // Update all block line counts and line-to-block mapping after processing changes.
     let currentLine = 1;
+    let index = 0;
     for (const block of this._blocks) {
-      const lineCount = this._renderer(block).length;
+      const lineCount = this._renderer(block, index).length;
       this._blockLineCounts.set(block.id, lineCount);
       this._lineToBlock.set(currentLine, block);
       currentLine += lineCount;
+      index++;
     }
 
     // Clean up deleted blocks.
