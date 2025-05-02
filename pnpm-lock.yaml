@@ -558,6 +558,9 @@ importers:
       '@dxos/plugin-presenter':
         specifier: workspace:*
         version: link:../../plugins/plugin-presenter
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-preview
       '@dxos/plugin-pwa':
         specifier: workspace:*
         version: link:../../plugins/plugin-pwa
@@ -6640,9 +6643,15 @@ importers:
       '@dxos/artifact':
         specifier: workspace:*
         version: link:../../experimental/artifact
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../experimental/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
@@ -6676,6 +6685,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -7729,6 +7741,43 @@ importers:
       '@types/reveal.js':
         specifier: ^5.0.3
         version: 5.0.3
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: 5.4.7
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
+
+  packages/plugins/plugin-preview:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
+    devDependencies:
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9499,6 +9548,12 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
     devDependencies:
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
+      '@dxos/plugin-storybook-layout':
+        specifier: workspace:*
+        version: link:../plugin-storybook-layout
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -51018,7 +51073,7 @@ snapshots:
       hast-util-whitespace: 2.0.0
       html-void-elements: 2.0.1
       property-information: 6.1.1
-      space-separated-tokens: 2.0.2
+      space-separated-tokens: 2.0.1
       stringify-entities: 4.0.3
       unist-util-is: 5.1.1
 
@@ -53065,7 +53120,7 @@ snapshots:
 
   mdast-util-find-and-replace@3.0.2:
     dependencies:
-      '@types/mdast': 4.0.4
+      '@types/mdast': 4.0.3
       escape-string-regexp: 5.0.0
       unist-util-is: 6.0.0
       unist-util-visit-parents: 6.0.1
@@ -53124,7 +53179,7 @@ snapshots:
 
   mdast-util-gfm-autolink-literal@2.0.1:
     dependencies:
-      '@types/mdast': 4.0.4
+      '@types/mdast': 4.0.3
       ccount: 2.0.1
       devlop: 1.1.0
       mdast-util-find-and-replace: 3.0.2
@@ -53138,7 +53193,7 @@ snapshots:
 
   mdast-util-gfm-footnote@2.1.0:
     dependencies:
-      '@types/mdast': 4.0.4
+      '@types/mdast': 4.0.3
       devlop: 1.1.0
       mdast-util-from-markdown: 2.0.0
       mdast-util-to-markdown: 2.1.0
@@ -53153,7 +53208,7 @@ snapshots:
 
   mdast-util-gfm-strikethrough@2.0.0:
     dependencies:
-      '@types/mdast': 4.0.4
+      '@types/mdast': 4.0.3
       mdast-util-from-markdown: 2.0.0
       mdast-util-to-markdown: 2.1.0
     transitivePeerDependencies:
@@ -53170,7 +53225,7 @@ snapshots:
 
   mdast-util-gfm-table@2.0.0:
     dependencies:
-      '@types/mdast': 4.0.4
+      '@types/mdast': 4.0.3
       devlop: 1.1.0
       markdown-table: 3.0.2
       mdast-util-from-markdown: 2.0.0
@@ -53185,7 +53240,7 @@ snapshots:
 
   mdast-util-gfm-task-list-item@2.0.0:
     dependencies:
-      '@types/mdast': 4.0.4
+      '@types/mdast': 4.0.3
       devlop: 1.1.0
       mdast-util-from-markdown: 2.0.0
       mdast-util-to-markdown: 2.1.0
@@ -53295,7 +53350,7 @@ snapshots:
   mdast-util-to-hast@13.2.0:
     dependencies:
       '@types/hast': 3.0.4
-      '@types/mdast': 4.0.4
+      '@types/mdast': 4.0.3
       '@ungap/structured-clone': 1.2.0
       devlop: 1.1.0
       micromark-util-sanitize-uri: 2.0.0
@@ -56820,7 +56875,7 @@ snapshots:
 
   remark-gfm@4.0.1:
     dependencies:
-      '@types/mdast': 4.0.4
+      '@types/mdast': 4.0.3
       mdast-util-gfm: 3.1.0
       micromark-extension-gfm: 3.0.0
       remark-parse: 11.0.0
@@ -56913,7 +56968,7 @@ snapshots:
 
   remark-stringify@11.0.0:
     dependencies:
-      '@types/mdast': 4.0.4
+      '@types/mdast': 4.0.3
       mdast-util-to-markdown: 2.1.0
       unified: 11.0.5
 
@@ -58531,7 +58586,7 @@ snapshots:
   terser@5.19.2:
     dependencies:
       '@jridgewell/source-map': 0.3.5
-      acorn: 8.13.0
+      acorn: 8.11.3
       commander: 2.20.3
       source-map-support: 0.5.21
 

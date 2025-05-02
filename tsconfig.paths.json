@@ -166,6 +166,9 @@
       "@dxos/plugin-presenter": [
         "packages/plugins/plugin-presenter/src/index.ts"
       ],
+      "@dxos/plugin-preview": [
+        "packages/plugins/plugin-preview/src/index.ts"
+      ],
       "@dxos/plugin-pwa": [
         "packages/plugins/plugin-pwa/src/index.ts"
       ],
