@@ -31,6 +31,14 @@ import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } fro
 import { type BlockModel } from '../model';
 import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { ThemePlugin } from '@dxos/plugin-theme';
+import { SpacePlugin } from '@dxos/plugin-space';
+import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { defaultTx } from '@dxos/react-ui-theme';
+import { TestItem } from './Transcript/testings';
+import { TranscriptionPlugin } from '../TranscriptionPlugin';
 
 const TranscriptionStory: FC<{
   model: BlockModel<TranscriptBlock>;
@@ -136,14 +144,14 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
 
   useEffect(() => {
     if (transcriber && running) {
-      void transcriber.open();
+      void transcriber.open().then(manageChunkRecording);
     } else if (!running) {
       transcriber?.stopChunksRecording();
       void transcriber?.close();
     }
   }, [transcriber, running]);
 
-  useEffect(() => {
+  const manageChunkRecording = () => {
     if (track?.readyState === 'live' && transcriber?.isOpen) {
       log.info('starting transcription');
       transcriber.startChunksRecording();
@@ -151,6 +159,9 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
       log.info('stopping transcription');
       transcriber.stopChunksRecording();
     }
+  };
+  useEffect(() => {
+    manageChunkRecording();
   }, [transcriber, track?.readyState, transcriber?.isOpen]);
 
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
@@ -159,16 +170,38 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
 const meta: Meta<typeof AudioFile> = {
   title: 'plugins/plugin-transcription/transcription',
   decorators: [
-    withClientProvider({
-      config: new Config({
-        runtime: {
-          client: { edgeFeatures: { signaling: true } },
-          services: {
-            edge: { url: 'https://edge.dxos.workers.dev/' },
-            iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+    withPluginManager({
+      plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        ClientPlugin({
+          types: [TestItem],
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
           },
-        },
-      }),
+        }),
+        SpacePlugin(),
+        SettingsPlugin(),
+        IntentPlugin(),
+        TranscriptionPlugin(),
+      ],
+      fireEvents: [Events.SetupAppGraph],
+      // capabilities: [
+      //   contributes(
+      //     Capabilities.ReactSurface,
+      //     createSurface({
+      //       id: 'preview-test',
+      //       role: 'preview',
+      //       component: ({ data }) => {
+      //         const schema = getSchema(data);
+      //         if (!schema) {
+      //           return null;
+      //         }
+
+      //         return <Form schema={schema} values={data} />;
+      //       },
+      //     }),
+      //   ),
+      // ],
     }),
     withTheme,
     withLayout({
