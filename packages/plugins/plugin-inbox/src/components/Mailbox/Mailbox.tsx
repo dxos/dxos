@@ -151,7 +151,6 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
   return (
     <Grid.Root id={`${id}__grid`}>
       <Grid.Content
-        columns={1}
         limitColumns={1}
         limitRows={messages.length}
         rowDefault={messageRowDefault}

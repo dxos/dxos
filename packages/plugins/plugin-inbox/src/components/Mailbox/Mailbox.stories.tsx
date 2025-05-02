@@ -17,6 +17,8 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useAttendableAttributes } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { Contact, MessageType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
@@ -44,15 +46,17 @@ const WithCompanionStory = () => {
   const message = mailbox && state[fullyQualifiedId(mailbox)];
   const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
 
+  // NOTE: Attention required for scrolling.
+  const attentionAttrs = useAttendableAttributes(mailbox ? fullyQualifiedId(mailbox) : undefined);
+
   if (!space || !mailbox) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className='is-full grid grid-cols-[1fr_1fr] overflow-hidden divide-separator'>
-      <div role='none' className='relative border-ie border-separator'>
-        <Surface role='article' data={mailboxData} />
-      </div>
+    <div {...attentionAttrs} className='is-full grid grid-cols-[1fr_1px_1fr] overflow-hidden divide-separator'>
+      <Surface role='article' data={mailboxData} />
+      <span role='separator' className='bg-separator' />
       <Surface role='article' data={companionData} />
     </div>
   );
@@ -88,7 +92,7 @@ const meta: Meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: Mailbox,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true })],
+  decorators: [withLayout({ fullscreen: true }), withAttention],
 };
 
 export default meta;

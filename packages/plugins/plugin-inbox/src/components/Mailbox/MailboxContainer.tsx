@@ -74,7 +74,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   );
 
   return (
-    <StackItem.Content>
+    <StackItem.Content classNames='relative'>
       {messages && messages.length > 0 ? (
         <Mailbox
           messages={messages}
