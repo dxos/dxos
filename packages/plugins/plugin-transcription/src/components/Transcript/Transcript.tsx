@@ -24,6 +24,7 @@ import { isNotFalsy } from '@dxos/util';
 import { transcript } from './transcript-extension';
 import { type BlockModel } from '../../model';
 import { type TranscriptType, type TranscriptBlock } from '../../types';
+import { log } from '@dxos/log';
 
 export const renderMarkdown = (block: TranscriptBlock, debug = false): string[] => {
   // TODO(burdon): Use link/reference markup for users (with popover).
@@ -66,6 +67,7 @@ export const Transcript = ({
         space &&
           preview({
             onLookup: async ({ label, ref }) => {
+              log.info('onLookup', { label, ref });
               const dxn = DXN.parse(ref);
               if (!dxn) {
                 return null;

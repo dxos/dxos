@@ -193,7 +193,7 @@ const useTestTranscriptionQueueWithEntityExtraction = (space: Space | undefined,
     return () => {
       ctx.dispose();
     };
-  }, [queue, running, interval]);
+  }, [space, queue, running, interval]);
 
   return queue;
 };
