@@ -13,10 +13,10 @@ const createContact = (name: string, email: string): ContactType => {
 /**
  * Helper to create dates in reverse chronological order
  */
-const getDate = (daysAgo: number): Date => {
+const getDate = (daysAgo: number): string => {
   const date = new Date();
   date.setDate(date.getDate() - daysAgo);
-  return date;
+  return date.toISOString();
 };
 
 export const DocumentType = Schema.Struct({
