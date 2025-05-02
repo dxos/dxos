@@ -128,20 +128,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     ClientPlugin({
       config,
       services,
-      onClientInitialized: async (_, client) => {
-        const { LegacyTypes } = await import('./migrations');
-        client.addTypes([
-          LegacyTypes.DocumentType,
-          LegacyTypes.FileType,
-          LegacyTypes.FolderType,
-          LegacyTypes.MessageType,
-          LegacyTypes.SectionType,
-          LegacyTypes.StackType,
-          LegacyTypes.TableType,
-          LegacyTypes.TextType,
-          LegacyTypes.ThreadType,
-        ]);
-      },
       onReset: ({ target }) => {
         localStorage.clear();
         if (target === 'deviceInvitation') {
