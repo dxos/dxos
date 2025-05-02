@@ -36,6 +36,7 @@ export default [
         'default view mode label': 'Default view mode',
         'upload image label': 'Upload image',
         'fallback title': 'Untitled',
+        'navigate to document label': 'Open document',
       },
     },
   },

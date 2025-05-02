@@ -97,7 +97,7 @@ export default () =>
     }),
     createSurface({
       id: `${MARKDOWN_PLUGIN}/preview`,
-      role: 'preview',
+      role: 'popover',
       filter: (data): data is { subject: DocumentType | TextType } =>
         isInstanceOf(DocumentType, data.subject) || isInstanceOf(TextType, data.subject),
       component: (props) => <MarkdownPreview {...props} />,

@@ -104,6 +104,7 @@ export const PreviewPlugin = () =>
           createSurface({
             id: `${PREVIEW_PLUGIN}/fallback-popover`,
             role: 'popover',
+            position: 'fallback',
             filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
             component: ({ data }) => {
               const schema = getSchema(data.subject);
