@@ -9,6 +9,7 @@ import { Format, FieldLookupAnnotationId, GeneratorAnnotationId, LabelAnnotation
 
 import { IconAnnotationId } from '../annotations';
 
+// TODO(wittjosiah): Migrate to using common types.
 export namespace Testing {
   //
   // Org

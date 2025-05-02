@@ -3,7 +3,7 @@
 //
 
 import { INBOX_PLUGIN } from './meta';
-import { CalendarType, ContactsType, MailboxType } from './types';
+import { CalendarType, MailboxType } from './types';
 
 export default [
   {
@@ -11,10 +11,6 @@ export default [
       [MailboxType.typename]: {
         'typename label': 'Mailbox',
         'object name placeholder': 'New mailbox',
-      },
-      [ContactsType.typename]: {
-        'typename label': 'Contacts',
-        'object name placeholder': 'New contacts',
       },
       [CalendarType.typename]: {
         'typename label': 'Calendar',

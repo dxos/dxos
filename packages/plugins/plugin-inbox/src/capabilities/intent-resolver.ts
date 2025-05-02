@@ -9,7 +9,7 @@ import { live, refFromDXN } from '@dxos/live-object';
 import { MessageType } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
-import { CalendarType, ContactsType, InboxAction, MailboxType } from '../types';
+import { CalendarType, InboxAction, MailboxType } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -22,12 +22,6 @@ export default (context: PluginsContext) =>
             queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           }),
         },
-      }),
-    }),
-    createResolver({
-      intent: InboxAction.CreateContacts,
-      resolve: () => ({
-        data: { object: live(ContactsType, {}) },
       }),
     }),
     createResolver({
