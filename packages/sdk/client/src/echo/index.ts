@@ -69,7 +69,7 @@ export {
   isSpace,
   parseFullyQualifiedId,
   parseId,
-  randomQueueDxn,
+  createQueueDxn,
   type Progress,
   type PeerSyncState,
   type SpaceSyncStateMap,

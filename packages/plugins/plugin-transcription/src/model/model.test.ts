@@ -8,7 +8,11 @@ import { describe, test } from 'vitest';
 import { BlockModel, DocumentAdapter, type BlockRenderer } from './model';
 import { type TranscriptBlock } from '../types';
 
-const blockToMarkdown: BlockRenderer<TranscriptBlock> = (block: TranscriptBlock, debug = true): string[] => {
+const blockToMarkdown: BlockRenderer<TranscriptBlock> = (
+  block: TranscriptBlock,
+  index: number,
+  debug = true,
+): string[] => {
   return [`###### ${block.authorName}`, ...block.segments.map((segment) => segment.text), ''];
 };
 
