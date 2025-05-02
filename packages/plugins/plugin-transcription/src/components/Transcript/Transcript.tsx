@@ -29,7 +29,7 @@ export const renderMarkdown = (block: TranscriptBlock, debug = false): string[] 
   // TODO(burdon): Use link/reference markup for users (with popover).
   // TODO(burdon): Color and avatar.
   return [
-    `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
+    `###### \`${block.identityDid}\`` + (debug ? ` (${block.id})` : ''),
     block.segments.map((segment) => segment.text.trim()).join(' '),
     '',
   ];

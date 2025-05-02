@@ -5,10 +5,9 @@
 import { useEffect, useMemo } from 'react';
 
 import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { DXN, IdentityDid, QueueSubspaceTags } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
-import { hues } from '@dxos/react-ui-theme';
 
 import { TranscriptBlock } from '../../types';
 
@@ -30,10 +29,7 @@ export const TestItem = S.Struct({
 export class BlockBuilder {
   static readonly singleton = new BlockBuilder();
 
-  users = Array.from({ length: 5 }, () => ({
-    authorName: faker.person.fullName(),
-    authorHue: faker.helpers.arrayElement(hues),
-  }));
+  users = Array.from({ length: 5 }, () => IdentityDid.random());
 
   start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 
@@ -42,7 +38,7 @@ export class BlockBuilder {
   createBlock(numSegments = 1): TranscriptBlock {
     return {
       id: ObjectId.random().toString(),
-      ...faker.helpers.arrayElement(this.users),
+      identityDid: faker.helpers.arrayElement(this.users),
       segments: Array.from({ length: numSegments }).map(() => this.createSegment()),
     };
   }
