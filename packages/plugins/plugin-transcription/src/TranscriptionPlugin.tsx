@@ -7,7 +7,14 @@ import { QueueImpl } from '@dxos/echo-db';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, IntentResolver, MeetingTranscriptionState, ReactSurface, Transcriber } from './capabilities';
+import {
+  AppGraphBuilder,
+  IntentResolver,
+  MeetingTranscriptionState,
+  ReactSurface,
+  Settings,
+  Transcriber,
+} from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 import { TranscriptBlock, TranscriptType } from './types';
@@ -20,14 +27,9 @@ export const TranscriptionPlugin = () =>
       activate: () => contributes(Capabilities.Translations, translations),
     }),
     defineModule({
-      id: `${meta.id}/module/transcription`,
-      activatesOn: Events.SetupAppGraph,
-      activate: Transcriber,
-    }),
-    defineModule({
-      id: `${meta.id}/module/meeting-transcription-state`,
-      activatesOn: Events.SetupAppGraph,
-      activate: MeetingTranscriptionState,
+      id: `${meta.id}/module/settings`,
+      activatesOn: Events.SetupSettings,
+      activate: Settings,
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
@@ -70,5 +72,15 @@ export const TranscriptionPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
+    }),
+    defineModule({
+      id: `${meta.id}/module/transcription`,
+      activatesOn: Events.SetupAppGraph,
+      activate: Transcriber,
+    }),
+    defineModule({
+      id: `${meta.id}/module/meeting-transcription-state`,
+      activatesOn: Events.SetupAppGraph,
+      activate: MeetingTranscriptionState,
     }),
   ]);
