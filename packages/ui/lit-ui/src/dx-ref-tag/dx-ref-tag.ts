@@ -2,16 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(thure): Find a way to instruct ESLint & Prettier to treat any whitespace between tags rendered in the `html` template function as significant.
+/* eslint-disable */
+
 import { html, LitElement } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 
 import { makeId } from '@dxos/react-hooks';
 
 export class DxRefTagActivate extends Event {
   public readonly ref: string;
   public readonly label: string;
-  public readonly trigger: HTMLButtonElement;
-  constructor(props: { ref: string; label: string; trigger: HTMLButtonElement }) {
+  public readonly trigger: DxRefTag;
+  constructor(props: { ref: string; label: string; trigger: DxRefTag }) {
     super('dx-ref-tag-activate');
     this.ref = props.ref;
     this.label = props.label;
@@ -25,52 +28,27 @@ export class DxRefTag extends LitElement {
   ref: string = makeId('dx-ref-tag');
 
   @property({ type: String })
-  label: string = 'never';
-
-  @property({ type: String })
   rootClassName: string | undefined = undefined;
 
-  @property({ type: Number })
-  hoverDelay: number = 400;
+  constructor () {
+    super();
+    this.addEventListener('click', this.handleActivate);
+  }
 
-  @state()
-  private hoverTimer: number | null = null;
+  override connectedCallback () {
+    super.connectedCallback();
+    this.tabIndex = 0;
+    this.classList.add('dx-focus-ring');
+    if(this.rootClassName){
+      this.classList.add(this.rootClassName);
+    }
+    this.setAttribute('role', 'button');
+  }
 
   private handleActivate(event: { type: string }) {
     this.dispatchEvent(
-      new DxRefTagActivate({ ref: this.ref, label: this.label, trigger: this.querySelector('[data-trigger]')! }),
+      new DxRefTagActivate({ ref: this.ref, label: this.textContent ?? '', trigger: this }),
     );
-  }
-
-  private handlePointerEnter() {
-    if (this.hoverTimer !== null) {
-      window.clearTimeout(this.hoverTimer);
-    }
-    this.hoverTimer = window.setTimeout(() => {
-      this.handleActivate({ type: 'hover-linger' });
-      this.hoverTimer = null;
-    }, this.hoverDelay);
-  }
-
-  private handlePointerLeave() {
-    if (this.hoverTimer !== null) {
-      window.clearTimeout(this.hoverTimer);
-      this.hoverTimer = null;
-    }
-  }
-
-  override render() {
-    const className = `dx-focus-ring dx-ref-tag${this.rootClassName ? ` ${this.rootClassName}` : ''}`;
-    return html`<span
-      tabindex="0"
-      data-trigger="true"
-      class=${className}
-      id=${this.id}
-      @click=${this.handleActivate}
-      @pointerenter=${this.handlePointerEnter}
-      @pointerleave=${this.handlePointerLeave}
-      >${this.label}</span
-    >`;
   }
 
   override createRenderRoot() {
