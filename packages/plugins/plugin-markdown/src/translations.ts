@@ -35,6 +35,7 @@ export default [
         'toggle view mode label': 'Toggle read-only',
         'default view mode label': 'Default view mode',
         'upload image label': 'Upload image',
+        'fallback title': 'Untitled',
       },
     },
   },
