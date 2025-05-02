@@ -41,6 +41,7 @@ export default () => {
     dialogBlockAlign: undefined,
     dialogType: undefined,
     popoverContent: null,
+    popoverAnchor: undefined,
     popoverAnchorId: undefined,
     popoverOpen: false,
     toasts: [],

@@ -24,7 +24,10 @@ export const PopoverAddSpace = () => {
         onClick={() => {
           void dispatch(createIntent(SpaceAction.OpenCreateSpace));
           void dispatch(
-            createIntent(LayoutAction.UpdatePopover, { part: 'popover', options: { anchorId: '', state: false } }),
+            createIntent(LayoutAction.UpdatePopover, {
+              part: 'popover',
+              options: { variant: 'react', anchorId: '', state: false },
+            }),
           );
         }}
         data-testid='spacePlugin.createSpace'
@@ -36,7 +39,10 @@ export const PopoverAddSpace = () => {
         onClick={() => {
           void dispatch(createIntent(SpaceAction.Join));
           void dispatch(
-            createIntent(LayoutAction.UpdatePopover, { part: 'popover', options: { anchorId: '', state: false } }),
+            createIntent(LayoutAction.UpdatePopover, {
+              part: 'popover',
+              options: { variant: 'react', anchorId: '', state: false },
+            }),
           );
         }}
         data-testid='spacePlugin.joinSpace'

@@ -3,3 +3,4 @@
 //
 
 export * from './system-prompt';
+export * from './template';

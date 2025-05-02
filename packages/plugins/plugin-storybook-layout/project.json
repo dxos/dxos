@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-storybook-layout",
+  "tags": [
+    "scope:plugins"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "pack": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

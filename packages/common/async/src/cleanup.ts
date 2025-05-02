@@ -21,7 +21,7 @@ export const combine = (...cleanupFns: CleanupFn[]): CleanupFn => {
  * Can be used in effect hooks in conjunction with `combine`.
  */
 export const addEventListener = <T extends Event = Event>(
-  el: HTMLElement,
+  el: HTMLElement | Window,
   event: string,
   handler: EventListenerOrEventListenerObject | ((event: T) => void),
   options?: boolean | AddEventListenerOptions,

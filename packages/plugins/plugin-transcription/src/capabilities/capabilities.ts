@@ -12,6 +12,7 @@ export namespace TranscriptionCapabilities {
   export type GetTranscriberProps = {
     audioStreamTrack: MediaStreamTrack;
     onSegments: TranscriberParams['onSegments'];
+    config?: TranscriberParams['config'];
   };
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;
   export const Transcriber = defineCapability<GetTranscriber>(`${TRANSCRIPTION_PLUGIN}/capability/transcriber`);
