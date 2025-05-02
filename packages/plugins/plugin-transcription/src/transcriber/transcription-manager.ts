@@ -9,11 +9,10 @@ import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { type HuePalette } from '@dxos/react-ui-theme';
+import { MessageType, type TranscriptionContentBlock } from '@dxos/schema';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
-import { TranscriptBlock, type TranscriptSegment } from '../types';
 
 /**
  * Length of the chunk in ms.
@@ -38,11 +37,10 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
-  private _name?: string = undefined;
-  private _hue?: HuePalette = undefined;
+  private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _queue?: Queue<TranscriptBlock> = undefined;
+  private _queue?: Queue<MessageType> = undefined;
   private _enabled = false;
 
   constructor(edgeClient: EdgeHttpClient) {
@@ -100,24 +98,16 @@ export class TranscriptionManager extends Resource {
   setQueue(queueDxn: DXN) {
     if (this._queue?.dxn.toString() !== queueDxn.toString()) {
       log.info('setQueue', { queueDxn: queueDxn.toString() });
-      this._queue = new QueueImpl<TranscriptBlock>(this._edgeClient, queueDxn);
+      this._queue = new QueueImpl<MessageType>(this._edgeClient, queueDxn);
     }
   }
 
   @synchronized
-  setName(name: string) {
-    if (this._name === name) {
+  setIdentityDid(did: string) {
+    if (this._identityDid === did) {
       return;
     }
-    this._name = name;
-  }
-
-  @synchronized
-  setHue(hue: HuePalette) {
-    if (this._hue === hue) {
-      return;
-    }
-    this._hue = hue;
+    this._identityDid = did;
   }
 
   // TODO(burdon): Change this to setEnables (explicit), not toggle.
@@ -128,11 +118,19 @@ export class TranscriptionManager extends Resource {
     if (this._enabled) {
       await this._transcriber?.open();
       // TODO(burdon): Started and stopped blocks appear twice.
-      const block = create(TranscriptBlock, { segments: [{ text: 'Started', started: new Date().toISOString() }] });
+      const block = create(MessageType, {
+        created: new Date().toISOString(),
+        blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
+        sender: { role: 'assistant' },
+      });
       this._queue?.append([block]);
     } else {
       await this._transcriber?.close();
-      const block = create(TranscriptBlock, { segments: [{ text: 'Stopped', started: new Date().toISOString() }] });
+      const block = create(MessageType, {
+        created: new Date().toISOString(),
+        blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
+        sender: { role: 'assistant' },
+      });
       this._queue?.append([block]);
     }
   }
@@ -164,12 +162,16 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _onSegments(segments: TranscriptSegment[]) {
+  private async _onSegments(segments: TranscriptionContentBlock[]) {
     if (!this.isOpen || !this._queue) {
       return;
     }
 
-    const block = create(TranscriptBlock, { authorName: this._name, authorHue: this._hue, segments });
+    const block = create(MessageType, {
+      created: new Date().toISOString(),
+      blocks: segments,
+      sender: { identityDid: this._identityDid },
+    });
     this._queue.append([block]);
   }
 }

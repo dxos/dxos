@@ -5,75 +5,97 @@
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { BlockModel, DocumentAdapter, type BlockRenderer } from './model';
-import { type TranscriptBlock } from '../types';
+import { type MessageType } from '@dxos/schema';
 
-const blockToMarkdown: BlockRenderer<TranscriptBlock> = (
-  block: TranscriptBlock,
-  index: number,
-  debug = true,
-): string[] => {
-  return [`###### ${block.authorName}`, ...block.segments.map((segment) => segment.text), ''];
+import { SerializationModel, DocumentAdapter, type ChunkRenderer } from './model';
+
+const blockToMarkdown: ChunkRenderer<MessageType> = (message: MessageType, index: number, debug = true): string[] => {
+  return [
+    `###### ${message.sender.name}`,
+    ...message.blocks.filter((block) => block.type === 'transcription').map((block) => block.text),
+    '',
+  ];
 };
 
 const createDate = () => new Date().toISOString();
 
-describe('BlockModel', () => {
+describe('SerializationModel', () => {
   test('basic', ({ expect }) => {
-    const model = new BlockModel<TranscriptBlock>(blockToMarkdown);
-    expect(model.blocks.length).to.eq(0);
+    const model = new SerializationModel<MessageType>(blockToMarkdown);
+    expect(model.chunks.length).to.eq(0);
     expect(model.doc.toString()).to.eq('');
 
-    // Create block.
-    const block = {
+    // Create message.
+    const message: MessageType = {
       id: '1',
-      authorName: 'Alice',
-      segments: [{ started: createDate(), text: 'Hello world!' }],
+      created: createDate(),
+      sender: { name: 'Alice' },
+      blocks: [
+        {
+          type: 'transcription',
+          started: createDate(),
+          text: 'Hello world!',
+        },
+      ],
     };
-    model.appendBlock(block);
+    model.appendChunk(message);
     {
       const text = model.doc.toString();
       expect(text).to.eq('###### Alice\nHello world!\n\n');
-      expect(model.blocks.length).to.eq(1);
+      expect(model.chunks.length).to.eq(1);
     }
 
-    // Update block.
-    block.segments.push({ started: new Date().toISOString(), text: 'Hello again!' });
-    model.updateBlock(block);
+    // Update message.
+    message.blocks.push({ type: 'transcription', started: createDate(), text: 'Hello again!' });
+    model.updateChunk(message);
     {
       const text = model.doc.toString();
       expect(text).to.eq('###### Alice\nHello world!\nHello again!\n\n');
-      expect(model.blocks.length).to.eq(1);
+      expect(model.chunks.length).to.eq(1);
     }
   });
 
   test('sync - append', ({ expect }) => {
     const view = new EditorView({ extensions: [], doc: '' });
-    const model = new BlockModel<TranscriptBlock>(blockToMarkdown);
+    const model = new SerializationModel<MessageType>(blockToMarkdown);
     const adapter = new DocumentAdapter(view);
     expect(adapter.lineCount()).to.eq(0);
     expect(view.state.doc.toString()).to.eq('');
 
-    // Append block.
+    // Append message.
     {
-      const block = {
+      const message: MessageType = {
         id: '1',
-        authorName: 'Alice',
-        segments: [{ started: createDate(), text: 'Hello world!' }],
+        created: createDate(),
+        sender: { name: 'Alice' },
+        blocks: [
+          {
+            type: 'transcription',
+            started: createDate(),
+            text: 'Hello world!',
+          },
+        ],
       };
-      model.appendBlock(block);
+      model.appendChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n');
     }
 
-    // Append block.
+    // Append message.
     {
-      const block = {
+      const message: MessageType = {
         id: '2',
-        authorName: 'Bob',
-        segments: [{ started: createDate(), text: 'Hello world!' }],
+        created: createDate(),
+        sender: { name: 'Bob' },
+        blocks: [
+          {
+            type: 'transcription',
+            started: createDate(),
+            text: 'Hello world!',
+          },
+        ],
       };
-      model.appendBlock(block);
+      model.appendChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n###### Bob\nHello world!\n\n');
     }
@@ -81,40 +103,56 @@ describe('BlockModel', () => {
 
   test('sync - append, update, delete', ({ expect }) => {
     const view = new EditorView({ extensions: [], doc: '' });
-    const model = new BlockModel<TranscriptBlock>(blockToMarkdown);
+    const model = new SerializationModel<MessageType>(blockToMarkdown);
     const adapter = new DocumentAdapter(view);
     expect(adapter.lineCount()).to.eq(0);
 
-    // Append block.
+    // Append message.
     {
-      const block = { id: '1', authorName: 'Alice', segments: [{ started: createDate(), text: 'Hello world!' }] };
-      model.appendBlock(block);
+      const message: MessageType = {
+        id: '1',
+        created: createDate(),
+        sender: { name: 'Alice' },
+        blocks: [
+          {
+            type: 'transcription',
+            started: createDate(),
+            text: 'Hello world!',
+          },
+        ],
+      };
+      model.appendChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n');
 
-      // Update block (add segment).
-      block.segments.push({ started: createDate(), text: 'Hello again!' });
-      model.updateBlock(block);
+      // Update message (add block).
+      message.blocks.push({ type: 'transcription', started: createDate(), text: 'Hello again!' });
+      model.updateChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\nHello again!\n\n');
 
-      // Update block (remove segment).
-      block.segments.splice(0, 1);
-      model.updateBlock(block);
+      // Update message (remove block).
+      message.blocks.splice(0, 1);
+      model.updateChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello again!\n\n');
 
-      expect(model.getBlockAtLine(1)).to.eq(block);
+      expect(model.getChunkAtLine(1)).to.eq(message);
     }
 
-    // Append block.
+    // Append message.
     {
-      const block = { id: '2', authorName: 'Bob', segments: [{ started: createDate(), text: 'Hello again!' }] };
-      model.appendBlock(block);
+      const message: MessageType = {
+        id: '2',
+        created: createDate(),
+        sender: { name: 'Bob' },
+        blocks: [{ type: 'transcription', started: createDate(), text: 'Hello again!' }],
+      };
+      model.appendChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello again!\n\n###### Bob\nHello again!\n\n');
 
-      expect(model.getBlockAtLine(4)).to.eq(block);
+      expect(model.getChunkAtLine(4)).to.eq(message);
     }
 
     // Delete block.
