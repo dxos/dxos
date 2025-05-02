@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { resolveRef, useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -39,6 +40,7 @@ export type TranscriptProps = ThemedClassName<{
   transcript?: TranscriptType;
   space?: Space;
   model: BlockModel<TranscriptBlock>;
+  // TODO(wittjosiah): Move to container.
   attendableId?: string;
   ignoreAttention?: boolean;
 }>;
@@ -66,6 +68,7 @@ export const Transcript = ({
         space &&
           preview({
             onLookup: async ({ label, ref }) => {
+              log.info('onLookup', { label, ref });
               const dxn = DXN.parse(ref);
               if (!dxn) {
                 return null;

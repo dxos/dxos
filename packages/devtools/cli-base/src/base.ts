@@ -526,6 +526,21 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     }
   }
 
+  async getSpaceById(client: Client, id: string, { wait = true }: { wait?: boolean } = {}): Promise<Space> {
+    await client.spaces.waitUntilReady();
+    const spaces = await this.getSpaces(client, { wait: false });
+    const space = spaces.find((space) => space.id.startsWith(id!));
+    if (!space) {
+      this.catch(`Invalid space: ${id}`);
+    }
+
+    if (wait) {
+      await space.waitUntilReady();
+    }
+
+    return space;
+  }
+
   /**
    * Execute callback with the given space(s).
    */
