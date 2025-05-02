@@ -6,7 +6,7 @@ import { defineFunction, S } from 'dxos:functions';
 
 export default defineFunction({
   inputSchema: S.Any,
-  handler: ({ event: { data }, context }) => {
+  handler: ({ event: { data }, context }: any) => {
     console.log(context);
     return data;
   },
