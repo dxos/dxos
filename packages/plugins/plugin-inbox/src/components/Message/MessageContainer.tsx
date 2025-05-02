@@ -36,7 +36,7 @@ const Message = ({ space, message, classNames }: MessageProps) => {
       .join('\n');
   }, [message.blocks]);
 
-  // TODO(ZaymonFC): How to prevent
+  // TODO(ZaymonFC): How to prevent caret and selection?
   const extensions = useMemo(() => {
     if (space) {
       return [
