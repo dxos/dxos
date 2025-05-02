@@ -76,7 +76,7 @@ export const MeetingStatusDetail = ({ state }: MeetingStatusDetailProps) => {
       <div className='flex flex-col gap-2 overflow-y-auto'>
         <div className='flex items-row gap-2'>
           <Input.Root>
-            <Input.Label classNames={'text-sm '}>Show detailed webrtc stats</Input.Label>
+            <Input.Label classNames={'text-sm '}>{t('show webrtc stats title')}</Input.Label>
             <Input.Checkbox checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
           </Input.Root>
         </div>
