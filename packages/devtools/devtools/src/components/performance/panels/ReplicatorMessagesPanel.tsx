@@ -38,15 +38,27 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
       const cmp = m1.type.localeCompare(m2.type);
       return cmp === 0 ? m1.direction.localeCompare(m2.direction) : cmp;
     });
+
   return (
     <Panel
       {...props}
       icon='ph--database--regular'
       title='DB messages'
       info={
-        <span>
-          last {formatNumber(receivedTotal)}-in & {formatNumber(sentTotal)}-out
-        </span>
+        <div className='flex gap-1 items-center'>
+          <span>
+            <span>{formatNumber(receivedTotal)}</span>
+            <span className='text-green-500' title='Received'>
+              ↓
+            </span>
+          </span>
+          <span>
+            <span>{formatNumber(sentTotal)}</span>
+            <span className='text-orange-500' title='Sent'>
+              ↑
+            </span>
+          </span>
+        </div>
       }
     >
       <table className='table-auto w-full text-xs font-mono'>
