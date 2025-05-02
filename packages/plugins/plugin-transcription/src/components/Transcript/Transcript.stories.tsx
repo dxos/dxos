@@ -9,7 +9,7 @@ import React, { useEffect, useState, useMemo, type FC } from 'react';
 
 import { contributes, Capabilities, SettingsPlugin, IntentPlugin, createSurface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { DXN, getS, ObjectIdchema } from '@dxos/echo-schema';
+import { create, getSchema, ObjectId, ObjectIdSchema } from '@dxos/echo-schema';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
@@ -26,9 +26,15 @@ import { BlockBuilder, TestItem, useTestTranscriptionQueue } from './testings';
 import { useQueueModelAdapter } from '../../hooks';
 import { BlockModel } from '../../model';
 import translations from '../../translations';
-import { type TranscriptBlock } from '../../types';
+import { TranscriptBlock } from '../../types';
+import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { Context } from '@dxos/context';
-import { QueueSubspaceTags } from '@dxos/keys';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { ContactType } from '@dxos/schema';
+import { processTranscriptBlock } from '../../entity-extraction';
+import * as TestData from '../../testing/test-data';
+import { AIServiceEdgeClient } from '@dxos/assistant';
+import { scheduleTaskInterval } from '@dxos/async';
 
 faker.seed(1);
 
@@ -209,12 +215,12 @@ const EntityExtractionQueueStory = () => {
   const space = useSpace();
   console.log('space', space);
   const queue = useTestTranscriptionQueueWithEntityExtraction(space, running, 2_000);
-  const model = useQueueModel(queue);
+  const model = useQueueModelAdapter(renderMarkdown, queue, []);
 
-  return <Editor space={space} model={model} running={running} onRunningChange={setRunning} />;
+  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta: Meta<typeof QueueStory> = {
   title: 'plugins/plugin-transcription/Transcript',
   decorators: [
     withPluginManager({
