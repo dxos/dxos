@@ -2,14 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
+import { AIServiceEdgeClient } from '@dxos/assistant';
+import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { scheduleTaskInterval } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
+import { SpaceId } from '@dxos/react-client/echo';
 import { hues } from '@dxos/react-ui-theme';
+import { ContactType } from '@dxos/schema';
 
+import { processTranscriptBlock } from '../../entity-extraction';
+import * as TestData from '../../testing/test-data';
 import { TranscriptBlock } from '../../types';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to schema-testing.
@@ -91,6 +99,84 @@ export const useTestTranscriptionQueue = (space: Space | undefined, running = tr
     }, interval);
     return () => clearInterval(i);
   }, [queue, running, interval]);
+
+  return queue;
+};
+
+class EntityExtractionBlockBuilder {
+  aiService = new AIServiceEdgeClient({
+    endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+  });
+
+  currentBlock: number = 0;
+
+  seedData(space: Space) {
+    space.db.graph.schemaRegistry.addSchema([ContactType]);
+    // for (const document of TestData.documents) {
+    //   const obj = space.db.add(live(Document, document));
+    //   const dxn = makeRef(obj).dxn.toString();
+    //   document.dxn = dxn;
+    // }
+
+    for (const contact of Object.values(TestData.contacts)) {
+      space.db.add(contact);
+    }
+  }
+
+  async createBlock(): Promise<TranscriptBlock> {
+    const block = TestData.transcriptBlocks[this.currentBlock];
+    this.currentBlock++;
+    this.currentBlock = this.currentBlock % TestData.transcriptBlocks.length;
+
+    const { block: enhancedBlock } = await processTranscriptBlock({
+      block,
+      aiService: this.aiService,
+      context: {
+        objects: [...TestData.documents, ...Object.values(TestData.contacts)],
+      },
+    });
+    return enhancedBlock;
+  }
+}
+
+const randomQueueDXN = (spaceId = SpaceId.random()) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]);
+
+/**
+ * Test transcription queue.
+ */
+export const useTestTranscriptionQueueWithEntityExtraction = (
+  space: Space | undefined,
+  running = true,
+  interval = 1_000,
+) => {
+  const queueDxn = useMemo(() => (space ? randomQueueDXN(space.id) : undefined), [space]);
+  const queue = useQueue<TranscriptBlock>(queueDxn);
+  const [builder] = useState(() => new EntityExtractionBlockBuilder());
+
+  useEffect(() => {
+    if (!queue || !running) {
+      return;
+    }
+
+    if (space) {
+      builder.seedData(space);
+    }
+
+    const ctx = new Context();
+    scheduleTaskInterval(
+      ctx,
+      async () => {
+        const block = await builder.createBlock();
+        queue.append([create(TranscriptBlock, block)]);
+      },
+      interval,
+    );
+
+    return () => {
+      void ctx.dispose();
+    };
+  }, [space, queue, running, interval]);
 
   return queue;
 };

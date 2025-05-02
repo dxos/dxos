@@ -6,7 +6,7 @@ import { type Schema as S } from 'effect';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface, Surface, useCapability, useLayout } from '@dxos/app-framework';
-import { isInstanceOf } from '@dxos/echo-schema';
+import { getSchema, isInstanceOf } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import {
@@ -21,7 +21,7 @@ import {
   type Space,
 } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
-import { type InputProps } from '@dxos/react-ui-form';
+import { Form, type InputProps } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
@@ -197,6 +197,19 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
             <IconPicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
           </Input.Root>
         );
+      },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/preview-popover`,
+      role: 'popover',
+      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+      component: ({ data }) => {
+        const schema = getSchema(data.subject);
+        if (!schema) {
+          return null;
+        }
+
+        return <Form schema={schema} values={data.subject} readonly />;
       },
     }),
     createSurface({

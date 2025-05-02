@@ -29,6 +29,7 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
+  preview,
   selectionState,
   typewriter,
   type RenderCallback,
@@ -190,6 +191,7 @@ const createBaseExtensions = ({
               : undefined,
         }),
         linkTooltip(renderLinkTooltip),
+        preview(),
       ],
     );
   }
