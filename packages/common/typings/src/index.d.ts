@@ -13,7 +13,6 @@ import './nanoerror';
 import './nanomessage';
 import './nanoresource';
 import './nanoresource-promise';
-import './peermetrics-webrtc-stats';
 import './race-as-promised';
 import './random-access-storage';
 import './streamx';

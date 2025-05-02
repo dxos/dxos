@@ -4,7 +4,6 @@
   ],
   "compilerOptions": {
     "types": [
-      "@dxos/typings",
       "node"
     ]
   },
@@ -15,7 +14,8 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/*.ts"
+    "src/*.ts",
+    "src/typings/**/*.d.ts"
   ],
   "references": [
     {
