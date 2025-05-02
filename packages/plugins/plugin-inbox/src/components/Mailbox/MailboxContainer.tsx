@@ -2,28 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId, useQueue } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type MessageType } from '@dxos/schema';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
+import { useMailboxModel } from './model';
 import { InboxCapabilities } from '../../capabilities/capabilities';
-import { InboxAction, type MailboxType, MessageState } from '../../types';
+import { InboxAction, type MailboxType } from '../../types';
 
 export type MailboxContainerProps = {
   mailbox: MailboxType;
 };
-
-const byDate =
-  (direction = -1) =>
-  ({ created: a = '' }: MessageType, { created: b = '' }: MessageType) =>
-    a < b ? -direction : a > b ? direction : 0;
 
 export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const id = fullyQualifiedId(mailbox);
@@ -31,18 +26,8 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const currentMessageId = state[id]?.id;
 
-  const queue = useQueue<MessageType>(mailbox.queue.dxn, { pollInterval: 1_000 });
-
-  const messages = useMemo(
-    () =>
-      [...(queue?.items ?? [])]
-        .filter(
-          (message) =>
-            message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,
-        )
-        .sort(byDate()),
-    [queue?.items],
-  );
+  // Use the mailbox model instead of the direct queue
+  const model = useMailboxModel(mailbox.queue.dxn);
 
   const handleAction = useCallback<MailboxActionHandler>(
     ({ action, messageId }) => {
@@ -52,7 +37,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           break;
         }
         case 'current': {
-          const message = queue?.items?.find((message) => message.id === messageId);
+          const message = model.messages.find((message) => message.id === messageId);
           void dispatch(
             createIntent(InboxAction.SelectMessage, {
               mailboxId: id,
@@ -69,14 +54,14 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
         }
       }
     },
-    [id, dispatch],
+    [id, dispatch, model.messages],
   );
 
   return (
     <StackItem.Content classNames='relative'>
-      {messages && messages.length > 0 ? (
+      {model.messages && model.messages.length > 0 ? (
         <Mailbox
-          messages={messages}
+          messages={model.messages}
           id={id}
           name={mailbox.name}
           onAction={handleAction}
