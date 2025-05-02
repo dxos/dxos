@@ -7,13 +7,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { scheduleTaskInterval } from '@dxos/async';
-import { type Queue } from '@dxos/client/echo';
+import { createQueueDxn, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
-import { SpaceId } from '@dxos/react-client/echo';
 import { hues } from '@dxos/react-ui-theme';
 import { ContactType } from '@dxos/schema';
 
@@ -33,10 +31,7 @@ export const TestItem = S.Struct({
   }),
 }).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
 
-// TODO(burdon): Factor out.
-const createQueueDXN = (spaceId = SpaceId.random(), queueId = ObjectId.random()) =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, queueId]);
-
+// TODO(ZaymonFC): Generalize builder for enriched markdown.
 abstract class AbstractBlockBuilder {
   abstract createBlock(numSegments?: number): Promise<TranscriptBlock>;
 }
@@ -98,7 +93,9 @@ class EntityExtractionBlockBuilder extends AbstractBlockBuilder {
   currentBlock: number = 0;
 
   seedData(space: Space) {
-    space.db.graph.schemaRegistry.addSchema([ContactType]);
+    if (!space.db.graph.schemaRegistry.hasSchema(ContactType)) {
+      space.db.graph.schemaRegistry.addSchema([ContactType]);
+    }
     // for (const document of TestData.documents) {
     //   const obj = space.db.add(live(Document, document));
     //   const dxn = makeRef(obj).dxn.toString();
@@ -143,7 +140,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   running = true,
   interval = 1_000,
 ) => {
-  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
+  const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<TranscriptBlock>(queueDxn);
   const builder = useMemo(() => new BlockBuilder(space), [space]);
   useEffect(() => {
@@ -172,7 +169,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
   running = true,
   interval = 1_000,
 ) => {
-  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
+  const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<TranscriptBlock>(queueDxn);
   const [builder] = useState(() => new EntityExtractionBlockBuilder());
 

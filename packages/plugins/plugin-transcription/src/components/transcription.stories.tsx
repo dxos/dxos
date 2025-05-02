@@ -25,7 +25,7 @@ import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { randomQueueDxn, useQueue } from '@dxos/react-client/echo';
+import { createQueueDxn, useQueue } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -68,7 +68,7 @@ const Microphone = () => {
   const track = useAudioTrack(running);
 
   // Queue.
-  const queueDxn = useMemo(() => randomQueueDxn(), []);
+  const queueDxn = useMemo(() => createQueueDxn(), []);
   const queue = useMemo(() => new MemoryQueue<TranscriptBlock>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown, queue);
 
@@ -233,7 +233,7 @@ export const Default: Story = {
 export const File: Story = {
   render: AudioFile,
   args: {
-    queueDxn: randomQueueDxn(),
+    queueDxn: createQueueDxn(),
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     transcriptUrl: 'https://dxos.network/audio-london.txt',
     audioUrl: 'https://dxos.network/audio-london.m4a',

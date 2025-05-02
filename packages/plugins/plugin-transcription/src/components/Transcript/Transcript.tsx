@@ -4,9 +4,6 @@
 
 import React from 'react';
 
-import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { resolveRef, useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
@@ -63,7 +60,6 @@ export const Transcript = ({
   attendableId,
   ignoreAttention,
 }: TranscriptProps) => {
-  const client = useClient();
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -72,19 +68,7 @@ export const Transcript = ({
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),
-        space &&
-          preview({
-            onLookup: async ({ label, ref }) => {
-              log.info('onLookup', { label, ref });
-              const dxn = DXN.parse(ref);
-              if (!dxn) {
-                return null;
-              }
-
-              const object = await resolveRef(client, dxn, space);
-              return { label, object };
-            },
-          }),
+        space && preview(),
         transcript({
           model,
           started: object?.started ? new Date(object.started) : undefined,
