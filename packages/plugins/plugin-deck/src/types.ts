@@ -81,16 +81,17 @@ export const DeckPluginState = S.Struct({
   complementarySidebarPanel: S.optional(S.String),
 
   dialogOpen: S.Boolean,
-  /** Data to be passed to the dialog Surface. */
-  dialogContent: S.optional(S.Any),
   dialogBlockAlign: S.optional(S.Literal('start', 'center', 'end')),
   dialogType: S.optional(S.Literal('default', 'alert')),
+  /** Data to be passed to the dialog Surface. */
+  dialogContent: S.optional(S.Any),
 
   popoverOpen: S.Boolean,
   popoverSide: S.optional(S.Literal('top', 'right', 'bottom', 'left')),
+  popoverAnchor: S.optional(S.Any),
+  popoverAnchorId: S.optional(S.String),
   /** Data to be passed to the popover Surface. */
   popoverContent: S.optional(S.Any),
-  popoverAnchorId: S.optional(S.String),
 
   toasts: S.mutable(S.Array(LayoutAction.Toast)),
   currentUndoId: S.optional(S.String),

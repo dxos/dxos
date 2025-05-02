@@ -21,10 +21,6 @@ export class DxRefTagActivate extends Event {
 
 @customElement('dx-ref-tag')
 export class DxRefTag extends LitElement {
-  // TODO(thure): Get Hue type used in theme.
-  @property({ type: String })
-  hue: string = 'neutral';
-
   @property({ type: String })
   ref: string = makeId('dx-ref-tag');
 
@@ -40,9 +36,9 @@ export class DxRefTag extends LitElement {
   @state()
   private hoverTimer: number | null = null;
 
-  private handleActivate() {
+  private handleActivate(event: { type: string }) {
     this.dispatchEvent(
-      new DxRefTagActivate({ ref: this.ref, label: this.label, trigger: this.querySelector('button')! }),
+      new DxRefTagActivate({ ref: this.ref, label: this.label, trigger: this.querySelector('[data-trigger]')! }),
     );
   }
 
@@ -51,7 +47,7 @@ export class DxRefTag extends LitElement {
       window.clearTimeout(this.hoverTimer);
     }
     this.hoverTimer = window.setTimeout(() => {
-      this.handleActivate();
+      this.handleActivate({ type: 'hover-linger' });
       this.hoverTimer = null;
     }, this.hoverDelay);
   }
@@ -64,18 +60,17 @@ export class DxRefTag extends LitElement {
   }
 
   override render() {
-    const className = `dx-tag dx-focus-ring dx-ref-tag${this.rootClassName ? ` ${this.rootClassName}` : ''}`;
-    return html`<button
+    const className = `dx-focus-ring dx-ref-tag${this.rootClassName ? ` ${this.rootClassName}` : ''}`;
+    return html`<span
+      tabindex="0"
+      data-trigger="true"
       class=${className}
-      data-hue=${this.hue}
       id=${this.id}
       @click=${this.handleActivate}
-      @focus=${this.handleActivate}
       @pointerenter=${this.handlePointerEnter}
       @pointerleave=${this.handlePointerLeave}
-    >
-      ${this.label}
-    </button>`;
+      >${this.label}</span
+    >`;
   }
 
   override createRenderRoot() {
