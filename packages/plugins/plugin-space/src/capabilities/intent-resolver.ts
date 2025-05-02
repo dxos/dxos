@@ -228,6 +228,7 @@ export default ({ context, observability }: IntentResolverOptions) => {
               part: 'popover',
               subject: POPOVER_ADD_SPACE,
               options: {
+                variant: 'react',
                 anchorId: SpaceAction.AddSpace._tag,
                 side: 'right',
               },

@@ -10,6 +10,7 @@ export const IntentResolver = lazy(() => import('./intent-resolver'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 export const MarkdownSettings = lazy(() => import('./settings'));
 export const MarkdownState = lazy(() => import('./state'));
+export const PreviewExtension = lazy(() => import('./preview-extension'));
 export const Thread = lazy(() => import('./thread'));
 
 export * from './capabilities';
