@@ -94,6 +94,7 @@ export class Transcriber extends Resource {
   }
 
   protected override async _open(ctx: Context) {
+    log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
     this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
@@ -101,15 +102,18 @@ export class Transcriber extends Resource {
   }
 
   protected override async _close() {
+    log.info('closing');
     this._recording = false;
     this._transcribeTask = undefined;
     await this._recorder.stop();
   }
 
   startChunksRecording() {
+    log.info('starting');
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
     }
+
     this._recording = true;
   }
 
@@ -117,8 +121,10 @@ export class Transcriber extends Resource {
     if (this._lifecycleState !== LifecycleState.OPEN || !this._recording) {
       return;
     }
+
     this._recording = false;
     this._transcribeTask?.schedule();
+    log.info('stopped');
   }
 
   private _saveAudioChunk(chunk: AudioChunk) {
@@ -195,17 +201,15 @@ export class Transcriber extends Resource {
 
     if (!response.ok) {
       this._audioChunks = [];
-      throw new Error('Failed to transcribe');
+      throw new Error(`Transcription failed: ${response.statusText}`);
     }
 
-    const {
-      segments,
-    }: {
+    const { segments } = (await response.json()) as {
       segments: WhisperSegment[];
-    } = await response.json();
+    };
 
     log.info('transcription response', {
-      segments,
+      segments: segments.length,
       string: segments.map((segments) => segments.text).join(' '),
     });
 
@@ -243,7 +247,7 @@ export class Transcriber extends Resource {
     return filteredSegments.map((segment) => ({
       type: 'transcription',
       started: new Date(zeroTimestamp + segment.start * 1_000).toISOString(),
-      text: segment.text,
+      text: segment.text.trim(),
     }));
   }
 }

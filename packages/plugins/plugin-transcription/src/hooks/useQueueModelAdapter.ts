@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 
 import { type Queue } from '@dxos/react-client/echo';
 
@@ -17,14 +17,47 @@ export const useQueueModelAdapter = <T extends Chunk>(
   initialChunks: T[] = [],
 ): SerializationModel<T> => {
   const model = useMemo(() => new SerializationModel<T>(renderer, initialChunks), [queue]);
+  const [loaded, setLoaded] = useState(false);
+
+  // Set initial blocks.
   useEffect(() => {
-    if (!queue?.items.length) {
+    if (!queue) {
+      return;
+    }
+
+    const update = () => {
+      for (const block of queue?.items ?? []) {
+        model.appendChunk(block);
+      }
+
+      setLoaded(true);
+    };
+
+    // TODO(burdon): This is a hack to ensure the queue is loaded.
+    let i: NodeJS.Timeout | undefined;
+    if (queue.isLoading) {
+      i = setInterval(() => {
+        if (!queue?.isLoading) {
+          clearInterval(i);
+          update();
+        }
+      }, 1_000);
+    } else {
+      update();
+    }
+
+    return () => clearTimeout(i);
+  }, [model, queue]);
+
+  // TODO(burdon): Can we listen for queue events?
+  useEffect(() => {
+    if (!loaded || !queue || model.chunks.length === queue.items.length) {
       return;
     }
 
     const chunk = queue.items[queue.items.length - 1];
     model.appendChunk(chunk);
-  }, [model, queue?.items.length]);
+  }, [model, loaded, queue?.items.length]);
 
   return model;
 };

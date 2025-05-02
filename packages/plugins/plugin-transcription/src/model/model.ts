@@ -14,7 +14,7 @@ export type Chunk = { id: string };
 /**
  * Covert block to a set of markdown lines.
  */
-export type ChunkRenderer<T extends Chunk> = (chunk: T, debug?: boolean) => string[];
+export type ChunkRenderer<T extends Chunk> = (chunk: T, index: number, debug?: boolean) => string[];
 
 /**
  * Abstract representation of the document model.
@@ -112,7 +112,7 @@ export class SerializationModel<T extends Chunk> {
   }
 
   get doc() {
-    return Text.of([...this._chunks.flatMap((chunk) => this._renderer(chunk)), '']);
+    return Text.of([...this._chunks.flatMap((chunk, index) => this._renderer(chunk, index)), '']);
   }
 
   get chunks() {
@@ -171,7 +171,7 @@ export class SerializationModel<T extends Chunk> {
       switch (change.type) {
         case 'append': {
           // For appends, convert block to lines and add at the end.
-          const lines = this._renderer(change.chunk);
+          const lines = this._renderer(change.chunk, change.index);
           const lastLine = document.lineCount();
           document.replaceLines(lastLine + 1, 0, lines);
           break;
@@ -184,7 +184,7 @@ export class SerializationModel<T extends Chunk> {
             lineStart += this._chunkLineCounts.get(this._chunks[i].id)!;
           }
           const previousLineCount = this._chunkLineCounts.get(change.chunk.id)!;
-          const newLines = this._renderer(change.chunk);
+          const newLines = this._renderer(change.chunk, change.index);
           document.replaceLines(lineStart, previousLineCount, newLines);
           break;
         }
@@ -207,8 +207,8 @@ export class SerializationModel<T extends Chunk> {
 
     // Update all block line counts and line-to-block mapping after processing changes.
     let currentLine = 1;
-    for (const chunk of this._chunks) {
-      const lineCount = this._renderer(chunk).length;
+    for (const [index, chunk] of this._chunks.entries()) {
+      const lineCount = this._renderer(chunk, index).length;
       this._chunkLineCounts.set(chunk.id, lineCount);
       this._lineToChunk.set(currentLine, chunk);
       currentLine += lineCount;

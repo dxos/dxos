@@ -7,16 +7,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { scheduleTaskInterval } from '@dxos/async';
+import { createQueueDxn, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
-import { DXN, IdentityDid, QueueSubspaceTags } from '@dxos/keys';
+import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
-import { SpaceId } from '@dxos/react-client/echo';
 import { ContactType, MessageType, type TranscriptionContentBlock } from '@dxos/schema';
 
-import { processTranscriptMessage } from '../../entity-extraction';
-import * as TestData from '../../testing/test-data';
+import * as TestData from './test-data';
+import { processTranscriptMessage } from '../entity-extraction';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to schema-testing.
 export const TestItem = S.Struct({
@@ -31,10 +31,14 @@ export const TestItem = S.Struct({
 }).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.
+abstract class AbstractMessageBuilder {
+  abstract createMessage(numSegments?: number): Promise<MessageType>;
+}
+
 /**
  * Generator of transcript messages.
  */
-export class MessageBuilder {
+export class MessageBuilder extends AbstractMessageBuilder {
   static readonly singleton = new MessageBuilder();
 
   users = Array.from({ length: 5 }, () => ({
@@ -45,9 +49,11 @@ export class MessageBuilder {
 
   start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 
-  constructor(private readonly _space?: Space) {}
+  constructor(private readonly _space?: Space) {
+    super();
+  }
 
-  createMessage(numSegments = 1): MessageType {
+  override async createMessage(numSegments = 1): Promise<MessageType> {
     return {
       id: ObjectId.random().toString(),
       created: this.next().toISOString(),
@@ -80,32 +86,8 @@ export class MessageBuilder {
   }
 }
 
-/**
- * Test transcriptionqueue.
- */
-export const useTestTranscriptionQueue = (space: Space | undefined, running = true, interval = 1_000) => {
-  const queueDxn = useMemo(
-    () => (space ? new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]) : undefined),
-    [space],
-  );
-  const queue = useQueue<MessageType>(queueDxn);
-
-  const builder = useMemo(() => new MessageBuilder(space), [space]);
-  useEffect(() => {
-    if (!queue || !running) {
-      return;
-    }
-
-    const i = setInterval(() => {
-      queue.append([create(MessageType, builder.createMessage(Math.ceil(Math.random() * 3)))]);
-    }, interval);
-    return () => clearInterval(i);
-  }, [queue, running, interval]);
-
-  return queue;
-};
-
-class EntityExtractionMessageBuilder {
+// TODO(burdon): Reconcile with BlockBuilder.
+class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
   aiService = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
@@ -113,7 +95,9 @@ class EntityExtractionMessageBuilder {
   currentMessage: number = 0;
 
   seedData(space: Space) {
-    space.db.graph.schemaRegistry.addSchema([ContactType]);
+    if (!space.db.graph.schemaRegistry.hasSchema(ContactType)) {
+      space.db.graph.schemaRegistry.addSchema([ContactType]);
+    }
     // for (const document of TestData.documents) {
     //   const obj = space.db.add(live(Document, document));
     //   const dxn = makeRef(obj).dxn.toString();
@@ -125,7 +109,7 @@ class EntityExtractionMessageBuilder {
     }
   }
 
-  async createMessage(): Promise<MessageType> {
+  override async createMessage(): Promise<MessageType> {
     const message = TestData.transcriptMessages[this.currentMessage];
     this.currentMessage++;
     this.currentMessage = this.currentMessage % TestData.transcriptMessages.length;
@@ -137,22 +121,58 @@ class EntityExtractionMessageBuilder {
         objects: [...TestData.documents, ...Object.values(TestData.contacts)],
       },
     });
+
     return enhancedMessage;
   }
 }
 
-const randomQueueDXN = (spaceId = SpaceId.random()) =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]);
+type UseTestTranscriptionQueue = (
+  space: Space | undefined,
+  queueId?: ObjectId,
+  running?: boolean,
+  interval?: number,
+) => Queue<MessageType> | undefined;
+
+/**
+ * Test transcriptionqueue.
+ */
+export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
+  space: Space | undefined,
+  queueId?: ObjectId,
+  running = true,
+  interval = 1_000,
+) => {
+  const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
+  const queue = useQueue<MessageType>(queueDxn);
+  const builder = useMemo(() => new MessageBuilder(space), [space]);
+
+  useEffect(() => {
+    if (!queue || !running) {
+      return;
+    }
+
+    const i = setInterval(() => {
+      void builder.createMessage(Math.ceil(Math.random() * 3)).then((message) => {
+        queue.append([create(MessageType, message)]);
+      });
+    }, interval);
+    return () => clearInterval(i);
+  }, [queue, running, interval]);
+
+  return queue;
+};
 
 /**
  * Test transcription queue.
  */
-export const useTestTranscriptionQueueWithEntityExtraction = (
+// TODO(burdon): Reconcile with useTestTranscriptionQueue.
+export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscriptionQueue = (
   space: Space | undefined,
+  queueId?: ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  const queueDxn = useMemo(() => (space ? randomQueueDXN(space.id) : undefined), [space]);
+  const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
   const queue = useQueue<MessageType>(queueDxn);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 

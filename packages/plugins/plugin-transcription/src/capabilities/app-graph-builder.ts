@@ -6,6 +6,7 @@ import { Capabilities, contributes, createIntent, type PluginsContext } from '@d
 import { fullyQualifiedId, getSpace, makeRef, type Space } from '@dxos/client/echo';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
@@ -119,8 +120,11 @@ export default (context: PluginsContext) =>
 
                 const payload: TranscriptionPayload = transcription.payload;
                 state.enabled = !!payload.enabled;
+                if (payload.queueDxn) {
+                  // NOTE: Must set queue before enabling transcription.
+                  void state.transcriptionManager?.setQueue(DXN.parse(payload.queueDxn));
+                }
                 void state.transcriptionManager?.setEnabled(payload.enabled);
-                void state.transcriptionManager?.setQueue(payload.queueDxn);
               },
               onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => {
                 void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);

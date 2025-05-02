@@ -6,8 +6,8 @@ import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { QueueImpl, type Queue } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { MessageType, type TranscriptionContentBlock } from '@dxos/schema';
 
@@ -40,8 +40,8 @@ export class TranscriptionManager extends Resource {
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _enabled = false;
   private _queue?: Queue<MessageType> = undefined;
+  private _enabled = false;
 
   constructor(edgeClient: EdgeHttpClient) {
     super();
@@ -78,7 +78,9 @@ export class TranscriptionManager extends Resource {
     if (this._enabled === enabled) {
       return;
     }
+
     this._enabled = enabled ?? false;
+    // TODO(burdon): Why is toggle called here?
     this.isOpen && (await this._toggleTranscriber());
   }
 
@@ -87,33 +89,16 @@ export class TranscriptionManager extends Resource {
     if (this._audioStreamTrack === track) {
       return;
     }
+
     this._audioStreamTrack = track;
     this.isOpen && (await this._toggleTranscriber());
   }
 
-  /**
-   * Set the queue to save the transcription to.
-   * @param queue - The queue to save the transcription to or the DXN of the queue.
-   */
   @synchronized
-  setQueue(queue?: Queue<MessageType> | string) {
-    switch (typeof queue) {
-      case 'string':
-        if (this._queue?.dxn.toString() === queue) {
-          return;
-        }
-        this._queue = new QueueImpl<MessageType>(this._edgeClient, DXN.parse(queue));
-        break;
-      case 'object':
-        if (this._queue === queue) {
-          return;
-        }
-        invariant(queue instanceof QueueImpl);
-        this._queue = queue;
-        break;
-      case 'undefined':
-        this._queue = undefined;
-        break;
+  setQueue(queueDxn: DXN) {
+    if (this._queue?.dxn.toString() !== queueDxn.toString()) {
+      log.info('setQueue', { queueDxn: queueDxn.toString() });
+      this._queue = new QueueImpl<MessageType>(this._edgeClient, queueDxn);
     }
   }
 
@@ -125,14 +110,28 @@ export class TranscriptionManager extends Resource {
     this._identityDid = did;
   }
 
+  // TODO(burdon): Change this to setEnables (explicit), not toggle.
   private async _toggleTranscriber() {
     await this._maybeReinitTranscriber();
 
     // Open or close transcriber if transcription is enabled or disabled.
     if (this._enabled) {
       await this._transcriber?.open();
+      // TODO(burdon): Started and stopped blocks appear twice.
+      const block = create(MessageType, {
+        created: new Date().toISOString(),
+        blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
+        sender: { role: 'assistant' },
+      });
+      this._queue?.append([block]);
     } else {
       await this._transcriber?.close();
+      const block = create(MessageType, {
+        created: new Date().toISOString(),
+        blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
+        sender: { role: 'assistant' },
+      });
+      this._queue?.append([block]);
     }
   }
 

@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState, type FC } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { ObjectId } from '@dxos/echo-schema';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -23,14 +24,14 @@ import { type MessageType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
+import { useQueueModelAdapter } from '../../hooks';
+import { SerializationModel } from '../../model';
 import {
   MessageBuilder,
   TestItem,
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
-} from './testings';
-import { useQueueModelAdapter } from '../../hooks';
-import { SerializationModel } from '../../model';
+} from '../../testing';
 import translations from '../../translations';
 
 faker.seed(1);
@@ -87,9 +88,10 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
     }
 
     if (!currentMessage) {
-      const message = builder.createMessage();
-      model.appendChunk(message);
-      setCurrentMessage(message);
+      void builder.createMessage().then((message) => {
+        model.appendChunk(message);
+        setCurrentMessage(message);
+      });
       return;
     }
 
@@ -127,24 +129,52 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
 /**
  * Queue story mutates queue with model adapter.
  */
-const QueueStory = ({ messages: initialMessages = [], ...props }: StoryProps) => {
+const QueueStory = ({
+  messages: initialMessages = [],
+  queueId,
+  onReset,
+  ...props
+}: StoryProps & { queueId: ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
   const members = useMembers(space?.key).map((member) => member.identity);
-  const queue = useTestTranscriptionQueue(space, running, 2_000);
+  const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
   const model = useQueueModelAdapter(renderMarkdown(members), queue, initialMessages);
 
-  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} {...props} />;
+  return (
+    <TranscriptContainer
+      space={space}
+      model={model}
+      running={running}
+      onRunningChange={setRunning}
+      onReset={onReset}
+      {...props}
+    />
+  );
 };
 
+// TODO(burdon): Reconcile with QueueStory.
 const EntityExtractionQueueStory = () => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
   const members = useMembers(space?.key).map((member) => member.identity);
-  const queue = useTestTranscriptionQueueWithEntityExtraction(space, running, 2_000);
+  const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
   const model = useQueueModelAdapter(renderMarkdown(members), queue, []);
 
   return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
+};
+
+/**
+ * Wrapper remounts on refresh to reload queue.
+ */
+const QueueStoryWrapper = () => {
+  const [queueId] = useState(ObjectId.random());
+  const [key, setKey] = useState(ObjectId.random().toString());
+  const handleReset = () => {
+    setKey(ObjectId.random().toString());
+  };
+
+  return <QueueStory key={key} queueId={queueId} onReset={handleReset} />;
 };
 
 const meta: Meta<typeof QueueStory> = {
@@ -182,7 +212,7 @@ export const Default: Story = {
   args: {
     ignoreAttention: true,
     attendableId: 'story',
-    messages: Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage()),
+    messages: await Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())),
   },
 };
 
@@ -195,7 +225,7 @@ export const Empty: Story = {
 };
 
 export const WithQueue: Story = {
-  render: QueueStory,
+  render: QueueStoryWrapper,
   args: {
     ignoreAttention: true,
     attendableId: 'story',
@@ -205,7 +235,7 @@ export const WithQueue: Story = {
 export const WithEntityExtractionQueue: Story = {
   render: EntityExtractionQueueStory,
   args: {
-    // ignoreAttention: true,
-    // attendableId: 'story',
+    ignoreAttention: true,
+    attendableId: 'story',
   },
 };

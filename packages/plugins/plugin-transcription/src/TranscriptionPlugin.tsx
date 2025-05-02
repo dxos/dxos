@@ -9,7 +9,14 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { MessageType } from '@dxos/schema';
 
-import { AppGraphBuilder, IntentResolver, MeetingTranscriptionState, ReactSurface, Transcriber } from './capabilities';
+import {
+  AppGraphBuilder,
+  IntentResolver,
+  MeetingTranscriptionState,
+  ReactSurface,
+  Transcriber,
+  Settings,
+} from './capabilities';
 import { renderMarkdown } from './components';
 import { meta } from './meta';
 import translations from './translations';
@@ -23,14 +30,9 @@ export const TranscriptionPlugin = () =>
       activate: () => contributes(Capabilities.Translations, translations),
     }),
     defineModule({
-      id: `${meta.id}/module/transcription`,
-      activatesOn: Events.SetupAppGraph,
-      activate: Transcriber,
-    }),
-    defineModule({
-      id: `${meta.id}/module/meeting-transcription-state`,
-      activatesOn: Events.SetupAppGraph,
-      activate: MeetingTranscriptionState,
+      id: `${meta.id}/module/settings`,
+      activatesOn: Events.SetupSettings,
+      activate: Settings,
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
@@ -49,7 +51,7 @@ export const TranscriptionPlugin = () =>
               await queue.refresh();
               const content = queue.items
                 .filter((message) => isInstanceOf(MessageType, message))
-                .flatMap((message) => renderMarkdown(members)(message))
+                .flatMap((message, index) => renderMarkdown(members)(message, index))
                 .join('\n\n');
               return content;
             },
@@ -75,5 +77,15 @@ export const TranscriptionPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
+    }),
+    defineModule({
+      id: `${meta.id}/module/transcription`,
+      activatesOn: Events.SetupAppGraph,
+      activate: Transcriber,
+    }),
+    defineModule({
+      id: `${meta.id}/module/meeting-transcription-state`,
+      activatesOn: Events.SetupAppGraph,
+      activate: MeetingTranscriptionState,
     }),
   ]);

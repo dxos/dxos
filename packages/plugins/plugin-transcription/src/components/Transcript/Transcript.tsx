@@ -4,9 +4,6 @@
 
 import React from 'react';
 
-import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { resolveRef, useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { IconButton, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -30,7 +27,12 @@ import { type TranscriptType } from '../../types';
 
 export const renderMarkdown =
   (identities: Identity[]) =>
-  (message: MessageType, debug = false): string[] => {
+  (message: MessageType, index: number, debug = false): string[] => {
+    if (message.sender.role === 'assistant') {
+      // Start/stop block.
+      return [message.blocks.find((block) => block.type === 'transcription')?.text ?? '', ''];
+    }
+
     // TODO(burdon): Use link/reference markup for users (with popover).
     // TODO(burdon): Color and avatar.
     const identity = identities.find((identity) => identity.did === message.sender.identityDid);
@@ -42,7 +44,7 @@ export const renderMarkdown =
       message.sender.identityDid;
     const blocks = message.blocks.filter((block) => block.type === 'transcription');
     return [
-      `###### ${name}` + (debug ? ` (${message.id})` : ''),
+      `###### ${name}` + (debug ? ` [${index}]:${message.id}` : ''),
       blocks.map((block) => block.text.trim()).join(' '),
       '',
     ];
@@ -68,7 +70,6 @@ export const Transcript = ({
   attendableId,
   ignoreAttention,
 }: TranscriptProps) => {
-  const client = useClient();
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -77,19 +78,7 @@ export const Transcript = ({
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),
-        space &&
-          preview({
-            onLookup: async ({ label, ref }) => {
-              log.info('onLookup', { label, ref });
-              const dxn = DXN.parse(ref);
-              if (!dxn) {
-                return null;
-              }
-
-              const object = await resolveRef(client, dxn, space);
-              return { label, object };
-            },
-          }),
+        space && preview(),
         transcript({
           model,
           started: object?.started ? new Date(object.started) : undefined,
