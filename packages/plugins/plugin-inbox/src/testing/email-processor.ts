@@ -51,7 +51,7 @@ export const processEmail = async (params: ProcessEmailParams): Promise<ProcessE
 `;
 
   const messages = await new MixedStreamParser().parse(
-    await params.aiService.exec({
+    await params.aiService.execStream({
       model: '@anthropic/claude-3-5-sonnet-20241022',
       systemPrompt,
       history: [

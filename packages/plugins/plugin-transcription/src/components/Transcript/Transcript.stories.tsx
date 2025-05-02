@@ -10,7 +10,8 @@ import React, { useEffect, useState, useMemo, type FC } from 'react';
 import { contributes, Capabilities, SettingsPlugin, IntentPlugin, createSurface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AST, create, EchoObject, getSchema, ObjectId, S } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
@@ -39,6 +40,11 @@ import { BlockModel } from './model';
 import { blockToMarkdown, transcript } from './transcript-extension';
 import translations from '../../translations';
 import { TranscriptBlock } from '../../types';
+import * as TestData from '../../testing/test-data';
+import { AIServiceEdgeClient } from '@dxos/assistant';
+import { processTranscriptBlock } from '../../entity-extraction';
+import { scheduleTaskInterval } from '@dxos/async';
+import { Context } from '@dxos/context';
 
 faker.seed(1);
 
@@ -100,14 +106,37 @@ class BlockBuilder {
   }
 }
 
+class EntityExtractionBlockBuilder {
+  aiService = new AIServiceEdgeClient({
+    endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+  });
+  currentBlock: number = 0;
+
+  async createBlock(): Promise<TranscriptBlock> {
+    const block = TestData.transcriptBlocks[this.currentBlock];
+    this.currentBlock++;
+    this.currentBlock = this.currentBlock % TestData.transcriptBlocks.length;
+
+    const { block: enhancedBlock } = await processTranscriptBlock({
+      block,
+      aiService: this.aiService,
+      context: {
+        documents: TestData.documents,
+        contacts: Object.values(TestData.contacts),
+      },
+    });
+    return enhancedBlock;
+  }
+}
+
+const randomQueueDXN = (spaceId = SpaceId.random()) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]);
+
 /**
  * Test transcriptionqueue.
  */
 const useTestTranscriptionQueue = (space: Space | undefined, running = true, interval = 1_000) => {
-  const queueDxn = useMemo(
-    () => (space ? new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]) : undefined),
-    [space],
-  );
+  const queueDxn = useMemo(() => (space ? randomQueueDXN(space.id) : undefined), [space]);
   const queue = useQueue<TranscriptBlock>(queueDxn);
 
   const builder = useMemo(() => new BlockBuilder(space), [space]);
@@ -120,6 +149,38 @@ const useTestTranscriptionQueue = (space: Space | undefined, running = true, int
       queue.append([create(TranscriptBlock, builder.createBlock(Math.ceil(Math.random() * 3)))]);
     }, interval);
     return () => clearInterval(i);
+  }, [queue, running, interval]);
+
+  return queue;
+};
+
+/**
+ * Test transcription queue.
+ */
+const useTestTranscriptionQueueWithEntityExtraction = (space: Space | undefined, running = true, interval = 1_000) => {
+  const queueDxn = useMemo(() => (space ? randomQueueDXN(space.id) : undefined), [space]);
+  const queue = useQueue<TranscriptBlock>(queueDxn);
+  const [builder] = useState(() => new EntityExtractionBlockBuilder());
+
+  useEffect(() => {
+    if (!queue || !running) {
+      return;
+    }
+
+    const ctx = new Context();
+
+    scheduleTaskInterval(
+      ctx,
+      async () => {
+        const block = await builder.createBlock();
+        queue.append([create(TranscriptBlock, block)]);
+      },
+      interval,
+    );
+
+    return () => {
+      ctx.dispose();
+    };
   }, [queue, running, interval]);
 
   return queue;
@@ -272,6 +333,15 @@ const QueueStory = () => {
   return <Editor space={space} model={model} running={running} onRunningChange={setRunning} />;
 };
 
+const EntityExtractionQueueStory = () => {
+  const [running, setRunning] = useState(true);
+  const space = useSpace();
+  const queue = useTestTranscriptionQueueWithEntityExtraction(space, running, 2_000);
+  const model = useQueueModel(queue);
+
+  return <Editor space={space} model={model} running={running} onRunningChange={setRunning} />;
+};
+
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-transcription/Transcript',
   render: DefaultStory,
@@ -344,6 +414,14 @@ export const Extension: Story = {
 
 export const WithQueue: Story = {
   render: QueueStory,
+  args: {
+    // ignoreAttention: true,
+    // attendableId: 'story',
+  },
+};
+
+export const WithEntityExtractionQueue: Story = {
+  render: EntityExtractionQueueStory,
   args: {
     // ignoreAttention: true,
     // attendableId: 'story',
