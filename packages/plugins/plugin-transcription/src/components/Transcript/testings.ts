@@ -112,7 +112,9 @@ class EntityExtractionBlockBuilder {
   currentBlock: number = 0;
 
   seedData(space: Space) {
-    space.db.graph.schemaRegistry.addSchema([ContactType]);
+    if (!space.db.graph.schemaRegistry.hasSchema(ContactType)) {
+      space.db.graph.schemaRegistry.addSchema([ContactType]);
+    }
     // for (const document of TestData.documents) {
     //   const obj = space.db.add(live(Document, document));
     //   const dxn = makeRef(obj).dxn.toString();
