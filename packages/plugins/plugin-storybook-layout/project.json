@@ -1,8 +1,8 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "react-ui-editor",
+  "name": "plugin-storybook-layout",
   "tags": [
-    "scope:ui"
+    "scope:plugins"
   ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
@@ -11,21 +11,14 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/testing/index.ts"
-        ],
-        "platforms": [
-          "browser",
-          "node"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },
     "lint": {},
-    "pack": {},
-    "test": {}
+    "pack": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }

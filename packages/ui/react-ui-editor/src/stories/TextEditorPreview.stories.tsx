@@ -12,7 +12,6 @@ import { mx, hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import { DefaultStory, str } from './story-utils';
-import { RefPopover, useRefPopover } from '../components/RefPopover';
 import { editorWidth } from '../defaults';
 import {
   preview,
@@ -24,6 +23,7 @@ import {
   type PreviewRenderProps,
   type Action,
 } from '../extensions';
+import { RefPopover, useRefPopover } from '../testing';
 import { createRenderer } from '../util';
 
 const meta: Meta<typeof DefaultStory> = {
@@ -86,7 +86,7 @@ const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<Prev
 const useRefTarget = (link: PreviewLinkRef, onLookup: PreviewOptions['onLookup']): PreviewLinkTarget | undefined => {
   const [target, setTarget] = useState<PreviewLinkTarget | undefined>();
   useEffect(() => {
-    void onLookup(link).then((target) => setTarget(target ?? undefined));
+    void onLookup?.(link).then((target) => setTarget(target ?? undefined));
   }, [link, onLookup]);
 
   return target;

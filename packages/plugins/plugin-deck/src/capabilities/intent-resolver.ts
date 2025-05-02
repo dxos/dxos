@@ -121,8 +121,10 @@ export default (context: PluginsContext) =>
       resolve: ({ subject, options }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
         layout.popoverOpen = options.state ?? Boolean(subject);
-        layout.popoverContent = subject ? { component: subject, props: options.props } : null;
-        layout.popoverAnchorId = options.anchorId;
+        layout.popoverContent =
+          typeof subject === 'string' ? { component: subject, props: options.props } : subject ? { subject } : null;
+        layout.popoverAnchor = options.variant === 'virtual' ? options.anchor : undefined;
+        layout.popoverAnchorId = options.variant === 'react' ? options.anchorId : undefined;
         layout.popoverSide = options.side;
       },
     }),

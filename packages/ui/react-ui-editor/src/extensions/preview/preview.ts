@@ -51,18 +51,18 @@ export type PreviewRenderProps = {
   readonly: boolean;
   link: PreviewLinkRef;
   onAction: PreviewActionHandler;
-  onLookup: PreviewLookup;
+  onLookup?: PreviewLookup;
 };
 
 export type PreviewOptions = {
   renderBlock?: RenderCallback<PreviewRenderProps>;
-  onLookup: PreviewLookup;
+  onLookup?: PreviewLookup;
 };
 
 /**
  * Create preview decorations.
  */
-export const preview = (options: PreviewOptions): Extension => {
+export const preview = (options: PreviewOptions = {}): Extension => {
   return [
     // NOTE: Atomic block decorations must be created from a state field, now a widget, otherwise it results in the following error:
     // "Block decorations may not be specified via plugins"
