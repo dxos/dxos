@@ -4,6 +4,7 @@
 
 import { Args, Flags } from '@oclif/core';
 import fs from 'node:fs';
+import { basename } from 'node:path';
 import path from 'path';
 
 import { asyncTimeout } from '@dxos/async';
@@ -26,7 +27,6 @@ import { TextType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 import { bundleScript, findFunctionByDeploymentId } from '../../util';
-import { basename } from 'node:path';
 
 // TODO: move to cli-composer
 

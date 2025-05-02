@@ -163,7 +163,7 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
     table(
       mapMembers(members, true),
       {
-        key: { 
+        key: {
           header: 'identity key',
         },
         name: {

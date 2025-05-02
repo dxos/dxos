@@ -1,9 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
-import { describe, test } from 'vitest';
-import * as TestData from '../testing/test-data';
+
 import { processTranscriptBlock } from './entity-extraction';
+import * as TestData from '../testing/test-data';
 
 const aiService = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,

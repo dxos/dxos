@@ -1,3 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
+
 import { defineTool, Message } from '@dxos/artifact';
 import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
@@ -5,7 +11,7 @@ import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { failedInvariant } from '@dxos/invariant';
 import type { ContactType, MessageType } from '@dxos/schema';
-import { Schema } from 'effect';
+
 import type { DocumentType, Label } from './test-data';
 
 type ProcessEmailParams = {

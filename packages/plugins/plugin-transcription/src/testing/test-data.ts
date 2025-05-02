@@ -1,6 +1,12 @@
-import { create, EchoObject, ObjectId } from '@dxos/echo-schema';
-import { ContactType, MessageType } from '@dxos/schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema } from 'effect';
+
+import { create, EchoObject, ObjectId } from '@dxos/echo-schema';
+import { ContactType } from '@dxos/schema';
+
 import { TranscriptBlock } from '../types';
 
 const createContact = (name: string, email: string): ContactType => {

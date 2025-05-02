@@ -6,13 +6,13 @@
 
 // TODO(dmaretskyi): Move to @dxos/functions
 declare module 'dxos:functions' {
-  export const defineFunction: any; //typeof import('@dxos/functions-sdk').defineFunction;
+  export const defineFunction: any; // typeof import('@dxos/functions-sdk').defineFunction;
 
-  export const S: any; //typeof import('@dxos/functions-sdk').S;
+  export const S: any; // typeof import('@dxos/functions-sdk').S;
 
-  export const Filter: any; //typeof import('@dxos/functions-sdk').Filter;
+  export const Filter: any; // typeof import('@dxos/functions-sdk').Filter;
 
-  export const FunctionsClient: any; //typeof import('@dxos/functions-sdk').FunctionsClient;
+  export const FunctionsClient: any; // typeof import('@dxos/functions-sdk').FunctionsClient;
 
   export const createClientFromEnv: any; //  typeof import('@dxos/functions-sdk').createClientFromEnv;
 }

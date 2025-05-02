@@ -1,7 +1,13 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
-import { describe, test } from 'vitest';
+
 import { processEmail } from './email-processor';
 import { contacts, documents, emails, labels } from './test-data';
 

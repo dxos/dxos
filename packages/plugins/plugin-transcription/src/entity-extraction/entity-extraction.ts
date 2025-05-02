@@ -1,15 +1,18 @@
-import { createTemplate, defineTool, Message, structuredOutputParser } from '@dxos/artifact';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
+
+import { createTemplate, Message, structuredOutputParser } from '@dxos/artifact';
 import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import type { BaseEchoObject } from '@dxos/echo-schema';
-import { failedInvariant } from '@dxos/invariant';
-import type { ContactType, MessageType } from '@dxos/schema';
-import { Schema } from 'effect';
-import type { TranscriptBlock } from '../types';
-import type { DocumentType } from '../testing/test-data';
+
 import SYSTEM_PROMPT from './system-prompt.tpl?raw';
+import type { TranscriptBlock } from '../types';
 
 type ProcessTranscriptBlockParams = {
   block: TranscriptBlock;

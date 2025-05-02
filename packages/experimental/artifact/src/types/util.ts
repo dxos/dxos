@@ -5,10 +5,10 @@
 import { Schema as S, Schema } from 'effect';
 
 import { toJsonSchema, type JsonSchemaType } from '@dxos/echo-schema';
-
-import { type Tool, type ToolExecutionContext, type ToolResult } from './tools';
 import { failedInvariant } from '@dxos/invariant';
+
 import type { Message } from './message';
+import { type Tool, type ToolExecutionContext, type ToolResult } from './tools';
 
 export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
   /**

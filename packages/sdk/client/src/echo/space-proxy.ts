@@ -6,6 +6,7 @@ import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
 import { PropertiesType, type ClientServicesProvider, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType, type SpecificCredential } from '@dxos/credentials';
 import {
@@ -54,7 +55,6 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-import { Stream } from '@dxos/codec-protobuf/stream';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
