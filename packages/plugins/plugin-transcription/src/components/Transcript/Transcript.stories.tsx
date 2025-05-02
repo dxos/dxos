@@ -9,10 +9,6 @@ import React, { useEffect, useMemo, useState, type FC } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-<<<<<<< HEAD
-import { getSchema, ObjectId } from '@dxos/echo-schema';
-=======
->>>>>>> origin/main
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -25,10 +21,6 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
 
-<<<<<<< HEAD
-import { Transcript, type TranscriptProps, renderMarkdown } from './Transcript';
-import { BlockBuilder, TestItem, useTestTranscriptionQueue } from './testing';
-=======
 import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
 import {
   BlockBuilder,
@@ -36,7 +28,6 @@ import {
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
 } from './testings';
->>>>>>> origin/main
 import { useQueueModelAdapter } from '../../hooks';
 import { BlockModel } from '../../model';
 import translations from '../../translations';
