@@ -36,7 +36,16 @@
       "path": "../../ui/lit-ui"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../plugin-client"

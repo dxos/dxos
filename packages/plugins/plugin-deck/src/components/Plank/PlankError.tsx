@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { type Node } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
 import { PlankHeading, type PlankHeadingProps } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
@@ -19,11 +19,7 @@ export const PlankContentError = ({ error }: { error?: Error }) => {
     <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
       <p
         role='alert'
-        className={mx(
-          descriptionText,
-          'break-words border border-dashed border-separator rounded-lg p-8',
-          errorString.length < 256 && 'text-lg',
-        )}
+        className={mx(descriptionMessage, 'break-words rounded-lg p-8', errorString.length < 256 && 'text-lg')}
       >
         {error ? errorString : t('error fallback message')}
       </p>
