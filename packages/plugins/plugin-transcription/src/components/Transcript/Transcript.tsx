@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { resolveRef, useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -24,7 +25,6 @@ import { isNotFalsy } from '@dxos/util';
 import { transcript } from './transcript-extension';
 import { type BlockModel } from '../../model';
 import { type TranscriptType, type TranscriptBlock } from '../../types';
-import { log } from '@dxos/log';
 
 export const renderMarkdown = (block: TranscriptBlock, debug = false): string[] => {
   // TODO(burdon): Use link/reference markup for users (with popover).
@@ -40,6 +40,7 @@ export type TranscriptProps = ThemedClassName<{
   transcript?: TranscriptType;
   space?: Space;
   model: BlockModel<TranscriptBlock>;
+  // TODO(wittjosiah): Move to container.
   attendableId?: string;
   ignoreAttention?: boolean;
 }>;

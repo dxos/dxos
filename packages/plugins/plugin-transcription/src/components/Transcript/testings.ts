@@ -2,23 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useMemo } from 'react';
-
-import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { faker } from '@dxos/random';
-import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
-import { hues } from '@dxos/react-ui-theme';
-
-import { useState } from 'react';
-
-import { SpaceId } from '@dxos/react-client/echo';
+import { useEffect, useMemo, useState } from 'react';
 
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { faker } from '@dxos/random';
+import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
+import { SpaceId } from '@dxos/react-client/echo';
+import { hues } from '@dxos/react-ui-theme';
 import { ContactType } from '@dxos/schema';
+
 import { processTranscriptBlock } from '../../entity-extraction';
 import * as TestData from '../../testing/test-data';
 import { TranscriptBlock } from '../../types';
@@ -110,6 +107,7 @@ class EntityExtractionBlockBuilder {
   aiService = new AIServiceEdgeClient({
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
+
   currentBlock: number = 0;
 
   seedData(space: Space) {
@@ -176,7 +174,7 @@ export const useTestTranscriptionQueueWithEntityExtraction = (
     );
 
     return () => {
-      ctx.dispose();
+      void ctx.dispose();
     };
   }, [space, queue, running, interval]);
 
