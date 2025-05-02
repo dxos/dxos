@@ -14,6 +14,7 @@ export type DeckPopoverRootProps = PropsWithChildren<{}>;
 export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const virtualRef = useRef<HTMLButtonElement | null>(null);
+  const [virtualIter, setVirtualIter] = useState(0);
 
   // TODO(thure): This is a workaround for the difference in `React`ion time between displaying a Popover and rendering
   //  the anchor further down the tree. Refactor to use VirtualTrigger or some other approach which does not cause a lag.
@@ -37,11 +38,8 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
   );
 
   useEffect(() => {
-    if (context.popoverAnchor) {
-      virtualRef.current = context.popoverAnchor as HTMLButtonElement;
-    } else {
-      virtualRef.current = null;
-    }
+    virtualRef.current = context.popoverAnchor ?? null;
+    setVirtualIter((iter) => iter + 1);
   }, [context.popoverAnchor]);
 
   return (
@@ -50,7 +48,7 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
       open={!!((context.popoverAnchor || context.popoverAnchorId) && delayedPopoverVisibility)}
       onOpenChange={handlePopoverOpenChange}
     >
-      {context.popoverAnchor && <Popover.VirtualTrigger virtualRef={virtualRef} />}
+      {context.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
       {children}
     </Popover.Root>
   );
