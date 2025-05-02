@@ -5,8 +5,15 @@
 declare module '@peermetrics/webrtc-stats' {
   import { EventEmitter } from 'events';
 
-  export interface WebRTCStatsOptions {
-    getStatsInterval: number;
+  export interface WebRTCStatsConstructorOptions {
+    getStatsInterval?: number;
+    rawStats?: boolean;
+    statsObject?: boolean;
+    filteredStats?: boolean;
+    wrapGetUserMedia?: boolean;
+    debug?: boolean;
+    remote?: boolean;
+    logLevel?: LogLevel;
   }
 
   export interface ConnectionInfo {
@@ -16,7 +23,7 @@ declare module '@peermetrics/webrtc-stats' {
   }
 
   export class WebRTCStats extends EventEmitter {
-    constructor(options: WebRTCStatsOptions);
+    constructor(options: WebRTCStatsConstructorOptions);
     addConnection(info: ConnectionInfo): void;
     removeConnection(info: Pick<ConnectionInfo, 'pc'>): void;
   }
