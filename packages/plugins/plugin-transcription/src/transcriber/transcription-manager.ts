@@ -5,7 +5,7 @@
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { QueueImpl, type Queue } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
@@ -65,8 +65,14 @@ export class TranscriptionManager extends Resource {
     }
 
     if (recording) {
+      this._queue?.append([
+        { id: ObjectId.random(), segments: [{ text: 'Started', started: new Date().toISOString() }] },
+      ]);
       this._transcriber?.startChunksRecording();
     } else {
+      this._queue?.append([
+        { id: ObjectId.random(), segments: [{ text: 'Stopped', started: new Date().toISOString() }] },
+      ]);
       this._transcriber?.stopChunksRecording();
     }
   }
@@ -80,6 +86,7 @@ export class TranscriptionManager extends Resource {
     if (this._enabled === enabled) {
       return;
     }
+
     this._enabled = enabled ?? false;
     this.isOpen && (await this._toggleTranscriber());
   }
@@ -89,12 +96,13 @@ export class TranscriptionManager extends Resource {
     if (this._audioStreamTrack === track) {
       return;
     }
+
     this._audioStreamTrack = track;
     this.isOpen && (await this._toggleTranscriber());
   }
 
   /**
-   * Set the queue to save the transcription to.
+   * Set the y  to save the transcription to.
    * @param queue - The queue to save the transcription to or the DXN of the queue.
    */
   @synchronized

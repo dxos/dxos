@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState, type FC } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { ObjectId } from '@dxos/echo-schema';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -22,14 +23,14 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
+import { useQueueModelAdapter } from '../../hooks';
+import { BlockModel } from '../../model';
 import {
   BlockBuilder,
   TestItem,
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
-} from './testings';
-import { useQueueModelAdapter } from '../../hooks';
-import { BlockModel } from '../../model';
+} from '../../testing';
 import translations from '../../translations';
 import { type TranscriptBlock } from '../../types';
 
@@ -84,9 +85,10 @@ const BasicStory = ({ blocks: initialBlocks = [], ...props }: StoryProps) => {
     }
 
     if (!currentBlock) {
-      const block = builder.createBlock();
-      model.appendBlock(block);
-      setCurrentBlock(block);
+      void builder.createBlock().then((block) => {
+        model.appendBlock(block);
+        setCurrentBlock(block);
+      });
       return;
     }
 
@@ -147,6 +149,16 @@ const QueueStory = ({
   );
 };
 
+// TODO(burdon): Reconcile with QueueStory.
+const EntityExtractionQueueStory = () => {
+  const [running, setRunning] = useState(true);
+  const space = useSpace();
+  const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
+  const model = useQueueModelAdapter(renderMarkdown, queue, []);
+
+  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
+};
+
 /**
  * Wrapper remounts on refresh to reload queue.
  */
@@ -158,15 +170,6 @@ const QueueStoryWrapper = () => {
   };
 
   return <QueueStory key={key} queueId={queueId} onReset={handleReset} />;
-};
-
-const EntityExtractionQueueStory = () => {
-  const [running, setRunning] = useState(true);
-  const space = useSpace();
-  const queue = useTestTranscriptionQueueWithEntityExtraction(space, running, 2_000);
-  const model = useQueueModelAdapter(renderMarkdown, queue, []);
-
-  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
 };
 
 const meta: Meta<typeof QueueStory> = {
@@ -204,7 +207,7 @@ export const Default: Story = {
   args: {
     ignoreAttention: true,
     attendableId: 'story',
-    blocks: Array.from({ length: 10 }, () => BlockBuilder.singleton.createBlock()),
+    blocks: await Promise.all(Array.from({ length: 10 }, () => BlockBuilder.singleton.createBlock())),
   },
 };
 
@@ -227,7 +230,7 @@ export const WithQueue: Story = {
 export const WithEntityExtractionQueue: Story = {
   render: EntityExtractionQueueStory,
   args: {
-    // ignoreAttention: true,
-    // attendableId: 'story',
+    ignoreAttention: true,
+    attendableId: 'story',
   },
 };

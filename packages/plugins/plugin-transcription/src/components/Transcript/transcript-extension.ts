@@ -69,13 +69,15 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
           let isAutoScrolling = false;
           let hasScrolled = false;
 
-          const scrollToBottom = () => {
-            scroller.style.scrollBehavior = 'smooth';
+          let timeout: NodeJS.Timeout | undefined;
+          const scrollToBottom = (smooth = false) => {
+            scroller.style.scrollBehavior = smooth ? 'smooth' : '';
 
             // Temporarily hide scrollbar to prevent flicker.
             scroller.classList.add('cm-hide-scrollbar');
             isAutoScrolling = true;
-            setTimeout(() => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
               this._controls?.classList.add('opacity-0');
               scroller.classList.remove('cm-hide-scrollbar');
               isAutoScrolling = false;
@@ -96,7 +98,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
               this._controls,
               {
                 onClick: () => {
-                  scrollToBottom();
+                  scrollToBottom(false);
                 },
               },
               view,
@@ -122,7 +124,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
 
               // Scroll.
               if (autoScroll) {
-                scrollToBottom();
+                scrollToBottom(true);
               }
             }),
           );

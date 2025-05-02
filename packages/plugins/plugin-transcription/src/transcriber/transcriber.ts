@@ -93,6 +93,7 @@ export class Transcriber extends Resource {
   }
 
   protected override async _open(ctx: Context) {
+    log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
     this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
@@ -100,15 +101,18 @@ export class Transcriber extends Resource {
   }
 
   protected override async _close() {
+    log.info('closing');
     this._recording = false;
     this._transcribeTask = undefined;
     await this._recorder.stop();
   }
 
   startChunksRecording() {
+    log.info('starting');
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
     }
+
     this._recording = true;
   }
 
@@ -116,8 +120,10 @@ export class Transcriber extends Resource {
     if (this._lifecycleState !== LifecycleState.OPEN || !this._recording) {
       return;
     }
+
     this._recording = false;
     this._transcribeTask?.schedule();
+    log.info('stopped');
   }
 
   private _saveAudioChunk(chunk: AudioChunk) {

@@ -34,7 +34,7 @@ export const renderMarkdown: BlockRenderer<TranscriptBlock> = (
   // TODO(burdon): Use link/reference markup for users (with popover).
   // TODO(burdon): Color and avatar.
   return [
-    `###### ${block.authorName}` + (debug ? ` (${index}:${block.id})` : ''),
+    `###### ${block.authorName}` + (debug ? ` [${index}]:${block.id}` : ''),
     block.segments.map((segment) => segment.text.trim()).join(' '),
     '',
   ];
