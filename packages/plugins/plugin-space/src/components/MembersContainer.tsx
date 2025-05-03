@@ -6,6 +6,7 @@ import { Check, X } from '@phosphor-icons/react';
 import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, useSpaceInvitations, type Space } from '@dxos/react-client/echo';
@@ -27,7 +28,7 @@ import {
 import { hexToEmoji } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
-import { CollectionType } from '../types';
+import { CollectionType, SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK } from '../util';
 
 // TODO(wittjosiah): Copied from Shell.
@@ -50,6 +51,7 @@ export const MembersContainer = ({
 }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const config = useConfig();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const invitations = useSpaceInvitations(space.key);
   const visibleInvitations = invitations?.filter(
     (invitation) => ![Invitation.State.CANCELLED].includes(invitation.get().state),
@@ -77,13 +79,16 @@ export const MembersContainer = ({
         description: t('invite one description', { ns: 'os' }),
         icon: () => <Icon icon='ph--user-plus--regular' size={5} />,
         testId: 'membersContainer.inviteOne',
-        onClick: () => {
-          const invitation = space.share?.({
-            type: Invitation.Type.INTERACTIVE,
-            authMethod: Invitation.AuthMethod.SHARED_SECRET,
-            multiUse: false,
-            target: target && fullyQualifiedId(target),
-          });
+        onClick: async () => {
+          const { data: invitation } = await dispatch(
+            createIntent(SpaceAction.Share, {
+              space,
+              type: Invitation.Type.INTERACTIVE,
+              authMethod: Invitation.AuthMethod.SHARED_SECRET,
+              multiUse: false,
+              target: target && fullyQualifiedId(target),
+            }),
+          );
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
             const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
               handleInvitationEvent(invitation, subscription),
@@ -96,13 +101,16 @@ export const MembersContainer = ({
         description: t('invite many description', { ns: 'os' }),
         icon: () => <Icon icon='ph--users-three--regular' size={5} />,
         testId: 'membersContainer.inviteMany',
-        onClick: () => {
-          const invitation = space.share?.({
-            type: Invitation.Type.DELEGATED,
-            authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
-            multiUse: true,
-            target: target && fullyQualifiedId(target),
-          });
+        onClick: async () => {
+          const { data: invitation } = await dispatch(
+            createIntent(SpaceAction.Share, {
+              space,
+              type: Invitation.Type.DELEGATED,
+              authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+              multiUse: true,
+              target: target && fullyQualifiedId(target),
+            }),
+          );
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
             const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
               handleInvitationEvent(invitation, subscription),
