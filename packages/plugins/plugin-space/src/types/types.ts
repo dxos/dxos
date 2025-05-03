@@ -7,6 +7,7 @@ import { S, type Expando, type BaseObject, type TypedObject } from '@dxos/echo-s
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
+import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
 import { type ComplexMap } from '@dxos/util';
 
 import { CollectionType } from './collection';
@@ -135,11 +136,31 @@ export namespace SpaceAction {
     output: S.Void,
   }) {}
 
-  export class Share extends S.TaggedClass<Share>()(`${SPACE_ACTION}/share`, {
+  export class OpenMembers extends S.TaggedClass<OpenMembers>()(`${SPACE_ACTION}/open-members`, {
     input: S.Struct({
       space: SpaceSchema,
     }),
     output: S.Void,
+  }) {}
+
+  export class Share extends S.TaggedClass<Share>()(`${SPACE_ACTION}/share`, {
+    input: S.Struct({
+      space: SpaceSchema,
+      type: S.Enums(Invitation.Type),
+      authMethod: S.Enums(Invitation.AuthMethod),
+      multiUse: S.Boolean,
+      target: S.optional(S.String),
+    }),
+    output: S.instanceOf(CancellableInvitationObservable),
+  }) {}
+
+  export class GetShareLink extends S.TaggedClass<GetShareLink>()(`${SPACE_ACTION}/get-share-link`, {
+    input: S.Struct({
+      space: SpaceSchema,
+      target: S.optional(S.String),
+      copyToClipboard: S.optional(S.Boolean),
+    }),
+    output: S.String,
   }) {}
 
   export class Lock extends S.TaggedClass<Lock>()(`${SPACE_ACTION}/lock`, {

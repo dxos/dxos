@@ -4,12 +4,13 @@
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { memoizeQuery } from '@dxos/plugin-space';
-import { SPACE_TYPE } from '@dxos/plugin-space/types';
-import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { COMPOSER_SPACE_LOCK, memoizeQuery } from '@dxos/plugin-space';
+import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
+import { Filter, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
@@ -97,9 +98,36 @@ export default (context: PluginsContext) =>
     }),
 
     createExtension({
-      id: `${MEETING_PLUGIN}/meeting-summary`,
+      id: `${MEETING_PLUGIN}/share-meeting-link`,
       filter: (node): node is Node<MeetingType> =>
-        isInstanceOf(MeetingType, node.data) && node.type !== PLANK_COMPANION_TYPE,
+        isInstanceOf(MeetingType, node.data) && !getSpace(node.data)?.properties[COMPOSER_SPACE_LOCK],
+      actions: ({ node }) => [
+        {
+          id: `${fullyQualifiedId(node.data)}/action/share-meeting-link`,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const target = node.data;
+            const space = getSpace(target);
+            invariant(space);
+            await dispatch(
+              createIntent(SpaceAction.GetShareLink, {
+                space,
+                target: target && fullyQualifiedId(target),
+                copyToClipboard: true,
+              }),
+            );
+          },
+          properties: {
+            label: ['share meeting link label', { ns: MEETING_PLUGIN }],
+            icon: 'ph--share-network--regular',
+          },
+        },
+      ],
+    }),
+
+    createExtension({
+      id: `${MEETING_PLUGIN}/meeting-summary`,
+      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data),
       // TODO(wittjosiah): Only show the summarize action if the meeting plausibly completed.
       actions: ({ node }) => [
         {
@@ -119,7 +147,7 @@ export default (context: PluginsContext) =>
         {
           id: `${fullyQualifiedId(node.data)}${ATTENDABLE_PATH_SEPARATOR}summary`,
           type: PLANK_COMPANION_TYPE,
-          data: node.data,
+          data: 'summary',
           properties: {
             label: ['meeting summary label', { ns: MEETING_PLUGIN }],
             icon: 'ph--book-open-text--regular',
