@@ -106,13 +106,13 @@ export const MessageContentBlock = S.Union(
   TranscriptionContentBlock,
 );
 
-// TODO(wittjosiah): Add read status:
-//  - Read receipts need to be per space member.
-//  - Read receipts don't need to be added to schema until they being implemented.
 /**
  * Message.
  */
 // TODO(wittjosiah): Using `EchoObject` here causes type errors.
+// TODO(wittjosiah): Add read status:
+//  - Read receipts need to be per space member.
+//  - Read receipts don't need to be added to schema until they being implemented.
 export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.2.0' })({
   id: ObjectId,
   created: S.String.annotations({
