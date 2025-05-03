@@ -38,7 +38,7 @@ export const renderMarkdown =
     const identity = identities.find((identity) => identity.did === message.sender.identityDid);
     const name =
       identity?.profile?.displayName ??
-      message.sender.contact?.target?.name ??
+      message.sender.contact?.target?.fullName ??
       message.sender.name ??
       message.sender.email ??
       message.sender.identityDid;

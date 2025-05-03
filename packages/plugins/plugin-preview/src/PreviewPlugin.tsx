@@ -18,6 +18,7 @@ import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { resolveRef } from '@dxos/client';
 import { getSchema, isEchoObject, parseId, type ReactiveEchoObject, type Space } from '@dxos/client/echo';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { type DxRefTagActivate } from '@dxos/lit-ui';
 import { log } from '@dxos/log';
@@ -26,7 +27,9 @@ import { useTranslation } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
 import { descriptionMessage } from '@dxos/react-ui-theme';
+import { Testing } from '@dxos/schema/testing';
 
+import { OrgCard } from './components';
 import { meta, PREVIEW_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -115,6 +118,13 @@ export const PreviewPlugin = () =>
 
               return <Form schema={schema} values={data.subject} readonly />;
             },
+          }),
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/schema-popover`,
+            role: 'popover',
+            filter: (data): data is { subject: ReactiveEchoObject<Testing.Org> } =>
+              isEchoObject(data.subject) && isInstanceOf(data.subject, Testing.Org),
+            component: ({ data }) => <OrgCard subject={data.subject} />,
           }),
         ]),
     }),

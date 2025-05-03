@@ -34,7 +34,7 @@ describe('View', () => {
       'name',
       'email',
       // 'address',
-      'employer',
+      'organization',
     ]);
 
     const props = getSchemaProperties(schema.ast);
@@ -43,13 +43,13 @@ describe('View', () => {
       'Name',
       'Email',
       // 'Address',
-      'Employer',
+      'Organization',
     ]);
   });
 
   test('static schema definitions with references', async ({ expect }) => {
     const org = live(Testing.Org, { name: 'DXOS', website: 'https://dxos.org' });
-    const contact = live(Testing.Contact, { name: 'Alice', email: 'alice@example.com', employer: makeRef(org) });
+    const contact = live(Testing.Contact, { name: 'Alice', email: 'alice@example.com', organization: makeRef(org) });
     log('schema', { org: toJsonSchema(Testing.Org), person: toJsonSchema(Testing.Contact) });
     log('objects', { org, person: contact });
     expect(getTypename(org)).to.eq(Testing.Org.typename);

@@ -5,8 +5,9 @@
 import { SchemaAST as AST, Schema as S } from 'effect';
 
 import { Type } from '@dxos/echo';
-import {, FormatEnum
+import {
   Format,
+  FormatEnum,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
   LabelAnnotationId,
@@ -15,6 +16,7 @@ import {, FormatEnum
 
 import { IconAnnotationId } from '../annotations';
 
+// TODO(wittjosiah): Migrate to using common types.
 export namespace Testing {
   //
   // Org
@@ -25,7 +27,13 @@ export namespace Testing {
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'company.name',
     }),
-    image: S.optional(S.String),
+    description: S.optional(S.String),
+    image: S.optional(
+      Format.URL.annotations({
+        [AST.TitleAnnotationId]: 'Preview image',
+        [GeneratorAnnotationId]: 'image.url',
+      }),
+    ),
     website: S.optional(
       Format.URL.annotations({
         [AST.TitleAnnotationId]: 'Website',
@@ -72,9 +80,14 @@ export namespace Testing {
     name: S.String.pipe(FormatAnnotation.set(FormatEnum.DateTime)).annotations({
       [GeneratorAnnotationId]: 'person.fullName',
     }),
-    image: S.optional(Format.URL.annotations({ [GeneratorAnnotationId]: 'image.url' })),
+    image: S.optional(
+      Format.URL.annotations({
+        [AST.TitleAnnotationId]: 'Preview image',
+        [GeneratorAnnotationId]: 'image.url',
+      }),
+    ),
     email: S.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
-    employer: S.optional(
+    organization: S.optional(
       Type.Ref(Org).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
