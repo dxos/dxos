@@ -7,6 +7,9 @@ import { S, Format, AST, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/
 
 import { IconAnnotationId } from '../annotations';
 
+/**
+ * Organization schema.
+ */
 export const OrganizationSchema = S.Struct({
   id: Type.ObjectId,
   name: S.String.annotations({
@@ -33,4 +36,5 @@ export const Organization = OrganizationSchema.pipe(
     version: '0.1.0',
   }),
 );
+
 export type Organization = S.Schema.Type<typeof Organization>;
