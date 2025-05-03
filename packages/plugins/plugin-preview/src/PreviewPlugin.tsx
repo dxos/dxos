@@ -29,7 +29,7 @@ import { Form } from '@dxos/react-ui-form';
 import { descriptionMessage } from '@dxos/react-ui-theme';
 import { Testing } from '@dxos/schema/testing';
 
-import { OrgCard } from './components';
+import { ContactCard, OrganizationCard } from './components';
 import { meta, PREVIEW_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -104,6 +104,25 @@ export const PreviewPlugin = () =>
       activatesOn: Events.SetupReactSurface,
       activate: () =>
         contributes(Capabilities.ReactSurface, [
+          //
+          // Specific types.
+          //
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/schema-popover`,
+            role: 'popover',
+            filter: (data): data is { subject: Testing.Contact } => isInstanceOf(Testing.Contact, data.subject),
+            component: ({ data }) => <ContactCard subject={data.subject} />,
+          }),
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/schema-popover`,
+            role: 'popover',
+            filter: (data): data is { subject: Testing.Org } => isInstanceOf(Testing.Org, data.subject),
+            component: ({ data }) => <OrganizationCard subject={data.subject} />,
+          }),
+
+          //
+          // Fallback for any object.
+          //
           createSurface({
             id: `${PREVIEW_PLUGIN}/fallback-popover`,
             role: 'popover',
@@ -118,13 +137,6 @@ export const PreviewPlugin = () =>
 
               return <Form schema={schema} values={data.subject} readonly />;
             },
-          }),
-          createSurface({
-            id: `${PREVIEW_PLUGIN}/schema-popover`,
-            role: 'popover',
-            filter: (data): data is { subject: ReactiveEchoObject<Testing.Org> } =>
-              isEchoObject(data.subject) && isInstanceOf(data.subject, Testing.Org),
-            component: ({ data }) => <OrgCard subject={data.subject} />,
           }),
         ]),
     }),
