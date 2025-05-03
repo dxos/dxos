@@ -8,12 +8,12 @@ import { createTemplate, Message, structuredOutputParser } from '@dxos/artifact'
 import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { create } from '@dxos/echo-schema';
-import type { BaseEchoObject } from '@dxos/ewcho-schema';
-import { type MessageType } from '@dxos/schema';
+import { type BaseEchoObject, create } from '@dxos/echo-schema';
+import { MessageType } from '@dxos/schema';
 
-import SYSTEM_PROMPT from './system-prompt.tpl?raw';
 import { asyncTimeout } from '@dxos/async';
+import { log } from '@dxos/log';
+import SYSTEM_PROMPT from './system-prompt.tpl?raw';
 
 type ProcessTranscriptMessageParams = {
   message: MessageType;
@@ -39,6 +39,7 @@ type ProcessTranscriptMessageParams = {
 
 type ProcessTranscriptMessageResult = {
   message: MessageType;
+  timeElapsed: number;
 };
 
 /**
@@ -69,6 +70,8 @@ export const processTranscriptMessage = async (
     );
 
     const runParser = async (): Promise<ProcessTranscriptMessageResult> => {
+      const startTime = performance.now();
+      console.time('entity extraction');
       const result = outputParser.getResult(
         await new MixedStreamParser().parse(
           await params.aiService.execStream({
@@ -89,27 +92,32 @@ export const processTranscriptMessage = async (
           }),
         ),
       );
+      console.timeEnd('entity extraction');
+      log.info('entity extraction result', { result });
 
       return {
-        message: {
+        message: create(MessageType, {
           ...params.message,
           blocks: params.message.blocks.map((block, i) => ({
             ...block,
-            text: postprocessText(result?.segments[i] ?? raise(new Error('failed to process email'))),
+            text: postprocessText(result?.segments[i] ?? raise(new Error('failed to process transcript segment'))),
           })),
-        },
+        }),
+        timeElapsed: performance.now() - startTime,
       };
     };
 
     if (params.options?.timeout && params.options.timeout > 0) {
-      return await asyncTimeout(runParser, params.options.timeout);
+      return await asyncTimeout(runParser(), params.options.timeout);
     } else {
       return await runParser();
     }
   } catch (error) {
     if (params.options?.fallbackToRaw) {
+      log.warn('failed to process transcript message, falling back to raw text', { error });
       return {
         message: params.message,
+        timeElapsed: 0,
       };
     } else {
       throw error;

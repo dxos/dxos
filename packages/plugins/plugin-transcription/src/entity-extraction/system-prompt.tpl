@@ -6,5 +6,6 @@
   Call the submit_result tool to submit your result.
 
   The inline reference syntax is as follows:
-   - [<optional name>][<ID>] or just [<ID>]
+   - [<human-readable name>][<ID>].
    - Example: [Earnings Report][01JT0JP9AX0XKGZX4MV4B69VT6]
+   - Always adhere to this format with 2 sections.

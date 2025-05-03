@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { Filter, fullyQualifiedId, getSpace, makeRef, type Space } from '@dxos/client/echo';
-import { getSchemaTypename, isInstanceOf, type EchoSchema } from '@dxos/echo-schema';
+import { getSchemaTypename, isInstanceOf, type BaseEchoObject, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -25,6 +25,7 @@ import { processTranscriptMessage } from '../entity-extraction';
 import type { MessageType } from '@dxos/schema';
 import type { Schema } from 'effect';
 import { DocumentType } from '@dxos/plugin-markdown/types';
+import { log } from '@dxos/log';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -176,13 +177,30 @@ type EntityExtractionEnricherFactoryOptions = {
 const createEntityExtractionEnricher = ({ aiClient, space, contextTypes }: EntityExtractionEnricherFactoryOptions) => {
   return async (message: MessageType) => {
     const { objects } = await space.db.query(Filter.or(...contextTypes.map((s) => Filter.schema(s)))).run();
+    log.info('context', { objects });
 
-    const result = await processTranscriptMessage({
+    const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
       message,
       aiService: aiClient,
-      context: { objects },
-      options: { timeout: 15_000, fallbackToRaw: true },
+      context: { objects: await Promise.all(objects.map(processContextObject)) },
+      options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },
     });
-    return result.message;
+    log.info('entity extraction time', { timeElapsed });
+    return enhancedMessage;
   };
 };
+
+const processContextObject = async (object: BaseEchoObject): Promise<any> => {
+  // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
+  // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
+  if (isInstanceOf(DocumentType, object)) {
+    return {
+      ...object,
+      content: await object.content.load(),
+    };
+  }
+
+  return object;
+};
+
+const ENTITY_EXTRACTOR_TIMEOUT = 25_000;
