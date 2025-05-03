@@ -151,7 +151,6 @@ export default (context: PluginsContext) =>
           properties: {
             label: ['meeting summary label', { ns: MEETING_PLUGIN }],
             icon: 'ph--book-open-text--regular',
-            position: 'fallback',
             disposition: 'hidden',
             schema: DocumentType,
             getIntent: ({ meeting }: { meeting: MeetingType }) => createIntent(MeetingAction.Summarize, { meeting }),

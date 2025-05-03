@@ -93,6 +93,7 @@ export default (context: PluginsContext) =>
             properties: {
               label: ['transcript companion label', { ns: TRANSCRIPTION_PLUGIN }],
               icon: 'ph--subtitles--regular',
+              position: 'hoist',
               disposition: 'hidden',
               schema: TranscriptType,
               getIntent: ({ space }: { space: Space }) =>

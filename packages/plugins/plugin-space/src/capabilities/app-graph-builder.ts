@@ -369,7 +369,7 @@ export default (context: PluginsContext) => {
             label: ['object settings label', { ns: SPACE_PLUGIN }],
             icon: 'ph--sliders--regular',
             disposition: 'hidden',
-            position: 'hoist',
+            position: 'fallback',
           },
         },
       ],
