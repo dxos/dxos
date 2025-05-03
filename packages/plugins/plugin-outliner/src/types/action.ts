@@ -3,8 +3,8 @@
 //
 
 import { S } from '@dxos/echo-schema';
+import { Task } from '@dxos/schema';
 
-import { TaskType } from './task';
 import { TreeNodeType } from './tree';
 import { JournalType, OutlineType } from './types';
 import { OUTLINER_PLUGIN } from '../meta';
@@ -36,7 +36,7 @@ export namespace OutlinerAction {
       node: TreeNodeType,
     }),
     output: S.Struct({
-      object: TaskType,
+      object: Task,
     }),
   }) {}
 }

@@ -6,7 +6,6 @@ import { S } from '@dxos/echo-schema';
 import { MessageType } from '@dxos/schema';
 
 import { CalendarType } from './calendar';
-import { ContactsType } from './contacts';
 import { MailboxType } from './mail';
 import { INBOX_PLUGIN } from '../meta';
 
@@ -20,16 +19,6 @@ export namespace InboxAction {
     }),
     output: S.Struct({
       object: MailboxType,
-    }),
-  }) {}
-
-  // TODO(wittjosiah): Remove.
-  export class CreateContacts extends S.TaggedClass<CreateContacts>()(`${INBOX_ACTION}/create-contacts`, {
-    input: S.Struct({
-      name: S.optional(S.String),
-    }),
-    output: S.Struct({
-      object: ContactsType,
     }),
   }) {}
 
