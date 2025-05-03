@@ -5,12 +5,12 @@
 import { Schema } from 'effect';
 
 import { create, EchoObject, ObjectId } from '@dxos/echo-schema';
-import { ContactType, MessageType } from '@dxos/schema';
+import { Contact, MessageType } from '@dxos/schema';
 
-const createContact = (name: string, email: string): ContactType => {
-  return create(ContactType, {
-    name,
-    identifiers: [{ type: 'email', value: email }],
+const createContact = (fullName: string, email: string): Contact => {
+  return create(Contact, {
+    fullName,
+    emails: [{ value: email }],
   });
 };
 
@@ -94,7 +94,7 @@ export const documents = [
 export const transcriptMessages: MessageType[] = [
   create(MessageType, {
     sender: {
-      name: contacts.john.name,
+      name: contacts.john.fullName,
     },
     created: getDate(0),
     blocks: [
@@ -112,7 +112,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.sarah.name,
+      name: contacts.sarah.fullName,
     },
     created: getDate(45),
     blocks: [
@@ -125,7 +125,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.emma.name,
+      name: contacts.emma.fullName,
     },
     created: getDate(60),
     blocks: [
@@ -138,7 +138,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.john.name,
+      name: contacts.john.fullName,
     },
     created: getDate(90),
     blocks: [
@@ -151,7 +151,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.david.name,
+      name: contacts.david.fullName,
     },
     created: getDate(120),
     blocks: [
@@ -169,7 +169,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.sarah.name,
+      name: contacts.sarah.fullName,
     },
     created: getDate(160),
     blocks: [
@@ -182,7 +182,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.emma.name,
+      name: contacts.emma.fullName,
     },
     created: getDate(190),
     blocks: [
@@ -200,7 +200,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.john.name,
+      name: contacts.john.fullName,
     },
     created: getDate(240),
     blocks: [
@@ -218,7 +218,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.sarah.name,
+      name: contacts.sarah.fullName,
     },
     created: getDate(290),
     blocks: [
@@ -236,7 +236,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.david.name,
+      name: contacts.david.fullName,
     },
     created: getDate(350),
     blocks: [
@@ -249,7 +249,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.john.name,
+      name: contacts.john.fullName,
     },
     created: getDate(380),
     blocks: [
@@ -267,7 +267,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.emma.name,
+      name: contacts.emma.fullName,
     },
     created: getDate(430),
     blocks: [
@@ -280,7 +280,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.sarah.name,
+      name: contacts.sarah.fullName,
     },
     created: getDate(460),
     blocks: [
@@ -293,7 +293,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.david.name,
+      name: contacts.david.fullName,
     },
     created: getDate(490),
     blocks: [
@@ -311,7 +311,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.john.name,
+      name: contacts.john.fullName,
     },
     created: getDate(540),
     blocks: [
@@ -324,7 +324,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.emma.name,
+      name: contacts.emma.fullName,
     },
     created: getDate(570),
     blocks: [
@@ -337,7 +337,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.john.name,
+      name: contacts.john.fullName,
     },
     created: getDate(600),
     blocks: [
@@ -350,7 +350,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.sarah.name,
+      name: contacts.sarah.fullName,
     },
     created: getDate(630),
     blocks: [
@@ -363,7 +363,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.john.name,
+      name: contacts.john.fullName,
     },
     created: getDate(660),
     blocks: [
@@ -376,7 +376,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.david.name,
+      name: contacts.david.fullName,
     },
     created: getDate(690),
     blocks: [
@@ -389,7 +389,7 @@ export const transcriptMessages: MessageType[] = [
   }),
   create(MessageType, {
     sender: {
-      name: contacts.john.name,
+      name: contacts.john.fullName,
     },
     created: getDate(720),
     blocks: [

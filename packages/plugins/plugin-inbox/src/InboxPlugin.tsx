@@ -12,7 +12,7 @@ import { MessageType } from '@dxos/schema';
 import { AppGraphBuilder, ArtifactDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
-import { CalendarType, ContactsType, EventType, InboxAction, MailboxType } from './types';
+import { CalendarType, EventType, InboxAction, MailboxType } from './types';
 
 export const InboxPlugin = () =>
   definePlugin(meta, [
@@ -37,12 +37,6 @@ export const InboxPlugin = () =>
           id: MailboxType.typename,
           metadata: {
             icon: 'ph--tray--regular',
-          },
-        }),
-        contributes(Capabilities.Metadata, {
-          id: ContactsType.typename,
-          metadata: {
-            icon: 'ph--address-book--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -75,13 +69,6 @@ export const InboxPlugin = () =>
           defineObjectForm({
             objectSchema: MailboxType,
             getIntent: (_, options) => createIntent(InboxAction.CreateMailbox, { spaceId: options.space.id }),
-          }),
-        ),
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: ContactsType,
-            getIntent: () => createIntent(InboxAction.CreateContacts),
           }),
         ),
         contributes(
