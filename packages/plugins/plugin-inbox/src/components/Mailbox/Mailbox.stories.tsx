@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+
 import './mailbox.css';
 
 import { type Meta } from '@storybook/react';
@@ -17,7 +18,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { ContactType, MessageType } from '@dxos/schema';
+import { Contact, MessageType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { Mailbox } from './Mailbox';
@@ -63,7 +64,7 @@ export const WithCompanion = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [MailboxType, MessageType, ContactType],
+          types: [MailboxType, MessageType, Contact],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

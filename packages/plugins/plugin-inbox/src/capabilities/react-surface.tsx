@@ -10,15 +10,9 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { MessageType } from '@dxos/schema';
 
-import {
-  ContactsContainer,
-  EventsContainer,
-  MailboxContainer,
-  MessageContainer,
-  MailboxObjectSettings,
-} from '../components';
+import { EventsContainer, MailboxContainer, MessageContainer, MailboxObjectSettings } from '../components';
 import { INBOX_PLUGIN } from '../meta';
-import { CalendarType, ContactsType, MailboxType } from '../types';
+import { CalendarType, MailboxType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -51,12 +45,6 @@ export default () =>
           <MessageContainer message={message} space={space} />
         );
       },
-    }),
-    createSurface({
-      id: `${INBOX_PLUGIN}/contacts`,
-      role: 'article',
-      filter: (data): data is { subject: ContactsType } => isInstanceOf(ContactsType, data.subject),
-      component: ({ data }) => <ContactsContainer contacts={data.subject} />,
     }),
     createSurface({
       id: `${INBOX_PLUGIN}/calendar`,

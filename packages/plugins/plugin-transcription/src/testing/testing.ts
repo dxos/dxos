@@ -13,7 +13,7 @@ import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
-import { ContactType, MessageType, type TranscriptionContentBlock } from '@dxos/schema';
+import { Contact, MessageType, type TranscriptionContentBlock } from '@dxos/schema';
 
 import * as TestData from './test-data';
 import { processTranscriptMessage } from '../entity-extraction';
@@ -95,8 +95,8 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
   currentMessage: number = 0;
 
   seedData(space: Space) {
-    if (!space.db.graph.schemaRegistry.hasSchema(ContactType)) {
-      space.db.graph.schemaRegistry.addSchema([ContactType]);
+    if (!space.db.graph.schemaRegistry.hasSchema(Contact)) {
+      space.db.graph.schemaRegistry.addSchema([Contact]);
     }
     // for (const document of TestData.documents) {
     //   const obj = space.db.add(live(Document, document));
