@@ -5,7 +5,13 @@
 import { SchemaAST as AST, Schema as S } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Format, FieldLookupAnnotationId, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
+import {, FormatEnum
+  Format,
+  FieldLookupAnnotationId,
+  GeneratorAnnotationId,
+  LabelAnnotationId,
+  FormatAnnotation,
+} from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
@@ -19,6 +25,7 @@ export namespace Testing {
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'company.name',
     }),
+    image: S.optional(S.String),
     website: S.optional(
       Format.URL.annotations({
         [AST.TitleAnnotationId]: 'Website',
@@ -62,7 +69,10 @@ export namespace Testing {
 
   export const ContactSchema = S.Struct({
     id: Type.ObjectId,
-    name: S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName' }),
+    name: S.String.pipe(FormatAnnotation.set(FormatEnum.DateTime)).annotations({
+      [GeneratorAnnotationId]: 'person.fullName',
+    }),
+    image: S.optional(Format.URL.annotations({ [GeneratorAnnotationId]: 'image.url' })),
     email: S.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
     employer: S.optional(
       Type.Ref(Org).annotations({
@@ -96,6 +106,7 @@ export namespace Testing {
     id: Type.ObjectId,
     name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
     description: S.optional(S.String),
+    image: S.optional(Format.URL.annotations({ [GeneratorAnnotationId]: 'image.url' })),
   }).annotations({
     [AST.TitleAnnotationId]: 'Project',
     [LabelAnnotationId]: 'name',

@@ -11,6 +11,7 @@ import {
   randFloat,
   randFullName,
   randHexaDecimal,
+  randImg,
   randNumber,
   randParagraph,
   randProductName,
@@ -57,6 +58,9 @@ export const faker = {
   },
   date: {
     recent: () => randRecentDate(),
+  },
+  image: {
+    url: () => randImg(),
   },
 
   //
