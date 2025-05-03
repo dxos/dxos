@@ -35,8 +35,8 @@ export namespace MeetingAction {
 // TODO(budron): Better way to define specific extensions for meeting companions.
 // TODO(budron): This brings in deps from ../state; how should we manage/minimize explicit type exposure to other plugins?
 export type MeetingCallProperties = Record<string, any> & {
-  onJoin: (state: { meeting: MeetingType; roomId: string }) => void;
-  onLeave: () => void;
-  onCallStateUpdated: (callState: CallState) => void;
-  onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => void;
+  onJoin: (state: { meeting: MeetingType; roomId: string }) => Promise<void>;
+  onLeave: () => Promise<void>;
+  onCallStateUpdated: (callState: CallState) => Promise<void>;
+  onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
 };

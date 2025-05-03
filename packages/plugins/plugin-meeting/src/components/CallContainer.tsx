@@ -43,19 +43,19 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
     const ctx = new Context();
     callManager.left.on(ctx, (roomId) => {
       companions.forEach((companion) => {
-        companion.properties.onLeave?.(roomId);
+        void companion.properties.onLeave?.(roomId);
       });
     });
 
     callManager.callStateUpdated.on(ctx, (state) => {
       companions.forEach((companion) => {
-        companion.properties.onCallStateUpdated?.(state);
+        void companion.properties.onCallStateUpdated?.(state);
       });
     });
 
     callManager.mediaStateUpdated.on(ctx, (state) => {
       companions.forEach((companion) => {
-        companion.properties.onMediaStateUpdated?.(state);
+        void companion.properties.onMediaStateUpdated?.(state);
       });
     });
 
@@ -82,11 +82,9 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
       void joinSound.play();
       callManager.setRoomId(roomId);
       await callManager.join();
-
-      companions.forEach((companion) => {
-        companion.properties.onJoin?.({ meeting, roomId });
-      });
+      await Promise.all(companions.map((companion) => companion.properties.onJoin?.({ meeting, roomId })));
     } catch (err) {
+      // TODO(burdon): Error sound.
       log.catch(err);
     }
   }, [companions, roomId]);
@@ -96,17 +94,16 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
    */
   const handleLeave = useCallback(async () => {
     try {
-      companions.forEach((companion) => {
-        companion.properties.onLeave?.(roomId);
-      });
+      void leaveSound.play();
+      await Promise.all(companions.map((companion) => companion.properties.onLeave?.(roomId)));
     } catch (err) {
+      // TODO(burdon): Error sound.
       log.catch(err);
     } finally {
       void callManager.turnAudioOff();
       void callManager.turnVideoOff();
       void callManager.turnScreenshareOff();
       void callManager.leave();
-      void leaveSound.play();
     }
   }, [companions, roomId]);
 

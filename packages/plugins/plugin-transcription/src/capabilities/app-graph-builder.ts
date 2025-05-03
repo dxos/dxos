@@ -112,7 +112,7 @@ export default (context: PluginsContext) =>
                 createIntent(TranscriptionAction.Create, { spaceId: space.id }),
 
               // TODO(burdon): Is this the right place to inisitalize the state? Change to a capability?
-              onJoin: ({ meeting }: { meeting: MeetingType; roomId: string }) => {
+              onJoin: async ({ meeting }: { meeting: MeetingType; roomId: string }) => {
                 const space = getSpace(meeting);
                 invariant(space);
 
@@ -127,6 +127,7 @@ export default (context: PluginsContext) =>
                       contextTypes: [Contact, Organization, DocumentType],
                     });
 
+                // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
                 const transcriptionManager = new TranscriptionManager({
                   edgeClient: client.edge,
                   messageEnricher: entityExtractionEnricher,
@@ -136,16 +137,15 @@ export default (context: PluginsContext) =>
                 invariant(identity);
                 transcriptionManager.setIdentityDid(identity.did);
 
-                // TODO(dmaretskyi): Is this safe to do asynchronously?
-                void transcriptionManager.open();
+                await transcriptionManager.open();
                 state.transcriptionManager = transcriptionManager;
               },
-              onLeave: () => {
-                void state.transcriptionManager?.close();
+              onLeave: async () => {
+                await state.transcriptionManager?.close();
                 state.transcriptionManager = undefined;
                 state.enabled = false;
               },
-              onCallStateUpdated: (callState: CallState) => {
+              onCallStateUpdated: async (callState: CallState) => {
                 const typename = getSchemaTypename(TranscriptType);
                 const transcription = typename ? callState.activities?.[typename] : undefined;
                 if (!transcription?.payload) {
@@ -156,11 +156,11 @@ export default (context: PluginsContext) =>
                 state.enabled = !!payload.enabled;
                 if (payload.queueDxn) {
                   // NOTE: Must set queue before enabling transcription.
-                  void state.transcriptionManager?.setQueue(DXN.parse(payload.queueDxn));
+                  state.transcriptionManager?.setQueue(DXN.parse(payload.queueDxn));
                 }
-                void state.transcriptionManager?.setEnabled(payload.enabled);
+                await state.transcriptionManager?.setEnabled(payload.enabled);
               },
-              onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => {
+              onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
                 void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
                 void state.transcriptionManager?.setRecording(isSpeaking);
               },
