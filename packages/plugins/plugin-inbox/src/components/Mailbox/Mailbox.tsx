@@ -13,7 +13,7 @@ import { type MessageType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
 import { type MailboxType } from '../../types';
-import { formatDate } from '../util';
+import { formatDate, hashString } from '../util';
 
 const ROW_SIZES = {
   DEFAULT: 56,
@@ -26,13 +26,6 @@ const messageRowDefault = {
 
 const messageColumnDefault = {
   grid: { size: 100 },
-};
-
-const hashString = (str?: string): number => {
-  if (!str) {
-    return 0;
-  }
-  return Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0));
 };
 
 const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean) => {

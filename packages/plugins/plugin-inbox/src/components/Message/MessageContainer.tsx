@@ -21,6 +21,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { type MessageType } from '@dxos/schema';
 
+import { MessageHeader } from './MessageHeader';
 import { useMessageToolbarActions, useMessageToolbarAction } from './toolbar';
 
 export type MessageProps = ThemedClassName<{
@@ -58,10 +59,10 @@ const Message = ({ space, message, plainView, classNames }: MessageProps) => {
 
   return (
     <div role='none' className='grid grid-rows-[min-content_min-content_1fr]'>
-      <div className='min-bs-0'>
-        <h3>{message.sender.name}</h3>
+      <MessageHeader message={message} />
+      <div role='none' className='overflow-y-auto bs-full min-bs-0 p-2'>
+        <div ref={parentRef} className={mx(classNames)} />
       </div>
-      <div ref={parentRef} className={mx('overflow-hidden bs-full', classNames)} />
     </div>
   );
 };
@@ -89,9 +90,7 @@ export const MessageContainer = ({ space, message }: MessageContainerProps) => {
             </MenuProvider>
           </ElevationProvider>
         </div>
-        <div className='p-2 overflow-y-auto'>
-          <Message space={space} message={message} plainView={plainView} />
-        </div>
+        <Message space={space} message={message} plainView={plainView} />
       </div>
     </StackItem.Content>
   );
