@@ -445,7 +445,7 @@ export const seed = async (space: Space) => {
   //   document.dxn = dxn;
   // }
 
-  const { organizations, contacts, documents, transcriptMessages } = createTestData();
+  const { organizations, contacts, transcriptMessages } = createTestData();
 
   const objects: BaseEchoObject[] = [
     // ...Object.values(documents),

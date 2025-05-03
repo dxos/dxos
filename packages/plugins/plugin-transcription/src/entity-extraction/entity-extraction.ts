@@ -71,7 +71,6 @@ export const processTranscriptMessage = async (
 
     const runParser = async (): Promise<ProcessTranscriptMessageResult> => {
       const startTime = performance.now();
-      console.time('entity extraction');
       const result = outputParser.getResult(
         await new MixedStreamParser().parse(
           await params.aiService.execStream({
@@ -92,7 +91,6 @@ export const processTranscriptMessage = async (
           }),
         ),
       );
-      console.timeEnd('entity extraction');
       log.info('entity extraction result', { result });
 
       return {
