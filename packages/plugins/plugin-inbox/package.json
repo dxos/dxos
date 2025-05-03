@@ -60,6 +60,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-tag-picker": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",

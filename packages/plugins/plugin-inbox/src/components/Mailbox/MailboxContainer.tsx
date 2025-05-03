@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { type ComponentProps, useCallback, useMemo } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { TagPicker } from '@dxos/react-ui-tag-picker';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
@@ -26,7 +27,6 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const currentMessageId = state[id]?.id;
 
-  // Use the mailbox model instead of the direct queue
   const model = useMailboxModel(mailbox.queue.dxn);
 
   const handleAction = useCallback<MailboxActionHandler>(
@@ -57,20 +57,39 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
     [id, dispatch, model.messages],
   );
 
+  const onTagPickerUpdate = useCallback(
+    (ids: string[]) => {
+      model.clearSelectedTags();
+      for (const id of ids) {
+        model.selectTag(id);
+      }
+    },
+    [model],
+  );
+
+  const tagPickerCurrentItems = useMemo(() => {
+    return model.selectedTags.map((tag) => ({ ...tag, id: tag.label, hue: tag.hue }) as any);
+  }, [model.selectedTags]);
+
   return (
     <StackItem.Content classNames='relative'>
-      {model.messages && model.messages.length > 0 ? (
-        <Mailbox
-          messages={model.messages}
-          id={id}
-          name={mailbox.name}
-          onAction={handleAction}
-          currentMessageId={currentMessageId}
-          onTagSelect={model.selectTag}
-        />
-      ) : (
-        <EmptyMailboxContent mailbox={mailbox} />
-      )}
+      <div role='none' className='grid grid-rows-[min-content_1fr]'>
+        <div role='toolbar' className='p-1 border-be border-separator bs-[2rem]'>
+          <TagPicker items={tagPickerCurrentItems} onUpdate={onTagPickerUpdate} />
+        </div>
+        {model.messages && model.messages.length > 0 ? (
+          <Mailbox
+            messages={model.messages}
+            id={id}
+            name={mailbox.name}
+            onAction={handleAction}
+            currentMessageId={currentMessageId}
+            onTagSelect={model.selectTag}
+          />
+        ) : (
+          <EmptyMailboxContent mailbox={mailbox} />
+        )}
+      </div>
     </StackItem.Content>
   );
 };
