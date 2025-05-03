@@ -77,9 +77,9 @@ export const create = create$;
  *
  * @example
  * ```ts
- * const Org = S.Struct({
+ * const Organization = S.Struct({
  *   name: S.String,
- * }).pipe(Type.def({ typename: 'example.com/type/Org', version: '1.0.0' }));
+ * }).pipe(Type.def({ typename: 'example.com/type/Organization', version: '1.0.0' }));
  * ```
  */
 export const def = (meta: TypeMeta) => EchoObject(meta);
@@ -92,7 +92,7 @@ export const def = (meta: TypeMeta) => EchoObject(meta);
  * import { Type } from '@dxos/echo';
  * const Contact = S.Struct({
  *   name: S.String,
- *   employer: Type.Ref(Org),
+ *   organization: Type.Ref(Organization),
  * }).pipe(Type.def({ typename: 'example.com/type/Contact', version: '1.0.0' }));
  * ```
  */

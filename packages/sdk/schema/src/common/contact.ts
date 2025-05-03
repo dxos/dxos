@@ -10,7 +10,7 @@ import { PostalAddressSchema } from './postal-address';
 
 // TODO(wittjosiah): Contact vs ContactSchema vs ContactType?
 
-// TODO(burdon): Materialize link for Role (Org => [Role] => Contact).
+// TODO(burdon): Materialize link for Role (Organization => [Role] => Contact).
 // TODO(burdon): Address sub type with geo location.
 // TODO(burdon): Reconcile with user id.
 

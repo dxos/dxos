@@ -17,7 +17,7 @@ import {
   formatInferredRelationshipLabel,
   formatNodeLabel,
 } from '../cypher';
-import { Contact, Org, Project, Task } from '../testing';
+import { Contact, Organization, Project, Task } from '../testing';
 
 export const seedTestData = (db: EchoDatabase) => {
   const contactRich = db.add(
@@ -122,14 +122,14 @@ export const seedTestData = (db: EchoDatabase) => {
   );
 
   const _orgDxos = db.add(
-    live(Org, {
+    live(Organization, {
       name: 'DXOS',
       employees: [makeRef(contactRich), makeRef(contactJosiah), makeRef(contactDima)],
       projects: [makeRef(projectEcho)],
     }),
   );
   const _orgBraneframe = db.add(
-    live(Org, {
+    live(Organization, {
       name: 'Braneframe',
       employees: [makeRef(contactJosiah), makeRef(contactRich)],
       projects: [makeRef(projectComposer)],
@@ -226,13 +226,13 @@ export const createTestData = (): MockDataSource => {
     assignee: makeRef(contactJosiah),
   });
 
-  const _orgDxos = dataSource.add(Org, {
+  const _orgDxos = dataSource.add(Organization, {
     id: ObjectId.random(),
     name: 'DXOS',
     employees: [makeRef(contactRich), makeRef(contactJosiah), makeRef(contactDima)],
     projects: [makeRef(projectEcho)],
   });
-  const _orgBraneframe = dataSource.add(Org, {
+  const _orgBraneframe = dataSource.add(Organization, {
     id: ObjectId.random(),
     name: 'Braneframe',
     employees: [makeRef(contactJosiah), makeRef(contactRich)],
