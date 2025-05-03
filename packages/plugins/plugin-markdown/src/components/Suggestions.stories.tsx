@@ -24,6 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
@@ -151,6 +152,7 @@ const meta: Meta<typeof DefaultStory> = {
         SettingsPlugin(),
         IntentPlugin(),
         MarkdownPlugin(),
+        PreviewPlugin(),
       ],
       capabilities: [contributes(MarkdownCapabilities.Extensions, [() => command()])],
     }),
