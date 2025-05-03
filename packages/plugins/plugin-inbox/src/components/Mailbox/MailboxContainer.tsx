@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
@@ -75,7 +75,17 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
     <StackItem.Content classNames='relative'>
       <div role='none' className='grid grid-rows-[min-content_1fr]'>
         <div role='toolbar' className='p-1 border-be border-separator bs-[2rem]'>
-          <TagPicker items={tagPickerCurrentItems} onUpdate={onTagPickerUpdate} />
+          <TagPicker
+            items={tagPickerCurrentItems}
+            onUpdate={onTagPickerUpdate}
+            onSearch={(text, ids) => {
+              // Return all available tags that match the filter text and aren't already selected
+              return model.availableTags
+                .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
+                .filter((tag) => !ids.includes(tag.label))
+                .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any }));
+            }}
+          />
         </div>
         {model.messages && model.messages.length > 0 ? (
           <Mailbox
