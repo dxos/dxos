@@ -19,6 +19,13 @@ export namespace Testing {
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'company.name',
     }),
+    description: S.optional(S.String),
+    image: S.optional(
+      Format.URL.annotations({
+        [AST.TitleAnnotationId]: 'Preview image',
+        [GeneratorAnnotationId]: 'image.url',
+      }),
+    ),
     website: S.optional(
       Format.URL.annotations({
         [AST.TitleAnnotationId]: 'Website',
