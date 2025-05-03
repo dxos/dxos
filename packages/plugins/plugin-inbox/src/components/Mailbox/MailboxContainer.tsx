@@ -21,6 +21,8 @@ import { useMailboxToolbarAction, useMailboxToolbarActions } from './toolbar';
 import { InboxCapabilities } from '../../capabilities/capabilities';
 import { InboxAction, type MailboxType } from '../../types';
 
+type FilterVisibilityState = 'closed' | 'display' | 'controlled';
+
 export type MailboxContainerProps = {
   mailbox: MailboxType;
 };
@@ -33,22 +35,35 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   const model = useMailboxModel(mailbox.queue.dxn);
 
-  const [filterVisible, setFilterVisible] = useState(false);
+  const [filterState, setFilterState] = useState<FilterVisibilityState>('closed');
 
-  const toolbarState = useMemo(() => ({ filterVisible, setFilterVisible }), [filterVisible]);
+  // Derive simple boolean for toolbar compatibility
+  const isFilterVisible = filterState !== 'closed';
+  const toolbarState = useMemo(
+    () => ({
+      filterVisible: isFilterVisible,
+      setFilterVisible: (visible: boolean) => {
+        // When toggled from toolbar, use 'controlled' state when enabling
+        setFilterState(visible ? 'controlled' : 'closed');
+      },
+    }),
+    [filterState],
+  );
+
   const menu = useMailboxToolbarActions(model, toolbarState);
   const handleToolbarAction = useMailboxToolbarAction({ model, state: toolbarState });
 
   const tagPickerRef = useRef<TagPickerHandle>(null);
 
   useEffect(() => {
-    if (filterVisible && tagPickerRef.current) {
+    // Only focus when in 'controlled' mode (opened from toolbar)
+    if (filterState === 'controlled' && tagPickerRef.current) {
       // Wait a tiny bit for the DOM to update
       setTimeout(() => {
         tagPickerRef.current?.focus();
       }, 0);
     }
-  }, [filterVisible]);
+  }, [filterState]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     ({ action, messageId }) => {
@@ -84,8 +99,22 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
       for (const id of ids) {
         model.selectTag(id);
       }
+
+      // If all tags are removed and we're in 'display' mode, close the filter
+      if (ids.length === 0 && filterState === 'display') {
+        setFilterState('closed');
+      }
     },
-    [model],
+    [model, filterState, setFilterState],
+  );
+
+  const handleTagSelect = useCallback(
+    (label: string) => {
+      // Set filter to 'display' mode - visible but don't auto-focus
+      setFilterState('display');
+      model.selectTag(label);
+    },
+    [model, setFilterState],
   );
 
   const tagPickerCurrentItems = useMemo(() => {
@@ -103,7 +132,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           </ElevationProvider>
         </div>
 
-        {filterVisible && (
+        {isFilterVisible && (
           <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
             <Icon
               role='presentation'
@@ -133,7 +162,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
             name={mailbox.name}
             onAction={handleAction}
             currentMessageId={currentMessageId}
-            onTagSelect={model.selectTag}
+            onTagSelect={handleTagSelect}
           />
         ) : (
           <EmptyMailboxContent mailbox={mailbox} />
