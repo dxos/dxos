@@ -9,7 +9,9 @@ import { TRANSCRIPTION_PLUGIN } from '../meta';
 import { type TranscriptionSettingsProps, TranscriptionSettingsSchema } from '../types';
 
 export default () => {
-  const settings = live<TranscriptionSettingsProps>({});
+  const settings = live<TranscriptionSettingsProps>({
+    entityExtraction: true,
+  });
 
   return contributes(Capabilities.Settings, {
     schema: TranscriptionSettingsSchema,

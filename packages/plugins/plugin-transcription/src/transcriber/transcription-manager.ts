@@ -44,7 +44,6 @@ export type TranscriptionManagerOptions = {
 /**
  * Manages transcription state for a meeting.
  */
-// TODO(mykola): Reconcile with transcriber capability.
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private readonly _messageEnricher?: TranscriptMessageEnricher;
@@ -70,9 +69,26 @@ export class TranscriptionManager extends Resource {
   }
 
   @synchronized
-  setRecording(recording?: boolean) {
+  setQueue(queueDxn: DXN): TranscriptionManager {
+    if (this._queue?.dxn.toString() !== queueDxn.toString()) {
+      log.info('setQueue', { queueDxn: queueDxn.toString() });
+      this._queue = new QueueImpl<MessageType>(this._edgeClient, queueDxn);
+    }
+    return this;
+  }
+
+  @synchronized
+  setIdentityDid(did: string): TranscriptionManager {
+    if (this._identityDid !== did) {
+      this._identityDid = did;
+    }
+    return this;
+  }
+
+  @synchronized
+  setRecording(recording?: boolean): TranscriptionManager {
     if (!this.isOpen || !this._enabled) {
-      return;
+      return this;
     }
 
     if (recording) {
@@ -80,6 +96,7 @@ export class TranscriptionManager extends Resource {
     } else {
       this._transcriber?.stopChunksRecording();
     }
+    return this;
   }
 
   /**
@@ -105,22 +122,6 @@ export class TranscriptionManager extends Resource {
 
     this._audioStreamTrack = track;
     this.isOpen && (await this._toggleTranscriber());
-  }
-
-  @synchronized
-  setQueue(queueDxn: DXN) {
-    if (this._queue?.dxn.toString() !== queueDxn.toString()) {
-      log.info('setQueue', { queueDxn: queueDxn.toString() });
-      this._queue = new QueueImpl<MessageType>(this._edgeClient, queueDxn);
-    }
-  }
-
-  @synchronized
-  setIdentityDid(did: string) {
-    if (this._identityDid === did) {
-      return;
-    }
-    this._identityDid = did;
   }
 
   // TODO(burdon): Change this to setEnables (explicit), not toggle.

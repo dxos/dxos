@@ -26,7 +26,7 @@ import { TranscriptionCapabilities } from './capabilities';
 import { processTranscriptMessage } from '../entity-extraction';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
 import { TranscriptionManager } from '../transcriber';
-import { TranscriptionAction, TranscriptType } from '../types';
+import { TranscriptionAction, type TranscriptionSettingsProps, TranscriptType } from '../types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -70,10 +70,10 @@ export default (context: PluginsContext) =>
               const transcript = await getMeetingTranscript(context, meeting);
               invariant(transcript, 'Failed to create transcript');
 
-              const call = context.requestCapability(MeetingCapabilities.CallManager);
-              call.setActivity(getSchemaTypename(TranscriptType)!, {
-                enabled: !state.enabled,
+              const callManager = context.requestCapability(MeetingCapabilities.CallManager);
+              callManager.setActivity(getSchemaTypename(TranscriptType)!, {
                 queueDxn: transcript.queue.dxn.toString(),
+                enabled: !state.enabled,
               });
             },
             properties: {
@@ -91,6 +91,9 @@ export default (context: PluginsContext) =>
         const meeting = node.data;
         const client = context.requestCapability(ClientCapabilities.Client);
         const state = context.requestCapability(TranscriptionCapabilities.MeetingTranscriptionState);
+        const settings = context
+          .requestCapability(Capabilities.SettingsStore)
+          .getStore<TranscriptionSettingsProps>(TRANSCRIPTION_PLUGIN)!.value;
 
         // TODO(dmaretskyi): Request via capability.
         const aiClient: AIServiceClient | undefined = new AIServiceEdgeClient({
@@ -113,32 +116,30 @@ export default (context: PluginsContext) =>
 
               // TODO(burdon): Is this the right place to inisitalize the state? Change to a capability?
               onJoin: async ({ meeting }: { meeting: MeetingType; roomId: string }) => {
+                const identity = client.halo.identity.get();
+                invariant(identity);
                 const space = getSpace(meeting);
                 invariant(space);
 
-                const entityExtractionEnricher = !aiClient
-                  ? undefined
-                  : createEntityExtractionEnricher({
-                      aiClient,
-                      space,
-                      // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
-                      //  This forced me to add a dependency on markdown plugin.
-                      //  This will be replaced with a vector search index anyway, so its not a big deal.
-                      contextTypes: [Contact, Organization, DocumentType],
-                    });
+                let messageEnricher;
+                if (aiClient && settings.entityExtraction) {
+                  messageEnricher = createEntityExtractionEnricher({
+                    aiClient,
+                    // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
+                    //  This forced me to add a dependency on markdown plugin.
+                    //  This will be replaced with a vector search index anyway, so its not a big deal.
+                    contextTypes: [DocumentType, Contact, Organization],
+                    space,
+                  });
+                }
 
                 // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-                const transcriptionManager = new TranscriptionManager({
+                state.transcriptionManager = await new TranscriptionManager({
                   edgeClient: client.edge,
-                  messageEnricher: entityExtractionEnricher,
-                });
-
-                const identity = client.halo.identity.get();
-                invariant(identity);
-                transcriptionManager.setIdentityDid(identity.did);
-
-                await transcriptionManager.open();
-                state.transcriptionManager = transcriptionManager;
+                  messageEnricher,
+                })
+                  .setIdentityDid(identity.did)
+                  .open();
               },
               onLeave: async () => {
                 await state.transcriptionManager?.close();
@@ -173,21 +174,22 @@ export default (context: PluginsContext) =>
 
 type EntityExtractionEnricherFactoryOptions = {
   aiClient: AIServiceClient;
-  space: Space;
   contextTypes: Schema.Schema.AnyNoContext[];
+  space: Space;
 };
 
-const createEntityExtractionEnricher = ({ aiClient, space, contextTypes }: EntityExtractionEnricherFactoryOptions) => {
+const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
   return async (message: MessageType) => {
     const { objects } = await space.db.query(Filter.or(...contextTypes.map((s) => Filter.schema(s)))).run();
     log.info('context', { objects });
 
     const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
-      message,
       aiService: aiClient,
+      message,
       context: { objects: await Promise.all(objects.map(processContextObject)) },
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },
     });
+
     log.info('entity extraction time', { timeElapsed });
     return enhancedMessage;
   };
