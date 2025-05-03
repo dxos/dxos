@@ -18,12 +18,16 @@ import React, {
 
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AIServiceEdgeClient } from '@dxos/assistant';
+import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { Filter, MemoryQueue } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { createQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
@@ -34,16 +38,12 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript } from './Transcript';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
+import { processTranscriptMessage } from '../entity-extraction';
 import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } from '../hooks';
 import { type SerializationModel } from '../model';
 import { TestItem } from '../testing';
-import { type TranscriberParams } from '../transcriber';
-import { AIServiceEdgeClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
-import { processTranscriptMessage } from '../entity-extraction';
 import * as TestData from '../testing/test-data';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { type TranscriberParams } from '../transcriber';
 
 const TranscriptionStory: FC<{
   model: SerializationModel<MessageType>;

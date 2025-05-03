@@ -7,12 +7,12 @@ import { Schema } from 'effect';
 import { createTemplate, Message, structuredOutputParser } from '@dxos/artifact';
 import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
+import { asyncTimeout } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { type BaseEchoObject, create } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { MessageType } from '@dxos/schema';
 
-import { asyncTimeout } from '@dxos/async';
-import { log } from '@dxos/log';
 import SYSTEM_PROMPT from './system-prompt.tpl?raw';
 
 type ProcessTranscriptMessageParams = {

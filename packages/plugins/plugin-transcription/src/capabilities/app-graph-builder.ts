@@ -2,30 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { Schema } from 'effect';
+
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
+import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/assistant';
+import { AI_SERVICE_ENDPOINT, Contact, Organization } from '@dxos/assistant/testing';
 import { Filter, fullyQualifiedId, getSpace, makeRef, type Space } from '@dxos/client/echo';
-import { getSchemaTypename, isInstanceOf, type BaseEchoObject, type EchoSchema } from '@dxos/echo-schema';
+import { getSchemaTypename, isInstanceOf, type BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { MeetingCapabilities, type CallState, type MediaState } from '@dxos/plugin-meeting';
 import { MeetingType } from '@dxos/plugin-meeting/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type TranscriptionPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
+import type { MessageType } from '@dxos/schema';
 
 import { TranscriptionCapabilities } from './capabilities';
+import { processTranscriptMessage } from '../entity-extraction';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
 import { TranscriptionManager } from '../transcriber';
 import { TranscriptionAction, TranscriptType } from '../types';
-import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT, Contact, Organization } from '@dxos/assistant/testing';
-import { processTranscriptMessage } from '../entity-extraction';
-import type { MessageType } from '@dxos/schema';
-import type { Schema } from 'effect';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { log } from '@dxos/log';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?

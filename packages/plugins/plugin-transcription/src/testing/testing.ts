@@ -11,13 +11,13 @@ import { createQueueDxn, Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
 import { Contact, MessageType, Organization, type TranscriptionContentBlock } from '@dxos/schema';
 
 import * as TestData from './test-data';
 import { processTranscriptMessage } from '../entity-extraction';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to schema-testing.
 export const TestItem = S.Struct({

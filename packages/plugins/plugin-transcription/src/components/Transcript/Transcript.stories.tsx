@@ -22,7 +22,6 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { Organization, Contact, type MessageType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
-import * as TestData from '../../testing/test-data';
 
 import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
 import { useQueueModelAdapter } from '../../hooks';
@@ -33,6 +32,7 @@ import {
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
 } from '../../testing';
+import * as TestData from '../../testing/test-data';
 import translations from '../../translations';
 
 faker.seed(1);

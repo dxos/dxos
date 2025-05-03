@@ -4,11 +4,11 @@
 
 import { Schema } from 'effect';
 
+import type { Space } from '@dxos/client/echo';
 import { create, EchoObject, ObjectId, type BaseEchoObject } from '@dxos/echo-schema';
 import { live, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Contact, MessageType, Organization } from '@dxos/schema';
-import type { Space } from '@dxos/client/echo';
 
 faker.seed(1);
 
