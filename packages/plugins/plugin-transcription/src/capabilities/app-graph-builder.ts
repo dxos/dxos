@@ -17,7 +17,7 @@ import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-de
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { MeetingCapabilities, type CallState, type MediaState } from '@dxos/plugin-meeting';
-import { MeetingType } from '@dxos/plugin-meeting/types';
+import { MeetingType, type MeetingCallProperties } from '@dxos/plugin-meeting/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type TranscriptionPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import type { MessageType } from '@dxos/schema';
@@ -92,7 +92,7 @@ export default (context: PluginsContext) =>
         const client = context.requestCapability(ClientCapabilities.Client);
         const state = context.requestCapability(TranscriptionCapabilities.MeetingTranscriptionState);
 
-        // TODO(dmaretskyi): Request via capability
+        // TODO(dmaretskyi): Request via capability.
         const aiClient: AIServiceClient | undefined = new AIServiceEdgeClient({
           endpoint: AI_SERVICE_ENDPOINT.REMOTE,
         });
@@ -110,17 +110,20 @@ export default (context: PluginsContext) =>
               schema: TranscriptType,
               getIntent: ({ space }: { space: Space }) =>
                 createIntent(TranscriptionAction.Create, { spaceId: space.id }),
-              onJoin: () => {
-                // TODO(dmaretskyi): How do I get the space for the meeting?
-                const space = client.spaces.default;
+
+              // TODO(burdon): Is this the right place to inisitalize the state? Change to a capability?
+              onJoin: ({ meeting }: { meeting: MeetingType; roomId: string }) => {
+                const space = getSpace(meeting);
+                invariant(space);
 
                 const entityExtractionEnricher = !aiClient
                   ? undefined
                   : createEntityExtractionEnricher({
                       aiClient,
                       space,
-                      // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities? This will be replaced with a vector search index anyway, so its not a big deal.
-                      // TODO(dmaretskyi): This forced me to add a dependency on markdown plugin.
+                      // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
+                      //  This forced me to add a dependency on markdown plugin.
+                      //  This will be replaced with a vector search index anyway, so its not a big deal.
                       contextTypes: [Contact, Organization, DocumentType],
                     });
 
@@ -161,7 +164,7 @@ export default (context: PluginsContext) =>
                 void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
                 void state.transcriptionManager?.setRecording(isSpeaking);
               },
-            },
+            } satisfies MeetingCallProperties,
           },
         ];
       },

@@ -8,6 +8,7 @@ import { DocumentType } from '@dxos/plugin-markdown/types';
 
 import { MeetingType } from './schema';
 import { MEETING_PLUGIN } from '../meta';
+import { type MediaState, type CallState } from '../state';
 
 export namespace MeetingAction {
   const MEETING_ACTION = `${MEETING_PLUGIN}/action`;
@@ -30,3 +31,12 @@ export namespace MeetingAction {
     }),
   }) {}
 }
+
+// TODO(budron): Better way to define specific extensions for meeting companions.
+// TODO(budron): This brings in deps from ../state; how should we manage/minimize explicit type exposure to other plugins?
+export type MeetingCallProperties = Record<string, any> & {
+  onJoin: (state: { meeting: MeetingType; roomId: string }) => void;
+  onLeave: () => void;
+  onCallStateUpdated: (callState: CallState) => void;
+  onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => void;
+};
