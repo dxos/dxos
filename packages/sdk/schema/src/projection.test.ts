@@ -148,7 +148,7 @@ describe('ViewProjection', () => {
       name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      org: Ref(Organization),
+      organization: Ref(Organization),
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -163,17 +163,17 @@ describe('ViewProjection', () => {
 
     projection.setFieldProjection({
       field: {
-        id: getFieldId(view, 'org'),
-        path: 'org' as JsonPath,
+        id: getFieldId(view, 'organization'),
+        path: 'organization' as JsonPath,
         referencePath: 'name' as JsonPath,
       },
     });
 
-    const { field, props } = projection.getFieldProjection(getFieldId(view, 'org'));
+    const { field, props } = projection.getFieldProjection(getFieldId(view, 'organization'));
 
     expect(field).to.deep.eq({
-      id: getFieldId(view, 'org'),
-      path: 'org',
+      id: getFieldId(view, 'organization'),
+      path: 'organization',
       referencePath: 'name',
     });
 
@@ -187,7 +187,7 @@ describe('ViewProjection', () => {
     });
 
     // Note: `referencePath` is stripped from schema.
-    expect(mutable.jsonSchema.properties?.['org' as const]).to.deep.eq({
+    expect(mutable.jsonSchema.properties?.['organization' as const]).to.deep.eq({
       $id: '/schemas/echo/ref',
       title: 'Ref',
       reference: {
