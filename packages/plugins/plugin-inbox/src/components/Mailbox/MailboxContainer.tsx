@@ -8,7 +8,7 @@ import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-fram
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { ElevationProvider } from '@dxos/react-ui';
+import { ElevationProvider, Icon } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -105,6 +105,13 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
         {filterVisible && (
           <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
+            <Icon
+              role='presentation'
+              icon='ph--tag--bold'
+              classNames='mr-1 opacity-30'
+              aria-label='tags icon'
+              size={4}
+            />
             <TagPicker
               ref={tagPickerRef}
               items={tagPickerCurrentItems}
