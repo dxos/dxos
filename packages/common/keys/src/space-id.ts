@@ -22,12 +22,10 @@ export const SpaceId = Object.freeze({
   encode: (value: Uint8Array): SpaceId => {
     invariant(value instanceof Uint8Array, 'Invalid type');
     invariant(value.length === SpaceId.byteLength, 'Invalid length');
-
     return (MULTIBASE_PREFIX + base32Encode(value, 'RFC4648')) as SpaceId;
   },
   decode: (value: SpaceId): Uint8Array => {
     invariant(value.startsWith(MULTIBASE_PREFIX), 'Invalid multibase32 encoding');
-
     return new Uint8Array(base32Decode(value.slice(1), 'RFC4648'));
   },
   isValid: (value: string): value is SpaceId => {
