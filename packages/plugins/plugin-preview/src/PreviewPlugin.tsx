@@ -5,14 +5,14 @@
 import React from 'react';
 
 import {
-  createIntent,
   Capabilities,
-  contributes,
   Events,
+  LayoutAction,
+  contributes,
+  createIntent,
+  createSurface,
   defineModule,
   definePlugin,
-  LayoutAction,
-  createSurface,
 } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -27,9 +27,9 @@ import { useTranslation } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
 import { descriptionMessage } from '@dxos/react-ui-theme';
-import { Testing } from '@dxos/schema/testing';
+import { Contact, Organization } from '@dxos/schema';
 
-import { OrgCard } from './components';
+import { ContactCard, OrganizationCard } from './components';
 import { meta, PREVIEW_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -104,6 +104,25 @@ export const PreviewPlugin = () =>
       activatesOn: Events.SetupReactSurface,
       activate: () =>
         contributes(Capabilities.ReactSurface, [
+          //
+          // Specific schema types.
+          //
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/schema-popover`,
+            role: 'popover',
+            filter: (data): data is { subject: Contact } => isInstanceOf(Contact, data.subject),
+            component: ({ data }) => <ContactCard subject={data.subject} />,
+          }),
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/schema-popover`,
+            role: 'popover',
+            filter: (data): data is { subject: Organization } => isInstanceOf(Organization, data.subject),
+            component: ({ data }) => <OrganizationCard subject={data.subject} />,
+          }),
+
+          //
+          // Fallback for any object.
+          //
           createSurface({
             id: `${PREVIEW_PLUGIN}/fallback-popover`,
             role: 'popover',
@@ -118,13 +137,6 @@ export const PreviewPlugin = () =>
 
               return <Form schema={schema} values={data.subject} readonly />;
             },
-          }),
-          createSurface({
-            id: `${PREVIEW_PLUGIN}/schema-popover`,
-            role: 'popover',
-            filter: (data): data is { subject: ReactiveEchoObject<Testing.Org> } =>
-              isEchoObject(data.subject) && isInstanceOf(data.subject, Testing.Org),
-            component: ({ data }) => <OrgCard subject={data.subject} />,
           }),
         ]),
     }),

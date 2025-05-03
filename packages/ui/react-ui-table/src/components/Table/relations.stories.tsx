@@ -71,8 +71,8 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 
 const DefaultStory = () => {
   // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
-  const orgSchema = useMemo(() => new ImmutableSchema(Testing.Org), []);
-  const { model: orgModel, presentation: orgPresentation } = useTestModel<Testing.Org>(orgSchema, 50);
+  const orgSchema = useMemo(() => new ImmutableSchema(Testing.Organization), []);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel<Testing.Organization>(orgSchema, 50);
 
   // TODO(burdon): Generate links with references.
   const contactSchema = useMemo(() => new ImmutableSchema(Testing.Contact), []);
@@ -97,7 +97,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Org, Testing.Contact],
+      types: [TableType, ViewType, Testing.Organization, Testing.Contact],
       createIdentity: true,
       createSpace: true,
     }),
