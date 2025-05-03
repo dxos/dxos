@@ -181,21 +181,21 @@ export class QueryState extends Resource {
 
 // TODO(burdon): Process Filter DSL.
 const filterToIndexQuery = (filter: FilterProto): IndexQuery => {
-  invariant(!(filter.type && (filter.or ?? []).length > 0), 'Cannot mix type and or filters.');
+  invariant(!((filter.type ?? []).length > 0 && (filter.or ?? []).length > 0), 'Cannot mix type and or filters.');
   invariant(
-    (filter.or ?? []).every((subFilter) => !(subFilter.type && (subFilter.or ?? []).length > 0)),
+    (filter.or ?? []).every((subFilter) => !((subFilter.type ?? []).length > 0 && (subFilter.or ?? []).length > 0)),
     'Cannot mix type and or filters.',
   );
   if (
-    filter.type ||
+    (filter.type ?? []).length > 0 ||
     ((filter.or ?? []).length > 0 && (filter.or ?? []).every((subFilter) => !subFilter.not && subFilter.type))
   ) {
     return {
       typenames:
-        filter.type && filter.type.length > 0
-          ? filter.type.map((type) => dxnToIndexerTypename(DXN.parse(type)))
+        (filter.type ?? []).length > 0
+          ? (filter.type ?? []).map((type) => dxnToIndexerTypename(DXN.parse(type)))
           : (filter.or ?? [])
-              .flatMap((f) => f.type?.map((type) => dxnToIndexerTypename(DXN.parse(type))) ?? [])
+              .flatMap((f) => (f.type ?? []).map((type) => dxnToIndexerTypename(DXN.parse(type))) ?? [])
               .filter(isNonNullable),
       inverted: filter.not,
     };
