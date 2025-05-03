@@ -48,6 +48,25 @@ const makeTagToMessageIndex = (messages: MessageType[]): Map<string, MessageType
 };
 
 /**
+ * Creates a map of tag labels to Tag objects.
+ * @param messages - Array of messages to process.
+ */
+const makeTagIndex = (messages: MessageType[]): Map<string, Tag> => {
+  const tagIndex = new Map<string, Tag>();
+
+  for (const message of messages) {
+    const messageTags = message.properties?.tags || [];
+    for (const tag of messageTags) {
+      if (!tagIndex.has(tag.label)) {
+        tagIndex.set(tag.label, tag);
+      }
+    }
+  }
+
+  return tagIndex;
+};
+
+/**
  * Model representing a mailbox with messages.
  */
 export class MailboxModel {
@@ -58,6 +77,7 @@ export class MailboxModel {
 
   // Computed signals (derived state).
   private _tagToMessagesIndex: ReadonlySignal<Map<string, MessageType[]>>;
+  private _tagIndex: ReadonlySignal<Map<string, Tag>>;
   private _filteredMessages: ReadonlySignal<MessageType[]>;
   private _sortedFilteredMessages: ReadonlySignal<MessageType[]>;
 
@@ -73,6 +93,7 @@ export class MailboxModel {
     this._selectedTags = signal([]);
 
     this._tagToMessagesIndex = computed(() => makeTagToMessageIndex(this._messages.value));
+    this._tagIndex = computed(() => makeTagIndex(this._messages.value));
 
     this._filteredMessages = computed(() => {
       const selectedTags = this._selectedTags.value;
@@ -155,26 +176,11 @@ export class MailboxModel {
     this._selectedTags.value = [];
   }
 
-  // TODO(ZaymonFC): This is kinda wack.
   /**
    * Gets all unique tags present across all messages.
    */
   get availableTags(): Tag[] {
-    // Extract unique tags from the keys of the tag-to-messages map
-    return Array.from(this._tagToMessagesIndex.value.keys()).map((tagLabel) => {
-      // Find a message with this tag to get the complete tag object
-      const messagesWithTag = this._tagToMessagesIndex.value.get(tagLabel) || [];
-      if (messagesWithTag.length === 0) {
-        return { label: tagLabel, hue: '' };
-      }
-
-      // Get the tag object from the first message that has it
-      const message = messagesWithTag[0];
-      const messageTags = message.properties?.tags || [];
-      const tag = messageTags.find((tag: any) => tag.label === tagLabel);
-
-      return tag || { label: tagLabel, hue: '' };
-    });
+    return Array.from(this._tagIndex.value.values());
   }
 
   /**
