@@ -14,10 +14,10 @@ import { Icon, Popover } from '@dxos/react-ui';
 import { Testing } from '@dxos/schema/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { ContactCard, OrgCard } from './components';
+import { ContactCard, OrganizationCard } from './components';
 import translations from './translations';
 
-faker.seed(1);
+faker.seed(1234);
 
 type StoryProps = {
   Component: FC<{ subject: any }>;
@@ -49,9 +49,9 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-export const Org = {
+export const Organization = {
   args: {
-    Component: OrgCard,
+    Component: OrganizationCard,
     icon: 'ph--building-office--regular',
     subject: create(Testing.Org, {
       name: faker.company.name(),
@@ -63,9 +63,9 @@ export const Org = {
   },
 };
 
-export const OrgNoImage = {
+export const OrganizationNoImage = {
   args: {
-    Component: OrgCard,
+    Component: OrganizationCard,
     icon: 'ph--building-office--regular',
     subject: create(Testing.Org, {
       name: faker.company.name(),
@@ -83,7 +83,7 @@ export const Contact = {
       name: faker.person.fullName(),
       image:
         'https://plus.unsplash.com/premium_photo-1664536392779-049ba8fde933?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      organization: makeRef(Org.args.subject),
+      organization: makeRef(Organization.args.subject),
       email: faker.internet.email(),
     }),
   },
@@ -95,7 +95,7 @@ export const ContactNoImage = {
     icon: 'ph--user--regular',
     subject: create(Testing.Contact, {
       name: faker.person.fullName(),
-      organization: makeRef(Org.args.subject),
+      organization: makeRef(Organization.args.subject),
       email: faker.internet.email(),
     }),
   },

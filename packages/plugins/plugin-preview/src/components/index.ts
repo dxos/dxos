@@ -3,4 +3,4 @@
 //
 
 export * from './ContactCard';
-export * from './OrgCard';
+export * from './OrganizationCard';
