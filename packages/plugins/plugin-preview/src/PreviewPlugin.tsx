@@ -22,7 +22,7 @@ import { isInstanceOf } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { type DxRefTagActivate } from '@dxos/lit-ui';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { useTranslation } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
@@ -55,6 +55,11 @@ export const PreviewPlugin = () =>
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => [contributes(ClientCapabilities.Schema, [Contact, Organization])],
     }),
     defineModule({
       id: `${meta.id}/module/preview-popover`,

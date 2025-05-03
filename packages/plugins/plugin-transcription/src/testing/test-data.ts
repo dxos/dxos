@@ -5,14 +5,11 @@
 import { Schema } from 'effect';
 
 import { create, EchoObject, ObjectId } from '@dxos/echo-schema';
-import { Contact, MessageType } from '@dxos/schema';
+import { makeRef } from '@dxos/live-object';
+import { faker } from '@dxos/random';
+import { Contact, MessageType, Organization } from '@dxos/schema';
 
-const createContact = (fullName: string, email: string): Contact => {
-  return create(Contact, {
-    fullName,
-    emails: [{ value: email }],
-  });
-};
+faker.seed(1);
 
 /**
  * Helper to create dates in reverse chronological order
@@ -37,17 +34,39 @@ const createDocument = (name: string, content: string): DocumentType => {
   });
 };
 
-export const contacts = {
-  john: createContact('John Doe', 'john.doe@example.com'),
-  sarah: createContact('Sarah Johnson', 'sarah.johnson@techvision.com'),
-  michael: createContact('Michael Chen', 'michael.chen@techvision.com'),
-  emma: createContact('Emma Rodriguez', 'e.rodriguez@investors.com'),
-  david: createContact('David Williams', 'david@accountingfirm.com'),
+const createOrganization = (name: string, website: string): Organization => {
+  return create(Organization, {
+    name,
+    description: faker.lorem.paragraph(),
+    website,
+  });
+};
+
+const createContact = (fullName: string, email: string, organization?: Organization): Contact => {
+  return create(Contact, {
+    fullName,
+    // TODO(burdon): Throws; need better error.
+    organization: organization ? makeRef(organization) : undefined,
+    emails: [{ value: email }],
+  });
+};
+
+export const organizations: Record<string, Organization> = {
+  amco: createOrganization('Amco', 'amco.org'),
+  cyberdyne: createOrganization('Cyberdyne', 'cyberdyne.com'),
+};
+
+export const contacts: Record<string, Contact> = {
+  john: createContact('John Doe', 'john.doe@example.com', organizations.dxos),
+  sarah: createContact('Sarah Johnson', 'sarah.johnson@techvision.com', organizations.dxos),
+  michael: createContact('Michael Chen', 'michael.chen@techvision.com', organizations.dxos),
+  emma: createContact('Emma Rodriguez', 'e.rodriguez@investors.com', organizations.cyberdyne),
+  david: createContact('David Williams', 'david@accountingfirm.com', organizations.cyberdyne),
   unknown1: createContact('Bitcoin Support', 'support@btc-wallet-verify.com'),
   unknown2: createContact('HR Department', 'hr-department@techvison-company.co'),
 };
 
-export const documents = [
+export const documents: DocumentType[] = [
   createDocument(
     'Q3 Financial Report',
     'Q3 Financial Summary\n\nRevenue: $12.4M (↑8% YoY)\nExpenses: $8.7M (↑15% YoY)\nMargin: 29.8% (↓4.5% YoY)\n\nConcerns:\n- Marketing budget exceeded allocation by 23%\n- Customer acquisition cost increased to $142 (↑18%)\n- New product line underperforming projections by 35%\n\nRecommendations:\n1. Reallocate Q4 marketing budget to high-performing channels\n2. Implement cost-saving measures in non-essential operations\n3. Review pricing strategy for new product line',
@@ -101,7 +120,7 @@ export const transcriptMessages: MessageType[] = [
       {
         type: 'transcription',
         started: getDate(0),
-        text: 'Good morning everyone. Thanks for joining the quarterly strategy meeting. I see Sarah and Emma are here. Are we still waiting for David?',
+        text: 'Good morning everyone. Thanks for joining the quarterly strategy meeting. I see Sarah and Emma are here from Amco. Are we still waiting for David?',
       },
       {
         type: 'transcription',
@@ -145,7 +164,7 @@ export const transcriptMessages: MessageType[] = [
       {
         type: 'transcription',
         started: getDate(90),
-        text: "I agree, Emma. That's definitely one of our top concerns. We also need to address the underperforming new product line. It's 35% below projections.",
+        text: "I agree, Emma. That's definitely one of our top concerns. We also need to address the underperforming new product line at Cyberdyne. It's 35% below projections.",
       },
     ],
   }),
