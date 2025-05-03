@@ -32,6 +32,7 @@ describe('View', () => {
     expect(view.query.typename).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq([
       'name',
+      'image',
       'email',
       // 'address',
       'organization',
@@ -41,6 +42,7 @@ describe('View', () => {
     const labels = props.map((p) => pipe(p.name ?? p.title, capitalize));
     expect(labels).to.deep.eq([
       'Name',
+      'Image',
       'Email',
       // 'Address',
       'Organization',
