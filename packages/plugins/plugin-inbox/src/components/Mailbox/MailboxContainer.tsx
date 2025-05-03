@@ -2,18 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { ElevationProvider } from '@dxos/react-ui';
+import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
+import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { TagPicker } from '@dxos/react-ui-tag-picker';
+import { TagPicker, type TagPickerHandle } from '@dxos/react-ui-tag-picker';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
 import { useMailboxModel } from './model';
+import { useMailboxToolbarAction, useMailboxToolbarActions } from './toolbar';
 import { InboxCapabilities } from '../../capabilities/capabilities';
 import { InboxAction, type MailboxType } from '../../types';
 
@@ -28,6 +32,23 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const currentMessageId = state[id]?.id;
 
   const model = useMailboxModel(mailbox.queue.dxn);
+
+  const [filterVisible, setFilterVisible] = useState(false);
+
+  const toolbarState = useMemo(() => ({ filterVisible, setFilterVisible }), [filterVisible]);
+  const menu = useMailboxToolbarActions(model, toolbarState);
+  const handleToolbarAction = useMailboxToolbarAction({ model, state: toolbarState });
+
+  const tagPickerRef = useRef<TagPickerHandle>(null);
+
+  useEffect(() => {
+    if (filterVisible && tagPickerRef.current) {
+      // Wait a tiny bit for the DOM to update
+      setTimeout(() => {
+        tagPickerRef.current?.focus();
+      }, 0);
+    }
+  }, [filterVisible]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     ({ action, messageId }) => {
@@ -73,20 +94,31 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   return (
     <StackItem.Content classNames='relative'>
-      <div role='none' className='grid grid-rows-[min-content_1fr]'>
-        <div role='toolbar' className='p-1 border-be border-separator bs-[2rem]'>
-          <TagPicker
-            items={tagPickerCurrentItems}
-            onUpdate={onTagPickerUpdate}
-            onSearch={(text, ids) => {
-              // Return all available tags that match the filter text and aren't already selected
-              return model.availableTags
-                .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
-                .filter((tag) => !ids.includes(tag.label))
-                .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any }));
-            }}
-          />
+      <div role='none' className='grid grid-rows-[min-content_min-content_1fr]'>
+        <div role='none' className={stackItemContentToolbarClassNames('section')}>
+          <ElevationProvider elevation='positioned'>
+            <MenuProvider {...menu} onAction={handleToolbarAction} attendableId={id}>
+              <ToolbarMenu />
+            </MenuProvider>
+          </ElevationProvider>
         </div>
+
+        {filterVisible && (
+          <div role='none' className='p-1.5 border-be border-separator'>
+            <TagPicker
+              ref={tagPickerRef}
+              items={tagPickerCurrentItems}
+              onUpdate={onTagPickerUpdate}
+              onSearch={(text, ids) =>
+                model.availableTags
+                  .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
+                  .filter((tag) => !ids.includes(tag.label))
+                  .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any }))
+              }
+            />
+          </div>
+        )}
+
         {model.messages && model.messages.length > 0 ? (
           <Mailbox
             messages={model.messages}
