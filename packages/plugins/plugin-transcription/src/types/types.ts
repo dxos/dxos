@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S, isInstanceOf, SpaceIdSchema } from '@dxos/echo-schema';
+import { SpaceIdSchema, S, isInstanceOf } from '@dxos/echo-schema';
 import { isLiveObject } from '@dxos/react-client/echo';
 
 import { TranscriptType } from './schema';
