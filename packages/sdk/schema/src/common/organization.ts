@@ -12,6 +12,8 @@ export const OrganizationSchema = S.Struct({
   name: S.String.annotations({
     [GeneratorAnnotationId]: 'company.name',
   }),
+  // TODO(wittjosiah): Support ref?
+  image: S.optional(Format.URL),
   website: S.optional(
     Format.URL.annotations({
       [AST.TitleAnnotationId]: 'Website',

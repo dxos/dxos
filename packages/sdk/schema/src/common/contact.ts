@@ -19,6 +19,8 @@ export const ContactSchema = S.Struct({
   fullName: S.optional(S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName' })),
   preferredName: S.optional(S.String),
   nickname: S.optional(S.String),
+  // TODO(wittjosiah): Support ref?
+  image: S.optional(Format.URL),
   organization: S.optional(
     S.Union(S.String, Ref(Organization)).annotations({
       [GeneratorAnnotationId]: 'company.name',
