@@ -104,7 +104,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
         </div>
 
         {filterVisible && (
-          <div role='none' className='p-1.5 border-be border-separator'>
+          <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
             <TagPicker
               ref={tagPickerRef}
               items={tagPickerCurrentItems}
