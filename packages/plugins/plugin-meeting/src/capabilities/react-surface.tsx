@@ -32,14 +32,14 @@ export default () =>
     createSurface({
       id: `${MEETING_PLUGIN}/meeting-summary`,
       role: 'article',
-      filter: (data): data is { subject: MeetingType; variant: 'summary' } =>
-        isInstanceOf(MeetingType, data.subject) &&
+      filter: (data): data is { companionTo: MeetingType; subject: 'summary' } =>
+        isInstanceOf(MeetingType, data.companionTo) &&
         data.variant === 'summary' &&
-        isInstanceOf(DocumentType, data.subject.artifacts[getSchemaTypename(DocumentType)!]?.target),
+        isInstanceOf(DocumentType, data.companionTo.artifacts[getSchemaTypename(DocumentType)!]?.target),
       component: ({ data }) => {
         return (
           <Surface
-            data={{ subject: data.subject.artifacts[getSchemaTypename(DocumentType)!].target }}
+            data={{ subject: data.companionTo.artifacts[getSchemaTypename(DocumentType)!].target }}
             role='article'
             limit={1}
           />

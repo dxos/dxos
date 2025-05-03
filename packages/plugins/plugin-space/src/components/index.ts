@@ -15,7 +15,6 @@ export * from './PopoverAddSpace';
 export * from './PopoverRenameObject';
 export * from './PopoverRenameSpace';
 export * from './SchemaContainer';
-export * from './ShareSpaceButton';
 export * from './SpacePresence';
 export * from './SpacePluginSettings';
 export * from './SpaceSettings';
