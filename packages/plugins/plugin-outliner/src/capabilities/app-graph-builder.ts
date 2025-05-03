@@ -16,8 +16,7 @@ export default () =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${OUTLINER_PLUGIN}/meeting-notes`,
-      filter: (node): node is Node<MeetingType> =>
-        isInstanceOf(MeetingType, node.data) && node.type !== PLANK_COMPANION_TYPE,
+      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data),
       connector: ({ node: { data: meeting } }) => [
         {
           id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}${getSchemaTypename(OutlineType)}`,

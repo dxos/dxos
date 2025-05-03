@@ -99,14 +99,14 @@ export default (context: PluginsContext) => {
           },
         },
         {
-          id: SpaceAction.Share._tag,
+          id: SpaceAction.OpenMembers._tag,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
             const layout = context.requestCapability(Capabilities.Layout);
             const client = context.requestCapability(ClientCapabilities.Client);
             const { spaceId } = parseId(layout.workspace);
             const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
-            await dispatch(createIntent(SpaceAction.Share, { space }));
+            await dispatch(createIntent(SpaceAction.OpenMembers, { space }));
           },
           properties: {
             label: ['share space label', { ns: SPACE_PLUGIN }],
@@ -369,7 +369,7 @@ export default (context: PluginsContext) => {
             label: ['object settings label', { ns: SPACE_PLUGIN }],
             icon: 'ph--sliders--regular',
             disposition: 'hidden',
-            position: 'hoist',
+            position: 'fallback',
           },
         },
       ],

@@ -27,10 +27,22 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/lit-ui"
