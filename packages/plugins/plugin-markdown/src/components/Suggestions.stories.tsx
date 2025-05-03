@@ -28,7 +28,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { randomQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
+import { createQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { command, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -60,7 +60,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   const { parentRef } = useTextEditor({ initialValue: content });
 
   const space = useSpace();
-  const queueDxn = useMemo(() => space && randomQueueDxn(space.id), [space]);
+  const queueDxn = useMemo(() => space && createQueueDxn(space.id), [space]);
   const queue = useQueue<Message>(queueDxn);
 
   const handleInsert = () => {
@@ -68,6 +68,12 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
     invariant(queue);
     queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.items[queue.items.length - 1];
+
+    // {
+    //   const ref = refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id]));
+
+    //   const message = deref(ref);
+    // }
 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {

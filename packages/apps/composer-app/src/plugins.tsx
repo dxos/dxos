@@ -32,6 +32,7 @@ import { NavTreePlugin, NAVTREE_PLUGIN } from '@dxos/plugin-navtree';
 import { ObservabilityPlugin, OBSERVABILITY_PLUGIN } from '@dxos/plugin-observability';
 import { OutlinerPlugin, OUTLINER_PLUGIN } from '@dxos/plugin-outliner';
 import { PresenterPlugin } from '@dxos/plugin-presenter';
+import { PreviewPlugin, PREVIEW_PLUGIN } from '@dxos/plugin-preview';
 import { PwaPlugin, PWA_PLUGIN } from '@dxos/plugin-pwa';
 import { RegistryPlugin, REGISTRY_PLUGIN } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
@@ -81,6 +82,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     isSocket && NATIVE_PLUGIN,
     NAVTREE_PLUGIN,
     OBSERVABILITY_PLUGIN,
+    PREVIEW_PLUGIN,
     !isSocket && isPwa && PWA_PLUGIN,
     REGISTRY_PLUGIN,
     SETTINGS_PLUGIN,
@@ -159,6 +161,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     ObservabilityPlugin({ namespace: appKey, observability: () => observability }),
     OutlinerPlugin(),
     PresenterPlugin(),
+    PreviewPlugin(),
     !isSocket && isPwa && PwaPlugin(),
     RegistryPlugin(),
     ScriptPlugin(),

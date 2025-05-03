@@ -7,10 +7,11 @@ import { WaveFile } from 'wavefile';
 import { DeferredTask, Trigger } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
+import { type TranscriptionContentBlock } from '@dxos/schema';
 import { trace } from '@dxos/tracing';
 
 import { type AudioRecorder, type AudioChunk } from './audio-recorder';
-import { TRANSCRIPTION_URL, type TranscriptSegment } from '../types';
+import { TRANSCRIPTION_URL } from '../types';
 import { mergeFloat64Arrays } from '../util';
 
 type WhisperWord = {
@@ -64,7 +65,7 @@ export type TranscribeConfig = {
 export type TranscriberParams = {
   config: TranscribeConfig;
   recorder: AudioRecorder;
-  onSegments: (segments: TranscriptSegment[]) => Promise<void>;
+  onSegments: (segments: TranscriptionContentBlock[]) => Promise<void>;
 };
 
 /**
@@ -93,6 +94,7 @@ export class Transcriber extends Resource {
   }
 
   protected override async _open(ctx: Context) {
+    log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
     this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
@@ -100,15 +102,18 @@ export class Transcriber extends Resource {
   }
 
   protected override async _close() {
+    log.info('closing');
     this._recording = false;
     this._transcribeTask = undefined;
     await this._recorder.stop();
   }
 
   startChunksRecording() {
+    log.info('starting');
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
     }
+
     this._recording = true;
   }
 
@@ -116,8 +121,10 @@ export class Transcriber extends Resource {
     if (this._lifecycleState !== LifecycleState.OPEN || !this._recording) {
       return;
     }
+
     this._recording = false;
     this._transcribeTask?.schedule();
+    log.info('stopped');
   }
 
   private _saveAudioChunk(chunk: AudioChunk) {
@@ -194,24 +201,22 @@ export class Transcriber extends Resource {
 
     if (!response.ok) {
       this._audioChunks = [];
-      throw new Error('Failed to transcribe');
+      throw new Error(`Transcription failed: ${response.statusText}`);
     }
 
-    const {
-      segments,
-    }: {
+    const { segments } = (await response.json()) as {
       segments: WhisperSegment[];
-    } = await response.json();
+    };
 
     log.info('transcription response', {
-      segments,
+      segments: segments.length,
       string: segments.map((segments) => segments.text).join(' '),
     });
 
     return segments;
   }
 
-  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): TranscriptSegment[] {
+  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): TranscriptionContentBlock[] {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 
@@ -240,8 +245,9 @@ export class Transcriber extends Resource {
 
     // Add absolute timestamp to each segment.
     return filteredSegments.map((segment) => ({
+      type: 'transcription',
       started: new Date(zeroTimestamp + segment.start * 1_000).toISOString(),
-      text: segment.text,
+      text: segment.text.trim(),
     }));
   }
 }

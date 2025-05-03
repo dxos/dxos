@@ -39,6 +39,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/local-storage"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -132,7 +135,13 @@
       "path": "../plugin-meeting"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-storybook-layout"
     },
     {
       "path": "../plugin-theme"
