@@ -76,13 +76,13 @@ describe('Experimental API review', () => {
   test('instance checks', ({ expect }) => {
     // TODO(burdon): Implement.
     // const org = Org.create({ name: 'DXOS' });
-    const org = Type.create(Testing.Org, { name: 'DXOS' });
+    const org = Type.create(Testing.Organization, { name: 'DXOS' });
     const contact = Type.create(Testing.Contact, { name: 'Test', org: Type.ref(org) });
 
     expect(S.is(Testing.Contact)(contact)).to.be.true;
     expect(Testing.Contact.instanceOf(contact)).to.be.true;
     expect(Type.instanceOf(Testing.Contact, contact)).to.be.true;
-    expect(Type.instanceOf(Testing.Org, contact.org?.target)).to.be.true;
+    expect(Type.instanceOf(Testing.Organization, contact.org?.target)).to.be.true;
   });
 
   test('default props', ({ expect }) => {

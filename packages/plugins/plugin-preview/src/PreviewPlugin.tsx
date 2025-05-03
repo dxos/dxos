@@ -5,14 +5,14 @@
 import React from 'react';
 
 import {
-  createIntent,
   Capabilities,
-  contributes,
   Events,
+  LayoutAction,
+  contributes,
+  createIntent,
+  createSurface,
   defineModule,
   definePlugin,
-  LayoutAction,
-  createSurface,
 } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -27,7 +27,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
 import { descriptionMessage } from '@dxos/react-ui-theme';
-import { Testing } from '@dxos/schema/testing';
+import { Contact, Organization } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard } from './components';
 import { meta, PREVIEW_PLUGIN } from './meta';
@@ -105,18 +105,18 @@ export const PreviewPlugin = () =>
       activate: () =>
         contributes(Capabilities.ReactSurface, [
           //
-          // Specific types.
+          // Specific schema types.
           //
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
             role: 'popover',
-            filter: (data): data is { subject: Testing.Contact } => isInstanceOf(Testing.Contact, data.subject),
+            filter: (data): data is { subject: Contact } => isInstanceOf(Contact, data.subject),
             component: ({ data }) => <ContactCard subject={data.subject} />,
           }),
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
             role: 'popover',
-            filter: (data): data is { subject: Testing.Org } => isInstanceOf(Testing.Org, data.subject),
+            filter: (data): data is { subject: Organization } => isInstanceOf(Organization, data.subject),
             component: ({ data }) => <OrganizationCard subject={data.subject} />,
           }),
 

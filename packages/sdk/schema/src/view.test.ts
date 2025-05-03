@@ -50,11 +50,11 @@ describe('View', () => {
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const org = live(Testing.Org, { name: 'DXOS', website: 'https://dxos.org' });
+    const org = live(Testing.Organization, { name: 'DXOS', website: 'https://dxos.org' });
     const contact = live(Testing.Contact, { name: 'Alice', email: 'alice@example.com', organization: makeRef(org) });
-    log('schema', { org: toJsonSchema(Testing.Org), person: toJsonSchema(Testing.Contact) });
+    log('schema', { org: toJsonSchema(Testing.Organization), person: toJsonSchema(Testing.Contact) });
     log('objects', { org, person: contact });
-    expect(getTypename(org)).to.eq(Testing.Org.typename);
+    expect(getTypename(org)).to.eq(Testing.Organization.typename);
     expect(getTypename(contact)).to.eq(Testing.Contact.typename);
   });
 

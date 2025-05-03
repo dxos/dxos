@@ -6,12 +6,12 @@ import { SchemaAST as AST, Schema as S } from 'effect';
 
 import { Type } from '@dxos/echo';
 import {
-  Format,
-  FormatEnum,
   FieldLookupAnnotationId,
+  Format,
+  FormatAnnotation,
+  FormatEnum,
   GeneratorAnnotationId,
   LabelAnnotationId,
-  FormatAnnotation,
 } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
@@ -22,7 +22,7 @@ export namespace Testing {
   // Org
   //
 
-  export const OrgSchema = S.Struct({
+  export const OrganizationSchema = S.Struct({
     id: Type.ObjectId,
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'company.name',
@@ -48,13 +48,13 @@ export namespace Testing {
 
   // export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
-  export const Org = OrgSchema.pipe(
+  export const Organization = OrganizationSchema.pipe(
     Type.def({
-      typename: 'example.com/type/Org',
+      typename: 'example.com/type/Organization',
       version: '0.1.0',
     }),
   );
-  export type Org = S.Schema.Type<typeof Org>;
+  export type Organization = S.Schema.Type<typeof Organization>;
 
   //
   // Contact
@@ -88,7 +88,7 @@ export namespace Testing {
     ),
     email: S.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
     organization: S.optional(
-      Type.Ref(Org).annotations({
+      Type.Ref(Organization).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),

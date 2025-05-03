@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { type Testing } from '@dxos/schema/testing';
+import { type Organization } from '@dxos/schema';
 
-export type OrganizationCardProps = { subject: Testing.Org };
+export type OrganizationCardProps = { subject: Organization };
 
 export const OrganizationCard = ({ subject: { name, image, description, website } }: OrganizationCardProps) => {
   return (
