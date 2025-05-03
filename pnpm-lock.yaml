@@ -7049,6 +7049,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
       '@dxos/plugin-storybook-layout':
         specifier: workspace:*
         version: link:../plugin-storybook-layout
