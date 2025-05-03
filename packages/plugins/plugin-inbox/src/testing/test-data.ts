@@ -5,10 +5,10 @@
 import { Schema } from 'effect';
 
 import { create, EchoObject, ObjectId } from '@dxos/echo-schema';
-import { ContactType, MessageType } from '@dxos/schema';
+import { Contact, MessageType } from '@dxos/schema';
 
-const createContact = (name: string, email: string): ContactType => {
-  return create(ContactType, {
+const createContact = (name: string, email: string): Contact => {
+  return create(Contact, {
     name,
     identifiers: [{ type: 'email', value: email }],
   });
@@ -53,7 +53,7 @@ export const labels: Label[] = [
   { name: 'Spam', color: '#FF0000', description: 'Spam messages' },
 ];
 
-export const contacts = {
+export const contacts: Record<string, Contact> = {
   john: createContact('John Doe', 'john.doe@example.com'),
   sarah: createContact('Sarah Johnson', 'sarah.johnson@techvision.com'),
   michael: createContact('Michael Chen', 'michael.chen@techvision.com'),
@@ -64,7 +64,7 @@ export const contacts = {
 };
 
 export const emails: MessageType[] = [
-  // Recent emails
+  // Recent emails.
   create(MessageType, {
     blocks: [
       {

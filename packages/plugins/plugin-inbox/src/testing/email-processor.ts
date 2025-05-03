@@ -4,13 +4,13 @@
 
 import { Schema } from 'effect';
 
-import { defineTool, Message } from '@dxos/artifact';
+import { defineTool } from '@dxos/artifact';
 import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { failedInvariant } from '@dxos/invariant';
-import type { ContactType, MessageType } from '@dxos/schema';
+import { type MessageType, type Contact } from '@dxos/schema';
 
 import type { DocumentType, Label } from './test-data';
 
@@ -20,7 +20,7 @@ type ProcessEmailParams = {
   context: {
     labels: Label[];
     documents?: DocumentType[];
-    contacts?: ContactType[];
+    contacts?: Contact[];
   };
 };
 
@@ -61,7 +61,7 @@ export const processEmail = async (params: ProcessEmailParams): Promise<ProcessE
       model: '@anthropic/claude-3-5-sonnet-20241022',
       systemPrompt,
       history: [
-        create(Message, {
+        create(MessageType, {
           role: 'user',
           content: [
             {
