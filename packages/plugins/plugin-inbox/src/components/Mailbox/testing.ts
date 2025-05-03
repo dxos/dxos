@@ -23,12 +23,12 @@ export const createMessage = (space?: Space) => {
     const linkCount = Math.floor(Math.random() * 5) + 1;
 
     for (let i = 0; i < linkCount; i++) {
-      const label = faker.person.fullName();
-      const obj = space.db.add(live(Contact, { name: label, identifiers: [] }));
+      const fullName = faker.person.fullName();
+      const obj = space.db.add(live(Contact, { fullName }));
       const dxn = makeRef(obj).dxn.toString();
 
       const position = Math.floor(Math.random() * words.length);
-      words.splice(position, 0, `[${label}][${dxn}]`);
+      words.splice(position, 0, `[${fullName}][${dxn}]`);
     }
 
     enrichedText = words.join(' ');

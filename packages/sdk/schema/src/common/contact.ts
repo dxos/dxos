@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { Format, GeneratorAnnotationId, Ref, type Ref$, S } from '@dxos/echo-schema';
+import { Format, GeneratorAnnotationId, Ref, S } from '@dxos/echo-schema';
 
 import { Organization } from './organization';
 import { PostalAddressSchema } from './postal-address';
@@ -21,6 +21,7 @@ export const ContactSchema = S.Struct({
   nickname: S.optional(S.String),
   // TODO(wittjosiah): Support ref?
   image: S.optional(Format.URL),
+  // TODO(burdon): Use reference links.
   organization: S.optional(
     S.Union(S.String, Ref(Organization)).annotations({
       [GeneratorAnnotationId]: 'company.name',
@@ -29,45 +30,58 @@ export const ContactSchema = S.Struct({
   jobTitle: S.optional(S.String),
   department: S.optional(S.String),
   notes: S.optional(S.String),
+  // TODO(burdon): Change to array of `handles`.
   emails: S.optional(
     S.mutable(
-      S.Struct({
-        label: S.String,
-        value: Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' }),
-      }),
+      S.Array(
+        S.Struct({
+          label: S.optional(S.String),
+          value: Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' }),
+        }),
+      ),
+    ),
+  ),
+  // TODO(burdon): Identities? (socials, DIDs, etc.)
+  // TODO(burdon): Add annotations.
+  identities: S.optional(
+    S.mutable(
+      S.Array(
+        S.Struct({
+          label: S.optional(S.String),
+          value: S.String,
+        }),
+      ),
     ),
   ),
   phoneNumbers: S.optional(
     S.mutable(
-      S.Struct({
-        label: S.String,
-        // TODO(wittjosiah): Format.Phone.
-        value: S.String,
-      }),
+      S.Array(
+        S.Struct({
+          label: S.optional(S.String),
+          // TODO(wittjosiah): Format.Phone.
+          value: S.String,
+        }),
+      ),
     ),
   ),
   addresses: S.optional(
     S.mutable(
-      S.Struct({
-        label: S.String,
-        value: PostalAddressSchema,
-      }),
-    ),
-  ),
-  socialProfiles: S.optional(
-    S.mutable(
-      S.Struct({
-        label: S.String,
-        value: S.String,
-      }),
+      S.Array(
+        S.Struct({
+          label: S.optional(S.String),
+          value: PostalAddressSchema,
+        }),
+      ),
     ),
   ),
   urls: S.optional(
     S.mutable(
-      S.Struct({
-        label: S.String,
-        value: Format.URL.annotations({ [GeneratorAnnotationId]: 'internet.url' }),
-      }),
+      S.Array(
+        S.Struct({
+          label: S.optional(S.String),
+          value: Format.URL.annotations({ [GeneratorAnnotationId]: 'internet.url' }),
+        }),
+      ),
     ),
   ),
   birthday: S.optional(
@@ -78,30 +92,7 @@ export const ContactSchema = S.Struct({
       }),
     ),
   ),
-  dates: S.optional(
-    S.mutable(
-      S.Struct({
-        label: S.String,
-        value: S.Date,
-      }),
-    ),
-  ),
-  pronouns: S.optional(
-    S.mutable(
-      S.Struct({
-        label: S.String,
-        value: S.String,
-      }),
-    ),
-  ),
-  relationships: S.optional(
-    S.mutable(
-      S.Struct({
-        label: S.String,
-        value: S.optional(S.suspend((): Ref$<Contact> => Ref(Contact))),
-      }),
-    ),
-  ),
+  // TODO(burdon): Move to cross-cutting.
   fields: S.optional(
     S.mutable(
       S.Array(
