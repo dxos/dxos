@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './OrgCard';
+export * from './ContactCard';
+export * from './OrganizationCard';

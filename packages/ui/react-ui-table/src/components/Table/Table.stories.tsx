@@ -247,7 +247,7 @@ export const StaticSchema: StoryObj = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Contact, Testing.Org],
+      types: [TableType, ViewType, Testing.Contact, Testing.Organization],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
@@ -257,7 +257,7 @@ export const StaticSchema: StoryObj = {
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
           { type: Testing.Contact, count: 10 },
-          { type: Testing.Org, count: 1 },
+          { type: Testing.Organization, count: 1 },
         ]);
       },
     }),
