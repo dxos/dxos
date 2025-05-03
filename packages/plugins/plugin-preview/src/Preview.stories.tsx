@@ -52,7 +52,7 @@ export default meta;
 export const Org = {
   args: {
     Component: OrgCard,
-    icon: 'ph--buildings--regular',
+    icon: 'ph--building-office--regular',
     subject: create(Testing.Org, {
       name: faker.company.name(),
       image:
@@ -66,7 +66,7 @@ export const Org = {
 export const OrgNoImage = {
   args: {
     Component: OrgCard,
-    icon: 'ph--user--regular',
+    icon: 'ph--building-office--regular',
     subject: create(Testing.Org, {
       name: faker.company.name(),
       website: faker.internet.url(),
@@ -78,6 +78,7 @@ export const OrgNoImage = {
 export const Contact = {
   args: {
     Component: ContactCard,
+    icon: 'ph--user--regular',
     subject: create(Testing.Contact, {
       name: faker.person.fullName(),
       image:
@@ -91,6 +92,7 @@ export const Contact = {
 export const ContactNoImage = {
   args: {
     Component: ContactCard,
+    icon: 'ph--user--regular',
     subject: create(Testing.Contact, {
       name: faker.person.fullName(),
       organization: makeRef(Org.args.subject),

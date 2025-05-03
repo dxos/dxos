@@ -15,8 +15,8 @@ export const OrgCard = ({ subject: { name, image, description, website } }: OrgC
       {image ? (
         <img className='aspect-video object-cover is-full bs-auto' src={image} alt={name} />
       ) : (
-        <div role='image' className='grid aspect-video bg-unAccent place-items-center'>
-          <Icon icon='ph--buildings--regular' size={8} />
+        <div role='image' className='grid aspect-video place-items-center bg-groupSurface text-subdued'>
+          <Icon icon='ph--building-office--regular' size={10} />
         </div>
       )}
       <h2 className='font-medium text-lg line-clamp-2 pli-3 mlb-3'>{name}</h2>
