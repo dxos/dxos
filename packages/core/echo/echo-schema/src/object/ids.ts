@@ -35,5 +35,4 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
   }
 };
 
-// TODO(burdon): Namespace (e.g., Key.SpaceId).
 export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
