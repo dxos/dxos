@@ -98,7 +98,6 @@ export const TranscriptionContentBlock = S.extend(
 export type TranscriptionContentBlock = S.Schema.Type<typeof TranscriptionContentBlock>;
 
 export const MessageContentBlock = S.Union(
-  // prettier-ignore
   TextContentBlock,
   JsonContentBlock,
   ImageContentBlock,
