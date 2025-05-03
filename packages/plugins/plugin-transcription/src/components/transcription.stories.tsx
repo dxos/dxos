@@ -18,18 +18,18 @@ import React, {
 
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { MemoryQueue } from '@dxos/echo-db';
+import { Filter, MemoryQueue } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { createQueueDxn, useQueue } from '@dxos/react-client/echo';
+import { createQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { MessageType } from '@dxos/schema';
+import { Contact, MessageType, Organization } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript } from './Transcript';
@@ -38,12 +38,20 @@ import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } fro
 import { type SerializationModel } from '../model';
 import { TestItem } from '../testing';
 import { type TranscriberParams } from '../transcriber';
+import { AIServiceEdgeClient } from '@dxos/assistant';
+import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { processTranscriptMessage } from '../entity-extraction';
+import * as TestData from '../testing/test-data';
+import { PreviewPlugin } from '@dxos/plugin-preview';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 
 const TranscriptionStory: FC<{
   model: SerializationModel<MessageType>;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
 }> = ({ model, running, onRunningChange }) => {
+  const space = useSpace();
+
   return (
     <div className='flex flex-col w-[30rem]'>
       <Toolbar.Root>
@@ -55,13 +63,17 @@ const TranscriptionStory: FC<{
         />
       </Toolbar.Root>
       <ScrollContainer>
-        <Transcript model={model} attendableId='story' />
+        <Transcript space={space} model={model} attendableId='story' />
       </ScrollContainer>
     </div>
   );
 };
 
-const Microphone = () => {
+const aiService = new AIServiceEdgeClient({
+  endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+});
+
+const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
   const [running, setRunning] = useState(false);
 
   // Audio.
@@ -71,14 +83,41 @@ const Microphone = () => {
   const queueDxn = useMemo(() => createQueueDxn(), []);
   const queue = useMemo(() => new MemoryQueue<MessageType>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
+  const space = useSpace();
 
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
       const message = create(MessageType, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
-      void queue.append([message]);
+
+      if (entityExtraction) {
+        if (!space) {
+          log.warn('no space');
+          return;
+        }
+        // TODO(dmaretskyi): Move to vector search index.
+        const { objects } = await space.db
+          .query(Filter.or(Filter.schema(Contact), Filter.schema(Organization), Filter.schema(TestData.DocumentType)))
+          .run();
+
+        log.info('context', { objects });
+
+        const result = await processTranscriptMessage({
+          message,
+          aiService,
+          context: {
+            objects,
+          },
+          options: {
+            fallbackToRaw: true,
+          },
+        });
+        void queue.append([result.message]);
+      } else {
+        void queue.append([message]);
+      }
     },
-    [queue],
+    [queue, space],
   );
 
   const config = useRef<TranscriberParams['config']>({
@@ -183,14 +222,19 @@ const meta: Meta<typeof AudioFile> = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [TestItem],
+          types: [TestItem, Contact, Organization, TestData.DocumentType],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
+            await client.spaces.waitUntilReady();
+            await client.spaces.default.waitUntilReady();
+            await TestData.seed(client.spaces.default);
           },
         }),
         SpacePlugin(),
         SettingsPlugin(),
+        PreviewPlugin(),
         IntentPlugin(),
         TranscriptionPlugin(),
       ],
@@ -224,13 +268,21 @@ const meta: Meta<typeof AudioFile> = {
 
 export default meta;
 
-type Story = StoryObj<typeof AudioFile>;
-
-export const Default: Story = {
+export const Default: StoryObj<typeof Microphone> = {
   render: Microphone,
+  args: {
+    entityExtraction: false,
+  },
 };
 
-export const File: Story = {
+export const EntityExtraction: StoryObj<typeof Microphone> = {
+  render: Microphone,
+  args: {
+    entityExtraction: true,
+  },
+};
+
+export const File: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
     queueDxn: createQueueDxn(),

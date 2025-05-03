@@ -13,12 +13,27 @@ import type { BaseEchoObject } from '@dxos/echo-schema';
 import { type MessageType } from '@dxos/schema';
 
 import SYSTEM_PROMPT from './system-prompt.tpl?raw';
+import { asyncTimeout } from '@dxos/async';
 
 type ProcessTranscriptMessageParams = {
   message: MessageType;
   aiService: AIServiceClient;
   context: {
     objects?: BaseEchoObject[];
+  };
+
+  options?: {
+    /**
+     * Timeout for the entity extraction.
+     */
+    timeout?: number;
+
+    /**
+     * Fallback to raw text if the entity extraction fails.
+     * Otherwise the function will throw an error.
+     * @default false
+     */
+    fallbackToRaw?: boolean;
   };
 };
 
@@ -37,50 +52,69 @@ const createSystemPrompt = (): string => {
 export const processTranscriptMessage = async (
   params: ProcessTranscriptMessageParams,
 ): Promise<ProcessTranscriptMessageResult> => {
-  // TODO(dmaretskyi): Move context to a vector search index.
-  const systemPrompt = `
+  try {
+    // TODO(dmaretskyi): Move context to a vector search index.
+    const systemPrompt = `
     ${createSystemPrompt()}
     Context:
     ${JSON.stringify(params.context.objects)}
   `;
 
-  const outputParser = structuredOutputParser(
-    Schema.Struct({
-      segments: Schema.Array(Schema.String).annotations({
-        description: 'The enhanced text of the transcript segments, keep the order and structure exactly as is',
+    const outputParser = structuredOutputParser(
+      Schema.Struct({
+        segments: Schema.Array(Schema.String).annotations({
+          description: 'The enhanced text of the transcript segments, keep the order and structure exactly as is',
+        }),
       }),
-    }),
-  );
-  const result = outputParser.getResult(
-    await new MixedStreamParser().parse(
-      await params.aiService.execStream({
-        model: '@anthropic/claude-3-5-haiku-20241022',
-        systemPrompt,
-        history: [
-          create(Message, {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(params.message),
-              },
-            ],
-          }),
-        ],
-        tools: [outputParser.tool],
-      }),
-    ),
-  );
+    );
 
-  return {
-    message: {
-      ...params.message,
-      blocks: params.message.blocks.map((block, i) => ({
-        ...block,
-        text: postprocessText(result?.segments[i] ?? raise(new Error('failed to process email'))),
-      })),
-    },
-  };
+    const runParser = async (): Promise<ProcessTranscriptMessageResult> => {
+      const result = outputParser.getResult(
+        await new MixedStreamParser().parse(
+          await params.aiService.execStream({
+            model: '@anthropic/claude-3-5-haiku-20241022',
+            systemPrompt,
+            history: [
+              create(Message, {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify(params.message),
+                  },
+                ],
+              }),
+            ],
+            tools: [outputParser.tool],
+          }),
+        ),
+      );
+
+      return {
+        message: {
+          ...params.message,
+          blocks: params.message.blocks.map((block, i) => ({
+            ...block,
+            text: postprocessText(result?.segments[i] ?? raise(new Error('failed to process email'))),
+          })),
+        },
+      };
+    };
+
+    if (params.options?.timeout && params.options.timeout > 0) {
+      return await asyncTimeout(runParser, params.options.timeout);
+    } else {
+      return await runParser();
+    }
+  } catch (error) {
+    if (params.options?.fallbackToRaw) {
+      return {
+        message: params.message,
+      };
+    } else {
+      throw error;
+    }
+  }
 };
 
 /**

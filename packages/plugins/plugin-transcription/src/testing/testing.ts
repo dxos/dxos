@@ -7,16 +7,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { scheduleTaskInterval } from '@dxos/async';
-import { createQueueDxn, type Queue } from '@dxos/client/echo';
+import { createQueueDxn, Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
-import { Contact, MessageType, type TranscriptionContentBlock } from '@dxos/schema';
+import { Contact, MessageType, Organization, type TranscriptionContentBlock } from '@dxos/schema';
 
 import * as TestData from './test-data';
 import { processTranscriptMessage } from '../entity-extraction';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to schema-testing.
 export const TestItem = S.Struct({
@@ -94,35 +95,35 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
   currentMessage: number = 0;
 
-  seedData(space: Space) {
-    if (!space.db.graph.schemaRegistry.hasSchema(Contact)) {
-      space.db.graph.schemaRegistry.addSchema([Contact]);
-    }
+  space: Space | undefined;
 
-    // for (const document of TestData.documents) {
-    //   const obj = space.db.add(live(Document, document));
-    //   const dxn = makeRef(obj).dxn.toString();
-    //   document.dxn = dxn;
-    // }
+  transcriptMessages: MessageType[] = [];
 
-    for (const contact of Object.values(TestData.contacts)) {
-      space.db.add(contact);
-    }
-    for (const organization of Object.values(TestData.organizations)) {
-      space.db.add(organization);
-    }
+  async connect(space: Space) {
+    this.space = space;
+    const { transcriptMessages } = await TestData.seed(space);
+    this.transcriptMessages = transcriptMessages;
   }
 
   override async createMessage(): Promise<MessageType> {
-    const message = TestData.transcriptMessages[this.currentMessage];
+    if (!this.space) {
+      throw new Error('Space not connected');
+    }
+    const { objects } = await this.space.db
+      .query(Filter.or(Filter.schema(Contact), Filter.schema(Organization), Filter.schema(TestData.DocumentType)))
+      .run();
+
+    log.info('context', { objects });
+
+    const message = this.transcriptMessages[this.currentMessage];
     this.currentMessage++;
-    this.currentMessage = this.currentMessage % TestData.transcriptMessages.length;
+    this.currentMessage = this.currentMessage % this.transcriptMessages.length;
 
     const { message: enhancedMessage } = await processTranscriptMessage({
       message,
       aiService: this.aiService,
       context: {
-        objects: [...TestData.documents, ...Object.values(TestData.contacts)],
+        objects,
       },
     });
 
@@ -186,7 +187,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
     }
 
     if (space) {
-      builder.seedData(space);
+      void builder.connect(space);
     }
 
     const ctx = new Context();
