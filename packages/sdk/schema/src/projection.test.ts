@@ -140,7 +140,7 @@ describe('ViewProjection', () => {
     const registry = new EchoSchemaRegistry(db);
 
     // TODO(burdon): Reconcile with createStoredSchema.
-    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+    class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
       name: S.String,
     }) {}
 
@@ -148,7 +148,7 @@ describe('ViewProjection', () => {
       name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      org: Ref(Org),
+      org: Ref(Organization),
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -178,11 +178,11 @@ describe('ViewProjection', () => {
     });
 
     expect(props).to.deep.eq({
-      property: 'org',
+      property: 'organization',
       title: 'Ref',
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
-      referenceSchema: 'example.com/type/Org',
+      referenceSchema: 'example.com/type/Organization',
       referencePath: 'name',
     });
 
@@ -192,7 +192,7 @@ describe('ViewProjection', () => {
       title: 'Ref',
       reference: {
         schema: {
-          $ref: 'dxn:type:example.com/type/Org',
+          $ref: 'dxn:type:example.com/type/Organization',
         },
         schemaVersion: '0.1.0',
       },

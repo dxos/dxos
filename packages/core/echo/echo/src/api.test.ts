@@ -75,7 +75,7 @@ describe('Experimental API review', () => {
 
   test('instance checks', ({ expect }) => {
     // TODO(burdon): Implement.
-    // const org = Org.create({ name: 'DXOS' });
+    // const org = Organization.create({ name: 'DXOS' });
     const org = Type.create(Testing.Organization, { name: 'DXOS' });
     const contact = Type.create(Testing.Contact, { name: 'Test', organization: Type.ref(org) });
 

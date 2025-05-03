@@ -9,8 +9,8 @@ import { getSchema, TypedObject } from '@dxos/echo-schema';
 
 import { live } from './object';
 
-class Org extends TypedObject({
-  typename: 'example.com/type/Org',
+class Organization extends TypedObject({
+  typename: 'example.com/type/Organization',
   version: '0.1.0',
 })({
   name: S.String,
@@ -29,17 +29,17 @@ class Contact extends TypedObject({
   },
 ) {}
 
-const TEST_ORG: Omit<Org, 'id'> = { name: 'Test' };
+const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 
 describe('EchoObject class DSL', () => {
   test('static isInstance check', async () => {
-    const obj = live(Org, TEST_ORG);
-    expect(obj instanceof Org).to.be.true;
+    const obj = live(Organization, TEST_ORG);
+    expect(obj instanceof Organization).to.be.true;
   });
 
   test('can get object schema', async () => {
-    const obj = live(Org, TEST_ORG);
-    expect(getSchema(obj)).to.deep.eq(Org);
+    const obj = live(Organization, TEST_ORG);
+    expect(getSchema(obj)).to.deep.eq(Organization);
   });
 
   describe('class options', () => {
