@@ -30,12 +30,24 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
+export type TranscriptMessageEnricher = (message: MessageType) => Promise<MessageType>;
+
+export type TranscriptionManagerOptions = {
+  edgeClient: EdgeHttpClient;
+
+  /**
+   * Enrich the message before it is written to the transcription queue.
+   */
+  messageEnricher?: TranscriptMessageEnricher;
+};
+
 /**
  * Manages transcription state for a meeting.
  */
 // TODO(mykola): Reconcile with transcriber capability.
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
+  private readonly _messageEnricher?: TranscriptMessageEnricher;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
@@ -43,9 +55,10 @@ export class TranscriptionManager extends Resource {
   private _queue?: Queue<MessageType> = undefined;
   private _enabled = false;
 
-  constructor(edgeClient: EdgeHttpClient) {
+  constructor(options: TranscriptionManagerOptions) {
     super();
-    this._edgeClient = edgeClient;
+    this._edgeClient = options.edgeClient;
+    this._messageEnricher = options.messageEnricher;
   }
 
   protected override async _open() {
@@ -167,11 +180,16 @@ export class TranscriptionManager extends Resource {
       return;
     }
 
-    const block = create(MessageType, {
+    let block = create(MessageType, {
       created: new Date().toISOString(),
       blocks: segments,
       sender: { identityDid: this._identityDid },
     });
+
+    if (this._messageEnricher) {
+      block = await this._messageEnricher(block);
+    }
+
     this._queue.append([block]);
   }
 }

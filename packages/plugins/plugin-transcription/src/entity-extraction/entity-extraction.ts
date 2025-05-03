@@ -9,7 +9,7 @@ import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
-import type { BaseEchoObject } from '@dxos/echo-schema';
+import type { BaseEchoObject } from '@dxos/ewcho-schema';
 import { type MessageType } from '@dxos/schema';
 
 import SYSTEM_PROMPT from './system-prompt.tpl?raw';

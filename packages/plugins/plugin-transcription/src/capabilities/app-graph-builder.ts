@@ -3,8 +3,8 @@
 //
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
-import { fullyQualifiedId, getSpace, makeRef, type Space } from '@dxos/client/echo';
-import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
+import { Filter, fullyQualifiedId, getSpace, makeRef, type Space } from '@dxos/client/echo';
+import { getSchemaTypename, isInstanceOf, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -19,6 +19,12 @@ import { TranscriptionCapabilities } from './capabilities';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
 import { TranscriptionManager } from '../transcriber';
 import { TranscriptionAction, TranscriptType } from '../types';
+import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/assistant';
+import { AI_SERVICE_ENDPOINT, Contact, Organization } from '@dxos/assistant/testing';
+import { processTranscriptMessage } from '../entity-extraction';
+import type { MessageType } from '@dxos/schema';
+import type { Schema } from 'effect';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -85,6 +91,11 @@ export default (context: PluginsContext) =>
         const client = context.requestCapability(ClientCapabilities.Client);
         const state = context.requestCapability(TranscriptionCapabilities.MeetingTranscriptionState);
 
+        // TODO(dmaretskyi): Request via capability
+        const aiClient: AIServiceClient | undefined = new AIServiceEdgeClient({
+          endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+        });
+
         return [
           {
             id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}${getSchemaTypename(TranscriptType)}`,
@@ -99,10 +110,29 @@ export default (context: PluginsContext) =>
               getIntent: ({ space }: { space: Space }) =>
                 createIntent(TranscriptionAction.Create, { spaceId: space.id }),
               onJoin: () => {
-                const transcriptionManager = new TranscriptionManager(client.edge);
+                // TODO(dmaretskyi): How do I get the space for the meeting?
+                const space = client.spaces.default;
+
+                const entityExtractionEnricher = !aiClient
+                  ? undefined
+                  : createEntityExtractionEnricher({
+                      aiClient,
+                      space,
+                      // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities? This will be replaced with a vector search index anyway, so its not a big deal.
+                      // TODO(dmaretskyi): This forced me to add a dependency on markdown plugin.
+                      contextTypes: [Contact, Organization, DocumentType],
+                    });
+
+                const transcriptionManager = new TranscriptionManager({
+                  edgeClient: client.edge,
+                  messageEnricher: entityExtractionEnricher,
+                });
+
                 const identity = client.halo.identity.get();
                 invariant(identity);
                 transcriptionManager.setIdentityDid(identity.did);
+
+                // TODO(dmaretskyi): Is this safe to do asynchronously?
                 void transcriptionManager.open();
                 state.transcriptionManager = transcriptionManager;
               },
@@ -136,3 +166,23 @@ export default (context: PluginsContext) =>
       },
     }),
   ]);
+
+type EntityExtractionEnricherFactoryOptions = {
+  aiClient: AIServiceClient;
+  space: Space;
+  contextTypes: Schema.Schema.AnyNoContext[];
+};
+
+const createEntityExtractionEnricher = ({ aiClient, space, contextTypes }: EntityExtractionEnricherFactoryOptions) => {
+  return async (message: MessageType) => {
+    const { objects } = await space.db.query(Filter.or(...contextTypes.map((s) => Filter.schema(s)))).run();
+
+    const result = await processTranscriptMessage({
+      message,
+      aiService: aiClient,
+      context: { objects },
+      options: { timeout: 15_000, fallbackToRaw: true },
+    });
+    return result.message;
+  };
+};
