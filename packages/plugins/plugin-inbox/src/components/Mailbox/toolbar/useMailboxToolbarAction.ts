@@ -16,17 +16,15 @@ export type MailboxToolbarActionProperties = SortActionProperties | FilterAction
 
 export type MailboxToolbarAction = MenuAction<MailboxToolbarActionProperties>;
 
-export type MailboxToolbarState = {
-  filterVisible: boolean;
-  setFilterVisible: (visible: boolean) => void;
-};
-
-export const useMailboxToolbarAction = (props: {
-  state: MailboxToolbarState;
+export const useMailboxToolbarAction = ({
+  model,
+  tagFilterVisible,
+  setTagFilterVisible,
+}: {
   model: MailboxModel;
+  tagFilterVisible: boolean;
+  setTagFilterVisible: (visible: boolean) => void;
 }): MenuActionHandler<MailboxToolbarAction> => {
-  const { model, state } = props;
-
   return useCallback<MenuActionHandler<MailboxToolbarAction>>(
     (action: MailboxToolbarAction) => {
       switch (action.properties.type) {
@@ -36,14 +34,14 @@ export const useMailboxToolbarAction = (props: {
           break;
         }
         case 'filter': {
-          const newVisibility = !state.filterVisible;
-          state.setFilterVisible(newVisibility);
+          const newVisibility = !tagFilterVisible;
+          setTagFilterVisible(newVisibility);
           break;
         }
         default:
           log.error('Unknown action type', action);
       }
     },
-    [model, state],
+    [model, tagFilterVisible, setTagFilterVisible],
   );
 };

@@ -1,8 +1,8 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
@@ -12,16 +12,15 @@ import { ElevationProvider, Icon } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { TagPicker, type TagPickerHandle } from '@dxos/react-ui-tag-picker';
+import { TagPicker } from '@dxos/react-ui-tag-picker';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
 import { useMailboxModel } from './model';
 import { useMailboxToolbarAction, useMailboxToolbarActions } from './toolbar';
+import { useTagFilterVisibility, useTagPickerFocusRef } from './toolbar/useTagFilterVisibility';
 import { InboxCapabilities } from '../../capabilities/capabilities';
 import { InboxAction, type MailboxType } from '../../types';
-
-type FilterVisibilityState = 'closed' | 'display' | 'controlled';
 
 export type MailboxContainerProps = {
   mailbox: MailboxType;
@@ -34,36 +33,22 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const currentMessageId = state[id]?.id;
 
   const model = useMailboxModel(mailbox.queue.dxn);
+  // Use the new hook for tag filter visibility management
+  const { tagFilterState, tagFilterVisible, dispatch: filterDispatch } = useTagFilterVisibility();
 
-  const [filterState, setFilterState] = useState<FilterVisibilityState>('closed');
+  const menu = useMailboxToolbarActions(model, tagFilterVisible);
+  const handleToolbarAction = useMailboxToolbarAction({
+    model,
+    tagFilterVisible,
+    setTagFilterVisible: (visible: boolean) => {
+      if (!visible) {
+        model.clearSelectedTags();
+      }
+      filterDispatch('toggle_from_toolbar');
+    },
+  });
 
-  // Derive simple boolean for toolbar compatibility
-  const isFilterVisible = filterState !== 'closed';
-  const toolbarState = useMemo(
-    () => ({
-      filterVisible: isFilterVisible,
-      setFilterVisible: (visible: boolean) => {
-        // When toggled from toolbar, use 'controlled' state when enabling
-        setFilterState(visible ? 'controlled' : 'closed');
-      },
-    }),
-    [filterState],
-  );
-
-  const menu = useMailboxToolbarActions(model, toolbarState);
-  const handleToolbarAction = useMailboxToolbarAction({ model, state: toolbarState });
-
-  const tagPickerRef = useRef<TagPickerHandle>(null);
-
-  useEffect(() => {
-    // Only focus when in 'controlled' mode (opened from toolbar)
-    if (filterState === 'controlled' && tagPickerRef.current) {
-      // Wait a tiny bit for the DOM to update
-      setTimeout(() => {
-        tagPickerRef.current?.focus();
-      }, 0);
-    }
-  }, [filterState]);
+  const tagPickerFocusRef = useTagPickerFocusRef(tagFilterState);
 
   const handleAction = useCallback<MailboxActionHandler>(
     ({ action, messageId }) => {
@@ -100,21 +85,19 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
         model.selectTag(id);
       }
 
-      // If all tags are removed and we're in 'display' mode, close the filter
-      if (ids.length === 0 && filterState === 'display') {
-        setFilterState('closed');
+      if (ids.length === 0) {
+        filterDispatch('all_tags_cleared');
       }
     },
-    [model, filterState, setFilterState],
+    [model, filterDispatch],
   );
 
   const handleTagSelect = useCallback(
     (label: string) => {
-      // Set filter to 'display' mode - visible but don't auto-focus
-      setFilterState('display');
+      filterDispatch('tag_selected_in_message');
       model.selectTag(label);
     },
-    [model, setFilterState],
+    [model, filterDispatch],
   );
 
   const tagPickerCurrentItems = useMemo(() => {
@@ -132,7 +115,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           </ElevationProvider>
         </div>
 
-        {isFilterVisible && (
+        {tagFilterVisible && (
           <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
             <Icon
               role='presentation'
@@ -142,7 +125,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
               size={4}
             />
             <TagPicker
-              ref={tagPickerRef}
+              ref={tagPickerFocusRef}
               items={tagPickerCurrentItems}
               onUpdate={onTagPickerUpdate}
               onSearch={(text, ids) =>

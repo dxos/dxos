@@ -6,7 +6,6 @@ import { useCallback } from 'react';
 
 import { createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 
-import { type MailboxToolbarState } from './useMailboxToolbarAction';
 import { type MailboxModel, type SortDirection } from '../model/mailbox-model';
 
 // Action creators
@@ -23,11 +22,11 @@ const createFilterAction = (visible: boolean) => {
     label: 'Filter by tags',
     icon: 'ph--tag--regular',
     type: 'filter',
-    visible,
+    classNames: visible ? 'text-accentText' : undefined,
   });
 };
 
-export const createMailboxToolbar = (model: MailboxModel, state: MailboxToolbarState) => {
+export const createMailboxToolbar = (model: MailboxModel, tagFilterVisible: boolean) => {
   const nodes = [];
   const edges = [];
 
@@ -38,14 +37,14 @@ export const createMailboxToolbar = (model: MailboxModel, state: MailboxToolbarS
   nodes.push(sortAction);
   edges.push({ source: 'root', target: sortAction.id });
 
-  const filterAction = createFilterAction(state.filterVisible);
+  const filterAction = createFilterAction(tagFilterVisible);
   nodes.push(filterAction);
   edges.push({ source: 'root', target: filterAction.id });
 
   return { nodes, edges };
 };
 
-export const useMailboxToolbarActions = (model: MailboxModel, state: MailboxToolbarState) => {
-  const toolbarCreator = useCallback(() => createMailboxToolbar(model, state), [model, state]);
+export const useMailboxToolbarActions = (model: MailboxModel, tagFilterVisible: boolean) => {
+  const toolbarCreator = useCallback(() => createMailboxToolbar(model, tagFilterVisible), [model, tagFilterVisible]);
   return useMenuActions(toolbarCreator);
 };
