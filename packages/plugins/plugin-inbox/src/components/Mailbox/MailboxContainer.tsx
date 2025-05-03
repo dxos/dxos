@@ -66,6 +66,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           name={mailbox.name}
           onAction={handleAction}
           currentMessageId={currentMessageId}
+          onTagSelect={model.selectTag}
         />
       ) : (
         <EmptyMailboxContent mailbox={mailbox} />

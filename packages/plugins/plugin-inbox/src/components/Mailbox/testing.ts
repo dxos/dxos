@@ -56,6 +56,8 @@ export const createMessage = (space?: Space) => {
     tags.push({ label: 'spam', hue: 'error' });
   }
 
+  tags.sort((a, b) => a.label.localeCompare(b.label));
+
   return live(MessageType, {
     created: faker.date.recent().toISOString(),
     sender: {

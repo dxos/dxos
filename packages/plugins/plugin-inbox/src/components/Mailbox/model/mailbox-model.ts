@@ -5,7 +5,7 @@
 import { computed, signal, type Signal, type ReadonlySignal } from '@preact/signals-core';
 
 import { type MessageType } from '@dxos/schema';
-import { distinctBy } from '@dxos/util';
+import { intersectBy } from '@dxos/util';
 
 /**
  * Sort direction for messages.
@@ -73,7 +73,7 @@ export class MailboxModel {
   // Primary signals (direct inputs).
   private _messages: Signal<MessageType[]>;
   private _sortDirection: Signal<SortDirection>;
-  private _selectedTags: Signal<Tag[]>;
+  private _selectedTagLabels: Signal<string[]>;
 
   // Computed signals (derived state).
   private _tagToMessagesIndex: ReadonlySignal<Map<string, MessageType[]>>;
@@ -90,21 +90,21 @@ export class MailboxModel {
     // Initialize primary signals
     this._messages = signal(messages);
     this._sortDirection = signal(sortDirection);
-    this._selectedTags = signal([]);
+    this._selectedTagLabels = signal([]);
 
     this._tagToMessagesIndex = computed(() => makeTagToMessageIndex(this._messages.value));
     this._tagIndex = computed(() => makeTagIndex(this._messages.value));
 
     this._filteredMessages = computed(() => {
-      const selectedTags = this._selectedTags.value;
+      const selectedTagLabels = this._selectedTagLabels.value;
       const tagToMessagesIndex = this._tagToMessagesIndex.value;
 
-      if (selectedTags.length === 0) {
+      if (selectedTagLabels.length === 0) {
         return this._messages.value;
       }
 
-      const messages = selectedTags.map((t) => t.label).flatMap((label) => tagToMessagesIndex.get(label) ?? []);
-      return distinctBy(messages, (message) => message.id);
+      const messagesForSelectedTags = selectedTagLabels.map((label) => tagToMessagesIndex.get(label) ?? []);
+      return intersectBy(messagesForSelectedTags, (message) => message.id);
     });
 
     this._sortedFilteredMessages = computed(() => {
@@ -147,34 +147,38 @@ export class MailboxModel {
    * Gets the currently selected tags.
    */
   get selectedTags(): Tag[] {
-    return this._selectedTags.value;
+    // Convert the stored labels back to Tag objects for backward compatibility
+    const tagIndex = this._tagIndex.value;
+    return this._selectedTagLabels.value
+      .map((label) => tagIndex.get(label))
+      .filter((tag): tag is Tag => tag !== undefined);
   }
 
   /**
    * Selects a tag for filtering if it's not already selected.
-   * @param tag - The tag to select.
+   * @param label - The label of the tag to select.
    */
-  selectTag(tag: Tag): void {
-    const currentTags = this._selectedTags.value;
-    if (!currentTags.some((t) => t.label === tag.label)) {
-      this._selectedTags.value = [...currentTags, tag];
+  selectTag = (label: string): void => {
+    const currentLabels = this._selectedTagLabels.value;
+    if (!currentLabels.includes(label)) {
+      this._selectedTagLabels.value = [...currentLabels, label];
     }
-  }
+  };
 
   /**
    * Deselects a tag, removing it from the filter criteria.
    * @param tagLabel - The label of the tag to deselect.
    */
-  deselectTag(tagLabel: string): void {
-    this._selectedTags.value = this._selectedTags.value.filter((tag) => tag.label !== tagLabel);
-  }
+  deselectTag = (tagLabel: string): void => {
+    this._selectedTagLabels.value = this._selectedTagLabels.value.filter((label) => label !== tagLabel);
+  };
 
   /**
    * Clears all selected tags, effectively showing all messages.
    */
-  clearSelectedTags(): void {
-    this._selectedTags.value = [];
-  }
+  clearSelectedTags = (): void => {
+    this._selectedTagLabels.value = [];
+  };
 
   /**
    * Gets all unique tags present across all messages.

@@ -68,7 +68,7 @@ const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean)
   ${
     message.properties?.tags
       ? `<div class="message__tag-row">
-    ${message.properties.tags.map((tag: any) => `<div class="dx-tag message__tag-row__item" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
+    ${message.properties.tags.map((tag: any) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
   </div>`
       : ''
   }
@@ -92,9 +92,11 @@ export type MailboxProps = Pick<MailboxType, 'name'> & {
   ignoreAttention?: boolean;
   currentMessageId?: string;
   onAction?: MailboxActionHandler;
+  // TODO(Zaymon): Should this be part of onAction?
+  onTagSelect?: (label: string) => void;
 };
 
-export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention }: MailboxProps) => {
+export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention, onTagSelect }: MailboxProps) => {
   // TODO(thure): The container should manage the queue.
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
@@ -120,6 +122,13 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
   const handleClick = useCallback(
     (event: MouseEvent) => {
       const target = event.target as HTMLElement;
+
+      const label = target.getAttribute('data-label');
+      if (label && onTagSelect) {
+        onTagSelect(label);
+        return;
+      }
+
       const actionEl = target.closest('[data-inbox-action]');
       if (actionEl) {
         const messageId = actionEl.getAttribute('data-message-id')!;
