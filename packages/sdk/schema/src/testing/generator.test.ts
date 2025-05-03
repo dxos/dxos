@@ -80,12 +80,12 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register mutable schema.
-    const [org] = await db.schemaRegistry.register([Testing.Organization]);
+    const [organization] = await db.schemaRegistry.register([Testing.Organization]);
     const [project] = await db.schemaRegistry.register([Testing.Project]);
     const [contact] = await db.schemaRegistry.register([Testing.Contact]);
 
     const spec: TypeSpec[] = [
-      { type: org, count: 5 },
+      { type: organization, count: 5 },
       { type: project, count: 5 },
       { type: contact, count: 10 },
     ];

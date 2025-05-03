@@ -62,7 +62,7 @@ export const Task = S.Struct({
   });
 export interface Task extends S.Schema.Type<typeof Task> {}
 
-export const Org = S.Struct({
+export const Organization = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the organization.' }),
   projects: S.Array(Ref(Project)),
@@ -72,9 +72,9 @@ export const Org = S.Struct({
   .annotations({
     [TypeAnnotationId]: {
       kind: EntityKind.Object,
-      typename: 'example.com/type/Org',
+      typename: 'example.com/type/Organization',
       version: '0.1.0',
     },
     description: 'Contact information.',
   });
-export interface Org extends S.Schema.Type<typeof Org> {}
+export interface Organization extends S.Schema.Type<typeof Organization> {}
