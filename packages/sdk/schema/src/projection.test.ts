@@ -140,7 +140,7 @@ describe('ViewProjection', () => {
     const registry = new EchoSchemaRegistry(db);
 
     // TODO(burdon): Reconcile with createStoredSchema.
-    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+    class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
       name: S.String,
     }) {}
 
@@ -148,7 +148,7 @@ describe('ViewProjection', () => {
       name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      org: Ref(Org),
+      organization: Ref(Organization),
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -163,36 +163,36 @@ describe('ViewProjection', () => {
 
     projection.setFieldProjection({
       field: {
-        id: getFieldId(view, 'org'),
-        path: 'org' as JsonPath,
+        id: getFieldId(view, 'organization'),
+        path: 'organization' as JsonPath,
         referencePath: 'name' as JsonPath,
       },
     });
 
-    const { field, props } = projection.getFieldProjection(getFieldId(view, 'org'));
+    const { field, props } = projection.getFieldProjection(getFieldId(view, 'organization'));
 
     expect(field).to.deep.eq({
-      id: getFieldId(view, 'org'),
-      path: 'org',
+      id: getFieldId(view, 'organization'),
+      path: 'organization',
       referencePath: 'name',
     });
 
     expect(props).to.deep.eq({
-      property: 'org',
+      property: 'organization',
       title: 'Ref',
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
-      referenceSchema: 'example.com/type/Org',
+      referenceSchema: 'example.com/type/Organization',
       referencePath: 'name',
     });
 
     // Note: `referencePath` is stripped from schema.
-    expect(mutable.jsonSchema.properties?.['org' as const]).to.deep.eq({
+    expect(mutable.jsonSchema.properties?.['organization' as const]).to.deep.eq({
       $id: '/schemas/echo/ref',
       title: 'Ref',
       reference: {
         schema: {
-          $ref: 'dxn:type:example.com/type/Org',
+          $ref: 'dxn:type:example.com/type/Organization',
         },
         schemaVersion: '0.1.0',
       },

@@ -20,13 +20,13 @@ import { log } from '@dxos/log';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-const Org = S.Struct({
+const Organization = S.Struct({
   name: S.String,
   address: S.String,
 }).annotations({
   [TypeAnnotationId]: {
     kind: EntityKind.Object,
-    typename: 'example.com/type/Org',
+    typename: 'example.com/type/Organization',
     version: '0.1.0',
   } satisfies TypeAnnotation,
 });
@@ -77,11 +77,11 @@ describe('schema registry', () => {
 
   test('add new schema - preserves field order', async () => {
     const { registry } = await setupTest();
-    const [echoSchema] = await registry.register([Org]);
-    const expectedSchema = Org.annotations({
+    const [echoSchema] = await registry.register([Organization]);
+    const expectedSchema = Organization.annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
-        typename: 'example.com/type/Org',
+        typename: 'example.com/type/Organization',
         version: '0.1.0',
       } satisfies TypeAnnotation,
       [TypeIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
@@ -94,14 +94,14 @@ describe('schema registry', () => {
 
   test('can store the same schema multiple times', async () => {
     const { registry } = await setupTest();
-    const [stored1] = await registry.register([Org]);
-    const [stored2] = await registry.register([Org]);
+    const [stored1] = await registry.register([Organization]);
+    const [stored2] = await registry.register([Organization]);
     expect(stored1.id).to.not.equal(stored2.id);
   });
 
   test('get all dynamic schemas', async () => {
     const { registry } = await setupTest();
-    const schemas = await registry.register([Org, Contact]);
+    const schemas = await registry.register([Organization, Contact]);
     const retrieved = await registry.query().run();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
@@ -111,7 +111,7 @@ describe('schema registry', () => {
 
   test('get all raw stored schemas', async () => {
     const { db, registry } = await setupTest();
-    const schemas = await registry.register([Org, Contact]);
+    const schemas = await registry.register([Organization, Contact]);
     const retrieved = (await db.query(Filter.schema(StoredSchema)).run()).objects;
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {

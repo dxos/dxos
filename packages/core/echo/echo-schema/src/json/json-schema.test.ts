@@ -132,13 +132,13 @@ describe('effect-to-json', () => {
   });
 
   test('reference property by ref', () => {
-    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+    class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
       field: S.String,
     }) {}
 
     class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
       name: S.String,
-      org: Ref(Org).annotations({ description: 'Contact organization' }),
+      organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }) {}
 
     const jsonSchema = toJsonSchema(Contact);
@@ -164,37 +164,37 @@ describe('effect-to-json', () => {
           title: 'string',
           description: 'a string',
         },
-        org: {
+        organization: {
           $id: '/schemas/echo/ref',
           title: 'Ref',
           description: 'Contact organization',
           reference: {
             schema: {
-              $ref: 'dxn:type:example.com/type/Org',
+              $ref: 'dxn:type:example.com/type/Organization',
             },
             schemaVersion: '0.1.0',
           },
         },
       },
-      required: ['name', 'org', 'id'],
-      propertyOrder: ['name', 'org', 'id'],
+      required: ['name', 'organization', 'id'],
+      propertyOrder: ['name', 'organization', 'id'],
     });
   });
 
   test('add reference property', () => {
-    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+    class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
       field: S.String,
     }) {}
 
     class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
       name: S.String,
-      org: Ref(Org).annotations({ description: 'Contact organization' }),
+      organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }) {}
 
     const jsonSchema = toJsonSchema(Contact);
-    setSchemaProperty(jsonSchema, 'employer' as JsonProp, createSchemaReference(Org.typename));
-    const { typename } = getSchemaReference(getSchemaProperty(jsonSchema, 'employer' as JsonProp) ?? {}) ?? {};
-    expect(typename).to.eq(Org.typename);
+    setSchemaProperty(jsonSchema, 'organization' as JsonProp, createSchemaReference(Organization.typename));
+    const { typename } = getSchemaReference(getSchemaProperty(jsonSchema, 'organization' as JsonProp) ?? {}) ?? {};
+    expect(typename).to.eq(Organization.typename);
   });
 
   test('serialize circular schema (StoredSchema)', () => {
@@ -271,7 +271,7 @@ describe('json-to-effect', () => {
 
   for (const partial of [false, true]) {
     test(`deserialized equals original ${partial ? 'with partial' : ''}`, () => {
-      class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+      class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
         field: S.String,
       }) {}
 
@@ -283,9 +283,9 @@ describe('json-to-effect', () => {
           array: S.Array(S.String),
           twoDArray: S.Array(S.Array(S.String)),
           record: S.Record({ key: S.String, value: S.Number }),
-          object: S.Struct({ id: S.String, field: Ref(Org) }),
-          echoObject: Ref(Org),
-          echoObjectArray: S.Array(Ref(Org)),
+          object: S.Struct({ id: S.String, field: Ref(Organization) }),
+          echoObject: Ref(Organization),
+          echoObjectArray: S.Array(Ref(Organization)),
           email: S.String.annotations({ [FormatAnnotationId]: 'email' }),
           null: S.Null,
         },

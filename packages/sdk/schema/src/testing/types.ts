@@ -19,7 +19,7 @@ import { IconAnnotationId } from '../annotations';
 // TODO(wittjosiah): Migrate to using common types.
 export namespace Testing {
   //
-  // Org
+  // Organization
   //
 
   export const OrganizationSchema = S.Struct({
@@ -59,7 +59,7 @@ export namespace Testing {
   //
   // Contact
   // TODO(burdon): Array of email addresses.
-  // TODO(burdon): Materialize link for Role (Org => [Role] => Contact).
+  // TODO(burdon): Materialize link for Role (Organization => [Role] => Contact).
   // TODO(burdon): Use with concrete Message type.
   // TODO(burdon): Address sub type with geo location.
   // TODO(burdon): Reconcile with user id.

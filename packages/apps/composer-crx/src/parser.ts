@@ -8,7 +8,7 @@ import { Schema as S } from 'effect';
 // Bookmark
 // Article
 // Wikipedia
-// Org/Company
+// Organization
 // Contact
 // Project
 // Email/Calendar

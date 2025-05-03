@@ -361,26 +361,26 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   describe('references', () => {
-    const Org = S.Struct({
+    const Organization = S.Struct({
       name: S.String,
-    }).pipe(EchoObject({ typename: 'example.Org', version: '0.1.0' }));
+    }).pipe(EchoObject({ typename: 'example.com/type/Organization', version: '0.1.0' }));
 
-    const Person = S.Struct({
+    const Contact = S.Struct({
       name: S.String,
-      worksAt: Ref(Org),
-      previousEmployment: S.optional(S.Array(Ref(Org))),
-    }).pipe(EchoObject({ typename: 'example.Person', version: '0.1.0' }));
+      organization: Ref(Organization),
+      previousEmployment: S.optional(S.Array(Ref(Organization))),
+    }).pipe(EchoObject({ typename: 'example.com/type/Contact', version: '0.1.0' }));
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Org, Person]);
+      graph.schemaRegistry.addSchema([Organization, Contact]);
 
       const orgName = 'DXOS';
-      const org = db.add(live(Org, { name: orgName }));
-      const person = db.add(live(Person, { name: 'John', worksAt: makeRef(org) }));
+      const org = db.add(live(Organization, { name: orgName }));
+      const person = db.add(live(Contact, { name: 'John', organization: makeRef(org) }));
 
-      expect(person.worksAt.target).to.deep.eq(org);
-      expect(person.worksAt.target?.name).to.eq(orgName);
+      expect(person.organization.target).to.deep.eq(org);
+      expect(person.organization.target?.name).to.eq(orgName);
     });
 
     test('serialized references', async () => {
@@ -421,24 +421,26 @@ describe('Reactive Object with ECHO database', () => {
 
     test('adding object with nested objects to DB', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Org, Person]);
+      graph.schemaRegistry.addSchema([Organization, Contact]);
 
-      const person = db.add(live(Person, { name: 'John', worksAt: makeRef(live(Org, { name: 'DXOS' })) }));
+      const person = db.add(
+        live(Contact, { name: 'John', organization: makeRef(live(Organization, { name: 'DXOS' })) }),
+      );
 
-      expect(person.worksAt.target?.name).to.eq('DXOS');
-      expect(person.worksAt.target?.id).to.be.a('string');
+      expect(person.organization.target?.name).to.eq('DXOS');
+      expect(person.organization.target?.id).to.be.a('string');
     });
 
     test('adding objects with nested arrays to DB', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Org, Person]);
+      graph.schemaRegistry.addSchema([Organization, Contact]);
 
-      const dxos = live(Org, { name: 'DXOS' });
-      const braneframe = live(Org, { name: 'Braneframe' });
+      const dxos = live(Organization, { name: 'DXOS' });
+      const braneframe = live(Organization, { name: 'Braneframe' });
       const person = db.add(
-        live(Person, {
+        live(Contact, {
           name: 'John',
-          worksAt: makeRef(dxos),
+          organization: makeRef(dxos),
           previousEmployment: [makeRef(dxos), makeRef(braneframe)],
         }),
       );
