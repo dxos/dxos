@@ -46,5 +46,7 @@ export const createMailboxToolbar = (model: MailboxModel, tagFilterVisible: bool
 
 export const useMailboxToolbarActions = (model: MailboxModel, tagFilterVisible: boolean) => {
   const toolbarCreator = useCallback(() => createMailboxToolbar(model, tagFilterVisible), [model, tagFilterVisible]);
+  // TODO(ZaymonFC): Ask @Thure how to get menu to re-render when action creator changes.
+  //   OR: How to bind nodes to state? Filter button isn't toggling color.
   return useMenuActions(toolbarCreator);
 };

@@ -17,8 +17,12 @@ import { TagPicker } from '@dxos/react-ui-tag-picker';
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
 import { useMailboxModel } from './model';
-import { useMailboxToolbarAction, useMailboxToolbarActions } from './toolbar';
-import { useTagFilterVisibility, useTagPickerFocusRef } from './toolbar/useTagFilterVisibility';
+import {
+  useMailboxToolbarAction,
+  useMailboxToolbarActions,
+  useTagFilterVisibility,
+  useTagPickerFocusRef,
+} from './toolbar';
 import { InboxCapabilities } from '../../capabilities/capabilities';
 import { InboxAction, type MailboxType } from '../../types';
 
@@ -94,7 +98,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   const handleTagSelect = useCallback(
     (label: string) => {
-      filterDispatch('tag_selected_in_message');
+      filterDispatch('tag_selected_from_message');
       model.selectTag(label);
     },
     [model, filterDispatch],

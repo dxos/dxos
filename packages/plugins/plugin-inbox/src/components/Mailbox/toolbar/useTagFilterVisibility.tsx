@@ -8,7 +8,7 @@ import type { TagPickerHandle } from '@dxos/react-ui-tag-picker';
 
 type TagFilterVisibility = 'closed' | 'display' | 'controlled';
 
-type TagFilterVisibilityEvent = 'toggle_from_toolbar' | 'tag_selected_in_message' | 'all_tags_cleared';
+type TagFilterVisibilityEvent = 'toggle_from_toolbar' | 'tag_selected_from_message' | 'all_tags_cleared';
 
 /**
  * Custom hook to manage focus for a TagPicker component based on visibility state.
@@ -39,7 +39,7 @@ export const useTagFilterVisibility = () => {
           setTagFilterVisibility((value) => (value !== 'closed' ? 'closed' : 'controlled'));
           return;
 
-        case 'tag_selected_in_message':
+        case 'tag_selected_from_message':
           // Always set to 'display' when a tag is selected regardless of current state
           // This fixes the issue where filter doesn't appear after being toggled off
           setTagFilterVisibility('display');
