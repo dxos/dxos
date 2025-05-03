@@ -98,6 +98,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     if (!space.db.graph.schemaRegistry.hasSchema(Contact)) {
       space.db.graph.schemaRegistry.addSchema([Contact]);
     }
+
     // for (const document of TestData.documents) {
     //   const obj = space.db.add(live(Document, document));
     //   const dxn = makeRef(obj).dxn.toString();
@@ -106,6 +107,9 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
     for (const contact of Object.values(TestData.contacts)) {
       space.db.add(contact);
+    }
+    for (const organization of Object.values(TestData.organizations)) {
+      space.db.add(organization);
     }
   }
 
