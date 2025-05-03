@@ -67,7 +67,6 @@ export default (context: PluginsContext) =>
               // NOTE: We are not saving the state of the transcription manager here.
               // We expect the state to be updated through `onCallStateUpdated` once it is propagated through Swarm.
               // This is done to avoid race conditions and to not handle optimistic updates.
-
               const transcript = await getMeetingTranscript(context, meeting);
               invariant(transcript, 'Failed to create transcript');
 
