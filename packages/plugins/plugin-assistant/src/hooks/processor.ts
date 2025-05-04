@@ -99,7 +99,7 @@ export class ChatProcessor {
    * Make GPT request.
    */
   async request(message: string, options: RequestOptions = {}): Promise<Message[]> {
-    this._session = new AISession({ operationModel: 'immediate' });
+    this._session = new AISession({ operationModel: 'configured' });
 
     // Message complete.
     this._session.message.on((message) => {
@@ -125,6 +125,7 @@ export class ChatProcessor {
         client: this._ai,
         history: options.history ?? [],
         artifacts: this._artifacts ?? [],
+        requiredArtifactIds: this._artifacts?.map((artifact) => artifact.id) ?? [],
         tools: this._tools ?? [],
         prompt: message,
         systemPrompt: this._options.systemPrompt,
