@@ -119,7 +119,7 @@ export class PersistentLifecycle<T> extends Resource {
    * Scheduling restart should be done from outside.
    */
   @synchronized
-  scheduleRestart() {
+  async scheduleRestart() {
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
     }
