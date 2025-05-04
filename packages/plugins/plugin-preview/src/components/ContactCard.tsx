@@ -32,7 +32,8 @@ export const ContactCard = ({ subject: { fullName, image, organization, emails }
         )}
         {emails?.length && (
           <div className='flex flex-col'>
-            {emails.map(({ value }) => (
+            {emails.map(({ label, value }) => (
+              // TODO(burdon): Email tags.
               <p key={value} className='pli-3 mlb-3 truncate text-xs text-primary-500'>
                 {value}
               </p>

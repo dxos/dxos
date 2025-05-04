@@ -37,12 +37,8 @@ export const isTranscript = (object: unknown): object is typeof TranscriptType =
 // TODO(burdon): Create with decode consistently: S.decodeSync(TranscriptionSettingsSchema)({}))
 export const TranscriptionSettingsSchema = S.mutable(
   S.Struct({
-    entityExtraction: S.optional(S.Boolean),
-  }).pipe(
-    S.withConstructorDefault(() => ({
-      entityExtraction: true,
-    })),
-  ),
+    entityExtraction: S.optional(S.Boolean).pipe(S.withConstructorDefault(() => true)),
+  }),
 );
 
 export type TranscriptionSettingsProps = S.Schema.Type<typeof TranscriptionSettingsSchema>;
