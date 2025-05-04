@@ -20,13 +20,13 @@ import { Client } from '../client';
 import { getSpace, SpaceState } from '../echo';
 import { CreateEpochRequest } from '../halo';
 import {
-  type CreateInitializedClientsOptions,
   createInitializedClientsWithContext,
+  testSpaceAutomerge,
+  waitForSpace,
+  type CreateInitializedClientsOptions,
   DocumentType,
   TestBuilder,
-  testSpaceAutomerge,
   TextV0Type,
-  waitForSpace,
 } from '../testing';
 
 describe('Spaces', () => {

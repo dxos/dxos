@@ -100,6 +100,6 @@ export default () =>
       role: 'popover',
       filter: (data): data is { subject: DocumentType | TextType } =>
         isInstanceOf(DocumentType, data.subject) || isInstanceOf(TextType, data.subject),
-      component: (props) => <MarkdownPreview {...props} />,
+      component: ({ data }) => <MarkdownPreview {...data} />,
     }),
   ]);

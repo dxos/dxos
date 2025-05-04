@@ -75,8 +75,7 @@ const data = (() => {
 
   const project = create(Project, {
     name: faker.person.fullName(),
-    image:
-      'https://plus.unsplash.com/premium_photo-1672116452571-896980a801c8?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    image: 'https://dxos.network/dxos-logotype-blue.png',
     description: faker.lorem.paragraph(),
   });
 
@@ -87,7 +86,7 @@ export const ContactWithImage = {
   args: {
     Component: ContactCard,
     icon: 'ph--user--regular',
-    subject: create(Contact, data.contact),
+    subject: data.contact,
   },
 };
 
@@ -95,7 +94,7 @@ export const ContactNoImage = {
   args: {
     Component: ContactCard,
     icon: 'ph--user--regular',
-    subject: create(Contact, omitImage(data.contact)),
+    subject: omitImage(data.contact),
   },
 };
 
@@ -103,7 +102,7 @@ export const OrganizationWithImage = {
   args: {
     Component: OrganizationCard,
     icon: 'ph--building-office--regular',
-    subject: create(Organization, data.organization),
+    subject: data.organization,
   },
 };
 
@@ -111,7 +110,7 @@ export const OrganizationNoImage = {
   args: {
     Component: OrganizationCard,
     icon: 'ph--building-office--regular',
-    subject: create(Organization, omitImage(data.organization)),
+    subject: omitImage(data.organization),
   },
 };
 
@@ -119,7 +118,7 @@ export const ProjectWithImage = {
   args: {
     Component: ProjectCard,
     icon: 'ph--building--regular',
-    subject: create(Project, data.project),
+    subject: data.project,
   },
 };
 
@@ -127,6 +126,6 @@ export const ProjectNoImage = {
   args: {
     Component: ProjectCard,
     icon: 'ph--building--regular',
-    subject: create(Project, omitImage(data.project)),
+    subject: omitImage(data.project),
   },
 };
