@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
+import { fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { ElevationProvider, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -24,6 +24,7 @@ import { type MessageType } from '@dxos/schema';
 import { MessageHeader } from './MessageHeader';
 import { type ViewMode } from './MessageHeader';
 import { useMessageToolbarActions, useMessageToolbarAction } from './toolbar';
+import { type MailboxType } from '../../types';
 
 export type MessageProps = ThemedClassName<{
   space?: Space;
@@ -83,9 +84,10 @@ const Message = ({ space, message, plainView, hasEnrichedContent, classNames }: 
 export type MessageContainerProps = {
   space?: Space;
   message: MessageType;
+  inMailbox: MailboxType;
 };
 
-export const MessageContainer = ({ space, message }: MessageContainerProps) => {
+export const MessageContainer = ({ space, message, inMailbox }: MessageContainerProps) => {
   const [plainView, setPlainView] = useState(false); // Default to enriched view
 
   // Check if message has enriched content
@@ -105,7 +107,7 @@ export const MessageContainer = ({ space, message }: MessageContainerProps) => {
       <div role='none' className='grid grid-rows-[min-content_1fr]'>
         <div role='none' className={stackItemContentToolbarClassNames('section')}>
           <ElevationProvider elevation='positioned'>
-            <MenuProvider {...menu} onAction={handleToolbarAction}>
+            <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)} onAction={handleToolbarAction}>
               <ToolbarMenu />
             </MenuProvider>
           </ElevationProvider>
