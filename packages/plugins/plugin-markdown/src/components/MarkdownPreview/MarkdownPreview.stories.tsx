@@ -61,7 +61,7 @@ const data = (() => {
   return { document };
 })();
 
-export const ContactWithImage = {
+export const Default = {
   args: {
     subject: create(DocumentType, data.document),
   },

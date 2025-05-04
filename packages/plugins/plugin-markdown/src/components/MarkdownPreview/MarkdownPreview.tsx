@@ -6,8 +6,10 @@ import React, { useCallback } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
+import { type PreviewProps, previewCard } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { TextType } from '@dxos/schema';
 
 import { MARKDOWN_PLUGIN } from '../../meta';
