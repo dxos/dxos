@@ -237,7 +237,7 @@ export class RtcPeerConnection {
   }
 
   @synchronized
-  private _lockAndAbort(connection: RTCPeerConnection, error: Error) {
+  private async _lockAndAbort(connection: RTCPeerConnection, error: Error): Promise<void> {
     this._abortConnection(connection, error);
   }
 
@@ -261,7 +261,7 @@ export class RtcPeerConnection {
   }
 
   @synchronized
-  private _lockAndCloseConnection() {
+  private async _lockAndCloseConnection() {
     invariant(this._transportChannels.size === 0);
     if (this._connection) {
       this._safeCloseConnection();

@@ -68,7 +68,6 @@ export class TranscriptionManager extends Resource {
     void this._transcriber?.close();
   }
 
-  @synchronized
   setQueue(queueDxn: DXN): TranscriptionManager {
     if (this._queue?.dxn.toString() !== queueDxn.toString()) {
       log.info('setQueue', { queueDxn: queueDxn.toString() });
@@ -77,7 +76,6 @@ export class TranscriptionManager extends Resource {
     return this;
   }
 
-  @synchronized
   setIdentityDid(did: string): TranscriptionManager {
     if (this._identityDid !== did) {
       this._identityDid = did;
@@ -85,7 +83,6 @@ export class TranscriptionManager extends Resource {
     return this;
   }
 
-  @synchronized
   setRecording(recording?: boolean): TranscriptionManager {
     if (!this.isOpen || !this._enabled) {
       return this;
