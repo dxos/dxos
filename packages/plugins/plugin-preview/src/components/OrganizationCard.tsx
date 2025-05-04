@@ -5,13 +5,17 @@
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { type Organization } from '@dxos/schema';
 
-export type OrganizationCardProps = { subject: Organization };
+import { type PreviewProps, previewCard, previewTitle } from '../types';
 
-export const OrganizationCard = ({ subject: { name, image, description, website } }: OrganizationCardProps) => {
+export const OrganizationCard = ({
+  classNames,
+  subject: { name, image, description, website },
+}: PreviewProps<Organization>) => {
   return (
-    <div role='none' className='is-72'>
+    <div role='none' className={mx(previewCard, classNames)}>
       {image ? (
         <img className='aspect-video object-cover is-full bs-auto' src={image} alt={name} />
       ) : (
@@ -19,7 +23,7 @@ export const OrganizationCard = ({ subject: { name, image, description, website 
           <Icon icon='ph--building-office--regular' size={10} />
         </div>
       )}
-      <h2 className='font-medium text-lg line-clamp-2 pli-3 mlb-3'>{name}</h2>
+      <h2 className={mx(previewTitle, 'pli-3 mlb-3')}>{name}</h2>
       {description && <p className='pli-3 line-clamp-2 mlb-3'>{description}</p>}
       {website && (
         <div role='none'>

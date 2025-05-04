@@ -38,9 +38,9 @@ import {
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
 
-import { useSelectCurrentThread } from '../hooks';
-import { MARKDOWN_PLUGIN } from '../meta';
-import { type MarkdownPluginState } from '../types';
+import { useSelectCurrentThread } from '../../hooks';
+import { MARKDOWN_PLUGIN } from '../../meta';
+import { type MarkdownPluginState } from '../../types';
 
 export type MarkdownEditorProps = {
   id: string;
