@@ -205,7 +205,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
   const connect1 = peer1.swarm.connected.waitForCount(1);
   const connect2 = peer2.swarm.connected.waitForCount(1);
 
-  peer1.swarm.onSwarmEvent({
+  void peer1.swarm.onSwarmEvent({
     topic: peer2.topic,
     peerAvailable: {
       peer: peer2.peer,
@@ -215,7 +215,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
 
   await delay();
 
-  peer2.swarm.onSwarmEvent({
+  void peer2.swarm.onSwarmEvent({
     topic: peer1.topic,
     peerAvailable: {
       peer: peer1.peer,

@@ -27,9 +27,9 @@ export const ROOT_TYPE = 'dxos.org/type/GraphRoot';
 export const ACTION_TYPE = 'dxos.org/type/GraphAction';
 export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
 
-export type NodesOptions<T = any, U extends Record<string, any> = Record<string, any>> = {
+export type NodesOptions<TData = any, TProperties extends Record<string, any> = Record<string, any>> = {
   relation?: Relation;
-  filter?: NodeFilter<T, U>;
+  filter?: NodeFilter<TData, TProperties>;
   expansion?: boolean;
   type?: string;
 };
@@ -237,7 +237,10 @@ export class Graph {
   /**
    * Nodes that this node is connected to in default order.
    */
-  nodes<T = any, U extends Record<string, any> = Record<string, any>>(node: Node, options: NodesOptions<T, U> = {}) {
+  nodes<TData = any, TProperties extends Record<string, any> = Record<string, any>>(
+    node: Node,
+    options: NodesOptions<TData, TProperties> = {},
+  ) {
     const { relation, expansion, filter = DEFAULT_FILTER, type } = options;
     const nodes = this._getNodes({ node, relation, expansion, type });
     return nodes.filter((n) => filter(n, node));
