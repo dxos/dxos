@@ -36,7 +36,8 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/schema": "workspace:*"
+    "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

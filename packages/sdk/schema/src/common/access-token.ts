@@ -37,4 +37,5 @@ export const AccessTokenSchema = S.Struct({
 export const AccessTokenType = AccessTokenSchema.pipe(
   EchoObject({ typename: 'dxos.org/type/AccessToken', version: '0.1.0' }),
 );
+
 export type AccessTokenType = S.Schema.Type<typeof AccessTokenType>;

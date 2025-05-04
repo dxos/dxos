@@ -11,6 +11,9 @@ export enum TaskStatus {
   COMPLETE = 'C',
 }
 
+/**
+ * Task schema.
+ */
 export const TaskSchema = S.Struct({
   text: S.String,
   // TODO(wittjosiah): Why closed and status?
@@ -31,4 +34,5 @@ export const Task = TaskSchema.pipe(
     version: '0.1.0',
   }),
 );
+
 export interface Task extends S.Schema.Type<typeof Task> {}

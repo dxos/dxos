@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S, isInstanceOf, SpaceIdSchema } from '@dxos/echo-schema';
+import { SpaceIdSchema, S, isInstanceOf } from '@dxos/echo-schema';
 import { isLiveObject } from '@dxos/react-client/echo';
 
 import { TranscriptType } from './schema';
@@ -34,9 +34,10 @@ export const isTranscript = (object: unknown): object is typeof TranscriptType =
   return isLiveObject(object) && isInstanceOf(TranscriptType, object);
 };
 
+// TODO(burdon): Create with decode consistently: S.decodeSync(TranscriptionSettingsSchema)({}))
 export const TranscriptionSettingsSchema = S.mutable(
   S.Struct({
-    entityExtraction: S.optional(S.Boolean),
+    entityExtraction: S.optional(S.Boolean).pipe(S.withConstructorDefault(() => true)),
   }),
 );
 

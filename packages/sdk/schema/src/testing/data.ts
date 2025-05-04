@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, createObjectId, Format, S, type StoredSchema, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { AST, ObjectId, Format, S, type StoredSchema, toJsonSchema, TypedObject } from '@dxos/echo-schema';
 import { createStoredSchema, type Live } from '@dxos/live-object';
 
 import { createView, type ViewType } from '../view';
@@ -49,7 +49,7 @@ export const testView: Live<ViewType> = createView({
 });
 
 export const testData: TestType = {
-  id: createObjectId(),
+  id: ObjectId.random(),
   name: 'Tester',
   email: 'test@example.com',
   // address: {

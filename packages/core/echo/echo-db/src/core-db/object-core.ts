@@ -16,7 +16,7 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { createObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
@@ -59,7 +59,7 @@ export class ObjectCore {
   /**
    * Id of the ECHO object.
    */
-  public id = createObjectId();
+  public id = ObjectId.random();
 
   /**
    * Set if when the object is bound to a database.
