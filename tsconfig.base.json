@@ -31,7 +31,6 @@
     "out",
   ],
   "include": [],
-  "exclude": ["node_modules", "dist", "build", "out"],
   "ts-node": {
     "swc": true
   }
