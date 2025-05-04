@@ -19,10 +19,11 @@ const EXAMPLE_TAGS = [
 
 /**
  * Creates a message with plain and enriched content blocks, where the enriched version
- * can contain links to contacts.
+ * contains links to contacts and the plain version has the same content with links stripped.
  */
 export const createMessage = (space?: Space) => {
-  const text = faker.lorem.paragraphs(5);
+  // Start with base text
+  let text = faker.lorem.paragraphs(5);
   let enrichedText = text;
 
   if (space) {
@@ -38,7 +39,12 @@ export const createMessage = (space?: Space) => {
       words.splice(position, 0, `[${fullName}][${dxn}]`);
     }
 
+    // First create the enriched text with links
     enrichedText = words.join(' ');
+
+    // Then create plain text by stripping out the [label][dxn] syntax
+    // but keeping the label text itself
+    text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
   }
 
   const tags = faker.helpers.randomSubset(EXAMPLE_TAGS, { min: 0, max: EXAMPLE_TAGS.length });
@@ -65,7 +71,7 @@ export const createMessage = (space?: Space) => {
       email: faker.internet.email(),
       name: faker.person.fullName(),
     },
-    // First block plain text, second block enriched text
+    // First block plain text (with links stripped), second block enriched text (with links)
     blocks: [
       { type: 'text', text },
       { type: 'text', text: enrichedText },
