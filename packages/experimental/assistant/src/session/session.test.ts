@@ -21,6 +21,7 @@ import { log } from '@dxos/log';
 
 import { AISession } from './session';
 import { AI_SERVICE_ENDPOINT } from '../testing';
+import { skip } from 'node:test';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = S.Struct({
@@ -39,7 +40,7 @@ describe.skip('AISession with Ollama', () => {
     // const aiClient = new OllamaClient({
     //   overrides: { model: 'llama3.1:8b' },
     // });
-    const session = new AISession({ operationModel: 'immediate' });
+    const session = new AISession({ operationModel: 'configured' });
 
     const objects = new Set<string>();
 
@@ -140,6 +141,7 @@ describe.skip('AISession with Ollama', () => {
       client: aiClient,
       tools: [],
       artifacts: [calendarArtifact, tableArtifact, mapArtifact, scriptArtifact],
+      requiredArtifactIds: [calendarArtifact.id, tableArtifact.id, mapArtifact.id, scriptArtifact.id],
       history: [],
       generationOptions: {
         model: '@anthropic/claude-3-5-haiku-20241022',
