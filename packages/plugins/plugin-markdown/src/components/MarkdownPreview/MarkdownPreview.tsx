@@ -34,7 +34,7 @@ const getSnippet = (subject: DocumentType | TextType, fallback: string) => {
   }
 };
 
-export const MarkdownPreview = ({ className, subject }: PreviewProps<DocumentType | TextType>) => {
+export const MarkdownPreview = ({ classNames, subject }: PreviewProps<DocumentType | TextType>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const snippet = getSnippet(subject, t('fallback abstract'));
@@ -47,16 +47,17 @@ export const MarkdownPreview = ({ className, subject }: PreviewProps<DocumentTyp
   return (
     <div
       role='none'
-      className={mx('plb-3 pli-4 grid grid-cols-[1fr_min-content] gap-3 place-items-start', previewCard, className)}
+      className={mx('grid grid-cols-[1fr_min-content] plb-3 pli-3 gap-3 place-items-start', previewCard, classNames)}
     >
-      <h2 className='text-lg font-medium line-clamp-2 min-bs-0'>{getTitle(subject, t('fallback title'))}</h2>
+      <h2 className='text-lg font-medium line-clamp-2'>{getTitle(subject, t('fallback title'))}</h2>
       <IconButton
         iconOnly
         variant='ghost'
-        onClick={handleNavigate}
+        size={4}
         label={t('navigate to document label')}
         icon='ph--arrow-square-out--regular'
         tooltipSide='right'
+        onClick={handleNavigate}
       />
       {snippet && <p className='line-clamp-3 break-words col-span-2'>{snippet}</p>}
     </div>

@@ -11,12 +11,12 @@ import { type Contact } from '@dxos/schema';
 import { type PreviewProps, previewCard } from '../types';
 
 export const ContactCard = ({
-  className,
+  classNames,
   subject: { fullName, image, organization, emails },
 }: PreviewProps<Contact>) => {
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
-    <div role='none' className={mx('grid grid-cols-[6rem_1fr]', previewCard, className)}>
+    <div role='none' className={mx('grid grid-cols-[6rem_1fr]', previewCard, classNames)}>
       {image ? (
         <div className='grid'>
           <img className='h-full w-full object-cover' src={image} alt={fullName} />

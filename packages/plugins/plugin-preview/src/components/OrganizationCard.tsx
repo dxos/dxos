@@ -11,11 +11,11 @@ import { type Organization } from '@dxos/schema';
 import { type PreviewProps, previewCard } from '../types';
 
 export const OrganizationCard = ({
-  className,
+  classNames,
   subject: { name, image, description, website },
 }: PreviewProps<Organization>) => {
   return (
-    <div role='none' className={mx(previewCard, className)}>
+    <div role='none' className={mx(previewCard, classNames)}>
       {image ? (
         <img className='aspect-video object-cover is-full bs-auto' src={image} alt={name} />
       ) : (

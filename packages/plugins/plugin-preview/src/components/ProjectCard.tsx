@@ -9,9 +9,9 @@ import { type Project } from '@dxos/schema';
 
 import { type PreviewProps, previewCard } from '../types';
 
-export const ProjectCard = ({ className, subject: { name, image, description } }: PreviewProps<Project>) => {
+export const ProjectCard = ({ classNames, subject: { name, image, description } }: PreviewProps<Project>) => {
   return (
-    <div role='none' className={mx(previewCard, className)}>
+    <div role='none' className={mx(previewCard, classNames)}>
       {image && <img className='object-contain is-full bs-auto' src={image} alt={name} />}
       <h2 className='font-medium text-lg line-clamp-2 pli-3 mlb-3'>{name}</h2>
       {description && <p className='pli-3 line-clamp-2 mlb-3'>{description}</p>}
