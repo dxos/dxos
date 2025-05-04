@@ -18,7 +18,8 @@ const EXAMPLE_TAGS = [
 ];
 
 /**
- * Creates a message with optional enriched content linking to contacts.
+ * Creates a message with plain and enriched content blocks, where the enriched version
+ * can contain links to contacts.
  */
 export const createMessage = (space?: Space) => {
   const text = faker.lorem.paragraphs(5);
@@ -64,8 +65,11 @@ export const createMessage = (space?: Space) => {
       email: faker.internet.email(),
       name: faker.person.fullName(),
     },
-    // TODO(ZaymonFC): First block raw, second block enriched.
-    blocks: [{ type: 'text', text: enrichedText }],
+    // First block plain text, second block enriched text
+    blocks: [
+      { type: 'text', text },
+      { type: 'text', text: enrichedText },
+    ],
     properties: { tags },
   });
 };

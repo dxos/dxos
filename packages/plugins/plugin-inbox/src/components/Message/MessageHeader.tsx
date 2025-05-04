@@ -11,13 +11,16 @@ import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
 import { formatDate, hashString } from '../util';
 
+export type ViewMode = 'plain' | 'enriched' | 'plain-only';
+
 export type MessageHeaderProps = ThemedClassName<{
   message: MessageType;
+  viewMode?: ViewMode;
 }>;
 
-export const MessageHeader = ({ message, classNames }: MessageHeaderProps) => {
+export const MessageHeader = ({ message, viewMode, classNames }: MessageHeaderProps) => {
   return (
-    <div className='grid grid-flow-row p-2 gap-2 pb-3 min-bs-0 border-be border-separator'>
+    <div className='grid grid-flow-row pli-2 plb-1.5 gap-2 min-bs-0 border-be border-separator'>
       <div className='grid grid-cols-[auto_1fr_auto] gap-x-3'>
         <Avatar.Root>
           <Avatar.Content
@@ -34,8 +37,18 @@ export const MessageHeader = ({ message, classNames }: MessageHeaderProps) => {
           <h3>{message.sender.name || 'Unknown'}</h3>
           {message.sender.email && <div className='text-xs text-description'>{message.sender.email}</div>}
         </div>
-        <div className='text-xs text-description justify-self-end self-start'>
-          {message.created && formatDate(new Date(), new Date(message.created))}
+        <div className='grid gap-1 justify-items-end'>
+          <div className='text-xs text-description'>
+            {message.created && formatDate(new Date(), new Date(message.created))}
+          </div>
+          {/* View mode indicator */}
+          {viewMode && (
+            <div className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
+              {viewMode === 'plain' && 'Plain'}
+              {viewMode === 'enriched' && 'Enriched'}
+              {viewMode === 'plain-only' && 'Plain (no enriched)'}
+            </div>
+          )}
         </div>
       </div>
 

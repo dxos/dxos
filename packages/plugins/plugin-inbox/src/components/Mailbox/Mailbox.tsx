@@ -30,7 +30,9 @@ const messageColumnDefault = {
 
 const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean) => {
   const id = message.id;
-  const text = message.blocks.find((block) => block.type === 'text')?.text;
+  // Always use the first text block for displaying in the mailbox list
+  const textBlocks = message.blocks.filter(block => 'text' in block);
+  const text = textBlocks[0]?.text || '';
   const date = formatDate(now, message.created ? new Date(message.created) : new Date());
   const from = message.sender?.name ?? message.sender?.email;
   const subject = message.properties?.subject ?? text;
