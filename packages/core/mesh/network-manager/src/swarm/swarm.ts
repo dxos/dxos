@@ -170,7 +170,7 @@ export class Swarm {
   }
 
   @synchronized
-  onSwarmEvent(swarmEvent: SwarmEvent) {
+  async onSwarmEvent(swarmEvent: SwarmEvent): Promise<void> {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
     if (this._ctx.disposed) {
