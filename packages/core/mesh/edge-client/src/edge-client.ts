@@ -99,7 +99,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       log('Edge identity changed', { identity, oldIdentity: this._identity });
       this._identity = identity;
       this._closeCurrentConnection(new EdgeIdentityChangedError());
-      this._persistentLifecycle.scheduleRestart();
+      void this._persistentLifecycle.scheduleRestart();
     }
   }
 
@@ -176,7 +176,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
         onRestartRequired: () => {
           if (this._isActive(connection)) {
             this._closeCurrentConnection();
-            this._persistentLifecycle.scheduleRestart();
+            void this._persistentLifecycle.scheduleRestart();
           } else {
             log.verbose('restart requested by inactive connection');
           }

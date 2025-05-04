@@ -113,7 +113,7 @@ export class CallsServicePeer extends Resource {
     peerConnection.addEventListener('connectionstatechange', () => {
       if (peerConnection.connectionState === 'failed' || peerConnection.connectionState === 'closed') {
         log.warn('calls connection failed', { state: peerConnection.connectionState });
-        this._persistentLifecycle.scheduleRestart();
+        void this._persistentLifecycle.scheduleRestart();
       }
     });
 
@@ -122,7 +122,7 @@ export class CallsServicePeer extends Resource {
       clearTimeout(iceTimeout);
       if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'closed') {
         log.warn('calls connection to ICEs failed', { state: peerConnection.iceConnectionState });
-        this._persistentLifecycle.scheduleRestart();
+        void this._persistentLifecycle.scheduleRestart();
       } else if (peerConnection.iceConnectionState === 'disconnected') {
         // TODO(mykola): we should start to inspect the connection stats from here on for
         // any other signs of trouble to guide what to do next (instead of just hoping
@@ -135,7 +135,7 @@ export class CallsServicePeer extends Resource {
           }
 
           log.warn('calls iceConnectionState timed out', { state: peerConnection.iceConnectionState, timeoutSeconds });
-          this._persistentLifecycle.scheduleRestart();
+          void this._persistentLifecycle.scheduleRestart();
         }, timeoutSeconds * 1_000);
       }
     });

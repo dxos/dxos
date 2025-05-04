@@ -79,7 +79,7 @@ export class RtcPeerConnection {
     const connection = await this._openConnection();
     if (!this._transportChannels.has(topic)) {
       if (!this._transportChannels.size) {
-        this._lockAndCloseConnection();
+        void this._lockAndCloseConnection();
       }
       throw new Error('Transport closed while connection was being open');
     }
@@ -105,7 +105,7 @@ export class RtcPeerConnection {
     channel.closed.on(() => {
       this._transportChannels.delete(options.topic);
       if (this._transportChannels.size === 0) {
-        this._lockAndCloseConnection();
+        void this._lockAndCloseConnection();
       }
     });
     return channel;
@@ -145,7 +145,7 @@ export class RtcPeerConnection {
           await connection.setLocalDescription(offer);
           await this._sendDescription(connection, offer);
         } catch (err: any) {
-          this._lockAndAbort(connection, err);
+          void this._lockAndAbort(connection, err);
         }
       },
 
@@ -183,7 +183,7 @@ export class RtcPeerConnection {
 
         log('oniceconnectionstatechange', { state: connection.iceConnectionState });
         if (connection.iceConnectionState === 'failed') {
-          this._lockAndAbort(connection, createIceFailureError(iceCandidateErrors));
+          void this._lockAndAbort(connection, createIceFailureError(iceCandidateErrors));
         }
       },
 
@@ -200,7 +200,7 @@ export class RtcPeerConnection {
 
         log('onconnectionstatechange', { state: connection.connectionState });
         if (connection.connectionState === 'failed') {
-          this._lockAndAbort(connection, new Error('Connection failed.'));
+          void this._lockAndAbort(connection, new Error('Connection failed.'));
         }
       },
 
