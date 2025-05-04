@@ -67,7 +67,7 @@ const Message = ({ space, message, plainView, hasEnrichedContent, classNames }: 
       ];
     }
     return [];
-  }, [space, client]);
+  }, [space, client, themeMode]);
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
@@ -88,7 +88,7 @@ export type MessageContainerProps = {
 };
 
 export const MessageContainer = ({ space, message, inMailbox }: MessageContainerProps) => {
-  const [plainView, setPlainView] = useState(false); // Default to enriched view
+  const [plainView, setPlainView] = useState(false);
 
   // Check if message has enriched content
   const hasEnrichedContent = useMemo(() => {
@@ -99,7 +99,9 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   const menu = useMessageToolbarActions(plainView, hasEnrichedContent);
   const handleToolbarAction = useMessageToolbarAction({
     plainView,
-    setPlainView,
+    setPlainView: (value) => {
+      return setPlainView(value);
+    },
   });
 
   return (
