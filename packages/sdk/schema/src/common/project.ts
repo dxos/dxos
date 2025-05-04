@@ -7,6 +7,9 @@ import { S, AST, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-sch
 
 import { IconAnnotationId } from '../annotations';
 
+/**
+ * Project schema.
+ */
 export const ProjectSchema = S.Struct({
   id: Type.ObjectId,
   name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
@@ -23,4 +26,5 @@ export const Project = ProjectSchema.pipe(
     version: '0.1.0',
   }),
 );
+
 export type Project = S.Schema.Type<typeof Project>;

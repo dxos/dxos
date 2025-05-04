@@ -18,11 +18,6 @@ export const PostalAddressSchema = S.Struct({
       examples: ['Apt 1', 'Suite 2'],
     }),
   ),
-  postOfficeBoxNumber: S.optional(
-    S.String.annotations({
-      description: 'The post office box number for PO Box addresses.',
-    }),
-  ),
   locality: S.optional(
     S.String.annotations({
       description: 'The locality in which the street address is, and which is in the region.',
@@ -35,16 +30,21 @@ export const PostalAddressSchema = S.Struct({
       examples: ['CA', 'NY'],
     }),
   ),
-  country: S.optional(
-    S.String.annotations({
-      description: 'The country in 2-letter ISO 3166-1 alpha-2 format.',
-      examples: ['US', 'SG'],
-    }),
-  ),
   postalCode: S.optional(
     S.String.annotations({
       description: 'The postal code.',
       examples: ['12345', 'A1A 1A1'],
+    }),
+  ),
+  postOfficeBoxNumber: S.optional(
+    S.String.annotations({
+      description: 'The post office box number for PO Box addresses.',
+    }),
+  ),
+  country: S.optional(
+    S.String.annotations({
+      description: 'The country in 2-letter ISO 3166-1 alpha-2 format.',
+      examples: ['US', 'SG'],
     }),
   ),
   // TODO(burdon): Unknown error (handling tuples?)
