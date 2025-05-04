@@ -29,21 +29,13 @@ import { type MailboxType } from '../../types';
 export type MessageProps = ThemedClassName<{
   space?: Space;
   message: MessageType;
-  plainView: boolean;
+  viewMode: ViewMode;
   hasEnrichedContent: boolean;
 }>;
 
-const Message = ({ space, message, plainView, hasEnrichedContent, classNames }: MessageProps) => {
+const Message = ({ space, message, viewMode, hasEnrichedContent, classNames }: MessageProps) => {
   const client = useClient();
   const { themeMode } = useThemeContext();
-
-  // Calculate view mode based on plainView setting and hasEnrichedContent
-  const viewMode = useMemo<ViewMode>(() => {
-    if (plainView) {
-      return hasEnrichedContent ? 'plain' : 'plain-only';
-    }
-    return hasEnrichedContent ? 'enriched' : 'plain-only';
-  }, [plainView, hasEnrichedContent]);
 
   const content = useMemo(() => {
     const textBlocks = message.blocks.filter((block) => 'text' in block);
@@ -96,6 +88,14 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
     return textBlocks.length > 1 && !!textBlocks[1]?.text;
   }, [message]);
 
+  // Calculate view mode based on plainView setting and hasEnrichedContent
+  const viewMode = useMemo<ViewMode>(() => {
+    if (plainView) {
+      return hasEnrichedContent ? 'plain' : 'plain-only';
+    }
+    return hasEnrichedContent ? 'enriched' : 'plain-only';
+  }, [plainView, hasEnrichedContent]);
+
   const menu = useMessageToolbarActions(plainView, hasEnrichedContent);
   const handleToolbarAction = useMessageToolbarAction({
     plainView,
@@ -114,7 +114,7 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
             </MenuProvider>
           </ElevationProvider>
         </div>
-        <Message space={space} message={message} plainView={plainView} hasEnrichedContent={hasEnrichedContent} />
+        <Message space={space} message={message} viewMode={viewMode} hasEnrichedContent={hasEnrichedContent} />
       </div>
     </StackItem.Content>
   );
