@@ -17,13 +17,14 @@ const aiService = new AIServiceEdgeClient({
 
 describe.skip('EntityExtraction', { timeout: 180_000 }, () => {
   test('should process a transcript block', async () => {
-    for (const message of TestData.transcriptMessages) {
+    const { transcriptMessages, documents, contacts } = await TestData.createTestData();
+    for (const message of transcriptMessages) {
       log.info('input', message);
       const { message: enhancedMessage } = await processTranscriptMessage({
         message,
         aiService,
         context: {
-          objects: [...TestData.documents, ...Object.values(TestData.contacts)],
+          objects: [...documents, ...Object.values(contacts)],
         },
       });
       log.info('output', enhancedMessage);
