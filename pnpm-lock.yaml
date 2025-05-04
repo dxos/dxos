@@ -7003,6 +7003,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -7049,9 +7052,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../plugin-preview
       '@dxos/plugin-storybook-layout':
         specifier: workspace:*
         version: link:../plugin-storybook-layout

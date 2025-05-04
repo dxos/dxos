@@ -8,8 +8,8 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/react-ui-editor';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { MARKDOWN_PLUGIN } from '../meta';
-import { type MarkdownSettingsProps } from '../types';
+import { MARKDOWN_PLUGIN } from '../../meta';
+import { type MarkdownSettingsProps } from '../../types';
 
 export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
