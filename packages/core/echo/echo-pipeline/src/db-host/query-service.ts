@@ -86,7 +86,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
       log.warn('Indexer already initialized.');
       return;
     }
-    this._params.indexer.setConfig(config);
+    void this._params.indexer.setConfig(config);
   }
 
   execQuery(request: QueryRequest): Stream<QueryResponse> {

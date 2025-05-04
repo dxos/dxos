@@ -20,7 +20,7 @@ import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { type MessageType } from '@dxos/schema';
+import { Organization, Contact, type MessageType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
@@ -32,6 +32,7 @@ import {
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
 } from '../../testing';
+import * as TestData from '../../testing/test-data';
 import translations from '../../translations';
 
 faker.seed(1);
@@ -185,7 +186,7 @@ const meta: Meta<typeof QueueStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [TestItem],
+          types: [TestItem, Contact, Organization, TestData.DocumentType],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },

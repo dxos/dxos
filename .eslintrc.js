@@ -36,6 +36,7 @@ module.exports = {
 
     // Docs snippets
     'docs/content/**/*',
+    '**/typedoc/assets/**/*',
   ],
   overrides: [
     {
