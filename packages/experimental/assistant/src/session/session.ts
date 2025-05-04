@@ -397,7 +397,7 @@ const createBaseInstructions = ({
       : ''
   }
   ${
-    operationModel === 'immediate'
+    operationModel === 'configured'
       ? `
     - Select the most relevant artifact(s) to complete the task.
     - Call the appropriate tool to use the artifact(s).
