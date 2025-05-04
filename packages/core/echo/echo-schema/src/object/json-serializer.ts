@@ -21,6 +21,9 @@ export const serializeStatic = <T extends { id: string }>(obj: T): SerializedSta
   return JSON.parse(JSON.stringify(obj));
 };
 
+/**
+ * @internal
+ */
 export const attachTypedJsonSerializer = (obj: any) => {
   const descriptor = Object.getOwnPropertyDescriptor(obj, 'toJSON');
   if (descriptor) {

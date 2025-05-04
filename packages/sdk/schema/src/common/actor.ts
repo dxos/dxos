@@ -20,4 +20,5 @@ export const ActorSchema = S.Struct({
   name: S.optional(S.String),
   role: S.optional(ActorRole),
 });
+
 export interface ActorSchema extends S.Schema.Type<typeof ActorSchema> {}

@@ -4,3 +4,4 @@
 
 export * from './ContactCard';
 export * from './OrganizationCard';
+export * from './ProjectCard';

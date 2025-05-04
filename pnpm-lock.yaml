@@ -7810,6 +7810,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

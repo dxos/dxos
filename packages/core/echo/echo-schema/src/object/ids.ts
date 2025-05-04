@@ -5,9 +5,10 @@
 import { Schema as S } from 'effect';
 import { ulid } from 'ulidx';
 
-export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
+import { SpaceId } from '@dxos/keys';
 
-// TODO(dmaretskyi): Make brand. (RB: Yes!)
+// TODO(dmaretskyi): Make brand.
+// export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
 // export const ObjectIdSchema = S.ULID.pipe(S.brand(ObjectIdBrand));
 export const ObjectIdSchema = S.ULID;
 
@@ -18,7 +19,7 @@ export interface ObjectIdClass extends S.SchemaClass<ObjectId, string> {
   random(): ObjectId;
 }
 
-// TODO(dmaretskyi): Move to @dxos/keys.
+// TODO(dmaretskyi): Move to @dxos/keys. Normalize with SpaceId.
 export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
   static isValid(id: string): id is ObjectId {
     try {
@@ -34,4 +35,4 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
   }
 };
 
-export const createObjectId = () => ObjectId.random();
+export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
