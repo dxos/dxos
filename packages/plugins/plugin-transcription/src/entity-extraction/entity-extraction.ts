@@ -82,6 +82,10 @@ export const processTranscriptMessage = async (
                 content: [
                   {
                     type: 'text',
+                    text: 'THE TRANSCRIPT:',
+                  },
+                  {
+                    type: 'text',
                     text: JSON.stringify(params.message),
                   },
                 ],
