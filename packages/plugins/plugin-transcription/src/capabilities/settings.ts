@@ -3,15 +3,14 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 
 import { TRANSCRIPTION_PLUGIN } from '../meta';
-import { type TranscriptionSettingsProps, TranscriptionSettingsSchema } from '../types';
+import { TranscriptionSettingsSchema } from '../types';
 
 export default () => {
-  const settings = live<TranscriptionSettingsProps>({
-    entityExtraction: true,
-  });
+  const settings = live(S.decodeSync(TranscriptionSettingsSchema)({}));
 
   return contributes(Capabilities.Settings, {
     schema: TranscriptionSettingsSchema,

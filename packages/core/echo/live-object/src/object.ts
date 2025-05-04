@@ -5,7 +5,7 @@
 import { type Schema as S } from 'effect';
 
 import {
-  createObjectId,
+  ObjectId,
   defineHiddenProperty,
   getTypeAnnotation,
   type BaseObject,
@@ -78,7 +78,7 @@ const createReactiveObject = <T extends BaseObject>(
  */
 const setIdOnTarget = (target: any) => {
   invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
-  target.id = createObjectId();
+  target.id = ObjectId.random();
 };
 
 const symbolMeta = Symbol.for('@dxos/schema/ObjectMeta');

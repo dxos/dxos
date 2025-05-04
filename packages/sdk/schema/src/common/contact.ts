@@ -8,13 +8,14 @@ import { Format, GeneratorAnnotationId, Ref, S } from '@dxos/echo-schema';
 import { Organization } from './organization';
 import { PostalAddressSchema } from './postal-address';
 
-// TODO(wittjosiah): Contact vs ContactSchema vs ContactType?
-
 // TODO(burdon): Materialize link for Role (Organization => [Role] => Contact).
 // TODO(burdon): Address sub type with geo location.
 // TODO(burdon): Reconcile with user id.
 
-// Based on fields from Apple Contacts.
+/**
+ * Contact schema.
+ * Based on fields from Apple Contacts.
+ */
 export const ContactSchema = S.Struct({
   fullName: S.optional(S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName' })),
   preferredName: S.optional(S.String),
@@ -43,6 +44,7 @@ export const ContactSchema = S.Struct({
   ),
   // TODO(burdon): Identities? (socials, DIDs, etc.)
   // TODO(burdon): Add annotations.
+  // TODO(burdon): Record or array (for CRDT)?
   identities: S.optional(
     S.mutable(
       S.Array(
@@ -84,15 +86,8 @@ export const ContactSchema = S.Struct({
       ),
     ),
   ),
-  birthday: S.optional(
-    S.mutable(
-      S.Struct({
-        label: S.String,
-        value: S.Date,
-      }),
-    ),
-  ),
-  // TODO(burdon): Move to cross-cutting.
+  birthday: S.optional(S.mutable(S.Date)),
+  // TODO(burdon): Move to base object?
   fields: S.optional(
     S.mutable(
       S.Array(
@@ -112,4 +107,5 @@ export const Contact = ContactSchema.pipe(
     version: '0.1.0',
   }),
 );
+
 export interface Contact extends S.Schema.Type<typeof Contact> {}
