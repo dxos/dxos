@@ -5,13 +5,17 @@
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { type Organization } from '@dxos/schema';
 
-export type OrganizationCardProps = { subject: Organization };
+import { type PreviewProps, previewCard } from '../types';
 
-export const OrganizationCard = ({ subject: { name, image, description, website } }: OrganizationCardProps) => {
+export const OrganizationCard = ({
+  className,
+  subject: { name, image, description, website },
+}: PreviewProps<Organization>) => {
   return (
-    <div role='none' className='is-72'>
+    <div role='none' className={mx(previewCard, className)}>
       {image ? (
         <img className='aspect-video object-cover is-full bs-auto' src={image} alt={name} />
       ) : (

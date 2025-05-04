@@ -4,14 +4,15 @@
 
 import React from 'react';
 
+import { mx } from '@dxos/react-ui-theme';
 import { type Project } from '@dxos/schema';
 
-export type ProjectCardProps = { subject: Project };
+import { type PreviewProps, previewCard } from '../types';
 
-export const ProjectCard = ({ subject: { name, image, description } }: ProjectCardProps) => {
+export const ProjectCard = ({ className, subject: { name, image, description } }: PreviewProps<Project>) => {
   return (
-    <div role='none' className='is-72'>
-      {image && <img className='aspect-video object-cover is-full bs-auto' src={image} alt={name} />}
+    <div role='none' className={mx(previewCard, className)}>
+      {image && <img className='object-contain is-full bs-auto' src={image} alt={name} />}
       <h2 className='font-medium text-lg line-clamp-2 pli-3 mlb-3'>{name}</h2>
       {description && <p className='pli-3 line-clamp-2 mlb-3'>{description}</p>}
     </div>

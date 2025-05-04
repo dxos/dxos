@@ -5,14 +5,18 @@
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { type Contact } from '@dxos/schema';
 
-export type ContactCardProps = { subject: Contact };
+import { type PreviewProps, previewCard } from '../types';
 
-export const ContactCard = ({ subject: { fullName, image, organization, emails } }: ContactCardProps) => {
+export const ContactCard = ({
+  className,
+  subject: { fullName, image, organization, emails },
+}: PreviewProps<Contact>) => {
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
-    <div role='none' className='grid grid-cols-[6rem_1fr] is-72 overflow-hidden'>
+    <div role='none' className={mx('grid grid-cols-[6rem_1fr]', previewCard, className)}>
       {image ? (
         <div className='grid'>
           <img className='h-full w-full object-cover' src={image} alt={fullName} />
