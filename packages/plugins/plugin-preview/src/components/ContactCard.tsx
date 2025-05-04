@@ -8,7 +8,7 @@ import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Contact } from '@dxos/schema';
 
-import { type PreviewProps, previewCard } from '../types';
+import { type PreviewProps, previewCard, previewTitle } from '../types';
 
 export const ContactCard = ({
   classNames,
@@ -27,7 +27,7 @@ export const ContactCard = ({
         </div>
       )}
       <div className='overflow-hidden'>
-        <h2 className='font-medium text-lg line-clamp-2 pli-3 mlb-3'>{fullName}</h2>
+        <h2 className={mx(previewTitle, 'pli-3 mlb-3')}>{fullName}</h2>
         {organizationName && (
           <div className='flex pli-3 mlb-3 gap-2 items-center'>
             <Icon icon='ph--building-office--regular' size={5} classNames='text-subdued' />

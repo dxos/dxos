@@ -13,15 +13,21 @@ export type PreviewProps<T extends object> = ThemedClassName<{
 /**
  * NOTE: Padding for cards should be uniformly pli-3 plb-3, etc.
  */
-// TODO(burdon): Define small set of common Card grid layouts.
-//  Standardize Header, actions, image, grid layout, etc.
+// TODO(burdon): Update react-ui-card (to use grid) and re-use here.
+// - Standardize Header, actions, image, body, etc.
+// - Support different grid layouts (e.g., image to the side, on top, etc.)
+// - Should co-exist naturally with react-ui-form (e.g., as main content).
 /**
  * <Card.Root>
  *   <Card.Header>
  *     <Card.Title>
  *     <Card.Action>
  *   </Card.Header>
- *   <Card.Content>
+ *   <Card.Body>
+ *     <Card.Image>
+ *     <Form />
+ *   </Card.Body>
  * </Card.Root>
  */
 export const previewCard = 'popover-max-width overflow-hidden';
+export const previewTitle = 'font-medium text-lg line-clamp-2';

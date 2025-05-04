@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { type PreviewProps, previewCard } from '@dxos/plugin-preview';
+import { type PreviewProps, previewCard, previewTitle } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -49,7 +49,7 @@ export const MarkdownPreview = ({ classNames, subject }: PreviewProps<DocumentTy
       role='none'
       className={mx('grid grid-cols-[1fr_min-content] plb-3 pli-3 gap-3 place-items-start', previewCard, classNames)}
     >
-      <h2 className='text-lg font-medium line-clamp-2'>{getTitle(subject, t('fallback title'))}</h2>
+      <h2 className={previewTitle}>{getTitle(subject, t('fallback title'))}</h2>
       <IconButton
         iconOnly
         variant='ghost'
