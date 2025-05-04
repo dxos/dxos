@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { S, AST, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
+import { S, AST, Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
@@ -13,6 +13,7 @@ import { IconAnnotationId } from '../annotations';
 export const ProjectSchema = S.Struct({
   id: Type.ObjectId,
   name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
+  image: S.optional(Format.URL),
   description: S.optional(S.String),
 }).annotations({
   [AST.TitleAnnotationId]: 'Project',

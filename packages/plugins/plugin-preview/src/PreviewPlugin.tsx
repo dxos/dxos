@@ -15,8 +15,7 @@ import {
   definePlugin,
 } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
-import { type Client } from '@dxos/client';
-import { resolveRef } from '@dxos/client';
+import { type Client, resolveRef } from '@dxos/client';
 import { getSchema, isEchoObject, parseId, type ReactiveEchoObject, type Space } from '@dxos/client/echo';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
@@ -27,9 +26,9 @@ import { useTranslation } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
 import { descriptionMessage } from '@dxos/react-ui-theme';
-import { Contact, Organization } from '@dxos/schema';
+import { Contact, Organization, Project } from '@dxos/schema';
 
-import { ContactCard, OrganizationCard } from './components';
+import { ContactCard, OrganizationCard, ProjectCard } from './components';
 import { meta, PREVIEW_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -123,6 +122,12 @@ export const PreviewPlugin = () =>
             role: 'popover',
             filter: (data): data is { subject: Organization } => isInstanceOf(Organization, data.subject),
             component: ({ data }) => <OrganizationCard subject={data.subject} />,
+          }),
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/schema-popover`,
+            role: 'popover',
+            filter: (data): data is { subject: Project } => isInstanceOf(Project, data.subject),
+            component: ({ data }) => <ProjectCard subject={data.subject} />,
           }),
 
           //

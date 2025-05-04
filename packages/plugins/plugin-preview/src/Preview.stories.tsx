@@ -11,10 +11,10 @@ import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { makeRef } from '@dxos/react-client/echo';
 import { Icon, Popover } from '@dxos/react-ui';
-import { Testing } from '@dxos/schema/testing';
+import { Contact, Organization, Project } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { ContactCard, OrganizationCard } from './components';
+import { ContactCard, OrganizationCard, ProjectCard } from './components';
 import translations from './translations';
 
 faker.seed(1234);
@@ -49,37 +49,11 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-export const Organization = {
-  args: {
-    Component: OrganizationCard,
-    icon: 'ph--building-office--regular',
-    subject: create(Testing.Organization, {
-      name: faker.company.name(),
-      image:
-        'https://plus.unsplash.com/premium_photo-1672116452571-896980a801c8?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      website: faker.internet.url(),
-      description: faker.lorem.paragraph(),
-    }),
-  },
-};
-
-export const OrganizationNoImage = {
-  args: {
-    Component: OrganizationCard,
-    icon: 'ph--building-office--regular',
-    subject: create(Testing.Organization, {
-      name: faker.company.name(),
-      website: faker.internet.url(),
-      description: faker.lorem.paragraph(),
-    }),
-  },
-};
-
 export const Contact = {
   args: {
     Component: ContactCard,
     icon: 'ph--user--regular',
-    subject: create(Testing.Contact, {
+    subject: create(Contact, {
       name: faker.person.fullName(),
       image:
         'https://plus.unsplash.com/premium_photo-1664536392779-049ba8fde933?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -93,10 +67,60 @@ export const ContactNoImage = {
   args: {
     Component: ContactCard,
     icon: 'ph--user--regular',
-    subject: create(Testing.Contact, {
+    subject: create(Contact, {
       name: faker.person.fullName(),
       organization: makeRef(Organization.args.subject),
       email: faker.internet.email(),
+    }),
+  },
+};
+
+export const Organization = {
+  args: {
+    Component: OrganizationCard,
+    icon: 'ph--building-office--regular',
+    subject: create(Organization, {
+      name: faker.company.name(),
+      image:
+        'https://plus.unsplash.com/premium_photo-1672116452571-896980a801c8?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      website: faker.internet.url(),
+      description: faker.lorem.paragraph(),
+    }),
+  },
+};
+
+export const OrganizationNoImage = {
+  args: {
+    Component: OrganizationCard,
+    icon: 'ph--building-office--regular',
+    subject: create(Organization, {
+      name: faker.company.name(),
+      website: faker.internet.url(),
+      description: faker.lorem.paragraph(),
+    }),
+  },
+};
+
+export const Project = {
+  args: {
+    Component: ProjectCard,
+    icon: 'ph--building--regular',
+    subject: create(Project, {
+      name: faker.person.fullName(),
+      image:
+        'https://plus.unsplash.com/premium_photo-1672116452571-896980a801c8?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      description: faker.lorem.paragraph(),
+    }),
+  },
+};
+
+export const ProjectNoImage = {
+  args: {
+    Component: ProjectCard,
+    icon: 'ph--building--regular',
+    subject: create(Project, {
+      name: faker.person.fullName(),
+      description: faker.lorem.paragraph(),
     }),
   },
 };
