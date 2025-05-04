@@ -25,7 +25,7 @@ describe('ConnectionState', () => {
     });
 
     const triggerTimestamp = Date.now();
-    persistentLifecycle.scheduleRestart();
+    void persistentLifecycle.scheduleRestart();
     const timeToTrigger = (await triggerCall.wait({ timeout: 1000 })) - triggerTimestamp;
     expect(timeToTrigger).to.be.lessThan(50);
   });
@@ -69,7 +69,7 @@ describe('ConnectionState', () => {
 
     await persistentLifecycle.open();
 
-    persistentLifecycle.scheduleRestart();
+    void persistentLifecycle.scheduleRestart();
     await sleep(10);
     await persistentLifecycle.close();
     expect(restarted).to.be.true;
