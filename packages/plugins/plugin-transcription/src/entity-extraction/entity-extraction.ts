@@ -8,7 +8,6 @@ import { createTemplate, Message, structuredOutputParser } from '@dxos/artifact'
 import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { asyncTimeout } from '@dxos/async';
-import { raise } from '@dxos/debug';
 import { type BaseEchoObject, create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { MessageType } from '@dxos/schema';
@@ -50,43 +49,43 @@ const createSystemPrompt = (): string => {
   return template({});
 };
 
+const ReferencedQuotes = Schema.Struct({
+  references: Schema.Array(
+    Schema.Struct({
+      quote: Schema.String,
+      id: Schema.String,
+    }),
+  ).annotations({
+    description:
+      'The references to the context objects that are mentioned in the transcript. quote should match the original transcript text exactly, while id is the id of the context object.',
+  }),
+});
+interface ReferencedQuotes extends Schema.Schema.Type<typeof ReferencedQuotes> {}
+
+// TODO(dmaretskyi): Move context to a vector search index.
 export const processTranscriptMessage = async (
   params: ProcessTranscriptMessageParams,
 ): Promise<ProcessTranscriptMessageResult> => {
   try {
-    // TODO(dmaretskyi): Move context to a vector search index.
-    const systemPrompt = `
-    ${createSystemPrompt()}
-    Context:
-    ${JSON.stringify(params.context.objects)}
-  `;
-
-    const outputParser = structuredOutputParser(
-      Schema.Struct({
-        segments: Schema.Array(Schema.String).annotations({
-          description: 'The enhanced text of the transcript segments, keep the order and structure exactly as is',
-        }),
-      }),
-    );
-
+    const outputParser = structuredOutputParser(ReferencedQuotes);
     const runParser = async (): Promise<ProcessTranscriptMessageResult> => {
       const startTime = performance.now();
       const result = outputParser.getResult(
         await new MixedStreamParser().parse(
           await params.aiService.execStream({
             model: '@anthropic/claude-3-5-haiku-20241022',
-            systemPrompt,
+            systemPrompt: createSystemPrompt(),
             history: [
               create(Message, {
                 role: 'user',
                 content: [
                   {
                     type: 'text',
-                    text: 'THE TRANSCRIPT:',
+                    text: `<context>${JSON.stringify(params.context.objects)}</context>`,
                   },
                   {
                     type: 'text',
-                    text: JSON.stringify(params.message),
+                    text: `<transcript>${JSON.stringify(params.message.blocks)}</transcript>`,
                   },
                 ],
               }),
@@ -95,15 +94,19 @@ export const processTranscriptMessage = async (
           }),
         ),
       );
-      log.info('entity extraction result', { result });
+      log.info('entity extraction result', { refs: result.references });
 
       return {
         message: create(MessageType, {
           ...params.message,
-          blocks: params.message.blocks.map((block, i) => ({
-            ...block,
-            text: postprocessText(result?.segments[i] ?? raise(new Error('failed to process transcript segment'))),
-          })),
+          blocks: params.message.blocks.map((block, i) =>
+            block.type !== 'transcription'
+              ? block
+              : {
+                  ...block,
+                  text: postprocessText(block.text, result),
+                },
+          ),
         }),
         timeElapsed: performance.now() - startTime,
       };
@@ -128,11 +131,14 @@ export const processTranscriptMessage = async (
 };
 
 /**
- * Finds and replaces all inline references with DXNs references.
+ * Finds and replaces all quotes with DXNs references.
  */
 // TODO(dmaretskyi): Lookup and verifiy ids from provided context.
-const postprocessText = (text: string) => {
-  return text.replace(/\n/g, ' ').replace(/\[([^\]]+)\]\[([A-Z0-9]+)\]/g, (match, name, id) => {
-    return `[${name}][dxn:echo:@:${id}]`;
-  });
+export const postprocessText = (text: string, quotes: ReferencedQuotes) => {
+  for (const quote of quotes.references) {
+    // Use a case-insensitive regular expression to replace the quote
+    const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    text = text.replace(regex, `[${quote.quote}][dxn:echo:@:${quote.id}]`);
+  }
+  return text;
 };
