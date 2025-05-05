@@ -8,7 +8,14 @@ import React, { type MouseEvent, useCallback, useState, type WheelEvent } from '
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { useAttention } from '@dxos/react-ui-attention';
-import { type DxGridPlaneCells, Grid, type GridContentProps, toPlaneCellIndex } from '@dxos/react-ui-grid';
+import {
+  type DxGridPlaneCells,
+  Grid,
+  type GridContentProps,
+  gridSeparatorBlockEnd,
+  toPlaneCellIndex,
+} from '@dxos/react-ui-grid';
+import { mx } from '@dxos/react-ui-theme';
 import { type MessageType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
@@ -184,19 +191,24 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
   const rows = React.useMemo(() => ({ grid: gridRows }), [gridRows]);
 
   return (
-    <Grid.Root id={`${id}__grid`}>
-      <Grid.Content
-        limitColumns={1}
-        limitRows={messages.length}
-        rowDefault={messageRowDefault}
-        rows={rows}
-        columnDefault={columnDefault}
-        onWheelCapture={handleWheel}
-        onClick={handleClick}
-        getCells={getCells}
-        className='[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
-      />
-      <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
-    </Grid.Root>
+    <div role='none' className='flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0'>
+      <Grid.Root id={`${id}__grid`}>
+        <Grid.Content
+          limitColumns={1}
+          limitRows={messages.length}
+          rowDefault={messageRowDefault}
+          rows={rows}
+          columnDefault={columnDefault}
+          onWheelCapture={handleWheel}
+          onClick={handleClick}
+          getCells={getCells}
+          className={mx(
+            '[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto',
+            gridSeparatorBlockEnd,
+          )}
+        />
+        <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
+      </Grid.Root>
+    </div>
   );
 };
