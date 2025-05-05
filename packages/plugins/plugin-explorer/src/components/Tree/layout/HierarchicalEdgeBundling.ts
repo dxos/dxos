@@ -3,7 +3,7 @@
 // Copyright 2022 Observable, Inc.
 //
 
-import * as d3 from 'd3';
+import { cluster, curveBundle, hierarchy, lineRadial, select } from 'd3';
 import { type HierarchyNode } from 'd3-hierarchy';
 
 import { type TreeOptions } from '../Tree';
@@ -17,16 +17,16 @@ const getId = (node: HierarchyNode<TreeNode>): string =>
 // https://github.com/d3/d3-hierarchy
 // https://observablehq.com/@d3/hierarchical-edge-bundling?intent=fork
 const HierarchicalEdgeBundling = (s: SVGSVGElement, data: TreeNode, options: TreeOptions) => {
-  const svg = d3.select(s);
+  const svg = select(s);
   svg.selectAll('*').remove();
 
   const { radius = 600, padding = 100, slots } = options;
 
   // https://d3js.org/d3-hierarchy/hierarchy
-  const root = d3.hierarchy(flatten(data));
-  // .sort((a, b) => d3.ascending(a.height, b.height) || d3.ascending(getName(a.data), getName(b.data)));
+  const root = hierarchy(flatten(data));
+  // .sort((a, b) => ascending(a.height, b.height) || ascending(getName(a.data), getName(b.data)));
 
-  const tree = d3.cluster<TreeNode>().size([2 * Math.PI, radius - padding]);
+  const tree = cluster<TreeNode>().size([2 * Math.PI, radius - padding]);
   const layout = tree(addLinks(root));
 
   // eslint-disable-next-line unused-imports/no-unused-vars
@@ -54,9 +54,8 @@ const HierarchicalEdgeBundling = (s: SVGSVGElement, data: TreeNode, options: Tre
     );
 
   // https://d3js.org/d3-shape/radial-line
-  const line = d3
-    .lineRadial()
-    .curve(d3.curveBundle.beta(0.85))
+  const line = lineRadial()
+    .curve(curveBundle.beta(0.85))
     .radius((d: any) => d.y)
     .angle((d: any) => d.x);
 
@@ -77,30 +76,30 @@ const HierarchicalEdgeBundling = (s: SVGSVGElement, data: TreeNode, options: Tre
 
   // function overed(event: any, d: X) {
   //   link.style('mix-blend-mode', null);
-  // d3.select(this).attr('font-weight', 'bold');
-  // d3.selectAll(d.incoming.map((d) => d.path))
+  // select(this).attr('font-weight', 'bold');
+  // selectAll(d.incoming.map((d) => d.path))
   //   .attr('stroke', color.in)
   //   .raise();
-  // d3.selectAll((d as any).incoming.map(([d]) => d.text))
+  // selectAll((d as any).incoming.map(([d]) => d.text))
   //   .attr('fill', color.in)
   //   .attr('font-weight', 'bold');
-  // d3.selectAll(d.outgoing.map((d) => d.path))
+  // selectAll(d.outgoing.map((d) => d.path))
   //   .attr('stroke', color.out)
   //   .raise();
-  // d3.selectAll(d.outgoing.map(([, d]) => d.text))
+  // selectAll(d.outgoing.map(([, d]) => d.text))
   //   .attr('fill', color.out)
   //   .attr('font-weight', 'bold');
   // }
 
   // function outed(event: any, d: HierarchyNode<Datum>) {
   //   // @ts-ignore
-  //   d3.select(this).attr('font-weight', null);
-  //   d3.selectAll(d.incoming.map((d) => d.path)).attr('stroke', null);
-  //   d3.selectAll(d.incoming.map(([d]) => d.text))
+  //   select(this).attr('font-weight', null);
+  //   selectAll(d.incoming.map((d) => d.path)).attr('stroke', null);
+  //   selectAll(d.incoming.map(([d]) => d.text))
   //     .attr('fill', null)
   //     .attr('font-weight', null);
-  //   d3.selectAll(d.outgoing.map((d) => d.path)).attr('stroke', null);
-  //   d3.selectAll(d.outgoing.map(([, d]) => d.text))
+  //   selectAll(d.outgoing.map((d) => d.path)).attr('stroke', null);
+  //   selectAll(d.outgoing.map(([, d]) => d.text))
   //     .attr('fill', null)
   //     .attr('font-weight', null);
   // }
@@ -119,7 +118,6 @@ const addLinks = (root: HierarchyNode<TreeNode>) => {
 
   for (const d of root.leaves()) {
     // (d as any).incoming = [];
-
     const parent = parents.get(d.data.id);
     if (parent) {
       // Skip the first node which is a placeholder created by flatten().

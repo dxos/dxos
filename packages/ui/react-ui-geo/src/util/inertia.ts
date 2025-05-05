@@ -4,7 +4,7 @@
 // https://github.com/Fil/d3-inertia
 //
 
-import * as d3 from 'd3';
+import { select, drag, timer } from 'd3';
 import versor from 'versor';
 
 export const restrictAxis =
@@ -26,7 +26,7 @@ export const geoInertiaDrag = (target, render, projection, options) => {
   if (target.node) {
     target = target.node();
   }
-  target = d3.select(target);
+  target = select(target);
 
   // Complete params: (projection, render, startDrag, dragging, endDrag).
   const inertia = geoInertiaDragHelper({
@@ -45,7 +45,7 @@ export const geoInertiaDrag = (target, render, projection, options) => {
     hold: options.hold,
   });
 
-  target.call(d3.drag().on('start', inertia.start).on('drag', inertia.move).on('end', inertia.end));
+  target.call(drag().on('start', inertia.start).on('drag', inertia.move).on('end', inertia.end));
   return inertia;
 };
 
@@ -119,7 +119,7 @@ function inertiaHelper(opt) {
   const inertia = {
     position: [0, 0],
     velocity: [0, 0], // Velocity in pixels/s.
-    timer: d3.timer(() => {}),
+    timer: timer(() => {}),
     time: 0,
     t: 0,
 
@@ -135,7 +135,6 @@ function inertiaHelper(opt) {
 
     move: function (ev) {
       const position = [ev.x, ev.y];
-
       const time = performance.now();
       const deltaTime = time - inertia.time;
       const decay = 1 - Math.exp(-deltaTime / 1_000);
