@@ -5,10 +5,11 @@
 import React from 'react';
 
 import { Avatar } from '@dxos/react-ui';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type MessageType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
+import { INBOX_PLUGIN } from '../../meta';
 import { formatDate, hashString } from '../util';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
@@ -19,6 +20,8 @@ export type MessageHeaderProps = ThemedClassName<{
 }>;
 
 export const MessageHeader = ({ message, viewMode, classNames }: MessageHeaderProps) => {
+  const { t } = useTranslation(INBOX_PLUGIN);
+
   return (
     <div className='grid grid-flow-row pli-2 plb-2 bs-[56px] gap-2 min-bs-0 border-be border-separator'>
       <div className='grid grid-cols-[auto_1fr_auto] gap-x-3'>
@@ -43,9 +46,9 @@ export const MessageHeader = ({ message, viewMode, classNames }: MessageHeaderPr
           {/* View mode indicator */}
           {viewMode && (
             <div className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
-              {viewMode === 'plain' && 'Plain'}
-              {viewMode === 'enriched' && 'Enriched'}
-              {viewMode === 'plain-only' && 'Plain (no enriched)'}
+              {viewMode === 'plain' && t('message header view mode plain')}
+              {viewMode === 'enriched' && t('message header view mode enriched')}
+              {viewMode === 'plain-only' && t('message header view mode plain only')}
             </div>
           )}
         </div>

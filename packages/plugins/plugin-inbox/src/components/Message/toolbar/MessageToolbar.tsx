@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 
 import { createMenuAction, createMenuItemGroup, type MenuAction, useMenuActions } from '@dxos/react-ui-menu';
 
+import { INBOX_PLUGIN } from '../../../meta';
 import { type ViewMode } from '../MessageHeader';
 
 /**
@@ -18,20 +19,20 @@ const createViewModeAction = (viewMode: ViewMode): MenuAction<ViewModeActionProp
   switch (viewMode) {
     case 'plain':
       return createMenuAction<ViewModeActionProperties>('viewMode', {
-        label: 'Show enriched message',
+        label: ['mailbox toolbar show enriched message', { ns: INBOX_PLUGIN }],
         icon: 'ph--graph--regular',
         type,
       });
     case 'plain-only':
       return createMenuAction<ViewModeActionProperties>('viewMode', {
-        label: 'Enriched message not available',
+        label: ['mailbox toolbar enriched message not available', { ns: INBOX_PLUGIN }],
         icon: 'ph--graph--regular',
         type,
         disabled: true,
       });
     default: // enriched or any other mode
       return createMenuAction<ViewModeActionProperties>('viewMode', {
-        label: 'Show plain message',
+        label: ['mailbox toolbar show plain message', { ns: INBOX_PLUGIN }],
         icon: 'ph--article--regular',
         type,
       });
@@ -43,7 +44,9 @@ export const useMessageToolbarActions = (viewMode: Signal<ViewMode>) => {
     const nodes = [];
     const edges = [];
 
-    const rootGroup = createMenuItemGroup('root', { label: 'Message toolbar' });
+    const rootGroup = createMenuItemGroup('root', {
+      label: ['mailbox toolbar label', { ns: INBOX_PLUGIN }],
+    });
     nodes.push(rootGroup);
 
     // Create action based on viewMode
