@@ -198,6 +198,7 @@ export namespace LayoutAction {
           key: S.optional(
             S.String.annotations({ description: 'If provided, will replace item with a matching key (id prefix).' }),
           ),
+          workspace: S.optional(S.String.annotations({ description: 'The workspace to open the items in.' })),
           scrollIntoView: S.optional(S.Boolean.annotations({ description: 'Scroll the items into view.' })),
           pivotId: S.optional(S.String.annotations({ description: 'The id of the item to place new items next to.' })),
           positioning: S.optional(
