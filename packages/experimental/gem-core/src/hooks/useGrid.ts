@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { line, range, select } from 'd3';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
 import { type SVGContext, useSvgContext } from './useSvgContext';
 
-const createLine = d3.line();
+const createLine = line();
 
 type PathGroup = {
   id: string;
@@ -62,8 +62,8 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
 
   // Major grid lines.
   const majorSize = context.scale.gridSize;
-  const xMajor = d3.range(-mod((x + width / 2) * s, majorSize), mod((-x + width / 2) * s, majorSize, 1), majorSize);
-  const yMajor = d3.range(-mod((y + height / 2) * s, majorSize), mod((-y + height / 2) * s, majorSize, 1), majorSize);
+  const xMajor = range(-mod((x + width / 2) * s, majorSize), mod((-x + width / 2) * s, majorSize, 1), majorSize);
+  const yMajor = range(-mod((y + height / 2) * s, majorSize), mod((-y + height / 2) * s, majorSize, 1), majorSize);
   const major = [
     ...xMajor
       .filter((x) => !options.axis || x)
@@ -90,8 +90,8 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
   // TODO(burdon): Doesn't work is scale is not power of 2.
   const minorSize = Math.pow(2, Math.round(Math.log2(s * context.scale.gridSize)));
   if (majorSize > minorSize) {
-    const xMinor = d3.range(-mod((x + width / 2) * s, minorSize), mod((-x + width / 2) * s, minorSize, 1), minorSize);
-    const yMinor = d3.range(-mod((y + height / 2) * s, minorSize), mod((-y + height / 2) * s, minorSize, 1), minorSize);
+    const xMinor = range(-mod((x + width / 2) * s, minorSize), mod((-x + width / 2) * s, minorSize, 1), minorSize);
+    const yMinor = range(-mod((y + height / 2) * s, minorSize), mod((-y + height / 2) * s, minorSize, 1), minorSize);
     const minor = [
       ...xMinor
         .filter((x) => xMajor.indexOf(x) === -1)
@@ -155,7 +155,7 @@ export class GridController {
     }
 
     const paths = this._visible ? createGrid(this._context, this._options) : [];
-    const root = d3.select(this._ref.current!);
+    const root = select(this._ref.current!);
 
     root
       .selectAll<SVGPathElement, PathGroup>('path')

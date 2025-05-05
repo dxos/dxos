@@ -4,7 +4,6 @@
 
 import { GeoPoint, S, AST } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { MapType } from './map';
 import { MAP_PLUGIN } from '../meta';
@@ -13,7 +12,6 @@ import { MAP_PLUGIN } from '../meta';
 export const TypenameAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Typename');
 export const LocationAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Location');
 
-// Create schema for map creation
 export const CreateMapSchema = S.Struct({
   name: S.optional(S.String),
   initialSchema: S.optional(
@@ -45,10 +43,3 @@ export namespace MapAction {
     output: S.Void,
   }) {}
 }
-
-// TODO(burdonn): Move to react-ui-geo
-export type MapMarker = {
-  id: string;
-  title?: string;
-  location: LatLngLiteral;
-};
