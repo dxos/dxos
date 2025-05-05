@@ -13,15 +13,17 @@ import { MessageSchema, type Message } from '@dxos/protocols/buf/dxos/edge/messe
 
 import { protocol } from './defs';
 import { type EdgeIdentity } from './edge-identity';
+import { WebSocketMuxer } from './edge-ws-muxer';
 import { toUint8Array } from './protocol';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
 const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
 
+const EDGE_WEBSOCKET_PROTOCOL_V0 = 'edge-ws-v0';
 /**
- * 1MB websocket message limit: https://developers.cloudflare.com/durable-objects/platform/limits/
+ * Supports message segmentation and muxing.
  */
-const CLOUDFLARE_MESSAGE_LENGTH_LIMIT = 1024 * 1024;
+export const EDGE_WEBSOCKET_PROTOCOL_V1 = 'edge-ws-v1';
 
 export type EdgeWsConnectionCallbacks = {
   onConnected: () => void;
@@ -32,6 +34,7 @@ export type EdgeWsConnectionCallbacks = {
 export class EdgeWsConnection extends Resource {
   private _inactivityTimeoutCtx: Context | undefined;
   private _ws: WebSocket | undefined;
+  private _wsMuxer: WebSocketMuxer | undefined;
 
   constructor(
     private readonly _identity: EdgeIdentity,
@@ -52,24 +55,25 @@ export class EdgeWsConnection extends Resource {
 
   public send(message: Message) {
     invariant(this._ws);
+    invariant(this._wsMuxer);
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
-    const encoded = buf.toBinary(MessageSchema, message);
-    if (encoded.byteLength >= CLOUDFLARE_MESSAGE_LENGTH_LIMIT) {
-      log.error('edge message dropped due to websocket message limit', {
-        byteLength: encoded.byteLength,
-        serviceId: message.serviceId,
-        payload: protocol.getPayloadType(message),
-      });
-      return;
+    if (this._ws?.protocol.includes(EDGE_WEBSOCKET_PROTOCOL_V0)) {
+      this._ws.send(buf.toBinary(MessageSchema, message));
+    } else {
+      this._wsMuxer.send(message).catch((e) => log.catch(e));
     }
-    this._ws.send(encoded);
   }
 
   protected override async _open() {
+    const baseProtocols = [EDGE_WEBSOCKET_PROTOCOL_V0, EDGE_WEBSOCKET_PROTOCOL_V1];
     this._ws = new WebSocket(
       this._connectionInfo.url.toString(),
-      this._connectionInfo.protocolHeader ? [this._connectionInfo.protocolHeader] : [],
+      this._connectionInfo.protocolHeader
+        ? [...baseProtocols, this._connectionInfo.protocolHeader]
+        : [...baseProtocols],
     );
+    const muxer = new WebSocketMuxer(this._ws);
+    this._wsMuxer = muxer;
 
     this._ws.onopen = () => {
       if (this.isOpen) {
@@ -84,6 +88,7 @@ export class EdgeWsConnection extends Resource {
       if (this.isOpen) {
         log.warn('disconnected while being open', { code: event.code, reason: event.reason });
         this._callbacks.onRestartRequired();
+        muxer.destroy();
       }
     };
     this._ws.onerror = (event) => {
@@ -106,9 +111,16 @@ export class EdgeWsConnection extends Resource {
         this._rescheduleHeartbeatTimeout();
         return;
       }
-      const data = await toUint8Array(event.data);
-      if (this.isOpen) {
-        const message = buf.fromBinary(MessageSchema, data);
+      const bytes = await toUint8Array(event.data);
+      if (!this.isOpen) {
+        return;
+      }
+
+      const message = this._ws?.protocol?.includes(EDGE_WEBSOCKET_PROTOCOL_V0)
+        ? buf.fromBinary(MessageSchema, bytes)
+        : muxer.receiveData(bytes);
+
+      if (message) {
         log('received', { from: message.source, payload: protocol.getPayloadType(message) });
         this._callbacks.onMessage(message);
       }
@@ -121,6 +133,8 @@ export class EdgeWsConnection extends Resource {
     try {
       this._ws?.close();
       this._ws = undefined;
+      this._wsMuxer?.destroy();
+      this._wsMuxer = undefined;
     } catch (err) {
       if (err instanceof Error && err.message.includes('WebSocket is closed before the connection is established.')) {
         return;
