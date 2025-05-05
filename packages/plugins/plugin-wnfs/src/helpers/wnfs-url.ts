@@ -20,17 +20,19 @@ export const getPathFromUrl = (wnfsUrl: string) =>
 export const getBlobUrl = async ({
   wnfsUrl,
   blockstore,
-  directory,
   forest,
+  directory,
+  type,
 }: {
   wnfsUrl: string;
   blockstore: Blockstore;
-  directory: PrivateDirectory;
   forest: PrivateForest;
+  directory: PrivateDirectory;
+  type?: string;
 }) => {
   const path = getPathFromUrl(wnfsUrl);
   const wnfsStore = store(blockstore);
   const { result } = await directory.read(path, true, forest, wnfsStore);
-  const blob = new Blob([result]);
+  const blob = new Blob([result], { type });
   return URL.createObjectURL(blob);
 };
