@@ -43,9 +43,6 @@ export class CallManager extends Resource {
   private readonly _raisedHandSignal = computed(() => this._state.call.raisedHand ?? false);
   private readonly _speakingSignal = computed(() => this._state.call.speaking ?? false);
   private readonly _joinedSignal = computed(() => this._state.call.joined ?? false);
-  private readonly _selfSignal = computed(() => this._state.call.self ?? {});
-  private readonly _tracksSignal = computed(() => this._state.call.tracks ?? {});
-  private readonly _usersSignal = computed(() => this._state.call.users ?? []);
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
@@ -72,17 +69,17 @@ export class CallManager extends Resource {
 
   /** @reactive */
   get self(): UserState {
-    return this._selfSignal.value;
+    return this._state.call.self ?? {};
   }
 
   /** @reactive */
   get tracks(): Tracks {
-    return this._tracksSignal.value;
+    return this._state.call.tracks ?? {};
   }
 
   /** @reactive */
   get users(): UserState[] {
-    return this._usersSignal.value;
+    return this._state.call.users ?? [];
   }
 
   /** @reactive */
