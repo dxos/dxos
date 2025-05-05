@@ -4,6 +4,9 @@
 
 import React, { type PropsWithChildren } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+
 /**
  * A container component that maintains a 16:9 aspect ratio while centering its content.
  * The container will scale to fit within its parent's bounds while preserving the aspect ratio.
@@ -19,10 +22,10 @@ import React, { type PropsWithChildren } from 'react';
  *   <video />
  * </ResponsiveContainer>
  */
-export const ResponsiveContainer = ({ children }: PropsWithChildren) => {
+export const ResponsiveContainer = ({ children, classNames }: PropsWithChildren<ThemedClassName>) => {
   return (
     // Outer container that takes full size of parent.
-    <div role='none' className='relative flex w-full h-full overflow-hidden'>
+    <div role='none' className={mx('relative flex w-full h-full overflow-hidden', classNames)}>
       {/* Absolute positioning layer for centering content. */}
       <div role='none' className='absolute inset-0 flex overflow-hidden items-center justify-center'>
         {/* Content container that maintains aspect ratio and proper scaling */}

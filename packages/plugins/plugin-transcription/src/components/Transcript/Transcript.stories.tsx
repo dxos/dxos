@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useEffect, useMemo, useState, type FC } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -20,7 +20,7 @@ import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Organization, Contact, type MessageType } from '@dxos/schema';
+import { Contact, Organization, type MessageType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
@@ -28,11 +28,11 @@ import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
 import {
   MessageBuilder,
+  DocumentType,
   TestItem,
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
 } from '../../testing';
-import * as TestData from '../../testing/test-data';
 import translations from '../../translations';
 
 faker.seed(1);
@@ -186,7 +186,7 @@ const meta: Meta<typeof QueueStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [TestItem, Contact, Organization, TestData.DocumentType],
+          types: [TestItem, DocumentType, Contact, Organization],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },
@@ -206,7 +206,7 @@ const meta: Meta<typeof QueueStory> = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof QueueStory>;
 
 export const Default: Story = {
   render: BasicStory,
