@@ -73,7 +73,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
         <PlankControl
           label={t('close companion label')}
           variant='ghost'
-          icon='ph--caret-left--regular'
+          icon='ph--x--regular'
           onClick={handleCloseCompanion}
           classNames={plankControlSpacing}
         />
