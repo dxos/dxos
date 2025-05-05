@@ -2,28 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Signal } from '@preact/signals-react';
 import { useCallback } from 'react';
 
-import {
-  createMenuAction,
-  createMenuItemGroup,
-  type MenuActionHandler,
-  type MenuAction,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { createMenuAction, createMenuItemGroup, type MenuAction, useMenuActions } from '@dxos/react-ui-menu';
 
-const createViewModeAction = (plainView: boolean) => {
+import { type ViewMode } from '../MessageHeader';
+
+const createViewModeAction = (isPlainView: boolean) => {
   // We only show this action when enriched content is available
-  const label = plainView ? 'Show enriched message' : 'Show plain message';
+  const label = isPlainView ? 'Show enriched message' : 'Show plain message';
 
   return createMenuAction<ViewModeActionProperties>('viewMode', {
     label,
-    icon: plainView ? 'ph--article--regular' : 'ph--graph--regular',
+    icon: isPlainView ? 'ph--article--regular' : 'ph--graph--regular',
     type: 'viewMode',
   });
 };
 
-export const useMessageToolbarActions = (plainView: boolean, hasEnrichedContent: boolean = true) => {
+export const useMessageToolbarActions = (viewMode: Signal<ViewMode>, hasEnrichedContent: boolean) => {
   const actionCreator = useCallback(() => {
     const nodes = [];
     const edges = [];
@@ -32,13 +29,14 @@ export const useMessageToolbarActions = (plainView: boolean, hasEnrichedContent:
     nodes.push(rootGroup);
 
     if (hasEnrichedContent) {
-      const viewModeAction = createViewModeAction(plainView);
+      const isPlainView = viewMode.value === 'plain' || viewMode.value === 'plain-only';
+      const viewModeAction = createViewModeAction(isPlainView);
       nodes.push(viewModeAction);
       edges.push({ source: 'root', target: viewModeAction.id });
     }
 
     return { nodes, edges };
-  }, [plainView, hasEnrichedContent]);
+  }, [viewMode.value, hasEnrichedContent]);
 
   return useMenuActions(actionCreator);
 };
@@ -48,24 +46,3 @@ export type ViewModeActionProperties = { type: 'viewMode' };
 export type MessageToolbarActionProperties = ViewModeActionProperties;
 
 export type MessageToolbarAction = MenuAction<MessageToolbarActionProperties>;
-
-export const useMessageToolbarAction = ({
-  plainView,
-  setPlainView,
-}: {
-  plainView: boolean;
-  setPlainView: (value: boolean) => void;
-}): MenuActionHandler<MessageToolbarAction> => {
-  return useCallback<MenuActionHandler<MessageToolbarAction>>(
-    (action: MessageToolbarAction) => {
-      switch (action.properties.type) {
-        case 'viewMode': {
-          const newPlainView = !plainView;
-          setPlainView(newPlainView);
-          break;
-        }
-      }
-    },
-    [plainView, setPlainView],
-  );
-};

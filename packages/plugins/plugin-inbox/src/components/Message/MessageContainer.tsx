@@ -2,18 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import { useSignal } from '@preact/signals-react';
+import React, { useMemo, useCallback } from 'react';
 
 import { fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { ElevationProvider } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { type MenuActionHandler } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type MessageType } from '@dxos/schema';
 
 import { Message } from './Message';
 import { type ViewMode } from './MessageHeader';
-import { useMessageToolbarActions, useMessageToolbarAction } from './toolbar';
+import { useMessageToolbarActions, type MessageToolbarAction } from './toolbar';
 import { type MailboxType } from '../../types';
 
 export type MessageContainerProps = {
@@ -23,29 +25,34 @@ export type MessageContainerProps = {
 };
 
 export const MessageContainer = ({ space, message, inMailbox }: MessageContainerProps) => {
-  const [plainView, setPlainView] = useState(false);
-
-  // Check if message has enriched content
   const hasEnrichedContent = useMemo(() => {
     const textBlocks = message.blocks.filter((block) => 'text' in block);
     return textBlocks.length > 1 && !!textBlocks[1]?.text;
   }, [message]);
 
-  // Calculate view mode based on plainView setting and hasEnrichedContent
-  const viewMode = useMemo<ViewMode>(() => {
-    if (plainView) {
-      return hasEnrichedContent ? 'plain' : 'plain-only';
-    }
+  const initialViewMode = useMemo<ViewMode>(() => {
     return hasEnrichedContent ? 'enriched' : 'plain-only';
-  }, [plainView, hasEnrichedContent]);
+  }, [hasEnrichedContent]);
 
-  const menu = useMessageToolbarActions(plainView, hasEnrichedContent);
-  const handleToolbarAction = useMessageToolbarAction({
-    plainView,
-    setPlainView: (value) => {
-      return setPlainView(value);
+  const viewMode = useSignal<ViewMode>(initialViewMode);
+
+  const menu = useMessageToolbarActions(viewMode, hasEnrichedContent);
+
+  const handleToolbarAction = useCallback<MenuActionHandler<MessageToolbarAction>>(
+    (action: MessageToolbarAction) => {
+      switch (action.properties.type) {
+        case 'viewMode': {
+          const isPlainView = viewMode.value === 'plain' || viewMode.value === 'plain-only';
+          const hasEnrichedContent = viewMode.value !== 'plain-only';
+          if (hasEnrichedContent) {
+            viewMode.value = isPlainView ? 'enriched' : 'plain';
+          }
+          break;
+        }
+      }
     },
-  });
+    [viewMode],
+  );
 
   return (
     <StackItem.Content classNames='relative'>
@@ -57,7 +64,7 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
             </MenuProvider>
           </ElevationProvider>
         </div>
-        <Message space={space} message={message} viewMode={viewMode} hasEnrichedContent={hasEnrichedContent} />
+        <Message space={space} message={message} viewMode={viewMode.value} hasEnrichedContent={hasEnrichedContent} />
       </div>
     </StackItem.Content>
   );
