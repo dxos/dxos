@@ -20,39 +20,32 @@ const createViewModeAction = (plainView: boolean, hasEnrichedContent: boolean = 
       : 'No enriched version available'
     : 'Show plain message';
 
-  // Only disable the button if there's no enriched content AND we're in plain view
-  // This ensures we can always toggle to plain view
   const disabled = plainView && !hasEnrichedContent;
 
   return createMenuAction<ViewModeActionProperties>('viewMode', {
     label,
-    icon: plainView ? 'ph--text-t--regular' : 'ph--article--regular',
+    icon: plainView ? 'ph--article--regular' : 'ph--graph--regular',
     type: 'viewMode',
     disabled,
   });
 };
 
-// TODO(ZaymonFC): Quite a bit of repetition in these toolbar graph creators...
-export const createMessageToolbar = (plainView: boolean, hasEnrichedContent: boolean = true) => {
-  const nodes = [];
-  const edges = [];
-
-  const rootGroup = createMenuItemGroup('root', { label: 'Message toolbar' });
-  nodes.push(rootGroup);
-
-  const viewModeAction = createViewModeAction(plainView, hasEnrichedContent);
-  nodes.push(viewModeAction);
-  edges.push({ source: 'root', target: viewModeAction.id });
-
-  return { nodes, edges };
-};
-
 export const useMessageToolbarActions = (plainView: boolean, hasEnrichedContent: boolean = true) => {
-  const toolbarCreator = useCallback(
-    () => createMessageToolbar(plainView, hasEnrichedContent),
-    [plainView, hasEnrichedContent],
-  );
-  return useMenuActions(toolbarCreator);
+  const actionCreator = useCallback(() => {
+    const nodes = [];
+    const edges = [];
+
+    const rootGroup = createMenuItemGroup('root', { label: 'Message toolbar' });
+    nodes.push(rootGroup);
+
+    const viewModeAction = createViewModeAction(plainView, hasEnrichedContent);
+    nodes.push(viewModeAction);
+    edges.push({ source: 'root', target: viewModeAction.id });
+
+    return { nodes, edges };
+  }, [plainView, hasEnrichedContent]);
+
+  return useMenuActions(actionCreator);
 };
 
 export type ViewModeActionProperties = { type: 'viewMode' };
