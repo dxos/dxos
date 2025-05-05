@@ -108,9 +108,14 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
     return model.selectedTags.map((tag) => ({ ...tag, id: tag.label, hue: tag.hue }) as any);
   }, [model.selectedTags]);
 
+  const gridLayout = useMemo(
+    () => (tagFilterVisible ? 'grid grid-rows-[min-content_min-content_1fr]' : 'grid grid-rows-[min-content_1fr]'),
+    [tagFilterVisible],
+  );
+
   return (
     <StackItem.Content classNames='relative'>
-      <div role='none' className='grid grid-rows-[min-content_min-content_1fr]'>
+      <div role='none' className={gridLayout}>
         <div role='none' className={stackItemContentToolbarClassNames('section')}>
           <ElevationProvider elevation='positioned'>
             <MenuProvider {...menu} onAction={handleToolbarAction} attendableId={id}>
