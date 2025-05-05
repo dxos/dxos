@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useComputed, useSignal } from '@preact/signals-react';
+import { useCallback, useRef, useEffect } from 'react';
 
 import type { TagPickerHandle } from '@dxos/react-ui-tag-picker';
 
@@ -30,24 +31,25 @@ export const useTagPickerFocusRef = (tagFilterVisibility: TagFilterVisibility) =
  * Returns the current filter state, visibility flag, and dispatch method to change states.
  */
 export const useTagFilterVisibility = () => {
-  const [tagFilterVisibility, setTagFilterVisibility] = useState<TagFilterVisibility>('closed');
+  const tagFilterVisibility = useSignal('closed' as TagFilterVisibility);
+  const tagFilterVisible = useComputed(() => tagFilterVisibility.value !== 'closed');
 
   const dispatch = useCallback(
     (event: TagFilterVisibilityEvent) => {
       switch (event) {
         case 'toggle_from_toolbar':
-          setTagFilterVisibility((value) => (value !== 'closed' ? 'closed' : 'controlled'));
+          tagFilterVisibility.value = tagFilterVisibility.value !== 'closed' ? 'closed' : 'controlled';
           return;
 
         case 'tag_selected_from_message':
           // Always set to 'display' when a tag is selected regardless of current state
           // This fixes the issue where filter doesn't appear after being toggled off
-          setTagFilterVisibility('display');
+          tagFilterVisibility.value = 'display';
           return;
 
         case 'all_tags_cleared':
-          if (tagFilterVisibility === 'display') {
-            setTagFilterVisibility('closed');
+          if (tagFilterVisibility.value === 'display') {
+            tagFilterVisibility.value = 'closed';
           }
       }
     },
@@ -55,8 +57,8 @@ export const useTagFilterVisibility = () => {
   );
 
   return {
-    tagFilterState: tagFilterVisibility,
-    tagFilterVisible: tagFilterVisibility !== 'closed',
+    tagFilterState: tagFilterVisibility.value,
+    tagFilterVisible,
     dispatch,
   };
 };

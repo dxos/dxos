@@ -43,7 +43,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const menu = useMailboxToolbarActions(model, tagFilterVisible);
   const handleToolbarAction = useMailboxToolbarAction({
     model,
-    tagFilterVisible,
+    tagFilterVisible: tagFilterVisible.value,
     setTagFilterVisible: (visible: boolean) => {
       if (!visible) {
         model.clearSelectedTags();
@@ -109,8 +109,9 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   }, [model.selectedTags]);
 
   const gridLayout = useMemo(
-    () => (tagFilterVisible ? 'grid grid-rows-[min-content_min-content_1fr]' : 'grid grid-rows-[min-content_1fr]'),
-    [tagFilterVisible],
+    () =>
+      tagFilterVisible.value ? 'grid grid-rows-[min-content_min-content_1fr]' : 'grid grid-rows-[min-content_1fr]',
+    [tagFilterVisible.value],
   );
 
   return (
@@ -124,7 +125,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           </ElevationProvider>
         </div>
 
-        {tagFilterVisible && (
+        {tagFilterVisible.value && (
           <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
             <Icon
               role='presentation'

@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback } from 'react';
+import { type Signal } from '@preact/signals-core';
 
 import { createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 
 import { type MailboxModel } from '../model/mailbox-model';
 
-export const useMailboxToolbarActions = (model: MailboxModel, tagFilterVisible: boolean) => {
-  const actionCreator = useCallback(() => {
+export const useMailboxToolbarActions = (model: MailboxModel, tagFilterVisible: Signal<boolean>) => {
+  return useMenuActions(() => {
     const nodes = [];
     const edges = [];
 
@@ -28,13 +28,11 @@ export const useMailboxToolbarActions = (model: MailboxModel, tagFilterVisible: 
       label: 'Filter by tags',
       icon: 'ph--tag--regular',
       type: 'filter',
-      classNames: tagFilterVisible ? 'text-accentText' : undefined,
+      classNames: tagFilterVisible.value ? 'text-accentText' : undefined,
     });
     nodes.push(filterAction);
     edges.push({ source: 'root', target: filterAction.id });
 
     return { nodes, edges };
-  }, [model, tagFilterVisible]);
-
-  return useMenuActions(actionCreator);
+  });
 };
