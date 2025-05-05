@@ -43,16 +43,16 @@ CallAudio.displayName = 'CallAudio';
 // Room
 //
 
-type CallRoomProps = {};
+type CallGridProps = {};
 
-const CallMain: FC<CallRoomProps> = () => {
+const CallGrid: FC<CallGridProps> = () => {
   const debug = useDebugMode();
   const call = useCapability(MeetingCapabilities.CallManager);
 
   return <ParticipantGrid self={call.self} users={call.users} debug={debug} />;
 };
 
-CallMain.displayName = 'CallRoom';
+CallGrid.displayName = 'CallGrid';
 
 //
 // Toolbar
@@ -76,7 +76,7 @@ CallToolbar.displayName = 'CallToolbar';
 
 export const Call = {
   Root: CallRoot,
-  Main: CallMain,
+  Grid: CallGrid,
   Audio: CallAudio,
   Toolbar: CallToolbar,
 };
