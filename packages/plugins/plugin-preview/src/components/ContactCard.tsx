@@ -17,20 +17,22 @@ export const ContactCard = ({
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
     <div role='none' className={mx(previewCard, classNames)}>
-      <div role='group' className={mx(previewProse, 'grid gap-3 grid-cols-[min-content_1fr]')}>
-        <Avatar.Root>
+      <Avatar.Root>
+        <div role='group' className={mx(previewProse, 'grid gap-3 grid-cols-[min-content_1fr]')}>
           <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} />
-        </Avatar.Root>
-        <div role='none' className='bs-min self-center'>
-          <h2 className={previewTitle}>{fullName}</h2>
-          {organizationName && (
-            <p className='flex items-center gap-2'>
-              <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
-              <span className='truncate'>{organizationName}</span>
-            </p>
-          )}
+          <div role='none' className='bs-min self-center'>
+            <Avatar.Label asChild>
+              <h2 className={previewTitle}>{fullName}</h2>
+            </Avatar.Label>
+            {organizationName && (
+              <p className='flex items-center gap-2'>
+                <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
+                <span className='truncate'>{organizationName}</span>
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      </Avatar.Root>
       <dl
         className={mx(
           previewProse,
