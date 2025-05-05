@@ -12,6 +12,7 @@ import { intersectBy } from '@dxos/util';
  */
 export type SortDirection = 'asc' | 'desc';
 
+// TODO(ZaymonFC): Switch to generalized object tag pattern when that's available.
 /**
  * Tag structure within a message
  */
