@@ -7,20 +7,13 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useState, type FC } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ObjectId } from '@dxos/echo-schema';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { Organization, Contact, type MessageType } from '@dxos/schema';
+import { type MessageType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
@@ -28,11 +21,10 @@ import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
 import {
   MessageBuilder,
-  TestItem,
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
 } from '../../testing';
-import * as TestData from '../../testing/test-data';
+// import * as TestData from '../../testing/test-data';
 import translations from '../../translations';
 
 faker.seed(1);
@@ -183,18 +175,23 @@ const meta: Meta<typeof QueueStory> = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
-        ClientPlugin({
-          types: [TestItem, Contact, Organization, TestData.DocumentType],
-          onClientInitialized: async (_, client) => {
-            await client.halo.createIdentity();
-          },
-        }),
-        PreviewPlugin(),
-        SpacePlugin(),
-        SettingsPlugin(),
-        IntentPlugin(),
+        // ThemePlugin({ tx: defaultTx }),
+        // StorybookLayoutPlugin(),
+        // ClientPlugin({
+        //   types: [
+        //     TestItem,
+        //     // TestData.DocumentType,
+        //     Contact,
+        //     Organization,
+        //   ],
+        //   onClientInitialized: async (_, client) => {
+        //     await client.halo.createIdentity();
+        //   },
+        // }),
+        // PreviewPlugin(),
+        // SpacePlugin(),
+        // SettingsPlugin(),
+        // IntentPlugin(),
       ],
     }),
     withLayout({ tooltips: true, fullscreen: true }),
@@ -208,35 +205,36 @@ export default meta;
 
 type Story = StoryObj<StoryProps>;
 
-export const Default: Story = {
-  render: BasicStory,
-  args: {
-    ignoreAttention: true,
-    attendableId: 'story',
-    messages: await Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())),
-  },
-};
+// export const Default: Story = {
+//   render: BasicStory,
+//   args: {
+//     ignoreAttention: true,
+//     attendableId: 'story',
+//     messages: await Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())),
+//   },
+// };
 
 export const Empty: Story = {
-  render: BasicStory,
+  render: () => <div>Empty</div>,
+  // render: BasicStory,
   args: {
     ignoreAttention: true,
     attendableId: 'story',
   },
 };
 
-export const WithQueue: Story = {
-  render: QueueStoryWrapper,
-  args: {
-    ignoreAttention: true,
-    attendableId: 'story',
-  },
-};
+// export const WithQueue: Story = {
+//   render: QueueStoryWrapper,
+//   args: {
+//     ignoreAttention: true,
+//     attendableId: 'story',
+//   },
+// };
 
-export const WithEntityExtractionQueue: Story = {
-  render: EntityExtractionQueueStory,
-  args: {
-    ignoreAttention: true,
-    attendableId: 'story',
-  },
-};
+// export const WithEntityExtractionQueue: Story = {
+//   render: EntityExtractionQueueStory,
+//   args: {
+//     ignoreAttention: true,
+//     attendableId: 'story',
+//   },
+// };
