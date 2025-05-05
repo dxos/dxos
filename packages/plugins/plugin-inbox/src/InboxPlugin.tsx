@@ -4,10 +4,10 @@
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { MessageType } from '@dxos/schema';
+import { Contact, MessageType, Project, Organization } from '@dxos/schema';
 
 import { AppGraphBuilder, ArtifactDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -79,6 +79,12 @@ export const InboxPlugin = () =>
           }),
         ),
       ],
+    }),
+    // TODO(wittjosiah): Factor out.
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.Schema, [Contact, Organization, Project]),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
