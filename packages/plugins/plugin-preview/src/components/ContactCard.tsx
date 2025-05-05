@@ -19,7 +19,7 @@ export const ContactCard = ({
     <div role='none' className={mx(previewCard, classNames)}>
       <Avatar.Root>
         <div role='group' className={mx(previewProse, 'grid gap-3 grid-cols-[min-content_1fr]')}>
-          <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} />
+          <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} hue='neutral' />
           <div role='none' className='bs-min self-center'>
             <Avatar.Label asChild>
               <h2 className={previewTitle}>{fullName}</h2>
