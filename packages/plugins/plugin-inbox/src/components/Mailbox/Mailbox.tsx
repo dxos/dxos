@@ -19,6 +19,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { type MessageType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
+import { type Tag } from './model';
 import { type MailboxType } from '../../types';
 import { formatDate, hashString } from '../util';
 
@@ -70,7 +71,7 @@ const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean)
   ${
     message.properties?.tags
       ? `<div class="message__tag-row">
-    ${message.properties.tags.map((tag: any) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
+    ${message.properties.tags.map((tag: Tag) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
   </div>`
       : ''
   }
