@@ -12,6 +12,14 @@ import { Contact, MessageType, Organization } from '@dxos/schema';
 
 faker.seed(1);
 
+// TODO(burdon): Move to @dxos/schema?
+export const DocumentType = Schema.Struct({
+  id: ObjectId,
+  name: Schema.String,
+  content: Schema.String,
+}).pipe(EchoObject({ typename: 'dxos.org/example/Document', version: '0.1.0' }));
+export type DocumentType = typeof DocumentType.Type;
+
 /**
  * Helper to create dates in reverse chronological order
  */
@@ -21,12 +29,7 @@ const getDate = (daysAgo: number): string => {
   return date.toISOString();
 };
 
-export const DocumentType = Schema.Struct({
-  id: ObjectId,
-  name: Schema.String,
-  content: Schema.String,
-}).pipe(EchoObject({ typename: 'dxos.org/example/Document', version: '0.1.0' }));
-export type DocumentType = typeof DocumentType.Type;
+// TODO(burdon): Replace with standard data generator pattern from dxos/schema.
 
 const createDocument = (name: string, content: string): DocumentType => {
   return live(DocumentType, {
@@ -35,37 +38,67 @@ const createDocument = (name: string, content: string): DocumentType => {
   });
 };
 
-const createOrganization = (name: string, website: string): Organization => {
+const createOrganization = (
+  props: Pick<Organization, 'name' | 'website'> & Partial<Omit<Organization, 'name' | 'website'>>,
+): Organization => {
   return live(Organization, {
-    name,
     description: faker.lorem.paragraph(),
-    website,
+    image: faker.image.url(),
+    ...props,
   });
 };
 
-const createContact = (fullName: string, email: string, organization?: Organization): Contact => {
+const createContact = ({
+  email,
+  organization,
+  ...props
+}: { email: string; organization?: Organization } & Partial<Omit<Contact, 'organization'>>): Contact => {
   // TODO(dmaretskyi): `create` with nested refs throws an error when added to db.
   return live(Contact, {
-    fullName,
     organization: organization ? makeRef(organization) : undefined,
     emails: [{ value: email }],
+    ...props,
   });
 };
 
 export const createTestData = () => {
   const organizations: Record<string, Organization> = {
-    amco: createOrganization('Amco', 'amco.org'),
-    cyberdyne: createOrganization('Cyberdyne', 'cyberdyne.com'),
+    amco: createOrganization({ name: 'Amco', website: 'amco.org' }),
+    cyberdyne: createOrganization({ name: 'Cyberdyne', website: 'cyberdyne.com' }),
   };
 
   const contacts: Record<string, Contact> = {
-    john: createContact('John Doe', 'john.doe@example.com', organizations.dxos),
-    sarah: createContact('Sarah Johnson', 'sarah.johnson@techvision.com', organizations.dxos),
-    michael: createContact('Michael Chen', 'michael.chen@techvision.com', organizations.dxos),
-    emma: createContact('Emma Rodriguez', 'e.rodriguez@investors.com', organizations.cyberdyne),
-    david: createContact('David Williams', 'david@accountingfirm.com', organizations.cyberdyne),
-    unknown1: createContact('Bitcoin Support', 'support@btc-wallet-verify.com'),
-    unknown2: createContact('HR Department', 'hr-department@techvison-company.co'),
+    john: createContact({ fullName: 'John Doe', email: 'john.doe@example.com', organization: organizations.dxos }),
+    sarah: createContact({
+      fullName: 'Sarah Johnson',
+      email: 'sarah.johnson@techvision.com',
+      image:
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      organization: organizations.dxos,
+    }),
+    michael: createContact({
+      fullName: 'Michael Chen',
+      email: 'michael.chen@techvision.com',
+      image:
+        'https://plus.unsplash.com/premium_photo-1664536392779-049ba8fde933?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      organization: organizations.dxos,
+    }),
+    emma: createContact({
+      fullName: 'Emma Rodriguez',
+      email: 'e.rodriguez@investors.com',
+      image:
+        'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=2561&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      organization: organizations.cyberdyne,
+    }),
+    david: createContact({
+      fullName: 'David Williams',
+      email: 'david@accountingfirm.com',
+      image:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      organization: organizations.cyberdyne,
+    }),
+    unknown1: createContact({ fullName: 'Bitcoin Support', email: 'support@btc-wallet-verify.com' }),
+    unknown2: createContact({ fullName: 'HR Department', email: 'hr-department@techvison-company.co' }),
   };
 
   const documents: DocumentType[] = [
@@ -110,9 +143,23 @@ export const createTestData = () => {
       'Office Relocation Plan',
       'Headquarters Relocation Plan: Downtown Campus\n\nTimeline:\n- Phase 1: Planning & Design (3 months)\n- Phase 2: Construction & Buildout (5 months)\n- Phase 3: Move Execution (1 month)\n- Target completion: December 15\n\nSpace Details:\n- 45,000 sq ft across 3 floors\n- 320 workstations (30% hot-desking)\n- 18 conference rooms of varying sizes\n- 5 specialized collaboration spaces\n- Expanded lab and testing facilities\n\nBudget Summary:\n- Lease: $42/sq ft annually ($1.89M/year)\n- Buildout: $185/sq ft ($8.3M total)\n- Furniture & Equipment: $2.4M\n- Moving & Logistics: $350K\n- Technology Infrastructure: $1.2M\n\nDepartment Migration Schedule:\n- Engineering: December 3-4\n- Product & Design: December 5-6\n- Sales & Marketing: December 10-11\n- Executive & Operations: December 12-13',
     ),
+    createDocument('Computation Irreducibility', 'This is really cool'),
   ];
 
   const transcriptMessages: MessageType[] = [
+    create(MessageType, {
+      sender: {
+        name: contacts.john.fullName,
+      },
+      created: getDate(0),
+      blocks: [
+        {
+          type: 'transcription',
+          started: getDate(30),
+          text: "And what I'd like to talk today about is Steven Wolfram's concept of a computational irreducibility.",
+        },
+      ],
+    }),
     create(MessageType, {
       sender: {
         name: contacts.john.fullName,

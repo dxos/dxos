@@ -80,6 +80,7 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
   // TODO(burdon): Show ghost view of user for a second before leaving.
   return (
     <ResponsiveGrid<UserState>
+      classNames='dark:bg-neutral-900'
       Cell={Participant}
       debug={debug}
       getId={getId}
