@@ -93,10 +93,8 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
 
-  currentMessage: number = 0;
-
   space: Space | undefined;
-
+  currentMessage: number = 0;
   transcriptMessages: MessageType[] = [];
 
   async connect(space: Space) {
@@ -109,12 +107,12 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     if (!this.space) {
       throw new Error('Space not connected');
     }
+
     const { objects } = await this.space.db
       .query(Filter.or(Filter.schema(Contact), Filter.schema(Organization), Filter.schema(TestData.DocumentType)))
       .run();
 
     log.info('context', { objects });
-
     const message = this.transcriptMessages[this.currentMessage];
     this.currentMessage++;
     this.currentMessage = this.currentMessage % this.transcriptMessages.length;

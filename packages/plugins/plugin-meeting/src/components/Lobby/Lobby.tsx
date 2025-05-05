@@ -21,7 +21,7 @@ const SWARM_PEEK_INTERVAL = 1_000;
 type LobbyRootProps = PropsWithChildren<ThemedClassName>;
 
 const LobbyRoot: FC<LobbyRootProps> = ({ children }) => {
-  return <div className='flex flex-col grow overflow-hidden group'>{children}</div>;
+  return <div className='relative flex flex-col grow overflow-hidden group'>{children}</div>;
 };
 
 LobbyRoot.displayName = 'LobbyRoot';
@@ -68,7 +68,11 @@ const LobbyToolbar: FC<LobbyToolbarProps> = ({ roomId, ...props }) => {
     return () => clearInterval(interval);
   }, [call, roomId]);
 
-  return <Toolbar participants={count} {...props} />;
+  return (
+    <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
+      <Toolbar participants={count} {...props} />
+    </div>
+  );
 };
 
 LobbyToolbar.displayName = 'LobbyToolbar';
