@@ -50,8 +50,6 @@ export const MessageHeader = ({ message, viewMode, classNames }: MessageHeaderPr
           )}
         </div>
       </div>
-
-      {message.properties?.subject && <div className='text-sm font-medium pl-11'>{message.properties.subject}</div>}
     </div>
   );
 };
