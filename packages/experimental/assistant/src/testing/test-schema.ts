@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
-import { EntityKind, ObjectAnnotationId, Ref } from '@dxos/echo-schema';
+import { EntityKind, TypeAnnotationId, Ref } from '@dxos/echo-schema';
 
 // TODO(burdon): Reconcile with sdk/schema/testing.
 // TODO(burdon): Convert interface to type.
@@ -19,7 +19,7 @@ export const Contact = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
       kind: EntityKind.Object,
       typename: 'example.com/type/Contact',
       version: '0.1.0',
@@ -35,7 +35,7 @@ export const Project = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
       kind: EntityKind.Object,
       typename: 'example.com/type/Project',
       version: '0.1.0',
@@ -53,7 +53,7 @@ export const Task = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
       kind: EntityKind.Object,
       typename: 'example.com/type/Task',
       version: '0.1.0',
@@ -62,7 +62,7 @@ export const Task = S.Struct({
   });
 export interface Task extends S.Schema.Type<typeof Task> {}
 
-export const Org = S.Struct({
+export const Organization = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the organization.' }),
   projects: S.Array(Ref(Project)),
@@ -70,11 +70,11 @@ export const Org = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
       kind: EntityKind.Object,
-      typename: 'example.com/type/Org',
+      typename: 'example.com/type/Organization',
       version: '0.1.0',
     },
     description: 'Contact information.',
   });
-export interface Org extends S.Schema.Type<typeof Org> {}
+export interface Organization extends S.Schema.Type<typeof Organization> {}

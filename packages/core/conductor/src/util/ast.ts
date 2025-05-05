@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AST, Schema } from '@effect/schema';
+import { SchemaAST as AST, Schema } from 'effect';
 import * as Arr from 'effect/Array';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
@@ -19,7 +19,7 @@ export const pickProperty = <S extends Schema.Schema.Any, K extends keyof Schema
   return Schema.make(getPropertyKeyIndexedAccess(schema.ast, property).type);
 };
 
-// Copied from @effect/schema.
+// Copied from effect.
 // TODO(burdon): Reconcile with common/effect.
 
 /** @internal */

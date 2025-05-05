@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
+import { type Schema as S } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type GraphBuilder } from '@dxos/app-graph';
@@ -43,6 +43,10 @@ export namespace Capabilities {
     dialogOpen: boolean;
     sidebarOpen: boolean;
     complementarySidebarOpen: boolean;
+    /**
+     * The id of the active workspace, where a workspace is a set of active items.
+     */
+    workspace: string;
     /**
      * Identifiers of items which are currently active in the application.
      */

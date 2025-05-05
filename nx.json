@@ -7,8 +7,7 @@
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/.eslintrc*.js",
-      { "runtime": "node --version" },
-      "{workspaceRoot}/go.work"
+      { "runtime": "node --version" }
     ],
     "production": [
       "default",
@@ -68,7 +67,7 @@
       "dependsOn": ["prebuild", "^compile"],
       "executor": "@nx/playwright:playwright",
       "inputs": ["default", "^production", { "env": "CI" }, { "env": "LOG_LEVEL" }, { "env": "LOG_PROCESSOR" }],
-      "options": { "config": "{projectRoot}/src/playwright/playwright.config.ts" }
+      "options": { "config": "{projectRoot}/src/playwright/playwright.config.cts" }
     },
     "lint": {
       "cache": true,
@@ -100,14 +99,28 @@
     "storybook-build": { "cache": true },
     "pack": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build"],
+      "dependsOn": ["build"],
       "cache": true,
-      "inputs": ["production", "^production"],
+      "inputs": ["production"],
       "outputs": ["{workspaceRoot}/dist/tarballs/{projectName}"],
       "options": {
         "command": "bash -c 'pnpm pack --pack-destination \"$(git rev-parse --show-toplevel)/dist/tarballs/{projectName}\"'",
         "cwd": "{projectRoot}"
       }
+    },
+    "typedoc": {
+      "cache": true,
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "nx:run-script",
+      "inputs": ["production"],
+      "options": {
+        "script": "typedoc"
+      },
+      "outputs": [
+        "{projectRoot}/typedoc"
+      ]
     }
   },
   "nxCloudId": "62ed1bb8236992263d3c673b"

@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type EchoSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { Filter, useQuery, getSpace, create } from '@dxos/react-client/echo';
+import { Filter, useQuery, getSpace, live } from '@dxos/react-client/echo';
 import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
 import { ViewProjection } from '@dxos/schema';
@@ -21,8 +21,8 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   useEffect(() => {
-    if (kanban.cardView?.target?.query?.type && space) {
-      const query = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type });
+    if (kanban.cardView?.target?.query?.typename && space) {
+      const query = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.typename });
       const unsubscribe = query.subscribe(
         () => {
           const [schema] = query.results;
@@ -38,7 +38,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   useEffect(() => {
     if (kanban.cardView?.target && cardSchema) {
-      setProjection(new ViewProjection(cardSchema, kanban.cardView.target));
+      setProjection(new ViewProjection(cardSchema.jsonSchema, kanban.cardView.target));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
   }, [kanban.cardView?.target, cardSchema, JSON.stringify(cardSchema?.jsonSchema)]);
@@ -48,7 +48,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   const model = useKanbanModel({
     kanban,
-    cardSchema,
+    schema: cardSchema,
     projection,
     items: filteredObjects,
   });
@@ -57,7 +57,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
       if (space && cardSchema && path) {
-        const card = create(cardSchema, { [path]: columnValue });
+        const card = live(cardSchema, { [path]: columnValue });
         space.db.add(card);
         return card.id;
       }
@@ -73,12 +73,8 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   );
 
   return (
-    <StackItem.Content toolbar={false}>
-      {model ? (
-        <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />
-      ) : (
-        <span>Loading</span>
-      )}
+    <StackItem.Content>
+      {model && <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />}
     </StackItem.Content>
   );
 };

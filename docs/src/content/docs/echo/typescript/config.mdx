@@ -1,0 +1,129 @@
+---
+title: Configuration examples
+sidebar:
+  order: 4
+---
+
+import { Aside, Code, Tabs, TabItem } from '@astrojs/starlight/components';
+
+import createWithDefaults from './snippets/create-with-defaults.ts?raw';
+import createWithLocal from './snippets/create-with-local.ts?raw';
+import createWithEnvs from './snippets/create-with-envs.ts?raw';
+
+## Config Plugin
+
+`@dxos/config` provides plugins for a number of bundlers which allow the config to be loaded from yaml files at the package root rather than specified inline.
+
+<Tabs>
+  <TabItem label="vite">
+    ```ts
+    // vite.config.ts
+    import { defineConfig } from 'vite';
+    import { ConfigPlugin } from '@dxos/config/vite-plugin';
+
+    export default defineConfig({
+      ...
+      plugins: [
+        ConfigPlugin(),
+        ...
+      ]
+    });
+    ```
+  </TabItem>
+  <TabItem label="rollup">
+    ```js
+    // rollup.config.js
+    import { ConfigPlugin } from '@dxos/config/rollup-plugin';
+
+    export default {
+      ...
+      plugins: [
+        ConfigPlugin(),
+        ...
+      ]
+    };
+    ```
+  </TabItem>
+  <TabItem label="esbuild">
+    ```ts
+    import { build } from 'esbuild';
+    import { ConfigPlugin } from '@dxos/config/esbuild-plugin';
+
+    await build({
+      ...
+      bundle: true,
+      plugins: [
+        ConfigPlugin(),
+        ...
+      ]
+    })
+    ```
+  </TabItem>
+</Tabs>
+
+This allows config to be defined using one or more of the follow functions:
+
+### Loading config defaults from a file
+
+Any config included in the `dx.yml` file will be returned by `Defaults`.
+
+<Code code={createWithDefaults.slice(34)} lang="ts" />
+
+<Aside type="note">
+In a Node environment, `Defaults` loads from a `config/default.yml` file in your project.
+</Aside>
+
+### Local development configuration
+
+Often it is convenient to have different configuration presets for local development.
+For this purpose there is `Local` which will return any config included in the `dx-local.yml` file.
+
+<Code code={createWithLocal.slice(34)} lang="ts" />
+
+<Aside type="note">
+In a Node environment, `Local` is a no-op.
+</Aside>
+
+### App configuration with environment variables
+
+The config plugin provides an easy way to map environment variables to config values using the `dx-env.yml` file.
+
+<Code code={createWithEnvs.slice(34)} lang="ts" />
+
+This file takes the following format:
+
+```yml
+LOG_FILTER:
+  path: runtime.client.log.filter
+  type: string
+
+LOG_PREFIX:
+  path: runtime.client.log.prefix
+  type: string
+
+DX_PERSIST:
+  path: runtime.client.storage.persistence
+  type: boolean
+```
+
+### Loading app-specific environment variables
+
+Bundlers such as Vite will automatically provide access to any enviroment variables prefixed with `VITE_`, however sometimes it's not convenient to prefix every variable you need access to. The config plugin provides a way to load arbitrary enviroment variables at build time.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
+
+export default defineConfig({
+  ...
+  plugins: [
+    ConfigPlugin({
+      env: ['MY_ENV_VAR']
+    }),
+    ...
+  ]
+});
+```
+
+This can then be accessed at the config path `runtime.app.env.MY_ENV_VAR`.

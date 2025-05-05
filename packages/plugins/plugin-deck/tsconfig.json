@@ -3,11 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -87,9 +82,6 @@
     },
     {
       "path": "../plugin-attention"
-    },
-    {
-      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"

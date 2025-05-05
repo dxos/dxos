@@ -1,13 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "jsx": "react",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types"
-  },
+  "compilerOptions": {},
   "include": [
     "src",
     "stories"

@@ -61,7 +61,8 @@ export type BasicExtensionsOptions = {
   lineNumbers?: boolean;
   lineWrapping?: boolean;
   placeholder?: string;
-  readonly?: boolean;
+  /** If true user cannot edit the text, but they can still select and copy it. */
+  readOnly?: boolean;
   search?: boolean;
   scrollPastEnd?: boolean;
   standardKeymap?: boolean;
@@ -73,7 +74,6 @@ const defaultBasicOptions: BasicExtensionsOptions = {
   bracketMatching: true,
   closeBrackets: true,
   drawSelection: true,
-  editable: true,
   focus: true,
   history: true,
   keymap: 'standard',
@@ -101,13 +101,14 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.closeBrackets && closeBrackets(),
     props.dropCursor && dropCursor(),
     props.drawSelection && drawSelection({ cursorBlinkRate: 1_200 }),
+    props.editable !== undefined && EditorView.editable.of(props.editable),
     props.focus && focus,
     props.highlightActiveLine && highlightActiveLine(),
     props.history && history(),
     props.lineNumbers && lineNumbers(),
     props.lineWrapping && EditorView.lineWrapping,
     props.placeholder && placeholder(props.placeholder),
-    props.readonly && [EditorState.readOnly.of(true), EditorView.editable.of(false)],
+    props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
     props.scrollPastEnd && scrollPastEnd(),
     props.tabSize && EditorState.tabSize.of(props.tabSize),
 
@@ -124,6 +125,13 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
         ...(props.history ? historyKeymap : []),
         // https://codemirror.net/docs/ref/#search.searchKeymap
         ...(props.search ? searchKeymap : []),
+        // Disable bindings that conflict with system shortcuts.
+        // TODO(burdon): Catalog global shortcuts.
+        {
+          key: 'Mod-Shift-k',
+          preventDefault: true,
+          run: () => true,
+        },
       ].filter(isNotFalsy),
     ),
   ].filter(isNotFalsy);

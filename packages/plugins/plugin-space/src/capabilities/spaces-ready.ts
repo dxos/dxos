@@ -3,10 +3,10 @@
 //
 
 import { contributes, createIntent, type PluginsContext, Capabilities, LayoutAction } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
+import { SubscriptionList } from '@dxos/async';
 import { Expando } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -24,8 +24,8 @@ const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 1000;
 
 export default async (context: PluginsContext) => {
-  const subscriptions = new EventSubscriptions();
-  const spaceSubscriptions = new EventSubscriptions();
+  const subscriptions = new SubscriptionList();
+  const spaceSubscriptions = new SubscriptionList();
 
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
   const { graph } = context.requestCapability(Capabilities.AppGraph);
@@ -53,7 +53,7 @@ export default async (context: PluginsContext) => {
   if (!spacesOrder) {
     // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
     //  Instead, we store order as an array of space ids.
-    defaultSpace.db.add(create({ key: SHARED, order: [] }));
+    defaultSpace.db.add(live({ key: SHARED, order: [] }));
   }
 
   // Await missing objects.

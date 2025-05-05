@@ -41,6 +41,9 @@ const setupDevtools = (attention: AttentionManager) => {
   (globalThis as any).composer ??= {};
 
   (globalThis as any).composer.attention = {
+    get manager() {
+      return attention;
+    },
     get attended() {
       return attention.current;
     },

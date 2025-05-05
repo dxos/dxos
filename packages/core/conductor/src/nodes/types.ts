@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AST } from '@effect/schema';
-
 import { Tool, Message } from '@dxos/artifact';
 import { type GenerationStreamEvent } from '@dxos/assistant';
 import { DXN, ObjectId, S } from '@dxos/echo-schema';
@@ -34,7 +32,6 @@ export const QueueOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(Message) });
 
 export const FunctionInput = S.Struct({
   [DEFAULT_INPUT]: S.Any,
-  function: S.String.annotations({ [AST.DescriptionAnnotationId]: 'Function DXN' }),
 });
 export type FunctionInput = S.Schema.Type<typeof FunctionInput>;
 

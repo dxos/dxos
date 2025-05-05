@@ -38,6 +38,9 @@ const getNextSize = (
   );
 };
 
+const RESIZE_SUBJECT = 'data-dx-resize-subject';
+const RESIZE_SUBJECT_DRAGGING = 'data-dx-resizing';
+
 export const resizeAttributes = {
   'data-dx-resize-subject': true,
 };
@@ -96,6 +99,7 @@ export const ResizeHandle = ({
           dragStartSize.current === 'min-content'
             ? measureSubject(buttonRef.current!, fallbackSize)[orientation === 'horizontal' ? 'width' : 'height'] / REM
             : dragStartSize.current;
+        buttonRef.current?.closest(`[${RESIZE_SUBJECT}]`)?.setAttribute(RESIZE_SUBJECT_DRAGGING, 'true');
       },
       onDrag: ({ location }) => {
         if (typeof dragStartSize.current !== 'number') {
@@ -111,6 +115,7 @@ export const ResizeHandle = ({
         setSize(nextSize);
         onSizeChange?.(nextSize, true);
         dragStartSize.current = nextSize;
+        buttonRef.current?.closest(`[${RESIZE_SUBJECT}]`)?.removeAttribute(RESIZE_SUBJECT_DRAGGING);
       },
     });
   }, [

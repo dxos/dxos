@@ -4,14 +4,18 @@
 
 import React, { useEffect, useState } from 'react';
 
+import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import type { SpaceSyncState } from '@dxos/echo-db';
 
 import { JsonView } from '../../../components';
-import { useDevtoolsState } from '../../../hooks';
 
-export const SyncStateInfo = () => {
-  const { space } = useDevtoolsState();
-  const [syncState, setSyncState] = useState({});
+interface SyncStateInfoProps {
+  space: Space;
+}
+
+export const SyncStateInfo = ({ space }: SyncStateInfoProps) => {
+  const [syncState, setSyncState] = useState<SpaceSyncState>({});
 
   useEffect(() => {
     if (space) {
@@ -22,8 +26,8 @@ export const SyncStateInfo = () => {
   }, [space]);
 
   return (
-    <div>
-      <div className='flex w-full bg-gray-50 p-2'>Sync state</div>
+    <div className='p-2 text-sm'>
+      <p className='text-base'>Sync state</p>
       <JsonView data={syncState} />
     </div>
   );

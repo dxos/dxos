@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 import { type ThreadType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useTranslation, Trans } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
 import { CommentContainer } from './CommentContainer';
 import { type ThreadContainerProps } from './types';
@@ -59,13 +59,7 @@ export const CommentsContainer = ({
           );
         })
       ) : (
-        <div
-          role='alert'
-          className={mx(
-            descriptionText,
-            'place-self-center border border-dashed border-unAccent rounded-lg text-center p-4 m-4',
-          )}
-        >
+        <div role='alert' className={mx(descriptionMessage, 'place-self-center rounded-lg text-center m-4')}>
           <h2 className='mbe-2 font-medium text-baseText'>{t('no comments title')}</h2>
           <p>
             <Trans

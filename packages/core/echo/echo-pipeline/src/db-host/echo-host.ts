@@ -84,7 +84,7 @@ export class EchoHost extends Resource {
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
       indexCooldownTime: process.env.NODE_ENV === 'test' ? 0 : undefined,
     });
-    this._indexer.setConfig(INDEXER_CONFIG);
+    void this._indexer.setConfig(INDEXER_CONFIG);
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
@@ -206,6 +206,10 @@ export class EchoHost extends Resource {
     return await this._automergeHost.loadDoc(ctx, documentId, opts);
   }
 
+  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
+    return await this._automergeHost.exportDoc(ctx, id);
+  }
+
   /**
    * Create new persisted document.
    */
@@ -237,7 +241,7 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = this._automergeHost.repo.find(automergeUrl);
+    const handle = this._automergeHost.repo.find<SpaceDoc>(automergeUrl);
 
     return this._spaceStateManager.assignRootToSpace(spaceId, handle);
   }

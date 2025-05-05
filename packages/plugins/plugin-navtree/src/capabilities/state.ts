@@ -5,13 +5,13 @@
 import { effect } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
-import { type ReactiveObject, create } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from './capabilities';
 import { NAVTREE_PLUGIN } from '../meta';
 
-const KEY = `${NAVTREE_PLUGIN}/state`;
+const KEY = `${NAVTREE_PLUGIN}/state/v1`;
 
 const getInitialState = () => {
   const stringified = localStorage.getItem(KEY);
@@ -24,11 +24,11 @@ const getInitialState = () => {
     return cached.map(
       ([key, value]): [
         string,
-        ReactiveObject<{
+        Live<{
           open: boolean;
           current: boolean;
         }>,
-      ] => [key, create({ open: value.open, current: false })],
+      ] => [key, live({ open: value.open, current: false })],
     );
   } catch {}
 };
@@ -36,22 +36,22 @@ const getInitialState = () => {
 export default (context: PluginsContext) => {
   const layout = context.requestCapability(Capabilities.Layout);
 
-  // TODO(wittjosiah): This currently needs to be not a ReactiveObject at the root.
-  //   If it is a ReactiveObject then React errors when initializing new paths because of state change during render.
-  //   Ideally this could be a ReactiveObject but be able to access and update the root level without breaking render.
+  // TODO(wittjosiah): This currently needs to be not a Live at the root.
+  //   If it is a Live then React errors when initializing new paths because of state change during render.
+  //   Ideally this could be a Live but be able to access and update the root level without breaking render.
   //   Wrapping accesses and updates in `untracked` didn't seem to work in all cases.
-  const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>(
+  const state = new Map<string, Live<{ open: boolean; current: boolean; alternateTree?: boolean }>>(
     getInitialState() ?? [
       // TODO(thure): Initialize these dynamically.
-      ['root', create({ open: true, current: false })],
-      ['root~dxos.org/plugin/space-spaces', create({ open: true, current: false })],
-      ['root~dxos.org/plugin/files', create({ open: true, current: false })],
+      ['root', live({ open: true, current: false })],
+      ['root~dxos.org/plugin/space-spaces', live({ open: true, current: false })],
+      ['root~dxos.org/plugin/files', live({ open: true, current: false })],
     ],
   );
 
   const getItem = (_path: string[]) => {
     const path = Path.create(..._path);
-    const value = state.get(path) ?? create({ open: false, current: false });
+    const value = state.get(path) ?? live({ open: false, current: false, alternateTree: false });
     if (!state.has(path)) {
       state.set(path, value);
     }
@@ -59,7 +59,7 @@ export default (context: PluginsContext) => {
     return value;
   };
 
-  const setItem = (path: string[], key: 'open' | 'current', next: boolean) => {
+  const setItem = (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => {
     const value = getItem(path);
     value[key] = next;
 
@@ -68,6 +68,10 @@ export default (context: PluginsContext) => {
 
   const isOpen = (path: string[]) => getItem(path).open;
   const isCurrent = (path: string[]) => getItem(path).current;
+  const isAlternateTree = (path: string[]) => {
+    const item = getItem(path);
+    return item.alternateTree ?? false;
+  };
 
   let previous: string[] = [];
   const unsubscribe = effect(() => {
@@ -93,5 +97,7 @@ export default (context: PluginsContext) => {
     });
   });
 
-  return contributes(NavTreeCapabilities.State, { state, getItem, setItem, isOpen, isCurrent }, () => unsubscribe());
+  return contributes(NavTreeCapabilities.State, { state, getItem, setItem, isOpen, isCurrent, isAlternateTree }, () =>
+    unsubscribe(),
+  );
 };

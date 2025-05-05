@@ -7,7 +7,7 @@ import { EXPANDO_TYPENAME, foreignKeyEquals } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type Filter } from './filter';
@@ -28,7 +28,7 @@ export const filterMatch = (
     return false;
   }
 
-  invariant(!echoObject || isReactiveObject(echoObject));
+  invariant(!echoObject || isLiveObject(echoObject));
   const result = filterMatchInner(filter, core, echoObject);
   // Don't apply filter negation to deleted object handling, as it's part of filter options.
   return filter.not && !core.isDeleted() ? !result : result;
@@ -113,7 +113,7 @@ const filterMatchInner = (
 
 // TODO(dmaretskyi): Should be resolved at the DSL level.
 const sanitizePropertyFilter = (value: any) => {
-  if (isReactiveObject(value)) {
+  if (isLiveObject(value)) {
     const core = getObjectCore(value as any);
     return Reference.fromDXN(DXN.fromLocalObjectId(core.id));
   }

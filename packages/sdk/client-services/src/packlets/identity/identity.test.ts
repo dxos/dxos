@@ -4,6 +4,7 @@
 
 import { onTestFinished, describe, expect, test } from 'vitest';
 
+import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createDidFromIdentityKey, CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
@@ -22,6 +23,7 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -107,20 +109,21 @@ describe('identity/identity', () => {
 
   test('edge feed replicator', async () => {
     let replicationStarted = false;
-    let isConnected = false;
+    let status = EdgeStatus.NOT_CONNECTED;
     const listeners: Array<() => void> = [];
     const setup = await setupIdentity({
       edgeConnection: {
+        statusChanged: new Event(),
+        get status() {
+          return status;
+        },
         onReconnected: (listener) => {
-          if (isConnected) {
+          if (status === EdgeStatus.CONNECTED) {
             listener();
           } else {
             listeners.push(listener);
           }
           return () => {};
-        },
-        get isConnected() {
-          return isConnected;
         },
         open: async () => {},
         close: async () => {},
@@ -135,7 +138,7 @@ describe('identity/identity', () => {
 
     await writeGenesisCredential(setup);
     listeners.forEach((callback) => callback());
-    isConnected = true;
+    status = EdgeStatus.CONNECTED;
 
     await expect.poll(() => replicationStarted).toBeTruthy();
   });

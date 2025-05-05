@@ -17,6 +17,8 @@ export const Stack = {
     await page.keyboard.press('Enter');
 
     const objectForm = page.getByTestId('create-object-form');
-    await objectForm.getByTestId('save-button').click();
+    if (await objectForm.isVisible()) {
+      await objectForm.getByTestId('save-button').click();
+    }
   },
 };

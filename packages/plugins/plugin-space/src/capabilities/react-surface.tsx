@@ -2,34 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema as S } from 'effect';
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  contributes,
-  createSurface,
-  Surface,
-  useCapability,
-  useCapabilities,
-  usePluginManager,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, Surface, useCapability, useLayout } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import {
   getSpace,
   isEchoObject,
-  isReactiveObject,
+  isLiveObject,
   isSpace,
+  parseId,
   SpaceState,
+  useSpace,
   type ReactiveEchoObject,
   type Space,
 } from '@dxos/react-client/echo';
+import { Input } from '@dxos/react-ui';
+import { type InputProps } from '@dxos/react-ui-form';
+import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { SpaceCapabilities } from './capabilities';
 import {
-  AdvancedObjectSettings,
-  BaseObjectSettings,
   CollectionMain,
   CollectionSection,
   CREATE_OBJECT_DIALOG,
@@ -45,17 +42,19 @@ import {
   PopoverRenameObject,
   PopoverRenameSpace,
   SmallPresenceLive,
-  SPACE_SETTINGS_DIALOG,
   SpacePluginSettings,
   SpacePresence,
-  SpaceSettingsDialog,
-  SpaceSettingsPanel,
   SyncStatus,
   type CreateObjectDialogProps,
-  type SpaceSettingsDialogProps,
+  POPOVER_ADD_SPACE,
+  PopoverAddSpace,
+  MembersContainer,
+  ObjectSettingsContainer,
+  SpaceSettingsContainer,
+  SchemaContainer,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
-import { CollectionType, type SpaceSettingsProps } from '../types';
+import { CollectionType, HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -81,35 +80,68 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${SPACE_PLUGIN}/collection-fallback`,
       role: 'article',
       position: 'fallback',
-      filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/settings-panel`,
-      // TODO(burdon): Add role name syntax to minimal plugin docs.
-      role: 'complementary--settings',
-      filter: (data): data is { subject: Space } => isSpace(data.subject),
-      component: ({ data }) => <SpaceSettingsPanel space={data.subject} />,
+      id: `${SPACE_PLUGIN}/plugin-settings`,
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<SpaceSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === SPACE_PLUGIN,
+      component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/object-settings-base-panel`,
-      role: 'complementary--settings',
+      id: `${SPACE_PLUGIN}/companion/object-settings`,
+      role: 'article',
+      filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
+        isEchoObject(data.companionTo) && data.subject === 'settings',
+      component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/space-settings-properties`,
+      role: 'article',
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/properties`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <SpaceSettingsContainer space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/space-settings-members`,
+      role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <BaseObjectSettings object={data.subject} />,
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/members`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <MembersContainer space={space} createInvitationUrl={createInvitationUrl} />;
+      },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/object-settings-advanced-panel`,
-      role: 'complementary--settings',
-      position: 'fallback',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <AdvancedObjectSettings object={data.subject} />,
-    }),
-    createSurface({
-      id: SPACE_SETTINGS_DIALOG,
-      role: 'dialog',
-      filter: (data): data is { props: SpaceSettingsDialogProps } => data.component === SPACE_SETTINGS_DIALOG,
-      component: ({ data }) => <SpaceSettingsDialog {...data.props} createInvitationUrl={createInvitationUrl} />,
+      id: `${SPACE_PLUGIN}/space-settings-schema`,
+      role: 'article',
+      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/schema`,
+      component: () => {
+        const layout = useLayout();
+        const { spaceId } = parseId(layout.workspace);
+        const space = useSpace(spaceId);
+        if (!space || !spaceId) {
+          return null;
+        }
+
+        return <SchemaContainer space={space} />;
+      },
     }),
     createSurface({
       id: JOIN_DIALOG,
@@ -126,22 +158,45 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: CREATE_OBJECT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: Partial<CreateObjectDialogProps> } => data.component === CREATE_OBJECT_DIALOG,
-      component: ({ data }) => {
-        const schemas = useCapabilities(ClientCapabilities.Schema).flat();
-        const manager = usePluginManager();
-
-        const resolve = useCallback(
-          (typename: string) => {
-            return (
-              manager.context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ??
-              {}
-            );
-          },
-          [manager],
+      filter: (data): data is { props: CreateObjectDialogProps } => data.component === CREATE_OBJECT_DIALOG,
+      component: ({ data }) => <CreateObjectDialog {...data.props} />,
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/create-initial-space-form-[hue]`,
+      role: 'form-input',
+      filter: (data): data is { prop: string; schema: S.Schema<any> } => {
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, HueAnnotationId);
+        return !!annotation;
+      },
+      component: ({ data: _, ...inputProps }) => {
+        const { label, disabled, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange]);
+        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
+        return (
+          <Input.Root>
+            <Input.Label>{label}</Input.Label>
+            <HuePicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
+          </Input.Root>
         );
-
-        return <CreateObjectDialog schemas={schemas} resolve={resolve} {...data.props} />;
+      },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/create-initial-space-form-[icon]`,
+      role: 'form-input',
+      filter: (data): data is { prop: string; schema: S.Schema<any> } => {
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, IconAnnotationId);
+        return !!annotation;
+      },
+      component: ({ data: _, ...inputProps }) => {
+        const { label, disabled, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const handleChange = useCallback((nextIcon: string) => onValueChange(type, nextIcon), [onValueChange]);
+        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
+        return (
+          <Input.Root>
+            <Input.Label>{label}</Input.Label>
+            <IconPicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
+          </Input.Root>
+        );
       },
     }),
     createSurface({
@@ -154,8 +209,20 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: POPOVER_RENAME_OBJECT,
       role: 'popover',
       filter: (data): data is { props: ReactiveEchoObject<any> } =>
-        data.component === POPOVER_RENAME_OBJECT && isReactiveObject(data.props),
+        data.component === POPOVER_RENAME_OBJECT && isLiveObject(data.props),
       component: ({ data }) => <PopoverRenameObject object={data.props} />,
+    }),
+    createSurface({
+      id: POPOVER_ADD_SPACE,
+      role: 'popover',
+      filter: (data): data is any => data.component === POPOVER_ADD_SPACE,
+      component: () => <PopoverAddSpace />,
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/menu-footer`,
+      role: 'menu-footer',
+      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+      component: ({ data }) => <MenuFooter object={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-presence`,
@@ -168,14 +235,15 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return <SmallPresenceLive id={data.id} open={data.open} viewers={state.viewersByObject[data.id]} />;
       },
     }),
+    // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
     createSurface({
-      // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       id: `${SPACE_PLUGIN}/navtree-presence-fallback`,
       role: 'navtree-item-end',
       position: 'fallback',
       filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
       component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
     }),
+    // TODO(wittjosiah): Broken?
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-sync-status`,
       role: 'navtree-item-end',
@@ -202,21 +270,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/collection-section`,
       role: 'section',
-      filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
       component: ({ data }) => <CollectionSection collection={data.subject} />,
-    }),
-    createSurface({
-      id: `${SPACE_PLUGIN}/settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<SpaceSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === SPACE_PLUGIN,
-      component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: `${SPACE_PLUGIN}/menu-footer`,
-      role: 'menu-footer',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <MenuFooter object={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/status`,

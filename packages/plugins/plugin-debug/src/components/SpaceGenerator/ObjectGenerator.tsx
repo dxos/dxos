@@ -5,8 +5,8 @@
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { ObjectId, type BaseObject, type TypedObject } from '@dxos/echo-schema';
-import { DXN, SpaceId } from '@dxos/keys';
-import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
+import { DXN } from '@dxos/keys';
+import { live, makeRef, type Live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
@@ -31,8 +31,8 @@ const generator: ValueGenerator = faker as any;
 export type ObjectGenerator<T extends BaseObject> = (
   space: Space,
   n: number,
-  cb?: (objects: ReactiveObject<any>[]) => void,
-) => Promise<ReactiveObject<T>[]>;
+  cb?: (objects: Live<any>[]) => void,
+) => Promise<Live<T>[]>;
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
@@ -40,9 +40,9 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
-          create(DocumentType, {
+          live(DocumentType, {
             name: faker.commerce.productName(),
-            content: makeRef(create(TextType, { content: faker.lorem.sentences(5) })),
+            content: makeRef(live(TextType, { content: faker.lorem.sentences(5) })),
             threads: [],
           }),
         );
@@ -58,9 +58,9 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       const objects = range(n).map(() => {
         // TODO(burdon): Generate diagram.
         const obj = space.db.add(
-          create(DiagramType, {
+          live(DiagramType, {
             name: faker.commerce.productName(),
-            canvas: makeRef(create(CanvasType, { content: {} })),
+            canvas: makeRef(live(CanvasType, { content: {} })),
           }),
         );
 
@@ -120,7 +120,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
           .createNode({
             id: 'gpt-QUEUE_ID',
             type: 'constant',
-            value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+            value: new DXN(DXN.kind.QUEUE, ['data', space.id, ObjectId.random()]).toString(),
           })
           .createNode({ id: 'gpt-APPEND', type: 'append' })
           .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })
@@ -139,27 +139,23 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
 ]);
 
 export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): ObjectGenerator<T> => {
-  return async (
-    space: Space,
-    n: number,
-    cb?: (objects: ReactiveObject<any>[]) => void,
-  ): Promise<ReactiveObject<T>[]> => {
+  return async (space: Space, n: number, cb?: (objects: Live<any>[]) => void): Promise<Live<T>[]> => {
     // Find or create mutable schema.
     const schema =
       (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
       (await space.db.schemaRegistry.register([type]))[0];
 
     // Create objects.
-    const generate = createAsyncGenerator(generator, schema.getSchemaSnapshot(), { db: space.db });
+    const generate = createAsyncGenerator(generator, schema.snapshot, { db: space.db });
     const objects = await generate.createObjects(n);
 
     // Find or create table and view.
     const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
-    const table = tables.find((table) => table.view?.target?.query?.type === type.typename);
+    const table = tables.find((table) => table.view?.target?.query?.typename === type.typename);
     if (!table) {
       const name = type.typename.split('/').pop() ?? type.typename;
       const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      const table = space.db.add(create(TableType, { name, view: makeRef(view) }));
+      const table = space.db.add(live(TableType, { name, view: makeRef(view) }));
       cb?.([table]);
     }
 

@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { FetchHttpClient } from '@effect/platform';
 import { Layer, type Context, type Scope } from 'effect';
 
 import { type EdgeClient, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 
 import { consoleLogger, noopLogger } from './logger';
-import { EventLogger, GptService, SpaceService, QueueService } from '../services';
+import { EventLogger, GptService, SpaceService, QueueService, FunctionCallService } from '../services';
 import { MockGpt } from '../services/testing';
 import type { ComputeRequirements } from '../types';
 
@@ -35,7 +36,15 @@ export const testServices = ({
     edgeClient != null && edgeHttpClient != null ? QueueService.fromClient(edgeHttpClient) : QueueService.notAvailable;
   const gptLayer = Layer.succeed(GptService, gpt);
   const spaceLayer = SpaceService.empty;
-  return Layer.mergeAll(logLayer, edgeClientLayer, gptLayer, spaceLayer);
+  const functionCallServiceLayer = Layer.succeed(FunctionCallService, FunctionCallService.mock());
+  return Layer.mergeAll(
+    logLayer,
+    edgeClientLayer,
+    gptLayer,
+    spaceLayer,
+    FetchHttpClient.layer,
+    functionCallServiceLayer,
+  );
 };
 
 const DEFAULT_MOCK_GPT = new MockGpt({

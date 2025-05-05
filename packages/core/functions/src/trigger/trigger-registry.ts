@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { create, Filter, getMeta, type Space, compareForeignKeys } from '@dxos/client/echo';
+import { live, Filter, getMeta, type Space, compareForeignKeys } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
 import { ECHO_ATTR_META, foreignKey } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -114,7 +114,7 @@ export class TriggerRegistry extends Resource {
         keys = [foreignKey('manifest', [trigger.function, trigger.spec?.type].join(':'))];
       }
 
-      return create(FunctionTrigger, trigger, { keys });
+      return live(FunctionTrigger, trigger, { keys });
     });
 
     // Sync triggers.

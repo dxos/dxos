@@ -7,6 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Keyring } from '@dxos/keyring';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth';
@@ -40,17 +41,17 @@ describe('EdgeClient', () => {
 
     const { client } = await openNewClient(endpoint);
 
-    expect(client.isConnected).toBeFalsy();
+    expect(client.status).toBe(EdgeStatus.NOT_CONNECTED);
     admitConnection.wake();
-    await expect.poll(() => client.isConnected).toBeTruthy();
+    await expect.poll(() => client.status).toBe(EdgeStatus.CONNECTED);
 
     admitConnection.reset();
     await closeConnection();
     expect(client.isOpen).is.true;
-    await expect.poll(() => client.isConnected).toBeFalsy();
+    await expect.poll(() => client.status).toBe(EdgeStatus.NOT_CONNECTED);
 
     admitConnection.wake();
-    await expect.poll(() => client.isConnected).toBeTruthy();
+    await expect.poll(() => client.status).toBe(EdgeStatus.CONNECTED);
   });
 
   test('set identity reconnects', async () => {

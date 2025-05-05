@@ -5,4 +5,3 @@
 import { lazy } from 'react';
 
 export const DashboardPanel = lazy(() => import('./DashboardPanel'));
-export const SearchPanel = lazy(() => import('./SearchPanel'));

@@ -5,58 +5,62 @@
 import { pipe } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
-import { useClient } from '@dxos/react-client';
 import {
-  getSpace,
-  isReactiveObject,
-  isSpace,
-  type ReactiveObject,
-  type TypedObject,
-  useSpaces,
-} from '@dxos/react-client/echo';
+  Capabilities,
+  chain,
+  createIntent,
+  LayoutAction,
+  useCapabilities,
+  useIntentDispatcher,
+  usePluginManager,
+} from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
+import { useClient } from '@dxos/react-client';
+import { getSpace, isLiveObject, isSpace, type Live, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
+import { SpaceCapabilities } from '../../capabilities';
 import { SPACE_PLUGIN } from '../../meta';
-import { CollectionType, SpaceAction } from '../../types';
+import { type ObjectForm, SpaceAction } from '../../types';
 
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
-export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'schemas' | 'target' | 'typename' | 'name'> & {
-  resolve?: (typename: string) => Record<string, any>;
-  shouldNavigate?: (object: ReactiveObject<any>) => boolean;
+export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'name'> & {
+  shouldNavigate?: (object: Live<any>) => boolean;
 };
 
 export const CreateObjectDialog = ({
-  schemas,
   target,
   typename,
   name,
   shouldNavigate: _shouldNavigate,
-  resolve,
 }: CreateObjectDialogProps) => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
+  const manager = usePluginManager();
   const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
   const spaces = useSpaces();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const forms = useCapabilities(SpaceCapabilities.ObjectForm);
+
+  const resolve = useCallback(
+    (typename: string) =>
+      manager.context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
+    [manager],
+  );
 
   const handleCreateObject = useCallback(
     async ({
-      schema,
-      target: _target,
-      data,
+      form,
+      target,
+      data = {},
     }: {
-      schema: TypedObject;
+      form: ObjectForm;
       target: CreateObjectPanelProps['target'];
       data?: Record<string, any>;
     }) => {
-      const target = isSpace(_target)
-        ? (_target.properties[CollectionType.typename]?.target as CollectionType | undefined)
-        : _target;
-      const createObjectIntent = resolve?.(schema.typename)?.createObject;
-      if (!createObjectIntent || !target) {
+      if (!target) {
         // TODO(wittjosiah): UI feedback.
         return;
       }
@@ -65,10 +69,11 @@ export const CreateObjectDialog = ({
       closeRef.current?.click();
 
       const space = isSpace(target) ? target : getSpace(target);
-      const result = await dispatch(createObjectIntent(data, { space }));
+      invariant(space, 'Missing space');
+      const result = await dispatch(form.getIntent(data, { space }));
       const object = result.data?.object;
-      if (isReactiveObject(object)) {
-        const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object });
+      if (isLiveObject(object)) {
+        const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden: form.hidden });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (shouldNavigate(object)) {
           await dispatch(pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
@@ -95,7 +100,7 @@ export const CreateObjectDialog = ({
 
       <CreateObjectPanel
         classNames='p-4'
-        schemas={schemas}
+        forms={forms}
         spaces={spaces}
         target={target}
         typename={typename}

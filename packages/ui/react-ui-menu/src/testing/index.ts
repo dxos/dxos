@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 
 import { type Action, Graph, type NodeArg, ACTION_TYPE, ACTION_GROUP_TYPE, actionGroupSymbol } from '@dxos/app-graph';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
 
@@ -42,7 +42,7 @@ export const createActions = (params?: CreateActionsParams) => {
   const { callback = () => console.log('invoke'), count = 12, type = ACTION_TYPE } = params ?? {};
   return faker.helpers.multiple(
     () =>
-      create({
+      live({
         id: faker.string.uuid(),
         type,
         data: type === ACTION_GROUP_TYPE ? actionGroupSymbol : callback,

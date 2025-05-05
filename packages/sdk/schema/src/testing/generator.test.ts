@@ -35,21 +35,21 @@ describe('Generator', () => {
   // TODO(burdon): Type error: https://github.com/dxos/dxos/issues/8324
   test('create object', async ({ expect }) => {
     {
-      const schema: S.Schema<Testing.OrgType> = Testing.OrgType as any;
+      const schema: S.Schema<Testing.Organization> = Testing.Organization;
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
 
     {
-      const schema: S.Schema<Testing.ProjectType> = Testing.ProjectType as any;
+      const schema: S.Schema<Testing.Project> = Testing.Project;
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
 
     {
-      const schema: S.Schema<Testing.ContactType> = Testing.ContactType as any;
+      const schema: S.Schema<Testing.Contact> = Testing.Contact as any; // TODO(burdon): Fix.
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
@@ -62,12 +62,12 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register static schema.
-    db.graph.schemaRegistry.addSchema([Testing.OrgType, Testing.ProjectType, Testing.ContactType]);
+    db.graph.schemaRegistry.addSchema([Testing.Organization, Testing.Project, Testing.Contact]);
 
     const spec: TypeSpec[] = [
-      { type: Testing.OrgType, count: 5 },
-      { type: Testing.ProjectType, count: 5 },
-      { type: Testing.ContactType, count: 10 },
+      { type: Testing.Organization, count: 5 },
+      { type: Testing.Project, count: 5 },
+      { type: Testing.Contact, count: 10 },
     ];
 
     await createObjects(spec);
@@ -80,12 +80,12 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register mutable schema.
-    const [org] = await db.schemaRegistry.register([Testing.OrgType]);
-    const [project] = await db.schemaRegistry.register([Testing.ProjectType]);
-    const [contact] = await db.schemaRegistry.register([Testing.ContactType]);
+    const [organization] = await db.schemaRegistry.register([Testing.Organization]);
+    const [project] = await db.schemaRegistry.register([Testing.Project]);
+    const [contact] = await db.schemaRegistry.register([Testing.Contact]);
 
     const spec: TypeSpec[] = [
-      { type: org, count: 5 },
+      { type: organization, count: 5 },
       { type: project, count: 5 },
       { type: contact, count: 10 },
     ];

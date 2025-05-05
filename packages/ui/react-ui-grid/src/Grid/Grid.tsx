@@ -102,7 +102,7 @@ const GridRoot = ({
 GridRoot.displayName = GRID_NAME;
 
 type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
-  getCells?: NonNullable<NaturalDxGrid['getCells']>;
+  getCells?: NaturalDxGrid['getCells'];
   activeRefs?: string;
 };
 

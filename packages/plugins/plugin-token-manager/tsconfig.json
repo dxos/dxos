@@ -3,12 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -23,6 +17,9 @@
     "src/*.ts"
   ],
   "references": [
+    {
+      "path": "../../common/log"
+    },
     {
       "path": "../../common/random"
     },
@@ -42,10 +39,16 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../sdk/schema"
@@ -57,10 +60,16 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-stack"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"

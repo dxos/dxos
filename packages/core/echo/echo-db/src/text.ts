@@ -7,7 +7,7 @@ import get from 'lodash.get';
 import { next as A } from '@dxos/automerge/automerge';
 import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 
 import { type KeyPath, type DocAccessor, isValidKeyPath, createDocAccessor } from './core-db';
 import { type ReactiveEchoObject } from './echo-handler';
@@ -91,7 +91,7 @@ export const updateText = <T extends BaseObject>(
   path: KeyPath,
   newText: string,
 ): ReactiveEchoObject<T> => {
-  invariant(isReactiveObject(obj));
+  invariant(isLiveObject(obj));
   invariant(path === undefined || isValidKeyPath(path));
   const accessor = createDocAccessor(obj, path);
   accessor.handle.change((doc) => {

@@ -95,7 +95,6 @@ export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema
  * Trigger schema (discriminated union).
  */
 export const TriggerSchema = S.Union(
-  //
   TimerTriggerSchema,
   WebhookTriggerSchema,
   SubscriptionTriggerSchema,
@@ -112,6 +111,7 @@ export type TriggerType = S.Schema.Type<typeof TriggerSchema>;
  */
 export const FunctionTriggerSchema = S.Struct({
   // TODO(burdon): What type does this reference.
+  // TODO(wittjosiah): This should probably be a Ref?
   function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
 
   enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
@@ -119,7 +119,8 @@ export const FunctionTriggerSchema = S.Struct({
   // TODO(burdon): Flatten entire schema.
   spec: S.optional(TriggerSchema),
 
-  // TODO(burdon): Get meta from function.
+  // TODO(burdon): Get schema as partial from function.
+  // TODO(wittjosiah): Rename to payload.
   // The `meta` property is merged into the event data passed to the function.
   meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
 });

@@ -17,6 +17,7 @@ import {
   useLayout,
 } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
 import { useMediaQuery } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
@@ -45,6 +46,9 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
   <Surface role='navtree-item-end' data={{ id: node.id, subject: node.data, open }} limit={1} />
 );
 
+const getChildrenFilter = (node: Node): node is Node =>
+  untracked(() => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE);
+
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   topbar?: boolean;
@@ -55,7 +59,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
   const layout = useLayout();
-  const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
+  const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
@@ -64,12 +68,17 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       return graph.nodes(node ?? graph.root, {
         filter: (node): node is Node => {
           return untracked(() => {
-            const action = isActionLike(node);
-            if (!disposition) {
+            if (
+              !disposition &&
+              (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')
+            ) {
+              return false;
+            } else if (!disposition) {
+              const action = isAction(node);
               return !action || node.properties.disposition === 'item';
+            } else {
+              return node.properties.disposition === disposition;
             }
-
-            return node.properties.disposition === disposition;
           });
         },
       });
@@ -79,7 +88,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const getProps = useCallback(
     (node: Node, path: string[]): PropsFromTreeItem => {
-      const children = getChildren(graph, node, undefined, path);
+      const children = getChildren(graph, node, getChildrenFilter, path);
       const parentOf =
         children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
       return {
@@ -130,7 +139,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       // Open the first item if the workspace is empty.
       if (layout.active.length === 0) {
         const [item] = getItems(node).filter((node) => !isActionLike(node));
-        if (item) {
+        if (item && item.data) {
           await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] }));
         }
       }
@@ -192,6 +201,11 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [graph, dispatch, isCurrent, isLg],
   );
 
+  const onBack = useCallback(
+    () => dispatch(createIntent(LayoutAction.RevertWorkspace, { part: 'workspace', options: { revert: true } })),
+    [dispatch],
+  );
+
   // TODO(wittjosiah): Factor out hook.
   useEffect(() => {
     return monitorForElements({
@@ -251,10 +265,18 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     });
   }, [graph]);
 
+  const setAlternateTree = useCallback(
+    (path: string[], open: boolean) => {
+      setItem(path, 'alternateTree', open);
+    },
+    [setItem],
+  );
+
   const navTreeContextValue = useMemo(
     () => ({
       tab,
       onTabChange,
+      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -267,10 +289,13 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       onOpenChange,
       canDrop,
       onSelect: handleSelect,
+      isAlternateTree,
+      setAlternateTree,
     }),
     [
       tab,
       onTabChange,
+      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -283,6 +308,8 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       onOpenChange,
       canDrop,
       handleSelect,
+      isAlternateTree,
+      setAlternateTree,
     ],
   );
 

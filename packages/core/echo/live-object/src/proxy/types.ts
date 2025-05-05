@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema as S } from 'effect';
+
 import { type Reference } from '@dxos/echo-protocol';
 import { type BaseObject, type ObjectMeta } from '@dxos/echo-schema';
-import { type S } from '@dxos/effect';
 
 /**
  * Reactive object proxy.
@@ -20,10 +21,11 @@ export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
    */
   init(target: T): void;
 
+  // TODO(dmaretskyi): Remove, change to symbol getter.
   isDeleted(target: T): boolean;
 
   // TODO(dmaretskyi): Remove and use schemaSymbol.
-  getSchema(target: T): S.Schema<any> | undefined;
+  getSchema(target: T): S.Schema.AnyNoContext | undefined;
 
   /**
    * We always store a type reference together with an object, but schema might not have been
@@ -32,6 +34,7 @@ export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
   // TODO(dmaretskyi): Remove and use typenameSymbol.
   getTypeReference(target: T): Reference | undefined;
 
+  // TODO(dmaretskyi): Remove and change to symbol getter.
   getMeta(target: T): ObjectMeta;
 }
 

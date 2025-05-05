@@ -2,19 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  type IconProps,
-  Compass,
-  Desktop,
-  DeviceMobile,
-  Devices,
-  DotsThree,
-  ShareFat,
-  Power,
-  Robot,
-  Database,
-  FirstAidKit,
-} from '@phosphor-icons/react';
+import { DotsThree, ShareFat, Power, FirstAidKit } from '@phosphor-icons/react';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -35,17 +23,11 @@ import { keyToFallback } from '@dxos/util';
 
 import { type AgentFormProps, type DeviceListItemProps } from './DeviceListProps';
 
-const iconProps: IconProps = {
-  weight: 'duotone',
-  width: 24,
-  height: 24,
-  x: 8,
-  y: 8,
-};
-
 export const DeviceListItem = forwardRef<
   HTMLLIElement,
-  ThemedClassName<ComponentPropsWithoutRef<'li'>> & DeviceListItemProps & Pick<AgentFormProps, 'onAgentDestroy'>
+  ThemedClassName<ComponentPropsWithoutRef<'li'>> &
+    DeviceListItemProps &
+    Partial<Pick<AgentFormProps, 'onAgentDestroy'>>
 >(
   (
     {
@@ -77,37 +59,35 @@ export const DeviceListItem = forwardRef<
         labelId={labelId}
         ref={forwardedRef}
       >
-        <Avatar.Root
-          status={
-            isCurrent && connectionState === ConnectionState.OFFLINE
-              ? 'error'
-              : device.presence === Device.PresenceState.ONLINE
-                ? 'active'
-                : 'inactive'
-          }
-          labelId={labelId}
-          hue={fallbackValue.hue}
-          variant='square'
-        >
-          <Avatar.Frame classNames='place-self-center'>
-            {device.profile?.type ? (
-              device.profile.type === DeviceType.AGENT_MANAGED ? (
-                <Database {...iconProps} />
-              ) : device.profile.type === DeviceType.BROWSER ? (
-                <Compass {...iconProps} />
-              ) : device.profile.type === DeviceType.NATIVE ? (
-                <Desktop {...iconProps} />
-              ) : [DeviceType.AGENT, DeviceType.AGENT_MANAGED].includes(device.profile.type) ? (
-                <Robot {...iconProps} />
-              ) : device.profile.type === DeviceType.MOBILE ? (
-                <DeviceMobile {...iconProps} />
-              ) : (
-                <Devices {...iconProps} />
-              )
-            ) : (
-              <Avatar.Fallback text={fallbackValue.emoji} />
-            )}
-          </Avatar.Frame>
+        <Avatar.Root labelId={labelId}>
+          <Avatar.Content
+            status={
+              isCurrent && connectionState === ConnectionState.OFFLINE
+                ? 'error'
+                : device.presence === Device.PresenceState.ONLINE
+                  ? 'active'
+                  : 'inactive'
+            }
+            hue={fallbackValue.hue}
+            variant='square'
+            classNames='place-self-center'
+            {...(device.profile?.type
+              ? {
+                  icon:
+                    device.profile.type === DeviceType.AGENT_MANAGED
+                      ? 'ph--database--regular'
+                      : device.profile.type === DeviceType.BROWSER
+                        ? 'ph--compass--regular'
+                        : device.profile.type === DeviceType.NATIVE
+                          ? 'ph--desktop--regular'
+                          : [DeviceType.AGENT, DeviceType.AGENT_MANAGED].includes(device.profile.type)
+                            ? 'ph--robot--regular'
+                            : device.profile.type === DeviceType.MOBILE
+                              ? 'ph--device-mobile--regular'
+                              : 'ph--devices--regular',
+                }
+              : { fallback: fallbackValue.emoji })}
+          />
           <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
           {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
           {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}
@@ -131,7 +111,7 @@ export const DeviceListItem = forwardRef<
               </Tooltip.Portal>
             </Tooltip.Root>
           )} */}
-          {device.kind === DeviceKind.CURRENT && (
+          {device.kind === DeviceKind.CURRENT && (onClickJoinExisting || onClickRecover || onClickReset) && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button
@@ -149,20 +129,27 @@ export const DeviceListItem = forwardRef<
                   {/*  <PencilSimpleLine className={getSize(5)} /> */}
                   {/*  {t('edit device label')} */}
                   {/* </DropdownMenu.Item> */}
-                  <DropdownMenu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
-                    <ShareFat className={getSize(5)} />
-                    {t('choose join new identity label')}
-                  </DropdownMenu.Item>
+                  {onClickJoinExisting && (
+                    <DropdownMenu.Item
+                      data-testid='device-list-item-current.join-existing'
+                      onClick={onClickJoinExisting}
+                    >
+                      <ShareFat className={getSize(5)} />
+                      {t('choose join new identity label')}
+                    </DropdownMenu.Item>
+                  )}
                   {onClickRecover && (
                     <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
                       <FirstAidKit className={getSize(5)} />
                       {t('choose recover identity label')}
                     </DropdownMenu.Item>
                   )}
-                  <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                    <Power className={getSize(5)} />
-                    {t('reset device label')}
-                  </DropdownMenu.Item>
+                  {onClickReset && (
+                    <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
+                      <Power className={getSize(5)} />
+                      {t('reset device label')}
+                    </DropdownMenu.Item>
+                  )}
                 </DropdownMenu.Viewport>
               </DropdownMenu.Content>
             </DropdownMenu.Root>

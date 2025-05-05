@@ -3,4 +3,3 @@
 //
 
 export * from './useEdgeClient';
-export * from './useQueue';

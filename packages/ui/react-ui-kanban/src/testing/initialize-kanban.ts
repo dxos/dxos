@@ -5,7 +5,7 @@
 import { AST, S, TypedObject, FormatEnum, TypeEnum, type JsonProp, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
-import { type Space, create, makeRef } from '@dxos/react-client/echo';
+import { type Space, live, makeRef } from '@dxos/react-client/echo';
 import { createView, ViewProjection, createFieldId, getSchemaProperties } from '@dxos/schema';
 import { capitalize } from '@dxos/util';
 
@@ -13,7 +13,8 @@ import { KanbanType } from '../defs';
 
 type InitializeKanbanProps = {
   space: Space;
-  initialSchema?: string;
+  name?: string;
+  typename?: string;
   initialPivotColumn?: string;
 };
 
@@ -42,12 +43,13 @@ const createDefaultTaskSchema = () => {
 
 export const initializeKanban = async ({
   space,
-  initialSchema,
+  name,
+  typename,
   initialPivotColumn,
 }: InitializeKanbanProps): Promise<{ kanban: KanbanType; schema: EchoSchema }> => {
-  if (initialSchema) {
-    const schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
-    invariant(schema, `Schema not found: ${initialSchema}`);
+  if (typename) {
+    const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+    invariant(schema, `Schema not found: ${typename}`);
 
     const fields = getSchemaProperties(schema.ast)
       .filter((prop) => prop.type !== 'object' || prop.format === FormatEnum.Ref)
@@ -60,9 +62,9 @@ export const initializeKanban = async ({
       fields,
     });
 
-    const kanban = create(KanbanType, { cardView: makeRef(view), columnFieldId: undefined });
+    const kanban = live(KanbanType, { cardView: makeRef(view), columnFieldId: undefined, name });
     if (initialPivotColumn) {
-      const viewProjection = new ViewProjection(schema, view);
+      const viewProjection = new ViewProjection(schema.jsonSchema, view);
       const fieldId = viewProjection.getFieldId(initialPivotColumn);
       if (fieldId) {
         kanban.columnFieldId = fieldId;
@@ -80,7 +82,7 @@ export const initializeKanban = async ({
       fields: ['title', 'description'],
     });
 
-    const viewProjection = new ViewProjection(schema, view);
+    const viewProjection = new ViewProjection(schema.jsonSchema, view);
 
     // Set description field to Markdown format.
     const descriptionFieldId = viewProjection.getFieldId('description');
@@ -113,7 +115,7 @@ export const initializeKanban = async ({
     const fieldId = viewProjection.getFieldId(initialPivotField);
     invariant(fieldId);
 
-    const kanban = create(KanbanType, { cardView: makeRef(view), columnFieldId: fieldId });
+    const kanban = live(KanbanType, { cardView: makeRef(view), columnFieldId: fieldId });
     return { kanban, schema };
   }
 };

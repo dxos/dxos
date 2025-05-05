@@ -1,12 +1,13 @@
 {
   "name": "@dxos/react-ui-kanban",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "A stack component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -20,6 +21,11 @@
         "require": "./dist/lib/node/testing/index.cjs",
         "default": "./dist/lib/node-esm/testing/index.mjs"
       }
+    },
+    "./types": {
+      "types": "./dist/types/src/defs/kanban.d.ts",
+      "browser": "./dist/lib/browser/defs/kanban.mjs",
+      "node": "./dist/lib/node-esm/defs/kanban.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -27,6 +33,9 @@
     "*": {
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "types": [
+        "dist/types/src/defs/kanban.d.ts"
       ]
     }
   },
@@ -35,6 +44,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",

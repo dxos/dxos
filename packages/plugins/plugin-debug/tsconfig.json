@@ -3,13 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -26,6 +19,9 @@
   "references": [
     {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
     },
     {
       "path": "../../common/invariant"
@@ -112,6 +108,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-kanban"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
@@ -134,6 +133,12 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-meeting"
+    },
+    {
+      "path": "../plugin-script"
     },
     {
       "path": "../plugin-sheet"

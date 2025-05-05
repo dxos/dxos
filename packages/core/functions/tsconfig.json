@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
     "types": [
       "@dxos/typings"
     ]
@@ -34,6 +33,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../experimental/assistant"
     },
     {
       "path": "../../sdk/client"

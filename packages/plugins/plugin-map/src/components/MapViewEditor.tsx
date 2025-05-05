@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FormatEnum, S, AST, type EchoSchema } from '@dxos/echo-schema';
+import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 
@@ -19,10 +20,11 @@ export const MapSettingsSchema = S.Struct({
 type MapViewEditorProps = { map: MapType };
 
 export const MapViewEditor = ({ map }: MapViewEditorProps) => {
+  const client = useClient();
   const space = getSpace(map);
-  const currentTypename = useMemo(() => map?.view?.target?.query?.type, [map?.view?.target?.query?.type]);
+  const currentTypename = useMemo(() => map?.view?.target?.query?.typename, [map?.view?.target?.query?.typename]);
   const currentCoordinateProperty = useMemo(() => getLocationProperty(map?.view?.target), [map?.view?.target]);
-  const currentSchema = useSchema(space, currentTypename);
+  const currentSchema = useSchema(client, space, currentTypename);
 
   const [allSchemata, setAllSchemata] = useState<EchoSchema[]>([]);
 
@@ -54,7 +56,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     }
 
     const columns = Object.entries(currentSchema.jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-      if (typeof value === 'object' && value?.format === FormatEnum.LatLng) {
+      if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
         acc.push(key);
       }
       return acc;

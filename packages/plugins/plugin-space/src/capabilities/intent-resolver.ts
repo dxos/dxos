@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Effect, pipe } from 'effect';
+
 import {
   Capabilities,
+  chain,
   contributes,
   createIntent,
   createResolver,
@@ -12,25 +15,25 @@ import {
 } from '@dxos/app-framework';
 import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
+import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { isSpace, getSpace, SpaceState, type Space, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { isSpace, getSpace, SpaceState, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { SpaceCapabilities } from './capabilities';
 import {
   CREATE_SPACE_DIALOG,
   JOIN_DIALOG,
-  SPACE_SETTINGS_DIALOG,
-  type SpaceSettingsDialogProps,
   type JoinDialogProps,
   POPOVER_RENAME_SPACE,
   CREATE_OBJECT_DIALOG,
   type CreateObjectDialogProps,
   POPOVER_RENAME_OBJECT,
+  POPOVER_ADD_SPACE,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, CollectionType, SpaceAction } from '../types';
@@ -40,12 +43,12 @@ import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
 const SPACE_MAX_OBJECTS = 500;
 
 type IntentResolverOptions = {
-  createInvitationUrl: (invitationCode: string) => string;
   context: PluginsContext;
+  createInvitationUrl: (invitationCode: string) => string;
   observability?: boolean;
 };
 
-export default ({ createInvitationUrl, context, observability }: IntentResolverOptions) => {
+export default ({ context, observability, createInvitationUrl }: IntentResolverOptions) => {
   const resolve = (typename: string) =>
     context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
@@ -66,14 +69,14 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.Create,
-      resolve: async ({ name, edgeReplication }) => {
+      resolve: async ({ name, hue, icon, edgeReplication }) => {
         const client = context.requestCapability(ClientCapabilities.Client);
-        const space = await client.spaces.create({ name });
+        const space = await client.spaces.create({ name, hue, icon });
         if (edgeReplication) {
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
         await space.waitUntilReady();
-        const collection = create(CollectionType, { objects: [], views: {} });
+        const collection = live(CollectionType, { objects: [], views: {} });
         space.properties[CollectionType.typename] = makeRef(collection);
 
         if (Migrations.versionProperty) {
@@ -103,7 +106,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.Join,
-      resolve: ({ invitationCode }) => ({
+      resolve: ({ invitationCode, onDone }) => ({
         intents: [
           createIntent(LayoutAction.UpdateDialog, {
             part: 'dialog',
@@ -112,6 +115,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
               blockAlign: 'start',
               props: {
                 initialInvitationCode: invitationCode,
+                onDone,
               } satisfies Partial<JoinDialogProps>,
             },
           }),
@@ -119,41 +123,78 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
       }),
     }),
     createResolver({
-      intent: SpaceAction.Share,
-      filter: (data): data is { space: Space } => !data.space.properties[COMPOSER_SPACE_LOCK],
+      intent: SpaceAction.OpenMembers,
       resolve: ({ space }) => {
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const current = attention.current.at(-1);
-        const target = current?.startsWith(space.id) ? current : undefined;
+        const layout = context.requestCapability(Capabilities.Layout);
+        const id = `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
+        if (layout.active.includes(id)) {
+          return {
+            intents: [
+              createIntent(LayoutAction.ScrollIntoView, {
+                part: 'current',
+                subject: id,
+              }),
+            ],
+          };
+        }
 
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: SPACE_SETTINGS_DIALOG,
-              options: {
-                blockAlign: 'start',
-                props: {
-                  space,
-                  target,
-                  initialTab: 'members',
-                  createInvitationUrl,
-                } satisfies Partial<SpaceSettingsDialogProps>,
-              },
-            }),
-            ...(observability
-              ? [
-                  createIntent(ObservabilityAction.SendEvent, {
-                    name: 'space.share',
-                    properties: {
-                      space: space.id,
-                    },
-                  }),
-                ]
-              : []),
+            pipe(
+              createIntent(LayoutAction.SwitchWorkspace, {
+                part: 'workspace',
+                subject: space.id,
+              }),
+              chain(LayoutAction.Open, {
+                part: 'main',
+                subject: [id],
+              }),
+            ),
           ],
         };
       },
+    }),
+    createResolver({
+      intent: SpaceAction.Share,
+      resolve: ({ space, type, authMethod, multiUse, target }) => {
+        const invitation = space.share({ type, authMethod, multiUse, target });
+        return {
+          data: invitation,
+          intents: observability
+            ? [
+                createIntent(ObservabilityAction.SendEvent, {
+                  name: 'space.share',
+                  properties: {
+                    spaceId: space.id,
+                  },
+                }),
+              ]
+            : [],
+        };
+      },
+    }),
+    createResolver({
+      intent: SpaceAction.GetShareLink,
+      resolve: ({ space, target, copyToClipboard }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+          const invitation = yield* dispatch(
+            createIntent(SpaceAction.Share, {
+              space,
+              type: Invitation.Type.DELEGATED,
+              authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+              multiUse: true,
+              target,
+            }),
+          );
+
+          const url = pipe(invitation.get(), InvitationEncoder.encode, createInvitationUrl);
+          if (copyToClipboard) {
+            yield* Effect.tryPromise(() => navigator.clipboard.writeText(url));
+          }
+
+          return { data: url };
+        }),
     }),
     createResolver({
       intent: SpaceAction.Lock,
@@ -213,22 +254,51 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
       },
     }),
     createResolver({
-      intent: SpaceAction.OpenSettings,
-      resolve: ({ space }) => {
+      intent: SpaceAction.AddSpace,
+      resolve: () => {
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: SPACE_SETTINGS_DIALOG,
+            createIntent(LayoutAction.UpdatePopover, {
+              part: 'popover',
+              subject: POPOVER_ADD_SPACE,
               options: {
-                blockAlign: 'start',
-                props: {
-                  space,
-                  initialTab: 'settings',
-                  createInvitationUrl,
-                } satisfies Partial<SpaceSettingsDialogProps>,
+                variant: 'react',
+                anchorId: SpaceAction.AddSpace._tag,
+                side: 'right',
               },
             }),
+          ],
+        };
+      },
+    }),
+    createResolver({
+      intent: SpaceAction.OpenSettings,
+      resolve: ({ space }) => {
+        const layout = context.requestCapability(Capabilities.Layout);
+        const id = `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
+        if (layout.active.includes(id)) {
+          return {
+            intents: [
+              createIntent(LayoutAction.ScrollIntoView, {
+                part: 'current',
+                subject: id,
+              }),
+            ],
+          };
+        }
+
+        return {
+          intents: [
+            pipe(
+              createIntent(LayoutAction.SwitchWorkspace, {
+                part: 'workspace',
+                subject: space.id,
+              }),
+              chain(LayoutAction.Open, {
+                part: 'main',
+                subject: [id],
+              }),
+            ),
           ],
         };
       },
@@ -247,7 +317,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.Migrate,
-      resolve: async ({ space, version }) => {
+      resolve: async ({ space, version: targetVersion }) => {
         const state = context.requestCapability(SpaceCapabilities.MutableState);
 
         if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
@@ -255,7 +325,8 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
           await space.internal.migrate();
           state.sdkMigrationRunning[space.id] = false;
         }
-        const result = await Migrations.migrate(space, version);
+        const result = await Migrations.migrate(space, targetVersion);
+        const version = Migrations.versionProperty ? space.properties[Migrations.versionProperty] : undefined;
         return {
           data: result,
           intents: [
@@ -265,6 +336,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
                     name: 'space.migrate',
                     properties: {
                       spaceId: space.id,
+                      targetVersion,
                       version,
                     },
                   }),
@@ -289,7 +361,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
                 props: {
                   target,
                   shouldNavigate: navigable
-                    ? (object: ReactiveObject<any>) => !(object instanceof CollectionType) || state.navigableCollections
+                    ? (object: Live<any>) => !(object instanceof CollectionType) || state.navigableCollections
                     : () => false,
                 } satisfies Partial<CreateObjectDialogProps>,
               },
@@ -300,7 +372,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.AddObject,
-      resolve: async ({ target, object }) => {
+      resolve: async ({ target, object, hidden }) => {
         const space = isSpace(target) ? target : getSpace(target);
         invariant(space, 'Space not found.');
 
@@ -338,13 +410,15 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
 
         if (target instanceof CollectionType) {
           target.objects.push(makeRef(object as HasId));
+        } else if (isSpace(target) && hidden) {
+          space.db.add(object);
         } else if (isSpace(target)) {
           const collection = space.properties[CollectionType.typename]?.target;
           if (collection instanceof CollectionType) {
             collection.objects.push(makeRef(object as HasId));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-            const collection = create(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
+            const collection = live(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
             space.properties[CollectionType.typename] = makeRef(collection);
           }
         }
@@ -511,7 +585,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     createResolver({
       intent: CollectionAction.Create,
       resolve: async ({ name }) => ({
-        data: { object: create(CollectionType, { name, objects: [], views: {} }) },
+        data: { object: live(CollectionType, { name, objects: [], views: {} }) },
       }),
     }),
   ]);

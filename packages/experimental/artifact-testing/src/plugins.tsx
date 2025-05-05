@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
@@ -15,7 +15,7 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = S.Struct({
   coordinates: GeoPoint,
-}).pipe(EchoObject('example.com/type/Map', '0.1.0')) as any as S.Schema<{ id: ObjectId; coordinates: GeoPoint }>; // TODO(dmaretskyi): Fix the tuples/mutable issues.
+}).pipe(EchoObject({ typename: 'example.com/type/Map', version: '0.1.0' }));
 
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
@@ -36,7 +36,7 @@ declare global {
 }
 
 export const genericTools = [
-  defineTool({
+  defineTool('testing', {
     name: 'focus',
     description: 'Focus on the given artifact. Use this tool to bring the artifact to the front of the canvas.',
     schema: S.Struct({ id: ObjectId }),
@@ -62,14 +62,14 @@ export const capabilities: AnyCapability[] = [
   contributes(
     Capabilities.ArtifactDefinition,
     defineArtifact({
-      id: 'plugin-image',
+      id: 'artifact:dxos.org/plugin/image',
+      name: 'Image',
       instructions: `
-    Images:
-    - When presenting an image, you must use an artifact.
-    - Nest the <image> tag inside the <artifact> tag.
-    - Image tags are always self-closing and must contain an id attribute.
-    (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
-    `,
+        - When presenting an image, you must use an artifact.
+        - Nest the <image> tag inside the <artifact> tag.
+        - Image tags are always self-closing and must contain an id attribute.
+          (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
+      `,
       schema: S.Struct({}), // TODO(burdon): Add schema.
       tools: [],
     }),

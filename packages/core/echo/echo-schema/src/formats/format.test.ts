@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from 'effect';
 import { describe, test } from 'vitest';
-
-import { S } from '@dxos/effect';
 
 import { Format } from './format';
 import { FormatEnum, TypeEnum, getTypeEnum } from './types';

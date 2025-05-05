@@ -2,11 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "jsx": "react",
-    "lib": [
-      "DOM"
-    ],
-    "outDir": "./dist/types",
     "types": [
       "@dxos/typings",
       "node"
@@ -37,6 +32,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
     },
     {
       "path": "../../common/storybook-utils"
@@ -72,6 +70,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -105,6 +106,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-edge-client"
+    },
+    {
       "path": "../../ui/primitives/react-hooks"
     },
     {
@@ -115,6 +119,9 @@
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/react-ui-theme"

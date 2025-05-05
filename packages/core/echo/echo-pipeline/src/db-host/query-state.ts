@@ -4,7 +4,7 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { createIdFromSpaceKey, type SpaceDoc } from '@dxos/echo-protocol';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -113,13 +113,16 @@ export class QueryState extends Resource {
               this.metrics.documentsLoaded++;
             }
 
-            const handle = await this._params.automergeHost.loadDoc(Context.default(), documentId as DocumentId);
+            const handle = await this._params.automergeHost.loadDoc<SpaceDoc>(
+              Context.default(),
+              documentId as DocumentId,
+            );
 
             // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
             if (this._ctx.disposed) {
               return;
             }
-            spaceKey = getSpaceKeyFromDoc(handle.docSync());
+            spaceKey = getSpaceKeyFromDoc(handle.docSync()!);
           }
 
           if (!spaceKey) {
@@ -178,21 +181,20 @@ export class QueryState extends Resource {
 
 // TODO(burdon): Process Filter DSL.
 const filterToIndexQuery = (filter: FilterProto): IndexQuery => {
-  invariant(!(filter.type && (filter.or ?? []).length > 0), 'Cannot mix type and or filters.');
+  const { type = [], or = [] } = filter;
+
+  invariant(!(type.length > 0 && or.length > 0), 'Cannot mix type and or filters.');
   invariant(
-    (filter.or ?? []).every((subFilter) => !(subFilter.type && (subFilter.or ?? []).length > 0)),
+    or.every((subFilter) => !((subFilter.type ?? []).length > 0 && (subFilter.or ?? []).length > 0)),
     'Cannot mix type and or filters.',
   );
-  if (
-    filter.type ||
-    ((filter.or ?? []).length > 0 && (filter.or ?? []).every((subFilter) => !subFilter.not && subFilter.type))
-  ) {
+  if (type.length > 0 || (or.length > 0 && (or ?? []).every((subFilter) => !subFilter.not && subFilter.type))) {
     return {
       typenames:
-        filter.type && filter.type.length > 0
-          ? filter.type.map((type) => dxnToIndexerTypename(DXN.parse(type)))
-          : (filter.or ?? [])
-              .flatMap((f) => f.type?.map((type) => dxnToIndexerTypename(DXN.parse(type))) ?? [])
+        type.length > 0
+          ? type.map((type) => dxnToIndexerTypename(DXN.parse(type)))
+          : or
+              .flatMap((f) => (f.type ?? []).map((type) => dxnToIndexerTypename(DXN.parse(type))) ?? [])
               .filter(isNonNullable),
       inverted: filter.not,
     };

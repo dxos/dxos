@@ -1,11 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -16,6 +11,9 @@
     "src/*.ts"
   ],
   "references": [
+    {
+      "path": "../../common/context"
+    },
     {
       "path": "../../common/invariant"
     },

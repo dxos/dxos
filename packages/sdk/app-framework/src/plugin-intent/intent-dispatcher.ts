@@ -5,7 +5,8 @@
 import { Effect, Option, pipe, Ref } from 'effect';
 import { type Simplify } from 'effect/Types';
 
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { byPosition, type MaybePromise, type Position, type GuardedType } from '@dxos/util';
 
 import { IntentAction } from './actions';
@@ -82,15 +83,33 @@ export type IntentDispatcherResult<Input, Output> = Pick<IntentEffectResult<Inpu
 export type IntentEffectDefinition<Input, Output> = (
   data: Input,
   undo: boolean,
-) => MaybePromise<IntentEffectResult<Input, Output> | void> | Effect.Effect<IntentEffectResult<Input, Output> | void>;
+) =>
+  | MaybePromise<IntentEffectResult<Input, Output> | void>
+  | Effect.Effect<IntentEffectResult<Input, Output> | void, Error>;
 
 /**
  * Intent resolver to match intents to their effects.
  */
 export type IntentResolver<Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>> = Readonly<{
+  /**
+   * The schema of the intent to be resolved.
+   */
   intent: IntentSchema<Tag, Fields>;
+
+  /**
+   * Hint to determine the order the resolvers are processed if multiple resolvers are defined for the same intent.
+   * Only one resolver will be used.
+   */
   position?: Position;
+
+  /**
+   * Optional filter to determine if the resolver should be used.
+   */
   filter?: (data: IntentData<Fields>) => data is Data;
+
+  /**
+   * The effect to be performed when the intent is resolved.
+   */
   resolve: IntentEffectDefinition<GuardedType<IntentResolver<Tag, Fields, Data>['filter']>, IntentResultData<Fields>>;
 }>;
 
@@ -173,8 +192,8 @@ export const createDispatcher = (
   const handleIntent = (intent: AnyIntent) =>
     Effect.gen(function* () {
       const candidates = getResolvers(intent.module)
-        .filter((r) => r.intent._tag === intent.id)
-        .filter((r) => !r.filter || r.filter(intent.data))
+        .filter((resolver) => resolver.intent._tag === intent.id)
+        .filter((resolver) => !resolver.filter || resolver.filter(intent.data))
         .toSorted(byPosition);
       if (candidates.length === 0) {
         yield* Effect.fail(new NoResolversError(intent.id));
@@ -198,16 +217,27 @@ export const createDispatcher = (
         yield* Ref.update(resultsRef, (results) => [result, ...results]);
         if (result.intents) {
           for (const intent of result.intents) {
-            // Returned intents are dispatched but not yielded into results,
-            // as such they cannot be undone.
+            // Returned intents are dispatched but not yielded into results, as such they cannot be undone.
             // TODO(wittjosiah): Use higher execution concurrency?
             yield* dispatch(intent, depth + 1);
           }
         }
+
         if (result.error) {
+          // yield* dispatch(
+          //   createIntent(IntentAction.Track, {
+          //     intents: intentChain.all.map((i) => i.id),
+          //     error: result.error.message,
+          //   }),
+          // );
           yield* Effect.fail(result.error);
         }
       }
+
+      // Track the intent chain.
+      // if (intentChain.all.some((intent) => intent.id !== IntentAction.Track._tag)) {
+      //   yield* dispatch(createIntent(IntentAction.Track, { intents: intentChain.all.map((i) => i.id) }));
+      // }
 
       const results = yield* resultsRef.get;
       const result = results[0];
@@ -236,7 +266,10 @@ export const createDispatcher = (
   const dispatchPromise: PromiseIntentDispatcher = (intentChain) => {
     return Effect.runPromise(dispatch(intentChain))
       .then((data) => ({ data }))
-      .catch((error) => ({ error }));
+      .catch((error) => {
+        log.catch(error);
+        return { error };
+      });
   };
 
   const undo: IntentUndo = () => {
@@ -270,7 +303,7 @@ const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
 const defaultPromise = () => Effect.runPromise(defaultEffect());
 
 export default (context: PluginsContext) => {
-  const state = create<IntentContext>({
+  const state = live<IntentContext>({
     dispatch: defaultEffect,
     dispatchPromise: defaultPromise,
     undo: defaultEffect,
@@ -289,12 +322,12 @@ export default (context: PluginsContext) => {
   const manager = context.requestCapability(Capabilities.PluginManager);
   state.dispatch = (intentChain, depth) => {
     return Effect.gen(function* () {
-      yield* manager._activate(Events.SetupIntents);
+      yield* manager._activate(Events.SetupIntentResolver);
       return yield* dispatch(intentChain, depth);
     });
   };
   state.dispatchPromise = async (intentChain) => {
-    await manager.activate(Events.SetupIntents);
+    await manager.activate(Events.SetupIntentResolver);
     return await dispatchPromise(intentChain);
   };
   state.undo = undo;

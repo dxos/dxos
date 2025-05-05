@@ -49,7 +49,7 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
     return () => {
       cancelDrag(select(canvas));
     };
-  }, [controller, options]);
+  }, [controller, JSON.stringify(options)]);
 };
 
 const cancelDrag = (node) => node.on('.drag', null);

@@ -8,6 +8,7 @@ export default [
   {
     'en-US': {
       [NAVTREE_PLUGIN]: {
+        'back label': 'Back',
         'open settings label': 'Settings',
         'open commands label': 'Search commands',
         'commands dialog title': 'Commands',

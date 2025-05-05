@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Expando } from '@dxos/echo-schema';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 
 import { clone } from './clone';
 import { EchoTestBuilder } from '../testing';
@@ -25,7 +25,7 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = create(Expando, {
+    const task1 = live(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -48,7 +48,7 @@ describe('clone', () => {
   test('clone to the same database by changing the id', async () => {
     const { db } = await builder.createDatabase();
 
-    const task1 = create(Expando, {
+    const task1 = live(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -68,11 +68,11 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = create(Expando, {
+    const task1 = live(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: makeRef(
-        create(Expando, {
+        live(Expando, {
           type: 'Person',
           name: 'John Doe',
         }),
@@ -105,10 +105,10 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = create(Expando, {
+    const task1 = live(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      details: create(Expando, { content: 'Some details' }),
+      details: live(Expando, { content: 'Some details' }),
     });
     db1.add(task1);
     await db1.flush();

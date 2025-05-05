@@ -12,7 +12,7 @@ import {
 } from '@dxos/compute';
 import { randomBytes } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { type CreateSheetOptions, type SheetSize, SheetType } from '../types';
 
@@ -68,7 +68,7 @@ export const initialize = (
 };
 
 export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): SheetType => {
-  const sheet = create(SheetType, {
+  const sheet = live(SheetType, {
     name,
     cells: {},
     rows: [],

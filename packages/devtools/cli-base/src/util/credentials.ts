@@ -12,10 +12,12 @@ export const mapCredentials = (credentials: Credential[], truncateKeys = false) 
     issuer: maybeTruncateKey(credential.issuer!, truncateKeys),
     subject: maybeTruncateKey(credential.subject!.id!, truncateKeys),
     type: credential.subject.assertion['@type'],
+    assertion: credential.subject.assertion,
   }));
 };
 
 export const printCredentials = (credentials: Credential[], flags = {}) => {
+  console.log(credentials);
   // ux.table(
   //   mapCredentials(credentials, true),
   //   {

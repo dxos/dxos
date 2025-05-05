@@ -4,20 +4,17 @@
 
 import React, { useCallback } from 'react';
 
-import { Capabilities, contributes, useCapabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 
 import { DeckCapabilities } from './capabilities';
 import { DeckLayout } from '../components';
 import { DECK_PLUGIN } from '../meta';
-import { type DeckSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactRoot, {
     id: DECK_PLUGIN,
     root: () => {
       const layout = useCapability(DeckCapabilities.MutableDeckState);
-      const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
-      const panels = useCapabilities(DeckCapabilities.ComplementaryPanel);
 
       const handleDismissToast = useCallback(
         (id: string) => {
@@ -36,13 +33,6 @@ export default () =>
         [layout.toasts],
       );
 
-      return (
-        <DeckLayout
-          showHints={settings.showHints}
-          overscroll={settings.overscroll}
-          panels={panels}
-          onDismissToast={handleDismissToast}
-        />
-      );
+      return <DeckLayout onDismissToast={handleDismissToast} />;
     },
   });

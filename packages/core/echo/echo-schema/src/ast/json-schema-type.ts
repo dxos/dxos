@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JsonProp, S } from '@dxos/effect';
+import { Schema as S } from 'effect';
+
+import { type JsonProp } from '@dxos/effect';
 
 import { EntityKind } from './entity-kind';
 import { FormatAnnotationId } from '../formats';
@@ -28,6 +30,7 @@ export const EntityKindSchema = S.Enums(EntityKind);
  * Contains extensions for ECHO (e.g., references).
  * Ref: https://json-schema.org/draft-07/schema
  */
+// TODO(burdon): Integrate with Effect Serializable?
 // TODO(dmaretskyi): Update to latest draft: https://json-schema.org/draft/2020-12
 const _JsonSchemaType = S.Struct({
   /**
@@ -187,7 +190,10 @@ const _JsonSchemaType = S.Struct({
   dependencies: S.optional(
     S.Record({
       key: S.String,
-      value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)),
+      value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)).annotations({
+        identifier: 'dependency',
+        description: 'Dependency',
+      }),
     }),
   ),
 
@@ -265,7 +271,7 @@ const _JsonSchemaType = S.Struct({
       }),
     ),
   ),
-}).annotations({ description: 'JSON Schema' });
+}).annotations({ identifier: 'jsonSchema', description: 'JSON Schema' });
 
 export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
 

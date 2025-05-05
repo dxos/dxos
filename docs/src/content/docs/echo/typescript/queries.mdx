@@ -1,0 +1,39 @@
+---
+title: Queries
+sidebar:
+  order: 2
+---
+
+import { Aside, Code } from '@astrojs/starlight/components';
+
+import readItems from './snippets/read-items.ts?raw';
+import readItemsTyped from './snippets/read-items-typed.ts?raw';
+import schema from './snippets/schema.ts?raw';
+
+The simplest way to read the items in a space is to use the `space.db.query()` method. It's also possible to obtain strongly typed results as described [below](#typed-queries).
+
+## Untyped Queries
+
+Once access is obtained to a [space](/echo/typescript/api), objects can be retrieved:
+
+<Code code={readItems.slice(34)} lang="ts" />
+
+The result is an iterable collection of objects that can be used like an array.
+
+## Typed Queries
+
+It's possible to receive strongly typed results from `query`. This is done by declaring a type using [Effect Schema](https://effect.website) for the objects in the space.
+
+<Aside type='tip' title='Benefits of schema declarations'>
+Ability to generate type-safe data access code, which makes development faster and safer.
+</Aside>
+
+Consider this expression of schema declared with Effect Schema:
+
+<Code code={schema.slice(34)} lang="ts" />
+
+Types can be used to make queries as well:
+
+<Code code={readItemsTyped.slice(34)} lang="ts" />
+
+Note the `client.addTypes` call which registers the generated types with the client.

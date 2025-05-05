@@ -40,7 +40,12 @@ export const invariant: InvariantFn = (
     errorMessage += ` at ${getRelativeFilename(meta.F)}:${meta.L}`;
   }
 
-  throw new InvariantViolation(errorMessage);
+  const error = new InvariantViolation(errorMessage);
+
+  // Do not include the invariant function in the stack trace.
+  Error.captureStackTrace(error, invariant);
+
+  throw error;
 };
 
 export class InvariantViolation extends Error {

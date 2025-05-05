@@ -13,9 +13,9 @@ export type StackItemSize = DndSize;
 
 export type StackItemData = { id: string; type: 'column' | 'card' };
 
-export type StackItemRearrangeHandler = (
-  source: StackItemData,
-  target: StackItemData,
+export type StackItemRearrangeHandler<Data extends { id: string } = StackItemData> = (
+  source: Data,
+  target: Data,
   closestEdge: Edge | null,
 ) => void;
 

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
+import { SchemaAST as AST, Schema as S } from 'effect';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
