@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { useSyncState, getSyncSummary } from '@dxos/react-client/echo';
 import { Icon, Toggle } from '@dxos/react-ui';
@@ -47,7 +47,7 @@ export type QueryPanelProps = {
 };
 
 // TODO(burdon): Reconcile with TraceView in diagnostics.
-export const StatsPanel = ({ stats, onRefresh, children }: React.PropsWithChildren<QueryPanelProps>) => {
+export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<QueryPanelProps>) => {
   const [live, setLive] = useState(false);
   const handleToggleLive = () => setLive((live) => !live);
 

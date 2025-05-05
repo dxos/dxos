@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { type MouseEvent, useCallback } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { Icon, IconButton, Input, Link, ListItem, useTranslation } from '@dxos/react-ui';
@@ -37,7 +37,7 @@ export const PluginItem = ({
   const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
 
   const handleChange = useCallback(
-    (event: React.MouseEvent) => {
+    (event: MouseEvent) => {
       event.stopPropagation();
       onChange?.(id, !isEnabled);
     },

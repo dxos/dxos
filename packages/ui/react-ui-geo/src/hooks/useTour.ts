@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as d3 from 'd3';
-import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import { geoPath, geoInterpolate, geoDistance, selection as d3Selection } from 'd3';
+import { type SetStateAction, type Dispatch, useEffect, useState, useMemo } from 'react';
 import versor from 'versor';
-
-import { log } from '@dxos/log';
 
 import type { GlobeController } from '../components';
 import { geoToPosition, type LatLng, positionToRotation, type StyleSet } from '../util';
@@ -34,7 +32,7 @@ export const useTour = (
   points?: LatLng[],
   options: TourOptions = {},
 ): [boolean, Dispatch<SetStateAction<boolean>>] => {
-  const selection = d3.selection();
+  const selection = useMemo(() => d3Selection(), []);
   const [running, setRunning] = useState(options.running ?? false);
   useEffect(() => {
     if (!running) {
@@ -47,7 +45,7 @@ export const useTour = (
       t = setTimeout(async () => {
         const { canvas, projection, setRotation } = controller;
         const context = canvas.getContext('2d', { alpha: false });
-        const path = d3.geoPath(projection, context).pointRadius(2);
+        const path = geoPath(projection, context).pointRadius(2);
 
         const tilt = options.tilt ?? 0;
         let last: LatLng;
@@ -65,8 +63,8 @@ export const useTour = (
             // Points.
             const p1 = last ? geoToPosition(last) : undefined;
             const p2 = geoToPosition(next);
-            const ip = d3.geoInterpolate(p1 || p2, p2);
-            const distance = d3.geoDistance(p1 || p2, p2);
+            const ip = geoInterpolate(p1 || p2, p2);
+            const distance = geoDistance(p1 || p2, p2);
 
             // Rotation.
             const r1 = p1 ? positionToRotation(p1, tilt) : controller.projection.rotate();
@@ -98,10 +96,8 @@ export const useTour = (
                 context.restore();
 
                 // TODO(burdon): This has to come after rendering above. Add to features to correct order?
-                if (options.autoRotate) {
-                  projection.rotate(iv(t));
-                  setRotation(projection.rotate());
-                }
+                projection.rotate(iv(t));
+                setRotation(projection.rotate());
               });
 
             // Throws if interrupted.
@@ -109,7 +105,7 @@ export const useTour = (
             last = next;
           }
         } catch (err) {
-          log.catch(err);
+          // Ignore.
         } finally {
           setRunning(false);
         }

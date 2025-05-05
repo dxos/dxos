@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { type TraceEvent, type InvocationSpan } from '@dxos/functions/types';
@@ -13,7 +13,7 @@ type ExceptionPanelProps = {
   span: InvocationSpan;
 };
 
-export const ExceptionPanel: React.FC<ExceptionPanelProps> = ({ span }) => {
+export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
   const traceQueueDxn = useMemo(() => {
     return span.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;
   }, [span.invocationTraceQueue]);
