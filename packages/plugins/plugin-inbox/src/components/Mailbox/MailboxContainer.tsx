@@ -4,10 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { DeckAction } from '@dxos/plugin-deck/types';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId, useQueue, Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation, Button } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -64,7 +63,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           void dispatch(
             createIntent(DeckAction.ChangeCompanion, {
               primary: id,
-              companion: `${id}-message`,
+              companion: `${id}${ATTENDABLE_PATH_SEPARATOR}message`,
             }),
           );
           break;
@@ -99,9 +98,17 @@ const EmptyMailboxContent = ({ mailbox }: { mailbox: MailboxType }) => {
 
   const openSpaceSettings = useCallback(() => {
     if (space) {
-      void dispatch(createIntent(SpaceAction.OpenSettings, { space }));
+      void dispatch(
+        createIntent(LayoutAction.Open, {
+          part: 'main',
+          subject: [`integrations-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+          options: {
+            workspace: space.id,
+          },
+        }),
+      );
     }
-  }, [space]);
+  }, [space, dispatch]);
 
   // TODO(ZaymonFC): This should be generalised to all tokens that can be used to source messages.
   const gmailToken = tokens.find((t) => t.source.includes('gmail'));
