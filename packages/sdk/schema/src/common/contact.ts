@@ -20,8 +20,8 @@ export const ContactSchema = S.Struct({
   fullName: S.optional(S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName' })),
   preferredName: S.optional(S.String),
   nickname: S.optional(S.String),
-  // TODO(wittjosiah): Support ref?
-  image: S.optional(Format.URL),
+  // TODO(wittjosiah): Format.URL. Support ref?
+  image: S.optional(S.String),
   // TODO(burdon): Use reference links.
   organization: S.optional(
     S.Union(S.String, Ref(Organization)).annotations({
