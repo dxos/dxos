@@ -27,5 +27,8 @@ export type PreviewProps<T extends object> = ThemedClassName<{
  *   </Card.Body>
  * </Card.Root>
  */
-export const previewCard = 'popover-max-width overflow-hidden';
+export const previewCard = 'popover-max-width';
 export const previewTitle = 'text-lg font-medium line-clamp-2';
+export const previewProse = 'pli-3 mlb-3';
+export const previewChrome =
+  'pli-1.5 last:pbe-1.5 [&_.dx-button]:pli-1.5 [&_.dx-button]:text-start [&_.dx-button]:is-full';

@@ -6,9 +6,9 @@ import React, { useCallback } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { type PreviewProps, previewCard, previewTitle } from '@dxos/plugin-preview';
+import { type PreviewProps, previewCard, previewTitle, previewProse, previewChrome } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { TextType } from '@dxos/schema';
 
@@ -45,21 +45,15 @@ export const MarkdownPreview = ({ classNames, subject }: PreviewProps<DocumentTy
   );
 
   return (
-    <div
-      role='none'
-      className={mx('grid grid-cols-[1fr_min-content] plb-3 pli-3 gap-3 place-items-start', previewCard, classNames)}
-    >
-      <h2 className={previewTitle}>{getTitle(subject, t('fallback title'))}</h2>
-      <IconButton
-        iconOnly
-        variant='ghost'
-        size={4}
-        label={t('navigate to document label')}
-        icon='ph--arrow-square-out--regular'
-        tooltipSide='right'
-        onClick={handleNavigate}
-      />
-      {snippet && <p className='line-clamp-3 break-words col-span-2'>{snippet}</p>}
+    <div role='none' className={mx(previewCard, classNames)}>
+      <h2 className={mx(previewTitle, previewProse)}>{getTitle(subject, t('fallback title'))}</h2>
+      {snippet && <p className={mx(previewProse, 'line-clamp-3 break-words col-span-2')}>{snippet}</p>}
+      <div role='none' className={previewChrome}>
+        <Button onClick={handleNavigate}>
+          <span className='grow'>{t('navigate to document label')}</span>
+          <Icon icon='ph--arrow-right--regular' />
+        </Button>
+      </div>
     </div>
   );
 };

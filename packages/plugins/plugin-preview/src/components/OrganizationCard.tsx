@@ -8,7 +8,7 @@ import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Organization } from '@dxos/schema';
 
-import { type PreviewProps, previewCard, previewTitle } from '../types';
+import { type PreviewProps, previewCard, previewTitle, previewProse, previewChrome } from '../types';
 
 export const OrganizationCard = ({
   classNames,
@@ -23,11 +23,11 @@ export const OrganizationCard = ({
           <Icon icon='ph--building-office--regular' size={10} />
         </div>
       )}
-      <h2 className={mx(previewTitle, 'pli-3 mlb-3')}>{name}</h2>
-      {description && <p className='pli-3 line-clamp-2 mlb-3'>{description}</p>}
+      <h2 className={mx(previewTitle, previewProse)}>{name}</h2>
+      {description && <p className={mx(previewProse, 'line-clamp-2')}>{description}</p>}
       {website && (
-        <div role='none'>
-          <a className='dx-button is-full dx-focus-ring' href={website} target='_blank' rel='noreferrer'>
+        <div role='none' className={previewChrome}>
+          <a className='dx-button dx-focus-ring' href={website} target='_blank' rel='noreferrer'>
             <span className='grow'>{website}</span>
             <Icon icon='ph--arrow-right--regular' />
           </a>

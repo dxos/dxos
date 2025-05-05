@@ -30,7 +30,7 @@ const meta: Meta<StoryProps> = {
   render: ({ Component, icon, ...args }) => {
     return (
       <Popover.Root open>
-        <Popover.Content classNames='popover-max-width overflow-hidden'>
+        <Popover.Content classNames='overflow-hidden'>
           <Component {...args} />
           <Popover.Arrow />
         </Popover.Content>
