@@ -12,21 +12,14 @@ import {
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
-const createViewModeAction = (plainView: boolean, hasEnrichedContent: boolean = true) => {
-  // If there's no enriched content, indicate it in the label
-  const label = plainView
-    ? hasEnrichedContent
-      ? 'Show enriched message'
-      : 'No enriched version available'
-    : 'Show plain message';
-
-  const disabled = plainView && !hasEnrichedContent;
+const createViewModeAction = (plainView: boolean) => {
+  // We only show this action when enriched content is available
+  const label = plainView ? 'Show enriched message' : 'Show plain message';
 
   return createMenuAction<ViewModeActionProperties>('viewMode', {
     label,
     icon: plainView ? 'ph--article--regular' : 'ph--graph--regular',
     type: 'viewMode',
-    disabled,
   });
 };
 
@@ -38,9 +31,11 @@ export const useMessageToolbarActions = (plainView: boolean, hasEnrichedContent:
     const rootGroup = createMenuItemGroup('root', { label: 'Message toolbar' });
     nodes.push(rootGroup);
 
-    const viewModeAction = createViewModeAction(plainView, hasEnrichedContent);
-    nodes.push(viewModeAction);
-    edges.push({ source: 'root', target: viewModeAction.id });
+    if (hasEnrichedContent) {
+      const viewModeAction = createViewModeAction(plainView);
+      nodes.push(viewModeAction);
+      edges.push({ source: 'root', target: viewModeAction.id });
+    }
 
     return { nodes, edges };
   }, [plainView, hasEnrichedContent]);
