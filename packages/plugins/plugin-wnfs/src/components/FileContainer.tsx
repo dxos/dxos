@@ -25,7 +25,7 @@ const FileContainer = ({ file, role }: { file: FileType; role: string }) => {
       invariant(space);
       const { directory, forest } = await loadWnfs({ blockstore, instances, space });
       const path = filePath(file.cid.toString(), space);
-      const url = await getBlobUrl({ wnfsUrl: wnfsUrl(path), blockstore, directory, forest });
+      const url = await getBlobUrl({ wnfsUrl: wnfsUrl(path), blockstore, directory, forest, type: file.type });
       setBlobUrl(url);
     });
 
