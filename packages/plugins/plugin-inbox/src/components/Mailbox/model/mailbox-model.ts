@@ -21,7 +21,7 @@ export type Tag = { label: string; hue: string };
  * Sort by date comparison function.
  * @param direction The direction to sort (1 for ascending, -1 for descending).
  */
-const byDate =
+const sortByDate =
   (direction = -1) =>
   ({ created: a = '' }: MessageType, { created: b = '' }: MessageType) =>
     a < b ? -direction : a > b ? direction : 0;
@@ -30,7 +30,7 @@ const byDate =
  * Creates a map of tag labels to arrays of messages containing that tag.
  * @param messages - Array of messages to process.
  */
-const makeTagToMessageIndex = (messages: MessageType[]): Map<string, MessageType[]> => {
+const createTagToMessageIndex = (messages: MessageType[]): Map<string, MessageType[]> => {
   const tagToMessagesMap = new Map<string, MessageType[]>();
 
   for (const message of messages) {
@@ -51,7 +51,7 @@ const makeTagToMessageIndex = (messages: MessageType[]): Map<string, MessageType
  * Creates a map of tag labels to Tag objects.
  * @param messages - Array of messages to process.
  */
-const makeTagIndex = (messages: MessageType[]): Map<string, Tag> => {
+const createTagIndex = (messages: MessageType[]): Map<string, Tag> => {
   const tagIndex = new Map<string, Tag>();
 
   for (const message of messages) {
@@ -92,8 +92,8 @@ export class MailboxModel {
     this._sortDirection = signal(sortDirection);
     this._selectedTagLabels = signal([]);
 
-    this._tagToMessagesIndex = computed(() => makeTagToMessageIndex(this._messages.value));
-    this._tagIndex = computed(() => makeTagIndex(this._messages.value));
+    this._tagIndex = computed(() => createTagIndex(this._messages.value));
+    this._tagToMessagesIndex = computed(() => createTagToMessageIndex(this._messages.value));
 
     this._filteredMessages = computed(() => {
       const selectedTagLabels = this._selectedTagLabels.value;
@@ -109,9 +109,13 @@ export class MailboxModel {
 
     this._sortedFilteredMessages = computed(() => {
       const directionValue = this._sortDirection.value === 'asc' ? 1 : -1;
-      return [...this._filteredMessages.value].sort(byDate(directionValue));
+      return [...this._filteredMessages.value].sort(sortByDate(directionValue));
     });
   }
+
+  //
+  // Getters
+  //
 
   /**
    * Gets the current list of messages in the mailbox, filtered and sorted.
@@ -121,26 +125,10 @@ export class MailboxModel {
   }
 
   /**
-   * Sets the list of messages in the mailbox.
-   * @param messages - New list of messages from the queue.
-   */
-  set messages(messages: MessageType[]) {
-    this._messages.value = messages;
-  }
-
-  /**
    * Gets the current sort direction.
    */
   get sortDirection(): SortDirection {
     return this._sortDirection.value;
-  }
-
-  /**
-   * Sets the sort direction.
-   * @param direction - Direction to sort ('asc' or 'desc').
-   */
-  set sortDirection(direction: SortDirection) {
-    this._sortDirection.value = direction;
   }
 
   /**
@@ -155,32 +143,6 @@ export class MailboxModel {
   }
 
   /**
-   * Selects a tag for filtering if it's not already selected.
-   * @param label - The label of the tag to select.
-   */
-  selectTag = (label: string): void => {
-    const currentLabels = this._selectedTagLabels.value;
-    if (!currentLabels.includes(label)) {
-      this._selectedTagLabels.value = [...currentLabels, label];
-    }
-  };
-
-  /**
-   * Deselects a tag, removing it from the filter criteria.
-   * @param tagLabel - The label of the tag to deselect.
-   */
-  deselectTag = (tagLabel: string): void => {
-    this._selectedTagLabels.value = this._selectedTagLabels.value.filter((label) => label !== tagLabel);
-  };
-
-  /**
-   * Clears all selected tags, effectively showing all messages.
-   */
-  clearSelectedTags = (): void => {
-    this._selectedTagLabels.value = [];
-  };
-
-  /**
    * Gets all unique tags present across all messages.
    */
   get availableTags(): Tag[] {
@@ -193,5 +155,55 @@ export class MailboxModel {
    */
   getMessageCountForTag(tagLabel: string): number {
     return this._tagToMessagesIndex.value.get(tagLabel)?.length || 0;
+  }
+
+  //
+  // Setters
+  //
+
+  /**
+   * Sets the list of messages in the mailbox.
+   * @param messages - New list of messages from the queue.
+   */
+  set messages(messages: MessageType[]) {
+    this._messages.value = messages;
+  }
+
+  /**
+   * Sets the sort direction.
+   * @param direction - Direction to sort ('asc' or 'desc').
+   */
+  set sortDirection(direction: SortDirection) {
+    this._sortDirection.value = direction;
+  }
+
+  //
+  // Actions
+  //
+
+  /**
+   * Selects a tag for filtering if it's not already selected.
+   * @param tagLabel - The label of the tag to select.
+   */
+  selectTag(tagLabel: string): void {
+    const currentLabels = this._selectedTagLabels.value;
+    if (!currentLabels.includes(tagLabel)) {
+      this._selectedTagLabels.value = [...currentLabels, tagLabel];
+    }
+  }
+
+  /**
+   * Deselects a tag, removing it from the filter criteria.
+   * @param tagLabel - The label of the tag to deselect.
+   */
+  deselectTag(tagLabel: string): void {
+    this._selectedTagLabels.value = this._selectedTagLabels.value.filter((label) => label !== tagLabel);
+  }
+
+  /**
+   * Clears all selected tags, effectively showing all messages.
+   */
+  clearSelectedTags(): void {
+    this._selectedTagLabels.value = [];
   }
 }
