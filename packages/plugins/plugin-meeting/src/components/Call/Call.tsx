@@ -20,7 +20,7 @@ import { Toolbar, type ToolbarProps } from '../Toolbar';
 type CallRootProps = PropsWithChildren<ThemedClassName>;
 
 const CallRoot: FC<CallRootProps> = ({ children }) => {
-  return <div className='flex flex-col grow overflow-hidden'>{children}</div>;
+  return <div className='relative flex flex-col grow overflow-hidden'>{children}</div>;
 };
 
 CallRoot.displayName = 'CallRoot';
@@ -43,16 +43,16 @@ CallAudio.displayName = 'CallAudio';
 // Room
 //
 
-type CallRoomProps = {};
+type CallGridProps = {};
 
-const CallRoom: FC<CallRoomProps> = () => {
+const CallGrid: FC<CallGridProps> = () => {
   const debug = useDebugMode();
   const call = useCapability(MeetingCapabilities.CallManager);
 
   return <ParticipantGrid self={call.self} users={call.users} debug={debug} />;
 };
 
-CallRoom.displayName = 'CallRoom';
+CallGrid.displayName = 'CallGrid';
 
 //
 // Toolbar
@@ -61,7 +61,11 @@ CallRoom.displayName = 'CallRoom';
 type CallToolbarProps = Pick<ToolbarProps, 'meeting' | 'onLeave'>;
 
 const CallToolbar: FC<CallToolbarProps> = (props) => {
-  return <Toolbar {...props} />;
+  return (
+    <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
+      <Toolbar {...props} />
+    </div>
+  );
 };
 
 CallToolbar.displayName = 'CallToolbar';
@@ -72,7 +76,7 @@ CallToolbar.displayName = 'CallToolbar';
 
 export const Call = {
   Root: CallRoot,
+  Grid: CallGrid,
   Audio: CallAudio,
-  Room: CallRoom,
   Toolbar: CallToolbar,
 };

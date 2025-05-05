@@ -12,11 +12,11 @@ export default [
         'existing identity title': 'Sign up to access your account',
         'beta description': 'Drop your email below to request early access to Composer.',
 
-        'check email title': 'Now check your email!',
+        'check email title': 'Please check your email',
         'check email description':
-          "A login link has been sent to your inbox. If it doesn't arrive in 3 minutes, be sure to check your spam folder.",
+          "A login link has been sent to your inbox. If it doesn't arrive in the next three minutes please check your spam folder.",
         'request access email description':
-          "A confirmation link has been sent to your inbox. If it doesn't arrive in 3 minutes, be sure to check your spam folder.",
+          "A confirmation link has been sent to your inbox. If it doesn't arrive in the next three minutes please check your spam folder.",
         'email error': 'Failed to send verification email.',
 
         'email input label': 'Email',
@@ -29,7 +29,7 @@ export default [
         'recover identity button label': 'Continue with a recovery code',
         'recover identity button description': 'Recover your identity using a paper key.',
 
-        'space invitation title': "You've been invited to a space",
+        'space invitation title': 'You have been invited to a space',
         'space invitation description':
           "You're not currently logged in on this device, click the button below to create a new account and accept the invitation, or log in on this device before accepting the invitation.",
         'join space button label': 'Create account & accept invitation',
