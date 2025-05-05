@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { selection, geoPath, geoInterpolate, geoDistance } from 'd3';
-import { type SetStateAction, type Dispatch, useEffect, useState } from 'react';
+import { geoPath, geoInterpolate, geoDistance, selection as d3Selection } from 'd3';
+import { type SetStateAction, type Dispatch, useEffect, useState, useMemo } from 'react';
 import versor from 'versor';
-
-import { log } from '@dxos/log';
 
 import type { GlobeController } from '../components';
 import { geoToPosition, type LatLng, positionToRotation, type StyleSet } from '../util';
@@ -34,11 +32,11 @@ export const useTour = (
   points?: LatLng[],
   options: TourOptions = {},
 ): [boolean, Dispatch<SetStateAction<boolean>>] => {
-  const sel = selection();
-  const [running, setRunning] = useState(false);
+  const selection = useMemo(() => d3Selection(), []);
+  const [running, setRunning] = useState(options.running ?? false);
   useEffect(() => {
     if (!running) {
-      sel.interrupt(TRANSITION_NAME);
+      selection.interrupt(TRANSITION_NAME);
       return;
     }
 
@@ -73,7 +71,7 @@ export const useTour = (
             const r2 = positionToRotation(p2, tilt);
             const iv = versor.interpolate(r1, r2);
 
-            const transition = sel
+            const transition = selection
               .transition(TRANSITION_NAME)
               .duration(Math.max(options.duration ?? defaultDuration, distance * 2_000))
               .tween('render', () => (t) => {
@@ -98,10 +96,8 @@ export const useTour = (
                 context.restore();
 
                 // TODO(burdon): This has to come after rendering above. Add to features to correct order?
-                if (options.autoRotate) {
-                  projection.rotate(iv(t));
-                  setRotation(projection.rotate());
-                }
+                projection.rotate(iv(t));
+                setRotation(projection.rotate());
               });
 
             // Throws if interrupted.
@@ -109,7 +105,7 @@ export const useTour = (
             last = next;
           }
         } catch (err) {
-          log.catch(err);
+          // Ignore.
         } finally {
           setRunning(false);
         }
@@ -117,7 +113,7 @@ export const useTour = (
 
       return () => {
         clearTimeout(t);
-        sel.interrupt(TRANSITION_NAME);
+        selection.interrupt(TRANSITION_NAME);
       };
     }
   }, [controller, running, JSON.stringify(options)]);
