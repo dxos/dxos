@@ -22,7 +22,6 @@ export type DxAvatarProps = Partial<
   Pick<
     DxAvatar,
     | 'fallback'
-    | 'labelId'
     | 'imgSrc'
     | 'imgCrossOrigin'
     | 'imgReferrerPolicy'
@@ -48,9 +47,6 @@ export class DxAvatar extends LitElement {
 
   @property({ type: String })
   fallback: string = 'never';
-
-  @property({ type: String })
-  labelId: string = 'never';
 
   @property({ type: String })
   imgSrc: string | undefined = undefined;
@@ -90,6 +86,7 @@ export class DxAvatar extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
+    this.role = 'img';
     this.loadingStaus = this.imgSrc ? 'loading' : 'idle';
   }
 
@@ -122,9 +119,8 @@ export class DxAvatar extends LitElement {
       : 'var(--surface-bg)';
     const fg = this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-inverse)';
     return html`<span
-      role="img"
+      role="none"
       class=${`dx-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
-      aria-labelledby=${this.labelId}
       data-size=${this.size}
       data-variant=${this.variant}
       data-status=${this.status}
