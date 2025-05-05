@@ -28,6 +28,7 @@ import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
 import {
   MessageBuilder,
+  DocumentType,
   TestItem,
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
@@ -185,12 +186,7 @@ const meta: Meta<typeof QueueStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [
-            TestItem,
-            // DocumentType,
-            Contact,
-            Organization,
-          ],
+          types: [TestItem, DocumentType, Contact, Organization],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },
