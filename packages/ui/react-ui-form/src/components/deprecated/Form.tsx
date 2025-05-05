@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, pipe } from 'effect';
+import { SchemaAST as AST, type Schema as S, Option, pipe } from 'effect';
 import React, { useState } from 'react';
 
-import { AST, type S, findProperty } from '@dxos/effect';
+import { findProperty } from '@dxos/effect';
 import { Input, type ThemedClassName, type TextInputProps as NativeTextInputProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ViewType, getFieldValue, setFieldValue } from '@dxos/schema';

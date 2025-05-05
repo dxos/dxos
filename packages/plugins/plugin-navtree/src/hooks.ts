@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { type Node } from '@dxos/app-graph';
 
-import { useNavTreeContext } from './components/NavTreeContext';
+import { useNavTreeContext } from './components';
 
 export const useLoadDescendents = (root?: Node) => {
   const { loadDescendents } = useNavTreeContext();

@@ -5,8 +5,10 @@
 import { isNotNullable } from 'effect/Predicate';
 import React, { useEffect, useState } from 'react';
 
+import { useClient } from '@dxos/react-client';
 import { useQuery, getSpace, useSchema, Filter } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
+import { useSelectedItems } from '@dxos/react-ui-attention';
 import { type MapMarker, type MapCanvasProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -22,12 +24,15 @@ export type MapContainerProps = { role?: string; type?: MapControlType; map?: Ma
   'zoom' | 'center' | 'onChange'
 >;
 
+// TODO(burdon): Error: Map container is already initialized.
+
 export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(_type);
   const [markers, setMarkers] = useState<MapMarker[]>([]);
+  const client = useClient();
   const space = getSpace(map);
 
-  const schema = useSchema(space, map?.view?.target?.query.type);
+  const schema = useSchema(client, space, map?.view?.target?.query.typename);
   const objects = useQuery(space, schema ? Filter.schema(schema) : undefined);
 
   useEffect(() => {
@@ -59,10 +64,17 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
     setMarkers(newMarkers);
   }, [objects, map?.view?.target]);
 
+  // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
+  const selected = useSelectedItems(map?.view?.target?.query.typename);
+
   return (
-    <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
-      {type === 'map' && <MapControl markers={markers} onToggle={() => setType('globe')} {...props} />}
-      {type === 'globe' && <GlobeControl markers={markers} onToggle={() => setType('map')} {...props} />}
+    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
+      {type === 'map' && (
+        <MapControl markers={markers} selected={Array.from(selected)} onToggle={() => setType('globe')} {...props} />
+      )}
+      {type === 'globe' && (
+        <GlobeControl markers={markers} selected={Array.from(selected)} onToggle={() => setType('map')} {...props} />
+      )}
     </StackItem.Content>
   );
 };

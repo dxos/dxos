@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli-composer",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -39,6 +39,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@oclif/core": "^4.0.30",
     "@oclif/plugin-autocomplete": "^3.2.6",

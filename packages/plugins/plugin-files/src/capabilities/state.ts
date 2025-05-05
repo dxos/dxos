@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
+import { SubscriptionList } from '@dxos/async';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -29,7 +29,7 @@ export default async (context: PluginsContext) => {
     .requestCapability(Capabilities.SettingsStore)
     .getStore<FilesSettingsProps>(FILES_PLUGIN)!.value;
 
-  const subscriptions = new EventSubscriptions();
+  const subscriptions = new SubscriptionList();
 
   const value = await localforage.getItem<FileSystemHandle[]>(FILES_PLUGIN);
   if (Array.isArray(value) && settings.openLocalFiles) {

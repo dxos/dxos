@@ -1,11 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -31,6 +26,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../lit-ui"
     },
     {
       "path": "../primitives/react-hooks"

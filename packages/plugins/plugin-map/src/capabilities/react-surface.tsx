@@ -16,14 +16,14 @@ import { MapCapabilities } from './capabilities';
 import { MapContainer, MapControl } from '../components';
 import { MapViewEditor } from '../components/MapViewEditor';
 import { MAP_PLUGIN } from '../meta';
-import { InitialSchemaAnnotationId, MapType, LocationPropertyAnnotationId } from '../types';
+import { TypenameAnnotationId, MapType, LocationAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${MAP_PLUGIN}/map`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [lng = 0, lat = 0] = data.subject?.coordinates ?? [];
@@ -57,16 +57,16 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MAP_PLUGIN}/settings`,
-      role: 'complementary--settings',
-      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      id: `${MAP_PLUGIN}/object-settings`,
+      role: 'object-settings',
+      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
       component: ({ data }) => <MapViewEditor map={data.subject} />,
     }),
     createSurface({
       id: `${MAP_PLUGIN}/create-initial-schema-form-[schema]`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialSchemaAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
@@ -75,8 +75,8 @@ export default () =>
         if (!space) {
           return null;
         }
-        const schemata = space?.db.schemaRegistry.query().runSync();
 
+        const schemata = space?.db.schemaRegistry.query().runSync();
         return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
       },
     }),
@@ -84,7 +84,7 @@ export default () =>
       id: `${MAP_PLUGIN}/create-initial-schema-form-[property-of-interest]`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, LocationPropertyAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, LocationAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
@@ -104,7 +104,7 @@ export default () =>
           // Look for properties that use the LatLng format enum
           const properties = Object.entries(selectedSchema.jsonSchema.properties).reduce<string[]>(
             (acc, [key, value]) => {
-              if (typeof value === 'object' && value?.format === FormatEnum.LatLng) {
+              if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
                 acc.push(key);
               }
               return acc;

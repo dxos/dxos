@@ -1,13 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "outDir": "./dist/types"
+    "module": "ESNext"
   },
   "include": [
     "playwright",
@@ -19,6 +13,9 @@
     },
     {
       "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/context"
     },
     {
       "path": "../../common/debug"

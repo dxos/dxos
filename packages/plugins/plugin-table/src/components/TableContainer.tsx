@@ -5,14 +5,17 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { ImmutableSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
-import { create, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { useClient } from '@dxos/react-client';
+import { live, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
   type TableController,
+  type TableFeatures,
   TablePresentation,
   TableToolbar,
   type TableToolbarAction,
@@ -24,19 +27,26 @@ import { ViewProjection } from '@dxos/schema';
 import { TableAction } from '../types';
 
 // TODO(ZaymonFC): Move toolbar action handling to a more appropriate location.
-const TableContainer = ({ role, table }: { table: TableType; role?: string }) => {
+const TableContainer = ({ role, table }: { role?: string; table: TableType }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = getSpace(table);
+  const tableRef = useRef<TableController>(null);
 
-  const schema = useSchema(space, table.view?.target?.query.type);
+  const client = useClient();
+  const space = getSpace(table);
+  const schema = useSchema(client, space, table.view?.target?.query.typename);
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
+  const handleThreadCreate = useCallback(() => {
+    // TODO(Zan): Consider a more appropriate anchor format.
+    void dispatch(createIntent(ThreadAction.Create, { subject: table, cursor: Date.now().toString() }));
+  }, [dispatch, table]);
+
   const handleInsertRow = useCallback(() => {
     if (schema && space) {
-      space.db.add(create(schema, {}));
+      space.db.add(live(schema, {}));
     }
-  }, [schema, space]);
+  }, [space, schema]);
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
@@ -45,43 +55,49 @@ const TableContainer = ({ role, table }: { table: TableType; role?: string }) =>
     [dispatch],
   );
 
-  const handleDeleteColumn = useCallback((fieldId: string) => {
-    void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
-  }, []);
+  const handleDeleteColumn = useCallback(
+    (fieldId: string) => {
+      void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
+    },
+    [dispatch],
+  );
 
   const projection = useMemo(() => {
     if (!schema || !table.view?.target) {
       return;
     }
 
-    return new ViewProjection(schema, table.view.target!);
+    return new ViewProjection(schema.jsonSchema, table.view.target!);
   }, [schema, table.view?.target]);
 
-  const tableRef = useRef<TableController>(null);
+  const features: Partial<TableFeatures> = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'multiple' },
+      dataEditable: true,
+      schemaEditable: !(schema instanceof ImmutableSchema),
+    }),
+    [],
+  );
 
   const model = useTableModel({
     table,
     projection,
-    objects: filteredObjects,
+    features,
+    rows: filteredObjects,
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChanged: () => tableRef.current?.update?.(),
+    onRowOrderChange: () => tableRef.current?.update?.(),
   });
 
   const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
-
-  const onThreadCreate = useCallback(() => {
-    // TODO(Zan): Consider a more appropriate anchor format.
-    void dispatch(createIntent(ThreadAction.Create, { subject: table, cursor: Date.now().toString() }));
-  }, [dispatch, table]);
 
   const handleAction = useCallback(
     (action: TableToolbarAction) => {
       switch (action.properties.type) {
         case 'comment': {
-          onThreadCreate();
+          handleThreadCreate();
           break;
         }
         case 'add-row': {
@@ -94,12 +110,16 @@ const TableContainer = ({ role, table }: { table: TableType; role?: string }) =>
         }
       }
     },
-    [onThreadCreate, space, schema, handleInsertRow, dispatch, table, model],
+    [handleThreadCreate, handleInsertRow, model],
   );
 
   return (
-    <StackItem.Content toolbar role={role}>
-      <TableToolbar onAction={handleAction} attendableId={fullyQualifiedId(table)} />
+    <StackItem.Content role={role} toolbar>
+      <TableToolbar
+        onAction={handleAction}
+        attendableId={fullyQualifiedId(table)}
+        classNames='border-be border-separator'
+      />
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
       </Table.Root>

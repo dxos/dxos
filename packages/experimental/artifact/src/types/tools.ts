@@ -66,8 +66,11 @@ export const ToolResult = Object.freeze({
 export const Tool = S.Struct({
   /**
    * Unique name.
+   * ^[a-zA-Z0-9_-]{1,64}$
    */
   name: S.String,
+  namespace: S.optional(S.String),
+  function: S.optional(S.String),
 
   /**
    * If the tool is implemented by the service a type should be provided.
@@ -76,6 +79,11 @@ export const Tool = S.Struct({
    * See {@link ToolTypes} for the list of supported types.
    */
   type: S.optional(S.String),
+
+  /**
+   * Displayed to user when tool is called.
+   */
+  caption: S.optional(S.String),
 
   /**
    * Required for user-implemented tools.
@@ -95,7 +103,9 @@ export const Tool = S.Struct({
   options: S.optional(S.Any),
 });
 
-export interface Tool extends S.Schema.Type<typeof Tool> {
+export type ToolType = S.Schema.Type<typeof Tool>;
+
+export interface Tool extends ToolType {
   /**
    * Javascript function to execute the tool.
    */

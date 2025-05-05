@@ -13,6 +13,7 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
   /**
    * Globally unique ID.
    */
+  // TODO(burdon): Allow string array, which is concatenated.
   id: string;
 
   /**
@@ -40,10 +41,10 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
   data: TData;
 }>;
 
-export type NodeFilter<T = any, U extends Record<string, any> = Record<string, any>> = (
+export type NodeFilter<TData = any, TProperties extends Record<string, any> = Record<string, any>> = (
   node: Node<unknown, Record<string, any>>,
   connectedNode: Node,
-) => node is Node<T, U>;
+) => node is Node<TData, TProperties>;
 
 export type Relation = 'outbound' | 'inbound';
 

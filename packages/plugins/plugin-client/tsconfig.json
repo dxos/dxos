@@ -3,13 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -24,6 +17,9 @@
     "src/*.ts"
   ],
   "references": [
+    {
+      "path": "../../common/async"
+    },
     {
       "path": "../../common/invariant"
     },
@@ -62,6 +58,15 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-pickers"
+    },
+    {
+      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-theme"

@@ -2,29 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JsonSchemaType, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, JsonSchemaType, LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
 import { TextType } from '@dxos/schema';
 
 /**
  * Source script.
  */
-export class ScriptType extends TypedObject({
-  typename: 'dxos.org/type/Script',
-  version: '0.1.0',
-})({
-  // TODO(burdon): Change to URI?
+export const ScriptType = S.Struct({
   name: S.optional(S.String),
   description: S.optional(S.String),
   // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
   changed: S.optional(S.Boolean),
   source: Ref(TextType),
-}) {}
+})
+  .annotations({ [LabelAnnotationId]: 'name' })
+  .pipe(EchoObject({ typename: 'dxos.org/type/Script', version: '0.1.0' }));
+
+export type ScriptType = S.Schema.Type<typeof ScriptType>;
 
 /**
  * Function deployment.
  */
-// TODO(burdon): Move to core/functions.
 export class FunctionType extends TypedObject({
   typename: 'dxos.org/type/Function',
   version: '0.1.0',

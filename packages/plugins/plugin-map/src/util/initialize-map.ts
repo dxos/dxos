@@ -4,7 +4,7 @@
 
 import { FormatEnum, type GeoPoint } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type Space, create, makeRef } from '@dxos/react-client/echo';
+import { type Space, live, makeRef } from '@dxos/react-client/echo';
 import { createView } from '@dxos/schema';
 
 import { MapType } from '../types';
@@ -25,7 +25,7 @@ export const initializeMap = async ({
   initialSchema,
   locationProperty,
 }: InitializeMapProps): Promise<{ map: MapType }> => {
-  const map = create(MapType, { name });
+  const map = live(MapType, { name });
   if (coordinates) {
     map.coordinates = coordinates;
   }
@@ -36,7 +36,7 @@ export const initializeMap = async ({
     const schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
     invariant(schema, `Schema not found: ${initialSchema}`);
 
-    view.query.type = initialSchema;
+    view.query.typename = initialSchema;
 
     if (locationProperty) {
       setLocationProperty(view, locationProperty);
@@ -46,7 +46,7 @@ export const initializeMap = async ({
       if (schema.jsonSchema?.properties) {
         // Look for properties that use the LatLng format enum.
         const properties = Object.entries(schema.jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-          if (typeof value === 'object' && value?.format === FormatEnum.LatLng) {
+          if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
             acc.push(key);
           }
           return acc;

@@ -2,24 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  allOf,
-  Capabilities,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  Events,
-  type PluginsContext,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities } from '@dxos/plugin-deck';
-import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
+import { ChannelType, defineObjectForm, ThreadType } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
+import { MessageType, MessageTypeV1, MessageTypeV1ToV2 } from '@dxos/schema';
 
-import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadSettings, ThreadState } from './capabilities';
-import { meta, THREAD_ITEM, THREAD_PLUGIN } from './meta';
+import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
+import { ThreadEvents as LocalThreadEvents } from './events';
+import { meta, THREAD_ITEM } from './meta';
 import translations from './translations';
 import { ThreadAction } from './types';
 
@@ -27,14 +21,18 @@ import { ThreadAction } from './types';
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
 export const ThreadPlugin = () =>
   definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: ThreadSettings,
-    }),
+    // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
+    // defineModule({
+    //   id: `${meta.id}/module/settings`,
+    //   activatesOn: Events.SetupSettings,
+    //   activate: ThreadSettings,
+    // }),
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: Events.Startup,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
       activate: ThreadState,
     }),
     defineModule({
@@ -49,11 +47,7 @@ export const ThreadPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ChannelType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(ThreadAction.Create, props),
-            placeholder: ['channel name placeholder', { ns: THREAD_PLUGIN }],
-            icon: 'ph--chat--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (channel: ChannelType) => await RefArray.loadAll(channel.threads ?? []),
+            icon: 'ph--hash--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -88,42 +82,42 @@ export const ThreadPlugin = () =>
       ],
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: ChannelType,
+            getIntent: (_, options) => createIntent(ThreadAction.CreateChannel, { spaceId: options.space.id }),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SystemSchema, [ThreadType, MessageType]),
+      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, MessageType, MessageTypeV1]),
     }),
     defineModule({
-      id: `${meta.id}/module/channel-schema`,
-      activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady),
-      activate: (context: PluginsContext) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
-        client.addTypes([ChannelType]);
-        return contributes(ClientCapabilities.Schema, [ChannelType]);
-      },
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panel`,
-      activatesOn: Events.Startup,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'comments',
-          label: ['comments panel label', { ns: THREAD_PLUGIN }],
-          icon: 'ph--chat-text--regular',
-        }),
+      id: `${meta.id}/module/migration`,
+      activatesOn: ClientEvents.SetupMigration,
+      activate: () => contributes(ClientCapabilities.Migration, [MessageTypeV1ToV2]),
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,
-      activatesOn: Events.Startup,
+      activatesOn: MarkdownEvents.SetupExtensions,
       activate: Markdown,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
+      // TODO(wittjosiah): Should occur before the comments thread is loaded when surfaces activation is more granular.
+      activatesBefore: [ThreadEvents.SetupThread, LocalThreadEvents.SetupActivity],
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({

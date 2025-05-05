@@ -7,7 +7,7 @@
 .slide: data-background="#151515"
 -->
 
-![img](https://dxos.org/images/logo/dxos-logotype-white.svg)
+![img](https://dxos.network/dxos-logotype-blue.png)
 
 Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 <br>
@@ -125,6 +125,23 @@ KUBE
 8. Federated Adaptive Decentralized Engine
 
 ## Decentralized Compute
+
+---
+<!-- 
+.slide: data-background="#111111" data-background-opacity="0.5"
+-->
+
+# Code
+
+```tsx
+import { ClientProvider } from '@dxos/react-client'
+
+const Component = ({ str }: { str?: string }) => {
+  return (
+    <ClientProvider>{str ?? 'hello'}</ClientProvider>
+  )
+}
+```
 
 ---
 <!-- 

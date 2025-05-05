@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "tasks - a DXOS application",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "deploy": "dx app publish",

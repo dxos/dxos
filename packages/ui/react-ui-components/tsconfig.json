@@ -1,13 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -25,6 +18,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -32,6 +28,9 @@
     },
     {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-syntax-highlighter"
     },
     {
       "path": "../react-ui-theme"

@@ -1,12 +1,13 @@
 {
   "name": "@dxos/functions",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "Functions API and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -47,7 +48,7 @@
         "dist/types/src/testing/index.d.ts"
       ],
       "types": [
-        "dist/types/src/types.d.ts"
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
@@ -60,6 +61,7 @@
     "gen-schema": "ts-node ./tools/schema.ts"
   },
   "dependencies": {
+    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -76,10 +78,10 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
     "cron": "^3.1.6",
-    "effect": "^3.12.3",
+    "cron-schedule": "^5.0.4",
+    "effect": "3.13.3",
     "esbuild-wasm": "^0.16.14",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",

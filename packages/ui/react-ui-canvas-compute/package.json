@@ -1,11 +1,12 @@
 {
   "name": "@dxos/react-ui-canvas-compute",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "A compute graph extension for the canvas editor component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -48,6 +49,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/platform": "0.75.1",
     "chess.js": "^1.0.0"
   },
   "devDependencies": {
@@ -59,12 +61,12 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect/ai": "^0.5.1",
+    "@effect/ai": "0.8.0",
     "@effect/platform": "^0.72.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "^3.12.3",
+    "effect": "3.13.3",
     "lodash.defaultsdeep": "^4.6.1",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
@@ -73,8 +75,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect/schema": "^0.75.5",
-    "effect": "^3.12.3",
+    "effect": "3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

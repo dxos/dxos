@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 export const getTextTemplateInputSchema = (text: string): S.Schema.AnyNoContext => {
   const variables = findHandlebarVariables(text);

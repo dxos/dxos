@@ -7,14 +7,14 @@ import { invariant } from '@dxos/invariant';
 
 import { ReactiveArray } from './array';
 import { type ReactiveHandler } from './types';
-import type { ReactiveObject } from '../object';
-
-// TODO(burdon): Need tighter tests for these.
-// TODO(burdon): Reconcile Proxy and Reactive Object names.
+import type { Live } from '../live';
 
 export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 
-export const isReactiveObject = (value: unknown): value is ReactiveObject<any> => !!(value as any)?.[symbolIsProxy];
+/**
+ * Internal api.
+ */
+export const isProxy = (value: unknown) => !!(value as any)?.[symbolIsProxy];
 
 export const isValidProxyTarget = (value: any): value is object => {
   if (value == null || value[symbolIsProxy]) {
@@ -30,17 +30,17 @@ export const isValidProxyTarget = (value: any): value is object => {
 /**
  * @deprecated
  */
-export const getProxySlot = <T extends BaseObject>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
+export const getProxySlot = <T extends BaseObject>(proxy: Live<any>): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];
   invariant(value instanceof ProxyHandlerSlot);
   return value;
 };
 
-export const getProxyTarget = <T extends BaseObject>(proxy: ReactiveObject<any>): T => {
+export const getProxyTarget = <T extends BaseObject>(proxy: Live<any>): T => {
   return getProxySlot<T>(proxy).target;
 };
 
-export const getProxyHandler = <T extends BaseObject>(proxy: ReactiveObject<any>): ReactiveHandler<T> => {
+export const getProxyHandler = <T extends BaseObject>(proxy: Live<any>): ReactiveHandler<T> => {
   return getProxySlot<T>(proxy).handler;
 };
 
@@ -48,7 +48,7 @@ export const getProxyHandler = <T extends BaseObject>(proxy: ReactiveObject<any>
  * Unsafe method to override id for debugging/testing and migration purposes.
  * @deprecated
  */
-export const dangerouslySetProxyId = <T extends BaseObject>(obj: ReactiveObject<T>, id: string) => {
+export const dangerouslySetProxyId = <T extends BaseObject>(obj: Live<T>, id: string) => {
   (getProxySlot(obj).target as any).id = id;
 };
 
@@ -61,7 +61,7 @@ export const dangerouslySetProxyId = <T extends BaseObject>(obj: ReactiveObject<
  */
 // TODO(burdon): Document.
 // TODO(burdon): Tests for low-level functions.
-export const createProxy = <T extends BaseObject>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
+export const createProxy = <T extends BaseObject>(target: T, handler: ReactiveHandler<T>): Live<T> => {
   const existingProxy = handler._proxyMap.get(target);
   if (existingProxy) {
     return existingProxy;

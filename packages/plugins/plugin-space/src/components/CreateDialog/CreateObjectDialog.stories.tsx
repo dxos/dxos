@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect } from 'react';
 
-import { create, Filter, useQuery, useSpace } from '@dxos/react-client/echo';
+import { live, Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/shell/react';
@@ -40,9 +40,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
   parameters: {
     translations: [...translations, osTranslations],
   },
-  args: {
-    schemas: [CollectionType],
-  },
+  args: {},
 };
 
 export default meta;
@@ -72,7 +70,7 @@ export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
 
     useEffect(() => {
       if (space) {
-        space.db.add(create(CollectionType, { name: 'My Collection', objects: [], views: {} }));
+        space.db.add(live(CollectionType, { name: 'My Collection', objects: [], views: {} }));
       }
     }, [space]);
 

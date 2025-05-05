@@ -6,7 +6,7 @@ import type { MulticastObservable } from '@dxos/async';
 import type { FilterSource, Query } from '@dxos/echo-db';
 import type { BaseObject } from '@dxos/echo-schema';
 import type { PublicKey, SpaceId } from '@dxos/keys';
-import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { AuthenticatingInvitation } from './invitations';
@@ -58,9 +58,9 @@ export interface Echo extends MulticastObservable<Space[]> {
   create(meta?: PropertiesTypeProps): Promise<Space>;
 
   /**
-   * Creates a space from the given snapshot.
+   * Creates a space from the given archive.
    */
-  // clone(snapshot: SpaceSnapshot): Promise<Space>;
+  import(archive: SpaceArchive): Promise<Space>;
 
   /**
    * Joins an existing space using the given invitation.

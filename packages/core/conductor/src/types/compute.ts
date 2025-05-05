@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type HttpClient } from '@effect/platform';
 import { Effect, type Scope } from 'effect';
 
 import { type S } from '@dxos/echo-schema';
@@ -9,7 +10,7 @@ import { mapValues } from '@dxos/util';
 
 // TODO(burdon): Move to types to untangle circular deps.
 import type { ComputeNode } from './graph';
-import type { EventLogger, GptService, QueueService, SpaceService } from '../services';
+import type { EventLogger, FunctionCallService, GptService, QueueService, SpaceService } from '../services';
 
 //
 // Errors
@@ -86,7 +87,14 @@ export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   node?: ComputeNode, // TODO(burdon): Why could node be undefined?
 ) => ComputeEffect<ValueBag<O>>;
 
-export type ComputeRequirements = EventLogger | QueueService | GptService | SpaceService | Scope.Scope;
+export type ComputeRequirements =
+  | HttpClient.HttpClient
+  | EventLogger
+  | QueueService
+  | GptService
+  | SpaceService
+  | FunctionCallService
+  | Scope.Scope;
 
 /**
  * For results of compute functions.

@@ -1,12 +1,13 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "./dist/types"
-  },
+  "compilerOptions": {},
   "include": [
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/async"
+    },
     {
       "path": "../../common/debug"
     },
@@ -32,6 +33,9 @@
       "path": "../../experimental/assistant"
     },
     {
+      "path": "../../ui/react-ui-kanban"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
@@ -42,6 +46,9 @@
     },
     {
       "path": "../echo/live-object"
+    },
+    {
+      "path": "../functions"
     },
     {
       "path": "../mesh/edge-client"

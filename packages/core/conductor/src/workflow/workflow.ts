@@ -9,6 +9,7 @@ import { type DXN } from '@dxos/keys';
 
 import { compileOrThrow, type GraphExecutor } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { createDefectLogger } from '../services';
 import {
   type ComputeEffect,
   type ComputeGraphModel,
@@ -69,7 +70,9 @@ export class Workflow {
       const outputNodeId = this._graph.nodes.find((node) => node.type === NODE_OUTPUT)?.id;
       const outputNodeIndex = allAffectedNodes.findIndex((nodeId) => nodeId === outputNodeId);
       return outputNodeIndex >= 0 ? results[outputNodeIndex] : makeValueBag({});
-    }).pipe(Effect.withSpan('workflow', { attributes: { workflowDxn: this._dxn } }));
+    })
+      .pipe(createDefectLogger())
+      .pipe(Effect.withSpan('workflow', { attributes: { workflowDxn: this._dxn } }));
   }
 
   getResolvedNode(nodeId: string): Executable | undefined {

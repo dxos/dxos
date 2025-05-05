@@ -182,7 +182,7 @@ export const MarkdownInput = ({
         disabled={disabled}
         placeholder={placeholder}
         value={getValue() ?? ''}
-        classNames={'min-bs-auto overflow-hidden'}
+        classNames={'min-bs-auto max-h-40 overflow-auto'}
         onChange={(event) => onValueChange(type, event.target.value)}
         onBlur={onBlur}
         style={{ resize: 'none' }}

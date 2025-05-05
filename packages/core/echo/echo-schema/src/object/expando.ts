@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { Schema as S } from 'effect';
 
 import { EchoObject } from '../ast';
 
@@ -13,7 +13,10 @@ export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
  */
 export const ExpandoMarker = Symbol.for('@dxos/schema/Expando');
 
-const ExpandoSchema = S.Struct({}, { key: S.String, value: S.Any }).pipe(EchoObject(EXPANDO_TYPENAME, '0.1.0'));
+// TODO(burdon): Consider using Struct with Index Signatures?
+const ExpandoSchema = S.Struct({}, { key: S.String, value: S.Any }).pipe(
+  EchoObject({ typename: EXPANDO_TYPENAME, version: '0.1.0' }),
+);
 
 export interface Expando extends S.Schema.Type<typeof ExpandoSchema> {}
 

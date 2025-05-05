@@ -22,6 +22,10 @@ message LeaveRequest {
   dxos.edge.messenger.Peer peer = 2;
 }
 
+message QueryRequest {
+  dxos.keys.PublicKey topic = 1;
+}
+
 message Message {
   dxos.edge.messenger.Peer author = 1;
   dxos.edge.messenger.Peer recipient = 2;

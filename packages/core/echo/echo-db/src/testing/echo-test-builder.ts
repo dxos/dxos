@@ -74,7 +74,7 @@ export class EchoTestPeer extends Resource {
   private _initEcho() {
     this._echoHost = new EchoHost({ kv: this._kv });
     this._clients.delete(this._echoClient);
-    this._echoClient = new EchoClient({});
+    this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
   }
 
@@ -117,7 +117,7 @@ export class EchoTestPeer extends Resource {
   }
 
   async createClient() {
-    const client = new EchoClient({});
+    const client = new EchoClient();
     this._clients.add(client);
     client.connectToService({
       dataService: this._echoHost.dataService,

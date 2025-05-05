@@ -13,11 +13,13 @@ import {
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { type Space } from '@dxos/react-client/echo';
+import { ClientEvents } from '@dxos/plugin-client';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { Blockstore, FileUploader, IntentResolver, Markdown, ReactSurface, WnfsCapabilities } from './capabilities';
-import { meta, WNFS_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { FileType, WnfsAction } from './types';
 
@@ -30,7 +32,7 @@ export const WnfsPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/instances`,
-      activatesOn: Events.Startup,
+      activatesOn: ClientEvents.ClientReady,
       activate: () => {
         const instances: WnfsCapabilities.Instances = {};
         return contributes(WnfsCapabilities.Instances, instances);
@@ -48,20 +50,25 @@ export const WnfsPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: FileType.typename,
           metadata: {
-            creationSchema: WnfsAction.UploadFileSchema,
-            createObject: ({ file }: WnfsAction.UploadFileForm, { space }: { space: Space }) =>
-              pipe(createIntent(WnfsAction.Upload, { file, space }), chain(WnfsAction.Create, {})),
             label: (object: any) => (object instanceof FileType ? object.name : undefined),
-            placeholder: ['file title placeholder', { ns: WNFS_PLUGIN }],
             // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
             icon: 'ph--file--regular',
           },
         }),
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
+      id: `${meta.id}/module/object-form`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [FileType]),
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: FileType,
+            formSchema: WnfsAction.UploadFileSchema,
+            getIntent: (props, options) =>
+              pipe(createIntent(WnfsAction.Upload, { ...props, space: options.space }), chain(WnfsAction.Create, {})),
+          }),
+        ),
     }),
     defineModule({
       id: `${meta.id}/module/file-uploader`,
@@ -70,17 +77,17 @@ export const WnfsPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,
-      activatesOn: Events.Startup,
+      activatesOn: MarkdownEvents.SetupExtensions,
       activate: Markdown,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
   ]);

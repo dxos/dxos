@@ -51,7 +51,7 @@ describe('AutomergeRepo', () => {
     let valueDuringChange: string | undefined;
 
     handle.addListener('change', (doc) => {
-      valueDuringChange = handle.docSync().field;
+      valueDuringChange = handle.docSync()!.field;
     });
 
     handle.change((doc: any) => {
@@ -157,8 +157,8 @@ describe('AutomergeRepo', () => {
         doc.text = text;
       });
 
-      const docOnClient = client.find(handle.url);
-      expect((await asyncTimeout(docOnClient.doc(), 1000)).text).to.equal(text);
+      const docOnClient = client.find<any>(handle.url);
+      expect((await asyncTimeout(docOnClient.doc(), 1000))!.text).to.equal(text);
     });
 
     test('share policy gets enabled afterwards', async () => {
@@ -212,9 +212,9 @@ describe('AutomergeRepo', () => {
       await connectAdapters(adapters);
 
       {
-        const firstDocOnClient = client.find(firstHandle.url);
+        const firstDocOnClient = client.find<any>(firstHandle.url);
         await asyncTimeout(firstDocOnClient.whenReady(), 1000);
-        expect(firstDocOnClient.docSync().text).to.equal('Hello world');
+        expect(firstDocOnClient.docSync()!.text).to.equal('Hello world');
       }
 
       const secondHandle = host.create();
@@ -223,9 +223,9 @@ describe('AutomergeRepo', () => {
       allowedDocs.push(secondHandle.documentId);
 
       {
-        const secondDocOnClient = client.find(secondHandle.url);
+        const secondDocOnClient = client.find<any>(secondHandle.url);
         await asyncTimeout(secondDocOnClient.whenReady(), 1000);
-        expect(secondDocOnClient.docSync().text).to.equal('Hello world');
+        expect(secondDocOnClient.docSync()!.text).to.equal('Hello world');
       }
     });
 
@@ -239,14 +239,14 @@ describe('AutomergeRepo', () => {
       await connectAdapters(adapters);
 
       const handle = host.create();
-      const docOnClient = client.find(handle.url);
+      const docOnClient = client.find<any>(handle.url);
       {
         const sanityText = 'Hello world';
         handle.change((doc: any) => {
           doc.sanityText = sanityText;
         });
 
-        expect((await asyncTimeout(docOnClient.doc(), 1000)).sanityText).to.equal(sanityText);
+        expect((await asyncTimeout(docOnClient.doc(), 1000))!.sanityText).to.equal(sanityText);
       }
 
       // Disrupt connection.
@@ -259,7 +259,7 @@ describe('AutomergeRepo', () => {
         });
 
         await sleep(100);
-        expect((await asyncTimeout(docOnClient.doc(), 1000)).offlineText).to.be.undefined;
+        expect((await asyncTimeout(docOnClient.doc(), 1000))!.offlineText).to.be.undefined;
       }
 
       // Re-establish connection.
@@ -272,8 +272,8 @@ describe('AutomergeRepo', () => {
           doc.onlineText = onlineText;
         });
         await sleep(100);
-        expect((await asyncTimeout(docOnClient.doc(), 1000)).onlineText).to.equal(onlineText);
-        expect((await asyncTimeout(docOnClient.doc(), 1000)).offlineText).to.equal(offlineText);
+        expect((await asyncTimeout(docOnClient.doc(), 1000))!.onlineText).to.equal(onlineText);
+        expect((await asyncTimeout(docOnClient.doc(), 1000))!.offlineText).to.equal(offlineText);
       }
     });
 
@@ -373,10 +373,10 @@ describe('AutomergeRepo', () => {
       await connectAdapters(adapters);
 
       // Load doc on peer1
-      const hostHandle = peer1.find(url as AutomergeUrl);
+      const hostHandle = peer1.find<any>(url as AutomergeUrl);
 
       // Doc should be pushed to peer2
-      await expect.poll(() => hostHandle.docSync().text).not.toBeUndefined();
+      await expect.poll(() => hostHandle.docSync()!.text).not.toBeUndefined();
       await expect.poll(() => peer2.handles[hostHandle.documentId].docSync()).toEqual(hostHandle.docSync());
     });
 
@@ -390,8 +390,8 @@ describe('AutomergeRepo', () => {
       };
 
       // Sync handshake.
-      let syncedHeads = getHeads(serverHandle.docSync());
-      receiveByClient(save(serverHandle.docSync()));
+      let syncedHeads = getHeads(serverHandle.docSync()!);
+      receiveByClient(save(serverHandle.docSync()!));
 
       serverHandle.on('change', ({ doc }) => {
         // Note: This is mock of a sync protocol between client and server.
@@ -446,7 +446,7 @@ describe('AutomergeRepo', () => {
         await sendDoc(clientDoc);
 
         await repo.find(documentId).whenReady();
-        expect(repo.find(documentId).docSync().field).to.deep.equal(value);
+        expect(repo.find<any>(documentId).docSync()!.field).to.deep.equal(value);
       }
     });
 
@@ -455,8 +455,8 @@ describe('AutomergeRepo', () => {
       const [repoA, repoB] = repos;
       await connectAdapters(adapters);
 
-      const handleA = repoA.create();
-      const handleB = repoB.find(handleA.url);
+      const handleA = repoA.create<any>();
+      const handleB = repoB.find<any>(handleA.url);
 
       const text = 'Hello world';
       handleA.update((doc: any) => {
@@ -465,10 +465,10 @@ describe('AutomergeRepo', () => {
         });
       });
 
-      expect(handleA.docSync().text).to.equal(text);
+      expect(handleA.docSync()!.text).to.equal(text);
 
       await asyncTimeout(handleB.whenReady(), 1000);
-      expect(handleB.docSync().text).to.equal(text);
+      expect(handleB.docSync()!.text).to.equal(text);
     });
   });
 
@@ -493,9 +493,9 @@ describe('AutomergeRepo', () => {
         await expect
           .poll(
             async () => {
-              const docOnPeer2 = peer2.repo.find(handle.url);
+              const docOnPeer2 = peer2.repo.find<any>(handle.url);
               const doc = await asyncTimeout(docOnPeer2.doc(), 1000);
-              return doc.text;
+              return doc!.text;
             },
             { timeout: 1_000 },
           )
@@ -510,17 +510,17 @@ describe('AutomergeRepo', () => {
         handle.change((doc: any) => {
           doc.offlineText = offlineText;
         });
-        const docOnPeer2 = peer2.repo.find(handle.url);
+        const docOnPeer2 = peer2.repo.find<any>(handle.url);
         await sleep(100);
-        expect((await asyncTimeout(docOnPeer2.doc(), 1000)).offlineText).to.be.undefined;
+        expect((await asyncTimeout(docOnPeer2.doc(), 1000))!.offlineText).to.be.undefined;
       }
 
       {
         // Wait for offline changes to be synced after reconnect.
-        const docOnPeer2 = peer2.repo.find(handle.url);
+        const docOnPeer2 = peer2.repo.find<any>(handle.url);
         await docChangeAfterAction(docOnPeer2, () => connectPeers(spaceKey, teleportBuilder, peer1, peer2));
         await docOnPeer2.whenReady();
-        expect((await asyncTimeout(docOnPeer2.doc(), 1000)).offlineText).to.eq(offlineText);
+        expect((await asyncTimeout(docOnPeer2.doc(), 1000))!.offlineText).to.eq(offlineText);
 
         // Test connection.
         const onlineText = 'This has been written after the connection was re-established';
@@ -530,7 +530,7 @@ describe('AutomergeRepo', () => {
           });
         });
         await docOnPeer2.whenReady();
-        expect((await asyncTimeout(docOnPeer2.doc(), 1000)).onlineText).to.eq(onlineText);
+        expect((await asyncTimeout(docOnPeer2.doc(), 1000))!.onlineText).to.eq(onlineText);
       }
     });
 

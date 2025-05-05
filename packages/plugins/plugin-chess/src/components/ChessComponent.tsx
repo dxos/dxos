@@ -32,6 +32,7 @@ export const ChessComponent = ({ game }: { game: ChessType }) => {
     (move) => {
       if (model.makeMove(move)) {
         game.pgn = model.game.pgn();
+        game.fen = model.game.fen();
         return true;
       }
 

@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import { rmSync } from 'node:fs';
 import path, { join } from 'node:path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
-import { create, Expando } from '@dxos/client/echo';
+import { live, Expando } from '@dxos/client/echo';
 import { Ref, TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
@@ -81,7 +81,7 @@ const main = async () => {
     await space.waitUntilReady();
 
     space.db.add(
-      create({
+      live({
         value: 100,
         string: 'hello world!',
         array: ['one', 'two', 'three'],
@@ -95,9 +95,9 @@ const main = async () => {
     await promise;
     await space.db.flush();
 
-    const expando = space.db.add(create(Expando, { value: [1, 2, 3] }));
+    const expando = space.db.add(live(Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(
-      create(Todo, {
+      live(Todo, {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       }),
     );
@@ -116,13 +116,13 @@ const main = async () => {
     class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
     client.addTypes([TestType]);
-    const object = space.db.add(create(dynamicSchema, {}));
+    const object = space.db.add(live(dynamicSchema, {}));
     dynamicSchema.addFields({ name: S.String, todo: Ref(Todo) });
     object.name = 'Test';
-    object.todo = create(Todo, { name: 'Test todo' });
+    object.todo = live(Todo, { name: 'Test todo' });
     await space.db.flush();
 
-    // space.db.add(create(Expando, { crossSpaceReference: obj, explanation: 'this tests cross-space references' }));
+    // space.db.add(live(Expando, { crossSpaceReference: obj, explanation: 'this tests cross-space references' }));
   }
   log.info('created spaces');
 

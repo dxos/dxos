@@ -3,7 +3,7 @@
 //
 
 import { type Tool, ToolResult, Message } from '@dxos/artifact';
-import { createStatic, ObjectId } from '@dxos/echo-schema';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -43,10 +43,8 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
   const generate = async () => {
     log('llm generate', { tools: params.tools });
     const beginTs = Date.now();
-    const stream = await params.client.generate({
+    const stream = await params.client.execStream({
       model: params.model,
-      spaceId: params.spaceId,
-      threadId: params.threadId,
       history,
       systemPrompt: params.system,
       tools: params.tools as any,
@@ -88,8 +86,6 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
           log.warn('tool error', { message: toolResult.message });
           const resultMessage: Message = {
             id: ObjectId.random(),
-            spaceId: params.spaceId,
-            threadId: params.threadId,
             role: 'user',
             content: [
               {
@@ -110,8 +106,6 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
           log('tool success', { result: toolResult.result });
           const resultMessage: Message = {
             id: ObjectId.random(),
-            spaceId: params.spaceId,
-            threadId: params.threadId,
             role: 'user',
             content: [
               {
@@ -147,10 +141,10 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
   };
 };
 
-export const isToolUse = (message: Message) => {
+export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.content.at(-1);
   invariant(block);
-  return block.type === 'tool_use';
+  return block.type === 'tool_use' && (!onlyToolNames || onlyToolNames.includes(block.name));
 };
 
 export type RunToolsOptions = {
@@ -175,7 +169,23 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
   const toolCall = toolCalls[0];
   const tool = tools.find((tool) => tool.name === toolCall.name);
   if (!tool) {
-    throw new Error(`Tool not found: ${toolCall.name}`);
+    const resultMessage = create(Message, {
+      role: 'user',
+      content: [
+        {
+          type: 'tool_result',
+          toolUseId: toolCall.id,
+          content: `Tool not found: ${toolCall.name}`,
+          isError: true,
+        },
+      ],
+    });
+
+    // TODO(burdon): Retry count?
+    return {
+      type: 'continue',
+      message: resultMessage,
+    };
   }
 
   let toolResult: ToolResult;
@@ -190,7 +200,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
   switch (toolResult.kind) {
     case 'error': {
       log('tool error', { message: toolResult.message });
-      const resultMessage = createStatic(Message, {
+      const resultMessage = create(Message, {
         role: 'user',
         content: [
           {
@@ -211,7 +221,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
 
     case 'success': {
       log('tool success', { result: toolResult.result });
-      const resultMessage = createStatic(Message, {
+      const resultMessage = create(Message, {
         role: 'user',
         content: [
           {
@@ -220,6 +230,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
             content:
               typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result) ?? '',
           },
+          ...(toolResult.extractContentBlocks ?? []),
         ],
       });
 

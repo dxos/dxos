@@ -34,7 +34,7 @@ export class Serializer {
 
     const loadedObjects: Array<ReactiveEchoObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-      const { objects } = await database.query({ id: chunk }).run();
+      const { objects } = await database.query({ id: chunk }).run({ timeout: 60_000 });
       loadedObjects.push(...objects);
     }
 

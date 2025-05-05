@@ -4,11 +4,13 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { useSyncState, getSyncSummary } from '@dxos/react-client/echo';
 import { Icon, Toggle } from '@dxos/react-ui';
 
 import { Panel, type PanelProps } from './Panel';
 import {
   DatabasePanel,
+  EdgePanel,
   MemoryPanel,
   NetworkPanel,
   PerformancePanel,
@@ -17,26 +19,14 @@ import {
   ReplicatorMessagesPanel,
   ReplicatorPanel,
   SpansPanel,
+  SyncStatusPanel,
   TimeSeries,
 } from './panels';
 import { removeEmpty, type Stats } from '../../hooks';
 
 const LOCAL_STORAGE_KEY = 'dxos.org/plugin/performance/panel';
 
-type PanelKey =
-  | 'ts'
-  | 'performance'
-  | 'spans'
-  | 'queries'
-  | 'rawQueries'
-  | 'database'
-  | 'memory'
-  | 'replicator'
-  | 'replicatorMessages';
-
-type PanelMap = Record<PanelKey, boolean | undefined>;
-
-const PANEL_KEYS: PanelKey[] = [
+const PANEL_KEYS = [
   'ts',
   'performance',
   'spans',
@@ -46,7 +36,10 @@ const PANEL_KEYS: PanelKey[] = [
   'memory',
   'replicator',
   'replicatorMessages',
-];
+  'sync',
+] as const;
+type PanelKey = (typeof PANEL_KEYS)[number];
+type PanelMap = Record<PanelKey, boolean | undefined>;
 
 export type QueryPanelProps = {
   stats?: Stats;
@@ -54,7 +47,7 @@ export type QueryPanelProps = {
 };
 
 // TODO(burdon): Reconcile with TraceView in diagnostics.
-export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
+export const StatsPanel = ({ stats, onRefresh, children }: React.PropsWithChildren<QueryPanelProps>) => {
   const [live, setLive] = useState(false);
   const handleToggleLive = () => setLive((live) => !live);
 
@@ -81,6 +74,9 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
 
   const queries = [...(stats?.queries ?? [])];
   queries.reverse();
+
+  const syncState = useSyncState();
+  const syncSummary = getSyncSummary(syncState);
 
   // Store in local storage.
   const [panelState, setPanelState] = useState<Record<PanelKey, boolean | undefined>>(() =>
@@ -114,16 +110,15 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
           </Toggle>
         }
       />
-      <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
+      <MemoryPanel id='memory' memory={stats?.memory} />
+      <NetworkPanel id='network' network={stats?.network} />
+      <EdgePanel id='edge' edge={stats?.edge} />
       <PerformancePanel
         id='performance'
         open={panelState.performance}
         onToggle={handleToggle}
         entries={stats?.performanceEntries}
       />
-      <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
-      <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
-      <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
       <DatabasePanel id='database' open={panelState.database} onToggle={handleToggle} database={stats?.database} />
       <ReplicatorPanel
         id='replicator'
@@ -137,8 +132,19 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
         onToggle={handleToggle}
         database={stats?.database}
       />
-      <MemoryPanel id='memory' memory={stats?.memory} />
-      <NetworkPanel id='network' network={stats?.network} />
+      <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
+      <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
+      <SyncStatusPanel
+        id='sync'
+        open={panelState.sync}
+        onToggle={handleToggle}
+        state={syncState}
+        summary={syncSummary}
+        debug
+      />
+      <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
+      <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
+      {children}
     </div>
   );
 };

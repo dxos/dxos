@@ -160,10 +160,7 @@ const Story = ({
 
   // Control hooks.
   const [startSpinner, stopSpinner] = useSpinner(controller.current, { disabled: !spin });
-  const [startTour, stopTour] = useTour(controller.current, features, {
-    disabled: !tour,
-    styles,
-  });
+  const [_running, setRunning] = useTour(controller.current, features?.points, { disabled: !tour, styles });
   useDrag(controller.current, {
     xAxis,
     disabled: !drag,
@@ -171,7 +168,7 @@ const Story = ({
       switch (event.type) {
         case 'start': {
           stopSpinner();
-          stopTour();
+          setRunning(false);
           break;
         }
       }
@@ -186,7 +183,7 @@ const Story = ({
           startSpinner();
         }
         if (tour) {
-          startTour();
+          setRunning(true);
         }
         break;
       }

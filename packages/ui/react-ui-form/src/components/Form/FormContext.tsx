@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, useContext, useEffect, type FocusEvent, type PropsWithChildren } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, type FocusEvent, type PropsWithChildren } from 'react';
 
 import { raise } from '@dxos/debug';
 import { type BaseObject, getValue } from '@dxos/echo-schema';
@@ -34,12 +34,16 @@ export type FormInputStateProps = {
 export const useInputProps = (path: (string | number)[] = []): FormInputStateProps => {
   const { getStatus, getValue: getFormValue, onValueChange, onTouched } = useFormContext();
 
-  return {
-    getStatus: () => getStatus(path),
-    getValue: () => getFormValue(path),
-    onValueChange: (type: SimpleType, value: any) => onValueChange(path, type, value),
-    onBlur: () => onTouched(path),
-  };
+  const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
+  return useMemo(
+    () => ({
+      getStatus: () => getStatus(stablePath),
+      getValue: () => getFormValue(stablePath),
+      onValueChange: (type: SimpleType, value: any) => onValueChange(stablePath, type, value),
+      onBlur: () => onTouched(stablePath),
+    }),
+    [getStatus, getFormValue, onValueChange, onTouched, stablePath],
+  );
 };
 
 export const FormProvider = ({

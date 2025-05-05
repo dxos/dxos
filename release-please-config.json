@@ -164,11 +164,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/plate/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/process/package.json",
           "jsonpath": "$.version"
         },
@@ -235,6 +230,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/automerge/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -419,6 +419,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/env-tests/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/gem-core/package.json",
           "jsonpath": "$.version"
         },
@@ -469,77 +474,17 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-automation/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-calls/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-canvas/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-excalidraw/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-explorer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-inbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-native/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-outliner/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-script/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-search/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-theme-editor/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-transcription/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-transformer/package.json",
+          "path": "packages/plugins/plugin-assistant/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-automation/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -554,12 +499,27 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-debug/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-deck/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-excalidraw/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -579,6 +539,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-kanban/package.json",
           "jsonpath": "$.version"
         },
@@ -594,7 +559,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-meeting/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-mermaid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-native/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -609,7 +584,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-outliner/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-presenter/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-preview/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -620,6 +605,16 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-script/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-search/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -649,12 +644,27 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-storybook-layout/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-table/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-theme-editor/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -665,6 +675,16 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-token-manager/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-transcription/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-transformer/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -745,6 +765,11 @@
         {
           "type": "json",
           "path": "packages/ui/lit-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/lit-ui/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -879,6 +904,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-tag-picker/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-text-tooltip/package.json",
           "jsonpath": "$.version"
         },
@@ -895,11 +925,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-types/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/apidoc/package.json",
           "jsonpath": "$.version"
         },
         {

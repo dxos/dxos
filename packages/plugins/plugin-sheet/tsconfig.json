@@ -3,13 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -123,19 +116,22 @@
       "path": "../../ui/react-ui-types"
     },
     {
-      "path": "../experimental/plugin-script"
-    },
-    {
       "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-deck"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-script"
     },
     {
       "path": "../plugin-space"

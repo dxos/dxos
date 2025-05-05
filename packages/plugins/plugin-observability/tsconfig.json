@@ -3,11 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -72,6 +67,9 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../plugin-graph"
     }
   ]
 }

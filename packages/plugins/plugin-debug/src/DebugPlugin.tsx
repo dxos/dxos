@@ -3,13 +3,13 @@
 //
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { DeckCapabilities } from '@dxos/plugin-deck';
 import { type Client } from '@dxos/react-client';
 
-import { AppGraphBuilder, DebugSettings, ReactSurface } from './capabilities';
-import { DEBUG_PLUGIN, meta } from './meta';
+import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
+import { meta } from './meta';
 import translations from './translations';
 
+// TODO(wittjosiah): Rename to DevtoolsPlugin?
 export const DebugPlugin = () => {
   setupDevtools();
 
@@ -25,18 +25,13 @@ export const DebugPlugin = () => {
       activate: () => contributes(Capabilities.Translations, translations),
     }),
     defineModule({
-      id: `${meta.id}/module/complementary-panel`,
+      id: `${meta.id}/module/react-context`,
       activatesOn: Events.Startup,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'debug',
-          label: ['debug label', { ns: DEBUG_PLUGIN }],
-          icon: 'ph--bug--regular',
-        }),
+      activate: ReactContext,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({

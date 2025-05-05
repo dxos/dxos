@@ -4,13 +4,14 @@
 
 import { Message, type MessageContentBlock } from '@dxos/artifact';
 import { Event } from '@dxos/async';
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
 
-import { type GenerationStream } from './stream';
+import { type GenerationStream } from './service';
 import { StreamTransform, type StreamBlock } from './transform';
+import type { GenerationStreamEvent } from './types';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.
@@ -30,6 +31,8 @@ export class MixedStreamParser {
    * Update partial block (while streaming).
    */
   public update = new Event<MessageContentBlock>();
+
+  public streamEvent = new Event<GenerationStreamEvent>();
 
   /**
    * Current message.
@@ -60,7 +63,7 @@ export class MixedStreamParser {
   /**
    * Parse stream until end.
    */
-  async parse(stream: GenerationStream) {
+  async parse(stream: GenerationStream): Promise<Message[]> {
     const transformer = new StreamTransform();
 
     /**
@@ -74,8 +77,13 @@ export class MixedStreamParser {
     let streamBlock: StreamBlock | undefined;
     const stack: StreamBlock[] = [];
 
+    const messagesCollected: Message[] = [];
+
     for await (const event of stream) {
-      // log.info('event', { type: event.type, event });
+      log('streamEvent', { event });
+      this.streamEvent.emit(event);
+
+      // log('event', { type: event.type, event });
       switch (event.type) {
         //
         // Messages.
@@ -86,7 +94,7 @@ export class MixedStreamParser {
             log.warn('unexpected message_start');
           }
 
-          this._message = createStatic(Message, { role: 'assistant', content: [] });
+          this._message = create(Message, { role: event.message.role, content: [...event.message.content] });
           this.message.emit(this._message);
           break;
         }
@@ -103,6 +111,7 @@ export class MixedStreamParser {
           if (!this._message) {
             log.warn('unexpected message_stop');
           } else {
+            messagesCollected.push(this._message);
             this._message = undefined;
           }
           break;
@@ -135,7 +144,7 @@ export class MixedStreamParser {
             case 'text_delta': {
               const chunks = transformer.transform(event.delta.text);
               for (const chunk of chunks) {
-                // log.info('text_delta', { chunk, current });
+                log('text_delta', { chunk });
 
                 switch (streamBlock?.type) {
                   //
@@ -149,6 +158,7 @@ export class MixedStreamParser {
                         if (stack.length > 0) {
                           const top = stack.pop();
                           invariant(top && top.type === 'tag');
+                          log('pop', { top });
                           top.content.push(streamBlock);
                           streamBlock = top;
                         } else {
@@ -247,6 +257,8 @@ export class MixedStreamParser {
         this._emitUpdate(contentBlock, streamBlock);
       }
     } // for.
+
+    return messagesCollected;
   }
 }
 
@@ -304,6 +316,17 @@ export const mergeMessageBlock = (
           break;
         }
 
+        case 'proposal': {
+          if (streamBlock.content.length === 1 && streamBlock.content[0].type === 'text') {
+            return {
+              type: 'json',
+              disposition: 'proposal',
+              json: JSON.stringify({ text: streamBlock.content[0].content }),
+            };
+          }
+          break;
+        }
+
         case 'select': {
           return {
             type: 'json',
@@ -315,6 +338,14 @@ export const mergeMessageBlock = (
                   : [],
               ),
             }),
+          };
+        }
+
+        case 'tool-list': {
+          return {
+            type: 'json',
+            disposition: 'tool_list',
+            json: JSON.stringify({}),
           };
         }
       }

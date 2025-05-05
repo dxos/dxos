@@ -5,7 +5,7 @@
 export const range: {
   (n: number): number[];
   <T>(n: number, mapper: RangeMapper<T>): T[];
-} = <T>(n: number, mapper?: RangeMapper<T>) => {
+} = <T>(n: number = 0, mapper?: RangeMapper<T>) => {
   const range = Array.from(Array(n).keys());
   return mapper == null ? range : range.map(mapper);
 };
@@ -18,3 +18,10 @@ export const rangeFromTo: {
 };
 
 type RangeMapper<T> = (n: number) => T;
+
+/**
+ * Clamps a value between a minimum and maximum value.
+ */
+export const clamp = (value: number, min: number, max: number): number => {
+  return Math.min(Math.max(value, min), max);
+};

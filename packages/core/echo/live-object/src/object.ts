@@ -2,29 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema as S } from 'effect';
+
 import {
-  type BaseObject,
-  createObjectId,
+  ObjectId,
   defineHiddenProperty,
+  getTypeAnnotation,
+  type BaseObject,
   type ExcludeId,
   Expando,
-  getObjectAnnotation,
   type ObjectMeta,
   ObjectMetaSchema,
 } from '@dxos/echo-schema';
-import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import type { Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-
-/**
- * Reactive object marker interface (does not change the shape of the object.)
- * Accessing properties triggers signal semantics.
- */
-// TODO(dmaretskyi): Rename LiveObject.
-export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
 
 /**
  * Creates a reactive object from a plain Javascript object.
@@ -32,18 +27,15 @@ export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
  */
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
-export const create: {
-  <T extends BaseObject>(obj: T): ReactiveObject<T>;
-  <T extends BaseObject>(
-    schema: S.Schema<T, any, never>,
-    obj: NoInfer<ExcludeId<T>>,
-    meta?: ObjectMeta,
-  ): ReactiveObject<T>;
+export const live: {
+  <T extends BaseObject>(obj: T): Live<T>;
+  <T extends BaseObject>(schema: S.Schema<T, any, never>, obj: NoInfer<ExcludeId<T>>, meta?: ObjectMeta): Live<T>;
 } = <T extends BaseObject>(
   objOrSchema: S.Schema<T, any> | T,
+  // TODO(burdon): Handle defaults.
   obj?: ExcludeId<T>,
   meta?: ObjectMeta,
-): ReactiveObject<T> => {
+): Live<T> => {
   if (obj && (objOrSchema as any) !== Expando) {
     return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
@@ -58,13 +50,13 @@ const createReactiveObject = <T extends BaseObject>(
   meta?: ObjectMeta,
   schema?: S.Schema<T>,
   options?: { expando?: boolean },
-): ReactiveObject<T> => {
+): Live<T> => {
   if (!isValidProxyTarget(obj)) {
     throw new Error('Value cannot be made into a reactive object.');
   }
 
   if (schema) {
-    const shouldGenerateId = options?.expando || getObjectAnnotation(schema);
+    const shouldGenerateId = options?.expando || getTypeAnnotation(schema);
     if (shouldGenerateId) {
       setIdOnTarget(obj);
     }
@@ -86,7 +78,7 @@ const createReactiveObject = <T extends BaseObject>(
  */
 const setIdOnTarget = (target: any) => {
   invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
-  target.id = createObjectId();
+  target.id = ObjectId.random();
 };
 
 const symbolMeta = Symbol.for('@dxos/schema/ObjectMeta');

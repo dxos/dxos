@@ -2,7 +2,8 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "outDir": "dist"
+    "outDir": "dist",
+    "target": "ESNext"
   },
   "include": [
     "src",

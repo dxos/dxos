@@ -36,7 +36,7 @@ window.addEventListener('message', async (event) => {
   port.postMessage(message);
 });
 
-port.onMessage.addListener((message) => {
+port.onMessage.addListener((message: any) => {
   log('Received message from background:', message);
   sandbox.contentWindow?.postMessage({ data: message.data, source: 'panel' }, '*');
 });
@@ -45,4 +45,4 @@ browser.devtools.network.onNavigated.addListener(() => {
   window.location.reload();
 });
 
-log('Initialized panel finished.');
+log('initialized panel');

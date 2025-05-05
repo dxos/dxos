@@ -7,15 +7,17 @@ import { JSONPath } from 'jsonpath-plus';
 
 import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
-import { isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
+import { getTypename, isInstanceOf, ObjectId, S, toEffectSchema } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
+import { KanbanType } from '@dxos/react-ui-kanban/types';
 import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
 
+import { executeFunction, resolveFunctionPath } from './function';
 import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
-import { computeTemplate } from './template/generic';
+import { computeTemplate } from './template';
 import {
   AppendInput,
   ConstantOutput,
@@ -244,7 +246,7 @@ export const registry: Record<NodeType, Executable> = {
               const schema = yield* Effect.promise(async () =>
                 spaceService.db.schemaRegistry
                   .query({
-                    typename: (await container.view?.load())?.query.type,
+                    typename: (await container.view?.load())?.query.typename,
                   })
                   .first(),
               );
@@ -252,17 +254,32 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                spaceService.db.add(create(schema, rest));
+                spaceService.db.add(live(schema, rest));
+              }
+              yield* Effect.promise(() => spaceService.db.flush());
+            } else if (isInstanceOf(KanbanType, container)) {
+              const schema = yield* Effect.promise(async () =>
+                spaceService.db.schemaRegistry
+                  .query({
+                    typename: (await container.cardView?.load())?.query.typename,
+                  })
+                  .first(),
+              );
+
+              for (const item of items) {
+                const { id: _id, '@type': _type, ...rest } = item as any;
+                // TODO(dmaretskyi): Forbid type on create.
+                spaceService.db.add(live(schema, rest));
               }
               yield* Effect.promise(() => spaceService.db.flush());
             } else {
-              throw new Error('Unsupported ECHO container type');
+              throw new Error(`Unsupported ECHO container type: ${getTypename(container)}`);
             }
 
             return {};
           }
           default: {
-            throw new Error('Unsupported DXN');
+            throw new Error(`Unsupported DXN: ${dxn.toString()}`);
           }
         }
       }),
@@ -334,6 +351,21 @@ export const registry: Record<NodeType, Executable> = {
   ['function' as const]: defineComputeNode({
     input: AnyInput,
     output: AnyOutput,
+    exec: synchronizedComputeFunction((input, node) =>
+      Effect.gen(function* (): any {
+        const functionRef = node?.function;
+        if (!node || !functionRef) {
+          throw new Error(`Function not specified on ${node?.id}.`);
+        }
+        const { path } = yield* Effect.tryPromise({
+          try: () => resolveFunctionPath(functionRef),
+          catch: (e) => e,
+        });
+
+        const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
+        return executeFunction(path, input, outputSchema);
+      }),
+    ),
   }),
 
   ['gpt' as const]: defineComputeNode({

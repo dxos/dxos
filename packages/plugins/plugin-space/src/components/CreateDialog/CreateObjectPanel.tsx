@@ -2,45 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework';
-import { type TypedObject, getObjectAnnotation, type ObjectAnnotation, S } from '@dxos/echo-schema';
+import { getTypeAnnotation, type TypeAnnotation } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { type SpaceId, type Space } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Form, type InputProps } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable, type MaybePromise } from '@dxos/util';
 
+import { useInputSurfaceLookup } from '../../hooks';
 import { SPACE_PLUGIN } from '../../meta';
-import { type CollectionType } from '../../types';
+import { type ObjectForm, type CollectionType } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
-// TODO(ZaymonFC): Move this if you find yourself needing it elsewhere.
-/**
- * Creates a surface input component based on plugin context.
- * @param baseData Additional data that will be merged with form data and passed to the surface.
- * This allows providing more context to the surface than what's available from the form itself.
- */
-const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
-  const pluginManager = usePluginManager();
-
-  return useCallback(
-    ({ prop, schema, inputProps }: { prop: string; schema: S.Schema<any>; inputProps: InputProps }) => {
-      const composedData = { prop, schema, ...baseData };
-      if (!isSurfaceAvailable(pluginManager.context, { role: 'form-input', data: composedData })) {
-        return undefined;
-      }
-
-      return <Surface role='form-input' data={composedData} {...inputProps} />;
-    },
-    [pluginManager, baseData],
-  );
-};
-
 export type CreateObjectPanelProps = ThemedClassName<{
-  schemas: TypedObject[];
+  forms: ObjectForm[];
   spaces: Space[];
   typename?: string;
   target?: Space | CollectionType;
@@ -48,15 +27,15 @@ export type CreateObjectPanelProps = ThemedClassName<{
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Record<string, any>;
   onCreateObject?: (params: {
-    schema: TypedObject;
+    form: ObjectForm;
     target: Space | CollectionType;
-    data: Record<string, any>;
+    data?: Record<string, any>;
   }) => MaybePromise<void>;
 }>;
 
 export const CreateObjectPanel = ({
   classNames,
-  schemas,
+  forms,
   spaces,
   typename: initialTypename,
   target: initialTarget,
@@ -68,9 +47,9 @@ export const CreateObjectPanel = ({
   const { t } = useTranslation(SPACE_PLUGIN);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
-  const schema = schemas.find((schema) => getObjectAnnotation(schema)?.typename === typename);
-  const options: ObjectAnnotation[] = schemas
-    .map(getObjectAnnotation)
+  const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
+  const options: TypeAnnotation[] = forms
+    .map((form) => getTypeAnnotation(form.objectSchema))
     .filter(isNonNullable)
     .sort((a, b) => {
       const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
@@ -80,50 +59,47 @@ export const CreateObjectPanel = ({
 
   const handleCreateObject = useCallback(
     async (props: Record<string, any>) => {
-      if (!schema || !target) {
+      if (!form || !target) {
         return;
       }
-      await onCreateObject?.({ schema, target, data: props });
+      await onCreateObject?.({ form, target, data: props });
     },
-    [onCreateObject, schema, target],
+    [onCreateObject, form, target],
   );
 
-  const metadata = useMemo(() => {
-    if (!typename) {
-      return;
-    }
-    return resolve?.(typename);
-  }, [resolve, typename]);
+  const handleSetTypename = useCallback(
+    async (typename: string) => {
+      invariant(target, 'target is required');
+      const form = forms.find((form) => getTypeAnnotation(form.objectSchema)?.typename === typename);
+      if (form && !form.formSchema) {
+        await onCreateObject?.({ form, target });
+      } else {
+        setTypename(typename);
+      }
+    },
+    [forms, onCreateObject, target],
+  );
 
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
-
-  const form = useMemo(() => {
-    // TODO(ZaymonFC): Move this default object creation schema somewhere?
-    const schema = (metadata?.creationSchema ?? S.Struct({ name: S.optional(S.String) })) as S.Schema<any>;
-
-    return (
-      <Form
-        classNames='!p-0'
-        autoFocus
-        values={{ name: initialName }}
-        schema={schema}
-        testId='create-object-form'
-        onSave={handleCreateObject}
-        lookupComponent={inputSurfaceLookup}
-      />
-    );
-  }, [initialName, handleCreateObject, metadata]);
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
   return (
     <div role='form' className={mx('flex flex-col gap-2', classNames)}>
-      {!schema ? (
-        <SelectSchema options={options} resolve={resolve} onChange={setTypename} />
+      {!form ? (
+        <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
       ) : !target ? (
         <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={setTarget} />
-      ) : (
-        form
-      )}
+      ) : form.formSchema ? (
+        <Form
+          classNames='!p-0'
+          autoFocus
+          values={{ name: initialName }}
+          schema={form.formSchema}
+          testId='create-object-form'
+          onSave={handleCreateObject}
+          lookupComponent={inputSurfaceLookup}
+        />
+      ) : undefined}
     </div>
   );
 };
@@ -172,7 +148,7 @@ const SelectSchema = ({
   resolve,
   onChange,
 }: {
-  options: ObjectAnnotation[];
+  options: TypeAnnotation[];
   onChange: (type: string) => void;
 } & Pick<CreateObjectPanelProps, 'resolve'>) => {
   const { t } = useTranslation(SPACE_PLUGIN);

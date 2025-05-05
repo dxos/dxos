@@ -5,7 +5,6 @@
       "label": "build",
       "type": "typescript",
       "tsconfig": "tsconfig.all.json",
-      "isBackground": true,
       "problemMatcher": ["$tsc-watch"],
       "option": "watch",
       "presentation": {
@@ -23,12 +22,83 @@
       "label": "build current tsconfig",
       "type": "typescript",
       "tsconfig": "${relativeFile}",
-      "isBackground": true,
       "problemMatcher": ["$tsc-watch"],
       "option": "watch",
       "presentation": {
         "echo": true,
         "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
+      "label": "install dependencies",
+      "type": "shell",
+      "command": "pnpm install",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true
+      }
+    },
+    {
+      "label": "test current file",
+      "type": "shell",
+      "command": "cd ${fileDirname} && pnpm vitest ${file}",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
+    },
+    {
+      "label": "storybook",
+      "type": "shell",
+      "command": "pnpm -w nx storybook stories",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
+    },
+    {
+      "label": "serve composer-app",
+      "type": "shell",
+      "command": "pnpm -w nx serve composer-app",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      },
+      "options": {
+        "env": {
+          "DX_LABS": "true"
+        }
+      }
+    },
+    {
+      "label": "build and test all packages",
+      "type": "shell",
+      "command": "pnpm -w nx run-many --target=build,test --parallel 12",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
         "focus": false,
         "panel": "shared"
       },

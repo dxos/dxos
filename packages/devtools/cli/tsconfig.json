@@ -2,12 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "outDir": "dist/src",
     "rootDirs": [
       "./src", // <-- KEEP "./src" FIRST

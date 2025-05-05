@@ -2,17 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, type PublicKey } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 /**
- * Runtime representation of object reference.
+ * Runtime representation of an reference in ECHO.
+ * Implemented as a DXN, but we might extend it to other URIs in the future.
  */
-// TODO(dmaretskyi): This class needs refactoring.
 export class Reference {
   /**
    * Protocol references to runtime registered types.
+   * @deprecated
    */
   static TYPE_PROTOCOL = 'protobuf';
 
@@ -22,12 +23,12 @@ export class Reference {
         return new Reference(dxn.parts[0], Reference.TYPE_PROTOCOL, 'dxos.org', dxn);
       case DXN.kind.ECHO:
         if (dxn.parts[0] === LOCAL_SPACE_TAG) {
-          return new Reference(dxn.parts[1]);
+          return new Reference(dxn.parts[1], undefined, undefined, dxn);
         } else {
-          return new Reference(dxn.parts[1], undefined, dxn.parts[0]);
+          return new Reference(dxn.parts[1], undefined, dxn.parts[0], dxn);
         }
       default:
-        throw new Error(`Unsupported DXN kind: ${dxn.kind}`);
+        return new Reference(dxn.parts[0], undefined, dxn.parts[0], dxn);
     }
   }
 
@@ -45,27 +46,65 @@ export class Reference {
   /**
    * @deprecated
    */
-  // TODO(burdon): Document/remove?
+  // TODO(dmaretskyi): Remove.
   static fromLegacyTypename(type: string): Reference {
     return new Reference(type, Reference.TYPE_PROTOCOL, 'dxos.org');
   }
 
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): Remove
+  static fromObjectIdAndSpaceKey(objectId: ObjectId, spaceKey: PublicKey): Reference {
+    // TODO(dmaretskyi): FIX ME! This should be a space ID not a space key.
+    return new Reference(objectId, undefined, spaceKey.toHex());
+  }
+
   // prettier-ignore
-  constructor(
+  private constructor(
     // TODO(dmaretskyi): Remove and just leave DXN.
-    public readonly objectId: ObjectId,
-    public readonly protocol?: string,
-    public readonly host?: string,
-    public readonly dxn?: DXN,
+    private readonly _objectId: ObjectId,
+    private readonly _protocol?: string,
+    private readonly _host?: string,
+    private readonly _dxn?: DXN,
   ) {}
+
+  get dxn(): DXN | undefined {
+    return this._dxn;
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): Remove.
+  get objectId(): ObjectId {
+    return this._objectId;
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): Remove.
+  get protocol(): string | undefined {
+    return this._protocol;
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): Remove.
+  get host(): string | undefined {
+    return this._host;
+  }
 
   encode(): ReferenceProto {
     return { objectId: this.objectId, host: this.host, protocol: this.protocol };
   }
 
+  // TODO(dmaretskyi): Remove in favor of `reference.dxn`.
   toDXN(): DXN {
-    if (this.dxn) {
-      return this.dxn;
+    if (this._dxn) {
+      return this._dxn;
     }
 
     if (this.protocol === Reference.TYPE_PROTOCOL) {

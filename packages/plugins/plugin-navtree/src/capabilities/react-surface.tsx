@@ -7,13 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isGraphNode } from '@dxos/plugin-graph';
 
-import {
-  CommandsDialogContent,
-  CommandsTrigger,
-  NavTreeDocumentTitle,
-  NotchStart,
-  NavTreeContainer,
-} from '../components';
+import { CommandsDialogContent, CommandsTrigger, NavTreeDocumentTitle, NavTreeContainer } from '../components';
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
 
 export default () =>
@@ -41,11 +35,6 @@ export default () =>
       id: `${NAVTREE_PLUGIN}/document-title`,
       role: 'document-title',
       component: ({ data }) => <NavTreeDocumentTitle node={isGraphNode(data.subject) ? data.subject : undefined} />,
-    }),
-    createSurface({
-      id: `${NAVTREE_PLUGIN}/notch-start`,
-      role: 'notch-start',
-      component: () => <NotchStart />,
     }),
     createSurface({
       id: `${NAVTREE_PLUGIN}/search-input`,

@@ -59,7 +59,6 @@ export const NavTreePlugin = () =>
       activate: async (context) => {
         const layout = context.requestCapability(Capabilities.Layout);
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-
         if (dispatch && layout.active.length === 1) {
           await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] }));
         }
@@ -74,12 +73,12 @@ export const NavTreePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({

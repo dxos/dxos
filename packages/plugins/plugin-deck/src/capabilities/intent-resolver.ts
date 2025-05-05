@@ -16,17 +16,27 @@ import {
   chain,
 } from '@dxos/app-framework';
 import { getTypename, S } from '@dxos/echo-schema';
-import { isReactiveObject } from '@dxos/live-object';
+import { invariant } from '@dxos/invariant';
+import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { isNonNullable } from '@dxos/util';
+import { byPosition, isNonNullable } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
-import { setActive } from './set-active';
-import { closeEntry, incrementPlank, openEntry } from '../layout';
+import { closeEntry, createEntryId, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
-import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode } from '../types';
+import {
+  DeckAction,
+  type LayoutMode,
+  type DeckSettingsProps,
+  isLayoutMode,
+  getMode,
+  defaultDeck,
+  PLANK_COMPANION_TYPE,
+} from '../types';
+import { setActive } from '../util';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -111,8 +121,14 @@ export default (context: PluginsContext) =>
       resolve: ({ subject, options }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
         layout.popoverOpen = options.state ?? Boolean(subject);
-        layout.popoverContent = subject ? { component: subject, props: options.props } : null;
-        layout.popoverAnchorId = options.anchorId;
+        layout.popoverContent =
+          typeof subject === 'string' ? { component: subject, props: options.props } : subject ? { subject } : null;
+        layout.popoverSide = options.side;
+        if (options.variant === 'virtual') {
+          layout.popoverAnchor = options.anchor;
+        } else {
+          layout.popoverAnchorId = options.anchorId;
+        }
       },
     }),
     createResolver({
@@ -163,10 +179,8 @@ export default (context: PluginsContext) =>
             deck.initialized = true;
           }
 
-          if (mode === 'fullscreen' && !deck.fullscreen) {
-            deck.fullscreen = true;
-          } else if (mode !== 'fullscreen' && deck.fullscreen) {
-            deck.fullscreen = false;
+          if (mode === 'solo--fullscreen') {
+            deck.fullscreen = !deck.fullscreen;
           }
         };
 
@@ -193,18 +207,34 @@ export default (context: PluginsContext) =>
       resolve: ({ subject }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         batch(() => {
+          // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
+          //  Ideally this should be worked into the data model in a generic way.
+          if (!state.activeDeck.startsWith('!')) {
+            state.previousDeck = state.activeDeck;
+          }
           state.activeDeck = subject;
           if (!state.decks[subject]) {
-            state.decks[subject] = { initialized: false, active: [], inactive: [], fullscreen: false, plankSizing: {} };
+            state.decks[subject] = { ...defaultDeck };
           }
         });
 
-        const first = state.decks[state.activeDeck].active[0];
+        const first = state.deck.solo ? state.deck.solo : state.deck.active[0];
         if (first) {
           return {
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
         }
+      },
+    }),
+    createResolver({
+      intent: LayoutAction.UpdateLayout,
+      filter: (data): data is S.Schema.Type<typeof LayoutAction.RevertWorkspace.fields.input> =>
+        S.is(LayoutAction.RevertWorkspace.fields.input)(data),
+      resolve: () => {
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        return {
+          intents: [createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: state.previousDeck })],
+        };
       },
     }),
     createResolver({
@@ -222,13 +252,14 @@ export default (context: PluginsContext) =>
         const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
         batch(() => {
           const next = state.deck.solo
-            ? (subject as string[])
+            ? (subject as string[]).map((id) => createEntryId(id, options?.variant))
             : subject.reduce(
                 (acc, entryId) =>
                   openEntry(acc, entryId, {
                     key: options?.key,
                     positioning: options?.positioning ?? settings?.newPlankPositioning,
                     pivotId: options?.pivotId,
+                    variant: options?.variant,
                   }),
                 state.deck.active,
               );
@@ -245,13 +276,13 @@ export default (context: PluginsContext) =>
               ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
               : []),
             createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
-            ...newlyOpen.map((id) => {
-              const active = graph?.findNode(id)?.data;
-              const typename = isReactiveObject(active) ? getTypename(active) : undefined;
+            ...newlyOpen.map((subjectId) => {
+              const active = graph?.findNode(subjectId)?.data;
+              const typename = isLiveObject(active) ? getTypename(active) : undefined;
               return createIntent(ObservabilityAction.SendEvent, {
                 name: 'navigation.activate',
                 properties: {
-                  id,
+                  subjectId,
                   typename,
                 },
               });
@@ -267,10 +298,19 @@ export default (context: PluginsContext) =>
       resolve: ({ subject }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const next = subject.reduce((acc, id) => closeEntry(acc, id), state.deck.active);
+        const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
+        const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
         const toAttend = setActive({ next, state, attention });
+
+        const clearCompanionIntents = subject
+          .filter((id) => state.deck.activeCompanions && id in state.deck.activeCompanions)
+          .map((primary) => createIntent(DeckAction.ChangeCompanion, { primary, companion: null }));
+
         return {
-          intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
+          intents: [
+            ...clearCompanionIntents,
+            ...(toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : []),
+          ],
         };
       },
     }),
@@ -304,10 +344,28 @@ export default (context: PluginsContext) =>
       },
     }),
     createResolver({
+      intent: DeckAction.ChangeCompanion,
+      resolve: (data) => {
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        // TODO(thure): Reactivity only works when creating a lexically new `activeCompanions`… Are these not proxy objects?
+        if (data.companion === null) {
+          const { [data.primary]: _, ...nextActiveCompanions } = state.deck.activeCompanions ?? {};
+          state.deck.activeCompanions = nextActiveCompanions;
+        } else {
+          invariant(data.companion !== data.primary);
+          state.deck.activeCompanions = {
+            ...state.deck.activeCompanions,
+            [data.primary]: data.companion,
+          };
+        }
+      },
+    }),
+    createResolver({
       intent: DeckAction.Adjust,
       resolve: (adjustment) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
+        const { graph } = context.requestCapability(Capabilities.AppGraph);
 
         return batch(() => {
           if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
@@ -318,7 +376,24 @@ export default (context: PluginsContext) =>
             });
           }
 
-          if (adjustment.type === 'solo') {
+          if (adjustment.type === 'companion') {
+            const node = graph.findNode(adjustment.id);
+            const [companion] = node
+              ? graph
+                  .nodes(node, { filter: (n): n is Node<any> => n.type === PLANK_COMPANION_TYPE })
+                  .toSorted((a, b) => byPosition(a.properties, b.properties))
+              : [];
+            if (companion) {
+              return {
+                intents: [
+                  // TODO(wittjosiah): This should remember the previously selected companion.
+                  createIntent(DeckAction.ChangeCompanion, { primary: adjustment.id, companion: companion.id }),
+                ],
+              };
+            }
+          }
+
+          if (adjustment.type.startsWith('solo')) {
             const entryId = adjustment.id;
             if (!state.deck.solo) {
               // Solo the entry.
@@ -327,21 +402,34 @@ export default (context: PluginsContext) =>
                   createIntent(LayoutAction.SetLayoutMode, {
                     part: 'mode',
                     subject: entryId,
-                    options: { mode: 'solo' },
+                    options: { mode: adjustment.type },
                   }),
                 ],
               };
             } else {
-              // Un-solo the current entry.
-              return {
-                intents: [
-                  // NOTE: The order of these is important.
-                  pipe(
-                    createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
-                    chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
-                  ),
-                ],
-              };
+              if (adjustment.type === 'solo--fullscreen') {
+                // Toggle fullscreen on the current entry.
+                return {
+                  intents: [
+                    createIntent(LayoutAction.SetLayoutMode, {
+                      part: 'mode',
+                      subject: entryId,
+                      options: { mode: 'solo--fullscreen' },
+                    }),
+                  ],
+                };
+              } else if (adjustment.type === 'solo') {
+                // Un-solo the current entry.
+                return {
+                  intents: [
+                    // NOTE: The order of these is important.
+                    pipe(
+                      createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
+                      chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
+                    ),
+                  ],
+                };
+              }
             }
           }
         });

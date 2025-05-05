@@ -58,7 +58,7 @@ export class EchoClient extends Resource {
   private _queryService: QueryService | undefined = undefined;
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
-  constructor(params: EchoClientParams) {
+  constructor(_: EchoClientParams = {}) {
     super();
     this._graph = new Hypergraph();
   }

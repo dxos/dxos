@@ -19,6 +19,7 @@
     "Expando",
     "Faas",
     "Hypergraph",
+    "keymap",
     "mykola",
     "protobuf",
     "testutils",
@@ -58,5 +59,8 @@
     "console",
     "effect/Effect",
     "effect/Console"
-  ]
+  ],
+  "circleci.notifications.mine": true,
+  "search.useParentIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": false
 }

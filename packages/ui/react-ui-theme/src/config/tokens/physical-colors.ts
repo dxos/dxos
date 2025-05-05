@@ -19,7 +19,7 @@ const DEG_RAD = Math.PI / 180;
 const hueKeyPoint = (hue: number): PhysicalPalette => {
   const hueDeg = (360 * (hue / 17) + 26) % 360;
   return {
-    keyPoint: [0.5, 0.165 + 0.04 * Math.cos((hueDeg - 15) * DEG_RAD), hueDeg],
+    keyPoint: [0.5, 0.13 + 0.024 * Math.sin((hueDeg - 15) * DEG_RAD), hueDeg],
     lowerCp: 1,
     upperCp: 1,
     torsion: 0,

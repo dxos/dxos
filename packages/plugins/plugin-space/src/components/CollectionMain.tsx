@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
+import { baseSurface, descriptionMessage, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN } from '../meta';
 import type { CollectionType } from '../types';
@@ -21,10 +21,7 @@ export const CollectionMain = ({ collection }: { collection: CollectionType }) =
     >
       <p
         role='alert'
-        className={mx(
-          descriptionText,
-          'border border-dashed border-neutral-400/50 rounded-lg p-8 font-normal text-lg max-is-[24rem] break-words',
-        )}
+        className={mx(descriptionMessage, 'rounded-lg p-8 font-normal text-lg max-is-[24rem] break-words')}
       >
         {collection.name ?? t('unnamed collection label')}
       </p>

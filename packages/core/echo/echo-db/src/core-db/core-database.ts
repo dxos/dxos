@@ -11,7 +11,7 @@ import {
   Trigger,
   UpdateScheduler,
   type ReadOnlyEvent,
-  type UnsubscribeCallback,
+  type CleanupFn,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
@@ -318,7 +318,13 @@ export class CoreDatabase {
       inactivityTimeout = 30_000,
       returnDeleted = false,
       returnWithUnsatisfiedDeps = false,
-    }: { inactivityTimeout?: number; returnDeleted?: boolean; returnWithUnsatisfiedDeps?: boolean } = {},
+      failOnTimeout = false,
+    }: {
+      inactivityTimeout?: number;
+      returnDeleted?: boolean;
+      returnWithUnsatisfiedDeps?: boolean;
+      failOnTimeout?: boolean;
+    } = {},
   ): Promise<(ObjectCore | undefined)[]> {
     if (!this._automergeDocLoader.hasRootHandle) {
       throw new Error('Database is not ready.');
@@ -346,12 +352,16 @@ export class CoreDatabase {
     this._automergeDocLoader.loadObjectDocument(idsToLoad);
 
     return new Promise((resolve, reject) => {
-      let unsubscribe: UnsubscribeCallback | null = null;
+      let unsubscribe: CleanupFn | null = null;
       let inactivityTimeoutTimer: any | undefined;
       const scheduleInactivityTimeout = () => {
         inactivityTimeoutTimer = setTimeout(() => {
           unsubscribe?.();
-          reject(new TimeoutError(inactivityTimeout));
+          if (failOnTimeout) {
+            reject(new TimeoutError(inactivityTimeout));
+          } else {
+            resolve(result);
+          }
         }, inactivityTimeout);
       };
       unsubscribe = this._updateEvent.on(({ itemsUpdated }) => {
@@ -537,12 +547,15 @@ export class CoreDatabase {
     const core = await this.loadObjectCoreById(id);
     invariant(core);
 
-    const mappedData = deepMapValues(data, (value) => {
+    const mappedData = deepMapValues(data, (value, recurse) => {
       if (Ref.isRef(value)) {
         return { '/': value.dxn.toString() };
       }
-      return value;
+      return recurse(value);
     });
+    delete mappedData.id;
+    invariant(mappedData['@type'] === undefined);
+    invariant(mappedData['@meta'] === undefined);
 
     const existingStruct: ObjectStructure = core.getDecoded([]) as any;
     const newStruct: ObjectStructure = {
@@ -660,7 +673,7 @@ export class CoreDatabase {
     return value ?? raise(new Error('Failed to get sync state'));
   }
 
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): UnsubscribeCallback {
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
     const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
     stream.subscribe(
       (data) => {

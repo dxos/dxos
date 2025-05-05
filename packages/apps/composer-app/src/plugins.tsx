@@ -2,15 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+// NOTE(ZaymonFC): This is a workaround. See: https://discord.com/channels/837138313172353095/1363955461350621235
+import '@dxos/plugin-inbox/css';
+
 import { INTENT_PLUGIN, IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@dxos/app-framework';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
+import { AssistantPlugin, ASSISTANT_PLUGIN } from '@dxos/plugin-assistant';
 import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
 import { AutomationPlugin, AUTOMATION_PLUGIN } from '@dxos/plugin-automation';
-import { CallsPlugin, CALLS_PLUGIN } from '@dxos/plugin-calls';
-import { CanvasPlugin } from '@dxos/plugin-canvas';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin, CLIENT_PLUGIN } from '@dxos/plugin-client';
+import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DebugPlugin, DEBUG_PLUGIN } from '@dxos/plugin-debug';
 import { DeckPlugin, DECK_PLUGIN } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
@@ -19,15 +22,17 @@ import { FilesPlugin, FILES_PLUGIN } from '@dxos/plugin-files';
 import { GraphPlugin, GRAPH_PLUGIN } from '@dxos/plugin-graph';
 import { HelpPlugin, HELP_PLUGIN } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
-import { KanbanPlugin } from '@dxos/plugin-kanban';
+import { KanbanPlugin, KANBAN_PLUGIN } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin, MARKDOWN_PLUGIN } from '@dxos/plugin-markdown';
+import { MeetingPlugin, MEETING_PLUGIN } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin, NATIVE_PLUGIN } from '@dxos/plugin-native';
 import { NavTreePlugin, NAVTREE_PLUGIN } from '@dxos/plugin-navtree';
 import { ObservabilityPlugin, OBSERVABILITY_PLUGIN } from '@dxos/plugin-observability';
-import { OutlinerPlugin } from '@dxos/plugin-outliner';
+import { OutlinerPlugin, OUTLINER_PLUGIN } from '@dxos/plugin-outliner';
 import { PresenterPlugin } from '@dxos/plugin-presenter';
+import { PreviewPlugin, PREVIEW_PLUGIN } from '@dxos/plugin-preview';
 import { PwaPlugin, PWA_PLUGIN } from '@dxos/plugin-pwa';
 import { RegistryPlugin, REGISTRY_PLUGIN } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
@@ -67,6 +72,7 @@ export type PluginConfig = State & {
 export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
   [
     ATTENTION_PLUGIN,
+    AUTOMATION_PLUGIN,
     CLIENT_PLUGIN,
     DECK_PLUGIN,
     FILES_PLUGIN,
@@ -76,6 +82,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     isSocket && NATIVE_PLUGIN,
     NAVTREE_PLUGIN,
     OBSERVABILITY_PLUGIN,
+    PREVIEW_PLUGIN,
     !isSocket && isPwa && PWA_PLUGIN,
     REGISTRY_PLUGIN,
     SETTINGS_PLUGIN,
@@ -90,9 +97,8 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
 
 export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
-    isDev && DEBUG_PLUGIN,
-
     // Default
+    KANBAN_PLUGIN,
     MARKDOWN_PLUGIN,
     SHEET_PLUGIN,
     SKETCH_PLUGIN,
@@ -100,36 +106,30 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     THREAD_PLUGIN,
     WNFS_PLUGIN,
 
+    // Dev
+    isDev && DEBUG_PLUGIN,
+
     // Labs
-    isLabs && [AUTOMATION_PLUGIN, CALLS_PLUGIN, TRANSCRIPTION_PLUGIN],
+    (isDev || isLabs) && [
+      // prettier-ignore
+      ASSISTANT_PLUGIN,
+      MEETING_PLUGIN,
+      OUTLINER_PLUGIN,
+      TRANSCRIPTION_PLUGIN,
+    ],
   ]
     .filter(isNotFalsy)
     .flat();
 
-export const plugins = ({ appKey, config, services, observability, isDev, isPwa, isSocket }: PluginConfig) =>
+export const plugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isSocket }: PluginConfig) =>
   [
+    AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
-    CallsPlugin(),
-    CanvasPlugin(),
     ChessPlugin(),
     ClientPlugin({
       config,
       services,
-      onClientInitialized: async (_, client) => {
-        const { LegacyTypes } = await import('./migrations');
-        client.addTypes([
-          LegacyTypes.DocumentType,
-          LegacyTypes.FileType,
-          LegacyTypes.FolderType,
-          LegacyTypes.MessageType,
-          LegacyTypes.SectionType,
-          LegacyTypes.StackType,
-          LegacyTypes.TableType,
-          LegacyTypes.TextType,
-          LegacyTypes.ThreadType,
-        ]);
-      },
       onReset: ({ target }) => {
         localStorage.clear();
         if (target === 'deviceInvitation') {
@@ -141,9 +141,10 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
         }
       },
     }),
+    ConductorPlugin(),
     DebugPlugin(),
     DeckPlugin(),
-    ExcalidrawPlugin(),
+    isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FilesPlugin(),
     GraphPlugin(),
@@ -153,20 +154,22 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     KanbanPlugin(),
     MapPlugin(),
     MarkdownPlugin(),
+    MeetingPlugin(),
     MermaidPlugin(),
     isSocket && NativePlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({ namespace: appKey, observability: () => observability }),
     OutlinerPlugin(),
     PresenterPlugin(),
+    PreviewPlugin(),
     !isSocket && isPwa && PwaPlugin(),
     RegistryPlugin(),
     ScriptPlugin(),
-    SearchPlugin(),
+    isLabs && SearchPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
-    SpacePlugin(),
+    SpacePlugin({ observability: true }),
     StackPlugin(),
     StatusBarPlugin(),
     ThemeEditorPlugin(),

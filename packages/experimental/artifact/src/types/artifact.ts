@@ -2,20 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type S, type ObjectId } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 
 import { type Tool } from './tools';
 
 /**
- *
+ * Static artifact definition.
  */
+// TODO(burdon): Convert to effect schema.
 export type ArtifactDefinition = {
   // TODO(wittjosiah): Is this actually an ObjectId or should it be a uri?
-  id: ObjectId;
+  // TODO(burdon): Plugin id?
+  id: string;
+
+  /**
+   * Name.
+   */
+  name: string;
+
+  /**
+   * Description.
+   */
+  description?: string;
 
   /**
    * Instructions for how to use the artifact.
    */
+  // TODO(burdon): Reference template object.
   instructions: string;
 
   /**

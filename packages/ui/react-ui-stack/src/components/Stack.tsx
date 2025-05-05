@@ -10,7 +10,7 @@ import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type StackContextValue, StackContext } from './StackContext';
-import { useStackDropForElements } from '../hooks/useStackDropForElements';
+import { useStackDropForElements } from '../hooks';
 
 export type Orientation = 'horizontal' | 'vertical';
 export type Size = 'intrinsic' | 'contain' | 'contain-fit-content';
@@ -46,7 +46,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
   ) => {
     const [stackElement, stackRef] = useState<HTMLDivElement | null>(null);
     const composedItemRef = composeRefs<HTMLDivElement>(stackRef, forwardedRef);
-    const arrowNavigationGroup = useArrowNavigationGroup({ axis: orientation });
+    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation });
 
     const styles: CSSProperties = {
       [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
@@ -79,14 +79,14 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       <StackContext.Provider value={{ orientation, rail, size, onRearrange }}>
         <div
           {...props}
-          {...arrowNavigationGroup}
+          {...arrowNavigationAttrs}
           className={mx(
             'grid relative',
             gridClasses,
             (size === 'contain' || size === 'contain-fit-content') &&
               (orientation === 'horizontal'
-                ? 'overflow-x-auto min-bs-0 bs-full max-bs-full'
-                : 'overflow-y-auto min-is-0 is-full max-is-full'),
+                ? 'overflow-x-auto min-bs-0 max-bs-full bs-full'
+                : 'overflow-y-auto min-is-0 max-is-full is-full'),
             classNames,
           )}
           data-rail={rail}
@@ -110,4 +110,5 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 );
 
 export { StackContext };
+
 export type { StackContextValue };

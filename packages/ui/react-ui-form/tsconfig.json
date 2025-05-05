@@ -1,13 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]

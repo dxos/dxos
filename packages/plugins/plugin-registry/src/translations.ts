@@ -26,6 +26,7 @@ export default [
         'load by url label': 'Load by URL (soon)',
         'coming soon label': 'Coming soon!',
         'open plugin registry label': 'Open plugin registry',
+        'settings label': 'Settings',
       },
     },
   },

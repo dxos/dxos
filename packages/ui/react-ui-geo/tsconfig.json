@@ -2,11 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
     "strict": false
   },
   "include": [
@@ -19,6 +14,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/node-std"

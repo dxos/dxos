@@ -2,22 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
-import { Tool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
+import { Tool, Message, type MessageContentBlock } from '@dxos/artifact';
+import { type ObjectId } from '@dxos/echo-schema';
+
+import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
 
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
-export const LLMModel = S.Literal(
-  '@anthropic/claude-3-5-haiku-20241022',
-  '@anthropic/claude-3-5-sonnet-20241022',
-  '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
-  '@hf/nousresearch/hermes-2-pro-mistral-7b',
-  '@ollama/llama-3-2-3b',
-  '@ollama/llama-3-1-nemotron-70b-instruct',
-  '@ollama/llama-3-1-nemotron-mini-4b-instruct',
-);
+export const LLMModel = S.Literal(...DEFAULT_EDGE_MODELS, ...DEFAULT_OLLAMA_MODELS);
 
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 
@@ -31,17 +25,15 @@ export const ToolTypes = Object.freeze({
  * Client GPT request.
  */
 export const GenerateRequest = S.Struct({
-  spaceId: S.optional(SpaceIdSchema),
-  threadId: S.optional(ObjectId),
-
-  // TODO(burdon): Make optional with default.
-  model: LLMModel,
+  /**
+   * Preferred model or system default.
+   */
+  model: S.optional(LLMModel),
 
   /**
-   * Current request.
+   * Tools available for the LLM.
    */
-  // TODO(burdon): Remove from history.
-  // prompt: Message,
+  tools: S.optional(S.Array(Tool).pipe(S.mutable)),
 
   /**
    * System instructions to the LLM.
@@ -51,15 +43,28 @@ export const GenerateRequest = S.Struct({
   /**
    * History of messages to include in the context window.
    */
+  // TODO(burdon): Rename messages.
   history: S.optional(S.Array(Message)),
 
   /**
-   * Tools available for the LLM.
+   * Current request.
    */
-  tools: S.optional(S.Array(Tool).pipe(S.mutable)),
+  prompt: S.optional(Message),
 });
-
 export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;
+
+/**
+ * Non-streaming response.
+ */
+export const GenerateResponse = S.Struct({
+  messages: S.Array(Message),
+
+  /**
+   * Number of tokens used in the response.
+   */
+  tokenCount: S.optional(S.Number),
+});
+export type GenerateResponse = S.Schema.Type<typeof GenerateResponse>;
 
 /**
  * Server-Sent Events (SSE) stream from the AI service.
