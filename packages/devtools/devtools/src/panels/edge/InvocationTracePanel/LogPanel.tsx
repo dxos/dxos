@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
@@ -15,7 +15,7 @@ type LogPanelProps = {
   span?: InvocationSpan;
 };
 
-export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
+export const LogPanel: FC<LogPanelProps> = ({ span }) => {
   // Get the trace queue for this invocation
   const traceQueueDxn = useMemo(() => {
     return span?.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;
