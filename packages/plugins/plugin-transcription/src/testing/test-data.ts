@@ -12,6 +12,14 @@ import { Contact, MessageType, Organization } from '@dxos/schema';
 
 faker.seed(1);
 
+// TODO(burdon): Move to @dxos/schema?
+export const DocumentType = Schema.Struct({
+  id: ObjectId,
+  name: Schema.String,
+  content: Schema.String,
+}).pipe(EchoObject({ typename: 'dxos.org/example/Document', version: '0.1.0' }));
+export type DocumentType = typeof DocumentType.Type;
+
 /**
  * Helper to create dates in reverse chronological order
  */
@@ -20,13 +28,6 @@ const getDate = (daysAgo: number): string => {
   date.setDate(date.getDate() - daysAgo);
   return date.toISOString();
 };
-
-export const DocumentType = Schema.Struct({
-  id: ObjectId,
-  name: Schema.String,
-  content: Schema.String,
-}).pipe(EchoObject({ typename: 'dxos.org/example/Document', version: '0.1.0' }));
-export type DocumentType = typeof DocumentType.Type;
 
 // TODO(burdon): Replace with standard data generator pattern from dxos/schema.
 
