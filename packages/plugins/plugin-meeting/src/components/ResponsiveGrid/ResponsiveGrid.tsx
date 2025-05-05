@@ -15,6 +15,8 @@ import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 const ASPECT_RATIO = 16 / 9;
 const MIN_GALLERY_HEIGHT = 250;
 
+const maxImageSize = 'w-[2560px] h-[1440px]';
+
 /**
  * Props for the ResponsiveGrid component.
  */
@@ -197,7 +199,7 @@ const SoloItem: FC<Pick<ResponsiveGridProps, 'debug'> & { id: string }> = ({ deb
         className={mx('aspect-video overflow-hidden', debug && 'z-20 border-2 border-primary-500')}
       >
         {/* Maximum size placeholder image forces aspect ratio. */}
-        <img alt='placeholder video' className='w-[1280px] h-[720px] opacity-0' />
+        <img alt='placeholder video' className={mx('opacity-0', maxImageSize)} />
       </div>
     </ResponsiveContainer>
   );
