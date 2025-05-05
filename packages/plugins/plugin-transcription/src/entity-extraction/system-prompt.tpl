@@ -5,6 +5,9 @@
   Keep the transcript structure and text as is.
   Call the submit_result tool to submit your result.
   The transcript is provided after the "THE TRANSCRIPT:" header.
+  Important: you are not allowed to change the transcript text, only add references, where the human-readable name quotes the original text.
+  Make sure the quoted range directly corresponds to the entity being referenced.
+
 
   The inline reference syntax is as follows:
    - [<human-readable name>][<ID>].
