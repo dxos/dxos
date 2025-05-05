@@ -6,7 +6,6 @@ import { Effect, pipe } from 'effect';
 
 import {
   Capabilities,
-  chain,
   contributes,
   createIntent,
   createResolver,
@@ -124,35 +123,17 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenMembers,
-      resolve: ({ space }) => {
-        const layout = context.requestCapability(Capabilities.Layout);
-        const id = `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
-        if (layout.active.includes(id)) {
-          return {
-            intents: [
-              createIntent(LayoutAction.ScrollIntoView, {
-                part: 'current',
-                subject: id,
-              }),
-            ],
-          };
-        }
-
-        return {
-          intents: [
-            pipe(
-              createIntent(LayoutAction.SwitchWorkspace, {
-                part: 'workspace',
-                subject: space.id,
-              }),
-              chain(LayoutAction.Open, {
-                part: 'main',
-                subject: [id],
-              }),
-            ),
-          ],
-        };
-      },
+      resolve: ({ space }) => ({
+        intents: [
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [`members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+            options: {
+              workspace: space.id,
+            },
+          }),
+        ],
+      }),
     }),
     createResolver({
       intent: SpaceAction.Share,
@@ -273,35 +254,17 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenSettings,
-      resolve: ({ space }) => {
-        const layout = context.requestCapability(Capabilities.Layout);
-        const id = `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
-        if (layout.active.includes(id)) {
-          return {
-            intents: [
-              createIntent(LayoutAction.ScrollIntoView, {
-                part: 'current',
-                subject: id,
-              }),
-            ],
-          };
-        }
-
-        return {
-          intents: [
-            pipe(
-              createIntent(LayoutAction.SwitchWorkspace, {
-                part: 'workspace',
-                subject: space.id,
-              }),
-              chain(LayoutAction.Open, {
-                part: 'main',
-                subject: [id],
-              }),
-            ),
-          ],
-        };
-      },
+      resolve: ({ space }) => ({
+        intents: [
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [`properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+            options: {
+              workspace: space.id,
+            },
+          }),
+        ],
+      }),
     }),
     createResolver({
       intent: SpaceAction.Open,
