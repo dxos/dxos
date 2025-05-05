@@ -55,14 +55,14 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const tagPickerFocusRef = useTagPickerFocusRef(tagFilterState);
 
   const handleAction = useCallback<MailboxActionHandler>(
-    ({ action, messageId }) => {
-      switch (action) {
+    (action) => {
+      switch (action.type) {
         case 'select': {
-          log.debug(`[select message] ${messageId}`);
+          log.debug(`[select message] ${action.messageId}`);
           break;
         }
         case 'current': {
-          const message = model.messages.find((message) => message.id === messageId);
+          const message = model.messages.find((message) => message.id === action.messageId);
           void dispatch(
             createIntent(InboxAction.SelectMessage, {
               mailboxId: id,
@@ -77,9 +77,14 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           );
           break;
         }
+        case 'tag-select': {
+          filterDispatch('tag_selected_from_message');
+          model.selectTag(action.label);
+          break;
+        }
       }
     },
-    [id, dispatch, model.messages],
+    [id, dispatch, model.messages, model, filterDispatch],
   );
 
   const onTagPickerUpdate = useCallback(
@@ -92,14 +97,6 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
       if (ids.length === 0) {
         filterDispatch('all_tags_cleared');
       }
-    },
-    [model, filterDispatch],
-  );
-
-  const handleTagSelect = useCallback(
-    (label: string) => {
-      filterDispatch('tag_selected_from_message');
-      model.selectTag(label);
     },
     [model, filterDispatch],
   );
@@ -155,7 +152,6 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
             name={mailbox.name}
             onAction={handleAction}
             currentMessageId={currentMessageId}
-            onTagSelect={handleTagSelect}
           />
         ) : (
           <EmptyMailboxContent mailbox={mailbox} />

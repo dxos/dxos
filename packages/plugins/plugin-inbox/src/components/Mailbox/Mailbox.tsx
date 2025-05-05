@@ -86,8 +86,12 @@ const messageCellClassName = 'message';
 // TODO(burdon): Create outline/kanban.
 // TODO(burdon): Address book/cards.
 
-export type MailboxAction = 'select' | 'current';
-export type MailboxActionHandler = (payload: { action: MailboxAction; messageId: string }) => void;
+export type MailboxAction =
+  | { type: 'select'; messageId: string }
+  | { type: 'current'; messageId: string }
+  | { type: 'tag-select'; label: string };
+
+export type MailboxActionHandler = (action: MailboxAction) => void;
 
 export type MailboxProps = Pick<MailboxType, 'name'> & {
   id: string;
@@ -95,11 +99,9 @@ export type MailboxProps = Pick<MailboxType, 'name'> & {
   ignoreAttention?: boolean;
   currentMessageId?: string;
   onAction?: MailboxActionHandler;
-  // TODO(Zaymon): Should this be part of onAction?
-  onTagSelect?: (label: string) => void;
 };
 
-export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention, onTagSelect }: MailboxProps) => {
+export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention }: MailboxProps) => {
   // TODO(thure): The container should manage the queue.
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
@@ -127,8 +129,8 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
       const target = event.target as HTMLElement;
 
       const label = target.getAttribute('data-label');
-      if (label && onTagSelect) {
-        onTagSelect(label);
+      if (label) {
+        onAction?.({ type: 'tag-select', label });
         return;
       }
 
@@ -138,10 +140,10 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
         const action = actionEl.getAttribute('data-inbox-action')!;
         switch (action) {
           case 'select-message':
-            onAction?.({ action: 'select', messageId });
+            onAction?.({ type: 'select', messageId });
             break;
           case 'current-message':
-            onAction?.({ action: 'current', messageId });
+            onAction?.({ type: 'current', messageId });
             break;
         }
       }
