@@ -170,19 +170,6 @@ export class DxAvatar extends LitElement {
             />`
         }
         ${
-          this.imgSrc &&
-          svg`<image
-          width="100%"
-          height="100%"
-          preserveAspectRatio="xMidYMid slice"
-          href=${this.imgSrc}
-          mask=${`url(#${this.maskId})`}
-          crossorigin=${this.imgCrossOrigin}
-          @load=${this.handleLoad}
-          @error=${this.handleError}
-        />`
-        }
-        ${
           this.icon
             ? svg`<use
                 class="dx-avatar__icon"
@@ -203,6 +190,19 @@ export class DxAvatar extends LitElement {
               >
                 ${this.fallback}
               </text>`
+        }
+        ${
+          this.imgSrc &&
+          svg`<image
+              width="100%"
+              height="100%"
+              preserveAspectRatio="xMidYMid slice"
+              href=${this.imgSrc}
+              mask=${`url(#${this.maskId})`}
+              crossorigin=${this.imgCrossOrigin}
+              @load=${this.handleLoad}
+              @error=${this.handleError}
+            />`
         }
       </svg>`}<span role="none" class="dx-avatar__ring" style=${styleMap({ borderWidth: ringWidth + 'px' })}
     /></span>`;

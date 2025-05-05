@@ -70,6 +70,14 @@ const data = (() => {
         label: 'Work',
         value: faker.internet.email(),
       },
+      {
+        label: 'Work',
+        value: faker.internet.email(),
+      },
+      {
+        label: 'Work',
+        value: faker.internet.email(),
+      },
     ],
   });
 
