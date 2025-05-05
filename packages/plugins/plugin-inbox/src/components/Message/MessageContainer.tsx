@@ -36,17 +36,13 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
 
-  const menu = useMessageToolbarActions(viewMode, hasEnrichedContent);
+  const menu = useMessageToolbarActions(viewMode);
 
   const handleToolbarAction = useCallback<MenuActionHandler<MessageToolbarAction>>(
     (action: MessageToolbarAction) => {
       switch (action.properties.type) {
         case 'viewMode': {
-          const isPlainView = viewMode.value === 'plain' || viewMode.value === 'plain-only';
-          const hasEnrichedContent = viewMode.value !== 'plain-only';
-          if (hasEnrichedContent) {
-            viewMode.value = isPlainView ? 'enriched' : 'plain';
-          }
+          viewMode.value = viewMode.value === 'plain' ? 'enriched' : 'plain';
           break;
         }
       }

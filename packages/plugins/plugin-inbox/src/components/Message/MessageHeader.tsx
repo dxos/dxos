@@ -20,7 +20,7 @@ export type MessageHeaderProps = ThemedClassName<{
 
 export const MessageHeader = ({ message, viewMode, classNames }: MessageHeaderProps) => {
   return (
-    <div className='grid grid-flow-row pli-2 plb-1.5 bs-[56px] gap-2 min-bs-0 border-be border-separator'>
+    <div className='grid grid-flow-row pli-2 plb-2 bs-[56px] gap-2 min-bs-0 border-be border-separator'>
       <div className='grid grid-cols-[auto_1fr_auto] gap-x-3'>
         <Avatar.Root>
           <Avatar.Content
@@ -33,8 +33,8 @@ export const MessageHeader = ({ message, viewMode, classNames }: MessageHeaderPr
           <Avatar.Label srOnly>{message.sender.name || 'Unknown'}</Avatar.Label>
         </Avatar.Root>
         <div className='grid gap-0.5 self-center'>
-          <h3>{message.sender.name || 'Unknown'}</h3>
-          {message.sender.email && <div className='text-xs text-description'>{message.sender.email}</div>}
+          <h3 className='truncate'>{message.sender.name || 'Unknown'}</h3>
+          {message.sender.email && <div className='text-xs text-description truncate'>{message.sender.email}</div>}
         </div>
         <div className='grid gap-1 justify-items-end'>
           <div className='text-xs text-description'>
