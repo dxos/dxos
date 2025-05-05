@@ -3,7 +3,7 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type CSSProperties, useCallback, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { type CSSProperties, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
