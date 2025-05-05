@@ -7,10 +7,10 @@ import { describe, test, expect } from 'vitest';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
+import { range } from '@dxos/util';
 
 import { processTranscriptMessage, postprocessText } from './entity-extraction';
 import * as TestData from '../testing/test-data';
-import { range } from '@dxos/util';
 
 const aiService = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
