@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { computed } from '@preact/signals-core';
+
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
@@ -37,6 +39,11 @@ export class CallManager extends Resource {
     media: { pulledAudioTracks: {}, pulledVideoStreams: {} },
   });
 
+  // TODO(wittjosiah): This shouldn't be necessary, live-object's signals should be granular.
+  private readonly _raisedHandSignal = computed(() => this._state.call.raisedHand ?? false);
+  private readonly _speakingSignal = computed(() => this._state.call.speaking ?? false);
+  private readonly _joinedSignal = computed(() => this._state.call.joined ?? false);
+
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
 
@@ -47,17 +54,17 @@ export class CallManager extends Resource {
 
   /** @reactive */
   get raisedHand(): boolean {
-    return this._state.call.raisedHand ?? false;
+    return this._raisedHandSignal.value;
   }
 
   /** @reactive */
   get speaking(): boolean {
-    return this._state.call.speaking ?? false;
+    return this._speakingSignal.value;
   }
 
   /** @reactive */
   get joined(): boolean {
-    return this._state.call.joined ?? false;
+    return this._joinedSignal.value;
   }
 
   /** @reactive */
