@@ -6,6 +6,7 @@ import React, { type ComponentType, type FC, useLayoutEffect, useState, useEffec
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { type Size } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -20,7 +21,7 @@ const maxImageSize = 'w-[2560px] h-[1440px]';
 /**
  * Props for the ResponsiveGrid component.
  */
-export type ResponsiveGridProps<T extends object = any> = {
+export type ResponsiveGridProps<T extends object = any> = ThemedClassName<{
   /** Cell component. */
   Cell: ComponentType<ResponsiveGridItemProps<T>>;
 
@@ -44,7 +45,7 @@ export type ResponsiveGridProps<T extends object = any> = {
 
   /** Callback when the pinned item changes. */
   onPinnedChange?: (pinned: string | undefined) => void;
-};
+}>;
 
 const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
 
@@ -53,8 +54,9 @@ const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
  * Maintains aspect ratio of items while ensuring uniform gaps between them.
  */
 export const ResponsiveGrid = <T extends object = any>({
+  classNames,
   Cell,
-  gap = 16,
+  gap = 0,
   getId = defaultGetId,
   items,
   pinned,
@@ -123,7 +125,7 @@ export const ResponsiveGrid = <T extends object = any>({
   );
 
   return (
-    <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden')}>
+    <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden', classNames)}>
       <div className='absolute inset-0 flex flex-col grow'>
         {/* Pinned item. */}
         {pinnedItem && (

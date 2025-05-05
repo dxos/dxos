@@ -116,7 +116,7 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
     <StackItem.Content classNames='h-full'>
       {callManager.joined && callManager.roomId === roomId ? (
         <Call.Root>
-          <Call.Room />
+          <Call.Main />
           <Call.Toolbar meeting={meeting} onLeave={handleLeave} />
         </Call.Root>
       ) : (
