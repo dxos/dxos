@@ -33,12 +33,12 @@ describe('EchoEdgeReplicator', () => {
     await connectionOpen.waitForCount(1);
 
     const forbidden = createForbiddenMessage({ identityKey: client.identityKey, peerKey: client.peerKey }, spaceId);
-    server.sendMessage(forbidden);
+    await server.sendMessage(forbidden);
     await connectionOpen.waitForCount(1);
 
     // Double restart to check for race conditions.
     client.setIdentity(await createEphemeralEdgeIdentity());
-    server.sendMessage(forbidden);
+    await server.sendMessage(forbidden);
     await connectionOpen.waitForCount(1);
 
     await replicator.disconnect();
