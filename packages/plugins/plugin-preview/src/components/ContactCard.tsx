@@ -26,22 +26,32 @@ export const ContactCard = ({
       )}
       <div role='none'>
         <h2 className={mx(previewTitle, 'pli-3 mlb-3')}>{fullName}</h2>
-        {organizationName && (
-          <div className={mx(previewProse, 'flex gap-2 items-center')}>
-            <Icon icon='ph--building-office--regular' size={5} classNames='text-subdued' />
-            <p className='truncate'>{organizationName}</p>
-          </div>
-        )}
-        {emails?.length && (
-          <div className='flex flex-col'>
-            {emails.map(({ label, value }) => (
-              // TODO(burdon): Email tags.
-              <p key={value} className='pli-3 mlb-3'>
-                {value}
-              </p>
+        <dl
+          className={mx(
+            previewProse,
+            'grid gap-2 grid-cols-[min-content_1fr] [&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0',
+          )}
+        >
+          {organizationName && (
+            <>
+              <dt>
+                <Icon icon='ph--buildings--regular' size={5} />
+              </dt>
+              <dd className='truncate'>{organizationName}</dd>
+            </>
+          )}
+          {emails?.length &&
+            emails.map(({ label, value }) => (
+              <>
+                <dt>
+                  <Icon icon='ph--at--regular' size={5} />
+                </dt>
+                <dd key={value} className='break-words'>
+                  {value}
+                </dd>
+              </>
             ))}
-          </div>
-        )}
+        </dl>
       </div>
     </div>
   );
