@@ -3,15 +3,15 @@
 //
 
 import { contributes, Capabilities, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { Filter, makeRef } from '@dxos/client/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { QueueSubspaceTags, DXN } from '@dxos/keys';
 import { live, refFromDXN } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { MessageType, Contact, Organization } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
-import { log } from '@dxos/log';
-import { Filter } from '@dxos/client/echo';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -60,9 +60,17 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const existingContacts = await space.db.query(Filter.schema(Contact)).run();
+        const { objects: existingContacts } = await space.db.query(Filter.schema(Contact)).run();
 
-        // TODO(ZaymonFC): Check for existing contact.
+        // Check for existing contact
+        const existingContact = existingContacts.find((contact) =>
+          contact.emails?.some((contactEmail) => contactEmail.value === email),
+        );
+
+        if (existingContact) {
+          log.info('Contact already exists', { email, existingContact });
+          return;
+        }
 
         const newContact = live(Contact, {
           emails: [{ value: email }],
@@ -72,11 +80,40 @@ export default (context: PluginsContext) =>
           newContact.fullName = name;
         }
 
-        // Try find organisation
+        const emailDomain = email.split('@')[1]?.toLowerCase();
+        if (!emailDomain) {
+          log.warn('Invalid email format, cannot extract domain', { email });
+          space.db.add(newContact);
+          return;
+        }
+
+        log.info('Extracted email domain', { emailDomain });
+
         const { objects: existingOrganisations } = await space.db.query(Filter.schema(Organization)).run();
-        const organisation = existingOrganisations.find((org) => org.website === email);
+
+        const matchingOrg = existingOrganisations.find((org) => {
+          if (org.website) {
+            try {
+              const websiteDomain = new URL(org.website).hostname.toLowerCase();
+              return (
+                websiteDomain === emailDomain ||
+                websiteDomain.endsWith(`.${emailDomain}`) ||
+                emailDomain.endsWith(`.${websiteDomain}`)
+              );
+            } catch (e) {
+              return false;
+            }
+          }
+          return false;
+        });
+
+        if (matchingOrg) {
+          log.info('Found matching organization', { organization: matchingOrg });
+          newContact.organization = makeRef(matchingOrg);
+        }
 
         space.db.add(newContact);
+        log.info('Contact extracted and added to space', { contact: newContact });
       },
     }),
   ]);
