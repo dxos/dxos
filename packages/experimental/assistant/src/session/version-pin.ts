@@ -1,6 +1,6 @@
-import type { JsonContentBlock, MessageContentBlock } from '@dxos/artifact';
-import { getVersion } from '@dxos/echo-db';
+import type { MessageContentBlock } from '@dxos/artifact';
 import type { ObjectVersion } from '@dxos/echo-db';
+import { getVersion } from '@dxos/echo-db';
 import type { BaseEchoObject } from '@dxos/echo-schema';
 import { Schema } from 'effect';
 

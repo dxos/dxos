@@ -273,17 +273,7 @@ export class AISession {
         prelude.push(VersionPin.createBlock(VersionPin.make({ id, version })));
       }
       if (artifactDiff.size > 0) {
-        prelude.push({
-          // TODO(dmaretskyi): Custom disposition?
-          type: 'text',
-          disposition: 'cot',
-          text: `
-          The following artifacts have been updated since the last message:
-          ${Array.from(artifactDiff.entries())
-            .map(([id, { diff }]) => `<changed-artifact id="${id}">${diff ? `\n${diff}` : ''}</changed-artifact>`)
-            .join('\n')}
-        `,
-        });
+        prelude.push(createArtifactUpdateBlock(artifactDiff));
       }
     }
 
@@ -503,4 +493,19 @@ const gatherObjectVersions = (messages: Message[]): Map<ObjectId, ObjectVersion>
   }
 
   return artifactIds;
+};
+
+const createArtifactUpdateBlock = (
+  artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
+): MessageContentBlock => {
+  return {
+    type: 'text',
+    disposition: 'artifact-update',
+    text: `
+      The following artifacts have been updated since the last message:
+      ${Array.from(artifactDiff.entries())
+        .map(([id, { diff }]) => `<changed-artifact id="${id}">${diff ? `\n${diff}` : ''}</changed-artifact>`)
+        .join('\n')}
+    `,
+  };
 };
