@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type PropsWithChildren } from 'react';
+
 import { type ThemedClassName } from '@dxos/react-ui';
 
 // TODO(burdon): Better place for these defs?
-export type PreviewProps<T extends object> = ThemedClassName<{
-  subject: T;
-}>;
+export type PreviewProps<T extends object> = PropsWithChildren<
+  ThemedClassName<{
+    subject: T;
+  }>
+>;
 
 // TODO(burdon): Update react-ui-card (to use grid) and re-use here.
 // - See https://dxos-storybook.pages.dev/?path=/story/ui-react-ui-card-card--draggable
