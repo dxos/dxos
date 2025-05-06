@@ -88,7 +88,6 @@ const DefaultStory = () => {
   const contactSchema = useMemo(() => new ImmutableSchema(Contact), []);
   const { model: contactModel, presentation: contactPresentation } = useTestModel<Contact>(contactSchema, 50);
 
-  // TODO(burdon): Scrolling isn't working.
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
       <Table.Root>
