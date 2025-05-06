@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Space } from '@dxos/client/echo';
+import type { Space } from '@dxos/client-protocol';
 import { create, type BaseEchoObject } from '@dxos/echo-schema';
 import { live, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
