@@ -1,8 +1,13 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
+
 import type { MessageContentBlock } from '@dxos/artifact';
 import type { ObjectVersion } from '@dxos/echo-db';
 import { getVersion } from '@dxos/echo-db';
 import { ObjectId, type BaseEchoObject } from '@dxos/echo-schema';
-import { Schema } from 'effect';
 
 // TODO(dmaretskyi): Extract.
 const ObjectVersionSchema = Schema.Unknown as Schema.Schema<ObjectVersion>;
@@ -27,6 +32,7 @@ export const VersionPin: typeof VersionPinSchema & {
       version: getVersion(object),
     });
   }
+
   static createBlock(pin: VersionPin): MessageContentBlock {
     return {
       type: 'json',

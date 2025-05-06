@@ -10,7 +10,6 @@ import { type AIServiceClient, AISession, DEFAULT_EDGE_MODEL, type GenerateReque
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getVersion, type Space } from '@dxos/react-client/echo';
-import { ThreadStatus } from '@dxos/plugin-space/types';
 
 // TODO(burdon): Factor out.
 declare global {

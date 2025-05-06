@@ -13,14 +13,14 @@ import {
   type Tool,
 } from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
+import { ObjectVersion } from '@dxos/echo-db';
 import { create, type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { VersionPin } from './version-pin';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest, type GenerationStream } from '../ai-service';
 import { isToolUse, runTools } from '../conversation';
-import { ObjectVersion } from '@dxos/echo-db';
-import { VersionPin } from './version-pin';
 
 /**
  * Contains message history, tools, current context.

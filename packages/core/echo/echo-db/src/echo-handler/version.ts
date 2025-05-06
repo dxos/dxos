@@ -1,6 +1,11 @@
-import type { Live } from '@dxos/live-object';
-import { createDocAccessor } from '../core-db';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { next as Automerge } from '@dxos/automerge/automerge';
+import type { Live } from '@dxos/live-object';
+
+import { createDocAccessor } from '../core-db';
 
 export type ObjectVersion = {
   heads: string[];

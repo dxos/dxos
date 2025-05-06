@@ -15,7 +15,6 @@ import { Filter, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { ChessAction, ChessType } from '../types';
-import { getVersion } from '@dxos/react-client/echo';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -54,7 +53,6 @@ export default () => {
           if (!data || error) {
             return ToolResult.Error(error?.message ?? 'Failed to create chess game');
           }
-          console.log(data);
 
           return ToolResult.Success(createArtifactElement(data.id), [
             VersionPin.createBlock(VersionPin.fromObject(data.object)),
