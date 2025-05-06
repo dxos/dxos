@@ -274,6 +274,9 @@ export class MediaManager extends Resource {
     try {
       const trackData = TrackNameCodec.decode(name);
       const track = await this._state.peer!.pullTrack({ trackData, ctx });
+      if (track?.readyState === 'ended') {
+        throw new Error('Pulled track ended immediately');
+      }
 
       switch (track?.kind) {
         case 'audio': {
