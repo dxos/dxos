@@ -44,6 +44,9 @@ export default [
         'message header view mode plain': 'Plain',
         'message header view mode enriched': 'Enriched',
         'message header view mode plain only': 'Plain',
+
+        'related contacts title': 'Related contacts',
+        'related messages title': 'Recent messages',
       },
     },
   },

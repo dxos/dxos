@@ -16,7 +16,7 @@ export const PopoverAddSpace = () => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   return (
-    <div role='none' className='grid grid-cols-1 gap-1 [&>button]:justify-start'>
+    <div role='none' className='p-1 grid grid-cols-1 gap-1 [&>button]:justify-start'>
       <IconButton
         variant='ghost'
         label={t('create space label')}
