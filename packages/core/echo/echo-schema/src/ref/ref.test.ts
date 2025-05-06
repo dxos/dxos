@@ -4,14 +4,12 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { encodeReference, Reference } from '@dxos/echo-protocol';
-
-import { log } from '@dxos/log';
+import { DXN } from '@dxos/keys';
 import { Schema } from 'effect';
 import { EchoObject } from '../ast';
 import { create, ObjectId } from '../object';
-import { makeRef, refFromDXN, Ref } from './ref';
-import { DXN } from '@dxos/keys';
+import { getDXN } from '../types';
+import { Ref } from './ref';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
@@ -39,12 +37,12 @@ type Contact = Schema.Schema.Type<typeof Contact>;
 
 describe('Ref', () => {
   test('Schema is', () => {
-    Ref(Contact).pipe(Schema.is)(refFromDXN(DXN.parse(`dxn:echo:@:${ObjectId.random()}`)));
+    Ref(Contact).pipe(Schema.is)(Ref.fromDXN(DXN.parse(`dxn:echo:@:${ObjectId.random()}`)));
   });
 
   test('encode with inlined target', () => {
     const task = create(Task, { title: 'Fix bugs' });
-    const contact = create(Contact, { name: 'John Doe', tasks: [makeRef(task)] });
+    const contact = create(Contact, { name: 'John Doe', tasks: [Ref.make(task)] });
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
@@ -53,7 +51,7 @@ describe('Ref', () => {
       name: 'John Doe',
       tasks: [
         {
-          ...encodeReference(Reference.fromDXN(makeRef(task).dxn)),
+          '/': getDXN(task)!.toString(),
           target: JSON.parse(JSON.stringify(task)),
         },
       ],
@@ -62,14 +60,14 @@ describe('Ref', () => {
 
   test('encode without inlining target', () => {
     const task = create(Task, { title: 'Fix bugs' });
-    const contact = create(Contact, { name: 'John Doe', tasks: [makeRef(task).noInline()] });
+    const contact = create(Contact, { name: 'John Doe', tasks: [Ref.make(task).noInline()] });
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
       '@type': `dxn:type:${Contact.typename}:${Contact.version}`,
       name: 'John Doe',
-      tasks: [{ ...encodeReference(Reference.fromDXN(makeRef(task).dxn)) }],
+      tasks: [{ '/': getDXN(task)!.toString() }],
     });
   });
 

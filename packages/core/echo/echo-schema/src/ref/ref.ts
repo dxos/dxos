@@ -74,6 +74,17 @@ interface RefFn {
    * @returns True if the schema AST is a reference schema.
    */
   isRefSchemaAST: (ast: SchemaAST.AST) => boolean;
+
+  /**
+   * Constructs a reference that points to the given object.
+   */
+  // TODO(burdon): Tighten type of T?
+  make: <T extends WithId>(object: T) => Ref<T>;
+
+  /**
+   * Constructs a reference that points to the object specified by the provided DXN.
+   */
+  fromDXN: (dxn: DXN) => Ref<any>;
 }
 /**
  * Schema builder for references.
@@ -153,6 +164,22 @@ Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean => {
   return SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome);
 };
 
+Ref.make = <T extends BaseObject>(obj: T): Ref<T> => {
+  if (typeof obj !== 'object' || obj === null) {
+    throw new TypeError('Expected: ECHO object.');
+  }
+
+  // TODO(dmaretskyi): Extract to `getObjectDXN` function.
+  const id = obj.id;
+  invariant(ObjectId.isValid(id), 'Invalid object ID');
+  const dxn = Reference.localObjectReference(id).toDXN();
+  return new RefImpl(dxn, obj);
+};
+
+Ref.fromDXN = (dxn: DXN): Ref<any> => {
+  return new RefImpl(dxn);
+};
+
 /**
  * `reference` field on the schema object.
  */
@@ -199,8 +226,7 @@ export const createEchoReferenceSchema = (
             return Effect.succeed(value);
           }
 
-          log.info('decode', { value });
-          return Effect.succeed(refFromDXN(DXN.parse((value as any)['/'])));
+          return Effect.succeed(Ref.fromDXN(DXN.parse((value as any)['/'])));
         };
       },
     },
@@ -225,33 +251,6 @@ const getSchemaExpectedName = (ast: Annotated): string | undefined => {
     Option.orElse(() => getDescriptionAnnotation(ast)),
     Option.getOrElse(() => undefined),
   );
-};
-
-// TODO(burdon): Move to echo-schema?
-
-/**
- * Constructs a reference that points to the given object.
- */
-// TODO(burdon): Tighten type of T?
-// TODO(dmaretskyi): Should be `Ref.make` but that's not possible because of the circular dependency.
-export const makeRef = <T extends BaseObject>(obj: T): Ref<T> => {
-  if (typeof obj !== 'object' || obj === null) {
-    throw new TypeError('Expected: ECHO object.');
-  }
-
-  // TODO(dmaretskyi): Extract to `getObjectDXN` function.
-  const id = obj.id;
-  invariant(ObjectId.isValid(id), 'Invalid object ID');
-  const dxn = Reference.localObjectReference(id).toDXN();
-  return new RefImpl(dxn, obj);
-};
-
-/**
- * Constructs a reference that points to the object specified by the provided DXN.
- */
-// TODO(dmaretskyi): Should be `Ref.fromDXN` but that's not possible because of the circular dependency.
-export const refFromDXN = (dxn: DXN): Ref<any> => {
-  return new RefImpl(dxn);
 };
 
 export interface RefResolver {
