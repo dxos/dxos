@@ -121,7 +121,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                   classNames={buttonClassNames}
                   icon={
                     layoutMode === 'solo--fullscreen'
-                      ? 'ph--x--regular'
+                      ? 'ph--corners-in--regular'
                       : layoutIsAnySolo
                         ? 'ph--arrows-in-line-horizontal--regular'
                         : 'ph--arrows-out-line-horizontal--regular'

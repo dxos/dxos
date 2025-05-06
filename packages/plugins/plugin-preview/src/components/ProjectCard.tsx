@@ -12,7 +12,7 @@ import { type PreviewProps, previewCard, previewTitle } from '../types';
 export const ProjectCard = ({ classNames, subject: { name, image, description } }: PreviewProps<Project>) => {
   return (
     <div role='none' className={mx(previewCard, classNames)}>
-      {image && <img className='object-contain is-full bs-auto' src={image} alt={name} />}
+      {image && <img className='is-full bs-auto' src={image} alt={name} />}
       <h2 className={mx(previewTitle, 'pli-3 mlb-3')}>{name}</h2>
       {description && <p className='pli-3 line-clamp-2 mlb-3'>{description}</p>}
     </div>
