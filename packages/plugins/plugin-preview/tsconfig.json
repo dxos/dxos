@@ -60,6 +60,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-table"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {
