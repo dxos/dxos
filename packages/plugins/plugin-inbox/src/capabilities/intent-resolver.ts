@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { contributes, Capabilities, createResolver, type PluginsContext, createIntent } from '@dxos/app-framework';
 import { Filter, makeRef } from '@dxos/client/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { QueueSubspaceTags, DXN } from '@dxos/keys';
 import { live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
+import { TableAction } from '@dxos/plugin-table';
+import { TableType } from '@dxos/react-ui-table';
 import { MessageType, Contact, Organization } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
@@ -114,6 +116,24 @@ export default (context: PluginsContext) =>
 
         space.db.add(newContact);
         log.info('Contact extracted and added to space', { contact: newContact });
+
+        const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+        const contactTable = tables.find((table) => {
+          return table.view?.target?.query?.typename === Contact.typename;
+        });
+
+        if (!contactTable) {
+          log.info('No table found for contacts, creating one.');
+          return {
+            intents: [
+              createIntent(TableAction.Create, {
+                space,
+                name: 'Contacts',
+                typename: Contact.typename,
+              }),
+            ],
+          };
+        }
       },
     }),
   ]);

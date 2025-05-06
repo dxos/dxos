@@ -6691,6 +6691,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../plugin-table
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -6709,6 +6712,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
       '@dxos/react-ui-tag-picker':
         specifier: workspace:*
         version: link:../../ui/react-ui-tag-picker
