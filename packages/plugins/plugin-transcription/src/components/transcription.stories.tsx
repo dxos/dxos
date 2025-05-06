@@ -34,6 +34,7 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { Contact, MessageType, Organization } from '@dxos/schema';
+import { seedTestData, Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript } from './Transcript';
@@ -42,7 +43,6 @@ import { processTranscriptMessage } from '../entity-extraction';
 import { useAudioFile, useAudioTrack, useQueueModelAdapter, useTranscriber } from '../hooks';
 import { type SerializationModel } from '../model';
 import { TestItem } from '../testing';
-import * as TestData from '../testing/test-data';
 import { type TranscriberParams } from '../transcriber';
 
 const TranscriptionStory: FC<{
@@ -97,7 +97,7 @@ const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
         }
         // TODO(dmaretskyi): Move to vector search index.
         const { objects } = await space.db
-          .query(Filter.or(Filter.schema(Contact), Filter.schema(Organization), Filter.schema(TestData.DocumentType)))
+          .query(Filter.or(Filter.schema(Contact), Filter.schema(Organization), Filter.schema(Testing.DocumentType)))
           .run();
 
         log.info('context', { objects });
@@ -224,12 +224,12 @@ const meta: Meta<typeof AudioFile> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [TestItem, Contact, Organization, TestData.DocumentType],
+          types: [TestItem, Contact, Organization, Testing.DocumentType],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
-            await TestData.seed(client.spaces.default);
+            await seedTestData(client.spaces.default);
           },
         }),
         SpacePlugin(),

@@ -11,6 +11,7 @@ import { type Organization } from '@dxos/schema';
 import { type PreviewProps, previewCard, previewTitle, previewProse, previewChrome } from '../types';
 
 export const OrganizationCard = ({
+  children,
   classNames,
   subject: { name, image, description, website },
 }: PreviewProps<Organization>) => {
@@ -33,6 +34,7 @@ export const OrganizationCard = ({
           </a>
         </div>
       )}
+      {children}
     </div>
   );
 };

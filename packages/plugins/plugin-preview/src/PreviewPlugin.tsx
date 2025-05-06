@@ -8,6 +8,7 @@ import {
   Capabilities,
   Events,
   LayoutAction,
+  Surface,
   contributes,
   createIntent,
   createSurface,
@@ -107,6 +108,7 @@ export const PreviewPlugin = () =>
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
       activate: () =>
+        // TODO(wittjosiah): Factor out to lazy capabilities like other plugins.
         contributes(Capabilities.ReactSurface, [
           //
           // Specific schema types.
@@ -115,13 +117,23 @@ export const PreviewPlugin = () =>
             id: `${PREVIEW_PLUGIN}/schema-popover`,
             role: 'popover',
             filter: (data): data is { subject: Contact } => isInstanceOf(Contact, data.subject),
-            component: ({ data }) => <ContactCard subject={data.subject} />,
+            component: ({ data }) => {
+              return (
+                <ContactCard subject={data.subject}>
+                  <Surface role='related' data={data} />
+                </ContactCard>
+              );
+            },
           }),
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
             role: 'popover',
             filter: (data): data is { subject: Organization } => isInstanceOf(Organization, data.subject),
-            component: ({ data }) => <OrganizationCard subject={data.subject} />,
+            component: ({ data }) => (
+              <OrganizationCard subject={data.subject}>
+                <Surface role='related' data={data} />
+              </OrganizationCard>
+            ),
           }),
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
