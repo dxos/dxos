@@ -49,7 +49,7 @@ const AvatarContent = forwardRef<NaturalDxAvatar, AvatarContentProps>(
       <DxAvatar
         {...props}
         icon={href}
-        labelId={labelId}
+        aria-labelledby={labelId}
         aria-describedby={descriptionId}
         rootClassName={mx(classNames)}
         ref={forwardedRef}

@@ -2,72 +2,85 @@
 // Copyright 2025 DXOS.org
 //
 
+import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework';
-import { Popover } from '@dxos/react-ui';
+import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
 
 export type DeckPopoverRootProps = PropsWithChildren<{}>;
 
+const DEBOUNCE_DELAY = 40;
+
+type DeckPopoverContextValue = {
+  setOpen: (open: boolean) => void;
+};
+
+const [DeckPopoverProvider, useDeckPopoverContext] = createContext<DeckPopoverContextValue>('DeckPopover');
+
 export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
-  const context = useCapability(DeckCapabilities.MutableDeckState);
+  const layout = useCapability(DeckCapabilities.MutableDeckState);
   const virtualRef = useRef<HTMLButtonElement | null>(null);
   const [virtualIter, setVirtualIter] = useState(0);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // TODO(thure): This is a workaround for the difference in `React`ion time between displaying a Popover and rendering
-  //  the anchor further down the tree. Refactor to use VirtualTrigger or some other approach which does not cause a lag.
-  const [delayedPopoverVisibility, setDelayedPopoverVisibility] = useState(false);
+  // TODO(thure): This is a workaround for the race condition between displaying a Popover and either rendering
+  //  the anchor further down the tree or measuring the virtual trigger’s client rect.
   useEffect(() => {
-    context.popoverOpen ? setTimeout(() => setDelayedPopoverVisibility(true), 40) : setDelayedPopoverVisibility(false);
-  }, [context.popoverOpen]);
-
-  const handlePopoverOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (nextOpen && (context.popoverAnchor || context.popoverAnchorId)) {
-        context.popoverOpen = true;
-      } else {
-        context.popoverOpen = false;
-        context.popoverAnchor = undefined;
-        context.popoverAnchorId = undefined;
-        context.popoverSide = undefined;
+    setOpen(false);
+    if (layout.popoverOpen) {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
-    },
-    [context],
-  );
-
-  useEffect(() => {
-    virtualRef.current = context.popoverAnchor ?? null;
-    setVirtualIter((iter) => iter + 1);
-  }, [context.popoverAnchor]);
+      if (layout.popoverAnchor && virtualRef.current !== layout.popoverAnchor) {
+        virtualRef.current = layout.popoverAnchor ?? null;
+        setVirtualIter((iter) => iter + 1);
+      }
+      debounceRef.current = setTimeout(() => setOpen(true), DEBOUNCE_DELAY);
+    }
+  }, [layout.popoverOpen, layout.popoverAnchorId, layout.popoverAnchor, layout.popoverContent]);
 
   return (
-    <Popover.Root
-      modal
-      open={!!((context.popoverAnchor || context.popoverAnchorId) && delayedPopoverVisibility)}
-      onOpenChange={handlePopoverOpenChange}
-    >
-      {context.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
-      {children}
-    </Popover.Root>
+    <DeckPopoverProvider setOpen={setOpen}>
+      <Popover.Root modal open={open}>
+        {layout.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
+        {children}
+      </Popover.Root>
+    </DeckPopoverProvider>
   );
 };
 
 export const PopoverContent = () => {
-  const context = useCapability(DeckCapabilities.MutableDeckState);
-  const handlePopoverClose = useCallback(() => {
-    context.popoverOpen = false;
-    context.popoverAnchor = undefined;
-    context.popoverAnchorId = undefined;
-    context.popoverSide = undefined;
-  }, [context]);
+  const layout = useCapability(DeckCapabilities.MutableDeckState);
+  const { setOpen } = useDeckPopoverContext('PopoverContent');
+
+  const handleClose = useCallback(
+    (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
+      if (
+        // TODO(thure): CodeMirror should not focus itself when it updates.
+        event.type === 'dismissableLayer.focusOutside' &&
+        (event.currentTarget as HTMLElement | undefined)?.classList.contains('cm-content')
+      ) {
+        event.preventDefault();
+      } else {
+        setOpen(false);
+        layout.popoverOpen = false;
+        layout.popoverAnchor = undefined;
+        layout.popoverAnchorId = undefined;
+        layout.popoverSide = undefined;
+      }
+    },
+    [setOpen],
+  );
 
   return (
     <Popover.Portal>
-      <Popover.Content side={context.popoverSide} onEscapeKeyDown={handlePopoverClose}>
+      <Popover.Content side={layout.popoverSide} onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
         <Popover.Viewport>
-          <Surface role='popover' data={context.popoverContent} limit={1} />
+          <Surface role='popover' data={layout.popoverContent} limit={1} />
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>

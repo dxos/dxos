@@ -26,6 +26,7 @@ export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
       }
     }, [videoStream, internalRef.current]);
 
+    // NOTE: The video element typically has a max size of 1280x720.
     return (
       <video
         className={mx(

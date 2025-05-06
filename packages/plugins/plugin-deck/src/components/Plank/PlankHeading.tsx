@@ -17,6 +17,8 @@ import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart, type LayoutMode } 
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
+const MAX_COMPANIONS = 5;
+
 export type PlankHeadingProps = {
   id: string;
   part: ResolvedPart;
@@ -152,7 +154,7 @@ export const PlankHeading = memo(
                 key={id}
                 data-id={id}
                 icon={icon}
-                iconOnly={node?.id !== id}
+                iconOnly={companions.length > MAX_COMPANIONS && node?.id !== id}
                 label={toLocalizedString(label, t)}
                 size={5}
                 variant={node?.id === id ? 'primary' : 'default'}

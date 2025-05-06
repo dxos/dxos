@@ -32,27 +32,33 @@ describe('View', () => {
     expect(view.query.typename).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq([
       'name',
+      'image',
       'email',
       // 'address',
-      'employer',
+      'organization',
     ]);
 
     const props = getSchemaProperties(schema.ast);
     const labels = props.map((p) => pipe(p.name ?? p.title, capitalize));
     expect(labels).to.deep.eq([
       'Name',
+      'Image',
       'Email',
       // 'Address',
-      'Employer',
+      'Organization',
     ]);
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const org = live(Testing.Org, { name: 'DXOS', website: 'https://dxos.org' });
-    const contact = live(Testing.Contact, { name: 'Alice', email: 'alice@example.com', employer: makeRef(org) });
-    log('schema', { org: toJsonSchema(Testing.Org), person: toJsonSchema(Testing.Contact) });
-    log('objects', { org, person: contact });
-    expect(getTypename(org)).to.eq(Testing.Org.typename);
+    const organization = live(Testing.Organization, { name: 'DXOS', website: 'https://dxos.org' });
+    const contact = live(Testing.Contact, {
+      name: 'Alice',
+      email: 'alice@example.com',
+      organization: makeRef(organization),
+    });
+    log('schema', { organization: toJsonSchema(Testing.Organization), contact: toJsonSchema(Testing.Contact) });
+    log('objects', { organization, contact });
+    expect(getTypename(organization)).to.eq(Testing.Organization.typename);
     expect(getTypename(contact)).to.eq(Testing.Contact.typename);
   });
 

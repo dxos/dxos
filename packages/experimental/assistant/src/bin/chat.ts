@@ -19,7 +19,7 @@ import {
   createSystemPrompt,
   createTestData,
   Contact,
-  Org,
+  Organization,
   Project,
   Task,
 } from '../testing';
@@ -33,7 +33,7 @@ const dataSource = createTestData();
 
 const cypherTool = createCypherTool(dataSource);
 
-const schemaTypes = [Org, Project, Task, Contact];
+const schemaTypes = [Organization, Project, Task, Contact];
 
 const spaceId = SpaceId.random();
 const threadId = ObjectId.random();

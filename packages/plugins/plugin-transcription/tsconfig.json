@@ -39,6 +39,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/local-storage"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -127,6 +130,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-meeting"

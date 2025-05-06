@@ -27,6 +27,8 @@ import {
   Grid,
   type DxGridPlane,
   type DxGridPlaneRange,
+  gridSeparatorInlineEnd,
+  gridSeparatorBlockEnd,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy, safeParseInt } from '@dxos/util';
@@ -40,13 +42,6 @@ import { ModalController, type TableModel, type TablePresentation } from '../../
 import { translationKey } from '../../translations';
 import { tableButtons, tableControls } from '../../util';
 import { createOption, TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
-
-// NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
-// These are offset by 1px to avoid double borders in planks.
-const inlineEndLine =
-  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-separator';
-const blockEndLine =
-  '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
 
 //
 // Table.Root
@@ -361,7 +356,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onQuery={handleQuery}
         />
         <Grid.Content
-          className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
+          className={mx('[--dx-grid-base:var(--surface-bg)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
           // getCells={getCells}
           columns={model.columnMeta.value}

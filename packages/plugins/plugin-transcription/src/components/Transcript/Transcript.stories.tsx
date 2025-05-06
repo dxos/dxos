@@ -5,33 +5,35 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useEffect, useMemo, useState, type FC } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { ObjectId } from '@dxos/echo-schema';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { useSpace } from '@dxos/react-client/echo';
+import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { Contact, Organization, type MessageType } from '@dxos/schema';
+import { Testing } from '@dxos/schema/testing';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
+import { useQueueModelAdapter } from '../../hooks';
+import { SerializationModel } from '../../model';
 import {
-  BlockBuilder,
+  MessageBuilder,
   TestItem,
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
-} from './testings';
-import { useQueueModelAdapter } from '../../hooks';
-import { BlockModel } from '../../model';
+} from '../../testing';
 import translations from '../../translations';
-import { type TranscriptBlock } from '../../types';
 
 faker.seed(1);
 
@@ -67,45 +69,49 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { blocks?: TranscriptBlock[] } & Pick<TranscriptProps, 'ignoreAttention' | 'attendableId'>;
+type StoryProps = { messages?: MessageType[] } & Pick<TranscriptProps, 'ignoreAttention' | 'attendableId'>;
 
 /**
- * Basic story mutates array of blocks.
+ * Basic story mutates array of messages.
  */
-const BasicStory = ({ blocks: initialBlocks = [], ...props }: StoryProps) => {
+const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) => {
   const [reset, setReset] = useState({});
-  const builder = useMemo(() => new BlockBuilder(), []);
-  const model = useMemo(() => new BlockModel<TranscriptBlock>(renderMarkdown, initialBlocks), [initialBlocks, reset]);
+  const builder = useMemo(() => new MessageBuilder(), []);
+  const model = useMemo(
+    () => new SerializationModel<MessageType>(renderMarkdown([]), initialMessages),
+    [initialMessages, reset],
+  );
   const [running, setRunning] = useState(true);
-  const [currentBlock, setCurrentBlock] = useState<TranscriptBlock | null>(null);
+  const [currentMessage, setCurrentMessage] = useState<MessageType | null>(null);
   useEffect(() => {
     if (!running) {
       return;
     }
 
-    if (!currentBlock) {
-      const block = builder.createBlock();
-      model.appendBlock(block);
-      setCurrentBlock(block);
+    if (!currentMessage) {
+      void builder.createMessage().then((message) => {
+        model.appendChunk(message);
+        setCurrentMessage(message);
+      });
       return;
     }
 
     const i = setInterval(() => {
-      if (currentBlock?.segments.length && currentBlock.segments.length >= 3) {
-        setCurrentBlock(null);
+      if (currentMessage?.blocks.length && currentMessage.blocks.length >= 3) {
+        setCurrentMessage(null);
         clearInterval(i);
         return;
       }
 
-      currentBlock.segments.push(builder.createSegment());
-      model.updateBlock(currentBlock);
+      currentMessage.blocks.push(builder.createBlock());
+      model.updateChunk(currentMessage);
     }, 3_000);
 
     return () => clearInterval(i);
-  }, [model, currentBlock, running]);
+  }, [model, currentMessage, running]);
 
   const handleReset = () => {
-    setCurrentBlock(null);
+    setCurrentMessage(null);
     setRunning(false);
     setReset({});
   };
@@ -124,22 +130,52 @@ const BasicStory = ({ blocks: initialBlocks = [], ...props }: StoryProps) => {
 /**
  * Queue story mutates queue with model adapter.
  */
-const QueueStory = ({ blocks: initialBlocks = [], ...props }: StoryProps) => {
+const QueueStory = ({
+  messages: initialMessages = [],
+  queueId,
+  onReset,
+  ...props
+}: StoryProps & { queueId: ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
-  const queue = useTestTranscriptionQueue(space, running, 2_000);
-  const model = useQueueModelAdapter(renderMarkdown, queue, initialBlocks);
+  const members = useMembers(space?.key).map((member) => member.identity);
+  const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
+  const model = useQueueModelAdapter(renderMarkdown(members), queue, initialMessages);
 
-  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} {...props} />;
+  return (
+    <TranscriptContainer
+      space={space}
+      model={model}
+      running={running}
+      onRunningChange={setRunning}
+      onReset={onReset}
+      {...props}
+    />
+  );
 };
 
+// TODO(burdon): Reconcile with QueueStory.
 const EntityExtractionQueueStory = () => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
-  const queue = useTestTranscriptionQueueWithEntityExtraction(space, running, 2_000);
-  const model = useQueueModelAdapter(renderMarkdown, queue, []);
+  const members = useMembers(space?.key).map((member) => member.identity);
+  const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
+  const model = useQueueModelAdapter(renderMarkdown(members), queue, []);
 
   return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
+};
+
+/**
+ * Wrapper remounts on refresh to reload queue.
+ */
+const QueueStoryWrapper = () => {
+  const [queueId] = useState(ObjectId.random());
+  const [key, setKey] = useState(ObjectId.random().toString());
+  const handleReset = () => {
+    setKey(ObjectId.random().toString());
+  };
+
+  return <QueueStory key={key} queueId={queueId} onReset={handleReset} />;
 };
 
 const meta: Meta<typeof QueueStory> = {
@@ -150,7 +186,7 @@ const meta: Meta<typeof QueueStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [TestItem],
+          types: [TestItem, Testing.DocumentType, Contact, Organization],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },
@@ -170,14 +206,14 @@ const meta: Meta<typeof QueueStory> = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof QueueStory>;
 
 export const Default: Story = {
   render: BasicStory,
   args: {
     ignoreAttention: true,
     attendableId: 'story',
-    blocks: Array.from({ length: 10 }, () => BlockBuilder.singleton.createBlock()),
+    messages: await Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())),
   },
 };
 
@@ -190,7 +226,7 @@ export const Empty: Story = {
 };
 
 export const WithQueue: Story = {
-  render: QueueStory,
+  render: QueueStoryWrapper,
   args: {
     ignoreAttention: true,
     attendableId: 'story',
@@ -200,7 +236,7 @@ export const WithQueue: Story = {
 export const WithEntityExtractionQueue: Story = {
   render: EntityExtractionQueueStory,
   args: {
-    // ignoreAttention: true,
-    // attendableId: 'story',
+    ignoreAttention: true,
+    attendableId: 'story',
   },
 };

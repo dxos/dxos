@@ -78,9 +78,9 @@ export const Default: Story<TestType> = {
   },
 };
 
-export const Org: Story<Testing.Org> = {
+export const Organization: Story<Testing.Organization> = {
   args: {
-    schema: Testing.OrgSchema,
+    schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
       // website: 'https://dxos.org',
@@ -88,9 +88,9 @@ export const Org: Story<Testing.Org> = {
   },
 };
 
-export const OrgAutoSave: Story<Testing.Org> = {
+export const OrganizationAutoSave: Story<Testing.Organization> = {
   args: {
-    schema: Testing.OrgSchema,
+    schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
       // website: 'https://dxos.org',

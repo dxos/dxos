@@ -25,7 +25,7 @@ test.skip('run', async ({ expect }) => {
   const result = await executeQuery(
     dataSource,
     `
-      MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'})
+      MATCH (org:Organization {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'})
       RETURN c.name, t.name
     `,
   );

@@ -5,22 +5,21 @@
 import { Schema } from 'effect';
 
 import { defineTool, Message } from '@dxos/artifact';
-import type { AIServiceClient } from '@dxos/assistant';
+import { type AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { failedInvariant } from '@dxos/invariant';
-import type { ContactType, MessageType } from '@dxos/schema';
-
-import type { DocumentType, Label } from './test-data';
+import { type MessageType, type Contact } from '@dxos/schema';
+import { type Testing } from '@dxos/schema/testing';
 
 type ProcessEmailParams = {
   email: MessageType;
   aiService: AIServiceClient;
   context: {
-    labels: Label[];
-    documents?: DocumentType[];
-    contacts?: ContactType[];
+    labels: Testing.Label[];
+    documents?: Testing.DocumentType[];
+    contacts?: Contact[];
   };
 };
 

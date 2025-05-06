@@ -11,7 +11,7 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
-import { MarkdownContainer, MarkdownSettings } from '../components';
+import { MarkdownContainer, MarkdownSettings, MarkdownPreview } from '../components';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { DocumentType, isEditorModel, type MarkdownSettingsProps } from '../types';
 
@@ -94,5 +94,12 @@ export default () =>
       filter: (data): data is { subject: SettingsStore<MarkdownSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === MARKDOWN_PLUGIN,
       component: ({ data: { subject } }) => <MarkdownSettings settings={subject.value} />,
+    }),
+    createSurface({
+      id: `${MARKDOWN_PLUGIN}/preview`,
+      role: 'popover',
+      filter: (data): data is { subject: DocumentType | TextType } =>
+        isInstanceOf(DocumentType, data.subject) || isInstanceOf(TextType, data.subject),
+      component: ({ data }) => <MarkdownPreview {...data} />,
     }),
   ]);

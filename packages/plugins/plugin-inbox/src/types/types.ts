@@ -3,10 +3,10 @@
 //
 
 import { S } from '@dxos/echo-schema';
+import { SpaceSchema } from '@dxos/react-client/echo';
 import { MessageType } from '@dxos/schema';
 
 import { CalendarType } from './calendar';
-import { ContactsType } from './contacts';
 import { MailboxType } from './mail';
 import { INBOX_PLUGIN } from '../meta';
 
@@ -23,16 +23,6 @@ export namespace InboxAction {
     }),
   }) {}
 
-  // TODO(wittjosiah): Remove.
-  export class CreateContacts extends S.TaggedClass<CreateContacts>()(`${INBOX_ACTION}/create-contacts`, {
-    input: S.Struct({
-      name: S.optional(S.String),
-    }),
-    output: S.Struct({
-      object: ContactsType,
-    }),
-  }) {}
-
   export class CreateCalendar extends S.TaggedClass<CreateCalendar>()(`${INBOX_ACTION}/create-calendar`, {
     input: S.Struct({
       name: S.optional(S.String),
@@ -46,6 +36,14 @@ export namespace InboxAction {
     input: S.Struct({
       mailboxId: S.String,
       message: S.optional(MessageType),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class ExtractContact extends S.TaggedClass<ExtractContact>()(`${INBOX_ACTION}/extract-contact`, {
+    input: S.Struct({
+      space: SpaceSchema,
+      message: MessageType,
     }),
     output: S.Void,
   }) {}

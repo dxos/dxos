@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { useSyncState, getSyncSummary } from '@dxos/react-client/echo';
 import { Icon, Toggle } from '@dxos/react-ui';
@@ -47,7 +47,7 @@ export type QueryPanelProps = {
 };
 
 // TODO(burdon): Reconcile with TraceView in diagnostics.
-export const StatsPanel = ({ stats, onRefresh, children }: React.PropsWithChildren<QueryPanelProps>) => {
+export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<QueryPanelProps>) => {
   const [live, setLive] = useState(false);
   const handleToggleLive = () => setLive((live) => !live);
 
@@ -110,16 +110,15 @@ export const StatsPanel = ({ stats, onRefresh, children }: React.PropsWithChildr
           </Toggle>
         }
       />
-      <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
+      <MemoryPanel id='memory' memory={stats?.memory} />
+      <NetworkPanel id='network' network={stats?.network} />
+      <EdgePanel id='edge' edge={stats?.edge} />
       <PerformancePanel
         id='performance'
         open={panelState.performance}
         onToggle={handleToggle}
         entries={stats?.performanceEntries}
       />
-      <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
-      <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
-      <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
       <DatabasePanel id='database' open={panelState.database} onToggle={handleToggle} database={stats?.database} />
       <ReplicatorPanel
         id='replicator'
@@ -133,6 +132,8 @@ export const StatsPanel = ({ stats, onRefresh, children }: React.PropsWithChildr
         onToggle={handleToggle}
         database={stats?.database}
       />
+      <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
+      <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
       <SyncStatusPanel
         id='sync'
         open={panelState.sync}
@@ -141,9 +142,8 @@ export const StatsPanel = ({ stats, onRefresh, children }: React.PropsWithChildr
         summary={syncSummary}
         debug
       />
-      <MemoryPanel id='memory' memory={stats?.memory} />
-      <NetworkPanel id='network' network={stats?.network} />
-      <EdgePanel id='edge' edge={stats?.edge} />
+      <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
+      <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
       {children}
     </div>
   );

@@ -7,7 +7,7 @@ import React, { type FC, useMemo } from 'react';
 import { useAppGraph, Surface } from '@dxos/app-framework';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN } from '../meta';
 import { type LocalFile, type LocalEntity, LocalFilesAction } from '../types';
@@ -40,10 +40,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   return (
     <StackItem.Content>
       <div role='none' className='overflow-auto p-8 grid place-items-center'>
-        <p
-          role='alert'
-          className={mx(descriptionText, 'break-words border border-dashed border-separator rounded-lg p-8')}
-        >
+        <p role='alert' className={mx(descriptionMessage, 'break-words rounded-lg p-8')}>
           {t('missing file permissions')}
           {action && node && (
             <Button onClick={() => action.data({ node })}>{toLocalizedString(action.properties.label, t)}</Button>

@@ -27,16 +27,40 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../ui/lit-ui"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
     },
     {
       "path": "../plugin-client"

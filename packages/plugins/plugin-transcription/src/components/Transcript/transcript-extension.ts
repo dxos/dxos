@@ -9,15 +9,15 @@ import { intervalToDuration } from 'date-fns/intervalToDuration';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type RenderCallback } from '@dxos/react-ui-editor';
+import { type MessageType } from '@dxos/schema';
 
-import { DocumentAdapter, type BlockModel } from '../../model';
-import { type TranscriptBlock } from '../../types';
+import { DocumentAdapter, type SerializationModel } from '../../model';
 
 /**
- * Data structure that maps Blocks queue to lines with transcript state.
+ * Data structure that maps Chunks queue to lines with transcript state.
  */
 export type TranscriptOptions = {
-  model: BlockModel<TranscriptBlock>;
+  model: SerializationModel<MessageType>;
   started?: Date;
   renderButton?: RenderCallback<{ onClick: () => void }>;
 };
@@ -32,12 +32,13 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
       class: 'cm-timestamp-gutter',
       lineMarkerChange: (update) => update.docChanged || update.viewportChanged,
       markers: (view) => {
-        const start = getStartTime(started, model.blocks[0]);
+        const start = getStartTime(started, model.chunks[0]);
         const builder = new RangeSetBuilder<GutterMarker>();
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            const timestamp = model.getBlockAtLine(line.number)?.segments[0]?.started;
+            const block = model.getChunkAtLine(line.number)?.blocks[0];
+            const timestamp = block?.type === 'transcription' && block.started;
             if (timestamp) {
               builder.add(line.from, line.from, new TimestampMarker(line.number, new Date(timestamp), start));
             }
@@ -69,13 +70,15 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
           let isAutoScrolling = false;
           let hasScrolled = false;
 
-          const scrollToBottom = () => {
-            scroller.style.scrollBehavior = 'smooth';
+          let timeout: NodeJS.Timeout | undefined;
+          const scrollToBottom = (smooth = false) => {
+            scroller.style.scrollBehavior = smooth ? 'smooth' : '';
 
             // Temporarily hide scrollbar to prevent flicker.
             scroller.classList.add('cm-hide-scrollbar');
             isAutoScrolling = true;
-            setTimeout(() => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
               this._controls?.classList.add('opacity-0');
               scroller.classList.remove('cm-hide-scrollbar');
               isAutoScrolling = false;
@@ -96,7 +99,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
               this._controls,
               {
                 onClick: () => {
-                  scrollToBottom();
+                  scrollToBottom(false);
                 },
               },
               view,
@@ -122,7 +125,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
 
               // Scroll.
               if (autoScroll) {
-                scrollToBottom();
+                scrollToBottom(true);
               }
             }),
           );
@@ -210,24 +213,24 @@ class TimestampMarker extends GutterMarker {
   }
 }
 
-const getStartTime = (started?: Date, block?: TranscriptBlock): Date | undefined => {
+const getStartTime = (started?: Date, message?: MessageType): Date | undefined => {
   if (started) {
     return started;
   }
 
-  if (block?.segments[0]?.started) {
-    return new Date(block.segments[0].started);
+  if (message?.blocks[0]?.type === 'transcription' && message.blocks[0].started) {
+    return new Date(message.blocks[0].started);
   }
 
   return undefined;
 };
 
 const formatTimestamp = (timestamp: Date, relative?: Date) => {
-  if (!relative) {
-    return format(timestamp, 'HH:mm:ss');
-  } else {
+  if (relative) {
     const pad = (n = 0) => String(n).padStart(2, '0');
     const { hours, minutes, seconds } = intervalToDuration({ start: relative, end: timestamp });
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  } else {
+    return format(timestamp, 'HH:mm:ss');
   }
 };

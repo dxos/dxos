@@ -4,15 +4,15 @@
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { MessageType } from '@dxos/schema';
+import { Contact, MessageType, Project, Organization } from '@dxos/schema';
 
 import { AppGraphBuilder, ArtifactDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
-import { CalendarType, ContactsType, EventType, InboxAction, MailboxType } from './types';
+import { CalendarType, EventType, InboxAction, MailboxType } from './types';
 
 export const InboxPlugin = () =>
   definePlugin(meta, [
@@ -37,12 +37,6 @@ export const InboxPlugin = () =>
           id: MailboxType.typename,
           metadata: {
             icon: 'ph--tray--regular',
-          },
-        }),
-        contributes(Capabilities.Metadata, {
-          id: ContactsType.typename,
-          metadata: {
-            icon: 'ph--address-book--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -80,18 +74,17 @@ export const InboxPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: ContactsType,
-            getIntent: () => createIntent(InboxAction.CreateContacts),
-          }),
-        ),
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
             objectSchema: CalendarType,
             getIntent: () => createIntent(InboxAction.CreateCalendar),
           }),
         ),
       ],
+    }),
+    // TODO(wittjosiah): Factor out.
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.Schema, [Contact, Organization, Project]),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,

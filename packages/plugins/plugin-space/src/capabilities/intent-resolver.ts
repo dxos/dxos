@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Effect, pipe } from 'effect';
 
 import {
   Capabilities,
-  chain,
   contributes,
   createIntent,
   createResolver,
@@ -21,6 +20,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { isSpace, getSpace, SpaceState, fullyQualifiedId, isEchoObject } from '@dxos/react-client/echo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { SpaceCapabilities } from './capabilities';
@@ -43,10 +43,11 @@ const SPACE_MAX_OBJECTS = 500;
 
 type IntentResolverOptions = {
   context: PluginsContext;
+  createInvitationUrl: (invitationCode: string) => string;
   observability?: boolean;
 };
 
-export default ({ context, observability }: IntentResolverOptions) => {
+export default ({ context, observability, createInvitationUrl }: IntentResolverOptions) => {
   const resolve = (typename: string) =>
     context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
@@ -121,46 +122,60 @@ export default ({ context, observability }: IntentResolverOptions) => {
       }),
     }),
     createResolver({
+      intent: SpaceAction.OpenMembers,
+      resolve: ({ space }) => ({
+        intents: [
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [`members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+            options: {
+              workspace: space.id,
+            },
+          }),
+        ],
+      }),
+    }),
+    createResolver({
       intent: SpaceAction.Share,
-      resolve: ({ space }) => {
-        const layout = context.requestCapability(Capabilities.Layout);
-        const id = `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
-        if (layout.active.includes(id)) {
-          return {
-            intents: [
-              createIntent(LayoutAction.ScrollIntoView, {
-                part: 'current',
-                subject: id,
-              }),
-            ],
-          };
-        }
-
+      resolve: ({ space, type, authMethod, multiUse, target }) => {
+        const invitation = space.share({ type, authMethod, multiUse, target });
         return {
-          intents: [
-            pipe(
-              createIntent(LayoutAction.SwitchWorkspace, {
-                part: 'workspace',
-                subject: space.id,
-              }),
-              chain(LayoutAction.Open, {
-                part: 'main',
-                subject: [id],
-              }),
-            ),
-            ...(observability
-              ? [
-                  createIntent(ObservabilityAction.SendEvent, {
-                    name: 'space.share',
-                    properties: {
-                      spaceId: space.id,
-                    },
-                  }),
-                ]
-              : []),
-          ],
+          data: invitation,
+          intents: observability
+            ? [
+                createIntent(ObservabilityAction.SendEvent, {
+                  name: 'space.share',
+                  properties: {
+                    spaceId: space.id,
+                  },
+                }),
+              ]
+            : [],
         };
       },
+    }),
+    createResolver({
+      intent: SpaceAction.GetShareLink,
+      resolve: ({ space, target, copyToClipboard }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+          const invitation = yield* dispatch(
+            createIntent(SpaceAction.Share, {
+              space,
+              type: Invitation.Type.DELEGATED,
+              authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+              multiUse: true,
+              target,
+            }),
+          );
+
+          const url = pipe(invitation.get(), InvitationEncoder.encode, createInvitationUrl);
+          if (copyToClipboard) {
+            yield* Effect.tryPromise(() => navigator.clipboard.writeText(url));
+          }
+
+          return { data: url };
+        }),
     }),
     createResolver({
       intent: SpaceAction.Lock,
@@ -239,35 +254,17 @@ export default ({ context, observability }: IntentResolverOptions) => {
     }),
     createResolver({
       intent: SpaceAction.OpenSettings,
-      resolve: ({ space }) => {
-        const layout = context.requestCapability(Capabilities.Layout);
-        const id = `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`;
-        if (layout.active.includes(id)) {
-          return {
-            intents: [
-              createIntent(LayoutAction.ScrollIntoView, {
-                part: 'current',
-                subject: id,
-              }),
-            ],
-          };
-        }
-
-        return {
-          intents: [
-            pipe(
-              createIntent(LayoutAction.SwitchWorkspace, {
-                part: 'workspace',
-                subject: space.id,
-              }),
-              chain(LayoutAction.Open, {
-                part: 'main',
-                subject: [id],
-              }),
-            ),
-          ],
-        };
-      },
+      resolve: ({ space }) => ({
+        intents: [
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [`properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+            options: {
+              workspace: space.id,
+            },
+          }),
+        ],
+      }),
     }),
     createResolver({
       intent: SpaceAction.Open,

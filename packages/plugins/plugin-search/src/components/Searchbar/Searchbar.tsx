@@ -3,7 +3,7 @@
 //
 
 import { MagnifyingGlass } from '@phosphor-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { Input, type TextInputProps } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -35,7 +35,7 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange, onSu
     inputRef.current?.focus();
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
       case 'Enter':
         onSubmit?.(text);

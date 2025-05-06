@@ -4,9 +4,10 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
@@ -19,6 +20,7 @@ export const PopoverRenameObject = ({ object: obj }: { object: Live<any> }) => {
   const object = obj as any;
   // TODO(burdon): Field should not be hardcoded field.
   const [name, setName] = useState(object.name || object.title || '');
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleDone = useCallback(() => {
     try {
@@ -30,6 +32,12 @@ export const PopoverRenameObject = ({ object: obj }: { object: Live<any> }) => {
         log.error('Failed to rename object', { err });
       }
     }
+    void dispatch(
+      createIntent(LayoutAction.UpdatePopover, {
+        part: 'popover',
+        options: { variant: 'react', anchorId: '', state: false },
+      }),
+    );
   }, [object, name]);
 
   return (
@@ -46,11 +54,9 @@ export const PopoverRenameObject = ({ object: obj }: { object: Live<any> }) => {
           />
         </Input.Root>
       </div>
-      <Popover.Close asChild>
-        <Button ref={doneButton} classNames='self-stretch' onClick={handleDone}>
-          {t('done label', { ns: 'os' })}
-        </Button>
-      </Popover.Close>
+      <Button ref={doneButton} classNames='self-stretch' onClick={handleDone}>
+        {t('done label', { ns: 'os' })}
+      </Button>
     </div>
   );
 };

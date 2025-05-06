@@ -2,26 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
+import React from 'react';
+
 import {
-  createIntent,
   Capabilities,
-  contributes,
   Events,
+  LayoutAction,
+  Surface,
+  contributes,
+  createIntent,
+  createSurface,
   defineModule,
   definePlugin,
-  LayoutAction,
 } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
-import { type Client } from '@dxos/client';
-import { resolveRef } from '@dxos/client';
-import { parseId, type Space } from '@dxos/client/echo';
+import { type Client, resolveRef } from '@dxos/client';
+import { getSchema, isEchoObject, parseId, type ReactiveEchoObject, type Space } from '@dxos/client/echo';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { type DxRefTagActivate } from '@dxos/lit-ui';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { useTranslation } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-editor';
+import { Form } from '@dxos/react-ui-form';
+import { descriptionMessage } from '@dxos/react-ui-theme';
+import { Contact, Organization, Project } from '@dxos/schema';
 
-import { meta } from './meta';
+import { ContactCard, OrganizationCard, ProjectCard } from './components';
+import { meta, PREVIEW_PLUGIN } from './meta';
+import translations from './translations';
 
 const customEventOptions = { capture: true, passive: false };
 
@@ -42,7 +52,17 @@ const handlePreviewLookup = async (
 export const PreviewPlugin = () =>
   definePlugin(meta, [
     defineModule({
-      id: `${meta.id}/module/preview-popoevr`,
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => [contributes(ClientCapabilities.Schema, [Contact, Organization])],
+    }),
+    defineModule({
+      id: `${meta.id}/module/preview-popover`,
       activatesOn: Events.Startup,
       activate: (context) => {
         // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
@@ -83,5 +103,63 @@ export const PreviewPlugin = () =>
         );
         return contributes(Capabilities.Null, null, () => cleanup());
       },
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.SetupReactSurface,
+      activate: () =>
+        // TODO(wittjosiah): Factor out to lazy capabilities like other plugins.
+        contributes(Capabilities.ReactSurface, [
+          //
+          // Specific schema types.
+          //
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/schema-popover`,
+            role: 'popover',
+            filter: (data): data is { subject: Contact } => isInstanceOf(Contact, data.subject),
+            component: ({ data }) => {
+              return (
+                <ContactCard subject={data.subject}>
+                  <Surface role='related' data={data} />
+                </ContactCard>
+              );
+            },
+          }),
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/schema-popover`,
+            role: 'popover',
+            filter: (data): data is { subject: Organization } => isInstanceOf(Organization, data.subject),
+            component: ({ data }) => (
+              <OrganizationCard subject={data.subject}>
+                <Surface role='related' data={data} />
+              </OrganizationCard>
+            ),
+          }),
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/schema-popover`,
+            role: 'popover',
+            filter: (data): data is { subject: Project } => isInstanceOf(Project, data.subject),
+            component: ({ data }) => <ProjectCard subject={data.subject} />,
+          }),
+
+          //
+          // Fallback for any object.
+          //
+          createSurface({
+            id: `${PREVIEW_PLUGIN}/fallback-popover`,
+            role: 'popover',
+            position: 'fallback',
+            filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+            component: ({ data }) => {
+              const schema = getSchema(data.subject);
+              const { t } = useTranslation(PREVIEW_PLUGIN);
+              if (!schema) {
+                return <p className={descriptionMessage}>{t('unable to create preview message')}</p>;
+              }
+
+              return <Form schema={schema} values={data.subject} readonly />;
+            },
+          }),
+        ]),
     }),
   ]);
