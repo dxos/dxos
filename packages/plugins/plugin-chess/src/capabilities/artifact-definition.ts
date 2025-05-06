@@ -7,7 +7,7 @@ import { pipe } from 'effect';
 
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
-import { createArtifactElement } from '@dxos/assistant';
+import { createArtifactElement, VersionPin } from '@dxos/assistant';
 import { isInstanceOf, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -57,16 +57,7 @@ export default () => {
           console.log(data);
 
           return ToolResult.Success(createArtifactElement(data.id), [
-            // TODO(dmaretskyi): helper function
-            {
-              type: 'json',
-              disposition: 'artifact-version',
-              json: JSON.stringify({
-                // TODO(dmaretskyi): Ref
-                id: data.object.id,
-                version: getVersion(data.object),
-              }),
-            },
+            VersionPin.createBlock(VersionPin.fromObject(data.object)),
           ]);
         },
       }),

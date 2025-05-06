@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Option, Schema as S } from 'effect';
 
 import {
   defineTool,
@@ -20,6 +20,7 @@ import { log } from '@dxos/log';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest, type GenerationStream } from '../ai-service';
 import { isToolUse, runTools } from '../conversation';
 import { ObjectVersion } from '@dxos/echo-db';
+import { VersionPin } from './version-pin';
 
 /**
  * Contains message history, tools, current context.
@@ -263,20 +264,13 @@ export class AISession {
         versions,
       });
 
-      for (const [id, { version, diff }] of [...artifactDiff.entries()]) {
+      for (const [id, { version }] of [...artifactDiff.entries()]) {
         if (ObjectVersion.equals(version, versions.get(id)!)) {
           artifactDiff.delete(id);
           continue;
         }
 
-        prelude.push({
-          type: 'json',
-          disposition: 'artifact-version',
-          json: JSON.stringify({
-            id,
-            version,
-          }),
-        });
+        prelude.push(VersionPin.createBlock(VersionPin.make({ id, version })));
       }
       if (artifactDiff.size > 0) {
         prelude.push({
@@ -498,8 +492,11 @@ const gatherObjectVersions = (messages: Message[]): Map<ObjectId, ObjectVersion>
   const artifactIds = new Map<ObjectId, ObjectVersion>();
   for (const message of messages) {
     for (const block of message.content) {
-      if (block.type === 'json' && block.disposition === 'artifact-version') {
-        const json = JSON.parse(block.json);
+      if (block.type === 'json' && block.disposition === VersionPin.DISPOSITION) {
+        const json = VersionPin.pipe(S.decodeOption)(JSON.parse(block.json)).pipe(Option.getOrUndefined);
+        if (!json) {
+          continue;
+        }
         artifactIds.set(json.id, json.version);
       }
     }
