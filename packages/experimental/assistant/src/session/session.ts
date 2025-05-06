@@ -270,7 +270,7 @@ export class AISession {
           continue;
         }
 
-        prelude.push(VersionPin.createBlock(VersionPin.make({ id, version })));
+        prelude.push(VersionPin.createBlock(VersionPin.make({ objectId: id, version })));
       }
       if (artifactDiff.size > 0) {
         prelude.push(createArtifactUpdateBlock(artifactDiff));
@@ -483,11 +483,11 @@ const gatherObjectVersions = (messages: Message[]): Map<ObjectId, ObjectVersion>
   for (const message of messages) {
     for (const block of message.content) {
       if (block.type === 'json' && block.disposition === VersionPin.DISPOSITION) {
-        const json = VersionPin.pipe(S.decodeOption)(JSON.parse(block.json)).pipe(Option.getOrUndefined);
-        if (!json) {
+        const pin = VersionPin.pipe(S.decodeOption)(JSON.parse(block.json)).pipe(Option.getOrUndefined);
+        if (!pin) {
           continue;
         }
-        artifactIds.set(json.id, json.version);
+        artifactIds.set(pin.objectId, pin.version);
       }
     }
   }

@@ -1,15 +1,15 @@
 import type { MessageContentBlock } from '@dxos/artifact';
 import type { ObjectVersion } from '@dxos/echo-db';
 import { getVersion } from '@dxos/echo-db';
-import type { BaseEchoObject } from '@dxos/echo-schema';
+import { ObjectId, type BaseEchoObject } from '@dxos/echo-schema';
 import { Schema } from 'effect';
 
 // TODO(dmaretskyi): Extract.
 const ObjectVersionSchema = Schema.Unknown as Schema.Schema<ObjectVersion>;
 
 const VersionPinSchema = Schema.Struct({
-  // TODO(dmaretskyi): Ref
-  id: Schema.String,
+  // TODO(dmaretskyi): Use Ref when those support encoding.
+  objectId: ObjectId,
   // TODO(dmaretskyi): Could be opaque
   version: ObjectVersionSchema,
 });
@@ -23,7 +23,7 @@ export const VersionPin: typeof VersionPinSchema & {
   static readonly DISPOSITION = 'version-pin';
   static fromObject(object: BaseEchoObject): VersionPin {
     return VersionPin.make({
-      id: object.id,
+      objectId: object.id,
       version: getVersion(object),
     });
   }
