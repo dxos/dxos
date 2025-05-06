@@ -27,7 +27,7 @@ export const RelatedContacts = ({
       <ul className={previewChrome}>
         {contacts.map((contact) => (
           <Avatar.Root key={contact.id}>
-            {/* TODO(thure): This should become a link. */}
+            {/* TODO(thure): This should use a button. */}
             <li className='dx-button gap-2 mbe-1 last:mbe-0' onClick={() => onSelect?.(contact)}>
               <Avatar.Content
                 hue='neutral'
@@ -60,6 +60,7 @@ export const RelatedMessages = ({
         {t('related messages title')}
       </h3>
       <ul className={previewChrome}>
+        {/* TODO(thure): This should use a button. */}
         {messages.map((message) => (
           <li
             key={message.id}
