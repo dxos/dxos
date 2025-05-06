@@ -3,7 +3,7 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type CSSProperties, useCallback, useEffect } from 'react';
+import React, { type CSSProperties, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
@@ -35,13 +35,19 @@ export type TagPickerProps = ThemedClassName<
   } & Pick<TagPickerOptions, 'onSelect' | 'onSearch' | 'onUpdate'>
 >;
 
-export const TagPicker = ({ readonly, ...props }: TagPickerProps) => {
+export interface TagPickerHandle {
+  focus: () => void;
+}
+
+export const TagPicker = forwardRef<TagPickerHandle, TagPickerProps>(({ readonly, ...props }, ref) => {
   if (readonly) {
     return <ReadonlyTagPicker {...props} />;
   } else {
-    return <EditableTagPicker {...props} />;
+    return <EditableTagPicker ref={ref} {...props} />;
   }
-};
+});
+
+TagPicker.displayName = 'TagPicker';
 
 const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
   const handleItemClick = useCallback(
@@ -68,56 +74,63 @@ const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
   );
 };
 
-const EditableTagPicker = ({ classNames, items, readonly, mode, onUpdate, ...props }: TagPickerProps) => {
-  const { themeMode } = useThemeContext();
-  const { ref: resizeRef, width } = useResizeDetector();
-  const { t } = useTranslation(translationKey);
+const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
+  ({ classNames, items, readonly, mode, onUpdate, ...props }, ref) => {
+    const { themeMode } = useThemeContext();
+    const { ref: resizeRef, width } = useResizeDetector();
+    const { t } = useTranslation(translationKey);
 
-  const itemsRef = useDynamicRef(items);
-  const handleUpdate = (ids: string[]) => {
-    const modified = ids.length !== itemsRef.current.length || ids.some((id, i) => id !== itemsRef.current[i].id);
-    if (modified) {
-      onUpdate?.(ids);
-    }
-  };
+    const itemsRef = useDynamicRef(items);
+    const handleUpdate = (ids: string[]) => {
+      const modified = ids.length !== itemsRef.current.length || ids.some((id, i) => id !== itemsRef.current[i].id);
+      if (modified) {
+        onUpdate?.(ids);
+      }
+    };
 
-  const { parentRef, view } = useTextEditor(
-    () => ({
-      initialValue: createLinks(items),
-      extensions: [
-        createBasicExtensions({ lineWrapping: false }),
-        createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({
-          themeMode,
-          slots: {
-            editor: {
-              className: mx(classNames),
+    const { parentRef, view } = useTextEditor(
+      () => ({
+        initialValue: createLinks(items),
+        extensions: [
+          createBasicExtensions({ lineWrapping: false }),
+          createMarkdownExtensions({ themeMode }),
+          createThemeExtensions({
+            themeMode,
+            slots: {
+              editor: {
+                className: mx(classNames),
+              },
             },
-          },
-        }),
-        tagPickerExtension({
-          debug: true,
-          onUpdate: handleUpdate,
-          removeLabel: t('remove label'),
-          mode,
-          ...props,
-        }),
-      ],
-    }),
-    [themeMode, mode],
-  );
+          }),
+          tagPickerExtension({
+            debug: true,
+            onUpdate: handleUpdate,
+            removeLabel: t('remove label'),
+            mode,
+            ...props,
+          }),
+        ],
+      }),
+      [themeMode, mode],
+    );
 
-  const ref = useComposedRefs(resizeRef, parentRef);
+    const composedRef = useComposedRefs(resizeRef, parentRef);
+    useImperativeHandle(ref, () => ({ focus: () => view?.focus() }), [view]);
 
-  useEffect(() => {
-    const text = createLinks(items);
-    if (text !== view?.state.doc.toString()) {
-      // TODO(burdon): This will cancel any current autocomplete; need to merge?
-      view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
-    }
-  }, [view, items]);
+    useEffect(() => {
+      const text = createLinks(items);
+      if (text !== view?.state.doc.toString()) {
+        // TODO(burdon): This will cancel any current autocomplete; need to merge?
+        view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+      }
+    }, [view, items]);
 
-  return (
-    <div ref={ref} className='min-is-0 flex-1' style={{ '--dx-tag-picker-width': `${width}px` } as CSSProperties} />
-  );
-};
+    return (
+      <div
+        ref={composedRef}
+        className='min-is-0 flex-1'
+        style={{ '--dx-tag-picker-width': `${width}px` } as CSSProperties}
+      />
+    );
+  },
+);
