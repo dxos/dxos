@@ -2,10 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginsContext, createIntent } from '@dxos/app-framework';
+import {
+  contributes,
+  Capabilities,
+  createResolver,
+  type PluginsContext,
+  createIntent,
+  LayoutAction,
+} from '@dxos/app-framework';
 import { FunctionTrigger, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter } from '@dxos/react-client/echo';
 
@@ -54,7 +62,13 @@ export default (context: PluginsContext) =>
         return {
           intents: [
             createIntent(SpaceAction.AddObject, { object: trigger, target: space }),
-            createIntent(SpaceAction.OpenSettings, { space }),
+            createIntent(LayoutAction.Open, {
+              part: 'main',
+              subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+              options: {
+                workspace: space.id,
+              },
+            }),
           ],
         };
       },
