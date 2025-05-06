@@ -75,6 +75,7 @@ export const WithCompanion = {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
+            // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
             await initializeMailbox(client.spaces.default);
           },
         }),
