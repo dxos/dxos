@@ -53,8 +53,17 @@ export default () => {
           if (!data || error) {
             return ToolResult.Error(error?.message ?? 'Failed to create chess game');
           }
+          console.log(data);
 
-          return ToolResult.Success(createArtifactElement(data.id));
+          return ToolResult.Success(createArtifactElement(data.id), [
+            {
+              type: 'json',
+              disposition: 'artifact-version',
+              json: JSON.stringify({
+                // version: data.version,
+              }),
+            },
+          ]);
         },
       }),
       defineTool(meta.id, {
@@ -76,7 +85,9 @@ export default () => {
         schema: S.Struct({ id: ArtifactId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const game = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          const game = await extensions.space.db
+            .query({ id: ArtifactId.toDXN(id, extensions.space.id).toString() })
+            .first();
           invariant(isInstanceOf(ChessType, game));
 
           return ToolResult.Success(game.fen);
@@ -95,7 +106,9 @@ export default () => {
         }),
         execute: async ({ id, move }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const game = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          const game = await extensions.space.db
+            .query({ id: ArtifactId.toDXN(id, extensions.space.id).toString() })
+            .first();
           invariant(isInstanceOf(ChessType, game));
 
           const board = new Chess(game.fen);
