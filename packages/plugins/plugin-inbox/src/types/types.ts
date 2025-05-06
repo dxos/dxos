@@ -3,6 +3,7 @@
 //
 
 import { S } from '@dxos/echo-schema';
+import { SpaceSchema } from '@dxos/react-client/echo';
 import { MessageType } from '@dxos/schema';
 
 import { CalendarType } from './calendar';
@@ -35,6 +36,14 @@ export namespace InboxAction {
     input: S.Struct({
       mailboxId: S.String,
       message: S.optional(MessageType),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class ExtractContact extends S.TaggedClass<ExtractContact>()(`${INBOX_ACTION}/extract-contact`, {
+    input: S.Struct({
+      space: SpaceSchema,
+      message: MessageType,
     }),
     output: S.Void,
   }) {}
