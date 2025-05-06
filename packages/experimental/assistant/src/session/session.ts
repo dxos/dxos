@@ -2,16 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Option, Schema as S } from 'effect';
 
-import { defineTool, Message, ToolResult, type ArtifactDefinition, type Tool } from '@dxos/artifact';
+import {
+  defineTool,
+  Message,
+  ToolResult,
+  type ArtifactDefinition,
+  type MessageContentBlock,
+  type Tool,
+} from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
-import { create } from '@dxos/echo-schema';
+import { ObjectVersion } from '@dxos/echo-db';
+import { create, type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { VersionPin } from './version-pin';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest, type GenerationStream } from '../ai-service';
 import { isToolUse, runTools } from '../conversation';
+
 /**
  * Contains message history, tools, current context.
  * Current context means the state of the app, time of day, and other contextual information.
@@ -22,6 +32,22 @@ import { isToolUse, runTools } from '../conversation';
  * Could be run locally in the app or remotely.
  * Could be personal or shared.
  */
+
+/**
+ * Resolves artifact ids to their versions.
+ * Used to give the model a sense of the changes to the artifacts made by users during the conversation.
+ * The artifacts versions are pinned in the history, and whenever the artifact changes in-between assistant's steps,
+ * a diff is inserted into the conversation.
+ */
+export type ArtifactDiffResolver = (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
+  Map<
+    ObjectId,
+    {
+      version: ObjectVersion;
+      diff?: string;
+    }
+  >
+>;
 
 export type SessionRunOptions = {
   client: AIServiceClient;
@@ -47,6 +73,11 @@ export type SessionRunOptions = {
    * Pre-require artifacts.
    */
   requiredArtifactIds?: string[];
+
+  /**
+   * @see ArtifactDiffResolver
+   */
+  artifactDiffResolver?: ArtifactDiffResolver;
 };
 
 type OperationModel = 'planning' | 'importing' | 'configured';
@@ -129,12 +160,7 @@ export class AISession {
     }
 
     this._history = [...options.history];
-    this._pending = [
-      create(Message, {
-        role: 'user',
-        content: [{ type: 'text', text: options.prompt }],
-      }),
-    ];
+    this._pending = [await this._formatUserPrompt(options.artifactDiffResolver, options.prompt, options.history)];
     this.userMessage.emit(this._pending.at(-1)!);
     this._stream = undefined;
     let error: Error | undefined;
@@ -217,6 +243,44 @@ export class AISession {
     }
 
     return this._pending;
+  }
+
+  private async _formatUserPrompt(
+    artifactDiffResolver: ArtifactDiffResolver | undefined,
+    prompt: string,
+    history: Message[],
+  ) {
+    const prelude: MessageContentBlock[] = [];
+
+    if (artifactDiffResolver) {
+      const versions = gatherObjectVersions(history);
+
+      const artifactDiff = await artifactDiffResolver(
+        Array.from(versions.entries()).map(([id, version]) => ({ id, lastVersion: version })),
+      );
+
+      log.info('vision', {
+        artifactDiff,
+        versions,
+      });
+
+      for (const [id, { version }] of [...artifactDiff.entries()]) {
+        if (ObjectVersion.equals(version, versions.get(id)!)) {
+          artifactDiff.delete(id);
+          continue;
+        }
+
+        prelude.push(VersionPin.createBlock(VersionPin.make({ objectId: id, version })));
+      }
+      if (artifactDiff.size > 0) {
+        prelude.push(createArtifactUpdateBlock(artifactDiff));
+      }
+    }
+
+    return create(Message, {
+      role: 'user',
+      content: [...prelude, { type: 'text', text: prompt }],
+    });
   }
 
   private _createQueryArtifactsTool(artifacts: ArtifactDefinition[]) {
@@ -318,6 +382,7 @@ export class AISession {
             extensions: options.extensions,
             generationOptions: options.generationOptions,
             requiredArtifactIds: step.requiredArtifactIds.slice(),
+            artifactDiffResolver: options.artifactDiffResolver,
             prompt: `
               You are an agent that executes the subtask in a plan.
               
@@ -412,3 +477,35 @@ export class AIServiecOverloadedError extends S.TaggedError<AIServiecOverloadedE
   'AIServiecOverloadedError',
   {},
 ) {}
+
+const gatherObjectVersions = (messages: Message[]): Map<ObjectId, ObjectVersion> => {
+  const artifactIds = new Map<ObjectId, ObjectVersion>();
+  for (const message of messages) {
+    for (const block of message.content) {
+      if (block.type === 'json' && block.disposition === VersionPin.DISPOSITION) {
+        const pin = VersionPin.pipe(S.decodeOption)(JSON.parse(block.json)).pipe(Option.getOrUndefined);
+        if (!pin) {
+          continue;
+        }
+        artifactIds.set(pin.objectId, pin.version);
+      }
+    }
+  }
+
+  return artifactIds;
+};
+
+const createArtifactUpdateBlock = (
+  artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
+): MessageContentBlock => {
+  return {
+    type: 'text',
+    disposition: 'artifact-update',
+    text: `
+      The following artifacts have been updated since the last message:
+      ${Array.from(artifactDiff.entries())
+        .map(([id, { diff }]) => `<changed-artifact id="${id}">${diff ? `\n${diff}` : ''}</changed-artifact>`)
+        .join('\n')}
+    `,
+  };
+};
