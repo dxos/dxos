@@ -105,7 +105,7 @@ const components: Record<string, BlockComponent> = {
     return (
       <ToggleContainer
         // open={open}
-        defaultOpen={block.disposition === 'cot' && block.pending}
+        defaultOpen={systemDispositions.includes(block.disposition ?? '') && block.pending}
         title={title}
         icon={
           block.pending ? (
@@ -115,7 +115,7 @@ const components: Record<string, BlockComponent> = {
       >
         <MarkdownViewer
           content={block.text}
-          classNames={['pbe-2', block.disposition === 'cot' && 'text-sm text-subdued']}
+          classNames={['pbe-2', systemDispositions.includes(block.disposition ?? '') && 'text-sm text-subdued']}
         />
       </ToggleContainer>
     );
@@ -193,4 +193,7 @@ const titles: Record<string, string> = {
   ['tool_use' as const]: 'Tool request',
   ['tool_result' as const]: 'Tool result',
   ['tool_list' as const]: 'Tools',
+  ['artifact-update' as const]: 'Artifact(s) changed',
 };
+
+const systemDispositions: string[] = ['cot', 'artifact-update'];
