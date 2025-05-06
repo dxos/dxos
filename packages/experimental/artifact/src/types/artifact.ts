@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type S } from '@dxos/echo-schema';
+import { type ObjectId, type S } from '@dxos/echo-schema';
 
 import { type Tool } from './tools';
 

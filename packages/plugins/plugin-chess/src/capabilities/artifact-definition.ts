@@ -15,6 +15,7 @@ import { Filter, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { ChessAction, ChessType } from '../types';
+import { getVersion } from '@dxos/react-client/echo';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -56,11 +57,14 @@ export default () => {
           console.log(data);
 
           return ToolResult.Success(createArtifactElement(data.id), [
+            // TODO(dmaretskyi): helper function
             {
               type: 'json',
               disposition: 'artifact-version',
               json: JSON.stringify({
-                // version: data.version,
+                // TODO(dmaretskyi): Ref
+                id: data.object.id,
+                version: getVersion(data.object),
               }),
             },
           ]);
