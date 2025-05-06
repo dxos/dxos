@@ -12,8 +12,8 @@ import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { createView, ViewProjection, ViewType } from '@dxos/schema';
-import { createAsyncGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
+import { Contact, createView, Organization, ViewProjection, ViewType } from '@dxos/schema';
+import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
@@ -81,16 +81,16 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 
 const DefaultStory = () => {
   // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
-  const orgSchema = useMemo(() => new ImmutableSchema(Testing.Organization), []);
-  const { model: orgModel, presentation: orgPresentation } = useTestModel<Testing.Organization>(orgSchema, 50);
+  const orgSchema = useMemo(() => new ImmutableSchema(Organization), []);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel<Organization>(orgSchema, 50);
 
   // TODO(burdon): Generate links with references.
-  const contactSchema = useMemo(() => new ImmutableSchema(Testing.Contact), []);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel<Testing.Contact>(contactSchema, 50);
+  const contactSchema = useMemo(() => new ImmutableSchema(Contact), []);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel<Contact>(contactSchema, 50);
 
   // TODO(burdon): Scrolling isn't working.
   return (
-    <div className='grow grid grid-cols-2 divide-x divide-separator'>
+    <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
       <Table.Root>
         <Table.Main model={orgModel} presentation={orgPresentation} />
       </Table.Root>
@@ -107,7 +107,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Organization, Testing.Contact],
+      types: [TableType, ViewType, Organization, Contact],
       createIdentity: true,
       createSpace: true,
     }),
