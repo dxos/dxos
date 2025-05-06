@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import { Icon, Avatar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -41,14 +41,14 @@ export const ContactCard = ({
       >
         {emails?.length &&
           emails.map(({ label, value }) => (
-            <>
+            <Fragment key={value}>
               <dt>
                 <Icon icon='ph--at--regular' size={5} />
               </dt>
               <dd key={value} className='break-words'>
                 {value}
               </dd>
-            </>
+            </Fragment>
           ))}
       </dl>
     </div>
