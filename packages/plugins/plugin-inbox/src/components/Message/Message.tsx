@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -26,44 +26,47 @@ export type MessageProps = ThemedClassName<{
   message: MessageType;
   viewMode: ViewMode;
   hasEnrichedContent: boolean;
+  onSenderClick?: () => void;
 }>;
 
-export const Message = ({ space, message, viewMode, hasEnrichedContent, classNames }: MessageProps) => {
-  const client = useClient();
-  const { themeMode } = useThemeContext();
+export const Message = forwardRef<HTMLDivElement, MessageProps>(
+  ({ space, message, viewMode, hasEnrichedContent, onSenderClick, classNames }, ref) => {
+    const client = useClient();
+    const { themeMode } = useThemeContext();
 
-  const content = useMemo(() => {
-    const textBlocks = message.blocks.filter((block) => 'text' in block);
-    // If we're in plain-only mode or plain view, show the first block.
-    if (viewMode === 'plain-only' || viewMode === 'plain') {
-      return textBlocks[0]?.text || '';
-    }
-    // Otherwise show enriched content (second block).
-    return textBlocks[1]?.text || '';
-  }, [message.blocks, viewMode]);
+    const content = useMemo(() => {
+      const textBlocks = message.blocks.filter((block) => 'text' in block);
+      // If we're in plain-only mode or plain view, show the first block.
+      if (viewMode === 'plain-only' || viewMode === 'plain') {
+        return textBlocks[0]?.text || '';
+      }
+      // Otherwise show enriched content (second block).
+      return textBlocks[1]?.text || '';
+    }, [message.blocks, viewMode]);
 
-  // TODO(ZaymonFC): How to prevent caret and selection?
-  const extensions = useMemo(() => {
-    if (space) {
-      return [
-        createBasicExtensions({ readOnly: true, lineWrapping: true }),
-        createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode }),
-        decorateMarkdown(),
-        preview(),
-      ];
-    }
-    return [];
-  }, [space, client, themeMode]);
+    // TODO(ZaymonFC): How to prevent caret and selection?
+    const extensions = useMemo(() => {
+      if (space) {
+        return [
+          createBasicExtensions({ readOnly: true, lineWrapping: true }),
+          createMarkdownExtensions({ themeMode }),
+          createThemeExtensions({ themeMode }),
+          decorateMarkdown(),
+          preview(),
+        ];
+      }
+      return [];
+    }, [space, client, themeMode]);
 
-  const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
+    const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
-  return (
-    <div role='none' className='grid grid-rows-[min-content_1fr] relative h-full overflow-hidden'>
-      <MessageHeader message={message} viewMode={viewMode} />
-      <div role='none' className='overflow-y-auto h-full min-h-0 p-2'>
-        <div ref={parentRef} className={mx(classNames)} />
+    return (
+      <div role='none' className='grid grid-rows-[min-content_1fr] relative h-full overflow-hidden'>
+        <MessageHeader ref={ref} message={message} viewMode={viewMode} onSenderClick={onSenderClick} />
+        <div role='none' className='overflow-y-auto h-full min-h-0 p-2'>
+          <div ref={parentRef} className={mx(classNames)} />
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  },
+);
