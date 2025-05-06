@@ -7,9 +7,9 @@ import { describe, test } from 'vitest';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
+import { createTestData } from '@dxos/schema/testing';
 
 import { processEmail } from './email-processor';
-import { contacts, documents, emails, labels } from './test-data';
 
 const aiService = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
@@ -17,6 +17,7 @@ const aiService = new AIServiceEdgeClient({
 
 describe.skip('Email Processing', () => {
   test('content extraction and labeling', { timeout: 180_000 }, async () => {
+    const { contacts, documents, emails, labels } = await createTestData();
     for (const email of emails) {
       const result = await processEmail({
         email,

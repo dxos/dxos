@@ -6,18 +6,27 @@ import { SchemaAST as AST, Schema as S } from 'effect';
 
 import { Type } from '@dxos/echo';
 import {
+  EchoObject,
   FieldLookupAnnotationId,
   Format,
   FormatAnnotation,
   FormatEnum,
   GeneratorAnnotationId,
   LabelAnnotationId,
+  ObjectId,
 } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
 // TODO(wittjosiah): Migrate to using common types.
 export namespace Testing {
+  export const DocumentType = S.Struct({
+    id: ObjectId,
+    name: S.String,
+    content: S.String,
+  }).pipe(EchoObject({ typename: 'dxos.org/example/Document', version: '0.1.0' }));
+  export type DocumentType = typeof DocumentType.Type;
+
   //
   // Organization
   //
@@ -159,4 +168,14 @@ export namespace Testing {
     }),
   );
   export type Message = S.Schema.Type<typeof Message>;
+
+  //
+  // Label
+  //
+
+  export type Label = {
+    name: string;
+    color: string;
+    description: string;
+  };
 }
