@@ -23,11 +23,7 @@ export const ContactSchema = S.Struct({
   // TODO(wittjosiah): Format.URL. Support ref?
   image: S.optional(S.String),
   // TODO(burdon): Use reference links.
-  organization: S.optional(
-    S.Union(S.String, Ref(Organization)).annotations({
-      [GeneratorAnnotationId]: 'company.name',
-    }),
-  ),
+  organization: S.optional(Ref(Organization)),
   jobTitle: S.optional(S.String),
   department: S.optional(S.String),
   notes: S.optional(S.String),
