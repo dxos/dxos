@@ -9,8 +9,8 @@ import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/type
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useLayoutEffect, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { type ThemedClassName, useElevationContext } from '@dxos/react-ui';
+import { mx, surfaceZIndex } from '@dxos/react-ui-theme';
 
 import { type Size, type Side } from '../types';
 import { REM } from '../util';
@@ -75,6 +75,7 @@ export const ResizeHandle = ({
     onChange: onSizeChange,
   });
   const dragStartSize = useRef<Size>(size);
+  const elevation = useElevationContext();
 
   const orientation = side.startsWith('inline') ? 'horizontal' : 'vertical';
   const client = orientation === 'horizontal' ? 'clientX' : 'clientY';
@@ -130,6 +131,7 @@ export const ResizeHandle = ({
       data-side={side}
       className={mx(
         'group absolute flex focus-visible:outline-none',
+        surfaceZIndex({ elevation, level: 'tooltip' }),
         orientation === 'horizontal'
           ? 'cursor-col-resize is-4 inset-block-0 data-[side="inline-end"]:inline-end-0 data-[side="inline-end"]:before:inline-end-0 data-[side="inline-start"]:inline-start-0 data-[side="inline-start"]:before:inline-start-0 !border-lb-0 before:inset-block-0 before:is-1'
           : 'cursor-row-resize bs-4 inset-inline-0 data-[side="block-end"]:block-end-0 data-[side="block-end"]:before:block-end-0 data-[side="block-start"]:block-start-0 data-[side="block-start"]:before:block-start-0 !border-li-0 before:inset-inline-0 before:bs-1',
