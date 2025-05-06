@@ -2,16 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework';
-import { Popover } from '@dxos/react-ui';
+import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
 
 export type DeckPopoverRootProps = PropsWithChildren<{}>;
 
 const DEBOUNCE_DELAY = 40;
+
+type DeckPopoverContextValue = {
+  setOpen: (open: boolean) => void;
+};
+
+const [DeckPopoverProvider, useDeckPopoverContext] = createContext<DeckPopoverContextValue>('DeckPopover');
 
 export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
   const layout = useCapability(DeckCapabilities.MutableDeckState);
@@ -36,9 +43,29 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
     }
   }, [layout.popoverOpen, layout.popoverAnchorId, layout.popoverAnchor, layout.popoverContent]);
 
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (!nextOpen) {
+  return (
+    <DeckPopoverProvider setOpen={setOpen}>
+      <Popover.Root modal open={open}>
+        {layout.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
+        {children}
+      </Popover.Root>
+    </DeckPopoverProvider>
+  );
+};
+
+export const PopoverContent = () => {
+  const layout = useCapability(DeckCapabilities.MutableDeckState);
+  const { setOpen } = useDeckPopoverContext('PopoverContent');
+
+  const handleClose = useCallback(
+    (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
+      if (
+        // TODO(thure): CodeMirror should not focus itself when it updates.
+        event.type === 'dismissableLayer.focusOutside' &&
+        (event.currentTarget as HTMLElement | undefined)?.classList.contains('cm-content')
+      ) {
+        event.preventDefault();
+      } else {
         setOpen(false);
         layout.popoverOpen = false;
         layout.popoverAnchor = undefined;
@@ -46,23 +73,12 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
         layout.popoverSide = undefined;
       }
     },
-    [layout],
+    [setOpen],
   );
-
-  return (
-    <Popover.Root modal open={open} onOpenChange={handleOpenChange}>
-      {layout.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
-      {children}
-    </Popover.Root>
-  );
-};
-
-export const PopoverContent = () => {
-  const layout = useCapability(DeckCapabilities.MutableDeckState);
 
   return (
     <Popover.Portal>
-      <Popover.Content side={layout.popoverSide}>
+      <Popover.Content side={layout.popoverSide} onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
         <Popover.Viewport>
           <Surface role='popover' data={layout.popoverContent} limit={1} />
         </Popover.Viewport>

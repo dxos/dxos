@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework';
-import { Popover } from '@dxos/react-ui';
+import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
 
 import { LayoutState } from '../capabilities';
 
@@ -33,12 +33,20 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
     }
   }, [layout.popoverAnchor, layout.popoverContent, layout.popoverOpen]);
 
-  const handleInteractOutside = useCallback(() => {
-    setOpen(false);
-    layout.popoverOpen = false;
-    layout.popoverAnchor = undefined;
-    layout.popoverAnchorId = undefined;
-    layout.popoverSide = undefined;
+  const handleInteractOutside = useCallback((event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
+    if (
+      // TODO(thure): CodeMirror should not focus itself when it updates.
+      event.type === 'dismissableLayer.focusOutside' &&
+      (event.currentTarget as HTMLElement | undefined)?.classList.contains('cm-content')
+    ) {
+      event.preventDefault();
+    } else {
+      setOpen(false);
+      layout.popoverOpen = false;
+      layout.popoverAnchor = undefined;
+      layout.popoverAnchorId = undefined;
+      layout.popoverSide = undefined;
+    }
   }, []);
 
   return (
