@@ -92,10 +92,10 @@ const DefaultStory = () => {
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
       <Table.Root>
-        <Table.Main model={orgModel} presentation={orgPresentation} />
+        <Table.Main model={orgModel} presentation={orgPresentation} ignoreAttention />
       </Table.Root>
       <Table.Root>
-        <Table.Main model={contactModel} presentation={contactPresentation} />
+        <Table.Main model={contactModel} presentation={contactPresentation} ignoreAttention />
       </Table.Root>
     </div>
   );
