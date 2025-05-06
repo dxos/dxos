@@ -7,7 +7,7 @@ import { pipe } from 'effect';
 
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
-import { createArtifactElement } from '@dxos/assistant';
+import { createArtifactElement, VersionPin } from '@dxos/assistant';
 import { isInstanceOf, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -54,7 +54,9 @@ export default () => {
             return ToolResult.Error(error?.message ?? 'Failed to create chess game');
           }
 
-          return ToolResult.Success(createArtifactElement(data.id));
+          return ToolResult.Success(createArtifactElement(data.id), [
+            VersionPin.createBlock(VersionPin.fromObject(data.object)),
+          ]);
         },
       }),
       defineTool(meta.id, {
@@ -76,7 +78,9 @@ export default () => {
         schema: S.Struct({ id: ArtifactId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const game = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          const game = await extensions.space.db
+            .query({ id: ArtifactId.toDXN(id, extensions.space.id).toString() })
+            .first();
           invariant(isInstanceOf(ChessType, game));
 
           return ToolResult.Success(game.fen);
@@ -95,7 +99,9 @@ export default () => {
         }),
         execute: async ({ id, move }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const game = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          const game = await extensions.space.db
+            .query({ id: ArtifactId.toDXN(id, extensions.space.id).toString() })
+            .first();
           invariant(isInstanceOf(ChessType, game));
 
           const board = new Chess(game.fen);

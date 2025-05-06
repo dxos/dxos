@@ -33,7 +33,8 @@ export const useChatProcessor = ({
   chat,
   space,
   settings,
-  part = 'deck',
+  // part = 'deck',
+  part,
   associatedArtifact,
 }: UseChatProcessorProps): ChatProcessor => {
   const aiClient = useCapability(AssistantCapabilities.AiClient);

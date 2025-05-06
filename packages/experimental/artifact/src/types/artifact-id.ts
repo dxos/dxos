@@ -4,10 +4,10 @@
 
 import { Schema } from 'effect';
 
-import { DXN } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
 
 export const ArtifactId: Schema.Schema<string> & {
-  toDXN: (reference: ArtifactId) => DXN;
+  toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
 } = class extends Schema.String.annotations({
   description: `
   The ID of the referenced object. Formats accepted:
@@ -17,7 +17,7 @@ export const ArtifactId: Schema.Schema<string> & {
   `,
   examples: ['dxn:echo:@:XXXXX', '@dxn:echo:@:XXXXX', 'spaceID:objectID', 'XXXXX'],
 }) {
-  static toDXN(reference: ArtifactId): DXN {
+  static toDXN(reference: ArtifactId, owningSpaceId?: SpaceId): DXN {
     // Allow @dxn: prefix for compatibility with in-text references.
     if (reference.startsWith('@dxn:')) {
       return DXN.parse(reference.slice(1));
@@ -25,7 +25,10 @@ export const ArtifactId: Schema.Schema<string> & {
       return DXN.parse(reference);
     } else if (/^[A-Z0-9]+:[A-Z0-9]+$/.test(reference)) {
       const [spaceId, objectId] = reference.split(':');
-      return new DXN(DXN.kind.ECHO, [spaceId, objectId]);
+      // This is a workaround because the current Filter API doesn't work with fully qualified Echo DXNs.
+      // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
+      // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified DXNs.
+      return new DXN(DXN.kind.ECHO, [spaceId === owningSpaceId ? LOCAL_SPACE_TAG : spaceId, objectId]);
     } else if (/^[A-Z0-9]+$/.test(reference)) {
       return DXN.fromLocalObjectId(reference);
     } else {

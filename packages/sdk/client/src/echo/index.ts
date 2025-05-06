@@ -43,6 +43,8 @@ export {
   toCursor,
   toCursorRange,
   updateText,
+  getVersion,
+  ObjectVersion,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.

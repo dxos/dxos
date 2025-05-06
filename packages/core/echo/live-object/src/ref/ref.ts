@@ -115,6 +115,15 @@ export class RefImpl<T> implements Ref<T> {
   }
 
   /**
+   * Do not inline the target object in the reference.
+   * Makes .target unavailable unless the reference is connected to a database context.
+   */
+  noInline() {
+    this.#target = undefined;
+    return this;
+  }
+
+  /**
    * Serializes the reference to a JSON object.
    * The serialization format is compatible with the IPLD-style encoded references.
    * When a reference has a saved target (i.e. the target or object holding the reference is not in the database),

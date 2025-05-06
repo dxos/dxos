@@ -121,6 +121,17 @@ export interface Ref<T> {
    */
   tryLoad(): Promise<T | undefined>;
 
+  /**
+   * Do not inline the target object in the reference.
+   * Makes .target unavailable unless the reference is connected to a database context.
+   *
+   * When serialized with toJSON, the difference is between:
+   * `{ "/": "dxn:..." }`
+   * and
+   * `{ "/": "dxn:...", "target": { ... } }`
+   */
+  noInline(): this;
+
   [RefTypeId]: {
     _T: T;
   };
