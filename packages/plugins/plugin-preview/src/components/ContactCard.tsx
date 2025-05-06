@@ -6,7 +6,7 @@ import React, { Fragment } from 'react';
 
 import { Icon, Avatar, Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type Contact } from '@dxos/schema';
+import { type Contact, type Organization } from '@dxos/schema';
 
 import { type PreviewProps, previewCard, previewTitle, previewProse, previewChrome } from '../types';
 
@@ -14,7 +14,8 @@ export const ContactCard = ({
   children,
   classNames,
   subject: { fullName, image, organization, emails },
-}: PreviewProps<Contact>) => {
+  onOrgClick,
+}: PreviewProps<Contact> & { onOrgClick?: (org: Organization) => void }) => {
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
     <div role='none' className={mx(previewCard, classNames)}>
@@ -30,11 +31,18 @@ export const ContactCard = ({
       </Avatar.Root>
       {organizationName && (
         <div role='none' className={previewChrome}>
-          <Button variant='ghost' classNames='gap-2 text-start'>
-            <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
-            <span className='min-is-0 flex-1 truncate'>{organizationName}</span>
-            <Icon icon='ph--arrow-right--regular' />
-          </Button>
+          {typeof organization === 'object' && onOrgClick ? (
+            <Button variant='ghost' classNames='gap-2 text-start' onClick={() => onOrgClick(organization.target!)}>
+              <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
+              <span className='min-is-0 flex-1 truncate'>{organizationName}</span>
+              <Icon icon='ph--arrow-right--regular' />
+            </Button>
+          ) : (
+            <p className='dx-button gap-2' data-variant='ghost'>
+              <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
+              <span className='min-is-0 flex-1 truncate'>{organizationName}</span>
+            </p>
+          )}
         </div>
       )}
       <dl

@@ -84,7 +84,7 @@ export default () =>
           .toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
           .slice(0, 5);
 
-        const handleSelect = useCallback(
+        const handleMessageClick = useCallback(
           (message: MessageType) => {
             void dispatch(
               pipe(
@@ -100,7 +100,7 @@ export default () =>
           [dispatch, space, mailbox],
         );
 
-        return <RelatedMessages messages={related} onSelect={handleSelect} />;
+        return <RelatedMessages messages={related} onMessageClick={handleMessageClick} />;
       },
     }),
     createSurface({
@@ -130,7 +130,7 @@ export default () =>
           return table.view?.target?.query?.typename === Contact.typename;
         });
 
-        const handleSelect = useCallback(
+        const handleContactClick = useCallback(
           (contact: Contact) => {
             if (currentSpaceContacts.includes(contact)) {
               void dispatch(
@@ -153,7 +153,7 @@ export default () =>
           [dispatch, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, space, defaultSpace],
         );
 
-        return <RelatedContacts contacts={related} onSelect={handleSelect} />;
+        return <RelatedContacts contacts={related} onContactClick={handleContactClick} />;
       },
     }),
   ]);
