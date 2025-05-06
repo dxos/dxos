@@ -135,9 +135,23 @@ export const createTestData = () => {
       'Office Relocation Plan',
       'Headquarters Relocation Plan: Downtown Campus\n\nTimeline:\n- Phase 1: Planning & Design (3 months)\n- Phase 2: Construction & Buildout (5 months)\n- Phase 3: Move Execution (1 month)\n- Target completion: December 15\n\nSpace Details:\n- 45,000 sq ft across 3 floors\n- 320 workstations (30% hot-desking)\n- 18 conference rooms of varying sizes\n- 5 specialized collaboration spaces\n- Expanded lab and testing facilities\n\nBudget Summary:\n- Lease: $42/sq ft annually ($1.89M/year)\n- Buildout: $185/sq ft ($8.3M total)\n- Furniture & Equipment: $2.4M\n- Moving & Logistics: $350K\n- Technology Infrastructure: $1.2M\n\nDepartment Migration Schedule:\n- Engineering: December 3-4\n- Product & Design: December 5-6\n- Sales & Marketing: December 10-11\n- Executive & Operations: December 12-13',
     ),
+    createDocument('Computation Irreducibility', 'This is really cool'),
   ];
 
   const transcriptMessages: MessageType[] = [
+    create(MessageType, {
+      sender: {
+        name: contacts.john.fullName,
+      },
+      created: getDate(0),
+      blocks: [
+        {
+          type: 'transcription',
+          started: getDate(30),
+          text: "And what I'd like to talk today about is Steven Wolfram's concept of a computational irreducibility.",
+        },
+      ],
+    }),
     create(MessageType, {
       sender: {
         name: contacts.john.fullName,
