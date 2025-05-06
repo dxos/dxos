@@ -16,19 +16,18 @@ import {
   GeneratorAnnotationId,
   LabelAnnotationId,
   PropertyMetaAnnotationId,
-  Ref,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
-  createEchoReferenceSchema,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-  type JsonSchemaReferenceInfo,
   type JsonSchemaType,
   type PropertyMetaAnnotation,
   type TypeAnnotation,
 } from '../ast';
 import { CustomAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
+import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
+import { log } from '@dxos/log';
 
 /**
  * @internal
@@ -95,6 +94,7 @@ export const toPropType = (type?: PropType): string => {
 export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   invariant(schema);
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast, '#'));
+  // log.info('schemaWithRefinements', { ast: schemaWithRefinements.ast });
   let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
