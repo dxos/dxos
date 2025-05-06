@@ -20,8 +20,8 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // TODO(thure): This is a workaround for the difference in `React`ion time between displaying a Popover and rendering
-  //  the anchor further down the tree, and/or rect measurement by the virtual ref.
+  // TODO(thure): This is a workaround for the race condition between displaying a Popover and either rendering
+  //  the anchor further down the tree or measuring the virtual trigger’s client rect.
   useEffect(() => {
     setOpen(false);
     if (layout.popoverOpen) {
@@ -36,8 +36,21 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
     }
   }, [layout.popoverOpen, layout.popoverAnchorId, layout.popoverAnchor, layout.popoverContent]);
 
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        setOpen(false);
+        layout.popoverOpen = false;
+        layout.popoverAnchor = undefined;
+        layout.popoverAnchorId = undefined;
+        layout.popoverSide = undefined;
+      }
+    },
+    [layout],
+  );
+
   return (
-    <Popover.Root modal open={open}>
+    <Popover.Root modal open={open} onOpenChange={handleOpenChange}>
       {layout.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
       {children}
     </Popover.Root>
@@ -45,23 +58,13 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
-  const context = useCapability(DeckCapabilities.MutableDeckState);
-  const handlePopoverClose = useCallback(() => {
-    context.popoverOpen = false;
-    context.popoverAnchor = undefined;
-    context.popoverAnchorId = undefined;
-    context.popoverSide = undefined;
-  }, [context]);
+  const layout = useCapability(DeckCapabilities.MutableDeckState);
 
   return (
     <Popover.Portal>
-      <Popover.Content
-        side={context.popoverSide}
-        onEscapeKeyDown={handlePopoverClose}
-        onInteractOutside={handlePopoverClose}
-      >
+      <Popover.Content side={layout.popoverSide}>
         <Popover.Viewport>
-          <Surface role='popover' data={context.popoverContent} limit={1} />
+          <Surface role='popover' data={layout.popoverContent} limit={1} />
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
