@@ -7,7 +7,7 @@ import React from 'react';
 import { previewChrome, previewProse } from '@dxos/plugin-preview';
 import { Avatar, Icon, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type Contact } from '@dxos/schema';
+import { type Contact, type MessageType } from '@dxos/schema';
 
 import { INBOX_PLUGIN } from '../meta';
 
@@ -30,10 +30,30 @@ export const RelatedContacts = ({ contacts }: { contacts: Contact[] }) => {
                 imgSrc={contact.image}
                 icon={'ph--user--regular'}
               />
-              <Avatar.Label classNames='grow'>{contact.fullName}</Avatar.Label>
+              <Avatar.Label classNames='min-is-0 flex-1 truncate'>{contact.fullName}</Avatar.Label>
               <Icon icon='ph--arrow-right--regular' />
             </li>
           </Avatar.Root>
+        ))}
+      </ul>
+    </>
+  ) : null;
+};
+
+export const RelatedMessages = ({ messages }: { messages: MessageType[] }) => {
+  const { t } = useTranslation(INBOX_PLUGIN);
+  return messages.length ? (
+    <>
+      <h3 className={mx(previewProse, 'text-xs text-description uppercase font-medium')}>
+        {t('related messages title')}
+      </h3>
+      <ul className={previewChrome}>
+        {messages.map((message) => (
+          <li key={message.id} className='dx-button font-normal gap-2 mbe-1 last:mbe-0'>
+            <Icon icon='ph--envelope-simple--regular' classNames='mli-0.5' />
+            <p className='min-is-0 flex-1 truncate'>{message.properties?.subject}</p>
+            <Icon icon='ph--arrow-right--regular' />
+          </li>
         ))}
       </ul>
     </>

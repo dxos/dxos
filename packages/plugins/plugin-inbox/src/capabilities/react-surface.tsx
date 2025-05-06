@@ -11,7 +11,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Contact, MessageType, Organization } from '@dxos/schema';
 
 import { EventsContainer, MailboxContainer, MessageContainer, MailboxObjectSettings } from '../components';
-import { RelatedContacts } from '../components/Related';
+import { RelatedContacts, RelatedMessages } from '../components/Related';
 import { INBOX_PLUGIN } from '../meta';
 import { CalendarType, MailboxType } from '../types';
 
@@ -69,8 +69,7 @@ export default () =>
               message.sender.contact?.target === contact,
           )
           .filter((message) => message.properties?.subject);
-        // TODO(wittjosiah): Render properly.
-        return <div>{related.map((message) => message.properties?.subject)}</div>;
+        return <RelatedMessages messages={related} />;
       },
     }),
     createSurface({
