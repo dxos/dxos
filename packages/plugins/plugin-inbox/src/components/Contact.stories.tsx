@@ -11,7 +11,7 @@ import { createIntent, IntentPlugin, LayoutAction, SettingsPlugin, useIntentDisp
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
+import { Ref.fromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -139,7 +139,7 @@ const meta: Meta = {
             const queueDxn = new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]);
             const queue = space.queues.get<MessageType>(queueDxn);
             queue.append(emails);
-            const mailbox = live(MailboxType, { queue: refFromDXN(queueDxn) });
+            const mailbox = live(MailboxType, { queue: Ref.fromDXN(queueDxn) });
             space.db.add(mailbox);
           },
         }),

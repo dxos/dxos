@@ -6,7 +6,7 @@ import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { ObjectId, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { live, makeRef, type Live } from '@dxos/live-object';
+import { live, Ref.make, type Live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
@@ -42,7 +42,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         return space.db.add(
           live(DocumentType, {
             name: faker.commerce.productName(),
-            content: makeRef(live(TextType, { content: faker.lorem.sentences(5) })),
+            content: Ref.make(live(TextType, { content: faker.lorem.sentences(5) })),
             threads: [],
           }),
         );
@@ -60,7 +60,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         const obj = space.db.add(
           live(DiagramType, {
             name: faker.commerce.productName(),
-            canvas: makeRef(live(CanvasType, { content: {} })),
+            canvas: Ref.make(live(CanvasType, { content: {} })),
           }),
         );
 
@@ -155,7 +155,7 @@ export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): Obj
     if (!table) {
       const name = type.typename.split('/').pop() ?? type.typename;
       const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      const table = space.db.add(live(TableType, { name, view: makeRef(view) }));
+      const table = space.db.add(live(TableType, { name, view: Ref.make(view) }));
       cb?.([table]);
     }
 

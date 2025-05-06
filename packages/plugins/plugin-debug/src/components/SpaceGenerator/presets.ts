@@ -7,7 +7,7 @@ import { AST, ObjectId, S, toJsonSchema } from '@dxos/echo-schema';
 import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, makeRef } from '@dxos/live-object';
+import { live, Ref.make } from '@dxos/live-object';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -511,7 +511,7 @@ const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, comput
   return space.db.add(
     live(CanvasBoardType, {
       name,
-      computeGraph: makeRef(compute.root),
+      computeGraph: Ref.make(compute.root),
       layout: canvas.graph,
     }),
   );

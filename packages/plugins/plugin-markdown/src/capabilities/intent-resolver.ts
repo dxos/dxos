@@ -12,7 +12,7 @@ import {
 import { next as A } from '@dxos/automerge/automerge';
 import { isInstanceOf, ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { makeRef, live, refFromDXN } from '@dxos/live-object';
+import { Ref.make, live, Ref.fromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { resolveRef } from '@dxos/react-client';
@@ -29,8 +29,8 @@ export default (context: PluginsContext) =>
       resolve: ({ name, spaceId, content }) => {
         const doc = live(DocumentType, {
           name,
-          content: makeRef(live(TextType, { content: content ?? '' })),
-          assistantChatQueue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+          content: Ref.make(live(TextType, { content: content ?? '' })),
+          assistantChatQueue: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           threads: [],
         });
 

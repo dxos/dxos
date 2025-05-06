@@ -5,7 +5,7 @@
 import { AST, S, TypedObject, FormatEnum, TypeEnum, type JsonProp, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
-import { type Space, live, makeRef } from '@dxos/react-client/echo';
+import { type Space, live, Ref.make } from '@dxos/react-client/echo';
 import { createView, ViewProjection, createFieldId, getSchemaProperties } from '@dxos/schema';
 import { capitalize } from '@dxos/util';
 
@@ -62,7 +62,7 @@ export const initializeKanban = async ({
       fields,
     });
 
-    const kanban = live(KanbanType, { cardView: makeRef(view), columnFieldId: undefined, name });
+    const kanban = live(KanbanType, { cardView: Ref.make(view), columnFieldId: undefined, name });
     if (initialPivotColumn) {
       const viewProjection = new ViewProjection(schema.jsonSchema, view);
       const fieldId = viewProjection.getFieldId(initialPivotColumn);
@@ -115,7 +115,7 @@ export const initializeKanban = async ({
     const fieldId = viewProjection.getFieldId(initialPivotField);
     invariant(fieldId);
 
-    const kanban = live(KanbanType, { cardView: makeRef(view), columnFieldId: fieldId });
+    const kanban = live(KanbanType, { cardView: Ref.make(view), columnFieldId: fieldId });
     return { kanban, schema };
   }
 };

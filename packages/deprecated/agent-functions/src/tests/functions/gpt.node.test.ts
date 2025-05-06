@@ -10,7 +10,7 @@ import { getMeta, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
-import { live, makeRef } from '@dxos/live-object';
+import { live, Ref.make } from '@dxos/live-object';
 import { TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';
@@ -237,7 +237,7 @@ const createMessage = (
   });
 
   if (options?.thread) {
-    options.thread.messages!.push(makeRef(message));
+    options.thread.messages!.push(Ref.make(message));
   } else {
     space.db.add(message);
   }

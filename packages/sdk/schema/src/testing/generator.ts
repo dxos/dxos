@@ -15,10 +15,11 @@ import {
   type JsonSchemaType,
   type S,
   type TypedObject,
+  Ref,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { live, makeRef, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
@@ -97,7 +98,7 @@ export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: 
             const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
             if (objects.length) {
               const object = randomElement(objects);
-              (obj as any)[property.name] = makeRef(object);
+              (obj as any)[property.name] = Ref.make(object);
             }
           }
         }

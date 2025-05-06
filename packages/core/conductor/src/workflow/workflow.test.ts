@@ -10,7 +10,7 @@ import { ObjectId, type Ref } from '@dxos/echo-schema';
 import { FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, getMeta, refFromDXN, type RefResolver, setRefResolver } from '@dxos/live-object';
+import { live, getMeta, Ref.fromDXN, type RefResolver, setRefResolver } from '@dxos/live-object';
 import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
@@ -145,7 +145,7 @@ describe('workflow', () => {
 
     const createFunction = () => {
       const functionDxn = DXN.fromLocalObjectId(ObjectId.random());
-      const functionRef = refFromDXN(functionDxn);
+      const functionRef = Ref.fromDXN(functionDxn);
       const fnObject = live(FunctionType, { name: 'foo', version: '0.0.1' });
       let resolveCounter = 0;
       const refResolver: RefResolver = {
@@ -202,7 +202,7 @@ describe('workflow', () => {
     const graphDxn = DXN.fromLocalObjectId(ObjectId.random());
     const model = ComputeGraphModel.create({ id: graphDxn.toString() });
     const transformId = ObjectId.random();
-    addTransform(model, { id: transformId, type: subgraphDxn.toString(), subgraph: refFromDXN(subgraphDxn) });
+    addTransform(model, { id: transformId, type: subgraphDxn.toString(), subgraph: Ref.fromDXN(subgraphDxn) });
     const graph = live(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };

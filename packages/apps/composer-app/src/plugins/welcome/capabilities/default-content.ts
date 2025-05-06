@@ -6,13 +6,13 @@ import { createIntent, LayoutAction } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
+import { Ref.fromDXN } from '@dxos/live-object';
 import { SPACES } from '@dxos/plugin-space';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 
 export default async (context: PluginsContext) => {
-  const { fullyQualifiedId, live, makeRef } = await import('@dxos/react-client/echo');
+  const { fullyQualifiedId, live, Ref.make } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { DocumentType } = await import('@dxos/plugin-markdown/types');
   const { CollectionType } = await import('@dxos/plugin-space/types');
@@ -25,19 +25,19 @@ export default async (context: PluginsContext) => {
 
   const readme = live(DocumentType, {
     name: INITIAL_DOC_TITLE,
-    content: makeRef(
+    content: Ref.make(
       live(TextType, {
         content: INITIAL_CONTENT.join('\n\n'),
       }),
     ),
-    assistantChatQueue: refFromDXN(
+    assistantChatQueue: Ref.fromDXN(
       new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, defaultSpace.id, ObjectId.random()]),
     ),
     threads: [],
   });
 
   const defaultSpaceCollection = defaultSpace.properties[CollectionType.typename].target;
-  defaultSpaceCollection?.objects.push(makeRef(readme));
+  defaultSpaceCollection?.objects.push(Ref.make(readme));
 
   // Ensure the default content is in the graph and connected.
   // This will allow the expose action to work before the navtree renders for the first time.

@@ -26,6 +26,9 @@ import {
   StoredSchema,
   symbolSchema,
   TYPENAME_SYMBOL,
+  RefImpl,
+  setRefResolver,
+  getRefSavedTarget,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -33,12 +36,9 @@ import {
   createProxy,
   getProxyHandler,
   getProxyTarget,
-  getRefSavedTarget,
   isLiveObject,
   type ReactiveHandler,
   type Live,
-  RefImpl,
-  setRefResolver,
   symbolIsProxy,
 } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -351,7 +351,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // to it or have shared mutability, we need to copy by value.
         return recurse({ ...value });
       } else if (isLiveObject(value)) {
-        throw new Error('Object references must be wrapped with `makeRef`');
+        throw new Error('Object references must be wrapped with `Ref.make`');
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
         if (savedTarget) {

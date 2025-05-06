@@ -22,7 +22,7 @@ import { Message } from '@dxos/artifact';
 import { S, AST, create, type Expando, EchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, makeRef, refFromDXN } from '@dxos/live-object';
+import { live, Ref.make, Ref.fromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -71,7 +71,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
     const message = queue.items[queue.items.length - 1];
 
     // {
-    //   const ref = refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id]));
+    //   const ref = Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id]));
 
     //   const message = deref(ref);
     // }
@@ -79,8 +79,8 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
         spaceId: space.id,
-        target: makeRef(doc as any as Expando), // TODO(burdon): Comomon base type.
-        object: refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
+        target: Ref.make(doc as any as Expando), // TODO(burdon): Comomon base type.
+        object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
         label: 'Proposal',
       }),
     );
@@ -113,7 +113,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
         // Create links.
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
           const obj = space.db.add(live(TestItem, { title: label, description: faker.lorem.paragraph() }));
-          const dxn = makeRef(obj).dxn.toString();
+          const dxn = Ref.make(obj).dxn.toString();
           return `[${label}][${dxn}]`;
         }),
       }),

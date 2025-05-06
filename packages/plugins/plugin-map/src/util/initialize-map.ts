@@ -4,7 +4,7 @@
 
 import { FormatEnum, type GeoPoint } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type Space, live, makeRef } from '@dxos/react-client/echo';
+import { type Space, live, Ref.make } from '@dxos/react-client/echo';
 import { createView } from '@dxos/schema';
 
 import { MapType } from '../types';
@@ -62,7 +62,7 @@ export const initializeMap = async ({
   }
 
   space.db.add(view);
-  map.view = makeRef(view);
+  map.view = Ref.make(view);
   space.db.add(map);
 
   return { map };

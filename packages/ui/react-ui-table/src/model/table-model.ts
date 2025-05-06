@@ -8,7 +8,7 @@ import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { type FieldSortType, FormatEnum, getValue, setValue, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject, makeRef } from '@dxos/live-object';
+import { isLiveObject, Ref.make } from '@dxos/live-object';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -343,7 +343,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         // TODO(ZaymonFC): This get's called an additional time by the cell editor onBlur, but with the cell editors
         //   plain string value. Maybe onBlur should be called with the actual value?
         if (isLiveObject(value)) {
-          setValue(this._rows.value[rowIdx], field.path, makeRef(value));
+          setValue(this._rows.value[rowIdx], field.path, Ref.make(value));
         }
         break;
       }

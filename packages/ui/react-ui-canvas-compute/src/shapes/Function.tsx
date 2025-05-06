@@ -8,7 +8,7 @@ import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { getSnapshot, isInstanceOf, S } from '@dxos/echo-schema';
 import { FunctionType, ScriptType } from '@dxos/functions/types';
 import { useClient } from '@dxos/react-client';
-import { Filter, makeRef, parseId } from '@dxos/react-client/echo';
+import { Filter, Ref.make, parseId } from '@dxos/react-client/echo';
 import {
   TextBox,
   type TextBoxControl,
@@ -68,7 +68,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       }
 
       node.value = value;
-      node.function = makeRef(fn);
+      node.function = Ref.make(fn);
       node.inputSchema = getSnapshot(fn.inputSchema);
       node.outputSchema = getSnapshot(fn.outputSchema);
     },

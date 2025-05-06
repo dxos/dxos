@@ -6,12 +6,12 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type BaseObject, Expando } from '@dxos/echo-schema';
+import { type BaseObject, Expando, Ref } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import { live, dangerouslySetProxyId, getMeta, getType, makeRef, type Live } from '@dxos/live-object';
+import { live, dangerouslySetProxyId, getMeta, getType, type Live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -229,8 +229,8 @@ describe('Database', () => {
       const container = db.add(live(Testing.Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(makeRef(live(Expando, { foo: 100 })));
-      container.objects!.push(makeRef(live(Expando, { bar: 200 })));
+      container.objects!.push(Ref.make(live(Expando, { foo: 100 })));
+      container.objects!.push(Ref.make(live(Expando, { bar: 200 })));
     }
 
     {
@@ -249,8 +249,8 @@ describe('Database', () => {
       const container = db.add(live(Testing.Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(makeRef(live(Testing.Task, {})));
-      container.objects!.push(makeRef(live(Testing.Contact, {})));
+      container.objects!.push(Ref.make(live(Testing.Task, {})));
+      container.objects!.push(Ref.make(live(Testing.Contact, {})));
     }
 
     {
@@ -326,14 +326,14 @@ describe('Database', () => {
     test('add with a reference to echo reactive proxy', async () => {
       const { db } = await createDbWithTypes();
       const firstTask = db.add(live(Testing.Task, { title: 'foo' }));
-      const secondTask = db.add(live(Testing.Task, { title: 'bar', previous: makeRef(firstTask) }));
+      const secondTask = db.add(live(Testing.Task, { title: 'bar', previous: Ref.make(firstTask) }));
       expect(secondTask.previous?.target).to.eq(firstTask);
     });
 
     test('add with a reference to a reactive proxy', async () => {
       const { db } = await createDbWithTypes();
       const task = db.add(
-        live(Testing.Task, { title: 'first', previous: makeRef(live(Testing.Task, { title: 'second' })) }),
+        live(Testing.Task, { title: 'first', previous: Ref.make(live(Testing.Task, { title: 'second' })) }),
       );
       expect(task.title).to.eq('first');
       expect(task.previous?.target?.id).to.be.a('string');
@@ -345,7 +345,7 @@ describe('Database', () => {
     const task = db.add(
       live(Testing.Task, {
         title: 'Main task',
-        subTasks: [makeRef(live(Testing.Task, { title: 'Sub task' }))],
+        subTasks: [Ref.make(live(Testing.Task, { title: 'Sub task' }))],
       }),
     );
 
@@ -360,8 +360,8 @@ describe('Database', () => {
       const root = newTask();
       expect(root.subTasks).to.have.length(0);
 
-      range(3).forEach(() => root.subTasks!.push(makeRef(newTask())));
-      root.subTasks!.push(makeRef(newTask()), makeRef(newTask()));
+      range(3).forEach(() => root.subTasks!.push(Ref.make(newTask())));
+      root.subTasks!.push(Ref.make(newTask()), Ref.make(newTask()));
 
       expect(root.subTasks).to.have.length(5);
       expect(root.subTasks!.length).to.eq(5);
@@ -373,9 +373,9 @@ describe('Database', () => {
       expect(Array.from(root.subTasks!.values())).to.have.length(5);
 
       root.subTasks = [
-        makeRef(live(Testing.Task, {})),
-        makeRef(live(Testing.Task, {})),
-        makeRef(live(Testing.Task, {})),
+        Ref.make(live(Testing.Task, {})),
+        Ref.make(live(Testing.Task, {})),
+        Ref.make(live(Testing.Task, {})),
       ];
       expect(root.subTasks.length).to.eq(3);
 
@@ -384,8 +384,8 @@ describe('Database', () => {
 
     test('splice', async () => {
       const root = newTask();
-      root.subTasks = range(3).map((i) => makeRef(newTask()));
-      root.subTasks.splice(0, 2, makeRef(newTask()));
+      root.subTasks = range(3).map((i) => Ref.make(newTask()));
+      root.subTasks.splice(0, 2, Ref.make(newTask()));
       expect(root.subTasks).to.have.length(2);
       await addToDatabase(root);
     });
@@ -394,7 +394,7 @@ describe('Database', () => {
       const root = live(Testing.Container, { records: [] });
       root.records!.push({
         title: 'test',
-        contacts: [makeRef(live(Testing.Contact, { name: 'tester' }))],
+        contacts: [Ref.make(live(Testing.Contact, { name: 'tester' }))],
       });
       const { db } = await addToDatabase(root);
 

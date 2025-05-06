@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { live, makeRef } from '@dxos/live-object';
+import { live, Ref.make } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Task } from '@dxos/schema';
 
@@ -128,6 +128,6 @@ describe('tree', () => {
 
     const tree = createTree();
     const node = tree.addNode(tree.root);
-    node.ref = makeRef(task);
+    node.ref = Ref.make(task);
   });
 });

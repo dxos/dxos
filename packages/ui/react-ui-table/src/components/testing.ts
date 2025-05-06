@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { live, makeRef } from '@dxos/react-client/echo';
+import { live, Ref.make } from '@dxos/react-client/echo';
 import { createView, type ViewProjection } from '@dxos/schema';
 
 import { TableType } from '../types';
@@ -21,7 +21,7 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/Test', versi
 
 export const createTable = (schema = TestSchema) => {
   return live(TableType, {
-    view: makeRef(
+    view: Ref.make(
       createView({
         name: 'Test',
         typename: schema.typename,

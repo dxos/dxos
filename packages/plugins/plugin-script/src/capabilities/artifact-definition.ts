@@ -9,7 +9,7 @@ import { ObjectId, S } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { live, makeRef, type Space } from '@dxos/react-client/echo';
+import { live, Ref.make, type Space } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -154,7 +154,7 @@ export default () => {
           invariant(extensions?.dispatch, 'No intent dispatcher');
           const script = live(ScriptType, {
             name,
-            source: makeRef(
+            source: Ref.make(
               live(TextType, {
                 content: code,
               }),

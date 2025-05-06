@@ -5,10 +5,10 @@
 import { contributes, Capabilities, createResolver, type PluginsContext, createIntent } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { QueueSubspaceTags, DXN } from '@dxos/keys';
-import { live, refFromDXN } from '@dxos/live-object';
+import { live, Ref.fromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TableAction } from '@dxos/plugin-table';
-import { Filter, makeRef } from '@dxos/react-client/echo';
+import { Filter, Ref.make } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 import { MessageType, Contact, Organization } from '@dxos/schema';
 
@@ -23,7 +23,7 @@ export default (context: PluginsContext) =>
         data: {
           object: live(MailboxType, {
             name,
-            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+            queue: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           }),
         },
       }),
@@ -111,7 +111,7 @@ export default (context: PluginsContext) =>
 
         if (matchingOrg) {
           log.info('Found matching organization', { organization: matchingOrg });
-          newContact.organization = makeRef(matchingOrg);
+          newContact.organization = Ref.make(matchingOrg);
         }
 
         space.db.add(newContact);

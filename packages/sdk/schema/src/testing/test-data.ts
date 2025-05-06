@@ -3,8 +3,8 @@
 //
 
 import type { Space } from '@dxos/client-protocol';
-import { create, type BaseEchoObject } from '@dxos/echo-schema';
-import { live, makeRef } from '@dxos/live-object';
+import { create, type BaseEchoObject, Ref } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { Testing } from './types';
@@ -47,7 +47,7 @@ const createContact = ({
 }: { email: string; organization?: Organization } & Partial<Omit<Contact, 'organization'>>): Contact => {
   // TODO(dmaretskyi): `create` with nested refs throws an error when added to db.
   return live(Contact, {
-    organization: organization ? makeRef(organization) : undefined,
+    organization: organization ? Ref.make(organization) : undefined,
     emails: [{ value: email }],
     ...props,
   });
@@ -471,7 +471,7 @@ export const createTestData = () => {
           text: "Hi Alex, I've reviewed the Q3 financial reports and would like to schedule a meeting to discuss some concerns about the marketing budget allocation. Are you available tomorrow afternoon?",
         },
       ],
-      sender: { contact: makeRef(contacts.david) },
+      sender: { contact: Ref.make(contacts.david) },
       created: getDate(0),
       properties: { subject: 'Q3 Financial Review' },
     }),
@@ -483,7 +483,7 @@ export const createTestData = () => {
           text: "Alex, the board is impressed with the latest product metrics. We'd like to discuss expansion plans in our next meeting. Please prepare a presentation on potential market opportunities in Asia.",
         },
       ],
-      sender: { contact: makeRef(contacts.emma) },
+      sender: { contact: Ref.make(contacts.emma) },
       created: getDate(1),
       properties: { subject: 'Board Feedback and Next Steps' },
     }),
@@ -495,7 +495,7 @@ export const createTestData = () => {
           text: "The engineering team has completed the beta version of our new feature. We're ready for internal testing before the public release next month. I've attached the testing protocol document for your review.",
         },
       ],
-      sender: { contact: makeRef(contacts.michael) },
+      sender: { contact: Ref.make(contacts.michael) },
       created: getDate(1),
       properties: { subject: 'New Feature Ready for Testing' },
     }),
@@ -507,7 +507,7 @@ export const createTestData = () => {
           text: '🚨 URGENT: Your Bitcoin wallet requires immediate verification to prevent account suspension. Click here to verify your credentials and receive a bonus 0.5 BTC for your cooperation.',
         },
       ],
-      sender: { contact: makeRef(contacts.unknown1) },
+      sender: { contact: Ref.make(contacts.unknown1) },
       created: getDate(2),
       properties: { subject: 'URGENT: Bitcoin Wallet Verification Required' },
     }),
@@ -519,7 +519,7 @@ export const createTestData = () => {
           text: "Following up on our conversation at the industry conference last week. I believe there's potential for a strategic partnership between our companies. Would you be interested in scheduling a call to discuss collaboration opportunities?",
         },
       ],
-      sender: { contact: makeRef(contacts.john) },
+      sender: { contact: Ref.make(contacts.john) },
       created: getDate(3),
       properties: { subject: 'Potential Strategic Partnership' },
     }),
@@ -531,7 +531,7 @@ export const createTestData = () => {
           text: "The HR department has processed the new hire paperwork for the three senior developers. They're scheduled to start next Monday. I'll need your final approval on their equipment budget by EOD tomorrow.",
         },
       ],
-      sender: { contact: makeRef(contacts.sarah) },
+      sender: { contact: Ref.make(contacts.sarah) },
       created: getDate(4),
       properties: { subject: 'New Hires Starting Next Week' },
     }),
@@ -543,7 +543,7 @@ export const createTestData = () => {
           text: "Our team has identified a critical security vulnerability in our payment processing system. We've implemented a temporary fix, but we need to discuss a more permanent solution and potential disclosure to affected customers.",
         },
       ],
-      sender: { contact: makeRef(contacts.michael) },
+      sender: { contact: Ref.make(contacts.michael) },
       created: getDate(5),
       properties: { subject: 'Security Incident Report' },
     }),
@@ -555,7 +555,7 @@ export const createTestData = () => {
           text: "I've reviewed the proposed acquisition target and have some concerns about their IP portfolio. Before we proceed further, I recommend a more thorough due diligence process. Let's discuss this in our next meeting.",
         },
       ],
-      sender: { contact: makeRef(contacts.emma) },
+      sender: { contact: Ref.make(contacts.emma) },
       created: getDate(6),
       properties: { subject: 'Acquisition Target Concerns' },
     }),
@@ -567,7 +567,7 @@ export const createTestData = () => {
           text: 'The quarterly tax filings are due next week. I need your signature on several documents before Thursday. Can we schedule a brief meeting tomorrow to go through them?',
         },
       ],
-      sender: { contact: makeRef(contacts.david) },
+      sender: { contact: Ref.make(contacts.david) },
       created: getDate(7),
       properties: { subject: 'Quarterly Tax Filings' },
     }),
@@ -579,7 +579,7 @@ export const createTestData = () => {
           text: "We've received an offer to speak at the International Tech Summit in Singapore next month. This would be an excellent opportunity to announce our expansion plans. Please let me know if you're interested in attending.",
         },
       ],
-      sender: { contact: makeRef(contacts.sarah) },
+      sender: { contact: Ref.make(contacts.sarah) },
       created: getDate(8),
       properties: { subject: 'Speaking Opportunity: International Tech Summit' },
     }),
@@ -591,7 +591,7 @@ export const createTestData = () => {
           text: 'ATTENTION: Company-wide policy update requires immediate action. Please download and install the attached software to update your security credentials. This is mandatory for all executives.',
         },
       ],
-      sender: { contact: makeRef(contacts.unknown2) },
+      sender: { contact: Ref.make(contacts.unknown2) },
       created: getDate(9),
       properties: { subject: 'MANDATORY: Security Update Required' },
     }),
@@ -603,7 +603,7 @@ export const createTestData = () => {
           text: "The customer satisfaction survey results for Q2 are now available. Overall sentiment has improved by 15% since our UI redesign. I've prepared a detailed report for the executive meeting next week.",
         },
       ],
-      sender: { contact: makeRef(contacts.michael) },
+      sender: { contact: Ref.make(contacts.michael) },
       created: getDate(10),
       properties: { subject: 'Q2 Customer Satisfaction Results' },
     }),
@@ -615,7 +615,7 @@ export const createTestData = () => {
           text: "I've scheduled the annual company retreat for the first weekend of October. Please confirm your attendance and any dietary restrictions. We'll be discussing the strategic roadmap for the next fiscal year.",
         },
       ],
-      sender: { contact: makeRef(contacts.sarah) },
+      sender: { contact: Ref.make(contacts.sarah) },
       created: getDate(12),
       properties: { subject: 'Annual Company Retreat Planning' },
     }),
@@ -627,7 +627,7 @@ export const createTestData = () => {
           text: "Our main competitor just announced a significant price reduction for their enterprise plan. We need to discuss our response strategy. I've prepared some initial thoughts for your consideration.",
         },
       ],
-      sender: { contact: makeRef(contacts.john) },
+      sender: { contact: Ref.make(contacts.john) },
       created: getDate(14),
       properties: { subject: 'Competitor Price Change - Strategic Response Needed' },
     }),
@@ -639,7 +639,7 @@ export const createTestData = () => {
           text: "The legal team has completed the review of the new privacy policy. We're ready to implement the changes ahead of the regulatory deadline. Please review the final draft attached to this email.",
         },
       ],
-      sender: { contact: makeRef(contacts.david) },
+      sender: { contact: Ref.make(contacts.david) },
       created: getDate(15),
       properties: { subject: 'Privacy Policy Update - Final Review' },
     }),
@@ -651,7 +651,7 @@ export const createTestData = () => {
           text: "I'm pleased to inform you that our Series C funding round is oversubscribed. We have multiple VCs competing for allocation. Let's schedule a call to discuss the final investor selection and terms.",
         },
       ],
-      sender: { contact: makeRef(contacts.emma) },
+      sender: { contact: Ref.make(contacts.emma) },
       created: getDate(16),
       properties: { subject: 'Series C Funding Update - Oversubscribed' },
     }),
@@ -663,7 +663,7 @@ export const createTestData = () => {
           text: "The product team has finalized the roadmap for the next 18 months. I'd like to present it to you before sharing it with the broader organization. Are you available for a review session this week?",
         },
       ],
-      sender: { contact: makeRef(contacts.michael) },
+      sender: { contact: Ref.make(contacts.michael) },
       created: getDate(18),
       properties: { subject: 'Product Roadmap Finalized' },
     }),
@@ -675,7 +675,7 @@ export const createTestData = () => {
           text: "We've received an acquisition offer from TechGiant Corp. The initial offer is $450M. I've scheduled an emergency board meeting for tomorrow at 3 PM to discuss this unexpected development.",
         },
       ],
-      sender: { contact: makeRef(contacts.emma) },
+      sender: { contact: Ref.make(contacts.emma) },
       created: getDate(20),
       properties: { subject: 'CONFIDENTIAL: Acquisition Offer Received' },
     }),
@@ -687,7 +687,7 @@ export const createTestData = () => {
           text: 'The annual audit is scheduled to begin next month. Please ensure all departments have their documentation prepared according to the checklist I sent last week. Let me know if you have any questions.',
         },
       ],
-      sender: { contact: makeRef(contacts.david) },
+      sender: { contact: Ref.make(contacts.david) },
       created: getDate(22),
       properties: { subject: 'Annual Audit Preparation' },
     }),
@@ -699,7 +699,7 @@ export const createTestData = () => {
           text: "Hello, nice to meet you! I'm looking forward to our partnership discussion next week. I've prepared some initial thoughts on how our companies can collaborate effectively.",
         },
       ],
-      sender: { contact: makeRef(contacts.john) },
+      sender: { contact: Ref.make(contacts.john) },
       created: getDate(25),
       properties: { subject: 'Introduction and Partnership Discussion' },
     }),
@@ -735,7 +735,7 @@ export const seedTestData = async (space: Space) => {
 
   // for (const document of TestData.documents) {
   //   const obj = space.db.add(live(Document, document));
-  //   const dxn = makeRef(obj).dxn.toString();
+  //   const dxn = Ref.make(obj).dxn.toString();
   //   document.dxn = dxn;
   // }
 
