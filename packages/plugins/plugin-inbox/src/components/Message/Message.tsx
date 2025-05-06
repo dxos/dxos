@@ -12,6 +12,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  editorContent,
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -50,7 +51,7 @@ export const Message = forwardRef<HTMLDivElement, MessageProps>(
         return [
           createBasicExtensions({ readOnly: true, lineWrapping: true }),
           createMarkdownExtensions({ themeMode }),
-          createThemeExtensions({ themeMode }),
+          createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
           decorateMarkdown(),
           preview(),
         ];
@@ -61,10 +62,10 @@ export const Message = forwardRef<HTMLDivElement, MessageProps>(
     const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
     return (
-      <div role='none' className='grid grid-rows-[min-content_1fr] relative h-full overflow-hidden'>
+      <div role='none' className='grid grid-rows-[min-content_1fr]'>
         <MessageHeader ref={ref} message={message} viewMode={viewMode} onSenderClick={onSenderClick} />
-        <div role='none' className='overflow-y-auto h-full min-h-0 p-2'>
-          <div ref={parentRef} className={mx(classNames)} />
+        <div role='none' className='relative'>
+          <div role='none' ref={parentRef} className={mx('absolute inset-0', classNames)} />
         </div>
       </div>
     );

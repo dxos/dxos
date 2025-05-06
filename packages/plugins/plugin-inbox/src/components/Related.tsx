@@ -13,10 +13,10 @@ import { INBOX_PLUGIN } from '../meta';
 
 export const RelatedContacts = ({
   contacts,
-  onSelect,
+  onContactClick,
 }: {
   contacts: Contact[];
-  onSelect?: (contact: Contact) => void;
+  onContactClick?: (contact: Contact) => void;
 }) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   return contacts.length ? (
@@ -28,7 +28,7 @@ export const RelatedContacts = ({
         {contacts.map((contact) => (
           <Avatar.Root key={contact.id}>
             {/* TODO(thure): This should use a button. */}
-            <li className='dx-button gap-2 mbe-1 last:mbe-0' onClick={() => onSelect?.(contact)}>
+            <li className='dx-button gap-2 mbe-1 last:mbe-0' onClick={() => onContactClick?.(contact)}>
               <Avatar.Content
                 hue='neutral'
                 size={5}
@@ -48,10 +48,10 @@ export const RelatedContacts = ({
 
 export const RelatedMessages = ({
   messages,
-  onSelect,
+  onMessageClick,
 }: {
   messages: MessageType[];
-  onSelect?: (message: MessageType) => void;
+  onMessageClick?: (message: MessageType) => void;
 }) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   return messages.length ? (
@@ -65,7 +65,7 @@ export const RelatedMessages = ({
           <li
             key={message.id}
             className='dx-button font-normal gap-2 mbe-1 last:mbe-0'
-            onClick={() => onSelect?.(message)}
+            onClick={() => onMessageClick?.(message)}
           >
             <Icon icon='ph--envelope-simple--regular' classNames='mli-0.5' />
             <p className='min-is-0 flex-1 truncate'>{message.properties?.subject}</p>
