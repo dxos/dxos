@@ -6691,6 +6691,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -6743,9 +6746,6 @@ importers:
         specifier: ^12.0.2
         version: 12.0.2(react@18.2.0)
     devDependencies:
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../plugin-preview
       '@dxos/plugin-storybook-layout':
         specifier: workspace:*
         version: link:../plugin-storybook-layout

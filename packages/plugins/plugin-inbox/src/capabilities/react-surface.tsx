@@ -11,6 +11,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Contact, MessageType, Organization } from '@dxos/schema';
 
 import { EventsContainer, MailboxContainer, MessageContainer, MailboxObjectSettings } from '../components';
+import { RelatedContacts } from '../components/Related';
 import { INBOX_PLUGIN } from '../meta';
 import { CalendarType, MailboxType } from '../types';
 
@@ -82,8 +83,7 @@ export default () =>
         const related = contacts.filter((contact) =>
           typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
         );
-        // TODO(wittjosiah): Render properly.
-        return <div>{related.map((contact) => contact.fullName)}</div>;
+        return <RelatedContacts contacts={related} />;
       },
     }),
   ]);
