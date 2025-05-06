@@ -5,6 +5,7 @@
 import { useSignal } from '@preact/signals-react';
 import React, { useMemo, useCallback } from 'react';
 
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
@@ -16,7 +17,7 @@ import { type MessageType, Contact } from '@dxos/schema';
 import { Message } from './Message';
 import { type ViewMode } from './MessageHeader';
 import { useMessageToolbarActions, type MessageToolbarAction } from './toolbar';
-import { type MailboxType } from '../../types';
+import { type MailboxType, InboxAction } from '../../types';
 
 export type MessageContainerProps = {
   space?: Space;
@@ -36,13 +37,9 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
 
-  // Check if message has sender email
-  const hasEmail = !!message.sender.email;
+  const hasEmail = useMemo(() => !!message.sender.email, [message.sender.email]);
 
-  // Get contacts from space
   const contacts = useQuery(space, Filter.schema(Contact));
-
-  // Check if there's an existing contact with the sender's email
   const existingContact = useMemo(() => {
     if (!hasEmail) {
       return undefined;
@@ -50,7 +47,9 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
     return contacts.find((contact) => contact.emails?.find((email) => email.value === message.sender.email));
   }, [contacts, message.sender.email, hasEmail]);
 
-  // Pass existingContact and hasEmail to useMessageToolbarActions
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+
+  // TODO(Zaymon): All deps need to be signals.
   const menu = useMessageToolbarActions(viewMode, !!existingContact, hasEmail);
 
   const handleToolbarAction = useCallback<MenuActionHandler<MessageToolbarAction>>(
@@ -61,13 +60,15 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
           break;
         }
         case 'extractContact': {
-          // TODO: Implement contact extraction logic
-          console.log('Extract contact from message:', message.sender);
+          if (!space) {
+            return;
+          }
+          void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
           break;
         }
       }
     },
-    [viewMode, message],
+    [viewMode, message, space, dispatch],
   );
 
   return (

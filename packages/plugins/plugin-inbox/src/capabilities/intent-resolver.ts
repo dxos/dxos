@@ -46,4 +46,15 @@ export default (context: PluginsContext) =>
         }
       },
     }),
+    createResolver({
+      intent: InboxAction.ExtractContact,
+      resolve: ({ space, message }) => {
+        // This would be where the actual extraction logic would happen
+        console.log('Extract contact intent received', { 
+          space: space.key?.toString(),  // Log just the key as string instead of whole space object
+          sender: message.sender 
+        });
+        // TODO: Implement actual contact extraction
+      },
+    }),
   ]);
