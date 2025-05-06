@@ -16,7 +16,6 @@ import {
 } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
 import { TableType } from '@dxos/react-ui-table';
 import { Contact, MessageType, Organization } from '@dxos/schema';
 
@@ -41,13 +40,13 @@ export default () =>
         isInstanceOf(MailboxType, data.companionTo) &&
         (data.subject === 'message' || isInstanceOf(MessageType, data.subject)),
       component: ({ data: { companionTo, subject: message } }) => {
-        const { t } = useTranslation(INBOX_PLUGIN);
         const space = getSpace(companionTo);
-        return typeof message === 'string' ? (
-          // TODO(burdon): Move into message container.
-          <p className='p-8 text-center text-description'>{t('no message message')}</p>
-        ) : (
-          <MessageContainer message={message} space={space} inMailbox={companionTo} />
+        return (
+          <MessageContainer
+            message={typeof message === 'string' ? undefined : message}
+            space={space}
+            inMailbox={companionTo}
+          />
         );
       },
     }),
@@ -81,20 +80,23 @@ export default () =>
               contact.emails?.some((email) => email.value === message.sender.email) ||
               message.sender.contact?.target === contact,
           )
-          .filter((message) => message.properties?.subject);
+          .filter((message) => message.properties?.subject)
+          .toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
+          .slice(0, 5);
 
         const handleSelect = useCallback(
-          (message: MessageType) =>
-            dispatch(
+          (message: MessageType) => {
+            void dispatch(
               pipe(
                 createIntent(LayoutAction.Open, {
                   part: 'main',
                   subject: [fullyQualifiedId(mailbox)],
                   options: { workspace: space?.id },
                 }),
-                chain(InboxAction.SelectMessage, { mailboxId: mailbox.id, message }),
+                chain(InboxAction.SelectMessage, { mailboxId: fullyQualifiedId(mailbox), message }),
               ),
-            ),
+            );
+          },
           [dispatch, space, mailbox],
         );
 
