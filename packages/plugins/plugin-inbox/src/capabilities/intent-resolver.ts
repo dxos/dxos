@@ -6,10 +6,12 @@ import { contributes, Capabilities, createResolver, type PluginsContext } from '
 import { ObjectId } from '@dxos/echo-schema';
 import { QueueSubspaceTags, DXN } from '@dxos/keys';
 import { live, refFromDXN } from '@dxos/live-object';
-import { MessageType } from '@dxos/schema';
+import { MessageType, Contact, Organization } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
+import { log } from '@dxos/log';
+import { Filter } from '@dxos/client/echo';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -48,13 +50,33 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: InboxAction.ExtractContact,
-      resolve: ({ space, message }) => {
-        // This would be where the actual extraction logic would happen
-        console.log('Extract contact intent received', { 
-          space: space.key?.toString(),  // Log just the key as string instead of whole space object
-          sender: message.sender 
+      resolve: async ({ space, message }) => {
+        log.info('Extract contact', { message });
+        const email = message.sender.email;
+        const name = message.sender.name;
+
+        if (!email) {
+          log.warn('Email is required for contact extraction', { sender: message.sender });
+          return;
+        }
+
+        const existingContacts = await space.db.query(Filter.schema(Contact)).run();
+
+        // TODO(ZaymonFC): Check for existing contact.
+
+        const newContact = live(Contact, {
+          emails: [{ value: email }],
         });
-        // TODO: Implement actual contact extraction
+
+        if (name) {
+          newContact.fullName = name;
+        }
+
+        // Try find organisation
+        const { objects: existingOrganisations } = await space.db.query(Filter.schema(Organization)).run();
+        const organisation = existingOrganisations.find((org) => org.website === email);
+
+        space.db.add(newContact);
       },
     }),
   ]);
