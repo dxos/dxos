@@ -10,7 +10,6 @@ import { Testing } from '@dxos/echo-schema/testing';
 
 import { getMeta } from './accessors';
 import { live } from './object';
-import { makeRef } from './ref';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {
@@ -42,7 +41,7 @@ describe('complex schema validations', () => {
     const field = 'hello';
     expect(() => live(Bar, { fooRef: { id: '1', field } as any })).to.throw();
     expect(() => live(Bar, { fooRef: undefined as any })).to.throw(); // Unresolved reference.
-    const bar = live(Bar, { fooRef: makeRef(live(Foo, { field })) });
+    const bar = live(Bar, { fooRef: Ref.make(live(Foo, { field })) });
     expect(bar.fooRef.target?.field).to.eq(field);
   });
 
