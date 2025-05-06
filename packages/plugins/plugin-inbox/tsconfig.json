@@ -87,6 +87,9 @@
       "path": "../../ui/react-ui-stack"
     },
     {
+      "path": "../../ui/react-ui-table"
+    },
+    {
       "path": "../../ui/react-ui-tag-picker"
     },
     {
@@ -115,6 +118,9 @@
     },
     {
       "path": "../plugin-storybook-layout"
+    },
+    {
+      "path": "../plugin-table"
     },
     {
       "path": "../plugin-theme"
