@@ -8,31 +8,39 @@ import React, { type MouseEvent, useCallback, useState, type WheelEvent } from '
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { useAttention } from '@dxos/react-ui-attention';
-import { type DxGridPlaneCells, Grid, type GridContentProps, toPlaneCellIndex } from '@dxos/react-ui-grid';
+import {
+  type DxGridPlaneCells,
+  Grid,
+  type GridContentProps,
+  gridSeparatorBlockEnd,
+  toPlaneCellIndex,
+} from '@dxos/react-ui-grid';
+import { mx } from '@dxos/react-ui-theme';
 import { type MessageType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
+import { type Tag } from './model';
 import { type MailboxType } from '../../types';
-import { formatDate } from '../util';
+import { formatDate, hashString } from '../util';
+
+const ROW_SIZES = {
+  DEFAULT: 56,
+  WITH_TAG: 76,
+};
 
 const messageRowDefault = {
-  grid: { size: 56 },
+  grid: { size: ROW_SIZES.DEFAULT },
 };
 
 const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const hashString = (str?: string): number => {
-  if (!str) {
-    return 0;
-  }
-  return Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0));
-};
-
 const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean) => {
   const id = message.id;
-  const text = message.blocks.find((block) => block.type === 'text')?.text;
+  // Always use the first text block for display in the mailbox list.
+  const textBlocks = message.blocks.filter((block) => 'text' in block);
+  const text = textBlocks[0]?.text || '';
   const date = formatDate(now, message.created ? new Date(message.created) : new Date());
   const from = message.sender?.name ?? message.sender?.email;
   const subject = message.properties?.subject ?? text;
@@ -59,7 +67,15 @@ const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean)
         ><span class="message__abstract__date">${date}</span
       ></p
       ><p class="message__abstract__body">${subject}</p
-  ></button>`;
+  >
+  ${
+    message.properties?.tags
+      ? `<div class="message__tag-row">
+    ${message.properties.tags.map((tag: Tag) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
+  </div>`
+      : ''
+  }
+  </button>`;
 };
 
 const messageCellClassName = 'message';
@@ -70,8 +86,12 @@ const messageCellClassName = 'message';
 // TODO(burdon): Create outline/kanban.
 // TODO(burdon): Address book/cards.
 
-export type MailboxAction = 'select' | 'current';
-export type MailboxActionHandler = (payload: { action: MailboxAction; messageId: string }) => void;
+export type MailboxAction =
+  | { type: 'select'; messageId: string }
+  | { type: 'current'; messageId: string }
+  | { type: 'tag-select'; label: string };
+
+export type MailboxActionHandler = (action: MailboxAction) => void;
 
 export type MailboxProps = Pick<MailboxType, 'name'> & {
   id: string;
@@ -107,16 +127,23 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
   const handleClick = useCallback(
     (event: MouseEvent) => {
       const target = event.target as HTMLElement;
+
+      const label = target.getAttribute('data-label');
+      if (label) {
+        onAction?.({ type: 'tag-select', label });
+        return;
+      }
+
       const actionEl = target.closest('[data-inbox-action]');
       if (actionEl) {
         const messageId = actionEl.getAttribute('data-message-id')!;
         const action = actionEl.getAttribute('data-inbox-action')!;
         switch (action) {
           case 'select-message':
-            onAction?.({ action: 'select', messageId });
+            onAction?.({ type: 'select', messageId });
             break;
           case 'current-message':
-            onAction?.({ action: 'current', messageId });
+            onAction?.({ type: 'current', messageId });
             break;
         }
       }
@@ -148,19 +175,43 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     [messages, currentMessageId],
   );
 
+  const gridRows = React.useMemo(() => {
+    return messages.reduce(
+      (acc, _, idx) => {
+        const message = messages[idx];
+        const hasTags = message.properties?.tags && message.properties.tags.length > 0;
+
+        acc[idx] = {
+          size: hasTags ? ROW_SIZES.WITH_TAG : ROW_SIZES.DEFAULT,
+        };
+
+        return acc;
+      },
+      {} as Record<number, { size: number }>,
+    );
+  }, [messages]);
+
+  const rows = React.useMemo(() => ({ grid: gridRows }), [gridRows]);
+
   return (
-    <Grid.Root id={`${id}__grid`}>
-      <Grid.Content
-        limitColumns={1}
-        limitRows={messages.length}
-        rowDefault={messageRowDefault}
-        columnDefault={columnDefault}
-        onWheelCapture={handleWheel}
-        onClick={handleClick}
-        getCells={getCells}
-        className='[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
-      />
-      <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
-    </Grid.Root>
+    <div role='none' className='flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0'>
+      <Grid.Root id={`${id}__grid`}>
+        <Grid.Content
+          limitColumns={1}
+          limitRows={messages.length}
+          rowDefault={messageRowDefault}
+          rows={rows}
+          columnDefault={columnDefault}
+          onWheelCapture={handleWheel}
+          onClick={handleClick}
+          getCells={getCells}
+          className={mx(
+            '[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto',
+            gridSeparatorBlockEnd,
+          )}
+        />
+        <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
+      </Grid.Root>
+    </div>
   );
 };

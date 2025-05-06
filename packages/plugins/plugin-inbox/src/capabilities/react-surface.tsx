@@ -36,7 +36,7 @@ export default () =>
           // TODO(burdon): Move into message container.
           <p className='p-8 text-center text-description'>{t('no message message')}</p>
         ) : (
-          <MessageContainer message={message} space={space} />
+          <MessageContainer message={message} space={space} inMailbox={companionTo} />
         );
       },
     }),

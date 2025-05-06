@@ -170,6 +170,7 @@ export const tagPickerExtension = ({
           ids.length = 0;
           itemSpan.clear();
           const builder = new RangeSetBuilder<Decoration>();
+
           syntaxTree(view.state).iterate({
             enter: (node) => {
               if (node.name === 'Link') {
@@ -283,9 +284,11 @@ class ItemWidget extends WidgetType {
     el.classList.add('inline-block', 'pie-0.5');
     el.setAttribute('itemId', this.props.itemId ?? 'never');
     el.setAttribute('label', this.props.label ?? 'never');
-    this.props.hue && el.setAttribute('hue', this.props.hue);
+    el.setAttribute('hue', this.props.hue ?? 'neutral');
+
     this.props.removeLabel && el.setAttribute('removeLabel', this.props.removeLabel);
     this.props.onItemClick && el.addEventListener('dx-tag-picker-item-click', this.props.onItemClick as any);
+
     return el;
   }
 }
