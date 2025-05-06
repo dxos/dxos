@@ -3,12 +3,12 @@
 //
 
 import { contributes, Capabilities, createResolver, type PluginsContext, createIntent } from '@dxos/app-framework';
-import { Filter, makeRef } from '@dxos/client/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { QueueSubspaceTags, DXN } from '@dxos/keys';
 import { live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TableAction } from '@dxos/plugin-table';
+import { Filter, makeRef } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 import { MessageType, Contact, Organization } from '@dxos/schema';
 
