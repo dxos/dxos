@@ -63,6 +63,8 @@ export default () =>
       filter: (data): data is { subject: MailboxType } => isInstanceOf(MailboxType, data.subject),
       component: ({ data }) => <MailboxObjectSettings object={data.subject} />,
     }),
+
+    // TODO(wittjosiah): Generalize the mess below.
     createSurface({
       id: `${INBOX_PLUGIN}/contact-related`,
       role: 'related',
