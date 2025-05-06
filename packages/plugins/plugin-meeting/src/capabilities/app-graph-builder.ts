@@ -71,7 +71,7 @@ export default (context: PluginsContext) =>
     //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
     createExtension({
       id: `${MEETING_PLUGIN}/meetings`,
-      filter: (node): node is Node<null, { space: Space }> => node.id === `${MEETING_PLUGIN}/meetings`,
+      filter: (node): node is Node<null, { space: Space }> => node.type === `${MEETING_PLUGIN}/meetings`,
       connector: ({ node }) => {
         const { metadata } = context.requestCapability(
           Capabilities.Metadata,
