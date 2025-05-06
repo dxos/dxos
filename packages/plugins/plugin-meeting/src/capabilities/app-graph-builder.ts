@@ -51,7 +51,7 @@ export default (context: PluginsContext) =>
         return meetings.length > 0
           ? [
               {
-                id: `${MEETING_PLUGIN}/meetings`,
+                id: `${node.id}-meetings`,
                 type: `${MEETING_PLUGIN}/meetings`,
                 data: null,
                 properties: {
