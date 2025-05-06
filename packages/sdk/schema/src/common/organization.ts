@@ -12,15 +12,13 @@ import { IconAnnotationId } from '../annotations';
  */
 export const OrganizationSchema = S.Struct({
   id: Type.ObjectId,
-  name: S.String.annotations({
-    [GeneratorAnnotationId]: 'company.name',
-  }),
-  description: S.optional(S.String),
+  name: S.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' }),
+  description: S.optional(S.String.annotations({ title: 'Description' })),
   // TODO(wittjosiah): Support ref?
-  image: S.optional(Format.URL),
+  image: S.optional(Format.URL.annotations({ title: 'Image' })),
   website: S.optional(
     Format.URL.annotations({
-      [AST.TitleAnnotationId]: 'Website',
+      title: 'Website',
       [GeneratorAnnotationId]: 'internet.url',
     }),
   ),
