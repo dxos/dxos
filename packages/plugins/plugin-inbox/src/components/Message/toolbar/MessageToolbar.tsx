@@ -39,7 +39,7 @@ const createViewModeAction = (viewMode: ViewMode): MenuAction<ViewModeActionProp
   }
 };
 
-export const useMessageToolbarActions = (viewMode: Signal<ViewMode>) => {
+export const useMessageToolbarActions = (viewMode: Signal<ViewMode>, existingContact?: boolean, hasEmail?: boolean) => {
   const actionCreator = useCallback(() => {
     const nodes = [];
     const edges = [];
@@ -55,14 +55,28 @@ export const useMessageToolbarActions = (viewMode: Signal<ViewMode>) => {
     nodes.push(viewModeAction);
     edges.push({ source: 'root', target: viewModeAction.id });
 
+    // Add extract contact action if there's no existing contact but there is an email
+    if (hasEmail === true && existingContact === false) {
+      const extractContactAction = createMenuAction<ExtractContactActionProperties>('extractContact', {
+        label: ['Extract contact', { ns: INBOX_PLUGIN }],
+        icon: 'ph--user-plus--regular',
+        type: 'extractContact',
+      });
+
+      nodes.push(extractContactAction);
+      edges.push({ source: 'root', target: extractContactAction.id });
+    }
+
     return { nodes, edges };
-  }, [viewMode.value]);
+  }, [viewMode.value, existingContact, hasEmail]);
 
   return useMenuActions(actionCreator);
 };
 
 export type ViewModeActionProperties = { type: 'viewMode' };
 
-export type MessageToolbarActionProperties = ViewModeActionProperties;
+export type ExtractContactActionProperties = { type: 'extractContact' };
+
+export type MessageToolbarActionProperties = ViewModeActionProperties | ExtractContactActionProperties;
 
 export type MessageToolbarAction = MenuAction<MessageToolbarActionProperties>;

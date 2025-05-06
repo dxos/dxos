@@ -5,13 +5,13 @@
 import { useSignal } from '@preact/signals-react';
 import React, { useMemo, useCallback } from 'react';
 
-import { fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { type MenuActionHandler } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type MessageType } from '@dxos/schema';
+import { type MessageType, Contact } from '@dxos/schema';
 
 import { Message } from './Message';
 import { type ViewMode } from './MessageHeader';
@@ -36,7 +36,22 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
 
-  const menu = useMessageToolbarActions(viewMode);
+  // Check if message has sender email
+  const hasEmail = !!message.sender.email;
+
+  // Get contacts from space
+  const contacts = useQuery(space, Filter.schema(Contact));
+
+  // Check if there's an existing contact with the sender's email
+  const existingContact = useMemo(() => {
+    if (!hasEmail) {
+      return undefined;
+    }
+    return contacts.find((contact) => contact.emails?.find((email) => email.value === message.sender.email));
+  }, [contacts, message.sender.email, hasEmail]);
+
+  // Pass existingContact and hasEmail to useMessageToolbarActions
+  const menu = useMessageToolbarActions(viewMode, !!existingContact, hasEmail);
 
   const handleToolbarAction = useCallback<MenuActionHandler<MessageToolbarAction>>(
     (action: MessageToolbarAction) => {
@@ -45,9 +60,14 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
           viewMode.value = viewMode.value === 'plain' ? 'enriched' : 'plain';
           break;
         }
+        case 'extractContact': {
+          // TODO: Implement contact extraction logic
+          console.log('Extract contact from message:', message.sender);
+          break;
+        }
       }
     },
-    [viewMode],
+    [viewMode, message],
   );
 
   return (
