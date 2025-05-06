@@ -11,15 +11,14 @@ import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { failedInvariant } from '@dxos/invariant';
 import { type MessageType, type Contact } from '@dxos/schema';
-
-import type { DocumentType, Label } from './test-data';
+import { type Testing } from '@dxos/schema/testing';
 
 type ProcessEmailParams = {
   email: MessageType;
   aiService: AIServiceClient;
   context: {
-    labels: Label[];
-    documents?: DocumentType[];
+    labels: Testing.Label[];
+    documents?: Testing.DocumentType[];
     contacts?: Contact[];
   };
 };

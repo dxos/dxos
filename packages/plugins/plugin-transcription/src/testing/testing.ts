@@ -15,11 +15,12 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
 import { Contact, MessageType, Organization, type TranscriptionContentBlock } from '@dxos/schema';
+import { Testing, seedTestData } from '@dxos/schema/testing';
 
-import * as TestData from './test-data';
 import { processTranscriptMessage } from '../entity-extraction';
 
-// TODO(burdon): Reconcile with plugin-markdown. Move to schema-testing.
+// TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
+
 export const TestItem = S.Struct({
   title: S.String.annotations({
     [AST.TitleAnnotationId]: 'Title',
@@ -99,7 +100,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
   async connect(space: Space) {
     this.space = space;
-    const { transcriptMessages } = await TestData.seed(space);
+    const { transcriptMessages } = await seedTestData(space);
     this.transcriptMessages = transcriptMessages;
   }
 
@@ -109,7 +110,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     }
 
     const { objects } = await this.space.db
-      .query(Filter.or(Filter.schema(Contact), Filter.schema(Organization), Filter.schema(TestData.DocumentType)))
+      .query(Filter.or(Filter.schema(Contact), Filter.schema(Organization), Filter.schema(Testing.DocumentType)))
       .run();
 
     log.info('context', { objects });
