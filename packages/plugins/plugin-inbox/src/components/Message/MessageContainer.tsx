@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSignal } from '@preact/signals-react';
-import React, { useMemo, useCallback } from 'react';
+import { useComputed, useSignal } from '@preact/signals-react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-client/echo';
@@ -37,20 +37,19 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
 
-  const hasEmail = useMemo(() => !!message.sender.email, [message.sender.email]);
-
+  const hasEmail = useComputed(() => !!message.sender.email);
   const contacts = useQuery(space, Filter.schema(Contact));
-  const existingContact = useMemo(() => {
-    if (!hasEmail) {
-      return undefined;
-    }
-    return contacts.find((contact) => contact.emails?.find((email) => email.value === message.sender.email));
-  }, [contacts, message.sender.email, hasEmail]);
+  const existingContact = useSignal<Contact | undefined>(undefined);
+
+  useEffect(() => {
+    existingContact.value = contacts.find((contact) =>
+      contact.emails?.find((email) => email.value === message.sender.email),
+    );
+  }, [contacts, message.sender.email, hasEmail, existingContact]);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  // TODO(Zaymon): All deps need to be signals.
-  const menu = useMessageToolbarActions(viewMode, !!existingContact, hasEmail);
+  const menu = useMessageToolbarActions(viewMode, existingContact);
 
   const handleToolbarAction = useCallback<MenuActionHandler<MessageToolbarAction>>(
     (action: MessageToolbarAction) => {

@@ -3,7 +3,6 @@
 //
 
 import { type Signal } from '@preact/signals-react';
-import { useCallback } from 'react';
 
 import { createMenuAction, createMenuItemGroup, type MenuAction, useMenuActions } from '@dxos/react-ui-menu';
 
@@ -39,8 +38,9 @@ const createViewModeAction = (viewMode: ViewMode): MenuAction<ViewModeActionProp
   }
 };
 
-export const useMessageToolbarActions = (viewMode: Signal<ViewMode>, existingContact?: boolean, hasEmail?: boolean) => {
-  const actionCreator = useCallback(() => {
+// TODO(ZaymonFC): Collapse state to single object.
+export const useMessageToolbarActions = (viewMode: Signal<ViewMode>, existingContact: Signal<any | undefined>) => {
+  return useMenuActions(() => {
     const nodes = [];
     const edges = [];
 
@@ -55,22 +55,17 @@ export const useMessageToolbarActions = (viewMode: Signal<ViewMode>, existingCon
     nodes.push(viewModeAction);
     edges.push({ source: 'root', target: viewModeAction.id });
 
-    // Add extract contact action if there's no existing contact but there is an email
-    if (hasEmail === true && existingContact === false) {
-      const extractContactAction = createMenuAction<ExtractContactActionProperties>('extractContact', {
-        label: ['Extract contact', { ns: INBOX_PLUGIN }],
-        icon: 'ph--user-plus--regular',
-        type: 'extractContact',
-      });
+    const extractContactAction = createMenuAction<ExtractContactActionProperties>('extractContact', {
+      label: ['Extract contact', { ns: INBOX_PLUGIN }],
+      icon: 'ph--user-plus--regular',
+      type: 'extractContact',
+    });
 
-      nodes.push(extractContactAction);
-      edges.push({ source: 'root', target: extractContactAction.id });
-    }
+    nodes.push(extractContactAction);
+    edges.push({ source: 'root', target: extractContactAction.id });
 
     return { nodes, edges };
-  }, [viewMode.value, existingContact, hasEmail]);
-
-  return useMenuActions(actionCreator);
+  });
 };
 
 export type ViewModeActionProperties = { type: 'viewMode' };
