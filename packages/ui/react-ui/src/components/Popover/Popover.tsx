@@ -571,6 +571,8 @@ const PopoverViewport = forwardRef<HTMLDivElement, PopoverViewportProps>(
 
 const getState = (open: boolean) => (open ? 'open' : 'closed');
 
+type PopoverContentInteractOutsideEvent = Parameters<NonNullable<PopoverContentProps['onInteractOutside']>>[0];
+
 export const Popover = {
   Root: PopoverRoot,
   Anchor: PopoverAnchor,
@@ -595,4 +597,5 @@ export type {
   PopoverCloseProps,
   PopoverArrowProps,
   PopoverViewportProps,
+  PopoverContentInteractOutsideEvent,
 };
