@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-import { Avatar } from '@dxos/react-ui';
+import { DxRefTagActivate, type DxRefTag } from '@dxos/lit-ui';
+import { Avatar, Button, Icon } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type MessageType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
@@ -17,41 +18,65 @@ export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 export type MessageHeaderProps = ThemedClassName<{
   message: MessageType;
   viewMode?: ViewMode;
+  contactDxn?: string;
 }>;
 
-export const MessageHeader = ({ message, viewMode, classNames }: MessageHeaderProps) => {
+export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderProps) => {
   const { t } = useTranslation(INBOX_PLUGIN);
 
+  const handleSenderClick = useCallback(
+    (event: MouseEvent) => {
+      const button = (event.target as HTMLElement).closest('.dx-button');
+      if (contactDxn && button) {
+        button.dispatchEvent(
+          new DxRefTagActivate({
+            trigger: button as DxRefTag,
+            ref: contactDxn,
+            label: message.sender.name ?? 'never',
+          }),
+        );
+      }
+    },
+    [contactDxn, message.sender.name],
+  );
+
+  const SenderRoot = contactDxn ? Button : 'div';
+  const senderProps = contactDxn
+    ? { variant: 'ghost', classNames: 'pli-2 gap-2 text-start', onClick: handleSenderClick }
+    : { className: 'dx-button hover:bg-transparent pli-2 gap-2', 'data-variant': 'ghost' };
+
   return (
-    <div className='grid grid-flow-row pli-2 plb-2 bs-[56px] gap-2 min-bs-0 border-be border-separator'>
-      <div className='grid grid-cols-[auto_1fr_auto] gap-x-3'>
-        <Avatar.Root>
+    <div className='border-be border-separator p-1 flex justify-between'>
+      <Avatar.Root>
+        <SenderRoot {...(senderProps as any)}>
           <Avatar.Content
-            hue={message.sender.name ? toHue(hashString(message.sender.name)) : undefined}
+            hue={toHue(hashString(message.sender?.name ?? message.sender?.email))}
             hueVariant='surface'
             variant='square'
             size={8}
             fallback={message.sender.name ? getFirstTwoRenderableChars(message.sender.name).join('') : '?'}
           />
-          <Avatar.Label srOnly>{message.sender.name || 'Unknown'}</Avatar.Label>
-        </Avatar.Root>
-        <div className='grid gap-0.5 self-center'>
-          <h3 className='truncate'>{message.sender.name || 'Unknown'}</h3>
-          {message.sender.email && <div className='text-xs text-description truncate'>{message.sender.email}</div>}
-        </div>
-        <div className='grid gap-1 justify-items-end'>
-          <div className='text-xs text-description'>
-            {message.created && formatDate(new Date(), new Date(message.created))}
+          <div role='none'>
+            <Avatar.Label classNames='flex items-center gap-1'>
+              <h3 className='truncate'>{message.sender.name || 'Unknown'}</h3>
+              {contactDxn && <Icon icon='ph--caret-down--bold' size={3} />}
+            </Avatar.Label>
+            {message.sender.email && <div className='text-xs text-description truncate'>{message.sender.email}</div>}
           </div>
-          {/* View mode indicator */}
-          {viewMode && (
-            <div className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
-              {viewMode === 'plain' && t('message header view mode plain')}
-              {viewMode === 'enriched' && t('message header view mode enriched')}
-              {viewMode === 'plain-only' && t('message header view mode plain only')}
-            </div>
-          )}
+        </SenderRoot>
+      </Avatar.Root>
+      <div className='grid gap-1 justify-items-end p-1'>
+        <div className='text-xs text-description'>
+          {message.created && formatDate(new Date(), new Date(message.created))}
         </div>
+        {/* View mode indicator */}
+        {viewMode && (
+          <div className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
+            {viewMode === 'plain' && t('message header view mode plain')}
+            {viewMode === 'enriched' && t('message header view mode enriched')}
+            {viewMode === 'plain-only' && t('message header view mode plain only')}
+          </div>
+        )}
       </div>
     </div>
   );

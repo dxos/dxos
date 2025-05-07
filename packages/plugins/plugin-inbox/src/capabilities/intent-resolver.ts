@@ -2,11 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginsContext, createIntent } from '@dxos/app-framework';
+import { pipe } from 'effect';
+
+import {
+  contributes,
+  Capabilities,
+  createResolver,
+  type PluginsContext,
+  createIntent,
+  chain,
+} from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { QueueSubspaceTags, DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { TableAction } from '@dxos/plugin-table';
 import { Filter, Ref } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
@@ -126,11 +136,14 @@ export default (context: PluginsContext) =>
           log.info('No table found for contacts, creating one.');
           return {
             intents: [
-              createIntent(TableAction.Create, {
-                space,
-                name: 'Contacts',
-                typename: Contact.typename,
-              }),
+              pipe(
+                createIntent(TableAction.Create, {
+                  space,
+                  name: 'Contacts',
+                  typename: Contact.typename,
+                }),
+                chain(SpaceAction.AddObject, { target: space }),
+              ),
             ],
           };
         }

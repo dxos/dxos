@@ -21,6 +21,7 @@ import { type ViewType, type ViewProjection } from '@dxos/schema';
 import { type SelectionMode, SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
 import { touch } from '../util';
+import { extractTagIds } from '../util/tag';
 
 // TODO(burdon): Use schema types.
 export type TableRow = Record<JsonProp, any> & { id: string };
@@ -344,6 +345,22 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         //   plain string value. Maybe onBlur should be called with the actual value?
         if (isLiveObject(value)) {
           setValue(this._rows.value[rowIdx], field.path, Ref.make(value));
+        }
+        break;
+      }
+
+      case FormatEnum.SingleSelect: {
+        const ids = extractTagIds(value);
+        if (ids && ids.length > 0) {
+          setValue(this._rows.value[rowIdx], field.path, ids[0]);
+        }
+        break;
+      }
+
+      case FormatEnum.MultiSelect: {
+        const ids = extractTagIds(value);
+        if (ids) {
+          setValue(this._rows.value[rowIdx], field.path, ids);
         }
         break;
       }

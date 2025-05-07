@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import {
   Capabilities,
@@ -14,10 +14,20 @@ import {
   createSurface,
   defineModule,
   definePlugin,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client, resolveRef } from '@dxos/client';
-import { getSchema, isEchoObject, parseId, type ReactiveEchoObject, type Space } from '@dxos/client/echo';
+import {
+  Filter,
+  fullyQualifiedId,
+  getSchema,
+  getSpace,
+  isEchoObject,
+  parseId,
+  type ReactiveEchoObject,
+  type Space,
+} from '@dxos/client/echo';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { type DxRefTagActivate } from '@dxos/lit-ui';
@@ -26,6 +36,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { useTranslation } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-editor';
 import { Form } from '@dxos/react-ui-form';
+import { TableType } from '@dxos/react-ui-table';
 import { descriptionMessage } from '@dxos/react-ui-theme';
 import { Contact, Organization, Project } from '@dxos/schema';
 
@@ -118,8 +129,37 @@ export const PreviewPlugin = () =>
             role: 'popover',
             filter: (data): data is { subject: Contact } => isInstanceOf(Contact, data.subject),
             component: ({ data }) => {
+              const { dispatchPromise: dispatch } = useIntentDispatcher();
+              const handleOrgClick = useCallback(
+                async (org: Organization) => {
+                  const space = getSpace(org);
+                  const tablesQuery = await space?.db.query(Filter.schema(TableType)).run();
+                  const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
+                    return table.view?.target?.query?.typename === Organization.typename;
+                  });
+                  await dispatch(
+                    createIntent(LayoutAction.UpdatePopover, {
+                      part: 'popover',
+                      options: {
+                        state: false,
+                        anchorId: '',
+                      },
+                    }),
+                  );
+                  if (currentSpaceOrgTable) {
+                    return dispatch(
+                      createIntent(LayoutAction.Open, {
+                        part: 'main',
+                        subject: [fullyQualifiedId(currentSpaceOrgTable)],
+                        options: { workspace: space?.id },
+                      }),
+                    );
+                  }
+                },
+                [dispatch],
+              );
               return (
-                <ContactCard subject={data.subject}>
+                <ContactCard subject={data.subject} onOrgClick={handleOrgClick}>
                   <Surface role='related' data={data} />
                 </ContactCard>
               );

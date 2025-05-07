@@ -12,6 +12,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  editorContent,
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -26,9 +27,10 @@ export type MessageProps = ThemedClassName<{
   message: MessageType;
   viewMode: ViewMode;
   hasEnrichedContent: boolean;
+  contactDxn?: string;
 }>;
 
-export const Message = ({ space, message, viewMode, hasEnrichedContent, classNames }: MessageProps) => {
+export const Message = ({ space, message, viewMode, contactDxn, classNames }: MessageProps) => {
   const client = useClient();
   const { themeMode } = useThemeContext();
 
@@ -48,7 +50,7 @@ export const Message = ({ space, message, viewMode, hasEnrichedContent, classNam
       return [
         createBasicExtensions({ readOnly: true, lineWrapping: true }),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, slots: { content: { className: editorContent } } }),
         decorateMarkdown(),
         preview(),
       ];
@@ -59,10 +61,10 @@ export const Message = ({ space, message, viewMode, hasEnrichedContent, classNam
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
   return (
-    <div role='none' className='grid grid-rows-[min-content_1fr] relative h-full overflow-hidden'>
-      <MessageHeader message={message} viewMode={viewMode} />
-      <div role='none' className='overflow-y-auto h-full min-h-0 p-2'>
-        <div ref={parentRef} className={mx(classNames)} />
+    <div role='none' className='grid grid-rows-[min-content_1fr]'>
+      <MessageHeader message={message} viewMode={viewMode} contactDxn={contactDxn} />
+      <div role='none' className='relative'>
+        <div role='none' ref={parentRef} className={mx('absolute inset-0', classNames)} />
       </div>
     </div>
   );

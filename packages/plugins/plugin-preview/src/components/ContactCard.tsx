@@ -4,17 +4,18 @@
 
 import React, { Fragment } from 'react';
 
-import { Icon, Avatar } from '@dxos/react-ui';
+import { Icon, Avatar, Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type Contact } from '@dxos/schema';
+import { type Contact, type Organization } from '@dxos/schema';
 
-import { type PreviewProps, previewCard, previewTitle, previewProse } from '../types';
+import { type PreviewProps, previewCard, previewTitle, previewProse, previewChrome } from '../types';
 
 export const ContactCard = ({
   children,
   classNames,
   subject: { fullName, image, organization, emails },
-}: PreviewProps<Contact>) => {
+  onOrgClick,
+}: PreviewProps<Contact> & { onOrgClick?: (org: Organization) => void }) => {
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
     <div role='none' className={mx(previewCard, classNames)}>
@@ -25,15 +26,25 @@ export const ContactCard = ({
             <Avatar.Label asChild>
               <h2 className={previewTitle}>{fullName}</h2>
             </Avatar.Label>
-            {organizationName && (
-              <p className='flex items-center gap-2'>
-                <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
-                <span className='truncate'>{organizationName}</span>
-              </p>
-            )}
           </div>
         </div>
       </Avatar.Root>
+      {organizationName && (
+        <div role='none' className={previewChrome}>
+          {typeof organization === 'object' && onOrgClick ? (
+            <Button variant='ghost' classNames='gap-2 text-start' onClick={() => onOrgClick(organization.target!)}>
+              <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
+              <span className='min-is-0 flex-1 truncate'>{organizationName}</span>
+              <Icon icon='ph--arrow-right--regular' />
+            </Button>
+          ) : (
+            <p className='dx-button gap-2' data-variant='ghost'>
+              <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
+              <span className='min-is-0 flex-1 truncate'>{organizationName}</span>
+            </p>
+          )}
+        </div>
+      )}
       <dl
         className={mx(
           previewProse,

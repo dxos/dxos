@@ -6670,6 +6670,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -6776,6 +6779,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.13.3
+        version: 3.13.3
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7822,6 +7828,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
@@ -7835,6 +7844,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      effect:
+        specifier: 3.13.3
+        version: 3.13.3
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -24758,6 +24770,9 @@ packages:
 
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
+
+  effect@3.13.3:
+    resolution: {integrity: sha512-r58d/ky/NC22/sQJWssKkRB5DSJ+cKZHAMDe+ANhbatkIDgUfxsOdeXsrERR+ng2pVZJ6s7GLneAs44Wa60HUw==}
 
   effect@3.14.20:
     resolution: {integrity: sha512-c3r1jpnev6epl1DU/baCsEU1P4571ExTEm9M8OTreIbMT5AFGC0lJoVrHFkjv0IMtIz8cwPObbjjsIhhSPPWKA==}
@@ -48950,6 +48965,11 @@ snapshots:
       semver: 7.6.3
 
   ee-first@1.1.1: {}
+
+  effect@3.13.3:
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      fast-check: 3.23.1
 
   effect@3.14.20:
     dependencies:

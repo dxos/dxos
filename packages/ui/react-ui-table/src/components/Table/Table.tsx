@@ -25,6 +25,8 @@ import {
   type DxGridPosition,
   type GridContentProps,
   Grid,
+  type DxGridPlane,
+  type DxGridPlaneRange,
   gridSeparatorInlineEnd,
   gridSeparatorBlockEnd,
 } from '@dxos/react-ui-grid';
@@ -99,20 +101,17 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       };
     }, [model]);
 
-    // TODO(burdon): Replace useEffect below.
-    // const getCells = useCallback<GridContentProps['getCells']>(
-    //   (range: DxGridRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
-    //   [presentation],
-    // );
+    const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
+      (range: DxGridPlaneRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
+      [presentation],
+    );
 
     useEffect(() => {
       if (!presentation || !dxGrid) {
         return;
       }
-
-      // TODO(burdon): Pass to Grid.Content?
-      dxGrid.getCells = (range, plane) => presentation.getCells(range, plane);
-    }, [presentation, dxGrid]);
+      dxGrid.getCells = getCells;
+    }, [presentation, dxGrid, getCells]);
 
     /**
      * Provides an external controller that can be called to repaint the table.

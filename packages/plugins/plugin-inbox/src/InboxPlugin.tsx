@@ -106,4 +106,9 @@ export const InboxPlugin = () =>
       activatesOn: Events.SetupArtifactDefinition,
       activate: ArtifactDefinition,
     }),
+    defineModule({
+      id: `${meta.id}/module/whitelist-schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [Organization, Contact]),
+    }),
   ]);
