@@ -36,7 +36,6 @@ import { isNotFalsy, safeParseInt } from '@dxos/util';
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
-import { RefPanel } from './RefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 import { ModalController, type TableModel, type TablePresentation } from '../../model';
 import { translationKey } from '../../translations';
@@ -179,10 +178,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
             }
             case 'newColumn': {
               modals.showColumnCreator();
-              break;
-            }
-            case 'referencedCell': {
-              modals.showReferencePanel(data.targetId, data.schemaId);
               break;
             }
             case 'sort': {
@@ -373,7 +368,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         <ColumnActionsMenu model={model} modals={modals} />
         <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
         <CreateRefPanel model={model} modals={modals} />
-        <RefPanel model={model} modals={modals} />
       </Grid.Root>
     );
   },

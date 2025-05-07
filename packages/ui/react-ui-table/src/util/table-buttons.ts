@@ -15,7 +15,6 @@ export const BUTTON_IDENTIFIERS: { [K in TableButton]: string } = {
 type ButtonData =
   | { type: 'columnSettings'; fieldId: string }
   | { type: 'newColumn'; disabled?: boolean }
-  | { type: 'referencedCell'; schemaId: string; targetId: string }
   | { type: 'rowMenu'; rowIndex: number }
   | { type: 'sort'; fieldId: string; direction?: 'asc' | 'desc' };
 
@@ -76,27 +75,6 @@ const columnSettingsButton = {
   }),
 } as const;
 
-const referencedCellButton = {
-  attr: BUTTON_IDENTIFIERS.referencedCell,
-  icon: 'ph--link-simple-horizontal--regular',
-  render: ({ targetId, schemaId }: Omit<Extract<ButtonData, { type: 'referencedCell' }>, 'type'>) => {
-    return createButton({
-      attr: BUTTON_IDENTIFIERS.referencedCell,
-      icon: referencedCellButton.icon,
-      data: {
-        'data-target-id': targetId,
-        'data-schema-id': schemaId,
-      },
-      testId: 'table-ref-cell-button',
-    });
-  },
-  getData: (el: HTMLElement): Extract<ButtonData, { type: 'referencedCell' }> => ({
-    type: 'referencedCell',
-    targetId: el.getAttribute('data-target-id')!,
-    schemaId: el.getAttribute('data-schema-id')!,
-  }),
-} as const;
-
 const rowMenuButton = {
   attr: BUTTON_IDENTIFIERS.rowMenu,
   icon: 'ph--dots-three--regular',
@@ -143,7 +121,6 @@ const sortButton = {
 export const tableButtons = {
   addColumn: addColumnButton,
   columnSettings: columnSettingsButton,
-  referencedCell: referencedCellButton,
   rowMenu: rowMenuButton,
   sort: sortButton,
 } as const;

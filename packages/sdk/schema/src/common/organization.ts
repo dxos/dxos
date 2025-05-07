@@ -46,8 +46,8 @@ export const OrganizationSchema = S.Struct({
       [FormatAnnotationId]: 'single-select',
     }),
   ),
-  // TODO(wittjosiah): Support ref?
-  image: S.optional(Format.URL.annotations({ title: 'Image' })),
+  // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
+  image: S.optional(S.String.annotations({ title: 'Image' })),
   website: S.optional(
     Format.URL.annotations({
       title: 'Website',
