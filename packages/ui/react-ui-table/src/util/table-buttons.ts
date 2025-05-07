@@ -76,27 +76,6 @@ const columnSettingsButton = {
   }),
 } as const;
 
-const referencedCellButton = {
-  attr: BUTTON_IDENTIFIERS.referencedCell,
-  icon: 'ph--link-simple-horizontal--regular',
-  render: ({ targetId, schemaId }: Omit<Extract<ButtonData, { type: 'referencedCell' }>, 'type'>) => {
-    return createButton({
-      attr: BUTTON_IDENTIFIERS.referencedCell,
-      icon: referencedCellButton.icon,
-      data: {
-        'data-target-id': targetId,
-        'data-schema-id': schemaId,
-      },
-      testId: 'table-ref-cell-button',
-    });
-  },
-  getData: (el: HTMLElement): Extract<ButtonData, { type: 'referencedCell' }> => ({
-    type: 'referencedCell',
-    targetId: el.getAttribute('data-target-id')!,
-    schemaId: el.getAttribute('data-schema-id')!,
-  }),
-} as const;
-
 const rowMenuButton = {
   attr: BUTTON_IDENTIFIERS.rowMenu,
   icon: 'ph--dots-three--regular',
@@ -143,7 +122,6 @@ const sortButton = {
 export const tableButtons = {
   addColumn: addColumnButton,
   columnSettings: columnSettingsButton,
-  referencedCell: referencedCellButton,
   rowMenu: rowMenuButton,
   sort: sortButton,
 } as const;
