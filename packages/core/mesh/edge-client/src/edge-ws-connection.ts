@@ -13,7 +13,7 @@ import { MessageSchema, type Message } from '@dxos/protocols/buf/dxos/edge/messe
 
 import { protocol } from './defs';
 import { type EdgeIdentity } from './edge-identity';
-import { WebSocketMuxer } from './edge-ws-muxer';
+import { CLOUDFLARE_MESSAGE_LENGTH_LIMIT, WebSocketMuxer } from './edge-ws-muxer';
 import { toUint8Array } from './protocol';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
@@ -58,7 +58,16 @@ export class EdgeWsConnection extends Resource {
     invariant(this._wsMuxer);
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
     if (this._ws?.protocol.includes(EDGE_WEBSOCKET_PROTOCOL_V0)) {
-      this._ws.send(buf.toBinary(MessageSchema, message));
+      const binary = buf.toBinary(MessageSchema, message);
+      if (binary.length > CLOUDFLARE_MESSAGE_LENGTH_LIMIT) {
+        log.error('Message dropped because it was too large (>1MB).', {
+          byteLength: binary.byteLength,
+          serviceId: message.serviceId,
+          payload: protocol.getPayloadType(message),
+        });
+        return;
+      }
+      this._ws.send(binary);
     } else {
       this._wsMuxer.send(message).catch((e) => log.catch(e));
     }
