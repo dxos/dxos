@@ -102,17 +102,22 @@ export default (context: PluginsContext) =>
         log.info('Extracted email domain', { emailDomain });
 
         const { objects: existingOrganisations } = await space.db.query(Filter.schema(Organization)).run();
-
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {
-              const websiteDomain = new URL(org.website).hostname.toLowerCase();
+              const websiteUrl =
+                org.website.startsWith('http://') || org.website.startsWith('https://')
+                  ? org.website
+                  : `https://${org.website}`;
+
+              const websiteDomain = new URL(websiteUrl).hostname.toLowerCase();
               return (
                 websiteDomain === emailDomain ||
                 websiteDomain.endsWith(`.${emailDomain}`) ||
                 emailDomain.endsWith(`.${websiteDomain}`)
               );
             } catch (e) {
+              log.warn('Error parsing website URL', { website: org.website, error: e });
               return false;
             }
           }
