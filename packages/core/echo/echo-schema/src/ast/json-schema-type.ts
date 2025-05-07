@@ -109,6 +109,8 @@ const _JsonSchemaType = S.Struct({
    */
   entityKind: S.optional(EntityKindSchema),
 
+  // TODO(dmaretskyi): Target and source types for relations.
+
   /**
    * Typename of this schema.
    * Only on schema representing an ECHO object.
