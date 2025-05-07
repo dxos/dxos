@@ -4,28 +4,24 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Layout, PageNumber, Pager, StartButton } from './Presenter';
-import { PresenterContext, PresenterAction } from '../types';
+import { Layout, PageNumber, Pager } from './Presenter';
+import { PresenterContext } from '../types';
+import { useExitPresenter } from '../useExitPresenter';
 
-const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
+const CollectionPresenterContainer: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   const { running } = useContext(PresenterContext);
 
-  // TODO(burdon): Currently conflates fullscreen and running.
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const handleSetRunning = (running: boolean) => {
-    void dispatch(createIntent(PresenterAction.TogglePresentation, { object: collection, state: running }));
-  };
+  const handleExit = useExitPresenter(collection);
 
   return (
-    <StackItem.Content>
+    <StackItem.Content classNames='relative'>
       <Layout
-        topRight={<StartButton running={running} onClick={(running) => handleSetRunning(running)} />}
         bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
         bottomLeft={
           <Pager
@@ -33,7 +29,7 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
             count={collection.objects.length}
             keys={running}
             onChange={setSlide}
-            onExit={() => handleSetRunning(false)}
+            onExit={handleExit}
           />
         }
       >
@@ -44,4 +40,4 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   );
 };
 
-export default PresenterMain;
+export default CollectionPresenterContainer;

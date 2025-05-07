@@ -10,7 +10,12 @@ import { SettingsStore } from '@dxos/local-storage';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
 
-import { MarkdownSlide, PresenterSettings, PresenterMain, RevealMain } from '../components';
+import {
+  MarkdownSlide,
+  PresenterSettings,
+  DocumentPresenterContainer,
+  CollectionPresenterContainer,
+} from '../components';
 import { PRESENTER_PLUGIN } from '../meta';
 import { type PresenterSettingsProps } from '../types';
 
@@ -19,16 +24,18 @@ export default () =>
     createSurface({
       id: `${PRESENTER_PLUGIN}/document`,
       role: 'article',
+      position: 'hoist',
       filter: (data): data is { subject: DocumentType; variant: 'presenter' } =>
         isInstanceOf(DocumentType, data.subject) && data.variant === 'presenter',
-      component: ({ data }) => <RevealMain document={data.subject} />,
+      component: ({ data }) => <DocumentPresenterContainer document={data.subject} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/collection`,
       role: 'article',
+      position: 'hoist',
       filter: (data): data is { subject: CollectionType; variant: 'presenter' } =>
         isInstanceOf(CollectionType, data.subject) && data.variant === 'presenter',
-      component: ({ data }) => <PresenterMain collection={data.subject} />,
+      component: ({ data }) => <CollectionPresenterContainer collection={data.subject} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,

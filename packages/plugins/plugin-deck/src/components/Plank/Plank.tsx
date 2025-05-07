@@ -116,7 +116,7 @@ const PlankImpl = memo(
           path,
           popoverAnchorId,
         },
-      [node, node?.data, path, popoverAnchorId, primary?.data],
+      [node, node?.data, path, popoverAnchorId, primary?.data, variant],
     );
 
     // TODO(wittjosiah): Change prop to accept a component.
