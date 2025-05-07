@@ -36,7 +36,7 @@ import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '..
 // TODO(dmaretskyi): Consider removing ECHO namespace and putting them at the top level.
 // TODO(dmaretskyi): Move to format.ts when circular imports are solved
 export const EchoAnnotations: Partial<Record<keyof JsonSchemaEchoAnnotations, symbol>> = {
-  annotations: PropertyMetaAnnotationId,
+  meta: PropertyMetaAnnotationId,
   generator: GeneratorAnnotationId,
   labelProp: LabelAnnotationId,
 
@@ -274,11 +274,6 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     const jsonSchema = defs[refSegments[refSegments.length - 1]];
     invariant(jsonSchema, `missing definition for ${root.$ref}`);
     result = toEffectSchema(jsonSchema, defs).pipe(S.annotations({ identifier: refSegments[refSegments.length - 1] }));
-  }
-
-  const echoAnnotations: JsonSchemaEchoAnnotations | undefined = getNormalizedEchoAnnotations(root);
-  if (echoAnnotations?.meta) {
-    result = result.annotations({ [PropertyMetaAnnotationId]: echoAnnotations.meta });
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);

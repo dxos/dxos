@@ -20,7 +20,7 @@ export const composeSchema = (source: JsonSchemaType, target: JsonSchemaType): J
 
   for (const prop in result.properties) {
     const propSchema = source.properties![prop]; // TODO(dmaretskyi): Find by json-path instead.
-    const annotations = (propSchema as any)?.echo?.annotations;
+    const annotations = (propSchema as JsonSchemaType)?.echo?.annotations;
     if (annotations) {
       (result.properties[prop] as JsonSchemaType).echo ??= {};
       (result.properties[prop] as JsonSchemaType).echo!.annotations ??= {};

@@ -39,7 +39,7 @@ describe('effect-to-json', () => {
     expect((jsonSchema as any).version).toEqual('0.1.0');
   });
 
-  test('field meta annotation', () => {
+  test('property meta annotation', () => {
     const meta = { maxLength: 0 };
     class Schema extends TypedObject({
       typename: 'example.com/type/Test',

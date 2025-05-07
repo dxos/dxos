@@ -31,7 +31,7 @@ describe('schema composition', () => {
         format: FormatEnum.Email,
         // TODO(dmaretskyi): Should use the new field.
         [ECHO_ANNOTATIONS_NS_DEPRECATED_KEY]: {
-          annotations: {
+          meta: {
             path: '$.email',
           },
         },
