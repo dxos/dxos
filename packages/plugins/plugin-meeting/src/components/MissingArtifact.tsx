@@ -24,10 +24,15 @@ export const MissingArtifact = ({ meeting, typename }: MissingArtifactProps) => 
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      const space = getSpace(meeting);
-      invariant(space);
-      const { data } = await dispatch(getIntent({ space, meeting }));
-      meeting.artifacts[typename] = makeRef(data!.object);
+      // TODO(wittjosiah): This check shouldn't be necessary, this component should only render if it's missing.
+      if (meeting.artifacts[typename] == null) {
+        const space = getSpace(meeting);
+        invariant(space);
+        const { data } = await dispatch(getIntent({ space, meeting }));
+        if (meeting.artifacts[typename] == null) {
+          meeting.artifacts[typename] = makeRef(data!.object);
+        }
+      }
     });
     return () => clearTimeout(timeout);
   }, [meeting, getIntent, typename]);
