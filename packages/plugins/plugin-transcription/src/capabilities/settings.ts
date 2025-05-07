@@ -3,14 +3,14 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 
 import { TRANSCRIPTION_PLUGIN } from '../meta';
 import { TranscriptionSettingsSchema } from '../types';
 
 export default () => {
-  const settings = live(S.decodeSync(TranscriptionSettingsSchema)({}));
+  // TODO(wittjosiah): `live` currently doesn't handle schema default values.
+  const settings = live(TranscriptionSettingsSchema, { entityExtraction: true });
 
   return contributes(Capabilities.Settings, {
     schema: TranscriptionSettingsSchema,
