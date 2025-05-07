@@ -135,19 +135,21 @@ const meta: Meta<StoryProps> = {
       types: [KanbanType, ViewType],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
-        const { schema, kanban } = await initializeKanban({ space });
+      onSpaceCreated: async ({ space, client }) => {
+        const { schema, kanban } = await initializeKanban({ space, client });
         space.db.add(kanban);
 
-        // TODO(burdon): Replace with sdk/schema/testing.
-        Array.from({ length: 80 }).map(() => {
-          return space.db.add(
-            live(schema, {
-              title: faker.commerce.productName(),
-              description: faker.lorem.paragraph(),
-            }),
-          );
-        });
+        if (schema) {
+          // TODO(burdon): Replace with sdk/schema/testing.
+          Array.from({ length: 80 }).map(() => {
+            return space.db.add(
+              live(schema, {
+                title: faker.commerce.productName(),
+                description: faker.lorem.paragraph(),
+              }),
+            );
+          });
+        }
       },
     }),
     withTheme,

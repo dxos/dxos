@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { type PreviewProps, previewCard, previewTitle, previewProse, previewChrome } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
@@ -39,8 +40,19 @@ export const MarkdownPreview = ({ classNames, subject }: PreviewProps<DocumentTy
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const snippet = getSnippet(subject, t('fallback abstract'));
 
+  // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.
   const handleNavigate = useCallback(
-    async () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(subject)] })),
+    () =>
+      dispatch(
+        pipe(
+          createIntent(LayoutAction.UpdatePopover, {
+            part: 'popover',
+            subject: null,
+            options: { state: false, anchorId: '' },
+          }),
+          chain(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(subject)] }),
+        ),
+      ),
     [dispatch, subject],
   );
 
