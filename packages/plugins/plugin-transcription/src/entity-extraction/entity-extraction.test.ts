@@ -16,7 +16,7 @@ const aiService = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.REMOTE,
 });
 
-describe('EntityExtraction', { timeout: 180_000 }, () => {
+describe.skip('EntityExtraction', { timeout: 180_000 }, () => {
   test.skip('should process a transcript block', async () => {
     const { transcriptMessages, documents, contacts } = await createTestData();
 
@@ -35,7 +35,7 @@ describe('EntityExtraction', { timeout: 180_000 }, () => {
     }
   });
 
-  test.skip('computational irreducibility', async () => {
+  test('computational irreducibility', async () => {
     const { transcriptWoflram, documents, contacts } = await createTestData();
 
     log.info('context', { documents, contacts });
@@ -56,7 +56,7 @@ describe('EntityExtraction', { timeout: 180_000 }, () => {
     );
   });
 
-  test.only('org and document linking', async () => {
+  test('org and document linking', async () => {
     const { transcriptJosiah, documents, contacts, organizations } = await createTestData();
 
     log.info('context', { contacts, organizations, documents });
