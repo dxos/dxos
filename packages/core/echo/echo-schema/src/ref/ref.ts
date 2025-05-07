@@ -227,6 +227,7 @@ export const createEchoReferenceSchema = (
           }
 
           return Effect.succeed(Ref.fromDXN(DXN.parse((value as any)['/'])));
+          
         };
       },
     },

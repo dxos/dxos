@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JSONSchema, Schema } from 'effect';
+import { log } from '@dxos/log';
+import { JSONSchema, Option, Schema, SchemaAST } from 'effect';
 import { expect, test } from 'vitest';
 
 test('json-schema annotations for filter refinement get combined', () => {
@@ -113,5 +114,24 @@ test('declare with refinement', () => {
     type: 'my-type',
     title: 'My Title',
     description: 'My Description',
+  });
+});
+
+test("default title annotations don't get serialized", () => {
+  const schema = Schema.String;
+
+  expect(SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrUndefined)).toEqual('string');
+  expect(SchemaAST.getDescriptionAnnotation(schema.ast).pipe(Option.getOrUndefined)).toEqual('a string');
+
+  expect(JSONSchema.make(schema)).toEqual({
+    $schema: 'http://json-schema.org/draft-07/schema#',
+    type: 'string',
+  });
+});
+
+test.skip('ast comparison', () => {
+  log.info('ast', {
+    default: Schema.String.ast,
+    annotated: Schema.String.annotations({ title: 'Custom title', description: 'Custom description' }).ast,
   });
 });

@@ -110,11 +110,11 @@ describe('effect-to-json', () => {
       type: 'object',
       required: ['name', 'email', 'id'],
       properties: {
-        id: { type: 'string', title: 'string', description: 'a string' },
+        id: { type: 'string' },
         name: { type: 'string', title: 'Name', description: 'Person name' },
         email: {
           type: 'string',
-          title: 'string',
+
           description: 'Email address',
           format: 'email',
         },
@@ -156,13 +156,9 @@ describe('effect-to-json', () => {
       properties: {
         id: {
           type: 'string',
-          title: 'string',
-          description: 'a string',
         },
         name: {
           type: 'string',
-          title: 'string',
-          description: 'a string',
         },
         organization: {
           $id: '/schemas/echo/ref',

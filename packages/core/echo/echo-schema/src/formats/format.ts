@@ -53,10 +53,17 @@ export namespace Format {
 
 /**
  * List of annotations for JSON encoding/decoding.
+ * Omits default effect-schema annotations since they are encoded with default serializer.
  */
 export const CustomAnnotations = {
-  title: TitleAnnotationId,
-  description: DescriptionAnnotationId,
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,
+};
+/**
+ * List of annotations for JSON decoding only.
+ * Includes default effect annotations.
+ */
+export const DecodedAnnotations = {
+  title: TitleAnnotationId,
+  description: DescriptionAnnotationId,
 };
