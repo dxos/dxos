@@ -7844,6 +7844,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      effect:
+        specifier: 3.13.3
+        version: 3.13.3
       react:
         specifier: ~18.2.0
         version: 18.2.0

@@ -137,6 +137,15 @@ export const PreviewPlugin = () =>
                   const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
                     return table.view?.target?.query?.typename === Organization.typename;
                   });
+                  await dispatch(
+                    createIntent(LayoutAction.UpdatePopover, {
+                      part: 'popover',
+                      options: {
+                        state: false,
+                        anchorId: '',
+                      },
+                    }),
+                  );
                   if (currentSpaceOrgTable) {
                     return dispatch(
                       createIntent(LayoutAction.Open, {
