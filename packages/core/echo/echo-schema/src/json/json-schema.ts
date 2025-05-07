@@ -9,17 +9,18 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { orderKeys } from '@dxos/util';
 
+import { JSONSchemaAnnotationId } from 'effect/SchemaAST';
 import {
   EntityKind,
   EntityKindSchema,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
   LabelAnnotationId,
   PropertyMetaAnnotationId,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
-  getTypeAnnotation,
-  getTypeIdentifierAnnotation,
   type JsonSchemaType,
   type PropertyMetaAnnotation,
   type TypeAnnotation,
@@ -27,7 +28,6 @@ import {
 import { CustomAnnotations, DecodedAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
-import { log } from '@dxos/log';
 
 /**
  * @internal
@@ -153,7 +153,6 @@ const withEchoRefinements = (
   let recursiveResult: AST.AST;
   if (AST.isSuspend(ast)) {
     // Precompute JSON schema for suspended AST since effect serializer does not support it.
-
     const suspendedAst = ast.f();
     const cachedPath = suspendCache.get(suspendedAst);
     if (cachedPath) {
@@ -169,13 +168,12 @@ const withEchoRefinements = (
       });
     }
   } else if (AST.isTypeLiteral(ast)) {
+    // Add property order annotations
     recursiveResult = mapAst(ast, (ast, key) =>
       withEchoRefinements(ast, path && typeof key === 'string' ? `${path}/${key}` : undefined, suspendCache),
     );
-    recursiveResult = makeAnnotatedRefinement(recursiveResult, {
-      [AST.JSONSchemaAnnotationId]: {
-        propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
-      } satisfies JsonSchemaType,
+    recursiveResult = addJsonSchemaFields(recursiveResult, {
+      propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
     });
   } else if (AST.isUndefinedKeyword(ast)) {
     // Ignore undefined keyword that appears in the optional fields.
@@ -194,9 +192,7 @@ const withEchoRefinements = (
   if (Object.keys(annotationFields).length === 0) {
     return recursiveResult;
   } else {
-    return makeAnnotatedRefinement(recursiveResult, {
-      [AST.JSONSchemaAnnotationId]: annotationFields,
-    });
+    return addJsonSchemaFields(recursiveResult, annotationFields);
   }
 };
 
@@ -483,3 +479,6 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
 const makeAnnotatedRefinement = (ast: AST.AST, annotations: AST.Annotations): AST.Refinement => {
   return new AST.Refinement(ast, () => Option.none(), annotations);
 };
+
+const addJsonSchemaFields = (ast: AST.AST, schema: JsonSchemaType): AST.AST =>
+  makeAnnotatedRefinement(ast, { [JSONSchemaAnnotationId]: schema });
