@@ -13,6 +13,7 @@ import { FormActions } from './FormActions';
 import { FormFields } from './FormContent';
 import { FormProvider } from './FormContext';
 import { type InputProps, type InputComponent } from './Input';
+import { type QueryRefOptions } from './RefField';
 import { type FormOptions } from '../../hooks';
 
 export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
@@ -41,6 +42,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     autoSave?: boolean;
     testId?: string;
     onCancel?: () => void;
+    onQueryRefOptions?: QueryRefOptions;
     lookupComponent?: ComponentLookup;
     /**
      * Map of custom renderers for specific properties.
@@ -65,6 +67,7 @@ export const Form = <T extends BaseObject>({
   onValidate,
   onSave,
   onCancel,
+  onQueryRefOptions,
   lookupComponent,
   Custom,
 }: FormProps<T>) => {
@@ -100,6 +103,7 @@ export const Form = <T extends BaseObject>({
           readonly={readonly}
           filter={filter}
           sort={sort}
+          onQueryRefOptions={onQueryRefOptions}
           lookupComponent={lookupComponent}
           Custom={Custom}
         />
