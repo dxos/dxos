@@ -31,7 +31,7 @@ export const OrganizationCard = ({
           <a className='dx-button dx-focus-ring gap-2' href={website} target='_blank' rel='noreferrer'>
             <Icon icon='ph--link--regular' size={5} classNames='text-subdued' />
             <span className='grow'>{website}</span>
-            <Icon icon='ph--arrow-right--regular' />
+            <Icon icon='ph--arrow-square-out--regular' />
           </a>
         </div>
       )}
