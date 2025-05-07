@@ -64,7 +64,12 @@ export const Message = ({ space, message, viewMode, contactDxn, classNames }: Me
     <div role='none' className='grid grid-rows-[min-content_1fr]'>
       <MessageHeader message={message} viewMode={viewMode} contactDxn={contactDxn} />
       <div role='none' className='relative'>
-        <div role='none' ref={parentRef} className={mx('absolute inset-0', classNames)} />
+        <div
+          role='none'
+          ref={parentRef}
+          className={mx('absolute inset-0', classNames)}
+          data-popover-collision-boundary={true}
+        />
       </div>
     </div>
   );

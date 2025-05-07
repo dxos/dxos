@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework';
 import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
@@ -45,7 +45,7 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
 
   return (
     <DeckPopoverProvider setOpen={setOpen}>
-      <Popover.Root modal open={open}>
+      <Popover.Root modal={false} open={open}>
         {layout.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
         {children}
       </Popover.Root>
@@ -76,9 +76,24 @@ export const PopoverContent = () => {
     [setOpen],
   );
 
+  const collisionBoundaries: HTMLElement[] = useMemo(() => {
+    const closest = layout.popoverAnchor?.closest('[data-popover-collision-boundary]') as
+      | HTMLElement
+      | null
+      | undefined;
+    return closest ? [closest] : [];
+  }, [layout.popoverAnchor]);
+
   return (
     <Popover.Portal>
-      <Popover.Content side={layout.popoverSide} onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
+      <Popover.Content
+        side={layout.popoverSide}
+        onInteractOutside={handleClose}
+        onEscapeKeyDown={handleClose}
+        collisionBoundary={collisionBoundaries}
+        sticky='always'
+        hideWhenDetached
+      >
         <Popover.Viewport>
           <Surface role='popover' data={layout.popoverContent} limit={1} />
         </Popover.Viewport>
