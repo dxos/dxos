@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, pipe } from 'effect';
+import { Effect } from 'effect';
 
 import {
   Capabilities,
@@ -169,7 +169,19 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             }),
           );
 
-          const url = pipe(invitation.get(), InvitationEncoder.encode, createInvitationUrl);
+          // TODO(wittjosiah): Better api to for this.
+          // NOTE: Delegated invitations are invalid until the connecting state when keys are filled in.
+          const invitationCode = yield* Effect.tryPromise(
+            () =>
+              new Promise<string>((resolve) => {
+                invitation.subscribe((invitation) => {
+                  if (invitation.state === Invitation.State.CONNECTING) {
+                    resolve(InvitationEncoder.encode(invitation));
+                  }
+                });
+              }),
+          );
+          const url = createInvitationUrl(invitationCode);
           if (copyToClipboard) {
             yield* Effect.tryPromise(() => navigator.clipboard.writeText(url));
           }
