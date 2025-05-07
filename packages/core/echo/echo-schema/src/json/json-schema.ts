@@ -13,7 +13,6 @@ import { JSONSchemaAnnotationId } from 'effect/SchemaAST';
 import {
   EntityKind,
   EntityKindSchema,
-  FieldLookupAnnotationId,
   GeneratorAnnotationId,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
@@ -21,14 +20,26 @@ import {
   PropertyMetaAnnotationId,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
+  type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
-  type PropertyMetaAnnotation,
   type TypeAnnotation,
 } from '../ast';
-// TODO(dmaretskyi): Fix circular import.
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from '../formats';
+import { CustomAnnotations, DecodedAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
+
+/**
+ * Annotations that go into ECHO namespace in json-schema.
+ */
+// TODO(dmaretskyi): Consider removing ECHO namespace and putting them at the top level.
+// TODO(dmaretskyi): Move to format.ts when circular imports are solved
+export const EchoAnnotations: Partial<Record<keyof JsonSchemaEchoAnnotations, symbol>> = {
+  annotations: PropertyMetaAnnotationId,
+  generator: GeneratorAnnotationId,
+  labelProp: LabelAnnotationId,
+
+  // TODO(dmaretskyi): `FieldLookupAnnotationId` might go here, but lets remove it entirely and use LabelAnnotation instead.
+};
 
 /**
  * @internal
@@ -48,13 +59,6 @@ export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})): JsonSche
   delete jsonSchema.anyOf;
   return jsonSchema;
 };
-
-interface EchoRefinement {
-  type?: TypeAnnotation;
-  reference?: TypeAnnotation;
-  annotations?: PropertyMetaAnnotation;
-  generator?: string;
-}
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
@@ -277,7 +281,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     result = toEffectSchema(jsonSchema, defs).pipe(S.annotations({ identifier: refSegments[refSegments.length - 1] }));
   }
 
-  const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
+  const refinement: JsonSchemaEchoAnnotations | undefined = (root as any)[ECHO_REFINEMENT_KEY];
   if (refinement?.annotations) {
     result = result.annotations({ [PropertyMetaAnnotationId]: refinement.annotations });
   }
@@ -293,7 +297,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
 const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): S.Schema.AnyNoContext => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
 
-  const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
+  const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_REFINEMENT_KEY];
   const isEchoObject =
     echoRefinement != null || ('$id' in root && typeof root.$id === 'string' && root.$id.startsWith('dxn:'));
 
@@ -344,10 +348,15 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
 };
 
 const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema.AnyNoContext => {
-  const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
-  if (echoRefinement?.reference != null) {
+  const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_REFINEMENT_KEY];
+  // TODO(dmaretskyi): Is this branch still taken?
+  if ((echoRefinement as any)?.reference != null) {
     const echoId = root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
-    return createEchoReferenceSchema(echoId, echoRefinement.reference.typename, echoRefinement.reference.version);
+    return createEchoReferenceSchema(
+      echoId,
+      (echoRefinement as any).reference.typename,
+      (echoRefinement as any).reference.version,
+    );
   }
 
   return S.Any;
@@ -382,29 +391,13 @@ const refToEffectSchema = (root: any): S.Schema.AnyNoContext => {
  */
 export const ECHO_REFINEMENT_KEY = 'echo';
 
-const ECHO_REFINEMENTS = [
-  TypeAnnotationId,
-  PropertyMetaAnnotationId,
-  LabelAnnotationId,
-  GeneratorAnnotationId,
-
-  // TODO(dmaretskyi): Remove and use the label annotation.
-  FieldLookupAnnotationId, // TODO(burdon): ???
-];
-
-const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
-  // TODO(dmaretskyi): Extract out.
-  [PropertyMetaAnnotationId]: 'annotations',
-  [GeneratorAnnotationId]: 'generator',
-};
-
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};
 
-  const echoRefinement: EchoRefinement = {};
+  const echoRefinement: JsonSchemaEchoAnnotations = {};
   for (const [key, annotationId] of Object.entries(EchoAnnotations)) {
     if (annotations[annotationId] != null) {
-      echoRefinement[key as keyof EchoRefinement] = annotations[annotationId] as any;
+      echoRefinement[key as keyof JsonSchemaEchoAnnotations] = annotations[annotationId] as any;
     }
   }
   if (Object.keys(echoRefinement).length > 0) {
@@ -431,11 +424,11 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
 const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations => {
   const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
 
-  const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
+  const echoRefinement: JsonSchemaEchoAnnotations = (schema as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement != null) {
     for (const [key, annotationId] of Object.entries(EchoAnnotations)) {
-      if (echoRefinement[key as keyof EchoRefinement]) {
-        annotations[annotationId] = echoRefinement[key as keyof EchoRefinement];
+      if (echoRefinement[key as keyof JsonSchemaEchoAnnotations]) {
+        annotations[annotationId] = echoRefinement[key as keyof JsonSchemaEchoAnnotations];
       }
     }
   }

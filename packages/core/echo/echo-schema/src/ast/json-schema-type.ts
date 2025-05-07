@@ -25,6 +25,55 @@ const JsonSchemaOrBoolean = S.Union(
 
 export const EntityKindSchema = S.Enums(EntityKind);
 
+export const JsonSchemaEchoAnnotations = S.Struct({
+  /**
+   * Label for this schema.
+   * Mapped from {@link LabelAnnotationId}.
+   */
+  labelProp: S.optional(S.Union(JsonPath, S.Array(JsonPath))),
+
+  /**
+   * Generator function for this schema.
+   * Mapped from {@link GeneratorAnnotationId}.
+   */
+  generator: S.optional(S.String),
+
+  /**
+   * {@link PropertyMeta} annotations get serialized here.
+   */
+  meta: S.optional(
+    S.Record({
+      key: S.String,
+      value: S.Any,
+    }),
+  ),
+
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe
+  type: S.optional(
+    S.Struct({
+      typename: S.String,
+      version: S.String,
+
+      // Not used.
+      schemaId: S.optional(S.String),
+    }).pipe(S.mutable),
+  ),
+
+  /**
+   * @deprecated Superseded by `meta`.
+   */
+  annotations: S.optional(
+    S.Record({
+      key: S.String,
+      value: S.Any,
+    }),
+  ),
+}).pipe(S.mutable);
+export type JsonSchemaEchoAnnotations = S.Schema.Type<typeof JsonSchemaEchoAnnotations>;
+
 /**
  * Describes a schema for the JSON-schema objects stored in ECHO.
  * Contains extensions for ECHO (e.g., references).
@@ -162,20 +211,16 @@ const _JsonSchemaType = S.Struct({
 
   additionalProperties: S.optional(JsonSchemaOrBoolean),
   properties: S.optional(
-    S.mutable(
-      S.Record({
-        key: S.String,
-        value: S.suspend(() => JsonSchemaType),
-      }),
-    ),
+    S.Record({
+      key: S.String,
+      value: S.suspend(() => JsonSchemaType),
+    }).pipe(S.mutable),
   ),
   patternProperties: S.optional(
-    S.mutable(
-      S.Record({
-        key: S.String,
-        value: S.suspend(() => JsonSchemaType),
-      }),
-    ),
+    S.Record({
+      key: S.String,
+      value: S.suspend(() => JsonSchemaType),
+    }).pipe(S.mutable),
   ),
   propertyNames: S.optional(S.suspend(() => JsonSchemaType)),
 
@@ -233,50 +278,15 @@ const _JsonSchemaType = S.Struct({
   ),
 
   /**
-   * @deprecated
+   * ECHO-specific annotations.
    */
-  // TODO(dmaretskyi): Extract `annotations` and remove the namespace property.
-  echo: S.optional(
-    S.mutable(
-      S.Struct({
-        /**
-         * @deprecated
-         */
-        // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe
-        type: S.optional(
-          S.Struct({
-            typename: S.String,
-            version: S.String,
+  // TODO(dmaretskyi): Since we are adding a lot of new extensions to the JSON Schema, it is safer to namespace them here.
+  annotations: S.optional(S.mutable(JsonSchemaEchoAnnotations)),
 
-            // Not used.
-            schemaId: S.optional(S.String),
-          }).pipe(S.mutable),
-        ),
-
-        /**
-         * {@link PropertyMeta} annotations get serialized here.
-         */
-        annotations: S.optional(
-          S.Record({
-            key: S.String,
-            value: S.Any,
-          }),
-        ),
-
-        /**
-         * Generator function for this schema.
-         * Mapped from {@link GeneratorAnnotationId}.
-         */
-        generator: S.optional(S.String),
-
-        /**
-         * Label for this schema.
-         * Mapped from {@link LabelAnnotationId}.
-         */
-        labelProp: S.optional(S.Union(JsonPath, S.Array(JsonPath))),
-      }),
-    ),
-  ),
+  /**
+   * @deprecated Use `annotations` instead.
+   */
+  echo: S.optional(S.mutable(JsonSchemaEchoAnnotations)),
 }).annotations({ identifier: 'jsonSchema', description: 'JSON Schema' });
 
 export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
