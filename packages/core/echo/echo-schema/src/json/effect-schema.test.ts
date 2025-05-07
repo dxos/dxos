@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import { JSONSchema, Option, Schema, SchemaAST } from 'effect';
 import { expect, test } from 'vitest';
+
+import { log } from '@dxos/log';
 
 test('json-schema annotations for filter refinement get combined', () => {
   const type = Schema.Number.annotations({

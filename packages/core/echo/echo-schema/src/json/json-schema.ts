@@ -3,13 +3,13 @@
 //
 
 import { SchemaAST as AST, JSONSchema, Option, Schema as S, type Types } from 'effect';
+import { JSONSchemaAnnotationId } from 'effect/SchemaAST';
 
 import { mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { orderKeys } from '@dxos/util';
 
-import { JSONSchemaAnnotationId } from 'effect/SchemaAST';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   EntityKind,

@@ -9,6 +9,7 @@ import { describe, expect, test } from 'vitest';
 import { findAnnotation, type JsonProp } from '@dxos/effect';
 import { log } from '@dxos/log';
 
+import { toEffectSchema, toJsonSchema } from './json-schema';
 import {
   EntityKind,
   FieldLookupAnnotationId,
@@ -25,7 +26,6 @@ import { TypedObject } from '../object';
 import { createSchemaReference, getSchemaReference, Ref } from '../ref';
 import { StoredSchema } from '../schema';
 import { prepareAstForCompare, Testing } from '../testing';
-import { toEffectSchema, toJsonSchema } from './json-schema';
 
 const EXAMPLE_NAMESPACE = '@example';
 

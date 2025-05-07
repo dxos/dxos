@@ -3,9 +3,10 @@
 //
 
 import { isNonNullable } from '@dxos/util';
-import type { BaseObject } from '../types';
+
 import { Ref } from './ref';
 import type { ObjectId } from '../object';
+import type { BaseObject } from '../types';
 
 /**
  * Helper functions for working with arrays of refs.

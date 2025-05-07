@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
-import { Schema } from 'effect';
+
+import { Ref } from './ref';
 import { EchoObject } from '../ast';
 import { create, ObjectId } from '../object';
 import { getDXN } from '../types';
-import { Ref } from './ref';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),

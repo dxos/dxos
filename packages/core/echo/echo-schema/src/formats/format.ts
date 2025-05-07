@@ -11,13 +11,6 @@ import { CurrencyAnnotationId } from './number';
 import * as ObjectUtil from './object';
 import * as StringUtil from './string';
 import { FormatAnnotationId } from './types';
-import {
-  GeneratorAnnotationId,
-  LabelAnnotationId,
-  PropertyMetaAnnotationId,
-  type JsonSchemaEchoAnnotations,
-  type JsonSchemaType,
-} from '../ast';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 // TODO(burdon): Media encoding.

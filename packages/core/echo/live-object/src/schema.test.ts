@@ -5,10 +5,9 @@
 import { Schema as S } from 'effect';
 import { test } from 'vitest';
 
-import { getTypename, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { getTypename, toJsonSchema, TypedObject, Ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { Ref } from '@dxos/echo-schema';
 import { live } from './object';
 
 test('static schema definitions with references', async ({ expect }) => {

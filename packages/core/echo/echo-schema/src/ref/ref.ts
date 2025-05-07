@@ -2,16 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Reference, type EncodedReference } from '@dxos/echo-protocol';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
-import { ObjectId } from '../object';
-import type { BaseObject, WithId } from '../types';
-import { Effect, Option, Schema as S } from 'effect';
-import { SchemaAST } from 'effect';
-import { log } from '@dxos/log';
+import { Effect, Option, Schema as S, SchemaAST } from 'effect';
 import {
   getDescriptionAnnotation,
   getIdentifierAnnotation,
@@ -19,7 +10,15 @@ import {
   type Annotated,
 } from 'effect/SchemaAST';
 
+import { Reference, type EncodedReference } from '@dxos/echo-protocol';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
+
+import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
 import { type JsonSchemaType } from '../ast';
+import { ObjectId } from '../object';
+import type { BaseObject, WithId } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -227,7 +226,6 @@ export const createEchoReferenceSchema = (
           }
 
           return Effect.succeed(Ref.fromDXN(DXN.parse((value as any)['/'])));
-          
         };
       },
     },
