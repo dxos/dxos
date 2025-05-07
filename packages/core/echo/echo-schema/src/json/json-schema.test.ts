@@ -6,7 +6,7 @@ import { Option, Schema as S, SchemaAST } from 'effect';
 import { TitleAnnotationId } from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
-import { type JsonProp } from '@dxos/effect';
+import { findAnnotation, type JsonProp } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
@@ -21,6 +21,7 @@ import {
   createSchemaReference,
   getSchemaReference,
   Ref,
+  FieldLookupAnnotationId,
 } from '../ast';
 import { FormatAnnotationId, Email } from '../formats';
 import { TypedObject } from '../object';
@@ -63,6 +64,22 @@ describe('effect-to-json', () => {
     log('schema', { jsonSchema });
     const nested = jsonSchema.properties!.name;
     expectReferenceAnnotation(nested);
+  });
+
+  // TODO(ZaymonFC): @dmaretskyi we still need to fix this.
+  // eslint-disable-next-line mocha/no-skipped-tests
+  test.skip('reference annotation with lookup property', () => {
+    class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
+      name: S.String,
+    }) {}
+    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
+    }) {}
+    const jsonSchema = toJsonSchema(Schema);
+    const effectSchema = toEffectSchema(jsonSchema);
+
+    const annotation = findAnnotation<string>(effectSchema.ast, FieldLookupAnnotationId);
+    expect(annotation).to.not.toBeUndefined();
   });
 
   test('array of references', () => {
