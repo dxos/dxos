@@ -86,7 +86,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     }, [viewport, fade]);
 
     return (
-      <div className='relative flex-1 min-bs-0 grid overflow-hidden' data-popover-collision-boundary={true}>
+      <div className='relative flex-1 min-bs-0 grid overflow-hidden'>
         {fade && (
           <div
             role='none'
