@@ -8,15 +8,16 @@ import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Organization } from '@dxos/schema';
 
-import { type PreviewProps, previewCard, previewTitle, previewProse, previewChrome } from '../types';
+import { type PreviewProps, popoverCard, previewTitle, previewProse, previewChrome, defaultCard } from '../types';
 
 export const OrganizationCard = ({
   children,
   classNames,
   subject: { name, image, description, website },
+  role,
 }: PreviewProps<Organization>) => {
   return (
-    <div role='none' className={mx(previewCard, classNames)}>
+    <div role='none' className={mx(role === 'popover' ? popoverCard : defaultCard, classNames)}>
       {image ? (
         <img className='aspect-video object-cover is-full bs-auto' src={image} alt={name} />
       ) : (

@@ -4,6 +4,7 @@
 
 import React, { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { getSnapshot, type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -87,8 +88,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
                   >
-                    <div role='none' className={mx('rounded bg-baseSurface dx-focus-ring-group-y-indicator')}>
-                      <div role='none' className='flex items-center'>
+                    <div
+                      role='none'
+                      className='rounded overflow-hidden bg-baseSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
+                    >
+                      <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
                         <StackItem.DragHandle asChild>
                           <IconButton
                             iconOnly
@@ -111,7 +115,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <CardForm key={card.id} card={card} model={model} autoFocus={card.id === focusedCardId} />
+                      <Surface role='card--kanban' limit={1} data={{ subject: card }} />
                     </div>
                   </StackItem.Root>
                 ))}

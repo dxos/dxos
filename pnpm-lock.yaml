@@ -12386,6 +12386,9 @@ importers:
 
   packages/ui/react-ui-kanban:
     dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

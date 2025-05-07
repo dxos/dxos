@@ -126,9 +126,9 @@ export const PreviewPlugin = () =>
           //
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
-            role: 'popover',
+            role: ['popover', 'card--kanban'],
             filter: (data): data is { subject: Contact } => isInstanceOf(Contact, data.subject),
-            component: ({ data }) => {
+            component: ({ data, role }) => {
               const { dispatchPromise: dispatch } = useIntentDispatcher();
               const handleOrgClick = useCallback(
                 async (org: Organization) => {
@@ -159,27 +159,27 @@ export const PreviewPlugin = () =>
                 [dispatch],
               );
               return (
-                <ContactCard subject={data.subject} onOrgClick={handleOrgClick}>
-                  <Surface role='related' data={data} />
+                <ContactCard subject={data.subject} onOrgClick={handleOrgClick} role={role}>
+                  {role === 'popover' && <Surface role='related' data={data} />}
                 </ContactCard>
               );
             },
           }),
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
-            role: 'popover',
+            role: ['popover', 'card--kanban'],
             filter: (data): data is { subject: Organization } => isInstanceOf(Organization, data.subject),
-            component: ({ data }) => (
-              <OrganizationCard subject={data.subject}>
-                <Surface role='related' data={data} />
+            component: ({ data, role }) => (
+              <OrganizationCard subject={data.subject} role={role}>
+                {role === 'popover' && <Surface role='related' data={data} />}
               </OrganizationCard>
             ),
           }),
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
-            role: 'popover',
+            role: ['popover', 'card--kanban'],
             filter: (data): data is { subject: Project } => isInstanceOf(Project, data.subject),
-            component: ({ data }) => <ProjectCard subject={data.subject} />,
+            component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
           }),
 
           //
@@ -187,7 +187,7 @@ export const PreviewPlugin = () =>
           //
           createSurface({
             id: `${PREVIEW_PLUGIN}/fallback-popover`,
-            role: 'popover',
+            role: ['popover', 'card--kanban'],
             position: 'fallback',
             filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
             component: ({ data }) => {
