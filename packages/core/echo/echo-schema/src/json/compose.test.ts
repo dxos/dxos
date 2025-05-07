@@ -28,8 +28,6 @@ describe('schema composition', () => {
     expect(composedSchema.properties).to.deep.eq({
       email: {
         type: 'string',
-        title: 'string',
-        description: 'a string',
         format: FormatEnum.Email,
         [ECHO_REFINEMENT_KEY]: {
           annotations: {

@@ -25,7 +25,8 @@ import {
   type PropertyMetaAnnotation,
   type TypeAnnotation,
 } from '../ast';
-import { CustomAnnotations, DecodedAnnotations } from '../formats';
+// TODO(dmaretskyi): Fix circular import.
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
 
@@ -385,8 +386,10 @@ const ECHO_REFINEMENTS = [
   TypeAnnotationId,
   PropertyMetaAnnotationId,
   LabelAnnotationId,
-  FieldLookupAnnotationId, // TODO(burdon): ???
   GeneratorAnnotationId,
+
+  // TODO(dmaretskyi): Remove and use the label annotation.
+  FieldLookupAnnotationId, // TODO(burdon): ???
 ];
 
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
@@ -399,11 +402,9 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
   const schemaFields: Record<string, any> = {};
 
   const echoRefinement: EchoRefinement = {};
-  for (const annotation of ECHO_REFINEMENTS) {
-    if (annotations[annotation] != null) {
-      if (annotationToRefinementKey[annotation]) {
-        echoRefinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
-      }
+  for (const [key, annotationId] of Object.entries(EchoAnnotations)) {
+    if (annotations[annotationId] != null) {
+      echoRefinement[key as keyof EchoRefinement] = annotations[annotationId] as any;
     }
   }
   if (Object.keys(echoRefinement).length > 0) {
@@ -432,9 +433,9 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
 
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement != null) {
-    for (const annotation of ECHO_REFINEMENTS) {
-      if (echoRefinement[annotationToRefinementKey[annotation]]) {
-        annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
+    for (const [key, annotationId] of Object.entries(EchoAnnotations)) {
+      if (echoRefinement[key as keyof EchoRefinement]) {
+        annotations[annotationId] = echoRefinement[key as keyof EchoRefinement];
       }
     }
   }

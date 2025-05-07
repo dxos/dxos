@@ -11,6 +11,7 @@ import { CurrencyAnnotationId } from './number';
 import * as ObjectUtil from './object';
 import * as StringUtil from './string';
 import { FormatAnnotationId } from './types';
+import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId, type JsonSchemaType } from '../ast';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 // TODO(burdon): Media encoding.
@@ -59,6 +60,7 @@ export const CustomAnnotations = {
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,
 };
+
 /**
  * List of annotations for JSON decoding only.
  * Includes default effect annotations.
@@ -66,4 +68,16 @@ export const CustomAnnotations = {
 export const DecodedAnnotations = {
   title: TitleAnnotationId,
   description: DescriptionAnnotationId,
+};
+
+/**
+ * Annotations that go into ECHO namespace in json-schema.
+ */
+// TODO(dmaretskyi): Consider removing ECHO namespace and putting them at the top level.
+export const EchoAnnotations: Partial<Record<keyof NonNullable<JsonSchemaType['echo']>, symbol>> = {
+  annotations: PropertyMetaAnnotationId,
+  generator: GeneratorAnnotationId,
+  labelProp: LabelAnnotationId,
+
+  // TODO(dmaretskyi): `FieldLookupAnnotationId` might go here, but lets remove it entirely and use LabelAnnotation instead.
 };

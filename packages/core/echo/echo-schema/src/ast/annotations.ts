@@ -248,6 +248,7 @@ export type SchemaMeta = TypeMeta & { id: string };
  * Either a string or an array of strings representing field accessors each matched in priority order.
  */
 // TODO(burdon): Move to property.
+// TODO(dmaretskyi): - Why move to property? Putting it on type level allows to set label field precedence.
 export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 
 /**

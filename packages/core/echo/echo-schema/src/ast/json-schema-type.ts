@@ -4,7 +4,7 @@
 
 import { Schema as S } from 'effect';
 
-import { type JsonProp } from '@dxos/effect';
+import { JsonPath, type JsonProp } from '@dxos/effect';
 
 import { EntityKind } from './entity-kind';
 import { FormatAnnotationId } from '../formats';
@@ -268,6 +268,12 @@ const _JsonSchemaType = S.Struct({
          * Mapped from {@link GeneratorAnnotationId}.
          */
         generator: S.optional(S.String),
+
+        /**
+         * Label for this schema.
+         * Mapped from {@link LabelAnnotationId}.
+         */
+        labelProp: S.optional(S.Union(JsonPath, S.Array(JsonPath))),
       }),
     ),
   ),
