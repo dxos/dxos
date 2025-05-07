@@ -244,7 +244,8 @@ export const Enum: StoryObj<FormProps<ColorType>> = {
 
 const RefSchema = S.Struct({
   contact: Ref(ContactType).annotations({ title: 'Contact Reference' }),
-  unknownExpando: Ref(Expando).annotations({ title: 'Ref to an Expando' }),
+  optionalContact: S.optional(Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
+  unknownExpando: S.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
 });
 
 const RefStory = ({ values: initialValues }: FormProps<any>) => {

@@ -9,10 +9,12 @@ import {
   Expando,
   getReferenceAnnotation,
   getTypeAnnotation,
+  ReferenceAnnotationId,
+  ReferenceAnnotationValue,
   S,
   type TypeAnnotation,
 } from '@dxos/echo-schema';
-import { type SimpleType } from '@dxos/effect';
+import { findAnnotation, type SimpleType } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { refFromDXN, RefImpl } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -45,7 +47,7 @@ export const RefField = ({
   inputProps,
 }: RefFieldProps) => {
   const { getValue, onValueChange, ...restInputProps } = inputProps;
-  const refTypeInfo = getReferenceAnnotation(S.make(ast));
+  const refTypeInfo = findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId);
   const [refOptions, setRefOptions] = useState<Array<{ value: string; label?: string }>>([]);
   const [loading, setLoading] = useState(false);
 
