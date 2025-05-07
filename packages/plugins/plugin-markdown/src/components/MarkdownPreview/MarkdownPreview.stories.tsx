@@ -28,7 +28,7 @@ const meta: Meta<typeof MarkdownPreview> = {
   render: ({ subject }) => {
     return (
       <Popover.Root open>
-        <Popover.Content classNames='popover-max-width overflow-hidden'>
+        <Popover.Content>
           <MarkdownPreview subject={subject} />
           <Popover.Arrow />
         </Popover.Content>

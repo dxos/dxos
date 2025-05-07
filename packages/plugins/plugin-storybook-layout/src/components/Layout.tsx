@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework';
 import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
@@ -49,6 +49,14 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
     }
   }, []);
 
+  const collisionBoundaries: HTMLElement[] = useMemo(() => {
+    const closest = layout.popoverAnchor?.closest('[data-popover-collision-boundary]') as
+      | HTMLElement
+      | null
+      | undefined;
+    return closest ? [closest] : [];
+  }, [layout.popoverAnchor]);
+
   return (
     <Popover.Root open={open}>
       <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
@@ -57,6 +65,9 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
           side={layout.popoverSide}
           onInteractOutside={handleInteractOutside}
           onEscapeKeyDown={handleInteractOutside}
+          collisionBoundary={collisionBoundaries}
+          sticky='always'
+          hideWhenDetached
         >
           <Popover.Viewport>
             <Surface role='popover' data={layout.popoverContent} limit={1} />
