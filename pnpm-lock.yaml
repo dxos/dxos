@@ -7698,6 +7698,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugin-deck
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -7780,6 +7783,9 @@ importers:
       '@types/reveal.js':
         specifier: ^5.0.3
         version: 5.0.3
+      effect:
+        specifier: 3.13.3
+        version: 3.13.3
       react:
         specifier: ~18.2.0
         version: 18.2.0

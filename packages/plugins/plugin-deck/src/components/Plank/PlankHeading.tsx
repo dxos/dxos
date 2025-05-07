@@ -145,7 +145,10 @@ export const PlankHeading = memo(
         classNames={[
           'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
           part === 'solo' ? soloInlinePadding : 'pli-1',
+          layoutMode === 'solo--fullscreen' &&
+            'opacity-0 border-transparent hover:border-separator hover:opacity-100 transition-[border-color,opacity]',
         ]}
+        data-plank-heading
       >
         {companions && isCompanionNode ? (
           <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-1'>
