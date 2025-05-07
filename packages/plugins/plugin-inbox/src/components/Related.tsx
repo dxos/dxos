@@ -11,7 +11,13 @@ import { type Contact, type MessageType } from '@dxos/schema';
 
 import { INBOX_PLUGIN } from '../meta';
 
-export const RelatedContacts = ({ contacts }: { contacts: Contact[] }) => {
+export const RelatedContacts = ({
+  contacts,
+  onContactClick,
+}: {
+  contacts: Contact[];
+  onContactClick?: (contact: Contact) => void;
+}) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   return contacts.length ? (
     <>
@@ -21,8 +27,8 @@ export const RelatedContacts = ({ contacts }: { contacts: Contact[] }) => {
       <ul className={previewChrome}>
         {contacts.map((contact) => (
           <Avatar.Root key={contact.id}>
-            {/* TODO(thure): This should become a link. */}
-            <li className='dx-button gap-2 mbe-1 last:mbe-0'>
+            {/* TODO(thure): This should use a button. */}
+            <li className='dx-button gap-2 mbe-1 last:mbe-0' onClick={() => onContactClick?.(contact)}>
               <Avatar.Content
                 hue='neutral'
                 size={5}
@@ -40,7 +46,13 @@ export const RelatedContacts = ({ contacts }: { contacts: Contact[] }) => {
   ) : null;
 };
 
-export const RelatedMessages = ({ messages }: { messages: MessageType[] }) => {
+export const RelatedMessages = ({
+  messages,
+  onMessageClick,
+}: {
+  messages: MessageType[];
+  onMessageClick?: (message: MessageType) => void;
+}) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   return messages.length ? (
     <>
@@ -48,8 +60,13 @@ export const RelatedMessages = ({ messages }: { messages: MessageType[] }) => {
         {t('related messages title')}
       </h3>
       <ul className={previewChrome}>
+        {/* TODO(thure): This should use a button. */}
         {messages.map((message) => (
-          <li key={message.id} className='dx-button font-normal gap-2 mbe-1 last:mbe-0'>
+          <li
+            key={message.id}
+            className='dx-button font-normal gap-2 mbe-1 last:mbe-0'
+            onClick={() => onMessageClick?.(message)}
+          >
             <Icon icon='ph--envelope-simple--regular' classNames='mli-0.5' />
             <p className='min-is-0 flex-1 truncate'>{message.properties?.subject}</p>
             <Icon icon='ph--arrow-right--regular' />

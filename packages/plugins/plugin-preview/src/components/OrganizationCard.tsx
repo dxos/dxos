@@ -29,7 +29,7 @@ export const OrganizationCard = ({
       {website && (
         <div role='none' className={previewChrome}>
           <a className='dx-button dx-focus-ring gap-2' href={website} target='_blank' rel='noreferrer'>
-            <Icon icon='ph--link--regular' classNames='mli-0.5' />
+            <Icon icon='ph--link--regular' size={5} classNames='text-subdued' />
             <span className='grow'>{website}</span>
             <Icon icon='ph--arrow-right--regular' />
           </a>
