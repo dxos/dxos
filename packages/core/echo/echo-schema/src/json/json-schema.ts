@@ -44,8 +44,44 @@ export const EchoAnnotations: Partial<Record<keyof JsonSchemaEchoAnnotations, sy
 /**
  * @internal
  */
-export const getEchoProp = (obj: JsonSchemaType): any => {
-  return (obj as any)[ECHO_REFINEMENT_KEY];
+export const ECHO_ANNOTATIONS_NS_DEPRECATED_KEY: keyof JsonSchemaType = 'echo';
+
+/**
+ * @internal
+ */
+export const ECHO_ANNOTATIONS_NS_KEY = 'annotations';
+
+/**
+ * @internal
+ * @returns ECHO annotations namespace object in its normalized form.
+ */
+export const getNormalizedEchoAnnotations = (obj: JsonSchemaType): JsonSchemaEchoAnnotations | undefined => {
+  if (obj[ECHO_ANNOTATIONS_NS_KEY] != null && obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] != null) {
+    return normalizeEchoAnnotations({
+      ...obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY],
+      ...obj[ECHO_ANNOTATIONS_NS_KEY],
+    });
+  } else if (obj[ECHO_ANNOTATIONS_NS_KEY] != null) {
+    return normalizeEchoAnnotations(obj[ECHO_ANNOTATIONS_NS_KEY]!);
+  } else if (obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] != null) {
+    return normalizeEchoAnnotations(obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY]!);
+  } else {
+    return undefined;
+  }
+};
+
+const normalizeEchoAnnotations = (obj: JsonSchemaEchoAnnotations): JsonSchemaEchoAnnotations => {
+  if (!obj.annotations) {
+    return obj;
+  } else {
+    return {
+      ...obj,
+      meta: {
+        ...obj.annotations,
+        ...(obj.meta ?? {}),
+      },
+    };
+  }
 };
 
 /**
@@ -281,7 +317,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     result = toEffectSchema(jsonSchema, defs).pipe(S.annotations({ identifier: refSegments[refSegments.length - 1] }));
   }
 
-  const refinement: JsonSchemaEchoAnnotations | undefined = (root as any)[ECHO_REFINEMENT_KEY];
+  const refinement: JsonSchemaEchoAnnotations | undefined = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   if (refinement?.annotations) {
     result = result.annotations({ [PropertyMetaAnnotationId]: refinement.annotations });
   }
@@ -297,7 +333,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
 const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): S.Schema.AnyNoContext => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
 
-  const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_REFINEMENT_KEY];
+  const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   const isEchoObject =
     echoRefinement != null || ('$id' in root && typeof root.$id === 'string' && root.$id.startsWith('dxn:'));
 
@@ -348,7 +384,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
 };
 
 const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema.AnyNoContext => {
-  const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_REFINEMENT_KEY];
+  const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   // TODO(dmaretskyi): Is this branch still taken?
   if ((echoRefinement as any)?.reference != null) {
     const echoId = root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
@@ -386,28 +422,23 @@ const refToEffectSchema = (root: any): S.Schema.AnyNoContext => {
 // Annotations
 //
 
-/**
- * @internal
- */
-export const ECHO_REFINEMENT_KEY = 'echo';
-
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};
 
-  const echoRefinement: JsonSchemaEchoAnnotations = {};
+  const echoAnnotations: JsonSchemaEchoAnnotations = {};
   for (const [key, annotationId] of Object.entries(EchoAnnotations)) {
     if (annotations[annotationId] != null) {
-      echoRefinement[key as keyof JsonSchemaEchoAnnotations] = annotations[annotationId] as any;
+      echoAnnotations[key as keyof JsonSchemaEchoAnnotations] = annotations[annotationId] as any;
     }
   }
-  if (Object.keys(echoRefinement).length > 0) {
-    schemaFields[ECHO_REFINEMENT_KEY] = echoRefinement;
+  if (Object.keys(echoAnnotations).length > 0) {
+    schemaFields[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] = echoAnnotations;
   }
 
   const echoIdentifier = annotations[TypeIdentifierAnnotationId];
   if (echoIdentifier) {
-    schemaFields[ECHO_REFINEMENT_KEY] ??= {};
-    schemaFields[ECHO_REFINEMENT_KEY].schemaId = echoIdentifier;
+    schemaFields[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] ??= {};
+    schemaFields[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY].schemaId = echoIdentifier;
   }
 
   // Custom (at end).
@@ -424,11 +455,11 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
 const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations => {
   const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
 
-  const echoRefinement: JsonSchemaEchoAnnotations = (schema as any)[ECHO_REFINEMENT_KEY];
-  if (echoRefinement != null) {
+  const echoAnnotations: JsonSchemaEchoAnnotations = getNormalizedEchoAnnotations(schema) ?? {};
+  if (echoAnnotations) {
     for (const [key, annotationId] of Object.entries(EchoAnnotations)) {
-      if (echoRefinement[key as keyof JsonSchemaEchoAnnotations]) {
-        annotations[annotationId] = echoRefinement[key as keyof JsonSchemaEchoAnnotations];
+      if (echoAnnotations[key as keyof JsonSchemaEchoAnnotations]) {
+        annotations[annotationId] = echoAnnotations[key as keyof JsonSchemaEchoAnnotations];
       }
     }
   }

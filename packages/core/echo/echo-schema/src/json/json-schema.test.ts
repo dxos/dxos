@@ -23,7 +23,7 @@ import { TypedObject } from '../object';
 import { createSchemaReference, getSchemaReference, Ref } from '../ref';
 import { StoredSchema } from '../schema';
 import { prepareAstForCompare, Testing } from '../testing';
-import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
+import { getNormalizedEchoAnnotations, toEffectSchema, toJsonSchema } from './json-schema';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -47,7 +47,7 @@ describe('effect-to-json', () => {
       name: S.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-    expect(getEchoProp(jsonSchema.properties!.name).annotations[EXAMPLE_NAMESPACE]).to.deep.eq(meta);
+    expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)!.meta![EXAMPLE_NAMESPACE]).to.deep.eq(meta);
   });
 
   test('reference annotation', () => {
@@ -89,8 +89,8 @@ describe('effect-to-json', () => {
   test('regular objects are not annotated', () => {
     const object = S.Struct({ name: S.Struct({ name: S.String }) });
     const jsonSchema = toJsonSchema(object);
-    expect(getEchoProp(jsonSchema)).to.be.undefined;
-    expect(getEchoProp(jsonSchema.properties!.name)).to.be.undefined;
+    expect(getNormalizedEchoAnnotations(jsonSchema)).to.be.undefined;
+    expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)).to.be.undefined;
   });
 
   test('annotations', () => {
