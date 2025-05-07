@@ -64,13 +64,25 @@ export const formatForDisplay = ({ type, format, value, locale = undefined }: Va
       });
     }
     case FormatEnum.Date: {
-      return formatDate(new Date(value as number), 'yyyy-MM-dd');
+      try {
+        return formatDate(new Date(value as number), 'yyyy-MM-dd');
+      } catch (error) {
+        return 'Invalid Date';
+      }
     }
     case FormatEnum.Time: {
-      return formatDate(new Date(value as number), 'HH:mm:ss');
+      try {
+        return formatDate(new Date(value as number), 'HH:mm:ss');
+      } catch (error) {
+        return 'Invalid Time';
+      }
     }
     case FormatEnum.DateTime: {
-      return formatDate(new Date(value as number), 'yyyy-MM-dd HH:mm:ss');
+      try {
+        return formatDate(new Date(value as number), 'yyyy-MM-dd HH:mm:ss');
+      } catch (error) {
+        return 'Invalid DateTime';
+      }
     }
     case FormatEnum.GeoPoint: {
       if (value === null || value === undefined) {

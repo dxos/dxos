@@ -17,20 +17,16 @@ import { PostalAddressSchema } from './postal-address';
  * Based on fields from Apple Contacts.
  */
 export const ContactSchema = S.Struct({
-  fullName: S.optional(S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName' })),
-  preferredName: S.optional(S.String),
-  nickname: S.optional(S.String),
+  fullName: S.optional(S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName', title: 'Full Name' })),
+  preferredName: S.optional(S.String.annotations({ title: 'Preferred Name' })),
+  nickname: S.optional(S.String.annotations({ title: 'Nickname' })),
   // TODO(wittjosiah): Format.URL. Support ref?
-  image: S.optional(S.String),
+  image: S.optional(S.String.annotations({ title: 'Image' })),
   // TODO(burdon): Use reference links.
-  organization: S.optional(
-    S.Union(S.String, Ref(Organization)).annotations({
-      [GeneratorAnnotationId]: 'company.name',
-    }),
-  ),
-  jobTitle: S.optional(S.String),
-  department: S.optional(S.String),
-  notes: S.optional(S.String),
+  organization: S.optional(Ref(Organization).annotations({ title: 'Organization' })),
+  jobTitle: S.optional(S.String.annotations({ title: 'Job Title' })),
+  department: S.optional(S.String.annotations({ title: 'Department' })),
+  notes: S.optional(S.String.annotations({ title: 'Notes' })),
   // TODO(burdon): Change to array of `handles`.
   emails: S.optional(
     S.mutable(
@@ -86,7 +82,7 @@ export const ContactSchema = S.Struct({
       ),
     ),
   ),
-  birthday: S.optional(S.mutable(S.Date)),
+  birthday: S.optional(S.mutable(S.Date.annotations({ title: 'Birthday' }))),
   // TODO(burdon): Move to base object?
   fields: S.optional(
     S.mutable(
