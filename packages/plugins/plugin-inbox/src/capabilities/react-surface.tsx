@@ -88,7 +88,14 @@ export default () =>
           (message: MessageType) => {
             void dispatch(
               pipe(
-                createIntent(LayoutAction.Open, {
+                createIntent(LayoutAction.UpdatePopover, {
+                  part: 'popover',
+                  options: {
+                    state: false,
+                    anchorId: '',
+                  },
+                }),
+                chain(LayoutAction.Open, {
                   part: 'main',
                   subject: [fullyQualifiedId(mailbox)],
                   options: { workspace: space?.id },
@@ -131,21 +138,23 @@ export default () =>
         });
 
         const handleContactClick = useCallback(
-          (contact: Contact) => {
-            if (currentSpaceContacts.includes(contact)) {
-              void dispatch(
+          async (contact: Contact) => {
+            const table = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
+            await dispatch(
+              createIntent(LayoutAction.UpdatePopover, {
+                part: 'popover',
+                options: {
+                  state: false,
+                  anchorId: '',
+                },
+              }),
+            );
+            if (table) {
+              return dispatch(
                 createIntent(LayoutAction.Open, {
                   part: 'main',
-                  subject: [fullyQualifiedId(currentSpaceContactTable)],
+                  subject: [fullyQualifiedId(table)],
                   options: { workspace: space?.id },
-                }),
-              );
-            } else {
-              void dispatch(
-                createIntent(LayoutAction.Open, {
-                  part: 'main',
-                  subject: [fullyQualifiedId(defaultSpaceContactTable)],
-                  options: { workspace: defaultSpace?.id },
                 }),
               );
             }

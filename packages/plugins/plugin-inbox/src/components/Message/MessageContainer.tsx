@@ -3,9 +3,10 @@
 //
 
 import { useComputed, useSignal } from '@preact/signals-react';
-import React, { useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { getDXN } from '@dxos/echo-schema';
 import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
@@ -28,7 +29,6 @@ export type MessageContainerProps = {
 
 export const MessageContainer = ({ space, message, inMailbox }: MessageContainerProps) => {
   const { t } = useTranslation(INBOX_PLUGIN);
-  const senderRef = useRef<HTMLDivElement>(null);
 
   const hasEnrichedContent = useMemo(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
@@ -44,6 +44,7 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   const hasEmail = useComputed(() => !!message?.sender.email);
   const contacts = useQuery(space, Filter.schema(Contact));
   const existingContact = useSignal<Contact | undefined>(undefined);
+  const contactDxn = useComputed(() => (existingContact.value ? getDXN(existingContact.value)?.toString() : undefined));
 
   useEffect(() => {
     existingContact.value = contacts.find((contact) =>
@@ -74,18 +75,6 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
     [viewMode, message, space, dispatch],
   );
 
-  const handleSenderClick = useCallback(() => {
-    if (existingContact.value && message && senderRef.current) {
-      void dispatch(
-        createIntent(LayoutAction.UpdatePopover, {
-          part: 'popover',
-          subject: existingContact.value,
-          options: { state: true, variant: 'virtual', anchor: senderRef.current },
-        }),
-      );
-    }
-  }, [existingContact, message]);
-
   if (!message) {
     return <p className='p-8 text-center text-description'>{t('no message message')}</p>;
   }
@@ -101,12 +90,11 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
           </ElevationProvider>
         </div>
         <Message
-          ref={senderRef}
           space={space}
           message={message}
           viewMode={viewMode.value}
           hasEnrichedContent={hasEnrichedContent}
-          onSenderClick={handleSenderClick}
+          contactDxn={contactDxn.value}
         />
       </div>
     </StackItem.Content>

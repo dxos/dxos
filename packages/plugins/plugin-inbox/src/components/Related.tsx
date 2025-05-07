@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { previewChrome, previewProse } from '@dxos/plugin-preview';
-import { Avatar, Icon, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, Icon, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Contact, type MessageType } from '@dxos/schema';
 
@@ -24,11 +24,10 @@ export const RelatedContacts = ({
       <h3 className={mx(previewProse, 'text-xs text-description uppercase font-medium')}>
         {t('related contacts title')}
       </h3>
-      <ul className={previewChrome}>
+      <div className={previewChrome}>
         {contacts.map((contact) => (
           <Avatar.Root key={contact.id}>
-            {/* TODO(thure): This should use a button. */}
-            <li className='dx-button gap-2 mbe-1 last:mbe-0' onClick={() => onContactClick?.(contact)}>
+            <Button classNames='gap-2 mbe-1 last:mbe-0' onClick={() => onContactClick?.(contact)}>
               <Avatar.Content
                 hue='neutral'
                 size={5}
@@ -38,10 +37,10 @@ export const RelatedContacts = ({
               />
               <Avatar.Label classNames='min-is-0 flex-1 truncate'>{contact.fullName}</Avatar.Label>
               <Icon icon='ph--arrow-right--regular' />
-            </li>
+            </Button>
           </Avatar.Root>
         ))}
-      </ul>
+      </div>
     </>
   ) : null;
 };
@@ -59,20 +58,19 @@ export const RelatedMessages = ({
       <h3 className={mx(previewProse, 'text-xs text-description uppercase font-medium')}>
         {t('related messages title')}
       </h3>
-      <ul className={previewChrome}>
-        {/* TODO(thure): This should use a button. */}
+      <div className={previewChrome}>
         {messages.map((message) => (
-          <li
+          <Button
             key={message.id}
-            className='dx-button font-normal gap-2 mbe-1 last:mbe-0'
+            classNames='font-normal gap-2 mbe-1 last:mbe-0'
             onClick={() => onMessageClick?.(message)}
           >
             <Icon icon='ph--envelope-simple--regular' classNames='mli-0.5' />
             <p className='min-is-0 flex-1 truncate'>{message.properties?.subject}</p>
             <Icon icon='ph--arrow-right--regular' />
-          </li>
+          </Button>
         ))}
-      </ul>
+      </div>
     </>
   ) : null;
 };

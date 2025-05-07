@@ -68,7 +68,6 @@ export const WithCompanion = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [MailboxType, MessageType, Contact],
           onClientInitialized: async (_, client) => {
@@ -79,6 +78,7 @@ export const WithCompanion = {
             await initializeMailbox(client.spaces.default);
           },
         }),
+        StorybookLayoutPlugin(),
         PreviewPlugin(),
         SpacePlugin(),
         IntentPlugin(),
