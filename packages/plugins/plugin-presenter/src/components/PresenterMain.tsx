@@ -4,15 +4,9 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { Surface, createIntent, useLayout, useIntentDispatcher } from '@dxos/app-framework';
+import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type CollectionType } from '@dxos/plugin-space/types';
-import { Main } from '@dxos/react-ui';
-import {
-  baseSurface,
-  topbarBlockPaddingStart,
-  fixedInsetFlexLayout,
-  bottombarBlockPaddingEnd,
-} from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PresenterContext, PresenterAction } from '../types';
@@ -20,9 +14,6 @@ import { PresenterContext, PresenterAction } from '../types';
 const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
-  // TODO(burdon): Should not depend on split screen.
-  const layout = useLayout();
-  const fullscreen = layout.mode === 'fullscreen';
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.
@@ -32,14 +23,7 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   };
 
   return (
-    <Main.Content
-      classNames={[
-        baseSurface,
-        fixedInsetFlexLayout,
-        !fullscreen && topbarBlockPaddingStart,
-        !fullscreen && bottombarBlockPaddingEnd,
-      ]}
-    >
+    <StackItem.Content>
       <Layout
         topRight={<StartButton running={running} onClick={(running) => handleSetRunning(running)} />}
         bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
@@ -56,7 +40,7 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
         {/* TODO(wittjosiah): Better slide placeholder. */}
         <Surface role='slide' data={{ subject: collection.objects[slide] }} placeholder={<></>} />
       </Layout>
-    </Main.Content>
+    </StackItem.Content>
   );
 };
 

@@ -1,37 +1,41 @@
 //
 // Copyright 2023 DXOS.org
 //
+import { pipe } from 'effect';
+import React, { type FC, useCallback } from 'react';
 
-import React, { type FC } from 'react';
-
-import { createIntent, useLayout, useIntentDispatcher } from '@dxos/app-framework';
+import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { DeckAction } from '@dxos/plugin-deck/types';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
-import { Main } from '@dxos/react-ui';
-import { topbarBlockPaddingStart, fixedInsetFlexLayout, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
+import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { RevealPlayer } from './RevealPlayer';
-import { PresenterAction } from '../types';
 
 const PresenterMain: FC<{ document: DocumentType }> = ({ document }) => {
-  const layout = useLayout();
-  const fullscreen = layout.mode === 'fullscreen';
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
+  const handleExit = useCallback(() => {
+    const documentId = fullyQualifiedId(document);
+    return dispatch(
+      pipe(
+        createIntent(LayoutAction.Open, {
+          part: 'main',
+          subject: [documentId],
+          options: { workspace: getSpace(document)?.id },
+        }),
+        chain(DeckAction.Adjust, {
+          type: 'solo--fullscreen',
+          id: documentId,
+        }),
+      ),
+    );
+  }, [dispatch, document]);
+
   return (
-    <Main.Content
-      classNames={[
-        fixedInsetFlexLayout,
-        !fullscreen && topbarBlockPaddingStart,
-        !fullscreen && bottombarBlockPaddingEnd,
-      ]}
-    >
-      <RevealPlayer
-        content={document.content.target?.content ?? ''}
-        onExit={() => {
-          void dispatch(createIntent(PresenterAction.TogglePresentation, { object: document, state: false }));
-        }}
-      />
-    </Main.Content>
+    <StackItem.Content>
+      <RevealPlayer content={document.content.target?.content ?? ''} onExit={handleExit} />
+    </StackItem.Content>
   );
 };
 
