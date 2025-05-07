@@ -3,7 +3,7 @@
 //
 
 import { EchoObject, Ref, S } from '@dxos/echo-schema';
-import { live, Ref.make, RefArray } from '@dxos/live-object';
+import { live, Ref, RefArray } from '@dxos/live-object';
 
 import { Tree, TreeType } from './tree';
 

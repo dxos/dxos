@@ -6,7 +6,7 @@ import { Capabilities, contributes, createResolver, type PluginsContext } from '
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { TextType } from '@dxos/schema';

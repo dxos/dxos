@@ -8,7 +8,7 @@ import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { getSnapshot, isInstanceOf, S } from '@dxos/echo-schema';
 import { FunctionType, ScriptType } from '@dxos/functions/types';
 import { useClient } from '@dxos/react-client';
-import { Filter, Ref.make, parseId } from '@dxos/react-client/echo';
+import { Filter, Ref, parseId } from '@dxos/react-client/echo';
 import {
   TextBox,
   type TextBoxControl,

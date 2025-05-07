@@ -24,7 +24,7 @@ import {
   type WebhookTrigger,
 } from '@dxos/functions/types';
 import { DXN, SpaceId } from '@dxos/keys';
-import { live, Ref.make, useSpace } from '@dxos/react-client/echo';
+import { live, Ref, useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 

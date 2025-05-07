@@ -3,7 +3,7 @@
 //
 
 import { IdentityDid } from '@dxos/keys';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';

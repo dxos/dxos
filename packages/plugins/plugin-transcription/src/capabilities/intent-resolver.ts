@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
-import { live, Ref.fromDXN } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { type SpaceId, createQueueDxn } from '@dxos/react-client/echo';
 
 import { TranscriptionAction, TranscriptType } from '../types';

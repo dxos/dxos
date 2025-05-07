@@ -4,7 +4,7 @@
 
 import { onTestFinished, describe, expect, test } from 'vitest';
 
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 

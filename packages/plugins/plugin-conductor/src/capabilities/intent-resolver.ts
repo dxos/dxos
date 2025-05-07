@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { ConductorAction } from '../types';

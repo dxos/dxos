@@ -4,7 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { AST } from '@dxos/echo-schema';
-import { live, Ref.make, type Live } from '@dxos/live-object';
+import { live, Ref, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';

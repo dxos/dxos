@@ -6,7 +6,7 @@ import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { ObjectId, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { live, Ref.make, type Live } from '@dxos/live-object';
+import { live, Ref, type Live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';

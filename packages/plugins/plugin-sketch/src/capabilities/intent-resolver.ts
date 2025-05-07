@@ -3,7 +3,7 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { CanvasType, DiagramType, SketchAction, TLDRAW_SCHEMA } from '../types';
 

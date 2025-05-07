@@ -5,7 +5,7 @@
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { live, Ref.fromDXN } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { AssistantAction, AIChatType, TemplateType } from '../types';
 

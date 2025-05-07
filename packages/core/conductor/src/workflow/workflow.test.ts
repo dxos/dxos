@@ -10,7 +10,7 @@ import { ObjectId, type Ref } from '@dxos/echo-schema';
 import { FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, getMeta, Ref.fromDXN, type RefResolver, setRefResolver } from '@dxos/live-object';
+import { live, getMeta, Ref., type RefResolver, setRefResolver } from '@dxos/live-object';
 import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';

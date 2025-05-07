@@ -14,7 +14,7 @@ import {
   TypeEnum,
 } from '@dxos/echo-schema';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { live, Ref.make, type Space } from '@dxos/react-client/echo';
+import { live, Ref, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
 
 import { type TableType } from '../types';

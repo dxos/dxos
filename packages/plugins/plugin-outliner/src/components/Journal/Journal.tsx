@@ -5,7 +5,7 @@
 import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Ref.make, RefArray } from '@dxos/live-object';
+import { Ref, RefArray } from '@dxos/live-object';
 import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 

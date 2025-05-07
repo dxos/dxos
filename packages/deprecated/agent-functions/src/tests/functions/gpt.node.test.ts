@@ -10,7 +10,7 @@ import { getMeta, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';

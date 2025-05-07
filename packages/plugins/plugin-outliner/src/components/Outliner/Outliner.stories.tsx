@@ -11,7 +11,7 @@ import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { live, Ref.make, useSpace } from '@dxos/react-client/echo';
+import { live, Ref, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Task } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';

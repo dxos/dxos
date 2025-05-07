@@ -22,7 +22,7 @@ import { Message } from '@dxos/artifact';
 import { S, AST, create, type Expando, EchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, Ref.make, Ref.fromDXN } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';

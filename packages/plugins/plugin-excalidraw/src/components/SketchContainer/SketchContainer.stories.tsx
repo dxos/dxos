@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 

@@ -7,7 +7,7 @@ import type { Schema } from 'effect';
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT, Contact, Organization } from '@dxos/assistant/testing';
-import { Filter, fullyQualifiedId, getSpace, Ref.make, type Space } from '@dxos/client/echo';
+import { Filter, fullyQualifiedId, getSpace, Ref, type Space } from '@dxos/client/echo';
 import { getSchemaTypename, isInstanceOf, type BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

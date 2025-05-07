@@ -10,7 +10,7 @@ import React, { useEffect, useMemo } from 'react';
 import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
-import { live, Ref.make, type Live } from '@dxos/react-client/echo';
+import { live, Ref, type Live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { createView, ViewProjection, ViewType } from '@dxos/schema';
 import { createGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';

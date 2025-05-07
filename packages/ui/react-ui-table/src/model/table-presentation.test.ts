@@ -5,7 +5,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 
 import { S, TypedObject } from '@dxos/echo-schema';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView, ViewProjection } from '@dxos/schema';
 

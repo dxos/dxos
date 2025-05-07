@@ -11,7 +11,7 @@ import { createIntent, IntentPlugin, LayoutAction, SettingsPlugin, useIntentDisp
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { Ref.fromDXN } from '@dxos/live-object';
+
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';

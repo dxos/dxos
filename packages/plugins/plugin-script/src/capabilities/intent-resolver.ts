@@ -7,7 +7,7 @@ import { isNotNullable } from 'effect/Predicate';
 
 import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions/types';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
 import { TextType } from '@dxos/schema';
 

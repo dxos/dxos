@@ -3,7 +3,7 @@
 //
 
 import { EchoObject, Expando, LabelAnnotationId, Ref, S } from '@dxos/echo-schema';
-import { Ref.make, live } from '@dxos/live-object';
+import { Ref, live } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';
 

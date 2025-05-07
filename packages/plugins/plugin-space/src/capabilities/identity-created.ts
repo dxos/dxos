@@ -3,7 +3,7 @@
 //
 
 import { contributes, type PluginsContext, Capabilities } from '@dxos/app-framework';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 

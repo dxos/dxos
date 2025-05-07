@@ -6,7 +6,7 @@ import { Capabilities, contributes, createIntent, createResolver, type PluginsCo
 import { ObjectId, Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { Ref.fromDXN } from '@dxos/live-object';
+
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';

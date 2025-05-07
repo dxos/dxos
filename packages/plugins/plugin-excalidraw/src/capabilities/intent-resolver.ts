@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 
 import { EXCALIDRAW_SCHEMA, SketchAction } from '../types';

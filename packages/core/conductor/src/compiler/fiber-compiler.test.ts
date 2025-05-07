@@ -6,9 +6,9 @@ import { it } from '@effect/vitest';
 import { Effect, Either } from 'effect';
 import { describe, test } from 'vitest';
 
-import { S } from '@dxos/echo-schema';
+import { Ref, S } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { Ref.fromDXN } from '@dxos/live-object';
+
 import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';

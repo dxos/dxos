@@ -14,7 +14,7 @@ import {
 } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { log } from '@dxos/log';
-import { live, getMeta, Ref.make, type Space } from '@dxos/react-client/echo';
+import { live, getMeta, Ref, type Space } from '@dxos/react-client/echo';
 
 import { updateFunctionMetadata } from './functions';
 

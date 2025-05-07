@@ -6,7 +6,7 @@ import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
 import { foreignKey, S } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';

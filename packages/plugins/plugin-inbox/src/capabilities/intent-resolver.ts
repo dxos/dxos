@@ -5,10 +5,10 @@
 import { contributes, Capabilities, createResolver, type PluginsContext, createIntent } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { QueueSubspaceTags, DXN } from '@dxos/keys';
-import { live, Ref.fromDXN } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TableAction } from '@dxos/plugin-table';
-import { Filter, Ref.make } from '@dxos/react-client/echo';
+import { Filter, Ref } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 import { MessageType, Contact, Organization } from '@dxos/schema';
 

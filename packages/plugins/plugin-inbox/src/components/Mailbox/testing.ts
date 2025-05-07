@@ -4,7 +4,7 @@
 
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { Ref.make, Ref.fromDXN } from '@dxos/live-object';
+
 import { faker } from '@dxos/random';
 import { live, type Space } from '@dxos/react-client/echo';
 import { Contact, MessageType } from '@dxos/schema';

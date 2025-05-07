@@ -54,7 +54,7 @@ describe('View', () => {
     const contact = live(Testing.Contact, {
       name: 'Alice',
       email: 'alice@example.com',
-      organization: Ref(organization),
+      organization: Ref.make(organization),
     });
     log('schema', { organization: toJsonSchema(Testing.Organization), contact: toJsonSchema(Testing.Contact) });
     log('objects', { organization, contact });

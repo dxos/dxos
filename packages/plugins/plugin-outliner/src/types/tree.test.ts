@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Task } from '@dxos/schema';
 

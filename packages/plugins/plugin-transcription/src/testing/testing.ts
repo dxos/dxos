@@ -13,7 +13,7 @@ import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { live, Ref.make, useQueue, type Space } from '@dxos/react-client/echo';
+import { live, Ref, useQueue, type Space } from '@dxos/react-client/echo';
 import { Contact, MessageType, Organization, type TranscriptionContentBlock } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
 

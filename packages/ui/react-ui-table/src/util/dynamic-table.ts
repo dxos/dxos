@@ -3,7 +3,7 @@
 //
 
 import type { BaseSchema, JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import {
   createView,
   getSchemaFromPropertyDefinitions,

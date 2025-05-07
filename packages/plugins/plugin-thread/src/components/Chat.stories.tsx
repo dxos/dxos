@@ -11,7 +11,7 @@ import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/ap
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { Ref.fromDXN } from '@dxos/live-object';
+
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';

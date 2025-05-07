@@ -10,7 +10,7 @@ import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
-import { live, Ref.make } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 

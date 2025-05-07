@@ -6,13 +6,13 @@ import { createIntent, LayoutAction } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { Ref.fromDXN } from '@dxos/live-object';
+
 import { SPACES } from '@dxos/plugin-space';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 
 export default async (context: PluginsContext) => {
-  const { fullyQualifiedId, live, Ref.make } = await import('@dxos/react-client/echo');
+  const { fullyQualifiedId, live, Ref } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { DocumentType } = await import('@dxos/plugin-markdown/types');
   const { CollectionType } = await import('@dxos/plugin-space/types');

@@ -4,7 +4,7 @@
 
 import type { Config as ImapConfig } from 'imap';
 
-import { getMeta, getSpace, Ref.make, type Space } from '@dxos/client/echo';
+import { getMeta, getSpace, Ref, type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
