@@ -17,7 +17,7 @@ const aiService = new AIServiceEdgeClient({
 });
 
 describe.skip('EntityExtraction', { timeout: 180_000 }, () => {
-  test('should process a transcript block', async () => {
+  test.skip('should process a transcript block', async () => {
     const { transcriptMessages, documents, contacts } = await createTestData();
 
     log.info('context', { documents, contacts });
@@ -36,10 +36,10 @@ describe.skip('EntityExtraction', { timeout: 180_000 }, () => {
   });
 
   test.skip('computational irreducibility', async () => {
-    const { transcriptMessages, documents, contacts } = await createTestData();
+    const { transcriptWoflram, documents, contacts } = await createTestData();
 
     log.info('context', { documents, contacts });
-    const message = transcriptMessages[0];
+    const message = transcriptWoflram[0];
     log.info('input', message);
 
     await Promise.all(
@@ -54,6 +54,25 @@ describe.skip('EntityExtraction', { timeout: 180_000 }, () => {
         log.info('output', { message: enhancedMessage.blocks[0], timeElapsed });
       }),
     );
+  });
+
+  test.only('org and document linking', async () => {
+    const { transcriptJosiah, documents, contacts, organizations } = await createTestData();
+
+    log.info('context', { contacts, organizations, documents });
+
+    for (const message of transcriptJosiah) {
+      log.info('input', message);
+
+      const { message: enhancedMessage } = await processTranscriptMessage({
+        message,
+        aiService,
+        context: {
+          objects: [...documents, ...Object.values(contacts), ...Object.values(organizations)],
+        },
+      });
+      log.info('output', enhancedMessage);
+    }
   });
 });
 
