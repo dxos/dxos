@@ -9,11 +9,11 @@ import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { asyncTimeout } from '@dxos/async';
 import { type BaseEchoObject, create, ObjectId } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MessageType } from '@dxos/schema';
 
 import SYSTEM_PROMPT from './system-prompt.tpl?raw';
-import { DXN } from '@dxos/keys';
 
 type ProcessTranscriptMessageParams = {
   message: MessageType;
