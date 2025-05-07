@@ -7,11 +7,9 @@ import React, { useEffect, useState } from 'react';
 import {
   type AST,
   Expando,
-  getReferenceAnnotation,
   getTypeAnnotation,
   ReferenceAnnotationId,
-  ReferenceAnnotationValue,
-  S,
+  type ReferenceAnnotationValue,
   type TypeAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation, type SimpleType } from '@dxos/effect';
