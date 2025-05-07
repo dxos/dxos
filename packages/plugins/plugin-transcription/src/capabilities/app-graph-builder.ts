@@ -198,12 +198,12 @@ const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: Entit
 const processContextObject = async (object: BaseEchoObject): Promise<any> => {
   // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
   // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
-  if (isInstanceOf(DocumentType, object)) {
-    return {
-      ...object,
-      content: await object.content.load(),
-    };
-  }
+  // if (isInstanceOf(DocumentType, object)) {
+  //   return {
+  //     ...object,
+  //     content: await object.content.load(),
+  //   };
+  // }
 
   return object;
 };
