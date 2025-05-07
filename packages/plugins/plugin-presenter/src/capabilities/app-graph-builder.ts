@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
-
-import { contributes, type PluginsContext, Capabilities, createIntent, chain, LayoutAction } from '@dxos/app-framework';
+import { contributes, type PluginsContext, Capabilities, createIntent, LayoutAction } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
+import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -39,19 +38,22 @@ export default (context: PluginsContext) =>
             //  So can set explicit fullscreen state coordinated with current presenter state.
             data: async () => {
               const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+              const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
               const presenterId = [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR);
-              await dispatch(
-                pipe(
-                  createIntent(LayoutAction.Open, {
-                    part: 'main',
-                    subject: [presenterId],
-                    options: { workspace: spaceId },
-                  }),
-                  chain(DeckAction.Adjust, {
+              if (!layout.deck.fullscreen) {
+                void dispatch(
+                  createIntent(DeckAction.Adjust, {
                     type: 'solo--fullscreen',
                     id: presenterId,
                   }),
-                ),
+                );
+              }
+              await dispatch(
+                createIntent(LayoutAction.Open, {
+                  part: 'main',
+                  subject: [presenterId],
+                  options: { workspace: spaceId },
+                }),
               );
             },
             properties: {
