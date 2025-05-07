@@ -9,10 +9,16 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { ASSISTANT_PLUGIN } from '../../meta';
-import { type AssistantSettingsProps } from '../../types';
+import { LLM_PROVIDERS, type AssistantSettingsProps } from '../../types';
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out default Selector.
 const DEFAULT_VALUE = '__default';
+
+const LLM_PROVIDER_LABELS = {
+  edge: 'DXOS',
+  ollama: 'Ollama',
+  lmstudio: 'LM Studio',
+} as const;
 
 export const AssistantSettings = ({ settings }: { settings: AssistantSettingsProps }) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
@@ -27,10 +33,26 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
       </DeprecatedFormInput>
 
       <DeprecatedFormInput label={t('settings llm provider label')}>
-        <Input.Switch
-          checked={settings.llmProvider === 'ollama'}
-          onCheckedChange={(checked) => (settings.llmProvider = checked ? 'ollama' : 'edge')}
-        />
+        <Select.Root
+          value={settings.llmProvider ?? 'edge'}
+          onValueChange={(value) => {
+            settings.llmProvider = value === DEFAULT_VALUE ? undefined : (value as any);
+          }}
+        >
+          <Select.TriggerButton placeholder={t('settings llm provider label')} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                <Select.Option value={DEFAULT_VALUE}>{t('settings default label')}</Select.Option>
+                {LLM_PROVIDERS.map((model) => (
+                  <Select.Option key={model} value={model}>
+                    {LLM_PROVIDER_LABELS[model]}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
       </DeprecatedFormInput>
 
       <DeprecatedFormInput label={t('settings edge llm model label')}>

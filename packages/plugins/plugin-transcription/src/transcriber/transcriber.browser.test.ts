@@ -9,11 +9,11 @@ import { WaveFile } from 'wavefile';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
+import { type TranscriptionContentBlock } from '@dxos/schema';
 import { openAndClose } from '@dxos/test-utils';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type AudioChunk, type AudioRecorder, Transcriber } from '../transcriber';
-import { type TranscriptSegment } from '../types';
 import { mergeFloat64Arrays } from '../util';
 
 // TODO(burdon): ReferenceError: Worker is not defined (Can only run with web workers).
@@ -93,7 +93,7 @@ describe.skip('Transcriber', () => {
   });
 
   test.skip('transcription of audio recording', { timeout: 10_000 }, async () => {
-    const trigger = new Trigger<TranscriptSegment[]>({ autoReset: true });
+    const trigger = new Trigger<TranscriptionContentBlock[]>({ autoReset: true });
     const recorder = new MockAudioRecorder({
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,
@@ -127,7 +127,7 @@ describe.skip('Transcriber', () => {
   });
 
   test.skip('transcription of audio recording with overlapping chunks', { timeout: 20_000 }, async () => {
-    const trigger = new Trigger<TranscriptSegment[]>({ autoReset: true });
+    const trigger = new Trigger<TranscriptionContentBlock[]>({ autoReset: true });
     const recorder = new MockAudioRecorder({
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,

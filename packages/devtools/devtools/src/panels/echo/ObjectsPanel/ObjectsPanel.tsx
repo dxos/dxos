@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, type ComponentType, type JSX } from 'react';
 
 import type { State as AmState } from '@dxos/automerge/automerge';
 import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
-import { FormatEnum, getSchemaVersion } from '@dxos/echo-schema';
+import { FormatEnum, getSchemaVersion, getSchema, getTypename } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
+import { getType, isDeleted } from '@dxos/live-object';
 import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
@@ -283,7 +283,7 @@ const ObjectDataViewer = ({ object, onNavigate }: ObjectDataViewerProps) => {
 interface rendererNode {
   type: 'element' | 'text';
   value?: string | number | undefined;
-  tagName?: keyof React.JSX.IntrinsicElements | React.ComponentType<any> | undefined;
+  tagName?: keyof JSX.IntrinsicElements | ComponentType<any> | undefined;
   properties?: { className: any[]; [key: string]: any };
   children?: rendererNode[];
 }

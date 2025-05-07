@@ -108,6 +108,11 @@ export class MediaManager extends Resource {
     this._trackToReconcile = [];
     await this._state.peer?.close();
     this._state.peer = undefined;
+    this._state.pushedVideoTrack = undefined;
+    this._state.pushedAudioTrack = undefined;
+    this._state.pushedScreenshareTrack = undefined;
+    this._state.pulledAudioTracks = {};
+    this._state.pulledVideoStreams = {};
   }
 
   async turnVideoOn() {
@@ -269,6 +274,9 @@ export class MediaManager extends Resource {
     try {
       const trackData = TrackNameCodec.decode(name);
       const track = await this._state.peer!.pullTrack({ trackData, ctx });
+      if (track?.readyState === 'ended') {
+        throw new Error('Pulled track ended immediately');
+      }
 
       switch (track?.kind) {
         case 'audio': {

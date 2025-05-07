@@ -5,107 +5,132 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { type FC, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import {
+  Capabilities,
   CollaborationActions,
-  createIntent,
   IntentPlugin,
   SettingsPlugin,
+  contributes,
+  createIntent,
+  useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { create, ObjectId } from '@dxos/echo-schema';
+import { S, AST, create, type Expando, EchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
+import { live, makeRef, refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { createDocAccessor, createObject, useQueue } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { ThemePlugin } from '@dxos/plugin-theme';
+import { faker } from '@dxos/random';
+import { createQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import {
-  automerge,
-  command,
-  createRenderer,
-  translations as editorTranslations,
-  preview,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+import { command, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { defaultTx } from '@dxos/react-ui-theme';
+import { withLayout } from '@dxos/storybook-utils';
 
-import { MarkdownEditor } from './MarkdownEditor';
+import MarkdownContainer from './MarkdownContainer';
+import { MarkdownPlugin } from '../MarkdownPlugin';
+import { MarkdownCapabilities } from '../capabilities';
+import { MARKDOWN_PLUGIN } from '../meta';
 import translations from '../translations';
+import { createDocument, DocumentType, type MarkdownSettingsProps } from '../types';
 
-const PreviewBlock = () => {
-  return <div>PreviewBlock</div>;
-};
+faker.seed(1);
 
-const PreviewCard = () => {
-  return <div>PreviewCard</div>;
-};
+const TestItem = S.Struct({
+  title: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Title',
+    [AST.DescriptionAnnotationId]: 'Product title',
+  }),
+  description: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Description',
+    [AST.DescriptionAnnotationId]: 'Product description',
+  }),
+}).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
 
-// TODO(burdon): Factor out (reconcile with ThreadContainer.stories.tsx)
-const randomQueueDxn = () =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
-
-const TestChat: FC<{ content: string }> = ({ content }) => {
+const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
-  const [queueDxn] = useState<string>(() => randomQueueDxn());
-  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
+
+  const space = useSpace();
+  const queueDxn = useMemo(() => space && createQueueDxn(space.id), [space]);
+  const queue = useQueue<Message>(queueDxn);
 
   const handleInsert = () => {
+    invariant(space);
     invariant(queue);
     queue.append([create(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
     const message = queue.items[queue.items.length - 1];
 
+    // {
+    //   const ref = refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id]));
+
+    //   const message = deref(ref);
+    // }
+
     void dispatch(
       createIntent(CollaborationActions.InsertContent, {
+        spaceId: space.id,
+        target: makeRef(doc as any as Expando), // TODO(burdon): Comomon base type.
+        object: refFromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
         label: 'Proposal',
-        queueId: queue.dxn.toString(),
-        messageId: message.id,
-        // TODO(burdon): Why artifact?
-        associatedArtifact: {} as any,
       }),
     );
   };
 
   return (
     <StackItem.Content toolbar classNames='w-full'>
-      <Toolbar.Root>
+      <Toolbar.Root classNames='border-be border-separator'>
         <IconButton icon='ph--plus--regular' disabled={!queue} label='Insert' onClick={handleInsert} />
       </Toolbar.Root>
-      <div ref={parentRef} className='grow p-4' />
+      <div ref={parentRef} className='p-4' />
     </StackItem.Content>
   );
 };
 
-const TestDocument: FC<{ content: string }> = ({ content }) => {
-  const doc = useMemo(() => createObject({ content }), []);
-  const extensions = useMemo(
-    () => [
-      automerge(createDocAccessor(doc, ['content'])),
-      command(),
-      preview({
-        renderBlock: createRenderer(PreviewBlock),
-        renderPopover: createRenderer(PreviewCard),
-        onLookup: async () => undefined,
-      }),
-    ],
-    [doc],
-  );
-
-  return <MarkdownEditor id='document' initialValue={doc.content} extensions={extensions} toolbar />;
-};
-
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
+  const space = useSpace();
+  const [doc, setDoc] = useState<DocumentType>();
+  const settings = useCapability(Capabilities.SettingsStore).getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
+
+  useEffect(() => {
+    if (!space) {
+      return undefined;
+    }
+
+    const doc = space.db.add(
+      createDocument({
+        name: 'Test',
+
+        // Create links.
+        content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
+          const obj = space.db.add(live(TestItem, { title: label, description: faker.lorem.paragraph() }));
+          const dxn = makeRef(obj).dxn.toString();
+          return `[${label}][${dxn}]`;
+        }),
+      }),
+    );
+
+    setDoc(doc);
+  }, [space]);
+
+  if (!space || !doc) {
+    return <></>;
+  }
+
   return (
-    <div className='grow grid grid-cols-2 overflow-hidden divide-x divide-divider'>
-      <TestDocument content={document} />
-      <TestChat content={chat} />
-    </div>
+    <>
+      <MarkdownContainer id={doc.id} object={doc} settings={settings} />
+      <TestChat doc={doc} content={chat} />
+    </>
   );
 };
 
@@ -113,13 +138,12 @@ const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
   render: DefaultStory,
   decorators: [
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-    }),
     withPluginManager({
       plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin(),
         ClientPlugin({
+          types: [DocumentType, TestItem],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },
@@ -127,13 +151,15 @@ const meta: Meta<typeof DefaultStory> = {
         SpacePlugin(),
         SettingsPlugin(),
         IntentPlugin(),
+        MarkdownPlugin(),
+        PreviewPlugin(),
       ],
+      capabilities: [contributes(MarkdownCapabilities.Extensions, [() => command()])],
     }),
-    withTheme,
-    withLayout({ tooltips: true, fullscreen: true }),
+    withLayout({ tooltips: true, fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],
   parameters: {
-    translations: [...translations, ...editorTranslations],
+    translations,
   },
 };
 
@@ -143,7 +169,16 @@ type Story = Meta<typeof DefaultStory>;
 
 export const Default: Story = {
   args: {
-    document: '# Test\n\n',
     chat: 'Hello\n',
+    document: [
+      '# Test',
+      '',
+      faker.lorem.paragraph(1),
+      '',
+      'This is a [DXOS] story that tests [ECHO] references inside the Markdown plugin.',
+      '',
+      faker.lorem.paragraph(3),
+      '',
+    ].join('\n'),
   },
 };

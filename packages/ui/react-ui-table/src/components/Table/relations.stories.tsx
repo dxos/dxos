@@ -10,15 +10,15 @@ import React, { useEffect, useMemo } from 'react';
 import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
-import { live, makeRef, type Live } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
-import { createView, ViewProjection, ViewType } from '@dxos/schema';
-import { createGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
+import { live, makeRef } from '@dxos/react-client/echo';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { Contact, createView, Organization, ViewProjection, ViewType } from '@dxos/schema';
+import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
-import { TablePresentation, type TableRow } from '../../model';
+import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 
@@ -30,6 +30,8 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count: number) => {
+  const { space } = useClientProvider();
+
   const table = useMemo(() => {
     // const { typename } = pipe(schema.ast, AST.getAnnotation<TypeAnnotation>(TypeAnnotationId), Option.getOrThrow);
     const typename = schema.typename;
@@ -47,16 +49,24 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     return new ViewProjection(schema.jsonSchema, table.view.target);
   }, [schema, table]);
 
-  const model = useTableModel<TableRow>({ table, projection, rows: [] });
+  const features = useMemo<TableFeatures>(
+    () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
+    [],
+  );
+
+  const model = useTableModel<TableRow>({ table, projection, rows: [], features });
   useEffect(() => {
-    if (!model) {
+    if (!model || !space) {
       return;
     }
 
-    const objectGenerator = createGenerator(generator, schema, { optional: true });
-    const objects: Live<T>[] = Array.from({ length: count }).map(() => objectGenerator.createObject());
-    model.setRows(objects);
-  }, [model]);
+    const objectGenerator = createAsyncGenerator(generator, schema, { optional: true, db: space?.db });
+    void objectGenerator.createObjects(count).then((objects) => {
+      model.setRows(objects);
+    });
+  }, [model, space]);
+
+  console.log(projection?.getFieldProjections());
 
   const presentation = useMemo(() => {
     if (!model) {
@@ -71,21 +81,20 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 
 const DefaultStory = () => {
   // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
-  const orgSchema = useMemo(() => new ImmutableSchema(Testing.Org), []);
-  const { model: orgModel, presentation: orgPresentation } = useTestModel<Testing.Org>(orgSchema, 50);
+  const orgSchema = useMemo(() => new ImmutableSchema(Organization), []);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel<Organization>(orgSchema, 50);
 
   // TODO(burdon): Generate links with references.
-  const contactSchema = useMemo(() => new ImmutableSchema(Testing.Contact), []);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel<Testing.Contact>(contactSchema, 50);
+  const contactSchema = useMemo(() => new ImmutableSchema(Contact), []);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel<Contact>(contactSchema, 50);
 
-  // TODO(burdon): Scrolling isn't working.
   return (
-    <div className='grow grid grid-cols-2 divide-x divide-separator'>
+    <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
       <Table.Root>
-        <Table.Main model={orgModel} presentation={orgPresentation} />
+        <Table.Main model={orgModel} presentation={orgPresentation} ignoreAttention />
       </Table.Root>
       <Table.Root>
-        <Table.Main model={contactModel} presentation={contactPresentation} />
+        <Table.Main model={contactModel} presentation={contactPresentation} ignoreAttention />
       </Table.Root>
     </div>
   );
@@ -97,7 +106,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Org, Testing.Contact],
+      types: [TableType, ViewType, Organization, Contact],
       createIdentity: true,
       createSpace: true,
     }),

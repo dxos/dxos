@@ -19,7 +19,7 @@ import {
   createSystemPrompt,
   createTestData,
   Contact,
-  Org,
+  Organization,
   Project,
   Task,
 } from '../testing';
@@ -33,7 +33,7 @@ const dataSource = createTestData();
 
 const cypherTool = createCypherTool(dataSource);
 
-const schemaTypes = [Org, Project, Task, Contact];
+const schemaTypes = [Organization, Project, Task, Contact];
 
 const spaceId = SpaceId.random();
 const threadId = ObjectId.random();
@@ -46,7 +46,6 @@ while (true) {
       message: 'Enter a message:',
     },
   ]);
-  await client.appendMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
   await runLLM({
     model: DEFAULT_EDGE_MODEL,
@@ -61,6 +60,7 @@ while (true) {
       },
     ],
     client,
+    history: [createUserMessage(spaceId, threadId, prompt.message)],
     logger: createLogger({
       stream: true,
       filter: (e) => {

@@ -6,20 +6,28 @@ import { ComplexMap, type PrimitiveProjection } from '@dxos/util';
 
 export type CleanupFn = () => void;
 
+/**
+ * Combine multiple cleanup functions into a single cleanup function.
+ * Can be used in effect hooks in conjunction with `addEventListener`.
+ */
 export const combine = (...cleanupFns: CleanupFn[]): CleanupFn => {
   return () => {
     cleanupFns.forEach((cleanupFn) => cleanupFn());
   };
 };
 
-export const addEventListener = (
-  el: HTMLElement,
+/**
+ * Add the event listener and return a cleanup function.
+ * Can be used in effect hooks in conjunction with `combine`.
+ */
+export const addEventListener = <T extends Event = Event>(
+  el: HTMLElement | Window,
   event: string,
-  handler: EventListenerOrEventListenerObject,
+  handler: EventListenerOrEventListenerObject | ((event: T) => void),
   options?: boolean | AddEventListenerOptions,
 ): CleanupFn => {
-  el.addEventListener(event, handler, options);
-  return () => el.removeEventListener(event, handler, options);
+  el.addEventListener(event, handler as EventListenerOrEventListenerObject, options);
+  return () => el.removeEventListener(event, handler as EventListenerOrEventListenerObject, options);
 };
 
 export class SubscriptionList {

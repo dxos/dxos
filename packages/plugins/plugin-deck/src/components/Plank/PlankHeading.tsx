@@ -17,6 +17,8 @@ import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart, type LayoutMode } 
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
+const MAX_COMPANIONS = 5;
+
 export type PlankHeadingProps = {
   id: string;
   part: ResolvedPart;
@@ -141,9 +143,12 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 layout-contain',
+          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
           part === 'solo' ? soloInlinePadding : 'pli-1',
+          layoutMode === 'solo--fullscreen' &&
+            'opacity-0 border-transparent hover:border-separator hover:opacity-100 transition-[border-color,opacity]',
         ]}
+        data-plank-heading
       >
         {companions && isCompanionNode ? (
           <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-1'>
@@ -152,7 +157,7 @@ export const PlankHeading = memo(
                 key={id}
                 data-id={id}
                 icon={icon}
-                iconOnly={node?.id !== id}
+                iconOnly={companions.length > MAX_COMPANIONS && node?.id !== id}
                 label={toLocalizedString(label, t)}
                 size={5}
                 variant={node?.id === id ? 'primary' : 'default'}

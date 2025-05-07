@@ -3,32 +3,25 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
 import {
   Capabilities,
   LayoutAction,
-  Surface,
   createIntent,
   useCapability,
   useIntentDispatcher,
   usePluginManager,
 } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import {
-  AlertDialog,
-  Dialog as NaturalDialog,
-  Main,
-  Popover,
-  type MainProps,
-  useMediaQuery,
-  useOnTransition,
-} from '@dxos/react-ui';
+import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
 import { ContentEmpty } from './ContentEmpty';
+import { Dialog } from './Dialog';
+import { PopoverContent, PopoverRoot } from './Popover';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
@@ -36,7 +29,7 @@ import { DeckCapabilities } from '../../capabilities';
 import { DECK_PLUGIN } from '../../meta';
 import { type DeckSettingsProps, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
-import { Plank, PlankContentError } from '../Plank';
+import { Plank } from '../Plank';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
@@ -51,20 +44,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
   const context = useCapability(DeckCapabilities.MutableDeckState);
-  const {
-    sidebarState,
-    complementarySidebarState,
-    complementarySidebarPanel,
-    dialogOpen,
-    dialogContent,
-    dialogBlockAlign,
-    dialogType,
-    popoverOpen,
-    popoverContent,
-    popoverAnchorId,
-    deck,
-    toasts,
-  } = context;
+  const { sidebarState, complementarySidebarState, complementarySidebarPanel, deck, toasts } = context;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
   const breakpoint = useBreakpoints();
   const layoutMode = getMode(deck);
@@ -74,13 +54,6 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
 
   const scrollLeftRef = useRef<number | null>();
   const deckRef = useRef<HTMLDivElement>(null);
-
-  // TODO(thure): This is a workaround for the difference in `React`ion time between displaying a Popover and rendering
-  //  the anchor further down the tree. Refactor to use VirtualTrigger or some other approach which does not cause a lag.
-  const [delayedPopoverVisibility, setDelayedPopoverVisibility] = useState(false);
-  useEffect(() => {
-    popoverOpen ? setTimeout(() => setDelayedPopoverVisibility(true), 40) : setDelayedPopoverVisibility(false);
-  }, [popoverOpen]);
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
@@ -176,22 +149,6 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     [topbar, hoistStatusbar],
   );
 
-  const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
-
-  const handlePopoverOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (nextOpen && popoverAnchorId) {
-        context.popoverOpen = true;
-      } else {
-        context.popoverOpen = false;
-        context.popoverAnchorId = undefined;
-        context.popoverSide = undefined;
-      }
-    },
-    [context],
-  );
-  const handlePopoverClose = useCallback(() => handlePopoverOpenChange(false), [handlePopoverOpenChange]);
-
   const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(() => {
     return active.reduce(
       (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
@@ -204,7 +161,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   }, [active, activeCompanions]);
 
   return (
-    <Popover.Root modal open={!!(popoverAnchorId && delayedPopoverVisibility)} onOpenChange={handlePopoverOpenChange}>
+    <PopoverRoot>
       <ActiveNode />
 
       <Main.Root
@@ -318,32 +275,10 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
       </Main.Root>
 
       {/* Global popovers. */}
-      <Popover.Portal>
-        <Popover.Content side={context.popoverSide} onEscapeKeyDown={handlePopoverClose}>
-          <Popover.Viewport>
-            <Surface role='popover' data={popoverContent} limit={1} />
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <PopoverContent />
 
       {/* Global dialog. */}
-      {/* TODO(thure): End block alignment affecting `modal` and whether the surface renders in an overlay is tailored
-            to the needs of the ambient chat dialog. As the feature matures, consider separating concerns. */}
-      <Dialog.Root
-        modal={dialogBlockAlign !== 'end'}
-        open={dialogOpen}
-        onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}
-      >
-        {dialogBlockAlign === 'end' ? (
-          // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
-          <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} placeholder={<div />} />
-        ) : (
-          <Dialog.Overlay blockAlign={dialogBlockAlign}>
-            <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} />
-          </Dialog.Overlay>
-        )}
-      </Dialog.Root>
+      <Dialog />
 
       {/* Global toasts. */}
       {toasts?.map((toast) => (
@@ -359,6 +294,6 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
           }}
         />
       ))}
-    </Popover.Root>
+    </PopoverRoot>
   );
 };

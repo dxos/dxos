@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { select } from 'd3';
 import React, { useEffect, useRef } from 'react';
 
 import { createMarkers } from '../graph';
@@ -18,7 +18,7 @@ export type MarkersProps = {
 export const Markers = ({ arrowSize, className }: MarkersProps) => {
   const ref = useRef();
   useEffect(() => {
-    d3.select(ref.current).call(createMarkers({ arrowSize }));
+    select(ref.current).call(createMarkers({ arrowSize }));
   }, [ref]);
 
   return <defs ref={ref} className={className} />;

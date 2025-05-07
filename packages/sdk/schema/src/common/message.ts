@@ -83,30 +83,44 @@ export const ReferenceContentBlock = S.extend(
 ).pipe(S.mutable);
 export type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
 
+/**
+ * Transcription
+ */
+export const TranscriptionContentBlock = S.extend(
+  AbstractContentBlock,
+  S.Struct({
+    type: S.Literal('transcription'),
+    // TODO(burdon): TS from service is not Unix TS (x1000).
+    started: S.String,
+    text: S.String,
+  }),
+).pipe(S.mutable);
+export type TranscriptionContentBlock = S.Schema.Type<typeof TranscriptionContentBlock>;
+
 export const MessageContentBlock = S.Union(
-  // prettier-ignore
   TextContentBlock,
   JsonContentBlock,
   ImageContentBlock,
   ReferenceContentBlock,
+  TranscriptionContentBlock,
 );
 
-// TODO(wittjosiah): Add read status:
-//  - Read receipts need to be per space member.
-//  - Read receipts don't need to be added to schema until they being implemented.
 /**
  * Message.
  */
 // TODO(wittjosiah): Using `EchoObject` here causes type errors.
+// TODO(wittjosiah): Add read status:
+//  - Read receipts need to be per space member.
+//  - Read receipts don't need to be added to schema until they being implemented.
 export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.2.0' })({
   id: ObjectId,
   created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
   }),
-  sender: ActorSchema.annotations({
+  sender: S.mutable(ActorSchema).annotations({
     description: 'Identity of the message sender.',
   }),
-  blocks: S.Array(MessageContentBlock).annotations({
+  blocks: S.mutable(S.Array(MessageContentBlock)).annotations({
     description: 'Contents of the message.',
   }),
   properties: S.optional(

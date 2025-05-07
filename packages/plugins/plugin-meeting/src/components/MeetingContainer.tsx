@@ -34,7 +34,7 @@ const DisplayNameMissing = () => {
   const handleSave = useCallback(() => client.halo.updateProfile({ displayName }), [client, displayName]);
 
   return (
-    <ControlGroup classNames='place-content-center'>
+    <ControlGroup classNames='p-4 place-content-center'>
       <ControlItemInput title={t('display name label')} description={t('display name description')}>
         <Input.TextInput
           value={displayName}

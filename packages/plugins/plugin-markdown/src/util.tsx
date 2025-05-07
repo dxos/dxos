@@ -22,6 +22,10 @@ export const getFallbackName = (content: string) => {
   return content.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };
 
+export const getAbstract = (content: string) => {
+  return content.substring(0, 128).split('\n')[0].replaceAll(nonTitleChars, '').trim();
+};
+
 export const setFallbackName = debounce((doc: DocumentType, content: string) => {
   const name = getFallbackName(content);
   if (doc.fallbackName !== name) {

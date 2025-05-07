@@ -51,7 +51,7 @@ export const StackSection = ({
                   <DropdownMenu.Viewport>
                     {view.collapsed ? (
                       <DropdownMenu.Item onClick={() => onNavigate(id)} data-testid='section.navigate-to'>
-                        <Icon icon='ph--arrow-square-out--regular' size={5} />
+                        <Icon icon='ph--arrow-right--regular' size={5} />
                         <span className='mis-2 grow'>{t('navigate to section label')}</span>
                       </DropdownMenu.Item>
                     ) : (
@@ -95,7 +95,7 @@ export const StackSection = ({
                 variant='ghost'
                 onClick={() => onNavigate(id)}
                 label={t('navigate to section label')}
-                icon='ph--arrow-square-out--regular'
+                icon='ph--arrow-right--regular'
                 data-testid='section.navigate-to'
                 classNames={sectionActionDimensions}
               />

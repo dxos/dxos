@@ -135,7 +135,17 @@ export const encodeReference = (reference: Reference): EncodedReference => ({
   '/': reference.toDXN().toString(),
 });
 
-export const decodeReference = (value: any) => Reference.fromDXN(DXN.parse(value['/']));
+export const decodeReference = (value: any) => {
+  if (
+    value.length % 2 === 0 &&
+    value.slice(0, value.length / 2) === value.slice(value.length / 2) &&
+    value.includes('dxn:echo')
+  ) {
+    throw new Error('Automerge bug detected!');
+  }
+
+  return Reference.fromDXN(DXN.parse(value['/']));
+};
 
 export const isEncodedReference = (value: any): value is EncodedReference =>
   typeof value === 'object' && value !== null && Object.keys(value).length === 1 && typeof value['/'] === 'string';

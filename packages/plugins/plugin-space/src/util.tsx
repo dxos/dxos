@@ -4,8 +4,9 @@
 
 import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSchema, isLiveObject, makeRef } from '@dxos/live-object';
+import { isLiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
@@ -219,7 +220,7 @@ export const constructSpaceNode = ({
         data: null,
         properties: {
           label: ['settings panel label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--gear--regular',
+          icon: 'ph--faders--regular',
           disposition: 'alternate-tree',
         },
         nodes: [

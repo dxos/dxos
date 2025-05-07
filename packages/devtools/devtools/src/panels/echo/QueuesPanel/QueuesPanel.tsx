@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
@@ -114,7 +114,7 @@ const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
 interface rendererNode {
   type: 'element' | 'text';
   value?: string | number | undefined;
-  tagName?: keyof React.JSX.IntrinsicElements | React.ComponentType<any> | undefined;
+  tagName?: keyof JSX.IntrinsicElements | ComponentType<any> | undefined;
   properties?: { className: any[]; [key: string]: any };
   children?: rendererNode[];
 }

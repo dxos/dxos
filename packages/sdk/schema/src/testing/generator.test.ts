@@ -35,7 +35,7 @@ describe('Generator', () => {
   // TODO(burdon): Type error: https://github.com/dxos/dxos/issues/8324
   test('create object', async ({ expect }) => {
     {
-      const schema: S.Schema<Testing.Org> = Testing.Org;
+      const schema: S.Schema<Testing.Organization> = Testing.Organization;
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
@@ -62,10 +62,10 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register static schema.
-    db.graph.schemaRegistry.addSchema([Testing.Org, Testing.Project, Testing.Contact]);
+    db.graph.schemaRegistry.addSchema([Testing.Organization, Testing.Project, Testing.Contact]);
 
     const spec: TypeSpec[] = [
-      { type: Testing.Org, count: 5 },
+      { type: Testing.Organization, count: 5 },
       { type: Testing.Project, count: 5 },
       { type: Testing.Contact, count: 10 },
     ];
@@ -80,12 +80,12 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register mutable schema.
-    const [org] = await db.schemaRegistry.register([Testing.Org]);
+    const [organization] = await db.schemaRegistry.register([Testing.Organization]);
     const [project] = await db.schemaRegistry.register([Testing.Project]);
     const [contact] = await db.schemaRegistry.register([Testing.Contact]);
 
     const spec: TypeSpec[] = [
-      { type: org, count: 5 },
+      { type: organization, count: 5 },
       { type: project, count: 5 },
       { type: contact, count: 10 },
     ];

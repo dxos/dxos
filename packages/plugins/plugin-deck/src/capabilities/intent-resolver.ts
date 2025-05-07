@@ -3,7 +3,7 @@
 //
 
 import { batch } from '@preact/signals-core';
-import { pipe } from 'effect';
+import { Effect, pipe } from 'effect';
 
 import {
   Capabilities,
@@ -121,9 +121,14 @@ export default (context: PluginsContext) =>
       resolve: ({ subject, options }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
         layout.popoverOpen = options.state ?? Boolean(subject);
-        layout.popoverContent = subject ? { component: subject, props: options.props } : null;
-        layout.popoverAnchorId = options.anchorId;
+        layout.popoverContent =
+          typeof subject === 'string' ? { component: subject, props: options.props } : subject ? { subject } : null;
         layout.popoverSide = options.side;
+        if (options.variant === 'virtual') {
+          layout.popoverAnchor = options.anchor;
+        } else {
+          layout.popoverAnchorId = options.anchorId;
+        }
       },
     }),
     createResolver({
@@ -236,55 +241,63 @@ export default (context: PluginsContext) =>
       intent: LayoutAction.UpdateLayout,
       filter: (data): data is S.Schema.Type<typeof LayoutAction.Open.fields.input> =>
         S.is(LayoutAction.Open.fields.input)(data),
-      resolve: ({ subject, options }) => {
-        const { graph } = context.requestCapability(Capabilities.AppGraph);
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const settings = context
-          .requestCapabilities(Capabilities.SettingsStore)[0]
-          ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
+      resolve: ({ subject, options }) =>
+        Effect.gen(function* () {
+          const { graph } = context.requestCapability(Capabilities.AppGraph);
+          const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+          const attention = context.requestCapability(AttentionCapabilities.Attention);
+          const settings = context
+            .requestCapabilities(Capabilities.SettingsStore)[0]
+            ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
-        const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
-        batch(() => {
-          const next = state.deck.solo
-            ? (subject as string[]).map((id) => createEntryId(id, options?.variant))
-            : subject.reduce(
-                (acc, entryId) =>
-                  openEntry(acc, entryId, {
-                    key: options?.key,
-                    positioning: options?.positioning ?? settings?.newPlankPositioning,
-                    pivotId: options?.pivotId,
-                    variant: options?.variant,
-                  }),
-                state.deck.active,
-              );
+          if (options?.workspace && state.activeDeck !== options?.workspace) {
+            const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            yield* dispatch(
+              createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: options.workspace }),
+            );
+          }
 
-          return setActive({ next, state, attention });
-        });
+          const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
+          batch(() => {
+            const next = state.deck.solo
+              ? (subject as string[]).map((id) => createEntryId(id, options?.variant))
+              : subject.reduce(
+                  (acc, entryId) =>
+                    openEntry(acc, entryId, {
+                      key: options?.key,
+                      positioning: options?.positioning ?? settings?.newPlankPositioning,
+                      pivotId: options?.pivotId,
+                      variant: options?.variant,
+                    }),
+                  state.deck.active,
+                );
 
-        const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
-        const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
+            return setActive({ next, state, attention });
+          });
 
-        return {
-          intents: [
-            ...(options?.scrollIntoView !== false
-              ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
-              : []),
-            createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
-            ...newlyOpen.map((subjectId) => {
-              const active = graph?.findNode(subjectId)?.data;
-              const typename = isLiveObject(active) ? getTypename(active) : undefined;
-              return createIntent(ObservabilityAction.SendEvent, {
-                name: 'navigation.activate',
-                properties: {
-                  subjectId,
-                  typename,
-                },
-              });
-            }),
-          ],
-        };
-      },
+          const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
+          const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
+
+          return {
+            intents: [
+              ...(options?.scrollIntoView !== false
+                ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
+                : []),
+              createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
+              ...newlyOpen.map((subjectId) => {
+                const active = graph?.findNode(subjectId)?.data;
+                const typename = isLiveObject(active) ? getTypename(active) : undefined;
+                return createIntent(ObservabilityAction.SendEvent, {
+                  name: 'navigation.activate',
+                  properties: {
+                    subjectId,
+                    typename,
+                  },
+                });
+              }),
+            ],
+          };
+        }),
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,

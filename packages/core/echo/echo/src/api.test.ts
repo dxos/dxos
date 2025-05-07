@@ -12,23 +12,23 @@ import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
 import { Type } from '.';
 
 namespace Testing {
-  export const Org = S.Struct({
+  export const Organization = S.Struct({
     id: Type.ObjectId,
     name: S.String,
   }).pipe(
     Type.def({
-      typename: 'example.com/type/Org',
+      typename: 'example.com/type/Organization',
       version: '0.1.0',
     }),
   );
 
-  export interface Org extends S.Schema.Type<typeof Org> {}
+  export interface Organization extends S.Schema.Type<typeof Organization> {}
 
   export const Contact = S.Struct({
     name: S.String,
     dob: S.optional(S.String),
     email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
-    org: S.optional(Type.Ref(Org)),
+    organization: S.optional(Type.Ref(Organization)),
   }).pipe(
     Type.def({
       typename: 'example.com/type/Contact',
@@ -74,15 +74,13 @@ describe('Experimental API review', () => {
   });
 
   test('instance checks', ({ expect }) => {
-    // TODO(burdon): Implement.
-    // const org = Org.create({ name: 'DXOS' });
-    const org = Type.create(Testing.Org, { name: 'DXOS' });
-    const contact = Type.create(Testing.Contact, { name: 'Test', org: Type.ref(org) });
+    const organization = Type.create(Testing.Organization, { name: 'DXOS' });
+    const contact = Type.create(Testing.Contact, { name: 'Test', organization: Type.ref(organization) });
 
     expect(S.is(Testing.Contact)(contact)).to.be.true;
     expect(Testing.Contact.instanceOf(contact)).to.be.true;
     expect(Type.instanceOf(Testing.Contact, contact)).to.be.true;
-    expect(Type.instanceOf(Testing.Org, contact.org?.target)).to.be.true;
+    expect(Type.instanceOf(Testing.Organization, organization)).to.be.true;
   });
 
   test('default props', ({ expect }) => {

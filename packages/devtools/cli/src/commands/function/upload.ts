@@ -4,6 +4,7 @@
 
 import { Args, Flags } from '@oclif/core';
 import fs from 'node:fs';
+import { basename } from 'node:path';
 import path from 'path';
 
 import { asyncTimeout } from '@dxos/async';
@@ -63,7 +64,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         const functionObject = this._updateFunctionObject(space, existingFunctionObject, uploadResult);
 
         if (this.flags.composerScript) {
-          await this._updateComposerScript(client, space, functionObject, scriptFileContent);
+          await this._updateComposerScript(client, space, functionObject, basename(this.args.file), scriptFileContent);
         }
       },
       { spaceKeys: this.flags.spaceKey ? [this.flags.spaceKey] : undefined },
@@ -142,6 +143,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     client: Client,
     space: Space,
     functionObject: FunctionType,
+    scriptFileName: string,
     scriptFileContent: string,
   ): Promise<void> {
     client.addTypes([ScriptType, TextType]);
@@ -155,7 +157,9 @@ export default class Upload extends BaseCommand<typeof Upload> {
       }
     } else {
       const sourceObj = space.db.add(live(TextType, { content: scriptFileContent }));
-      const obj = space.db.add(live(ScriptType, { name: this.flags.name, source: makeRef(sourceObj) }));
+      const obj = space.db.add(
+        live(ScriptType, { name: this.flags.name ?? scriptFileName, source: makeRef(sourceObj) }),
+      );
       functionObject.source = makeRef(obj);
       await makeObjectNavigableInComposer(client, space, obj);
       if (this.flags.verbose) {

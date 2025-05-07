@@ -40,7 +40,7 @@ import {
   type ObjectStructure,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { createObjectId, getTypeReference } from '@dxos/echo-schema';
+import { ObjectId, getTypeReference } from '@dxos/echo-schema';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
@@ -349,7 +349,7 @@ export class DataSpaceManager extends Resource {
       },
     };
 
-    const propertiesId = createObjectId();
+    const propertiesId = ObjectId.random();
     document.change((doc: SpaceDoc) => {
       setDeep(doc, ['objects', propertiesId], properties);
     });

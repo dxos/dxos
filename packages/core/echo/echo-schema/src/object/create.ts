@@ -6,8 +6,8 @@ import { type Schema as S } from 'effect';
 
 import { failedInvariant } from '@dxos/invariant';
 
+import { ObjectId } from './ids';
 import { attachTypedJsonSerializer } from './json-serializer';
-import { ObjectId } from './object-id';
 import { setTypename } from './typename';
 import { setSchema, getTypeAnnotation } from '../ast';
 import { getSchemaDXN } from '../types';

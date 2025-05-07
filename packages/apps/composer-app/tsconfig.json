@@ -148,6 +148,9 @@
       "path": "../../plugins/plugin-presenter"
     },
     {
+      "path": "../../plugins/plugin-preview"
+    },
+    {
       "path": "../../plugins/plugin-pwa"
     },
     {

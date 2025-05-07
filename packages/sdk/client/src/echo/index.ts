@@ -4,19 +4,31 @@
 
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
-export { getTypename, Expando, type TypedObject, type ObjectMeta } from '@dxos/echo-schema';
+export { getTypename, Expando, type TypedObject, type ObjectMeta, getSchema } from '@dxos/echo-schema';
 export {
   type Live,
   RefArray,
   live,
   getMeta,
-  getSchema,
   getType,
   isLiveObject,
   compareForeignKeys,
   makeRef,
 } from '@dxos/live-object';
 export {
+  DocAccessor,
+  type EchoDatabase,
+  Filter,
+  type FilterSource,
+  type Hypergraph,
+  type IDocHandle,
+  type ObjectMigration,
+  type Queue,
+  type Query,
+  type ReactiveEchoObject,
+  ResultFormat,
+  type Selection,
+  type SubscriptionHandle,
   createDocAccessor,
   createObject,
   createSubscription,
@@ -31,19 +43,8 @@ export {
   toCursor,
   toCursorRange,
   updateText,
-  DocAccessor,
-  type EchoDatabase,
-  type ReactiveEchoObject,
-  Filter,
-  type FilterSource,
-  type Hypergraph,
-  type IDocHandle,
-  type ObjectMigration,
-  type Queue,
-  type Query,
-  ResultFormat,
-  type Selection,
-  type SubscriptionHandle,
+  getVersion,
+  ObjectVersion,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.
@@ -57,16 +58,22 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export {
-  getSpace,
-  isSpace,
+  createEmptyEdgeSyncState,
   fullyQualifiedId,
-  parseFullyQualifiedId,
-  parseId,
-  EchoObjectSchema,
-  ReactiveObjectSchema,
-  SpaceSchema,
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
+  EchoObjectSchema,
+  ReactiveObjectSchema,
+  SpaceSchema,
+  getSpace,
+  getSyncSummary,
+  isSpace,
+  parseFullyQualifiedId,
+  parseId,
+  createQueueDxn,
+  type Progress,
+  type PeerSyncState,
+  type SpaceSyncStateMap,
 } from './util';
 export { importSpace } from './import';

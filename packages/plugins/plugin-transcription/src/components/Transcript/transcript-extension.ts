@@ -4,44 +4,43 @@
 
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { EditorView, GutterMarker, ViewPlugin, type ViewUpdate, gutter } from '@codemirror/view';
+import { format } from 'date-fns/format';
+import { intervalToDuration } from 'date-fns/intervalToDuration';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type RenderCallback } from '@dxos/react-ui-editor';
+import { type MessageType } from '@dxos/schema';
 
-import { DocumentAdapter, type BlockModel } from './model';
-import { type TranscriptBlock } from '../../types';
-
-export const blockToMarkdown = (block: TranscriptBlock, debug = false): string[] => {
-  // TODO(burdon): Use link/reference markup for users (with popover).
-  return [
-    `###### ${block.authorName}` + (debug ? ` (${block.id})` : ''),
-    block.segments.map((segment) => segment.text).join(' '),
-    '',
-  ];
-};
+import { DocumentAdapter, type SerializationModel } from '../../model';
 
 /**
- * Data structure that maps Blocks queue to lines with transcript state.
+ * Data structure that maps Chunks queue to lines with transcript state.
  */
 export type TranscriptOptions = {
-  model: BlockModel<TranscriptBlock>;
+  model: SerializationModel<MessageType>;
+  started?: Date;
   renderButton?: RenderCallback<{ onClick: () => void }>;
 };
 
-export const transcript = (options: TranscriptOptions): Extension => {
+/**
+ * Scrolling transcript with timestamps.
+ */
+export const transcript = ({ model, started, renderButton }: TranscriptOptions): Extension => {
   return [
     // Show timestamps in the gutter.
     gutter({
       class: 'cm-timestamp-gutter',
       lineMarkerChange: (update) => update.docChanged || update.viewportChanged,
       markers: (view) => {
+        const start = getStartTime(started, model.chunks[0]);
         const builder = new RangeSetBuilder<GutterMarker>();
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            const timestamp = options.model.getBlockAtLine(line.number)?.segments[0]?.started;
+            const block = model.getChunkAtLine(line.number)?.blocks[0];
+            const timestamp = block?.type === 'transcription' && block.started;
             if (timestamp) {
-              builder.add(line.from, line.from, new TimestampMarker(line.number, timestamp));
+              builder.add(line.from, line.from, new TimestampMarker(line.number, new Date(timestamp), start));
             }
 
             if (line.to + 1 > view.state.doc.length) {
@@ -71,17 +70,19 @@ export const transcript = (options: TranscriptOptions): Extension => {
           let isAutoScrolling = false;
           let hasScrolled = false;
 
-          const scrollToBottom = () => {
-            scroller.style.scrollBehavior = 'smooth';
+          let timeout: NodeJS.Timeout | undefined;
+          const scrollToBottom = (smooth = false) => {
+            scroller.style.scrollBehavior = smooth ? 'smooth' : '';
 
             // Temporarily hide scrollbar to prevent flicker.
             scroller.classList.add('cm-hide-scrollbar');
             isAutoScrolling = true;
-            setTimeout(() => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
               this._controls?.classList.add('opacity-0');
               scroller.classList.remove('cm-hide-scrollbar');
               isAutoScrolling = false;
-            }, 1_000);
+            }, 500);
 
             // Scroll to bottom.
             view.dispatch({
@@ -90,15 +91,15 @@ export const transcript = (options: TranscriptOptions): Extension => {
           };
 
           // Scroll button.
-          if (options.renderButton) {
+          if (renderButton) {
             this._controls = document.createElement('div');
             this._controls.classList.add('cm-controls', 'transition-opacity', 'duration-300', 'opacity-0');
             view.dom.appendChild(this._controls);
-            options.renderButton(
+            renderButton(
               this._controls,
               {
                 onClick: () => {
-                  scrollToBottom();
+                  scrollToBottom(false);
                 },
               },
               view,
@@ -107,7 +108,6 @@ export const transcript = (options: TranscriptOptions): Extension => {
 
           // Event listeners.
           this._cleanup = combine(
-            // Check if scrolled.
             addEventListener(view.scrollDOM, 'scroll', () => {
               if (!isAutoScrolling) {
                 hasScrolled = true;
@@ -115,28 +115,28 @@ export const transcript = (options: TranscriptOptions): Extension => {
               }
             }),
 
-            // Listen for model updates.
-            options.model.update.on(() => {
+            model.update.on(() => {
               // Check if clamped to bottom.
               const autoScroll =
                 scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
 
               // Sync.
-              options.model.sync(this._adapter);
+              model.sync(this._adapter);
 
               // Scroll.
               if (autoScroll) {
-                scrollToBottom();
+                scrollToBottom(true);
               }
             }),
           );
         }
 
         update(update: ViewUpdate) {
+          // Initial sync.
           if (!this._initialized) {
             this._initialized = true;
             setTimeout(() => {
-              options.model.sync(this._adapter);
+              model.sync(this._adapter);
             });
           }
         }
@@ -188,6 +188,7 @@ class TimestampMarker extends GutterMarker {
   constructor(
     readonly _line: number,
     readonly _timestamp: Date,
+    readonly _started?: Date,
   ) {
     super();
   }
@@ -197,16 +198,10 @@ class TimestampMarker extends GutterMarker {
   }
 
   override toDOM(view: EditorView) {
-    const pad = (n: number) => n.toString().padStart(2, '0');
     const el = document.createElement('div');
     el.className = 'text-sm text-subdued hover:bg-hoverSurface cursor-pointer';
-    el.textContent = [
-      pad(this._timestamp.getHours()),
-      pad(this._timestamp.getMinutes()),
-      pad(this._timestamp.getSeconds()),
-    ].join(':');
-
-    // TODO(burdon): Click to bookmark or get hyperlink.
+    el.textContent = formatTimestamp(this._timestamp, this._started);
+    // TODO(burdon): Click to bookmark or copy hyperlink.
     el.onclick = () => {
       const pos = view.state.doc.line(this._line).from;
       view.dispatch({
@@ -217,3 +212,25 @@ class TimestampMarker extends GutterMarker {
     return el;
   }
 }
+
+const getStartTime = (started?: Date, message?: MessageType): Date | undefined => {
+  if (started) {
+    return started;
+  }
+
+  if (message?.blocks[0]?.type === 'transcription' && message.blocks[0].started) {
+    return new Date(message.blocks[0].started);
+  }
+
+  return undefined;
+};
+
+const formatTimestamp = (timestamp: Date, relative?: Date) => {
+  if (relative) {
+    const pad = (n = 0) => String(n).padStart(2, '0');
+    const { hours, minutes, seconds } = intervalToDuration({ start: relative, end: timestamp });
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  } else {
+    return format(timestamp, 'HH:mm:ss');
+  }
+};

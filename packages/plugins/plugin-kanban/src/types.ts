@@ -5,9 +5,8 @@
 import { TitleAnnotationId } from 'effect/SchemaAST';
 
 import { S } from '@dxos/echo-schema';
-import { type Space, SpaceSchema } from '@dxos/react-client/echo';
+import { SpaceSchema } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
-import { initializeKanban } from '@dxos/react-ui-kanban/testing';
 import { FieldSchema } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from './meta';
@@ -96,18 +95,3 @@ export type Location = {
 };
 
 export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
-
-export const createKanban = async ({
-  space,
-  name,
-  typename,
-  initialPivotColumn,
-}: {
-  space: Space;
-  name?: string;
-  typename?: string;
-  initialPivotColumn?: string;
-}) => {
-  const { kanban } = await initializeKanban({ space, name, typename, initialPivotColumn });
-  return kanban;
-};

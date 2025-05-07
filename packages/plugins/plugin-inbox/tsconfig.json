@@ -21,6 +21,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/display-name"
     },
     {
@@ -54,6 +57,9 @@
       "path": "../../experimental/artifact"
     },
     {
+      "path": "../../experimental/assistant"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -63,16 +69,31 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../ui/lit-ui"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/react-ui-grid"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/react-ui-stack"
+    },
+    {
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tag-picker"
     },
     {
       "path": "../../ui/react-ui-theme"
@@ -90,7 +111,19 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-storybook-layout"
+    },
+    {
+      "path": "../plugin-table"
     },
     {
       "path": "../plugin-theme"
