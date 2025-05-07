@@ -6,6 +6,10 @@
   @apply is-max max-is-popoverMaxWidth;
 }
 
+.popover-consistent-width {
+  inline-size: min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth));
+}
+
 @layer dx-components {
 
   /* Block size */
