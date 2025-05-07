@@ -11,9 +11,11 @@ import { orderKeys } from '@dxos/util';
 
 import { JSONSchemaAnnotationId } from 'effect/SchemaAST';
 import {
+  ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   EntityKind,
   EntityKindSchema,
   GeneratorAnnotationId,
+  getNormalizedEchoAnnotations,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   LabelAnnotationId,
@@ -39,49 +41,6 @@ export const EchoAnnotations: Partial<Record<keyof JsonSchemaEchoAnnotations, sy
   labelProp: LabelAnnotationId,
 
   // TODO(dmaretskyi): `FieldLookupAnnotationId` might go here, but lets remove it entirely and use LabelAnnotation instead.
-};
-
-/**
- * @internal
- */
-export const ECHO_ANNOTATIONS_NS_DEPRECATED_KEY: keyof JsonSchemaType = 'echo';
-
-/**
- * @internal
- */
-export const ECHO_ANNOTATIONS_NS_KEY = 'annotations';
-
-/**
- * @internal
- * @returns ECHO annotations namespace object in its normalized form.
- */
-export const getNormalizedEchoAnnotations = (obj: JsonSchemaType): JsonSchemaEchoAnnotations | undefined => {
-  if (obj[ECHO_ANNOTATIONS_NS_KEY] != null && obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] != null) {
-    return normalizeEchoAnnotations({
-      ...obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY],
-      ...obj[ECHO_ANNOTATIONS_NS_KEY],
-    });
-  } else if (obj[ECHO_ANNOTATIONS_NS_KEY] != null) {
-    return normalizeEchoAnnotations(obj[ECHO_ANNOTATIONS_NS_KEY]!);
-  } else if (obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] != null) {
-    return normalizeEchoAnnotations(obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY]!);
-  } else {
-    return undefined;
-  }
-};
-
-const normalizeEchoAnnotations = (obj: JsonSchemaEchoAnnotations): JsonSchemaEchoAnnotations => {
-  if (!obj.annotations) {
-    return obj;
-  } else {
-    return {
-      ...obj,
-      meta: {
-        ...obj.annotations,
-        ...(obj.meta ?? {}),
-      },
-    };
-  }
 };
 
 /**
@@ -317,9 +276,9 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     result = toEffectSchema(jsonSchema, defs).pipe(S.annotations({ identifier: refSegments[refSegments.length - 1] }));
   }
 
-  const refinement: JsonSchemaEchoAnnotations | undefined = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
-  if (refinement?.annotations) {
-    result = result.annotations({ [PropertyMetaAnnotationId]: refinement.annotations });
+  const echoAnnotations: JsonSchemaEchoAnnotations | undefined = getNormalizedEchoAnnotations(root);
+  if (echoAnnotations?.meta) {
+    result = result.annotations({ [PropertyMetaAnnotationId]: echoAnnotations.meta });
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);

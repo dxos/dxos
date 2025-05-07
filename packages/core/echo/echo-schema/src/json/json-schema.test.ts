@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 
 import {
   EntityKind,
+  getNormalizedEchoAnnotations,
   getSchemaProperty,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
@@ -23,7 +24,7 @@ import { TypedObject } from '../object';
 import { createSchemaReference, getSchemaReference, Ref } from '../ref';
 import { StoredSchema } from '../schema';
 import { prepareAstForCompare, Testing } from '../testing';
-import { getNormalizedEchoAnnotations, toEffectSchema, toJsonSchema } from './json-schema';
+import { toEffectSchema, toJsonSchema } from './json-schema';
 
 const EXAMPLE_NAMESPACE = '@example';
 

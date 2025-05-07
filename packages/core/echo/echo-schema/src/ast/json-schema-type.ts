@@ -45,7 +45,7 @@ export const JsonSchemaEchoAnnotations = S.Struct({
     S.Record({
       key: S.String,
       value: S.Any,
-    }),
+    }).pipe(S.mutable),
   ),
 
   /**
@@ -69,7 +69,7 @@ export const JsonSchemaEchoAnnotations = S.Struct({
     S.Record({
       key: S.String,
       value: S.Any,
-    }),
+    }).pipe(S.mutable),
   ),
 }).pipe(S.mutable);
 export type JsonSchemaEchoAnnotations = S.Schema.Type<typeof JsonSchemaEchoAnnotations>;
@@ -309,4 +309,52 @@ export const setSchemaProperty = (schema: JsonSchemaType, property: JsonProp, va
   schema.properties ??= {};
   schema.properties[property] = value;
   return schema;
+};
+
+/**
+ * @internal
+ */
+export const ECHO_ANNOTATIONS_NS_DEPRECATED_KEY: keyof JsonSchemaType = 'echo';
+
+/**
+ * @internal
+ */
+export const ECHO_ANNOTATIONS_NS_KEY = 'annotations';
+
+/**
+ * @internal
+ * @returns ECHO annotations namespace object in its normalized form.
+ *
+ * `meta` holds PropertyMeta annotations.
+ * `annotations` holds other annotations.
+ */
+export const getNormalizedEchoAnnotations = (obj: JsonSchemaType): JsonSchemaEchoAnnotations | undefined => {
+  if (obj[ECHO_ANNOTATIONS_NS_KEY] != null && obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] != null) {
+    return normalizeEchoAnnotations({
+      ...obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY],
+      ...obj[ECHO_ANNOTATIONS_NS_KEY],
+    });
+  } else if (obj[ECHO_ANNOTATIONS_NS_KEY] != null) {
+    return normalizeEchoAnnotations(obj[ECHO_ANNOTATIONS_NS_KEY]!);
+  } else if (obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] != null) {
+    return normalizeEchoAnnotations(obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY]!);
+  } else {
+    return undefined;
+  }
+};
+
+const normalizeEchoAnnotations = (obj: JsonSchemaEchoAnnotations): JsonSchemaEchoAnnotations => {
+  if (!obj.annotations) {
+    return obj;
+  } else {
+    const res = {
+      ...obj,
+      meta: {
+        ...obj.annotations,
+        ...(obj.meta ?? {}),
+      },
+    };
+    delete res.annotations;
+    return res;
+  }
 };

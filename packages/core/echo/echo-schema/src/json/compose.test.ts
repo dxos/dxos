@@ -6,8 +6,8 @@ import { Schema as S } from 'effect';
 import { describe, test } from 'vitest';
 
 import { composeSchema } from './compose';
-import { ECHO_ANNOTATIONS_NS_DEPRECATED_KEY, toJsonSchema } from './json-schema';
-import { FieldPath } from '../ast';
+import { toJsonSchema } from './json-schema';
+import { ECHO_ANNOTATIONS_NS_DEPRECATED_KEY, FieldPath } from '../ast';
 import { FormatAnnotation, FormatEnum } from '../formats';
 import { TypedObject } from '../object';
 
@@ -29,6 +29,7 @@ describe('schema composition', () => {
       email: {
         type: 'string',
         format: FormatEnum.Email,
+        // TODO(dmaretskyi): Should use the new field.
         [ECHO_ANNOTATIONS_NS_DEPRECATED_KEY]: {
           annotations: {
             path: '$.email',
