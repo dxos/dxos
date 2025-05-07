@@ -15,7 +15,6 @@ export const BUTTON_IDENTIFIERS: { [K in TableButton]: string } = {
 type ButtonData =
   | { type: 'columnSettings'; fieldId: string }
   | { type: 'newColumn'; disabled?: boolean }
-  | { type: 'referencedCell'; schemaId: string; targetId: string }
   | { type: 'rowMenu'; rowIndex: number }
   | { type: 'sort'; fieldId: string; direction?: 'asc' | 'desc' };
 
