@@ -53,6 +53,7 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
             ...(statusbar ? ['var(--statusbar-size)'] : []),
           ].join(' '),
         }}
+        data-popover-collision-boundary={true}
         ref={forwardedRef}
       >
         {children}
