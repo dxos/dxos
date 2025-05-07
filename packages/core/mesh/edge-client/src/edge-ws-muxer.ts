@@ -27,7 +27,7 @@ const FLAG_SEGMENT_SEQ_TERMINATED = 1 << 1;
 /**
  * 1MB websocket message limit: https://developers.cloudflare.com/durable-objects/platform/limits/
  */
-const CLOUDFLARE_MESSAGE_LENGTH_LIMIT = 1024 * 1024;
+export const CLOUDFLARE_MESSAGE_LENGTH_LIMIT = 1024 * 1024;
 
 const MAX_CHUNK_LENGTH = 16384;
 const MAX_BUFFERED_AMOUNT = CLOUDFLARE_MESSAGE_LENGTH_LIMIT;
