@@ -45,7 +45,7 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
 
   return (
     <DeckPopoverProvider setOpen={setOpen}>
-      <Popover.Root modal open={open}>
+      <Popover.Root modal={false} open={open}>
         {layout.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
         {children}
       </Popover.Root>
