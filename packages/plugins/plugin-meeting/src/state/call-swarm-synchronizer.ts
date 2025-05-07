@@ -286,7 +286,7 @@ export class CallSwarmSynchronizer extends Resource {
     });
     this.stateUpdated.emit(this._state);
 
-    Schedule next reconcile if there are inactive peer to drop them after timeout.
+    // Schedule next reconcile if there are inactive peer to drop them after timeout.
     if (peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
       scheduleTaskInterval(
         this._ctx,
