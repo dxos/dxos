@@ -6,7 +6,7 @@ import type { Schema } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT, Contact, Organization } from '@dxos/assistant/testing';
+import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { Filter, fullyQualifiedId, getSpace, makeRef, type Space } from '@dxos/client/echo';
 import { getSchemaTypename, isInstanceOf, type BaseEchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -20,7 +20,7 @@ import { MeetingCapabilities, type CallState, type MediaState } from '@dxos/plug
 import { MeetingType, type MeetingCallProperties } from '@dxos/plugin-meeting/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type TranscriptionPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import type { MessageType } from '@dxos/schema';
+import { type MessageType, Contact, Organization } from '@dxos/schema';
 
 import { TranscriptionCapabilities } from './capabilities';
 import { processTranscriptMessage } from '../entity-extraction';
@@ -198,12 +198,12 @@ const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: Entit
 const processContextObject = async (object: BaseEchoObject): Promise<any> => {
   // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
   // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
-  if (isInstanceOf(DocumentType, object)) {
-    return {
-      ...object,
-      content: await object.content.load(),
-    };
-  }
+  // if (isInstanceOf(DocumentType, object)) {
+  //   return {
+  //     ...object,
+  //     content: await object.content.load(),
+  //   };
+  // }
 
   return object;
 };

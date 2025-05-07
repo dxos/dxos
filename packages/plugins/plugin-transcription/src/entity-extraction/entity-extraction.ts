@@ -8,7 +8,8 @@ import { createTemplate, Message, structuredOutputParser } from '@dxos/artifact'
 import type { AIServiceClient } from '@dxos/assistant';
 import { MixedStreamParser } from '@dxos/assistant';
 import { asyncTimeout } from '@dxos/async';
-import { type BaseEchoObject, create } from '@dxos/echo-schema';
+import { type BaseEchoObject, create, ObjectId } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MessageType } from '@dxos/schema';
 
@@ -136,9 +137,13 @@ export const processTranscriptMessage = async (
 // TODO(dmaretskyi): Lookup and verifiy ids from provided context.
 export const postprocessText = (text: string, quotes: ReferencedQuotes) => {
   for (const quote of quotes.references) {
+    if (!ObjectId.isValid(quote.id)) {
+      continue;
+    }
+
     // Use a case-insensitive regular expression to replace the quote
     const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    text = text.replace(regex, `[${quote.quote}][dxn:echo:@:${quote.id}]`);
+    text = text.replace(regex, `[${quote.quote}][${DXN.fromLocalObjectId(quote.id).toString()}]`);
   }
   return text;
 };
