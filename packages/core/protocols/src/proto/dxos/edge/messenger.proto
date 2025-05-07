@@ -45,12 +45,15 @@ message Peer {
   optional ConnectionState connection_state = 5;
   /**
    * UNIX timestamp of the connection.
+   * @example 1715142000000
    */
-  optional int32 connected = 6;
+  // Note: it is not `int64` because `int64` is compiled as a `string` in 'buf' and as a `number` in 'proto-js'.
+  optional double connected = 6;
   /**
    * UNIX timestamp of the disconnection.
+   * @example 1715142000000
    */
-  optional int32 disconnected = 7;
+  optional double disconnected = 7;
 
   /**
    * Optional opeage data that represents peer state is updated on `join` request and all peers in swarm are notified.
