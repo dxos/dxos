@@ -20,11 +20,11 @@ import { IconAnnotationId } from '../annotations';
  */
 export const OrganizationSchema = S.Struct({
   id: Type.ObjectId,
-  name: S.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' }),
+  name: S.optional(S.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' })),
   description: S.optional(S.String.annotations({ title: 'Description' })),
   // TODO(wittjosiah): Support ref?
   status: S.optional(
-    S.Union(S.Literal('active'), S.Literal('inactive'), S.Literal('pending'), S.Literal('archived')).annotations({
+    S.Union(S.Literal('first'), S.Literal('second'), S.Literal('third'), S.Literal('fourth')).annotations({
       title: 'Status',
       [PropertyMetaAnnotationId]: {
         singleSelect: {
