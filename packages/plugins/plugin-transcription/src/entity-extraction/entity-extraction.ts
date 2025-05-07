@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { MessageType } from '@dxos/schema';
 
 import SYSTEM_PROMPT from './system-prompt.tpl?raw';
+import { DXN } from '@dxos/keys';
 
 type ProcessTranscriptMessageParams = {
   message: MessageType;
@@ -142,7 +143,7 @@ export const postprocessText = (text: string, quotes: ReferencedQuotes) => {
 
     // Use a case-insensitive regular expression to replace the quote
     const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    text = text.replace(regex, `[${quote.quote}][dxn:echo:@:${quote.id}]`);
+    text = text.replace(regex, `[${quote.quote}][${DXN.fromLocalObjectId(quote.id).toString()}]`);
   }
   return text;
 };
