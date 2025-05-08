@@ -3,14 +3,11 @@
 //
 
 import { Schema as S } from 'effect';
-import { DescriptionAnnotationId, TitleAnnotationId } from 'effect/SchemaAST';
 
 import * as DateUtil from './date';
 import * as NumberUtil from './number';
-import { CurrencyAnnotationId } from './number';
 import * as ObjectUtil from './object';
 import * as StringUtil from './string';
-import { FormatAnnotationId } from './types';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 // TODO(burdon): Media encoding.
@@ -50,21 +47,3 @@ export namespace Format {
   // Objects
   export const GeoPoint = ObjectUtil.GeoPoint;
 }
-
-/**
- * List of annotations for JSON encoding/decoding.
- * Omits default effect-schema annotations since they are encoded with default serializer.
- */
-export const CustomAnnotations = {
-  format: FormatAnnotationId,
-  currency: CurrencyAnnotationId,
-};
-
-/**
- * List of annotations for JSON decoding only.
- * Includes default effect annotations.
- */
-export const DecodedAnnotations = {
-  title: TitleAnnotationId,
-  description: DescriptionAnnotationId,
-};

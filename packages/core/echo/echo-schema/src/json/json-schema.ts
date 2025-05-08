@@ -14,34 +14,18 @@ import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   EntityKind,
   EntityKindSchema,
-  GeneratorAnnotationId,
   getNormalizedEchoAnnotations,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-  LabelAnnotationId,
-  PropertyMetaAnnotationId,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
   type TypeAnnotation,
 } from '../ast';
-import { CustomAnnotations, DecodedAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
-
-/**
- * Annotations that go into ECHO namespace in json-schema.
- */
-// TODO(dmaretskyi): Consider removing ECHO namespace and putting them at the top level.
-// TODO(dmaretskyi): Move to format.ts when circular imports are solved
-export const EchoAnnotations: Partial<Record<keyof JsonSchemaEchoAnnotations, symbol>> = {
-  meta: PropertyMetaAnnotationId,
-  generator: GeneratorAnnotationId,
-  labelProp: LabelAnnotationId,
-
-  // TODO(dmaretskyi): `FieldLookupAnnotationId` might go here, but lets remove it entirely and use LabelAnnotation instead.
-};
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 
 /**
  * Create object jsonSchema.

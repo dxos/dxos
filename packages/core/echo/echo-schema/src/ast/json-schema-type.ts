@@ -25,6 +25,9 @@ const JsonSchemaOrBoolean = S.Union(
 
 export const EntityKindSchema = S.Enums(EntityKind);
 
+/**
+ * Go under the `annotations` property.
+ */
 export const JsonSchemaEchoAnnotations = S.Struct({
   /**
    * Label for this schema.
