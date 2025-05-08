@@ -112,8 +112,6 @@ const _JsonSchemaType = S.Struct({
    */
   entityKind: S.optional(EntityKindSchema),
 
-  // TODO(dmaretskyi): Target and source types for relations.
-
   /**
    * Typename of this schema.
    * Only on schema representing an ECHO object.
@@ -128,12 +126,43 @@ const _JsonSchemaType = S.Struct({
    */
   version: S.optional(S.String),
 
+  /**
+   * Target of this relation.
+   * Only for relation schemas.
+   * The referenced schema must be an object schema.
+   */
+  relationTarget: S.optional(S.suspend(() => JsonSchemaType)),
+
+  /**
+   * Source of this relation.
+   * Only for relation schemas.
+   * The referenced schema must be an object schema.
+   */
+  relationSource: S.optional(S.suspend(() => JsonSchemaType)),
+
+  /**
+   * Title of this schema.
+   */
   title: S.optional(S.String),
+
+  /**
+   * Description of this schema.
+   */
   description: S.optional(S.String),
 
+  /**
+   * Whether this schema is read-only.
+   */
   readOnly: S.optional(S.Boolean),
+
+  /**
+   * Whether this schema is write-only.
+   */
   writeOnly: S.optional(S.Boolean),
 
+  /**
+   * Examples of instances of this schema.
+   */
   examples: S.optional(S.Array(S.Any)),
 
   /**
@@ -141,7 +170,14 @@ const _JsonSchemaType = S.Struct({
    */
   default: S.optional(S.Any),
 
+  /**
+   * This schema only matches values that are equal to this value.
+   */
   const: S.optional(S.Any),
+
+  /**
+   * This schema only matches one of the values in this array.
+   */
   enum: S.optional(S.Array(S.Any)),
 
   /**
