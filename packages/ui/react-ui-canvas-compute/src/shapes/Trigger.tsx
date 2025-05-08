@@ -24,7 +24,7 @@ import {
   type WebhookTrigger,
 } from '@dxos/functions/types';
 import { DXN, SpaceId } from '@dxos/keys';
-import { live, Ref, useSpace } from '@dxos/react-client/echo';
+import { live, makeRef, useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
@@ -52,7 +52,7 @@ export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
   });
   return createShape<TriggerShape>({
     type: 'trigger',
-    functionTrigger: Ref.make(functionTrigger),
+    functionTrigger: makeRef(functionTrigger),
     size: { width: 192, height: getHeight(EmailTriggerOutput) },
     ...props,
   });

@@ -6,7 +6,7 @@ import { Capabilities, contributes, createResolver, type PluginsContext } from '
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { TextType } from '@dxos/schema';
@@ -45,8 +45,8 @@ export default (context: PluginsContext) =>
         let text = await doc?.content?.load();
         if (!isInstanceOf(DocumentType, doc)) {
           text = live(TextType, { content: '' });
-          doc = live(DocumentType, { content: Ref.make(text), threads: [] });
-          meeting.artifacts[getSchemaTypename(DocumentType)!] = Ref.make(doc);
+          doc = live(DocumentType, { content: makeRef(text), threads: [] });
+          meeting.artifacts[getSchemaTypename(DocumentType)!] = makeRef(doc);
         }
 
         const content = await getMeetingContent(meeting, resolve);

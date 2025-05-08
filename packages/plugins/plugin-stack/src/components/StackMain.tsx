@@ -13,7 +13,7 @@ import {
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { live, getType, fullyQualifiedId, isLiveObject, Ref.make } from '@dxos/client/echo';
+import { live, getType, fullyQualifiedId, isLiveObject, makeRef } from '@dxos/client/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -49,7 +49,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
 
   useEffect(() => {
     if (!collection.views[StackViewType.typename]) {
-      collection.views[StackViewType.typename] = Ref.make(stack);
+      collection.views[StackViewType.typename] = makeRef(stack);
     }
   }, [collection, stack]);
 

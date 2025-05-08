@@ -6,8 +6,6 @@ import type { Schema } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT, Contact, Organization } from '@dxos/assistant/testing';
-import { Filter, fullyQualifiedId, getSpace, Ref, type Space } from '@dxos/client/echo';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { Filter, fullyQualifiedId, getSpace, makeRef, type Space } from '@dxos/client/echo';
 import { getSchemaTypename, isInstanceOf, type BaseEchoObject } from '@dxos/echo-schema';
@@ -49,7 +47,7 @@ const getMeetingTranscript = async (
   const space = getSpace(meeting);
   invariant(space);
   const { data } = await dispatch(createIntent(TranscriptionAction.Create, { spaceId: space.id }));
-  meeting.artifacts[typename] = Ref.make(data!.object);
+  meeting.artifacts[typename] = makeRef(data!.object);
   return data?.object;
 };
 

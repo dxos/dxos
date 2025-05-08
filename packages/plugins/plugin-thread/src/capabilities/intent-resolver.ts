@@ -6,12 +6,12 @@ import { Capabilities, contributes, createIntent, createResolver, type PluginsCo
 import { ObjectId, Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-
+import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
-import { live, fullyQualifiedId, getSpace, Ref.make } from '@dxos/react-client/echo';
+import { live, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
 import { MessageType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
@@ -26,7 +26,7 @@ export default (context: PluginsContext) =>
         data: {
           object: live(ChannelType, {
             name,
-            queue: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           }),
         },
       }),
@@ -177,14 +177,14 @@ export default (context: PluginsContext) =>
           created: new Date().toISOString(),
           blocks: [{ type: 'text', text }],
           // TODO(wittjosiah): Context based on attention.
-          // context: context ? Ref.make(context) : undefined,
+          // context: context ? makeRef(context) : undefined,
         });
-        thread.messages.push(Ref.make(message));
+        thread.messages.push(makeRef(message));
 
         if (state.drafts[subjectId]?.find((t) => t === thread)) {
           // Move draft to document.
           thread.status = 'active';
-          subject.threads ? subject.threads.push(Ref.make(thread)) : (subject.threads = [Ref.make(thread)]);
+          subject.threads ? subject.threads.push(makeRef(thread)) : (subject.threads = [makeRef(thread)]);
           state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
           intents.push(
             createIntent(ObservabilityAction.SendEvent, {
@@ -256,7 +256,7 @@ export default (context: PluginsContext) =>
             return;
           }
 
-          thread.messages.splice(messageIndex, 0, Ref.make(message));
+          thread.messages.splice(messageIndex, 0, makeRef(message));
           return {
             intents: [
               createIntent(ObservabilityAction.SendEvent, {

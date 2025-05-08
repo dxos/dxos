@@ -3,7 +3,7 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 
 import { CanvasType, DiagramType, SketchAction, TLDRAW_SCHEMA } from '../types';
 
@@ -16,7 +16,7 @@ export default () =>
         data: {
           object: live(DiagramType, {
             name,
-            canvas: Ref.make(live(CanvasType, { schema, content })),
+            canvas: makeRef(live(CanvasType, { schema, content })),
             threads: [],
           }),
         },

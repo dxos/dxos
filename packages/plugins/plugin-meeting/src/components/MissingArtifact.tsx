@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId, getSpace, Ref.make } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
 
 import { type MeetingType } from '../types';
 

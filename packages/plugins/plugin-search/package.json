@@ -42,7 +42,7 @@
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.14.20",
+    "effect": "3.13.3",
     "exa-js": "^1.5.12",
     "main-thread-scheduling": "^14.1.1"
   },

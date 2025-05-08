@@ -4,21 +4,28 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useMemo } from 'react';
 
-import { AST, ImmutableSchema, type BaseObject, type BaseSchema, type HasId } from '@dxos/echo-schema';
+import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
-import { live, Ref } from '@dxos/react-client/echo';
+import { faker } from '@dxos/random';
+import { live, makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Contact, createView, Organization, ViewProjection, ViewType } from '@dxos/schema';
-import { createAsyncGenerator } from '@dxos/schema/testing';
+import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { Table } from './Table';
 import { useTableModel } from '../../hooks';
-import { TablePresentation, type TableFeatures, type TableRow } from '../../model';
+import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
-import { Table } from './Table';
+
+faker.seed(1);
+const generator: ValueGenerator = faker as any;
+
+// TODO(burdon): Many-to-many relations.
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
@@ -30,7 +37,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     const typename = schema.typename;
     const name = getAnnotation<string>(AST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema: schema.jsonSchema });
-    return live(TableType, { view: Ref.make(view) });
+    return live(TableType, { view: makeRef(view) });
   }, [schema]);
 
   const projection = useMemo(() => {

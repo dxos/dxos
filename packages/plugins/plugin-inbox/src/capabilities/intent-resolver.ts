@@ -14,11 +14,11 @@ import {
 } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { QueueSubspaceTags, DXN } from '@dxos/keys';
-import { live } from '@dxos/live-object';
+import { live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { TableAction } from '@dxos/plugin-table';
-import { Filter, Ref } from '@dxos/react-client/echo';
+import { Filter, makeRef } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 import { MessageType, Contact, Organization } from '@dxos/schema';
 
@@ -33,7 +33,7 @@ export default (context: PluginsContext) =>
         data: {
           object: live(MailboxType, {
             name,
-            queue: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           }),
         },
       }),
@@ -126,7 +126,7 @@ export default (context: PluginsContext) =>
 
         if (matchingOrg) {
           log.info('Found matching organization', { organization: matchingOrg });
-          newContact.organization = Ref.make(matchingOrg);
+          newContact.organization = makeRef(matchingOrg);
         }
 
         space.db.add(newContact);

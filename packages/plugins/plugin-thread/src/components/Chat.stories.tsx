@@ -11,7 +11,7 @@ import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/ap
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-
+import { refFromDXN } from '@dxos/live-object';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -39,7 +39,7 @@ const Story = () => {
         const space = await client.spaces.create();
         const channel = space.db.add(
           live(ChannelType, {
-            queue: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()])),
+            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()])),
           }),
         );
         setSpace(space);

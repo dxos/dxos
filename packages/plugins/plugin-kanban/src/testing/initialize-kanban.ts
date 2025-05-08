@@ -14,9 +14,8 @@ import {
   toJsonSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/react-client';
-import { type Space, live, Ref } from '@dxos/react-client/echo';
 import { type Client, PublicKey } from '@dxos/react-client';
+import { type Space, live, makeRef } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
 import { createView, ViewProjection, createFieldId, getSchemaProperties } from '@dxos/schema';
 import { capitalize } from '@dxos/util';
@@ -81,7 +80,7 @@ export const initializeKanban = async ({
       fields,
     });
 
-    const kanban = live(KanbanType, { cardView: Ref.make(view), columnFieldId: undefined, name });
+    const kanban = live(KanbanType, { cardView: makeRef(view), columnFieldId: undefined, name });
     if (initialPivotColumn) {
       const viewProjection = new ViewProjection(jsonSchema, view);
       const fieldId = viewProjection.getFieldId(initialPivotColumn);
@@ -134,7 +133,7 @@ export const initializeKanban = async ({
     const fieldId = viewProjection.getFieldId(initialPivotField);
     invariant(fieldId);
 
-    const kanban = live(KanbanType, { cardView: Ref.make(view), columnFieldId: fieldId });
+    const kanban = live(KanbanType, { cardView: makeRef(view), columnFieldId: fieldId });
     return { kanban, schema };
   }
 };

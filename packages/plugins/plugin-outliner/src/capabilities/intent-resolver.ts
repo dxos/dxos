@@ -3,7 +3,7 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { Task } from '@dxos/schema';
 
 import { OutlinerAction, JournalType, OutlineType, createJournalEntry, createTree } from '../types';
@@ -16,7 +16,7 @@ export default () =>
         data: {
           object: live(JournalType, {
             name,
-            entries: [Ref.make(createJournalEntry())],
+            entries: [makeRef(createJournalEntry())],
           }),
         },
       }),
@@ -27,7 +27,7 @@ export default () =>
         data: {
           object: live(OutlineType, {
             name,
-            tree: Ref.make(createTree()),
+            tree: makeRef(createTree()),
           }),
         },
       }),

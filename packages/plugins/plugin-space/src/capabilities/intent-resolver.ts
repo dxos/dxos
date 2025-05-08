@@ -14,7 +14,7 @@ import {
 } from '@dxos/app-framework';
 import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { live, Ref, type Live } from '@dxos/live-object';
+import { live, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
@@ -76,7 +76,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
         await space.waitUntilReady();
         const collection = live(CollectionType, { objects: [], views: {} });
-        space.properties[CollectionType.typename] = Ref.make(collection);
+        space.properties[CollectionType.typename] = makeRef(collection);
 
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
@@ -384,17 +384,17 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
 
         if (target instanceof CollectionType) {
-          target.objects.push(Ref.make(object as HasId));
+          target.objects.push(makeRef(object as HasId));
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {
           const collection = space.properties[CollectionType.typename]?.target;
           if (collection instanceof CollectionType) {
-            collection.objects.push(Ref.make(object as HasId));
+            collection.objects.push(makeRef(object as HasId));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-            const collection = live(CollectionType, { objects: [Ref.make(object as HasId)], views: {} });
-            space.properties[CollectionType.typename] = Ref.make(collection);
+            const collection = live(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
+            space.properties[CollectionType.typename] = makeRef(collection);
           }
         }
 
@@ -504,7 +504,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
             deletionData.indices.forEach((index: number, i: number) => {
               if (index !== -1) {
-                deletionData.parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Expando));
+                deletionData.parentCollection.objects.splice(index, 0, makeRef(restoredObjects[i] as Expando));
               }
             });
 

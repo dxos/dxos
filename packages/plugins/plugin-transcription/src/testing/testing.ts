@@ -13,7 +13,7 @@ import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { live, Ref, useQueue, type Space } from '@dxos/react-client/echo';
+import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
 import { Contact, MessageType, Organization, type TranscriptionContentBlock } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
 
@@ -69,7 +69,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     if (this._space) {
       const label = faker.commerce.productName();
       const obj = this._space.db.add(live(TestItem, { title: label, description: faker.lorem.paragraph() }));
-      const dxn = Ref.make(obj).dxn.toString();
+      const dxn = makeRef(obj).dxn.toString();
       const words = text.split(' ');
       words.splice(Math.floor(Math.random() * words.length), 0, `[${label}][${dxn}]`);
       text = words.join(' ');

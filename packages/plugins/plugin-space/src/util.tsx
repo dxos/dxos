@@ -3,17 +3,10 @@
 //
 
 import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import {
-  EXPANDO_TYPENAME,
-  getTypeAnnotation,
-  getTypename,
-  type BaseObject,
-  type Expando,
-  Ref,
-} from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject } from '@dxos/live-object';
+import { isLiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
@@ -114,7 +107,7 @@ const getCollectionGraphNodePartials = ({
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      collection.objects = nextOrder.filter(isEchoObject).map(Ref.make);
+      collection.objects = nextOrder.filter(isEchoObject).map(makeRef);
     },
     onTransferStart: (child: Node<ReactiveEchoObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
@@ -137,9 +130,9 @@ const getCollectionGraphNodePartials = ({
       // TODO(dmaretskyi): Compare by id.
       if (!collection.objects.find((object) => object.target === child.data)) {
         if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
+          collection.objects.splice(index, 0, makeRef(child.data));
         } else {
-          collection.objects.push(Ref.make(child.data));
+          collection.objects.push(makeRef(child.data));
         }
       }
 
@@ -166,9 +159,9 @@ const getCollectionGraphNodePartials = ({
       const newObject = await cloneObject(child.data, resolve, space);
       space.db.add(newObject);
       if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, Ref.make(newObject));
+        collection.objects.splice(index, 0, makeRef(newObject));
       } else {
-        collection.objects.push(Ref.make(newObject));
+        collection.objects.push(makeRef(newObject));
       }
     },
   };

@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { live, refFromDXN } from '@dxos/live-object';
 import { type SpaceId, createQueueDxn } from '@dxos/react-client/echo';
 
 import { TranscriptionAction, TranscriptType } from '../types';
@@ -15,7 +15,7 @@ export default (context: PluginsContext) =>
       intent: TranscriptionAction.Create,
       resolve: ({ name, spaceId }) => {
         const transcript = live(TranscriptType, {
-          queue: Ref.fromDXN(createQueueDxn(spaceId as SpaceId)),
+          queue: refFromDXN(createQueueDxn(spaceId as SpaceId)),
           name: name ?? `Transcript ${getTimeStr(Date.now())}`,
         });
 

@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { create } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
-import { Ref.make } from '@dxos/react-client/echo';
+import { makeRef } from '@dxos/react-client/echo';
 import { Icon, Popover } from '@dxos/react-ui';
 import { TextType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
@@ -50,7 +50,7 @@ export default meta;
 const data = (() => {
   const document = create(DocumentType, {
     name: faker.lorem.words(3),
-    content: Ref.make(
+    content: makeRef(
       create(TextType, {
         content: faker.lorem.paragraphs(3),
       }),

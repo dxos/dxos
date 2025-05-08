@@ -10,16 +10,15 @@ import path from 'path';
 import { asyncTimeout } from '@dxos/async';
 import { CollectionType } from '@dxos/cli-composer';
 import { type Client } from '@dxos/client';
-import { type ReactiveEchoObject, Ref.make } from '@dxos/client/echo';
-import { live, getMeta } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
+import { type ReactiveEchoObject, getMeta, live, makeRef } from '@dxos/client/echo';
 import {
-  incrementSemverPatch,
-  setUserFunctionUrlInMetadata,
-  uploadWorkerFunction,
-  makeFunctionUrl,
   FunctionType,
   ScriptType,
+  incrementSemverPatch,
+  makeFunctionUrl,
+  setUserFunctionUrlInMetadata,
+  uploadWorkerFunction,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
@@ -158,9 +157,9 @@ export default class Upload extends BaseCommand<typeof Upload> {
     } else {
       const sourceObj = space.db.add(live(TextType, { content: scriptFileContent }));
       const obj = space.db.add(
-        live(ScriptType, { name: this.flags.name ?? scriptFileName, source: Ref.make(sourceObj) }),
+        live(ScriptType, { name: this.flags.name ?? scriptFileName, source: makeRef(sourceObj) }),
       );
-      functionObject.source = Ref.make(obj);
+      functionObject.source = makeRef(obj);
       await makeObjectNavigableInComposer(client, space, obj);
       if (this.flags.verbose) {
         this.log(`Created object, ID: ${obj.id}`);
@@ -187,7 +186,7 @@ const makeObjectNavigableInComposer = async (client: Client, space: Space, obj: 
     client.addTypes([CollectionType]);
     const composerCollection = await collection.load();
     if (composerCollection) {
-      composerCollection.objects.push(Ref.make(obj));
+      composerCollection.objects.push(makeRef(obj));
     }
   }
 };

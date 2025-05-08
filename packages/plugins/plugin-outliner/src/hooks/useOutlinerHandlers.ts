@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
-import { Ref.make } from '@dxos/live-object';
+import { makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -38,7 +38,7 @@ export const useOutlinerHandlers = (space: Space | undefined): UseOutlinerHandle
           log.info('handleAction', { space: space?.id, data });
           if (space && data) {
             const task = space.db.add(data.object);
-            action.node.ref = Ref.make(task);
+            action.node.ref = makeRef(task);
             action.node.data.text = '';
           }
           break;

@@ -5,7 +5,7 @@
 import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Ref, RefArray } from '@dxos/live-object';
+import { makeRef, RefArray } from '@dxos/live-object';
 import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -48,7 +48,7 @@ const JournalRoot = ({ journal, classNames, ...props }: JournalRootProps) => {
     }
 
     const entry = createJournalEntry();
-    journal.entries.push(Ref.make(entry));
+    journal.entries.push(makeRef(entry));
     setShowAddEntry(false);
   }, [journal, date]);
 
