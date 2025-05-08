@@ -137,6 +137,9 @@ async function searchDependencyInFiles(depName, pkgPath) {
     absolute: true,
     cwd: pkgPath,
   });
+  if (argv.verbose) {
+    console.log(chalk.gray(`Searching for ${depName} in ${files}`));
+  }
 
   for (const file of files) {
     const content = await readFileWithCache(file);
@@ -270,7 +273,13 @@ async function analyzeDependencies(pkg, peerDepsMap) {
     if (shouldKeep) {
       potentiallyUsedDeps.push(dep);
     } else {
-      unusedDeps.push(dep);
+      // Check if the dependency is referenced in text somewhere
+      const foundInText = await searchDependencyInFiles(dep, pkg.path);
+      if (foundInText) {
+        potentiallyUsedDeps.push(dep);
+      } else {
+        unusedDeps.push(dep);
+      }
     }
   }
 
@@ -282,7 +291,13 @@ async function analyzeDependencies(pkg, peerDepsMap) {
     if (shouldKeep) {
       potentiallyUsedDevDeps.push(dep);
     } else {
-      unusedDevDeps.push(dep);
+      // Check if the dependency is referenced in text somewhere
+      const foundInText = await searchDependencyInFiles(dep, pkg.path);
+      if (foundInText) {
+        potentiallyUsedDevDeps.push(dep);
+      } else {
+        unusedDevDeps.push(dep);
+      }
     }
   }
 
