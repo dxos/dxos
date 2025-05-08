@@ -3,22 +3,27 @@
 //
 
 import '@dxos-theme';
-
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { SpacePlugin } from '@dxos/plugin-space';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useSpaces, useQuery, useSchema, live } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
+import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { ViewType, ViewProjection } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { defaultTx } from '@dxos/react-ui-theme';
+import { ViewProjection, Contact, Organization, organizationStatusOptions } from '@dxos/schema';
+import { withLayout } from '@dxos/storybook-utils';
 
-import { Kanban } from './Kanban';
-import { KanbanType, useKanbanModel } from '../defs';
 import { initializeKanban } from '../testing';
 import translations from '../translations';
 
@@ -27,6 +32,14 @@ faker.seed(0);
 //
 // Story components.
 //
+
+const rollOrg = () => ({
+  name: faker.commerce.productName(),
+  description: faker.lorem.paragraph(),
+  image: faker.image.url(),
+  website: faker.internet.url(),
+  status: faker.helpers.arrayElement(organizationStatusOptions).id,
+});
 
 const StorybookKanban = () => {
   const client = useClient();
@@ -66,8 +79,7 @@ const StorybookKanban = () => {
       const path = model?.columnFieldPath;
       if (space && schema && path) {
         const card = live(schema, {
-          title: faker.commerce.productName(),
-          description: faker.lorem.paragraph(),
+          ...rollOrg(),
           [path]: columnValue,
         });
 
@@ -126,34 +138,44 @@ type StoryProps = {
 //
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-kanban/Kanban',
+  title: 'ui/plugin-kanban/Kanban',
   component: StorybookKanban,
   render: () => <StorybookKanban />,
   parameters: { translations },
   decorators: [
-    withClientProvider({
-      types: [KanbanType, ViewType],
-      createIdentity: true,
-      createSpace: true,
-      onSpaceCreated: async ({ space, client }) => {
-        const { schema, kanban } = await initializeKanban({ space, client });
-        space.db.add(kanban);
+    withLayout({ fullscreen: true }),
+    withPluginManager({
+      plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        ClientPlugin({
+          types: [Organization, Contact, KanbanType],
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
+            const space = await client.spaces.create();
+            await space.waitUntilReady();
+            const { schema, kanban } = await initializeKanban({
+              space,
+              client,
+              typename: Organization.typename,
+              initialPivotColumn: 'status',
+            });
+            space.db.add(kanban);
 
-        if (schema) {
-          // TODO(burdon): Replace with sdk/schema/testing.
-          Array.from({ length: 80 }).map(() => {
-            return space.db.add(
-              live(schema, {
-                title: faker.commerce.productName(),
-                description: faker.lorem.paragraph(),
-              }),
-            );
-          });
-        }
-      },
+            if (schema) {
+              // TODO(burdon): Replace with sdk/schema/testing.
+              Array.from({ length: 80 }).map(() => {
+                return space.db.add(live(schema, rollOrg()));
+              });
+            }
+          },
+        }),
+        StorybookLayoutPlugin(),
+        PreviewPlugin(),
+        SpacePlugin(),
+        IntentPlugin(),
+        SettingsPlugin(),
+      ],
     }),
-    withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
   ],
 };
 

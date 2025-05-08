@@ -66,6 +66,9 @@
       "path": "../../ui/react-ui-stack"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {
@@ -75,10 +78,16 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }
