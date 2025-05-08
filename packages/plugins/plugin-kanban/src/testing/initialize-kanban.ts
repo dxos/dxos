@@ -16,10 +16,9 @@ import {
 import { invariant } from '@dxos/invariant';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space, live, makeRef } from '@dxos/react-client/echo';
+import { KanbanType } from '@dxos/react-ui-kanban';
 import { createView, ViewProjection, createFieldId, getSchemaProperties } from '@dxos/schema';
 import { capitalize } from '@dxos/util';
-
-import { KanbanType } from '../defs';
 
 // TODO(wittjosiah): UI package shouldn't depend on client.
 
