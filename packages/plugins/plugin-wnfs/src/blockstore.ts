@@ -3,7 +3,7 @@
 //
 
 import { CarWriter } from '@ipld/car';
-import type { Block } from '@ipld/car/api';
+import type { Block } from '@ipld/car/reader';
 import { BaseBlockstore } from 'blockstore-core';
 import { IDBBlockstore } from 'blockstore-idb';
 import debounce from 'debounce';
@@ -170,17 +170,9 @@ export class MixedBlockstore extends BaseBlockstore {
       }),
     );
 
-    // TODO: Create & submit CAR
-    //       DEPENDS ON EDGE BLOB-SERVICE CHANGES
-    // const car = await this.#createCar(blocks);
-    // await this.putCarRemote(car);
-    //
-    // Temporary solution:
-    await Promise.all(
-      blocks.map((block: Block) => {
-        return this.putRemote(block.cid, block.bytes);
-      }),
-    );
+    // Create & submit CAR
+    const car = await this.#createCar(blocks);
+    await this.putCarRemote(car);
 
     // Adjust queue
     const queue = [...this.#queue].filter((k) => {

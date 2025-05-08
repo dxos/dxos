@@ -1,11 +1,12 @@
 {
   "name": "@dxos/react-ui-pickers",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "A collection of picker components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -22,17 +23,18 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@emoji-mart/data": "^1.1.2",
     "@emoji-mart/react": "^1.1.1",
-    "@radix-ui/react-use-controllable-state": "1.1.0"
+    "@radix-ui/react-use-controllable-state": "1.1.0",
+    "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
@@ -42,7 +44,6 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

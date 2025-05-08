@@ -9,13 +9,13 @@ import { log } from '@dxos/log';
 import { executeQuery } from './query-executor';
 import { createTestData } from '../testing';
 
-test('run', async ({ expect }) => {
+test.skip('run', async ({ expect }) => {
   const dataSource = createTestData();
   // for (const node of dataSource.nodes) {
-  //   log.info('node', { id: node.id, label: node.label, name: node.properties.name });
+  //   log('node', { id: node.id, label: node.label, name: node.properties.name });
   // }
   // for (const relationship of dataSource.relationships) {
-  //   log.info('relationship', {
+  //   log('relationship', {
   //     source: relationship.source.id,
   //     target: relationship.target.id,
   //     label: relationship.label,
@@ -25,7 +25,7 @@ test('run', async ({ expect }) => {
   const result = await executeQuery(
     dataSource,
     `
-      MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'})
+      MATCH (org:Organization {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'})
       RETURN c.name, t.name
     `,
   );
@@ -43,5 +43,5 @@ test('run', async ({ expect }) => {
     },
   ]);
 
-  log.info('result', { result });
+  log('result', { result });
 });

@@ -4,4 +4,6 @@
 
 import { lazy } from 'react';
 
+export * from './ChessComponent';
+
 export const ChessContainer = lazy(() => import('./ChessContainer'));

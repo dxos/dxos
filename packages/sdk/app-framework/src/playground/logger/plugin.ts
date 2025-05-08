@@ -12,10 +12,10 @@ import { createResolver } from '../../plugin-intent';
 const Toolbar = lazy(() => import('./Toolbar'));
 
 export const LoggerPlugin = () =>
-  definePlugin({ id: 'dxos.org/test/logger' }, [
+  definePlugin({ id: 'dxos.org/test/logger', name: 'Logger' }, [
     defineModule({
       id: 'dxos.org/test/logger/intents',
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: () => [
         contributes(
           Capabilities.IntentResolver,

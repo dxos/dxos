@@ -12,8 +12,8 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Arrow, createPath } from './svg';
 import { testId } from './util';
 
-const Render = () => (
-  <svg className='border border-neutral-500 w-[400px] h-[400px]'>
+const DefaultStory = () => (
+  <svg className='border border-neutral-500 w-[30rem] h-[400px]'>
     <defs>
       <Arrow id='arrow-start' classNames='fill-none stroke-red-500' dir='start' />
       <Arrow id='arrow-end' classNames='fill-none stroke-red-500' dir='end' />
@@ -33,7 +33,7 @@ const Render = () => (
 
 const meta: Meta = {
   title: 'ui/react-ui-canvas/svg',
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',

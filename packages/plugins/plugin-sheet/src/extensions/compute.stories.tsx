@@ -20,7 +20,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { compute, computeGraphFacet } from './compute';
 import { GridSheet, SheetProvider, useComputeGraph } from '../components';
@@ -57,7 +57,7 @@ const EditorStory = ({ text }: EditorProps) => {
         computeGraph && computeGraphFacet.of(computeGraph),
         compute(),
         decorateMarkdown(),
-      ].filter(nonNullable),
+      ].filter(isNonNullable),
     }),
     [computeGraph, themeMode],
   );

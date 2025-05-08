@@ -1,15 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "jsx": "react",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "outDir": "./dist/types"
-  },
+  "compilerOptions": {},
   "exclude": [
     "/node_modules/"
   ],
@@ -49,6 +40,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../experimental/artifact"
     },
     {
       "path": "../../ui/primitives/react-hooks"

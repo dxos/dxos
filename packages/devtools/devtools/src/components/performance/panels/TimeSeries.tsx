@@ -123,7 +123,7 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
   }, [chart]);
 
   return (
-    <Panel {...props} icon='ph--clock-countdown--regular' title='Time Series' padding={false}>
+    <Panel {...props} icon='ph--clock-countdown--regular' title='FPS' padding={false}>
       <div className='relative w-full h-[160px]'>
         <canvas ref={canvasRef} />
       </div>

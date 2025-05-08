@@ -8,7 +8,7 @@
 
 // test('extract objects from the DXOS explainer', async () => {
 //   const result = await runLLM({
-//     model: '@anthropic/claude-3-5-haiku-20241022',
+//     model: DEFAULT_EDGE_MODEL,
 //     messages: [
 //       createUserMessage(`
 // # README
@@ -63,7 +63,7 @@
 //     backend,
 //   });
 
-//   log.info('result', { result });
+//   log('result', { result });
 // });
 
 // const backend = new AnthropicBackend({

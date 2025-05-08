@@ -10,15 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
 import { Expando } from '@dxos/echo-schema';
-import {
-  DocAccessor,
-  Filter,
-  create,
-  createDocAccessor,
-  useQuery,
-  useSpace,
-  type Space,
-} from '@dxos/react-client/echo';
+import { DocAccessor, Filter, live, createDocAccessor, useQuery, useSpace, type Space } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
@@ -74,12 +66,12 @@ const Story = () => {
       const repo1 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
       const repo2 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
 
-      const object1 = repo1.create();
+      const object1 = repo1.create<TestObject>();
       object1.change((doc: TestObject) => {
         doc.text = initialContent;
       });
 
-      const object2 = repo2.find(object1.url);
+      const object2 = repo2.find<TestObject>(object1.url);
       await object2.whenReady();
 
       setObject1({ handle: object1, path: ['text'] });
@@ -139,9 +131,9 @@ export const WithEcho = {
         createSpace
         onSpaceCreated={async ({ space }) => {
           space.db.add(
-            create({
+            live({
               type: 'test',
-              content: create(Expando, { content: initialContent }),
+              content: live(Expando, { content: initialContent }),
             }),
           );
         }}

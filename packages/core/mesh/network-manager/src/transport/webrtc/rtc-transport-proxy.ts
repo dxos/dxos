@@ -245,7 +245,9 @@ export class RtcTransportProxyFactory implements TransportFactory {
     invariant(this._bridgeService, 'RtcTransportProxyFactory is not ready to open connections');
     const transport = new RtcTransportProxy({ ...options, bridgeService: this._bridgeService });
     this._connections.add(transport);
-    transport.closed.on(() => this._connections.delete(transport));
+    transport.closed.on(() => {
+      this._connections.delete(transport);
+    });
     return transport;
   }
 }

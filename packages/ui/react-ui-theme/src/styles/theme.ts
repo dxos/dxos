@@ -31,7 +31,6 @@ import {
   tooltipTheme,
   treegridTheme,
 } from './components';
-import { hueTheme } from './fragments';
 
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
@@ -59,9 +58,6 @@ export const defaultTheme: Theme<Record<string, any>> = {
   toolbar: toolbarTheme,
   tooltip: tooltipTheme,
   treegrid: treegridTheme,
-
-  // TODO(burdon): Is this out of order for a reason?
-  hue: hueTheme,
 };
 
 export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<string, any>>) => {

@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { Plugin } from '../plugin';
 
@@ -68,7 +68,7 @@ export class QueryPlugin extends Plugin {
               rank: result.match?.rank ?? 0,
             };
           })
-          .filter(nonNullable) ?? [],
+          .filter(isNonNullable) ?? [],
       objects: queryResults.map((result) => createSnapshot(result.object!)) ?? [],
     };
 

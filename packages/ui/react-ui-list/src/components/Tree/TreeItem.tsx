@@ -3,11 +3,7 @@
 //
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import {
-  draggable as pragmaticDraggable,
-  dropTargetForElements,
-} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-// https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
   attachInstruction,
   extractInstruction,
@@ -69,7 +65,7 @@ export const RawTreeItem = <T = any,>({
   item,
   path: _path,
   last,
-  draggable,
+  draggable: _draggable,
   renderColumns: Columns,
   canDrop,
   onOpenChange,
@@ -103,7 +99,7 @@ export const RawTreeItem = <T = any,>({
   }, []);
 
   useEffect(() => {
-    if (!draggable) {
+    if (!_draggable) {
       return;
     }
 
@@ -111,7 +107,7 @@ export const RawTreeItem = <T = any,>({
 
     // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/about
     return combine(
-      pragmaticDraggable({
+      draggable({
         element: buttonRef.current,
         getInitialData: () => data,
         onDragStart: () => {
@@ -128,6 +124,7 @@ export const RawTreeItem = <T = any,>({
           }
         },
       }),
+      // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx
       dropTargetForElements({
         element: buttonRef.current,
         getData: ({ input, element }) => {
@@ -177,7 +174,7 @@ export const RawTreeItem = <T = any,>({
         },
       }),
     );
-  }, [draggable, item, id, mode, path, open, canDrop]);
+  }, [_draggable, item, id, mode, path, open, canDrop]);
 
   // Cancel expand on unmount.
   useEffect(() => () => cancelExpand(), [cancelExpand]);
@@ -189,10 +186,14 @@ export const RawTreeItem = <T = any,>({
 
   const handleSelect = useCallback(
     (option = false) => {
-      rowRef.current?.focus();
-      onSelect?.({ item, path, current: !current, option });
+      if (isBranch) {
+        handleOpenChange();
+      } else {
+        rowRef.current?.focus();
+        onSelect?.({ item, path, current: !current, option });
+      }
     },
-    [onSelect, item, path, current],
+    [item, path, current, isBranch, handleOpenChange, onSelect],
   );
 
   const handleKeyDown = useCallback(
@@ -221,7 +222,7 @@ export const RawTreeItem = <T = any,>({
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
         classNames={mx(
-          'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-input',
+          'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-groupSurface',
           hoverableControls,
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,
@@ -247,7 +248,7 @@ export const RawTreeItem = <T = any,>({
           style={paddingIndentation(level)}
         >
           <div role='none' className='flex items-center'>
-            <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />
+            <TreeItemToggle isBranch={isBranch} open={open} onToggle={handleOpenChange} />
             <TreeItemHeading
               ref={buttonRef}
               label={label}
@@ -269,7 +270,7 @@ export const RawTreeItem = <T = any,>({
             item={item}
             path={path}
             last={index === items.length - 1}
-            draggable={draggable}
+            draggable={_draggable}
             renderColumns={Columns}
             canDrop={canDrop}
             onOpenChange={onOpenChange}

@@ -2,11 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
+import { onMessage } from 'webext-bridge/background';
 import browser from 'webextension-polyfill';
 
+import { log } from '@dxos/log';
+
+/**
+ * Background worker.
+ */
 const main = async () => {
-  // eslint-disable-next-line no-console
-  console.log(browser);
+  log.info('background', { browser });
+
+  onMessage('config', ({ data }) => {
+    return { debug: data.debug ?? false };
+  });
 };
 
 void main();

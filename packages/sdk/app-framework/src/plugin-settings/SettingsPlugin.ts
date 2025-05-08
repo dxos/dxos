@@ -9,7 +9,7 @@ import { contributes, defineModule, definePlugin, lazy } from '../core';
 
 // TODO(wittjosiah): Add options to exclude some modules.
 export const SettingsPlugin = () =>
-  definePlugin({ id: SETTINGS_PLUGIN }, [
+  definePlugin({ id: SETTINGS_PLUGIN, name: 'Settings' }, [
     defineModule({
       id: `${SETTINGS_PLUGIN}/module/store`,
       activatesOn: Events.Startup,
@@ -24,7 +24,7 @@ export const SettingsPlugin = () =>
     }),
     defineModule({
       id: `${SETTINGS_PLUGIN}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: lazy(() => import('./intent-resolver')),
     }),
     defineModule({

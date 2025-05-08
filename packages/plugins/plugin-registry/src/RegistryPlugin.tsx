@@ -17,12 +17,12 @@ export const RegistryPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({

@@ -1,11 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -45,9 +40,6 @@
     },
     {
       "path": "../react-ui-attention"
-    },
-    {
-      "path": "../react-ui-mosaic"
     },
     {
       "path": "../react-ui-text-tooltip"

@@ -1,11 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -41,6 +36,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -51,6 +49,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../client-protocol"
     }
   ]
 }

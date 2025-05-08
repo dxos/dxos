@@ -18,6 +18,7 @@ export const lengthsFacet = {
       },
     },
   } satisfies LinearPhysicalLayer,
+
   semantic: {
     namespace: 'dx-',
     conditions: { root: [':root'] },
@@ -27,13 +28,40 @@ export const lengthsFacet = {
       thickLine: { root: ['line', 2] },
     },
   },
+
   alias: {
     namespace: 'dx-',
-    statements: [':root'],
+    conditions: { root: [':root'] },
     aliases: {
-      noLine: ['focusOffset'],
-      hairLine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'],
-      thickLine: ['focusLine'],
+      noLine: { root: ['focusOffset'] },
+      hairLine: { root: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
+      thickLine: { root: ['focusLine'] },
+    },
+  },
+} satisfies Facet;
+
+export const maxSizesFacet = {
+  physical: {
+    namespace: 'dx-',
+    conditions: { root: [':root'] },
+    series: {
+      size: {
+        root: {
+          unit: 'rem',
+          initial: 0,
+          slope: 10,
+        },
+      },
+    },
+  } satisfies LinearPhysicalLayer,
+
+  semantic: {
+    namespace: 'dx-',
+    conditions: { root: [':root'] },
+    sememes: {
+      prose: { root: ['size', 5] },
+      containerMaxWidth: { root: ['size', 5] },
+      popoverMaxWidth: { root: ['size', 2] },
     },
   },
 } satisfies Facet;

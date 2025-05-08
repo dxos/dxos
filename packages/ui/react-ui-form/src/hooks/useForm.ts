@@ -1,11 +1,12 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
+import { SchemaAST as AST, type Schema as S } from 'effect';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
-import { type SimpleType, type S, type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
+import { type SimpleType, type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
@@ -24,6 +25,7 @@ export type FormHandler<T extends BaseObject> = {
   touched: Record<JsonPath, boolean>;
   changed: Record<JsonPath, boolean>;
   canSave: boolean;
+  formIsValid: boolean;
   handleSave: () => void;
 
   //
@@ -41,9 +43,8 @@ export type FormHandler<T extends BaseObject> = {
  */
 export interface FormOptions<T extends BaseObject> {
   /**
-   * Effect schema.
+   * Effect schema (Type literal).
    */
-  // TODO(burdon): Change to S.Struct<T>?
   schema: S.Schema<T>;
 
   /**
@@ -89,6 +90,8 @@ export const useForm = <T extends BaseObject>({
   onValid,
   onSave,
 }: FormOptions<T>): FormHandler<T> => {
+  invariant(AST.isTypeLiteral(schema.ast));
+
   const [values, setValues] = useState<Partial<T>>(initialValues);
   useEffect(() => {
     setValues(initialValues);
@@ -128,6 +131,10 @@ export const useForm = <T extends BaseObject>({
     }
   }, [values, schemaDirty]);
 
+  const formIsValid = useMemo(() => {
+    return Object.keys(errors).length === 0;
+  }, [errors]);
+
   /**
    * NOTE: We can submit if there is no touched field that has an error.
    * Basically, if there's a validation message visible in the form, submit should be disabled.
@@ -135,7 +142,7 @@ export const useForm = <T extends BaseObject>({
   const canSave = useMemo(
     () =>
       !saving &&
-      // Check if any error paths that are touched have errors
+      // Check if any error paths that are touched have errors.
       !Object.entries(touched).some(
         ([path, isTouched]) =>
           isTouched &&
@@ -169,40 +176,55 @@ export const useForm = <T extends BaseObject>({
           errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
       );
 
+      // Only show errors for touched fields.
+      const isTouched = touched[jsonPath as JsonPath];
+      if (!isTouched) {
+        return {
+          status: undefined,
+          error: undefined,
+        };
+      }
+
       return {
         status: matchingError ? 'error' : undefined,
         error: matchingError ? matchingError[1] : undefined,
       };
     },
-    [errors],
+    [errors, touched],
   );
 
-  const getFormValue = <V>(path: (string | number)[]): V | undefined => {
-    return getValue(values, createJsonPath(path));
-  };
+  const getFormValue = useCallback<FormHandler<T>['getValue']>(
+    <V>(path: (string | number)[]): V | undefined => {
+      return getValue(values, createJsonPath(path));
+    },
+    [values],
+  );
 
-  const onValueChange = (path: (string | number)[], type: SimpleType, value: any) => {
-    const jsonPath = createJsonPath(path);
-    let parsedValue = value;
-    try {
-      if (type === 'number') {
-        parsedValue = parseFloat(value as string) || 0;
+  const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
+    (path: (string | number)[], type: SimpleType, value: any) => {
+      const jsonPath = createJsonPath(path);
+      let parsedValue = value;
+      try {
+        if (type === 'number') {
+          parsedValue = parseFloat(value as string) || 0;
+        }
+      } catch (err) {
+        log.catch(err);
+        parsedValue = undefined;
       }
-    } catch (err) {
-      log.catch(err);
-      parsedValue = undefined;
-    }
 
-    const newValues = { ...setValue(values, jsonPath, parsedValue) };
-    setValues(newValues);
-    setChanged((prev) => ({ ...prev, [jsonPath]: true }));
-    onValuesChanged?.(newValues);
+      const newValues = { ...setValue(values, jsonPath, parsedValue) };
+      setValues(newValues);
+      setChanged((prev) => ({ ...prev, [jsonPath]: true }));
+      onValuesChanged?.(newValues);
 
-    const isValid = validate(newValues);
-    if (isValid && onValid) {
-      onValid(newValues, { changed });
-    }
-  };
+      const isValid = validate(newValues);
+      if (isValid && onValid) {
+        onValid(newValues, { changed });
+      }
+    },
+    [values, onValuesChanged, validate, onValid, changed],
+  );
 
   const onTouched = useCallback(
     (path: (string | number)[]) => {
@@ -213,21 +235,39 @@ export const useForm = <T extends BaseObject>({
     [validate, values],
   );
 
-  return {
-    // State.
-    values,
-    errors,
-    touched,
-    changed,
-    canSave,
-    handleSave,
+  return useMemo(
+    () => ({
+      // State.
+      values,
+      errors,
+      touched,
+      changed,
+      canSave,
+      formIsValid,
 
-    // Field utils.
-    getStatus,
-    getValue: getFormValue,
-    onValueChange,
-    onTouched,
-  } satisfies FormHandler<T>;
+      // Actions.
+      handleSave,
+
+      // Field utils.
+      getStatus,
+      getValue: getFormValue,
+      onValueChange,
+      onTouched,
+    }),
+    [
+      values,
+      errors,
+      touched,
+      changed,
+      canSave,
+      formIsValid,
+      handleSave,
+      getStatus,
+      getFormValue,
+      onValueChange,
+      onTouched,
+    ],
+  );
 };
 
 const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<JsonPath, V> => {
@@ -238,7 +278,7 @@ const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<JsonPat
 const flatMap = (errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
-      // Convert the validation error path format to our JsonPath format
+      // Convert the validation error path format to our JsonPath format.
       const jsonPath = fromEffectValidationPath(path);
       if (!(jsonPath in result)) {
         result[jsonPath] = message;

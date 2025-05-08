@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@dxos/automerge/automerge';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -30,7 +30,7 @@ export const encode = (value: any): any => {
 
           return [key, value];
         })
-        .filter(nonNullable),
+        .filter(isNonNullable),
     );
   }
 

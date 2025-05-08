@@ -20,7 +20,8 @@
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild"

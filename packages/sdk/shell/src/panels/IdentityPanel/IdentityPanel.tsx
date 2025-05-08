@@ -5,6 +5,7 @@
 import { IdentificationCard, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { debounce } from '@dxos/async';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -13,8 +14,8 @@ import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
 import { Avatar, Clipboard, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
-import { EmojiPickerToolbarButton, HuePickerToolbarButton } from '@dxos/react-ui-pickers';
-import { getSize } from '@dxos/react-ui-theme';
+import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
+import { errorText, getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import {
@@ -48,16 +49,30 @@ const IdentityHeading = ({
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(identity.identityKey);
   const { t } = useTranslation('os');
-  const [displayName, setDisplayName] = useState(identity.profile?.displayName ?? '');
+  const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
-  const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
+  const [hue, setHueDirectly] = useState<string | undefined>(getHueValue(identity));
+
+  const updateDisplayName = useMemo(
+    () =>
+      debounce(
+        (nextDisplayName: string) => onUpdateProfile?.({ ...identity.profile, displayName: nextDisplayName }),
+        3_000,
+      ),
+    [onUpdateProfile, identity.profile],
+  );
+
+  const setDisplayName = (nextDisplayName: string) => {
+    setDisplayNameDirectly(nextDisplayName);
+    updateDisplayName(nextDisplayName);
+  };
 
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
     void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, emoji: nextEmoji } });
   };
 
-  const setHue = (nextHue: string) => {
+  const setHue = (nextHue: string | undefined) => {
     setHueDirectly(nextHue);
     void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, hue: nextHue } });
   };
@@ -66,11 +81,16 @@ const IdentityHeading = ({
 
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Avatar.Root size={16} variant='circle' status={isConnected ? 'active' : 'error'} hue={hue || fallbackValue.hue}>
+      <Avatar.Root>
         <Toolbar.Root classNames='flex justify-center'>
-          <Avatar.Frame classNames='relative z-[2] -mli-4 chromatic-ignore'>
-            <Avatar.Fallback text={emoji || fallbackValue.emoji} />
-          </Avatar.Frame>
+          <Avatar.Content
+            size={16}
+            variant='circle'
+            status={isConnected ? 'active' : 'error'}
+            hue={hue || fallbackValue.hue}
+            fallback={emoji || fallbackValue.emoji}
+            classNames='relative z-[2] -mli-4 chromatic-ignore'
+          />
         </Toolbar.Root>
 
         <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
@@ -86,13 +106,18 @@ const IdentityHeading = ({
             classNames='mbs-2 text-center font-light text-xl'
             value={displayName}
             onChange={({ target: { value } }) => setDisplayName(value)}
-            onBlur={({ target: { value } }) => onUpdateProfile?.({ ...identity.profile, displayName: value })}
           />
         </Input.Root>
 
         <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
-          <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action]' />
+          <HuePicker
+            value={hue}
+            onChange={setHue}
+            onReset={() => setHue(undefined)}
+            classNames='bs-[--rail-action]'
+            rootVariant='toolbar-button'
+          />
           <Clipboard.IconButton
             classNames='bs-[--rail-action]'
             data-testid='update-profile-form-copy-key'
@@ -118,7 +143,7 @@ const IdentityHeading = ({
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Toolbar.Button
-                classNames={['bs-[--rail-action]', !isConnected && 'text-error-500']}
+                classNames={['bs-[--rail-action]', !isConnected && errorText]}
                 onClick={() =>
                   onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
                 }

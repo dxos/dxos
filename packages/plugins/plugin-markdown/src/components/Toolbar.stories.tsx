@@ -8,11 +8,12 @@ import { type Meta } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import {
+  EditorToolbar,
   type EditorAction,
   type Comment,
   comments,
@@ -23,7 +24,6 @@ import {
   decorateMarkdown,
   editorContent,
   formattingKeymap,
-  EditorToolbar,
   translations,
   useActionHandler,
   useComments,
@@ -36,11 +36,9 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 faker.seed(101);
 
-const _onUpload = async (file: File) => ({ url: file.name });
-
 const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(createObject(create(TextType, { content })));
+  const [text] = useState(createObject(live(TextType, { content })));
   const toolbarState = useEditorToolbarState({ viewMode: 'preview' });
   const formattingObserver = useFormattingState(toolbarState);
   const { parentRef, view } = useTextEditor(() => {
@@ -49,7 +47,7 @@ const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
       initialValue: text.content,
       extensions: [
         formattingObserver,
-        createBasicExtensions({ readonly: toolbarState.viewMode === 'readonly' }),
+        createBasicExtensions({ readOnly: toolbarState.viewMode === 'readonly' }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: { editor: { className: editorContent } } }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
@@ -79,9 +77,9 @@ const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
   useComments(view, text.id, _comments);
 
   return (
-    <div role='none' className='fixed inset-0 flex flex-col'>
+    <div role='none' className='flex flex-col'>
       <EditorToolbar onAction={handleAction} state={toolbarState ?? {}} />
-      <div ref={parentRef} />
+      <div className='flex grow overflow-hidden' ref={parentRef} />
     </div>
   );
 };
@@ -96,18 +94,20 @@ const content = [
   '',
 ].join('\n');
 
+const meta: Meta<typeof EditorToolbar> = {
+  title: 'plugins/plugin-markdown/Toolbar',
+  component: EditorToolbar,
+  render: DefaultStory as any,
+  decorators: [withTheme, withLayout({ tooltips: true, fullscreen: true })],
+  parameters: {
+    translations,
+  },
+};
+
+export default meta;
+
 export const Default = {
   args: {
     content,
   },
 };
-
-const meta: Meta<typeof EditorToolbar> = {
-  title: 'plugins/plugin-markdown/Toolbar',
-  component: EditorToolbar,
-  render: DefaultStory as any,
-  decorators: [withTheme, withLayout({ tooltips: true })],
-  parameters: { translations, layout: 'fullscreen' },
-};
-
-export default meta;

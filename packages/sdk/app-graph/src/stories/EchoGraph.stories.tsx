@@ -8,16 +8,16 @@ import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import {
-  create,
+  live,
+  isSpace,
   type Echo,
-  type ReactiveEchoObject,
   type FilterSource,
   type Space,
   SpaceState,
-  isSpace,
   type QueryOptions,
   type Query,
 } from '@dxos/client/echo';
+import type { BaseObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -54,7 +54,7 @@ const actionWeights = {
 };
 
 // TODO(wittjosiah): Factor out.
-const memoizeQuery = <T extends ReactiveEchoObject<any>>(
+const memoizeQuery = <T extends BaseObject>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,
@@ -160,7 +160,7 @@ const runAction = async (client: Client, action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getRandomSpace(client)?.db.add(create({ type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace(client)?.db.add(live({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {

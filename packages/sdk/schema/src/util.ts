@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { SchemaAST as AST, type Schema as S } from 'effect';
+// TODO(burdon): Move to jsonpath-plus.
 import jp from 'jsonpath';
 
-import { type BaseObject, FormatEnum, TypeEnum } from '@dxos/echo-schema';
-import { AST, type S, visit } from '@dxos/effect';
+import { type BaseObject, FormatEnum, type JsonSchemaType, TypeEnum } from '@dxos/echo-schema';
+import { visit } from '@dxos/effect';
 
 import { type FieldType } from './view';
 
@@ -78,4 +80,46 @@ const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: TypeEnum 
 
   // TODO(burdon): Better fallback?
   return { type: TypeEnum.String, format: FormatEnum.JSON };
+};
+
+/**
+ * Creates or updates echo annotations for SingleSelect options in a JSON Schema property.
+ */
+export const makeSingleSelectAnnotations = (
+  jsonProperty: JsonSchemaType,
+  options: Array<{ id: string; title?: string; color?: string }>,
+) => {
+  jsonProperty.enum = options.map(({ id }) => id);
+  jsonProperty.format = FormatEnum.SingleSelect;
+  jsonProperty.echo = {
+    annotations: {
+      singleSelect: {
+        options: options.map(({ id, title, color }) => ({ id, title, color })),
+      },
+    },
+  };
+
+  return jsonProperty;
+};
+
+/**
+ * Creates or updates echo annotations for MultiSelect options in a JSON Schema property.
+ */
+export const makeMultiSelectAnnotations = (
+  jsonProperty: JsonSchemaType,
+  options: Array<{ id: string; title?: string; color?: string }>,
+) => {
+  // TODO(ZaymonFC): Is this how do we encode an array of enums?
+  jsonProperty.type = 'object';
+  jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };
+  jsonProperty.format = FormatEnum.MultiSelect;
+  jsonProperty.echo = {
+    annotations: {
+      multiSelect: {
+        options: options.map(({ id, title, color }) => ({ id, title, color })),
+      },
+    },
+  };
+
+  return jsonProperty;
 };

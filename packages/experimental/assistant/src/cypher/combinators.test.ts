@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 import { createRequire } from 'node:module';
-import type { Parjser } from 'parjs';
+import { type Parjser } from 'parjs';
 import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
@@ -58,13 +58,13 @@ describe('Cypher Combinators', () => {
     const parser = or(node)(relation);
     const input = '[a:b]';
     const result = parser.parse(input);
-    log.info('', { result });
+    log('result', { result });
   });
 
   test('properties', ({ expect }) => {
     const input = "{name: 'John'}";
     const result = properties.parse(input);
-    log.info('', { result });
+    log('result', { result });
     expect(result).toMatchObject({ isOk: true });
   });
 
@@ -77,7 +77,7 @@ describe('Cypher Combinators', () => {
   test('match clause', ({ expect }) => {
     testParser(matchClause, 'MATCH (n:Person)');
     testParser(matchClause, 'MATCH (n:Person)-[r:KNOWS]->(m:Person)');
-    testParser(matchClause, 'MATCH (o:Org)-[:HAS_EMPLOYEE]->(e:Employee)');
+    testParser(matchClause, 'MATCH (o:Organization)-[:HAS_EMPLOYEE]->(e:Employee)');
   });
 
   test('where clause', ({ expect }) => {
@@ -92,7 +92,7 @@ describe('Cypher Combinators', () => {
     const cases = ['RETURN n, m'];
     for (const input of cases) {
       const result = returnClause.parse(input);
-      log.info('', { result });
+      log('result', { result });
       expect(result).toMatchObject({ isOk: true });
     }
   });
@@ -116,15 +116,15 @@ describe('Cypher Combinators', () => {
     );
     testParser(
       cypherQuery,
-      'MATCH (o:Org)-[:HAS_EMPLOYEE]->(e:Employee)-[:WORKS_ON]->(p:Project) WHERE o.name = "DXOS" AND p.name = "Composer" RETURN e.name, e.id, p.name, p.id',
+      'MATCH (o:Organization)-[:HAS_EMPLOYEE]->(e:Employee)-[:WORKS_ON]->(p:Project) WHERE o.name = "DXOS" AND p.name = "Composer" RETURN e.name, e.id, p.name, p.id',
     );
     testParser(
       cypherQuery,
-      'MATCH (n:Org {name: "DXOS"})-[:HAS_EMPLOYEE]->(m:Employee)<-[:WORKS_ON]-(p:Project {name: "Composer"}) RETURN m.name AS employee',
+      'MATCH (n:Organization {name: "DXOS"})-[:HAS_EMPLOYEE]->(m:Employee)<-[:WORKS_ON]-(p:Project {name: "Composer"}) RETURN m.name AS employee',
     );
     testParser(
       cypherQuery,
-      "MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name",
+      "MATCH (org:Organization {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name",
     );
   });
 });

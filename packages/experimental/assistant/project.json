@@ -11,11 +11,13 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ]
       }
     },
     "lint": {},
+    "pack": {},
     "test": {}
   },
   "implicitDependencies": [

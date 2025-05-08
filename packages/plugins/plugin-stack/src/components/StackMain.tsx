@@ -13,13 +13,13 @@ import {
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { create, getType, fullyQualifiedId, isReactiveObject, makeRef } from '@dxos/client/echo';
+import { live, getType, fullyQualifiedId, isLiveObject, makeRef } from '@dxos/client/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { StackContext } from './StackContext';
 import { StackSection } from './StackSection';
@@ -43,7 +43,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const { graph } = useAppGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const allMetadata = useCapabilities(Capabilities.Metadata);
-  const defaultStack = useMemo(() => create(StackViewType, { sections: {} }), [collection]);
+  const defaultStack = useMemo(() => live(StackViewType, { sections: {} }), [collection]);
   const stack = (collection.views[StackViewType.typename]?.target as StackViewType | undefined) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
@@ -58,7 +58,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
       // TODO(wittjosiah): Should the database handle this differently?
       // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
       .map((object) => object.target)
-      .filter(nonNullable)
+      .filter(isNonNullable)
       .map((object) => {
         const metadata = allMetadata.find((m) => m.id === (getType(object)?.objectId ?? 'never'))
           ?.metadata as StackSectionMetadata;
@@ -75,10 +75,10 @@ const StackMain = ({ id, collection }: StackMainProps) => {
     async (id: string) => {
       const index = collection.objects
         .map((object) => object.target)
-        .filter(nonNullable)
+        .filter(isNonNullable)
         .findIndex((section) => fullyQualifiedId(section) === id);
       const object = collection.objects[index].target;
-      if (isReactiveObject(object)) {
+      if (isLiveObject(object)) {
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
 
         // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.

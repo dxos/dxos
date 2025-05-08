@@ -7,7 +7,9 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
-import { AST, type BaseObject, Format, S } from '@dxos/echo-schema';
+import { ContactType } from '@dxos/client/testing';
+import { AST, type BaseObject, Expando, Format, getDXN, Ref, S, type TypeAnnotation } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -78,9 +80,9 @@ export const Default: Story<TestType> = {
   },
 };
 
-export const Org: Story<Testing.OrgSchemaType> = {
+export const Organization: Story<Testing.Organization> = {
   args: {
-    schema: Testing.OrgSchema,
+    schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
       // website: 'https://dxos.org',
@@ -88,9 +90,9 @@ export const Org: Story<Testing.OrgSchemaType> = {
   },
 };
 
-export const OrgAutoSave: Story<Testing.OrgSchemaType> = {
+export const OrganizationAutoSave: Story<Testing.Organization> = {
   args: {
-    schema: Testing.OrgSchema,
+    schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
       // website: 'https://dxos.org',
@@ -238,4 +240,45 @@ export const Enum: StoryObj<FormProps<ColorType>> = {
       color: 'red',
     },
   },
+};
+
+const RefSchema = S.Struct({
+  contact: Ref(ContactType).annotations({ title: 'Contact Reference' }),
+  optionalContact: S.optional(Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
+  unknownExpando: S.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
+});
+
+const RefStory = ({ values: initialValues }: FormProps<any>) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSave = useCallback<NonNullable<FormProps<any>['onSave']>>((values) => {
+    setValues(values);
+  }, []);
+
+  const contact1 = live(ContactType, { identifiers: [] });
+  const contact2 = live(ContactType, { identifiers: [] });
+
+  const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
+    switch (typeInfo.typename) {
+      case ContactType.typename:
+        return [
+          { dxn: getDXN(contact1)!, label: 'John Coltraine' },
+          { dxn: getDXN(contact2)!, label: 'Erykah Badu' },
+        ];
+      default:
+        return [];
+    }
+  }, []);
+
+  return (
+    <TestLayout json={{ values, schema: RefSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form schema={RefSchema} values={values} onSave={handleSave} onQueryRefOptions={onQueryRefOptions} />
+      </TestPanel>
+    </TestLayout>
+  );
+};
+
+export const Refs: StoryObj<FormProps<ContactType>> = {
+  render: RefStory,
+  args: { values: {} },
 };

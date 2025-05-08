@@ -5,7 +5,8 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { type PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -15,7 +16,7 @@ import {
   type QueryService,
   type QueryResult as RemoteQueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type ReactiveEchoObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
@@ -23,7 +24,7 @@ import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '
 import { type Filter, type QueryResult } from '../query';
 
 export type LoadObjectParams = {
-  spaceKey: PublicKey;
+  spaceId: SpaceId;
   objectId: string;
   documentId: string;
 };
@@ -146,7 +147,7 @@ export class IndexQuerySource implements QuerySource {
           const processedResults = await Promise.all(
             (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
           );
-          const results = processedResults.filter(nonNullable);
+          const results = processedResults.filter(isNonNullable);
 
           log('queryIndex processed results', {
             queryId,
@@ -193,8 +194,9 @@ export class IndexQuerySource implements QuerySource {
       });
     }
 
+    invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
     const object = await this._params.objectLoader.loadObject({
-      spaceKey: result.spaceKey,
+      spaceId: result.spaceId,
       objectId: result.id,
       documentId: result.documentId,
     });

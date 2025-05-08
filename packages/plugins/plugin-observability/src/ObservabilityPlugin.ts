@@ -6,6 +6,7 @@ import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } 
 import { type Observability } from '@dxos/observability';
 
 import {
+  AppGraphBuilder,
   ClientReady,
   IntentResolver,
   ObservabilityCapabilities,
@@ -42,13 +43,18 @@ export const ObservabilityPlugin = (options: { namespace: string; observability:
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: (context) => IntentResolver({ context, namespace: options.namespace }),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/client-ready`,

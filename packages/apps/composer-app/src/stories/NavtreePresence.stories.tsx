@@ -11,7 +11,6 @@ import '@dxos-theme';
 // import { isGraphNode, Graph, type NodeArg, type ActionData, ACTION_TYPE } from '@dxos/app-graph';
 // import { PublicKey } from '@dxos/keys';
 // import { Tooltip } from '@dxos/react-ui';
-// import { Mosaic } from '@dxos/react-ui-mosaic';
 // import { withTheme } from '@dxos/storybook-utils';
 import React from 'react';
 

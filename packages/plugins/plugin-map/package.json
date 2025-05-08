@@ -1,12 +1,13 @@
 {
   "name": "@dxos/plugin-map",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "Map plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -33,8 +34,12 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -43,10 +48,12 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-geo": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
     "react-resize-detector": "^11.0.1"
   },
@@ -56,13 +63,14 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
+    "effect": "3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
+    "effect": "3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

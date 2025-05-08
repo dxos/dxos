@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+// @ts-nocheck
+// NOTE: This file cannot have typescript syntax otherwise storybook will fail to start.
+
 import { type Preview } from '@storybook/react';
 
 import { preview } from '../../.storybook/preview';

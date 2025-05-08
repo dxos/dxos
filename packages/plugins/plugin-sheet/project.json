@@ -26,10 +26,11 @@
         "stories:mkdist"
       ],
       "options": {
-        "config": "{projectRoot}/src/testing/playwright/playwright.config.ts"
+        "config": "{projectRoot}/src/testing/playwright/playwright.config.cts"
       }
     },
     "lint": {},
+    "pack": {},
     "test": {}
   },
   "implicitDependencies": [

@@ -2,8 +2,17 @@
 // Copyright 2018 DXOS.org
 //
 
-import * as d3 from 'd3';
-import { type GeoProjection } from 'd3';
+import {
+  type GeoProjection,
+  geoMercator,
+  geoOrthographic,
+  geoPath,
+  geoTransverseMercator,
+  interpolateNumber,
+  transition,
+  easeLinear,
+  easeSinOut,
+} from 'd3';
 import { type ControlPosition } from 'leaflet';
 import React, {
   type PropsWithChildren,
@@ -17,7 +26,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
+import { type ThemedClassName, type ThemeMode, useDynamicRef, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -28,7 +37,6 @@ import {
 } from '../../hooks';
 import {
   type Features,
-  type Styles,
   type StyleSet,
   createLayers,
   geoToPosition,
@@ -38,35 +46,57 @@ import {
 } from '../../util';
 import { ZoomControls, ActionControls, type ControlProps, controlPositions } from '../Toolbar';
 
-// https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
-const defaultStyles: Styles = {
-  background: {
-    fillStyle: '#111111',
-  },
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
+ */
+const defaultStyles: Record<ThemeMode, StyleSet> = {
+  light: {
+    background: {
+      fillStyle: '#EEE',
+    },
 
-  water: {
-    fillStyle: '#123E6A',
-  },
+    water: {
+      fillStyle: '#555',
+    },
 
-  hex: {
-    strokeStyle: 'green',
-    fillStyle: 'gray',
-    pointRadius: 1,
-  },
+    land: {
+      fillStyle: '#999',
+    },
 
-  land: {
-    fillStyle: '#032153',
-  },
+    line: {
+      strokeStyle: 'darkred',
+    },
 
-  line: {
-    strokeStyle: '#111111',
+    point: {
+      fillStyle: '#111111',
+      strokeStyle: '#111111',
+      strokeWidth: 1,
+      pointRadius: 0.5,
+    },
   },
+  dark: {
+    background: {
+      fillStyle: '#111111',
+    },
 
-  point: {
-    fillStyle: '#111111',
-    strokeStyle: '#111111',
-    strokeWidth: 1,
-    pointRadius: 0.5,
+    water: {
+      fillStyle: '#123E6A',
+    },
+
+    land: {
+      fillStyle: '#032153',
+    },
+
+    line: {
+      strokeStyle: '#111111',
+    },
+
+    point: {
+      fillStyle: '#111111',
+      strokeStyle: '#111111',
+      strokeWidth: 1,
+      pointRadius: 0.5,
+    },
   },
 };
 
@@ -78,18 +108,18 @@ export type GlobeController = {
 export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
 
 const projectionMap: Record<ProjectionType, () => GeoProjection> = {
-  orthographic: d3.geoOrthographic,
-  mercator: d3.geoMercator,
-  'transverse-mercator': d3.geoTransverseMercator,
+  orthographic: geoOrthographic,
+  mercator: geoMercator,
+  'transverse-mercator': geoTransverseMercator,
 };
 
 const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): GeoProjection => {
   if (typeof type === 'string') {
-    const constructor = projectionMap[type] ?? d3.geoOrthographic;
+    const constructor = projectionMap[type] ?? geoOrthographic;
     return constructor();
   }
 
-  return type ?? d3.geoOrthographic();
+  return type ?? geoOrthographic();
 };
 
 //
@@ -125,7 +155,10 @@ type GlobeCanvasProps = {
  * https://github.com/topojson/world-atlas
  */
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
-  ({ projection: _projection, topology, features, styles = defaultStyles }, forwardRef) => {
+  ({ projection: _projection, topology, features, styles: _styles }, forwardRef) => {
+    const { themeMode } = useThemeContext();
+    const styles = useMemo(() => _styles ?? defaultStyles[themeMode], [_styles, themeMode]);
+
     // Canvas.
     const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
     const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
@@ -170,10 +203,10 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
           setCenter,
           setScale: (s) => {
             if (typeof s === 'function') {
-              const is = d3.interpolateNumber(scaleRef.current, s(scaleRef.current));
+              const is = interpolateNumber(scaleRef.current, s(scaleRef.current));
               // Stop easing if already zooming.
-              d3.transition()
-                .ease(zooming.current ? d3.easeLinear : d3.easeSinOut)
+              transition()
+                .ease(zooming.current ? easeLinear : easeSinOut)
                 .duration(200)
                 .tween('scale', () => (t) => setScale(is(t)))
                 .on('end', () => {
@@ -193,7 +226,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     // https://d3js.org/d3-geo/path#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
     const generator = useMemo(
-      () => canvas && projection && d3.geoPath(projection, canvas.getContext('2d', { alpha: false })),
+      () => canvas && projection && geoPath(projection, canvas.getContext('2d', { alpha: false })),
       [canvas, projection],
     );
 
@@ -207,7 +240,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
             .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
             .rotate(rotation ?? [0, 0, 0]);
 
-          renderLayers(generator, layers, scale);
+          renderLayers(generator, layers, scale, styles);
         });
       }
     }, [generator, size, scale, translation, rotation, layers]);

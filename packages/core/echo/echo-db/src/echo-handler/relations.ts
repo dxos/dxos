@@ -12,11 +12,11 @@ import {
   type RelationSourceTargetRefs,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 
 import type { ReactiveEchoObject } from './create';
 
-export type ReactiveEchoRelation<T extends BaseObject> = ReactiveObject<T> & HasId & RelationSourceTargetRefs;
+export type ReactiveEchoRelation<T extends BaseObject> = Live<T> & HasId & RelationSourceTargetRefs;
 
 export const isRelation = <T extends BaseObject>(object: ReactiveEchoObject<T>): object is ReactiveEchoRelation<T> => {
   const kind = (object as any)[EntityKindPropertyId];

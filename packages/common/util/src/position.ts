@@ -9,6 +9,7 @@
  * - `hoist` - Placed before `static`.
  * - `fallback` - Placed after `static`.
  */
+// TODO(wittjosiah): Change to 'static' | 'start' | 'end'.
 export type Position = 'static' | 'hoist' | 'fallback';
 
 /**

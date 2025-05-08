@@ -32,7 +32,8 @@
         "{projectRoot}/src/gen"
       ]
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild"

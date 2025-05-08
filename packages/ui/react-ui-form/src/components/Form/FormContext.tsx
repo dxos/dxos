@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, useContext, type FocusEvent, type PropsWithChildren } from 'react';
+import React, {
+  createContext,
+  type RefObject,
+  useContext,
+  useEffect,
+  useMemo,
+  type FocusEvent,
+  type PropsWithChildren,
+} from 'react';
 
 import { raise } from '@dxos/debug';
 import { type BaseObject, getValue } from '@dxos/echo-schema';
@@ -34,15 +42,63 @@ export type FormInputStateProps = {
 export const useInputProps = (path: (string | number)[] = []): FormInputStateProps => {
   const { getStatus, getValue: getFormValue, onValueChange, onTouched } = useFormContext();
 
-  return {
-    getStatus: () => getStatus(path),
-    getValue: () => getFormValue(path),
-    onValueChange: (type: SimpleType, value: any) => onValueChange(path, type, value),
-    onBlur: () => onTouched(path),
-  };
+  const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
+  return useMemo(
+    () => ({
+      getStatus: () => getStatus(stablePath),
+      getValue: () => getFormValue(stablePath),
+      onValueChange: (type: SimpleType, value: any) => onValueChange(stablePath, type, value),
+      onBlur: () => onTouched(stablePath),
+    }),
+    [getStatus, getFormValue, onValueChange, onTouched, stablePath],
+  );
 };
 
-export const FormProvider = ({ children, ...formOptions }: PropsWithChildren<FormOptions<any>>) => {
-  const formHandler = useForm(formOptions);
-  return <FormContext.Provider value={formHandler}>{children}</FormContext.Provider>;
+export const FormProvider = ({
+  children,
+  formRef,
+  autoSave,
+  ...formOptions
+}: PropsWithChildren<
+  FormOptions<any> & {
+    formRef?: RefObject<HTMLDivElement>;
+    autoSave?: boolean;
+  }
+>) => {
+  const form = useForm(formOptions);
+
+  useEffect(() => {
+    if (!formRef?.current) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const keyIsEnter = event.key === 'Enter';
+      const modifierUsed = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
+      const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
+      const inputOptOut = (event.target as HTMLElement).hasAttribute('data-no-submit');
+
+      // Regular inputs: Submit on Enter (no modifiers).
+      const shouldSubmitRegularInput = !inputIsTextarea && keyIsEnter && !modifierUsed;
+
+      // Textareas: Submit only on Meta+Enter.
+      const shouldSubmitTextarea = inputIsTextarea && keyIsEnter && event.metaKey;
+
+      if ((shouldSubmitRegularInput || shouldSubmitTextarea) && !inputOptOut) {
+        if (!autoSave && form.canSave) {
+          form.handleSave();
+        }
+        if (autoSave && form.formIsValid) {
+          (event.target as HTMLElement).blur();
+        }
+      }
+    };
+
+    const formElement = formRef.current;
+
+    formElement.addEventListener('keydown', handleKeyDown);
+    return () => formElement.removeEventListener('keydown', handleKeyDown);
+  }, [formRef, form.canSave, form.formIsValid, form.handleSave, autoSave]);
+
+  return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
 };

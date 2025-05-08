@@ -11,15 +11,12 @@ export default [
     'en-US': {
       [ChannelType.typename]: {
         'typename label': 'Channel',
+        'object name placeholder': 'New channel',
       },
       [THREAD_PLUGIN]: {
         'plugin name': 'Threads',
-        'channel name placeholder': 'New channel',
         'channel title label': 'Title',
-        'delete channel label': 'Delete channel',
-        'create channel label': 'Create channel',
         'message placeholder': 'Reply…',
-        'settings standalone label': 'Enable channel creation (experimental)',
         'activity message': 'Processing…',
         'anonymous label': 'Anonymous',
         'delete message block label': 'Delete message block',
@@ -41,7 +38,9 @@ export default [
         'edit message label': 'Edit',
         'delete message label': 'Delete message',
         'open comments panel label': 'Show Comments',
-        'comments panel label': 'Comments',
+        'comments label': 'Comments',
+        'show all label': 'All comments',
+        'show unresolved label': 'Unresolved only',
       },
     },
   },

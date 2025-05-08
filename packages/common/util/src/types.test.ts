@@ -4,12 +4,12 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { nonNullable } from './types';
+import { isNonNullable } from './types';
 
 describe('types', () => {
   test('filter', async () => {
     const values = [1, 2, undefined, 3, 4];
-    const filtered: number[] = values.filter(nonNullable);
+    const filtered: number[] = values.filter(isNonNullable);
     expect(filtered).to.deep.equal([1, 2, 3, 4]);
   });
 });

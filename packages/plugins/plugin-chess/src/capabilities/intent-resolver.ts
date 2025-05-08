@@ -2,20 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { Chess } from 'chess.js';
 
-import { ChessAction, GameType } from '../types';
+import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { live } from '@dxos/live-object';
+
+import { ChessAction, ChessType } from '../types';
 
 export default () =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
       intent: ChessAction.Create,
-      resolve: ({ name }) => ({
-        data: {
-          object: create(GameType, { name }),
-        },
-      }),
+      resolve: ({ name, fen }) => {
+        const pgn = fen ? new Chess(fen).pgn() : undefined;
+        return {
+          data: {
+            object: live(ChessType, { name, fen, pgn }),
+          },
+        };
+      },
     }),
   );

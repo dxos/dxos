@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import {
   type EchoReplicator,
@@ -201,7 +201,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
           ? (connection.connection.peerId as PeerId)
           : null;
       })
-      .filter(nonNullable);
+      .filter(isNonNullable);
   }
 
   private _onConnectionOpen(connection: ReplicatorConnection) {

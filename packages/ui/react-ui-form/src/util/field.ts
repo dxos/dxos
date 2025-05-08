@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnum, GeoLocation, TypeEnum } from '@dxos/echo-schema';
 import { type ValidationError } from '@dxos/schema';
 
 /**
@@ -81,6 +81,24 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
       return isNaN(date.getTime()) ? null : date;
     }
 
+    case FormatEnum.GeoPoint: {
+      // Parse string in format "lat,long" to GeoPoint [longitude, latitude].
+      if (typeof value === 'string') {
+        // Only keep digits, decimal points, minus signs, and commas.
+        const cleaned = value.replace(/[^0-9.,-]+/g, '');
+        const parts = cleaned.split(',');
+        if (parts.length === 2) {
+          const lat = parseFloat(parts[0]);
+          const long = parseFloat(parts[1]);
+          if (!isNaN(lat) && !isNaN(long)) {
+            return GeoLocation.toGeoPoint({ latitude: lat, longitude: long });
+          }
+        }
+      }
+
+      return [0, 0];
+    }
+
     default: {
       return value;
     }
@@ -114,21 +132,21 @@ export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTyp
   switch (format) {
     case FormatEnum.Markdown:
       return undefined;
+    case FormatEnum.Time:
     case FormatEnum.Timestamp:
     case FormatEnum.DateTime:
     case FormatEnum.Date:
-    case FormatEnum.Time:
-      return ['font-mono'];
+    case FormatEnum.Duration:
+      return ['font-mono', 'text-right'];
     case FormatEnum.Currency:
       return ['text-right'];
     case FormatEnum.JSON:
+    case FormatEnum.DID:
       return ['font-mono'];
     default:
       return undefined;
   }
 };
-
-export const cellClassesForRowSelection = (selected: boolean) => (selected ? ['!bg-gridCellSelected'] : undefined);
 
 // TODO(ZaymonFC): How to do this with translations?
 export const pathNotUniqueError = (path: string): ValidationError => ({

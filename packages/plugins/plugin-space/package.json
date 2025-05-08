@@ -1,12 +1,13 @@
 {
   "name": "@dxos/plugin-space",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -33,6 +34,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -40,6 +42,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -57,20 +60,24 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
-    "effect": "^3.12.1",
+    "effect": "3.13.3",
     "jszip": "^3.10.1",
     "localforage": "^1.10.0",
     "lodash.get": "^4.4.2",
     "react-drag-drop-files": "^2.3.8",
-    "react-is": "~18.2.0"
+    "react-is": "~18.2.0",
+    "react-qr-rounded": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",

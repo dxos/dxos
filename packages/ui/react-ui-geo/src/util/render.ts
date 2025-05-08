@@ -2,16 +2,25 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from 'd3';
-import { type GeoPath, type GeoPermissibleObjects } from 'd3';
-import * as topojson from 'topojson-client';
+import { type GeoPath, type GeoPermissibleObjects, geoGraticule } from 'd3';
+import { feature, mesh } from 'topojson-client';
 import { type Topology } from 'topojson-specification';
 
 import { type LatLng, geoLine, geoPoint } from './path';
 
 export type Styles = Record<string, any>;
 
-export type Style = 'water' | 'graticule' | 'land' | 'border' | 'dots' | 'point' | 'line' | 'cursor' | 'arc';
+export type Style =
+  | 'background'
+  | 'water'
+  | 'graticule'
+  | 'land'
+  | 'border'
+  | 'dots'
+  | 'point'
+  | 'line'
+  | 'cursor'
+  | 'arc';
 
 export type StyleSet = Partial<Record<Style, Styles>>;
 
@@ -43,7 +52,7 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
   if (styles.graticule) {
     layers.push({
       styles: styles.graticule,
-      path: d3.geoGraticule().step([6, 6])(),
+      path: geoGraticule().step([6, 6])(),
     });
   }
 
@@ -55,14 +64,14 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
     if (topology.objects.land && styles.land) {
       layers.push({
         styles: styles.land,
-        path: topojson.feature(topology, topology.objects.land),
+        path: feature(topology, topology.objects.land),
       });
     }
 
     if (topology.objects.countries && styles.border) {
       layers.push({
         styles: styles.border,
-        path: topojson.mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b),
+        path: mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b),
       });
     }
 
@@ -108,16 +117,20 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
 /**
  * Render layers created above.
  */
-export const renderLayers = (generator: GeoPath, layers: Layer[] = [], scale: number) => {
+export const renderLayers = (generator: GeoPath, layers: Layer[] = [], scale: number, styles: StyleSet) => {
   const context: CanvasRenderingContext2D = generator.context();
   const {
     canvas: { width, height },
   } = context;
   context.reset();
 
-  // TODO(burdon): Option.
   // Clear background.
-  context.clearRect(0, 0, width, height);
+  if (styles.background) {
+    context.fillStyle = styles.background.fillStyle;
+    context.fillRect(0, 0, width, height);
+  } else {
+    context.clearRect(0, 0, width, height);
+  }
 
   // Render features.
   // https://github.com/d3/d3-geo#_path

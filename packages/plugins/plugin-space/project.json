@@ -26,7 +26,8 @@
           "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
-    }
+    },
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild",

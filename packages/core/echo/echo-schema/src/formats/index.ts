@@ -4,8 +4,9 @@
 
 export type { SimpleDate, SimpleDateTime, SimpleTime } from './date';
 export { DecimalPrecision } from './number';
-export { GeoPoint } from './object';
-export * from './select';
+export { GeoPoint, GeoLocation } from './object';
 
 export * from './format';
+export * from './select';
+export * from './string';
 export * from './types';

@@ -2,20 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { isInstanceOf, S } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table/types';
 import { FieldSchema } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 
-export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-table/annotation/InitialSchema');
+// TODO(burdon): Factor out (should be in common for Table, Kanban, and Map). Move to FormatEnum or SDK.
+export const TypenameAnnotationId = Symbol.for('@dxos/plugin-table/annotation/Typename');
 
 export const CreateTableSchema = S.Struct({
   name: S.optional(S.String),
-  initialSchema: S.optional(
+  typename: S.optional(
     S.String.annotations({
-      [InitialSchemaAnnotationId]: true,
+      [TypenameAnnotationId]: true,
     }),
   ),
 });
@@ -54,6 +55,14 @@ export namespace TableAction {
     }),
     output: S.Void,
   }) {}
+
+  export class AddRow extends S.TaggedClass<AddRow>()(`${TABLE_ACTION}/add-row`, {
+    input: S.Struct({
+      table: TableType,
+      data: S.Any,
+    }),
+    output: S.Void,
+  }) {}
 }
 
-export const isTable = (object: unknown): object is TableType => object != null && object instanceof TableType;
+export const isTable = (object: unknown): object is TableType => isInstanceOf(TableType, object);

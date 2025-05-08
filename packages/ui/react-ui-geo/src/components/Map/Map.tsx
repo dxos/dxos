@@ -5,16 +5,15 @@
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 
-import type L from 'leaflet';
-import { type ControlPosition, Control, DomEvent, DomUtil, type LatLngExpression, latLngBounds } from 'leaflet';
-import React, { forwardRef, type PropsWithChildren, useEffect, useImperativeHandle } from 'react';
+import L, { Control, DomEvent, DomUtil, latLngBounds, type ControlPosition, type LatLngExpression } from 'leaflet';
+import React, { forwardRef, useEffect, useImperativeHandle, type PropsWithChildren } from 'react';
 import { createRoot } from 'react-dom/client';
+import type { MapContainerProps } from 'react-leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
-import { type MapContainerProps } from 'react-leaflet/lib/MapContainer';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
-import { Tooltip, ThemeProvider, type ThemedClassName } from '@dxos/react-ui';
+import { ThemeProvider, Tooltip, type ThemedClassName } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
 import { ActionControls, controlPositions, ZoomControls, type ControlProps } from '../Toolbar';
@@ -61,84 +60,96 @@ type MapController = {
   setZoom: (cb: (zoom: number) => number) => void;
 };
 
-const MapCanvas = forwardRef<MapController, MapCanvasProps>(
-  ({ markers = [], center, zoom, onChange }, forwardedRef) => {
-    const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
-    const map = useMap();
+const MapCanvas = forwardRef<MapController, MapCanvasProps>(({ markers, center, zoom, onChange }, forwardedRef) => {
+  const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
+  const map = useMap();
 
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
-        setCenter: (center: LatLngExpression, zoom?: number) => {
-          map.setView(center, zoom);
-        },
-        setZoom: (cb) => {
-          map.setZoom(cb(map.getZoom()));
-        },
-      }),
-      [map],
-    );
-
-    // Resize.
-    useEffect(() => {
-      if (width && height) {
-        map.invalidateSize();
-      }
-    }, [width, height]);
-
-    // Position.
-    useEffect(() => {
-      if (center) {
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
+      setCenter: (center: LatLngExpression, zoom?: number) => {
         map.setView(center, zoom);
-      } else if (zoom !== undefined) {
-        map.setZoom(zoom);
-      }
-    }, [center, zoom]);
+      },
+      setZoom: (cb) => {
+        map.setZoom(cb(map.getZoom()));
+      },
+    }),
+    [map],
+  );
 
-    // Events.
-    useEffect(() => {
-      const handler = debounce(() => {
-        onChange?.({ center: map.getCenter(), zoom: map.getZoom() });
-      }, 100);
-      map.on('move', handler);
-      map.on('zoom', handler);
-      return () => {
-        map.off('move', handler);
-        map.off('zoom', handler);
-      };
-    }, [map, onChange]);
+  // Resize.
+  useEffect(() => {
+    if (width && height) {
+      map.invalidateSize();
+    }
+  }, [width, height]);
 
-    // Set the viewport around the markers, or show the whole world map if `markers` is empty.
-    useEffect(() => {
-      if (markers.length > 0) {
-        const bounds = latLngBounds(markers.map((marker) => marker.location));
-        map.fitBounds(bounds);
-      } else {
-        map.setView(defaults.center, defaults.zoom);
-      }
-    }, [markers]);
+  // Position.
+  useEffect(() => {
+    if (center) {
+      map.setView(center, zoom);
+    } else if (zoom !== undefined) {
+      map.setZoom(zoom);
+    }
+  }, [center, zoom]);
 
-    return (
-      <div ref={ref} className='flex w-full h-full overflow-hidden bg-baseSurface'>
-        {/* Map tiles. */}
-        <TileLayer
-          className='dark:filter dark:grayscale dark:invert'
-          url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-        />
+  // Events.
+  useEffect(() => {
+    const handler = debounce(() => {
+      onChange?.({ center: map.getCenter(), zoom: map.getZoom() });
+    }, 100);
+    map.on('move', handler);
+    map.on('zoom', handler);
+    return () => {
+      map.off('move', handler);
+      map.off('zoom', handler);
+    };
+  }, [map, onChange]);
 
-        {/* Markers. */}
-        {/* TODO(burdon): Marker icon doesn't load on mobile? */}
-        {markers.map(({ id, title, location: { lat, lng } }) => {
-          return (
-            <Marker key={id} position={{ lat, lng }}>
-              {title && <Popup>{title}</Popup>}
-            </Marker>
-          );
-        })}
-      </div>
-    );
-  },
-);
+  // Set the viewport around the markers, or show the whole world map if `markers` is empty.
+  useEffect(() => {
+    if (markers.length > 0) {
+      const bounds = latLngBounds(markers.map((marker) => marker.location));
+      map.fitBounds(bounds);
+    } else {
+      map.setView(defaults.center, defaults.zoom);
+    }
+  }, [markers]);
+
+  return (
+    <div ref={ref} className='flex w-full h-full overflow-hidden bg-baseSurface'>
+      {/* Map tiles. */}
+      <TileLayer
+        className='dark:filter dark:grayscale dark:invert'
+        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      />
+
+      {/* Markers. */}
+      {markers?.map(({ id, title, location: { lat, lng } }) => {
+        return (
+          <Marker
+            key={id}
+            position={{ lat, lng }}
+            icon={
+              // TODO(burdon): Create custom icon from bundled assets.
+              new L.Icon({
+                iconUrl: 'https://dxos.network/marker-icon.png',
+                iconRetinaUrl: 'https://dxos.network/marker-icon-2x.png',
+                shadowUrl: 'https://dxos.network/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41],
+              })
+            }
+          >
+            {title && <Popup>{title}</Popup>}
+          </Marker>
+        );
+      })}
+    </div>
+  );
+});
 
 //
 // Controls

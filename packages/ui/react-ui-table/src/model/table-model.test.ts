@@ -9,7 +9,7 @@ import { S, TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { createEchoSchema } from '@dxos/live-object/testing';
-import { create, makeRef } from '@dxos/react-client/echo';
+import { live, makeRef } from '@dxos/react-client/echo';
 import { createView, ViewProjection } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
@@ -69,7 +69,7 @@ describe('TableModel', () => {
 
   describe('reactivity', () => {
     it('pure signals should nest', () => {
-      const signal$ = create({ arr: [{ thingInside: 1 }, { thingInside: 2 }] });
+      const signal$ = live({ arr: [{ thingInside: 1 }, { thingInside: 2 }] });
 
       const computed$ = computed(() => {
         return signal$.arr.map((row) =>
@@ -106,7 +106,7 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
-  const projection = new ViewProjection(schema, view);
-  const table = create(TableType, { view: makeRef(view) });
-  return new TableModel({ table, projection, ...props });
+  const projection = new ViewProjection(schema.jsonSchema, view);
+  const table = live(TableType, { view: makeRef(view) });
+  return new TableModel({ id: table.id, space: undefined, view, projection, ...props });
 };

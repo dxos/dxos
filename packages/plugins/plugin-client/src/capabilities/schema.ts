@@ -9,28 +9,18 @@ import { type TypedObject } from '@dxos/echo-schema';
 
 import { ClientCapabilities } from './capabilities';
 
-// TODO(wittjosiah): Remove types?
 export default (context: PluginsContext) => {
   const client = context.requestCapability(ClientCapabilities.Client);
 
-  let previousSystem: TypedObject[] = [];
-  const unsubscribeSystem = effect(() => {
-    const systemSchemas = Array.from(new Set(context.requestCapabilities(ClientCapabilities.SystemSchema).flat()));
-    const newSchemas = systemSchemas.filter((schema) => !previousSystem.includes(schema));
-    previousSystem = systemSchemas;
-    client.addTypes(newSchemas);
-  });
-
+  // TODO(wittjosiah): Unregister schemas when they are disabled.
   let previous: TypedObject[] = [];
   const unsubscribe = effect(() => {
     const schemas = Array.from(new Set(context.requestCapabilities(ClientCapabilities.Schema).flat()));
+    // TODO(wittjosiah): Filter out schemas which the client has already registered.
     const newSchemas = schemas.filter((schema) => !previous.includes(schema));
     previous = schemas;
     client.addTypes(newSchemas);
   });
 
-  return contributes(Capabilities.Null, null, () => {
-    unsubscribeSystem();
-    unsubscribe();
-  });
+  return contributes(Capabilities.Null, null, () => unsubscribe());
 };

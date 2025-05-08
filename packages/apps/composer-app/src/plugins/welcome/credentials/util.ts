@@ -33,7 +33,7 @@ export const signup = async ({
   email: string;
   redirectUrl?: string;
   identity: Identity | null;
-}): Promise<void> => {
+}): Promise<boolean> => {
   const response = await fetch(new URL('/account/signup', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -48,14 +48,17 @@ export const signup = async ({
     throw new Error('signup failed', { cause: response.statusText });
   }
 
-  const { token } = await response.json();
+  const { token, type } = await response.json();
   if (token) {
     // Debugging link.
     const activationLink = new URL('/', window.location.href);
     activationLink.searchParams.set('token', token);
+    activationLink.searchParams.set('type', type);
     // eslint-disable-next-line
     console.log(activationLink.href);
   }
+
+  return type === 'login';
 };
 
 /**

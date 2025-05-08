@@ -27,6 +27,9 @@ import {
   WifiHigh,
   MagnifyingGlass,
   Cloud,
+  Function,
+  LineSegments,
+  Flask,
 } from '@phosphor-icons/react';
 
 export type SectionItem = {
@@ -42,7 +45,7 @@ export type SectionItem = {
 export const useSections = (): SectionItem[] => {
   return [
     {
-      id: '/client',
+      id: 'client',
       title: 'Client',
       Icon: Users,
       items: [
@@ -74,7 +77,7 @@ export const useSections = (): SectionItem[] => {
       ],
     },
     {
-      id: '/halo',
+      id: 'halo',
       title: 'HALO',
       Icon: IdentificationBadge,
       items: [
@@ -101,7 +104,7 @@ export const useSections = (): SectionItem[] => {
       ],
     },
     {
-      id: '/echo',
+      id: 'echo',
       title: 'ECHO',
       Icon: Database,
       items: [
@@ -192,9 +195,24 @@ export const useSections = (): SectionItem[] => {
       Icon: Cloud,
       items: [
         {
+          id: '/edge/workflows',
+          title: 'Workflows',
+          Icon: Function,
+        },
+        {
           id: '/edge/dashboard',
           title: 'Dashboard',
           Icon: ComputerTower,
+        },
+        {
+          id: '/edge/traces',
+          title: 'Traces',
+          Icon: LineSegments,
+        },
+        {
+          id: '/edge/testing',
+          title: 'Testing',
+          Icon: Flask,
         },
       ],
     },

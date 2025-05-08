@@ -28,8 +28,8 @@ export const Markers = ({ id = 'dx-marker', classNames }: ThemedClassName<{ id?:
       <Arrow id={`${id}-arrow-end`} dir='end' classNames={classNames} />
       <Arrow id={`${id}-triangle-start`} dir='start' closed classNames={classNames} />
       <Arrow id={`${id}-triangle-end`} dir='end' closed classNames={classNames} />
-      <Marker id={`${id}-circle`} pos={{ x: 6, y: 6 }} size={{ width: 12, height: 12 }}>
-        <circle cx={6} cy={6} r={5} stroke={'context-stroke'} className={mx(classNames)} />
+      <Marker id={`${id}-circle`} pos={{ x: 8, y: 8 }} size={{ width: 16, height: 16 }}>
+        <circle cx={8} cy={8} r={5} stroke={'context-stroke'} className={mx(classNames)} />
       </Marker>
     </>
   );

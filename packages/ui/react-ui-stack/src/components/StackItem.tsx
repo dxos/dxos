@@ -16,6 +16,7 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
 
 import { type ThemedClassName, ListItem } from '@dxos/react-ui';
+import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack, StackItemContext, type StackItemSize, type StackItemData } from './StackContext';
@@ -36,7 +37,8 @@ import {
   StackItemSigilButton,
 } from './StackItemSigil';
 
-export const DEFAULT_HORIZONTAL_SIZE = 44 satisfies StackItemSize;
+// NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
+export const DEFAULT_HORIZONTAL_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
 export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
 
@@ -94,6 +96,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       if (!itemElement || !onRearrange || disableRearrange) {
         return;
       }
+
       return combine(
         draggable({
           element: itemElement,
@@ -144,14 +147,14 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       );
     }, [orientation, item, onRearrange, selfDragHandleElement, itemElement]);
 
-    const focusGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
     return (
       <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>
         <Root
           {...props}
           tabIndex={0}
-          {...focusGroupAttrs}
+          {...focusableGroupAttrs}
           className={mx(
             'group/stack-item grid relative',
             focusIndicatorVariant === 'over-all'
@@ -159,16 +162,14 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
               : orientation === 'horizontal'
                 ? 'dx-focus-ring-group-x'
                 : 'dx-focus-ring-group-y',
-            size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
             classNames,
           )}
           data-dx-stack-item
+          {...resizeAttributes}
           style={{
-            ...(size !== 'min-content' && {
-              [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem`,
-            }),
+            ...sizeStyle(size, orientation),
             ...(Number.isFinite(order) && {
               [orientation === 'horizontal' ? 'gridColumn' : 'gridRow']: `${order}`,
             }),

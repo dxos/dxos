@@ -14,6 +14,7 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
   Pick<IconProps, 'icon' | 'size'> & {
     label: NonNullable<ReactNode>;
     iconOnly?: boolean;
+    noTooltip?: boolean;
     caretDown?: boolean;
     // TODO(burdon): Create slots abstraction?
     iconClassNames?: ThemedClassName<any>['classNames'];
@@ -24,8 +25,14 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
   };
 
 const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ tooltipPortal = true, tooltipZIndex: zIndex, tooltipSide, suppressNextTooltip, ...props }, forwardedRef) => {
+  (
+    { noTooltip, tooltipPortal = true, tooltipZIndex: zIndex, tooltipSide, suppressNextTooltip, ...props },
+    forwardedRef,
+  ) => {
     const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
+    if (noTooltip) {
+      return <LabelledIconButton {...props} ref={forwardedRef} />;
+    }
     const content = (
       <Tooltip.Content {...(zIndex && { style: { zIndex } })} side={tooltipSide}>
         {props.label}

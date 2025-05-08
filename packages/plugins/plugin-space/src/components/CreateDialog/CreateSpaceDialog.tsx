@@ -10,6 +10,7 @@ import { type S } from '@dxos/echo-schema';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
+import { useInputSurfaceLookup } from '../../hooks';
 import { SPACE_PLUGIN } from '../../meta';
 import { SpaceAction, SpaceForm } from '../../types';
 
@@ -22,6 +23,8 @@ export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const { t } = useTranslation(SPACE_PLUGIN);
   const { dispatch } = useIntentDispatcher();
+
+  const inputSurfaceLookup = useInputSurfaceLookup();
 
   const handleCreateSpace = useCallback(
     async (data: FormValues) => {
@@ -48,7 +51,15 @@ export const CreateSpaceDialog = () => {
         </Dialog.Close>
       </div>
       <div className='p-4'>
-        <Form testId='create-space-form' values={initialValues} schema={SpaceForm} onSave={handleCreateSpace} />
+        <Form
+          testId='create-space-form'
+          classNames='!p-0'
+          autoFocus
+          values={initialValues}
+          schema={SpaceForm}
+          lookupComponent={inputSurfaceLookup}
+          onSave={handleCreateSpace}
+        />
       </div>
     </Dialog.Content>
   );

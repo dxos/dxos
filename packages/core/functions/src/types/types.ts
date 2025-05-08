@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, OptionsAnnotationId, RawObject, S, TypedObject } from '@dxos/echo-schema';
+import { AST, OptionsAnnotationId, RawObject, S, TypedObject, DXN } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -14,6 +14,7 @@ export enum TriggerKind {
   Webhook = 'webhook',
   Subscription = 'subscription',
   Email = 'email',
+  Queue = 'queue',
 }
 
 // TODO(burdon): Rename prop kind.
@@ -37,6 +38,13 @@ const EmailTriggerSchema = S.Struct({
 }).pipe(S.mutable);
 
 export type EmailTrigger = S.Schema.Type<typeof EmailTriggerSchema>;
+
+const QueueTriggerSchema = S.Struct({
+  type: S.Literal(TriggerKind.Queue).annotations(typeLiteralAnnotations),
+  queue: DXN,
+}).pipe(S.mutable);
+
+export type QueueTrigger = S.Schema.Type<typeof QueueTriggerSchema>;
 
 /**
  * Webhook.
@@ -87,11 +95,11 @@ export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema
  * Trigger schema (discriminated union).
  */
 export const TriggerSchema = S.Union(
-  //
   TimerTriggerSchema,
   WebhookTriggerSchema,
   SubscriptionTriggerSchema,
   EmailTriggerSchema,
+  QueueTriggerSchema,
 ).annotations({
   [AST.TitleAnnotationId]: 'Trigger',
 });
@@ -103,6 +111,7 @@ export type TriggerType = S.Schema.Type<typeof TriggerSchema>;
  */
 export const FunctionTriggerSchema = S.Struct({
   // TODO(burdon): What type does this reference.
+  // TODO(wittjosiah): This should probably be a Ref?
   function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
 
   enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
@@ -110,7 +119,8 @@ export const FunctionTriggerSchema = S.Struct({
   // TODO(burdon): Flatten entire schema.
   spec: S.optional(TriggerSchema),
 
-  // TODO(burdon): Get meta from function.
+  // TODO(burdon): Get schema as partial from function.
+  // TODO(wittjosiah): Rename to payload.
   // The `meta` property is merged into the event data passed to the function.
   meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
 });

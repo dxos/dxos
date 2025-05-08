@@ -9,6 +9,7 @@ export default [
     'en-US': {
       [translationKey]: {
         'fields label': 'Fields',
+        'hidden fields label': 'Hidden Fields',
 
         // TODO(burdon): Standardize field/property.
         'button add property': 'Add property',
@@ -36,7 +37,7 @@ export default [
         'format hostname': 'Hostname',
         'format integer': 'Integer',
         'format json': 'JSON',
-        'format latlng': 'LatLng',
+        'format latlng': 'Geopoint',
         'format markdown': 'Markdown',
         'format percent': 'Percent',
         'format ref': 'Reference',

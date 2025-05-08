@@ -3,17 +3,14 @@
 //
 import React from 'react';
 
-import { hueTokenThemes } from '@dxos/react-ui-theme';
+import { hues } from '@dxos/react-ui-theme';
 import '@dxos-theme';
 import { type ChromaticPalette, type MessageValence } from '@dxos/react-ui-types';
 
 import { Tag } from './Tag';
 import { withTheme } from '../../testing';
 
-const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...Object.keys(hueTokenThemes)] as (
-  | ChromaticPalette
-  | MessageValence
-)[];
+const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as (ChromaticPalette | MessageValence)[];
 
 export default {
   title: 'ui/react-ui-core/Tag',

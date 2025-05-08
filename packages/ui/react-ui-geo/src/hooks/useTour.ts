@@ -2,30 +2,38 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as d3 from 'd3';
-import { useEffect, useState } from 'react';
+import { geoPath, geoInterpolate, geoDistance, selection as d3Selection } from 'd3';
+import { type SetStateAction, type Dispatch, useEffect, useState, useMemo } from 'react';
 import versor from 'versor';
 
 import type { GlobeController } from '../components';
-import { type Features, geoToPosition, type LatLng, positionToRotation, type StyleSet } from '../util';
+import { geoToPosition, type LatLng, positionToRotation, type StyleSet } from '../util';
 
 const TRANSITION_NAME = 'globe-tour';
 
 const defaultDuration = 1_500;
 
 export type TourOptions = {
+  running?: boolean;
   disabled?: boolean;
-  styles?: StyleSet;
   duration?: number;
+  loop?: boolean;
+  tilt?: number;
+  autoRotate?: boolean;
+  styles?: StyleSet;
 };
 
 /**
  * Iterates between points.
  * Inspired by: https://observablehq.com/@mbostock/top-100-cities
  */
-export const useTour = (controller?: GlobeController | null, features?: Features, options: TourOptions = {}) => {
-  const selection = d3.selection();
-  const [running, setRunning] = useState(false);
+export const useTour = (
+  controller?: GlobeController | null,
+  points?: LatLng[],
+  options: TourOptions = {},
+): [boolean, Dispatch<SetStateAction<boolean>>] => {
+  const selection = useMemo(() => d3Selection(), []);
+  const [running, setRunning] = useState(options.running ?? false);
   useEffect(() => {
     if (!running) {
       selection.interrupt(TRANSITION_NAME);
@@ -37,12 +45,17 @@ export const useTour = (controller?: GlobeController | null, features?: Features
       t = setTimeout(async () => {
         const { canvas, projection, setRotation } = controller;
         const context = canvas.getContext('2d', { alpha: false });
-        const path = d3.geoPath(projection, context).pointRadius(2);
+        const path = geoPath(projection, context).pointRadius(2);
 
-        const tilt = 0;
+        const tilt = options.tilt ?? 0;
         let last: LatLng;
         try {
-          for (const next of features.points) {
+          const p = [...points];
+          if (options.loop) {
+            p.push(p[0]);
+          }
+
+          for (const next of p) {
             if (!running) {
               break;
             }
@@ -50,8 +63,8 @@ export const useTour = (controller?: GlobeController | null, features?: Features
             // Points.
             const p1 = last ? geoToPosition(last) : undefined;
             const p2 = geoToPosition(next);
-            const ip = d3.geoInterpolate(p1 || p2, p2);
-            const distance = d3.geoDistance(p1 || p2, p2);
+            const ip = geoInterpolate(p1 || p2, p2);
+            const distance = geoDistance(p1 || p2, p2);
 
             // Rotation.
             const r1 = p1 ? positionToRotation(p1, tilt) : controller.projection.rotate();
@@ -92,6 +105,8 @@ export const useTour = (controller?: GlobeController | null, features?: Features
             last = next;
           }
         } catch (err) {
+          // Ignore.
+        } finally {
           setRunning(false);
         }
       });
@@ -101,14 +116,7 @@ export const useTour = (controller?: GlobeController | null, features?: Features
         selection.interrupt(TRANSITION_NAME);
       };
     }
-  }, [controller, running]);
+  }, [controller, running, JSON.stringify(options)]);
 
-  return [
-    () => {
-      if (!options.disabled) {
-        setRunning(true);
-      }
-    },
-    () => setRunning(false),
-  ];
+  return [running, setRunning];
 };

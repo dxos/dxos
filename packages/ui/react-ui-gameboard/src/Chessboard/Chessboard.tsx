@@ -6,8 +6,10 @@ import React, { type PropsWithChildren, useRef, useMemo, useEffect, useState, me
 import { useResizeDetector } from 'react-resize-detector';
 
 import { useTrackProps } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+import { isNotFalsy } from '@dxos/util';
 
-import { type ChessPiece, ChessPieces, getSquareColor, locationToPos } from './chess';
+import { boardStyles, type ChessPiece, ChessPieces, getSquareColor, locationToPos } from './chess';
 import {
   type DOMRectBounds,
   type Location,
@@ -34,7 +36,7 @@ export type ChessboardProps = PropsWithChildren<{
 export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols = 8 }: ChessboardProps) => {
   useTrackProps({ orientation, showLabels, debug }, Chessboard.displayName, false);
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
-  const { model } = useBoardContext();
+  const { model, promoting, onPromotion } = useBoardContext();
 
   const locations = useMemo<Location[]>(() => {
     return Array.from({ length: rows }, (_, i) => (orientation === 'black' ? i : rows - 1 - i)).flatMap((row) =>
@@ -73,16 +75,22 @@ export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols
   }, [locations, width, height]);
 
   // Get the bounds of each square and piece.
-  const positions = useMemo<{ bounds: DOMRectBounds; piece: PieceRecord }[]>(() => {
+  const positions = useMemo<{ piece: PieceRecord; bounds: DOMRectBounds }[]>(() => {
     if (!gridRef.current) {
       return [];
     }
 
-    return Object.values(model?.pieces.value ?? {}).map((piece) => {
-      const bounds = grid[locationToString(piece.location)];
-      return { bounds, piece };
-    });
-  }, [grid, model?.pieces.value]);
+    return Object.values(model?.pieces.value ?? {})
+      .map((piece) => {
+        if (piece.id === promoting?.id) {
+          return null;
+        }
+
+        const bounds = grid[locationToString(piece.location)];
+        return { piece, bounds };
+      })
+      .filter(isNotFalsy);
+  }, [grid, model?.pieces.value, promoting]);
 
   return (
     <div ref={containerRef} className='relative'>
@@ -100,7 +108,7 @@ export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols
           />
         ))}
       </div>
-      <div className='grow'>
+      <div className={mx(promoting && 'opacity-50')}>
         {positions.map(({ bounds, piece }) => (
           <Piece
             key={piece.id}
@@ -112,6 +120,22 @@ export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols
           />
         ))}
       </div>
+      <div>
+        {promoting && (
+          <PromotionSelector
+            grid={grid}
+            piece={promoting}
+            onSelect={(piece) => {
+              onPromotion({
+                from: Object.values(model!.pieces.value).find((p) => p.id === promoting.id)!.location,
+                to: piece.location,
+                piece: promoting.type,
+                promotion: piece.type,
+              });
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 });
@@ -120,4 +144,47 @@ Chessboard.displayName = 'Chessboard';
 
 const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
   return container.querySelector(`[data-location="${locationToString(location)}"]`);
+};
+
+const PromotionSelector = ({
+  grid,
+  piece,
+  onSelect,
+}: {
+  grid: Record<string, DOMRectBounds>;
+  piece: PieceRecord;
+  onSelect: (piece: PieceRecord) => void;
+}) => {
+  const positions = ['Q', 'N', 'R', 'B'].map((pieceType, i) => {
+    const location = [piece.location[0] + (piece.location[0] === 0 ? i : -i), piece.location[1]] as Location;
+    return {
+      piece: {
+        id: `promotion-${pieceType}`,
+        type: (piece.side === 'black' ? 'B' : 'W') + pieceType,
+        side: piece.side,
+        location,
+      },
+      bounds: grid[locationToString(location)],
+    };
+  });
+
+  const handleSelect = (selected: PieceRecord) => {
+    onSelect({ ...piece, type: selected.type });
+  };
+
+  // TODO(burdon): Circle.
+  return (
+    <div>
+      {positions.map(({ piece, bounds }) => (
+        <div key={piece.id} style={bounds} onClick={() => handleSelect(piece)}>
+          <Piece
+            piece={piece}
+            bounds={bounds}
+            Component={ChessPieces[piece.type as ChessPiece]}
+            classNames={mx('border-2 border-neutral-700 rounded-full', boardStyles.promotion)}
+          />
+        </div>
+      ))}
+    </div>
+  );
 };

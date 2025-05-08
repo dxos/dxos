@@ -2,60 +2,59 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import { test, describe } from 'vitest';
 
-import { toJsonSchema } from '@dxos/echo-schema';
+import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
+import { toJsonSchema, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceClientImpl } from './client';
-import { ObjectId, type LLMTool } from './schema';
+import { DEFAULT_EDGE_MODEL } from './defs';
+import { AIServiceEdgeClient } from './edge-client';
+import { OllamaClient } from './ollama-client';
+import { MixedStreamParser } from './parser';
+import { ToolTypes } from './types';
+import { createTestOllamaClient, AI_SERVICE_ENDPOINT } from '../testing';
 
-const ENDPOINT = 'http://localhost:8787';
+// log.config({ filter: 'debug' });
 
 describe.skip('AI Service Client', () => {
   test('client generation', async () => {
-    const client = new AIServiceClientImpl({
-      endpoint: ENDPOINT,
+    const client = new AIServiceEdgeClient({
+      endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
-    const spaceId = SpaceId.random();
-    const threadId = ObjectId.random();
+    // await client.appendMessages([
+    //   {
+    //     id: ObjectId.random(),
+    //     spaceId,
+    //     threadId,
+    //     role: 'user',
+    //     content: [{ type: 'text', text: 'Hello' }],
+    //   },
+    //     ]);
 
-    await client.insertMessages([
-      {
-        id: ObjectId.random(),
-        spaceId,
-        threadId,
-        role: 'user',
-        content: [{ type: 'text', text: 'Hello' }],
-      },
-    ]);
-
-    const stream = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
-      spaceId,
-      threadId,
+    const stream = await client.execStream({
+      model: DEFAULT_EDGE_MODEL,
       systemPrompt: 'You are a poet',
       tools: [],
     });
     for await (const event of stream) {
-      log.info('event', event);
+      log('event', event);
     }
 
-    log.info('full message', {
+    log('full message', {
       message: await stream.complete(),
     });
   });
 
-  test.only('tool calls', async () => {
-    const client = new AIServiceClientImpl({
-      endpoint: ENDPOINT,
+  test('tool calls', async () => {
+    const client = new AIServiceEdgeClient({
+      endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
-    const custodian: LLMTool = {
+    const custodian: Tool = {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       parameters: toJsonSchema(
@@ -65,60 +64,184 @@ describe.skip('AI Service Client', () => {
       ),
     };
 
-    const spaceId = SpaceId.random();
-    const threadId = ObjectId.random();
+    // await client.appendMessages([
+    //   {
+    //     id: ObjectId.random(),
+    //     spaceId,
+    //     threadId,
+    //     role: 'user',
+    //     content: [{ type: 'text', text: 'What is the password? Ask the custodian' }],
+    //   },
+    // ]);
 
-    await client.insertMessages([
-      {
-        id: ObjectId.random(),
-        spaceId,
-        threadId,
-        role: 'user',
-        content: [{ type: 'text', text: 'What is the password? Ask the custodian' }],
-      },
-    ]);
+    {
+      const stream1 = await client.execStream({
+        model: DEFAULT_EDGE_MODEL,
+        systemPrompt: 'You are a helpful assistant.',
+        tools: [custodian],
+      });
 
-    const stream = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
-      spaceId,
-      threadId,
-      systemPrompt: 'You are a helpful assistant.',
-      tools: [custodian],
+      for await (const event of stream1) {
+        log('event', event);
+      }
+
+      // TODO(burdon): !!!
+      await stream1.complete();
+      const messages: Message[] = [];
+
+      const [message1] = messages;
+      log('full message', { message: message1 });
+      // await client.appendMessages([message1]);
+
+      const toolUse = message1.content.find(({ type }) => type === 'tool_use')!;
+      invariant(toolUse.type === 'tool_use');
+      // await client.appendMessages([
+      //   {
+      //     id: ObjectId.random(),
+      //     spaceId,
+      //     threadId,
+      //     role: 'user',
+      //     content: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is blue"' }],
+      //   },
+      // ]);
+    }
+
+    {
+      const stream2 = await client.execStream({
+        model: DEFAULT_EDGE_MODEL,
+        systemPrompt: 'You are a helpful assistant.',
+        tools: [custodian],
+      });
+
+      for await (const event of stream2) {
+        log('event', event);
+      }
+
+      await stream2.complete();
+      const messages: Message[] = [];
+
+      const [message2] = messages;
+      log('full message', { message: message2 });
+    }
+  });
+
+  test.skip('image generation', async () => {
+    const client = new AIServiceEdgeClient({
+      endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
+
+    // await client.appendMessages([
+    //   {
+    //     id: ObjectId.random(),
+    //     spaceId,
+    //     threadId,
+    //     role: 'user',
+    //     content: [{ type: 'text', text: 'Generate an image of a cat' }],
+    //   },
+    // ]);
+
+    const stream = await client.execStream({
+      model: DEFAULT_EDGE_MODEL,
+      tools: [
+        {
+          name: 'text-to-image',
+          type: ToolTypes.TextToImage,
+          // options: {
+          //   model: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
+          // },
+        },
+      ],
+    });
+
     for await (const event of stream) {
-      log.info('event', event);
+      log('event', event);
     }
-    const [message] = await stream.complete();
-    log.info('full message', {
-      message,
-    });
-    await client.insertMessages([message]);
 
-    const toolUse = message.content.find(({ type }) => type === 'tool_use')!;
-    invariant(toolUse.type === 'tool_use');
-    await client.insertMessages([
-      {
-        id: ObjectId.random(),
-        spaceId,
-        threadId,
-        role: 'user',
-        content: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is gray"' }],
-      },
-    ]);
+    log('full message', { message: await stream.complete() });
+  });
+});
 
-    const stream2 = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
-      spaceId,
-      threadId,
-      systemPrompt: 'You are a helpful assistant.',
-      tools: [custodian],
-    });
-    for await (const event of stream2) {
-      log.info('event', event);
+describe.skip('Ollama Client', () => {
+  test('basic', async (ctx) => {
+    const isRunning = await OllamaClient.isRunning();
+    if (!isRunning) {
+      ctx.skip();
     }
-    const [message2] = await stream2.complete();
-    log.info('full message', {
-      message: message2,
+
+    const client = createTestOllamaClient();
+    const parser = new MixedStreamParser();
+
+    const messages = await parser.parse(
+      await client.execStream({
+        prompt: create(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: 'Hello, world!' }],
+        }),
+      }),
+    );
+
+    log('messages', { messages });
+  });
+
+  test('tool calls', async (ctx) => {
+    const isRunning = await OllamaClient.isRunning();
+    if (!isRunning) {
+      ctx.skip();
+    }
+
+    const client = createTestOllamaClient({
+      tools: [
+        defineTool('test', {
+          name: 'encrypt',
+          description: 'Encrypt a message',
+          schema: S.Struct({
+            message: S.String.annotations({ description: 'The message to encrypt' }),
+          }),
+          execute: async ({ message }) => ToolResult.Success(message.split('').reverse().join('')),
+        }),
+      ],
     });
+    const parser = new MixedStreamParser();
+    parser.streamEvent.on((event) => {
+      // log('event', { event });
+    });
+
+    const messages = await parser.parse(
+      await client.execStream({
+        prompt: create(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: 'What is the encrypted message for "Hello, world!"' }],
+        }),
+      }),
+    );
+
+    log('messages', { messages });
+  });
+
+  test('text-to-image', async (ctx) => {
+    const isRunning = await OllamaClient.isRunning();
+    if (!isRunning) {
+      ctx.skip();
+    }
+
+    const client = createTestOllamaClient();
+    const parser = new MixedStreamParser();
+
+    const messages = await parser.parse(
+      await client.execStream({
+        prompt: create(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: 'Generate an image of a cat' }],
+        }),
+        tools: [
+          {
+            name: 'text-to-image',
+            type: ToolTypes.TextToImage,
+          },
+        ],
+      }),
+    );
+
+    log('messages', { messages });
   });
 });

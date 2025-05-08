@@ -31,7 +31,7 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-testid="spacePlugin.createSpace"]',
+    target: '[data-testid="spacePlugin.addSpace"]',
     title: 'Sharing',
     content: 'Create shared spaces to collaborate with others.',
     placement: 'bottom',
@@ -47,16 +47,23 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-joyride="welcome/halo"]',
+    target: '[data-joyride="welcome/account"]',
     title: 'Profile',
     content: 'Manage your profile and devices.',
   },
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-joyride="welcome/settings"]',
+    target: '[data-testid="treeView.appSettings"]',
     title: 'Settings',
-    content: 'Configure settings and add plugins.',
+    content: 'Configure settings.',
+  },
+  {
+    ...base,
+    before: ensureSidebar,
+    target: '[data-testid="treeView.pluginRegistry"]',
+    title: 'Plugins',
+    content: 'Add plugins.',
   },
   {
     ...base,

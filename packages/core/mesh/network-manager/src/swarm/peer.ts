@@ -371,7 +371,7 @@ export class Peer {
 
     // Triggers `onStateChange` callback which will clean up the connection.
     // Won't throw.
-    await connection.close(err);
+    await connection.close({ error: err });
 
     log('closed', { peerId: this.remoteInfo, sessionId: connection.sessionId });
   }
@@ -386,12 +386,12 @@ export class Peer {
   }
 
   @synchronized
-  async safeDestroy(reason?: Error) {
+  async safeDestroy(reason?: string) {
     await this._ctx.dispose();
     log('Destroying peer', { peerId: this.remoteInfo, topic: this.topic });
 
     // Won't throw.
-    await this?.connection?.close(reason);
+    await this?.connection?.close({ reason });
   }
 }
 

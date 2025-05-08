@@ -79,6 +79,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/errors/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/esbuild-plugins/package.json",
           "jsonpath": "$.version"
         },
@@ -159,11 +164,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/plate/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/process/package.json",
           "jsonpath": "$.version"
         },
@@ -224,7 +224,17 @@
         },
         {
           "type": "json",
+          "path": "packages/core/conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/automerge/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -384,6 +394,16 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/artifact/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/artifact-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/assistant/package.json",
           "jsonpath": "$.version"
         },
@@ -395,6 +415,11 @@
         {
           "type": "json",
           "path": "packages/experimental/discord-bot/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/env-tests/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -449,72 +474,17 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-automation/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-calls/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-canvas/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-excalidraw/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-explorer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-inbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-kanban/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-native/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-outliner/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-script/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-search/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-theme-editor/package.json",
+          "path": "packages/plugins/plugin-assistant/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-automation/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -529,12 +499,27 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-debug/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-deck/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-excalidraw/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -554,6 +539,16 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-kanban/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-map/package.json",
           "jsonpath": "$.version"
         },
@@ -564,7 +559,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-meeting/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-mermaid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-native/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -579,7 +584,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-outliner/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-presenter/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-preview/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -590,6 +605,16 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-script/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-search/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -619,12 +644,27 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-storybook-layout/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-table/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-theme-editor/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -639,7 +679,12 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-wildcard/package.json",
+          "path": "packages/plugins/plugin-transcription/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-transformer/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -699,6 +744,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/react-edge-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/schema/package.json",
           "jsonpath": "$.version"
         },
@@ -715,6 +765,11 @@
         {
           "type": "json",
           "path": "packages/ui/lit-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/lit-ui/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -749,7 +804,27 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-canvas-compute/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-canvas-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-card/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-components/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-dnd/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -794,17 +869,17 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-mosaic/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-pickers/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/ui/react-ui-searchlist/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-sfx/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -829,6 +904,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-tag-picker/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-text-tooltip/package.json",
           "jsonpath": "$.version"
         },
@@ -849,17 +929,17 @@
         },
         {
           "type": "json",
-          "path": "tools/apidoc/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/beast/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "tools/codemods/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/codemorph/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -880,6 +960,11 @@
         {
           "type": "json",
           "path": "tools/lit-stories/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/lockfile-explorer/package.json",
           "jsonpath": "$.version"
         },
         {

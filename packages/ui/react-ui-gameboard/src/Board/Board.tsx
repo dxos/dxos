@@ -3,15 +3,15 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { type PropsWithChildren, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Container } from './Container';
-import { BoardContext } from './context';
-import { type BoardModel, isLocation, isPiece, type Move } from './types';
+import { BoardContext, type BoardContextType } from './context';
+import { type BoardModel, isLocation, isPiece, type Move, type PieceRecord } from './types';
 
 type RootProps = ThemedClassName<
   PropsWithChildren<{
@@ -25,8 +25,20 @@ type RootProps = ThemedClassName<
  */
 const Root = ({ children, classNames, model, onDrop }: RootProps) => {
   const [dragging, setDragging] = useState(false);
+  const [promoting, setPromoting] = useState<PieceRecord | undefined>();
+
+  // Handle promotion.
+  const onPromotion = useCallback<BoardContextType['onPromotion']>((move) => {
+    log('onPromotion', { move });
+    setPromoting(undefined);
+    onDrop?.(move);
+  }, []);
 
   useEffect(() => {
+    if (!model) {
+      return;
+    }
+
     // TODO(burdon): Should target specific container.
     return monitorForElements({
       onDragStart: ({ source }) => {
@@ -46,14 +58,20 @@ const Root = ({ children, classNames, model, onDrop }: RootProps) => {
           return;
         }
 
-        onDrop?.({ source: piece.location, target: targetLocation, piece: piece.type });
+        const move: Move = { from: piece.location, to: targetLocation, piece: piece.type };
+        if (model.canPromote?.(move)) {
+          setPromoting({ ...piece, location: targetLocation });
+        } else {
+          onDrop?.(move);
+        }
+
         setDragging(false);
       },
     });
-  }, []);
+  }, [model]);
 
   return (
-    <BoardContext.Provider value={{ model, dragging }}>
+    <BoardContext.Provider value={{ model, dragging, promoting, onPromotion }}>
       <Container classNames={mx('aspect-square', classNames)}>{children}</Container>
     </BoardContext.Provider>
   );

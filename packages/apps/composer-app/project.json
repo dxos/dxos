@@ -110,6 +110,7 @@
     },
     "e2e": {},
     "lint": {},
+    "pack": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {

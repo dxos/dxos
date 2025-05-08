@@ -3,13 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ES2022",
-    "moduleResolution": "bundler",
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -34,10 +27,19 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../experimental/artifact"
+    },
+    {
+      "path": "../../experimental/assistant"
     },
     {
       "path": "../../sdk/app-framework"
@@ -67,9 +69,6 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../experimental/plugin-search"
-    },
-    {
       "path": "../plugin-client"
     },
     {
@@ -77,6 +76,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"

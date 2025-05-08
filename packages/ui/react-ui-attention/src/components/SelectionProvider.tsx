@@ -3,8 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { useCallback, type PropsWithChildren } from 'react';
-import React from 'react';
+import React, { useCallback, useMemo, type PropsWithChildren } from 'react';
 
 import { useDefaultValue } from '@dxos/react-ui';
 
@@ -20,6 +19,11 @@ const [SelectionContextProvider, useSelectionContext] = createContext<SelectionC
   selection: new SelectionManager(),
 });
 
+/**
+ * Manages selection state across the app for multiple contexts.
+ */
+// TODO(burdon): Review/remove this.
+// TODO(burdon): When is the selection removed?
 export const SelectionProvider = ({
   children,
   selection: propsSelection,
@@ -28,40 +32,44 @@ export const SelectionProvider = ({
   return <SelectionContextProvider selection={selection}>{children}</SelectionContextProvider>;
 };
 
-export const useSelectedItems = (contextId: string): Set<string> => {
+const emptySet = new Set<string>();
+
+// TODO(burdon): Return array?
+export const useSelectedItems = (contextId?: string): Set<string> => {
   const { selection } = useSelectionContext(SELECTION_NAME);
-  return selection.getSelection(contextId);
+  return contextId ? selection.getSelection(contextId) : emptySet;
 };
 
-export const useSelectionActions = (contextId?: string) => {
+/**
+ * Provides functions to manage the selection state for multiple contexts.
+ */
+export const useSelectionActions = (contextIds: string[]) => {
+  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]);
   const { selection } = useSelectionContext(SELECTION_NAME);
 
   const select = useCallback(
     (ids: string[]) => {
-      if (!contextId) {
-        return new Set();
+      for (const contextId of stableContextIds) {
+        selection.updateSelection(contextId, ids);
       }
-      selection.updateSelection(contextId, ids);
     },
-    [selection, contextId],
+    [selection, stableContextIds],
   );
 
   const toggle = useCallback(
     (id: string) => {
-      if (!contextId) {
-        return new Set();
+      for (const contextId of stableContextIds) {
+        selection.toggleSelection(contextId, id);
       }
-      selection.toggleSelection(contextId, id);
     },
-    [selection, contextId],
+    [selection, stableContextIds],
   );
 
   const clear = useCallback(() => {
-    if (!contextId) {
-      return;
+    for (const contextId of stableContextIds) {
+      selection.clearSelection(contextId);
     }
-    selection.clearSelection(contextId);
-  }, [selection, contextId]);
+  }, [selection, stableContextIds]);
 
   return { select, toggle, clear };
 };

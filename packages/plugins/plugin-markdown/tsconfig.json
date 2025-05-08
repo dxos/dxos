@@ -3,13 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "outDir": "./dist/types",
     "types": [
       "@dxos/typings",
       "node"
@@ -53,10 +46,16 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/automerge"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../experimental/artifact"
     },
     {
       "path": "../../sdk/app-framework"
@@ -66,6 +65,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/lit-ui"
     },
     {
       "path": "../../ui/primitives/react-hooks"
@@ -86,9 +88,6 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
       "path": "../../ui/react-ui-stack"
     },
     {
@@ -101,10 +100,19 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-deck"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-storybook-layout"
     },
     {
       "path": "../plugin-theme"

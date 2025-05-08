@@ -12,7 +12,7 @@ import { mx, textBlockWidth } from '@dxos/react-ui-theme';
  */
 export const DeprecatedFormContainer = ({ children, classNames }: ThemedClassName<PropsWithChildren>) => {
   return (
-    <div role='none' className='w-full p-4 justify-center overflow-x-hidden overflow-y-auto'>
+    <div role='none' className='container-max-width p-4 justify-center overflow-x-hidden overflow-y-auto'>
       <div role='form' className={mx('flex flex-col', textBlockWidth, classNames)}>
         {children}
       </div>
@@ -29,7 +29,6 @@ export type DeprecatedFormInputProps = {
 /**
  * @deprecated
  */
-// TODO(burdon): Still used in ObservabilitySettings and all settings.
 export const DeprecatedFormInput = ({
   label,
   description,
@@ -40,7 +39,6 @@ export const DeprecatedFormInput = ({
     <div role='none' className='flex w-full gap-4 py-1'>
       <Input.Root>
         <div role='none' className='flex flex-col w-full'>
-          {/* TODO(burdon): Consistent height for controls (e.g., Select, Textbox, and Checkbox are all different). */}
           <Input.Label classNames='flex min-bs-[--rail-action] items-center' style={{ fontSize: 'unset' }}>
             {label}
           </Input.Label>
@@ -61,9 +59,8 @@ export const DeprecatedFormInput = ({
   );
 
   if (secondary) {
-    // console.log(secondary);
     return (
-      <div role='none' className='flex flex-col w-full'>
+      <div role='none'>
         {primary}
         {secondary}
       </div>

@@ -8,6 +8,7 @@
 //  - dxos/graph
 //  - dxos/compute
 //  - dxos/functions
+//  - dxos/assistant
 //  - dxos/plugin-automation
 //  - dxos/plugin-script
 //  - dxos/plugin-sheet

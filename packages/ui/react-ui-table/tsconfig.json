@@ -1,11 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -21,6 +16,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -53,7 +51,7 @@
       "path": "../../core/echo/live-object"
     },
     {
-      "path": "../../plugins/experimental/plugin-search"
+      "path": "../../plugins/plugin-search"
     },
     {
       "path": "../../plugins/plugin-space"
@@ -74,6 +72,9 @@
       "path": "../react-ui-attention"
     },
     {
+      "path": "../react-ui-editor"
+    },
+    {
       "path": "../react-ui-form"
     },
     {
@@ -90,6 +91,9 @@
     },
     {
       "path": "../react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../react-ui-tag-picker"
     },
     {
       "path": "../react-ui-theme"

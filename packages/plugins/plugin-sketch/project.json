@@ -22,6 +22,7 @@
       }
     },
     "lint": {},
+    "pack": {},
     "prebuild": {
       "executor": "nx:run-script",
       "options": {

@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
+import { DescriptionAnnotationId, TitleAnnotationId } from 'effect/SchemaAST';
 
 import * as DateUtil from './date';
 import * as NumberUtil from './number';
@@ -54,6 +55,8 @@ export namespace Format {
  * List of annotations for JSON encoding/decoding.
  */
 export const CustomAnnotations = {
+  title: TitleAnnotationId,
+  description: DescriptionAnnotationId,
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,
 };

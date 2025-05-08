@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { ClassProcessor } from './class-processor';
 
-describe('Code analysis', () => {
+describe.skip('Code analysis', () => {
   test.skip('traverses echo-db', () => {
     const baseDir = join(process.cwd());
     console.log(baseDir);

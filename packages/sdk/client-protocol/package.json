@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-protocol",
-  "version": "0.7.4",
+  "version": "0.8.1",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,6 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -35,7 +36,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "base-x": "~3.0.9"
   },
   "publishConfig": {

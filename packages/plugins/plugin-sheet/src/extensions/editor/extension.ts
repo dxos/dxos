@@ -279,6 +279,8 @@ export const rangeExtension = ({ onInit, onStateChange }: RangeExtensionOptions)
           const str = view.state.doc.sliceString(1);
           if (RANGE_NOTATION.test(str)) {
             activeRange = { from: 1, to: str.length + 1 };
+          } else {
+            activeRange = { from: str.length + 1, to: str.length + 1 };
           }
         }
 

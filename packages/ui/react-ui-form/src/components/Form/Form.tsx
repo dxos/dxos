@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactElement, useMemo } from 'react';
+import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
 import { type BaseObject, type S, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -13,6 +13,7 @@ import { FormActions } from './FormActions';
 import { FormFields } from './FormContent';
 import { FormProvider } from './FormContext';
 import { type InputProps, type InputComponent } from './Input';
+import { type QueryRefOptions } from './RefField';
 import { type FormOptions } from '../../hooks';
 
 export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
@@ -41,6 +42,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     autoSave?: boolean;
     testId?: string;
     onCancel?: () => void;
+    onQueryRefOptions?: QueryRefOptions;
     lookupComponent?: ComponentLookup;
     /**
      * Map of custom renderers for specific properties.
@@ -55,6 +57,7 @@ export const Form = <T extends BaseObject>({
   schema,
   values: initialValues,
   path = [],
+  autoFocus,
   readonly,
   filter,
   sort,
@@ -64,27 +67,43 @@ export const Form = <T extends BaseObject>({
   onValidate,
   onSave,
   onCancel,
+  onQueryRefOptions,
   lookupComponent,
   Custom,
 }: FormProps<T>) => {
+  const formRef = useRef<HTMLDivElement>(null);
   const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+
+  // Focus the first input element within this form.
+  useEffect(() => {
+    if (autoFocus && formRef.current) {
+      const input = formRef.current.querySelector('input');
+      if (input) {
+        input.focus();
+      }
+    }
+  }, [autoFocus]);
 
   return (
     <FormProvider
+      formRef={formRef}
       schema={schema}
+      autoSave={autoSave}
       initialValues={initialValues}
       onValuesChanged={onValuesChanged}
       onValidate={onValidate}
       onValid={onValid}
       onSave={onSave}
     >
-      <div role='none' className={mx('p-2', classNames)} data-testid={testId}>
+      {/* TODO(burdon): Remove padding. */}
+      <div ref={formRef} role='none' className={mx('p-2', classNames)} data-testid={testId}>
         <FormFields
           schema={schema}
           path={path}
           readonly={readonly}
           filter={filter}
           sort={sort}
+          onQueryRefOptions={onQueryRefOptions}
           lookupComponent={lookupComponent}
           Custom={Custom}
         />

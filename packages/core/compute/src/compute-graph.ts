@@ -9,11 +9,11 @@ import { type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { getTypename } from '@dxos/echo-schema';
-import { FunctionType } from '@dxos/functions';
+import { FunctionType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { ExportedCellChange, type HyperFormula } from '#hyperformula';
 import { ComputeNode } from './compute-node';
@@ -73,14 +73,13 @@ export class ComputeGraph extends Resource {
   ) {
     super();
 
-    const contextOptions = {
+    this.context = new FunctionContext(this._hf, this._space, {
       ...this._options,
       onUpdate: (update) => {
         this._options?.onUpdate?.(update);
         this.update.emit({ type: 'valuesUpdated' });
       },
-    } satisfies Partial<FunctionContextOptions>;
-    this.context = new FunctionContext(this._hf, this._space, contextOptions);
+    });
     this._hf.updateConfig({ context: this.context });
 
     // TODO(burdon): If debounce then aggregate changes.
@@ -161,7 +160,7 @@ export class ComputeGraph extends Resource {
                 const { type, id } = parseSheetName(name);
                 return type && id ? this._space?.db.getObjectById(id) : undefined;
               })
-              .filter(nonNullable);
+              .filter(isNonNullable);
 
             for (const obj of objects) {
               if (obj.name === name) {

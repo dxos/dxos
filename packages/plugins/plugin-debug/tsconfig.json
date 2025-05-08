@@ -3,13 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -26,6 +19,9 @@
   "references": [
     {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
     },
     {
       "path": "../../common/invariant"
@@ -52,6 +48,9 @@
       "path": "../../core/compute"
     },
     {
+      "path": "../../core/conductor"
+    },
+    {
       "path": "../../core/echo/automerge"
     },
     {
@@ -65,6 +64,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../core/functions"
     },
     {
       "path": "../../core/protocols"
@@ -97,7 +99,16 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-canvas-compute"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-editor"
+    },
+    {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-kanban"
     },
     {
       "path": "../../ui/react-ui-stack"
@@ -122,6 +133,12 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-meeting"
+    },
+    {
+      "path": "../plugin-script"
     },
     {
       "path": "../plugin-sheet"

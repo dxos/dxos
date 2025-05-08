@@ -4,7 +4,15 @@
 
 import { Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
 
-import { Client, AppGraphBuilder, IntentResolver, ReactContext, ReactSurface, Schema } from './capabilities';
+import {
+  Client,
+  AppGraphBuilder,
+  IntentResolver,
+  Migrations,
+  ReactContext,
+  ReactSurface,
+  Schema,
+} from './capabilities';
 import { ClientEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
@@ -36,14 +44,20 @@ export const ClientPlugin = ({
       activate: Schema,
     }),
     defineModule({
+      id: `${meta.id}/module/migration`,
+      activatesOn: ClientEvents.ClientReady,
+      activatesBefore: [ClientEvents.SetupMigration],
+      activate: Migrations,
+    }),
+    defineModule({
       id: `${meta.id}/module/react-context`,
       activatesOn: Events.Startup,
       activate: ReactContext,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
-      activate: () => ReactSurface({ createInvitationUrl }),
+      activatesOn: Events.SetupReactSurface,
+      activate: () => ReactSurface({ createInvitationUrl, onReset }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
@@ -52,8 +66,8 @@ export const ClientPlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
-      activate: (context) => IntentResolver({ context, onReset }),
+      activatesOn: Events.SetupIntentResolver,
+      activate: (context) => IntentResolver({ context }),
     }),
     defineModule({
       id: `${meta.id}/module/translations`,
