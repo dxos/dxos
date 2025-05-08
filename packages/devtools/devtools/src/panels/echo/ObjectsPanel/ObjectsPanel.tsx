@@ -12,7 +12,7 @@ import { getType, isDeleted } from '@dxos/live-object';
 import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { PanelContainer, Placeholder, Searchbar } from '../../../components';
@@ -82,8 +82,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
   }, [selected]);
 
-  const dataProperties = useMemo(
+  const dataProperties = useMemo<TablePropertyDefinition[]>(
     () => [
+      // TODO(dmaretskyi): FormatEnum.None breaks it.
+      { name: 'icon', format: FormatEnum.String },
+      // TODO(dmaretskyi): ObjectId is not the same as DID.
       { name: 'id', format: FormatEnum.DID },
       { name: 'type', format: FormatEnum.String },
       { name: 'version', format: FormatEnum.String, size: 100 },
@@ -112,6 +115,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
 
   const dataRows = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
+      icon: `<svg class="shrink-0 text-[var(--icons-color,currentColor)] bs-5 is-5 mlb-1"><use href="/icons.svg?nocache=30#ph--atom--regular"></use></svg>`,
       id: item.id,
       type: getTypename(item),
       version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,

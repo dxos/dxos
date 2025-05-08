@@ -79,11 +79,7 @@ export const DynamicTable = ({
     onRowAction,
   });
 
-  const presentation = useMemo(() => {
-    if (model) {
-      return new TablePresentation(model);
-    }
-  }, [model]);
+  const presentation = useMemo(() => (model != null ? new TablePresentation(model) : undefined), [model]);
 
   // TODO(burdon): Do we need the outer divs?
   return (
