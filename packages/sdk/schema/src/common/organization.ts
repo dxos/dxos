@@ -15,6 +15,14 @@ import {
 
 import { IconAnnotationId } from '../annotations';
 
+export const organizationStatusOptions = [
+  { id: 'prospect', title: 'Prospect', color: 'indigo' },
+  { id: 'qualified', title: 'Qualified', color: 'purple' },
+  { id: 'active', title: 'Active', color: 'amber' },
+  { id: 'commit', title: 'Commit', color: 'emerald' },
+  { id: 'reject', title: 'Reject', color: 'red' },
+];
+
 /**
  * Organization schema.
  */
@@ -34,13 +42,7 @@ export const OrganizationSchema = S.Struct({
       title: 'Status',
       [PropertyMetaAnnotationId]: {
         singleSelect: {
-          options: [
-            { id: 'prospect', title: 'Prospect', color: 'indigo' },
-            { id: 'qualified', title: 'Qualified', color: 'purple' },
-            { id: 'active', title: 'Active', color: 'amber' },
-            { id: 'commit', title: 'Commit', color: 'emerald' },
-            { id: 'reject', title: 'Reject', color: 'red' },
-          ],
+          options: organizationStatusOptions,
         },
       },
       [FormatAnnotationId]: 'single-select',

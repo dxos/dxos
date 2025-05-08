@@ -6,10 +6,10 @@ import { contributes, Capabilities, createResolver, type PluginsContext } from '
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { initializeKanban } from '@dxos/react-ui-kanban/testing';
 import { ViewProjection } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from '../meta';
+import { initializeKanban } from '../testing';
 import { KanbanAction } from '../types';
 
 export default (context: PluginsContext) =>
