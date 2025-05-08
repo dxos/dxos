@@ -6,15 +6,16 @@ import { SchemaAST as AST, JSONSchema, Option, Schema as S, type Types } from 'e
 import { JSONSchemaAnnotationId } from 'effect/SchemaAST';
 
 import { mapAst } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
+import { invariant, raise } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { orderKeys } from '@dxos/util';
+import { clearUndefined, orderKeys } from '@dxos/util';
 
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   EntityKind,
   EntityKindSchema,
   getNormalizedEchoAnnotations,
+  getSchemaDXN,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   TypeAnnotationId,
@@ -26,6 +27,7 @@ import {
 import { Expando, ObjectId } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
+import type { Mutable } from 'effect/Types';
 
 /**
  * Create object jsonSchema.
@@ -98,6 +100,14 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     jsonSchema.entityKind = objectAnnotation.kind;
     jsonSchema.version = objectAnnotation.version;
     jsonSchema.typename = objectAnnotation.typename;
+    if (jsonSchema.entityKind === EntityKind.Relation) {
+      jsonSchema.relationTarget = {
+        $ref: objectAnnotation.sourceSchema,
+      };
+      jsonSchema.relationSource = {
+        $ref: objectAnnotation.targetSchema,
+      };
+    }
   }
 
   // Fix field order.
@@ -106,9 +116,13 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   jsonSchema = orderKeys(jsonSchema, [
     '$schema',
     '$id',
+
     'entityKind',
     'typename',
     'version',
+    'relationTarget',
+    'relationSource',
+
     'type',
     'enum',
 
@@ -370,6 +384,7 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
     }
   }
   if (Object.keys(echoAnnotations).length > 0) {
+    // TODO(dmaretskyi): use new namespace.
     schemaFields[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] = echoAnnotations;
   }
 
@@ -390,6 +405,50 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
   return schemaFields;
 };
 
+const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefined => {
+  // Limit to dxn:echo: URIs.
+  if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
+    return schema.$id;
+  } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
+    const id = schema?.echo?.type?.schemaId;
+    if (ObjectId.isValid(id)) {
+      return DXN.fromLocalObjectId(id).toString();
+    }
+  }
+  return undefined;
+};
+
+const decodeTypeAnnotation = (schema: JsonSchemaType): TypeAnnotation | undefined => {
+  if (schema.typename) {
+    const annotation: Mutable<TypeAnnotation> = {
+      // TODO(dmaretskyi): Decoding default.
+      kind: schema.entityKind ? S.decodeSync(EntityKindSchema)(schema.entityKind) : EntityKind.Object,
+      typename: schema.typename,
+      version: schema.version ?? '0.1.0',
+    };
+
+    if (annotation.kind === EntityKind.Relation) {
+      const source = schema.relationSource?.$ref ?? raise(new Error('Relation source not set'));
+      const target = schema.relationTarget?.$ref ?? raise(new Error('Relation target not set'));
+      annotation.sourceSchema = DXN.parse(source).toString();
+      annotation.targetSchema = DXN.parse(target).toString();
+    }
+
+    return annotation;
+  }
+
+  // Decode legacy schema.
+  if (!schema.typename && schema?.echo?.type) {
+    return {
+      kind: EntityKind.Object,
+      typename: schema.echo.type.typename,
+      version: schema.echo.type.version,
+    };
+  }
+
+  return undefined;
+};
+
 const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations => {
   const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
 
@@ -402,32 +461,8 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
     }
   }
 
-  // Limit to dxn:echo: URIs.
-  if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
-    annotations[TypeIdentifierAnnotationId] = schema.$id;
-  } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
-    const id = schema?.echo?.type?.schemaId;
-    if (ObjectId.isValid(id)) {
-      annotations[TypeIdentifierAnnotationId] = DXN.fromLocalObjectId(id).toString();
-    }
-  }
-
-  if (schema.typename) {
-    annotations[TypeAnnotationId] ??= {
-      kind: schema.entityKind ? S.decodeSync(EntityKindSchema)(schema.entityKind) : EntityKind.Object,
-      typename: schema.typename,
-      version: schema.version ?? '0.1.0',
-    } satisfies TypeAnnotation;
-  }
-
-  // Decode legacy schema.
-  if (!schema.typename && schema?.echo?.type) {
-    annotations[TypeAnnotationId] ??= {
-      kind: EntityKind.Object,
-      typename: schema.echo.type.typename,
-      version: schema.echo.type.version,
-    } satisfies TypeAnnotation;
-  }
+  annotations[TypeIdentifierAnnotationId] = decodeTypeIdentifierAnnotation(schema);
+  annotations[TypeAnnotationId] = decodeTypeAnnotation(schema);
 
   // Custom (at end).
   for (const [key, annotationId] of Object.entries({ ...CustomAnnotations, ...DecodedAnnotations })) {
@@ -436,7 +471,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
     }
   }
 
-  return annotations;
+  return clearUndefined(annotations);
 };
 
 const makeAnnotatedRefinement = (ast: AST.AST, annotations: AST.Annotations): AST.Refinement => {

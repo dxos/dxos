@@ -257,6 +257,36 @@ describe('effect-to-json', () => {
     ).to.eq('Custom Title');
   });
 
+  test('relation schema', () => {
+    const schema = Testing.HasManager;
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toEqual({
+      $id: 'dxn:type:example.com/type/HasManager',
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      entityKind: 'relation',
+      typename: 'example.com/type/HasManager',
+      version: '0.1.0',
+      relationSource: {
+        $ref: 'dxn:type:example.com/type/Contact:0.1.0',
+      },
+      relationTarget: {
+        $ref: 'dxn:type:example.com/type/Contact:0.1.0',
+      },
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+        },
+        since: {
+          type: 'string',
+        },
+      },
+      propertyOrder: ['since', 'id'],
+      required: ['id'],
+      additionalProperties: false,
+    });
+  });
+
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
     expect(object.reference).to.deep.eq({
       schema: {
@@ -381,6 +411,13 @@ describe('json-to-effect', () => {
     const effectSchema = toEffectSchema(jsonSchema);
     const jsonSchema2 = toJsonSchema(effectSchema);
     expect(jsonSchema2.properties!.name.description).to.eq('Name');
+  });
+
+  test('relation schema roundtrip', () => {
+    const schema = Testing.HasManager;
+    const jsonSchema = toJsonSchema(schema);
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
   });
 });
 
