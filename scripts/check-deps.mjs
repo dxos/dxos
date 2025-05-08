@@ -243,6 +243,9 @@ async function analyzeDependencies(pkg, peerDepsMap) {
     deps.forEach((dep) => usedInTests.add(dep));
   }
 
+  // Combine both sets for checking dev dependencies
+  const usedAnywhere = new Set([...usedInSource, ...usedInTests]);
+
   if (argv.verbose) {
     console.log(chalk.gray('\nDependencies found in source:'));
     console.log([...usedInSource].map((d) => `  ${d}`).join('\n'));
@@ -265,7 +268,7 @@ async function analyzeDependencies(pkg, peerDepsMap) {
   // Check for unused dev dependencies and filter out peer dependencies
   const unusedDevDeps = [];
   const potentiallyUsedDevDeps = [];
-  for (const dep of [...devDependencies].filter((dep) => !usedInTests.has(dep))) {
+  for (const dep of [...devDependencies].filter((dep) => !usedAnywhere.has(dep))) {
     const shouldKeep = await shouldKeepDependency(pkg.path, dep, peerDepsMap);
     if (shouldKeep) {
       potentiallyUsedDevDeps.push(dep);
@@ -306,11 +309,9 @@ async function removeDependencies(pkgPath, depsToRemove, isDev, peerDepsMap) {
   const depsToActuallyRemove = [];
 
   for (const dep of depsToRemove) {
-    const shouldKeep = await shouldKeepDependency(pkgPath, dep, peerDepsMap);
-    if (!shouldKeep) {
-      delete pkgJson[depType][dep];
-      depsToActuallyRemove.push(dep);
-    }
+    // We already checked these in analyzeDependencies, no need to check again
+    delete pkgJson[depType][dep];
+    depsToActuallyRemove.push(dep);
   }
 
   await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
@@ -379,7 +380,7 @@ async function main() {
 
       for (const dep of analysis.potentiallyUsedDevDeps) {
         if (peerDepsMap.has(dep)) {
-          console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dev dependency is a peer dependency `));
+          console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dev dependency is a peer dependency`));
         } else {
           console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dev dependency not imported but found in text`));
         }
