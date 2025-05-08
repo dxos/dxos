@@ -296,7 +296,7 @@ async function analyzeDependencies(pkg, peerDepsMap) {
 /**
  * Remove dependencies from package.json
  */
-async function removeDependencies(pkgPath, depsToRemove, isDev) {
+async function removeDependencies(pkgPath, depsToRemove, isDev, peerDepsMap) {
   const pkgJsonPath = path.join(pkgPath, 'package.json');
   const pkgJson = JSON.parse(await fs.readFile(pkgJsonPath, 'utf-8'));
   const depType = isDev ? 'devDependencies' : 'dependencies';
@@ -403,10 +403,10 @@ async function main() {
       // Apply fixes if --fix is enabled and there are dependencies to remove
       if (argv.fix && (depsToRemove.length > 0 || devDepsToRemove.length > 0)) {
         if (depsToRemove.length > 0) {
-          await removeDependencies(pkg.path, depsToRemove, false);
+          await removeDependencies(pkg.path, depsToRemove, false, peerDepsMap);
         }
         if (devDepsToRemove.length > 0) {
-          await removeDependencies(pkg.path, devDepsToRemove, true);
+          await removeDependencies(pkg.path, devDepsToRemove, true, peerDepsMap);
         }
 
         // For dependencies that should be moved to devDependencies
@@ -436,7 +436,7 @@ async function main() {
       process.exit(1);
     }
   } catch (error) {
-    console.error(chalk.red('Error:', error.message));
+    console.error(chalk.red('Error:', error.stack));
     process.exit(1);
   }
 }
