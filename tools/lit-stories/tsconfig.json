@@ -1,5 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {},
   "exclude": [
     "dist",
     "node_modules",
@@ -9,5 +10,12 @@
     ".storybook/*.ts",
     "config/**/*.mts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../packages/ui/react-ui-theme"
+    },
+    {
+      "path": "../vite-plugin-icons"
+    }
+  ]
 }

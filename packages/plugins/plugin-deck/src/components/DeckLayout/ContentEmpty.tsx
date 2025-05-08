@@ -4,18 +4,27 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework';
+
+import { DeckCapabilities } from '../../capabilities';
+import { getMode } from '../../types';
+import { layoutAppliesTopbar, useBreakpoints } from '../../util';
+import { ToggleSidebarButton } from '../Sidebar';
+import { fixedSidebarToggleStyles } from '../fragments';
 
 export const ContentEmpty = () => {
+  const breakpoint = useBreakpoints();
+  const { deck } = useCapability(DeckCapabilities.MutableDeckState);
+  const layoutMode = getMode(deck);
+  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   return (
     <div
       role='none'
-      className='min-bs-screen is-dvw sm:is-full flex items-center justify-center p-8'
+      className='grid place-items-center p-8 relative bg-deck'
       data-testid='layoutPlugin.firstRunMessage'
     >
-      <div role='none' className='grid place-items-center grid-rows-[min-content_min-content]'>
-        <Surface role='keyshortcuts' />
-      </div>
+      <Surface role='keyshortcuts' />
+      {!topbar && <ToggleSidebarButton variant='default' classNames={fixedSidebarToggleStyles} />}
     </div>
   );
 };

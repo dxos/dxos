@@ -7,11 +7,11 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { create } from '@dxos/echo-schema';
-import { testData, testView, TestSchema, type TestType } from '@dxos/schema/testing';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { live } from '@dxos/live-object';
+import { testData, TestSchema, testView, type TestType } from '@dxos/schema/testing';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type DeprecatedFormProps, DeprecatedForm } from './Form';
+import { DeprecatedForm, type DeprecatedFormProps } from './Form';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
@@ -39,23 +39,23 @@ type Story = StoryObj<DeprecatedFormProps<TestType>>;
 
 export const Default: Story = {
   args: {
-    object: create(testData),
-    view: create(testView),
+    object: live(testData),
+    view: live(testView),
     schema: TestSchema,
   },
 };
 
 export const Empty: Story = {
   args: {
-    view: create(testView),
+    view: live(testView),
     schema: TestSchema,
   },
 };
 
 export const Readonly: Story = {
   args: {
-    object: create(testData),
-    view: create(testView),
+    object: live(testData),
+    view: live(testView),
     schema: TestSchema,
     readonly: true,
   },

@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type JSONSchema } from '@effect/schema';
+import { SchemaAST as AST, type JSONSchema } from 'effect';
 import { Option, pipe } from 'effect';
 
 import type { JsonSchemaType } from '../ast';
+import { createAnnotationHelper } from '../ast/annotation-helper';
 
 export enum TypeEnum {
   Object = 'object',
@@ -42,9 +43,12 @@ export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
  */
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
+export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotationId);
+
 export const getFormatAnnotation = (node: AST.AST): FormatEnum | undefined =>
   pipe(AST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
 
+// TODO(burdon): Rename Format.
 export enum FormatEnum {
   None = 'none',
   String = 'string',
@@ -64,6 +68,8 @@ export enum FormatEnum {
   JSON = 'json',
   Markdown = 'markdown',
   Regex = 'regex',
+  SingleSelect = 'single-select',
+  MultiSelect = 'multi-select',
   URL = 'url',
   UUID = 'uuid',
 
@@ -89,7 +95,7 @@ export enum FormatEnum {
   // { type: 'object' }
   //
 
-  LatLng = 'latlng',
+  GeoPoint = 'latlng', // TODO(burdon): Change to geopoint.
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();
@@ -129,6 +135,8 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Regex]: TypeEnum.String,
   [FormatEnum.URL]: TypeEnum.String,
   [FormatEnum.UUID]: TypeEnum.String,
+  [FormatEnum.SingleSelect]: TypeEnum.String,
+  [FormatEnum.MultiSelect]: TypeEnum.Object,
 
   // Dates
   [FormatEnum.Date]: TypeEnum.String,
@@ -143,7 +151,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Timestamp]: TypeEnum.Number,
 
   // Objects
-  [FormatEnum.LatLng]: TypeEnum.Object,
+  [FormatEnum.GeoPoint]: TypeEnum.Object,
 };
 
 /**

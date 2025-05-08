@@ -2,8 +2,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "schema",
   "tags": [
-    "scope:sdk",
-    "scope:ui"
+    "scope:sdk"
   ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
@@ -22,6 +21,7 @@
       }
     },
     "lint": {},
+    "pack": {},
     "test": {}
   },
   "implicitDependencies": [

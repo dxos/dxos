@@ -7,10 +7,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFin
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { create, Expando } from '@dxos/echo-schema';
-import { Contact } from '@dxos/echo-schema/testing';
+import { Expando, RelationSourceId, RelationTargetId, S, TypedObject, type Ref } from '@dxos/echo-schema';
+import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { live, getMeta, makeRef } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -21,16 +22,24 @@ import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {
-  return create(Expando, { idx, title: `Task ${idx}`, label });
+  return live(Expando, { idx, title: `Task ${idx}`, label });
 };
 
 describe('Queries', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   describe('Query with different filters', () => {
-    let builder: EchoTestBuilder;
     let db: EchoDatabase;
 
     beforeEach(async () => {
-      builder = await new EchoTestBuilder().open();
       const setup = await builder.createDatabase();
       db = setup.db;
 
@@ -44,10 +53,6 @@ describe('Queries', () => {
       }
 
       await db.flush({ indexes: true });
-    });
-
-    afterEach(async () => {
-      await builder.close();
     });
 
     test('filter properties', async () => {
@@ -80,6 +85,11 @@ describe('Queries', () => {
       }
     });
 
+    test('filter expando', async () => {
+      const { objects } = await db.query(Filter.schema(Expando, { label: 'red' })).run();
+      expect(objects).to.have.length(3);
+    });
+
     test('filter operators', async () => {
       {
         const { objects } = await db.query(() => false).run();
@@ -97,6 +107,30 @@ describe('Queries', () => {
           .run();
         expect(objects).to.have.length(5);
       }
+    });
+
+    test('filter by reference', async () => {
+      const objA = db.add(live(Expando, { label: 'obj a' }));
+      const objB = db.add(live(Expando, { label: 'obj b', ref: makeRef(objA) }));
+      await db.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.schema(Expando, { ref: objA })).run();
+      expect(objects).toEqual([objB]);
+    });
+
+    test('filter by foreign keys', async () => {
+      const obj = live(Expando, { label: 'has meta' });
+      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      db.add(obj);
+      await db.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.foreignKeys([{ id: 'test-id', source: 'test-source' }])).run();
+      expect(objects).toEqual([obj]);
+    });
+
+    test('filter nothing', async () => {
+      const { objects } = await db.query(Filter.nothing()).run();
+      expect(objects).toHaveLength(0);
     });
 
     test('filter chaining', async () => {
@@ -286,6 +320,68 @@ describe('Queries', () => {
 
     await expect(db.query().run()).rejects.toBeInstanceOf(Error);
   });
+
+  test('query objects with different versions', async () => {
+    const { peer, db, graph } = await builder.createDatabase();
+
+    class ContactV1 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
+      firstName: S.String,
+      lastName: S.String,
+    }) {}
+
+    class ContactV2 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.2.0' })({
+      name: S.String,
+    }) {}
+
+    graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
+
+    const contactV1 = db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+    const contactV2 = db.add(live(ContactV2, { name: 'Brian Smith' }));
+    await db.flush({ indexes: true });
+
+    const assertQueries = async (db: EchoDatabase) => {
+      await assertQuery(db, Filter.typename(ContactV1.typename), [contactV1, contactV2]);
+      await assertQuery(db, Filter.schema(ContactV1), [contactV1]);
+      await assertQuery(db, Filter.schema(ContactV2), [contactV2]);
+      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact'), [contactV1, contactV2]);
+      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.1.0'), [contactV1]);
+      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.1.0'), [contactV1]);
+      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.2.0'), [contactV2]);
+    };
+
+    await assertQueries(db);
+
+    await peer.reload();
+    await assertQueries(await peer.openLastDatabase());
+  });
+
+  describe('Relations', () => {
+    test('query by type', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
+
+      const alice = db.add(
+        live(Testing.Contact, {
+          name: 'Alice',
+        }),
+      );
+      const bob = db.add(
+        live(Testing.Contact, {
+          name: 'Bob',
+        }),
+      );
+      const hasManager = db.add(
+        live(Testing.HasManager, {
+          [RelationSourceId]: bob,
+          [RelationTargetId]: alice,
+          since: '2022',
+        }),
+      );
+
+      const { objects } = await db.query(Filter.schema(Testing.HasManager)).run();
+      expect(objects).toEqual([hasManager]);
+    });
+  });
 });
 
 // TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
@@ -401,11 +497,11 @@ describe('Queries with types', () => {
     await openAndClose(testBuilder);
     const { graph, db } = await testBuilder.createDatabase();
 
-    graph.schemaRegistry.addSchema([Contact]);
-    const contact = db.add(create(Contact, {}));
+    graph.schemaRegistry.addSchema([Testing.Contact]);
+    const contact = db.add(live(Testing.Contact, {}));
     const name = 'DXOS User';
 
-    const query = db.query(Filter.typename(Contact.typename));
+    const query = db.query(Filter.typename(Testing.Contact.typename));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);
@@ -423,7 +519,7 @@ describe('Queries with types', () => {
     onTestFinished(() => unsub());
 
     contact.name = name;
-    db.add(create(Contact, {}));
+    db.add(live(Testing.Contact, {}));
 
     await asyncTimeout(nameUpdate.wait(), 1000);
     await asyncTimeout(anotherContactAdded.wait(), 1000);
@@ -434,10 +530,10 @@ describe('Queries with types', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    const schema = db.schemaRegistry.addSchema(Contact);
-    const contact = db.add(create(schema, {}));
+    const [schema] = await db.schemaRegistry.register([Testing.Contact]);
+    const contact = db.add(live(schema, {}));
 
-    // NOTE: Must use `Filter.schema` with MutableSchema instance since matching is done by the object ID of the mutable schema.
+    // NOTE: Must use `Filter.schema` with EchoSchema instance since matching is done by the object ID of the mutable schema.
     const query = db.query(Filter.schema(schema));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
@@ -449,17 +545,17 @@ describe('Queries with types', () => {
     await openAndClose(testBuilder);
     const { graph, db } = await testBuilder.createDatabase();
 
-    graph.schemaRegistry.addSchema([Contact]);
+    graph.schemaRegistry.addSchema([Testing.Contact]);
     const name = 'DXOS User';
-    const contact = create(Contact, { name });
+    const contact = live(Testing.Contact, { name });
     db.add(contact);
-    expect(contact instanceof Contact).to.be.true;
+    expect(contact instanceof Testing.Contact).to.be.true;
 
     // query
     {
-      const contact = (await db.query(Filter.schema(Contact)).run()).objects[0];
+      const contact = (await db.query(Filter.schema(Testing.Contact)).run()).objects[0];
       expect(contact.name).to.eq(name);
-      expect(contact instanceof Contact).to.be.true;
+      expect(contact instanceof Testing.Contact).to.be.true;
     }
   });
 });
@@ -467,14 +563,14 @@ describe('Queries with types', () => {
 test('map over refs in query result', async () => {
   const testBuilder = new EchoTestBuilder();
   const { db } = await testBuilder.createDatabase();
-  const folder = db.add(create(Expando, { name: 'folder', objects: [] as any[] }));
+  const folder = db.add(live(Expando, { name: 'folder', objects: [] as any[] }));
   const objects = range(3).map((idx) => createTestObject(idx));
   for (const object of objects) {
-    folder.objects.push(object);
+    folder.objects.push(makeRef(object));
   }
 
   const queryResult = await db.query({ name: 'folder' }).run();
-  const result = queryResult.objects.flatMap(({ objects }) => objects);
+  const result = queryResult.objects.flatMap(({ objects }) => objects.map((o: Ref<any>) => o.target));
 
   for (const i in objects) {
     expect(result[i]).to.eq(objects[i]);
@@ -486,3 +582,10 @@ const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { co
   await db.flush({ indexes: true });
   return objects;
 };
+
+const assertQuery = async (db: EchoDatabase, filter: Filter, expected: any[]) => {
+  const { objects } = await db.query(filter).run();
+  expect(sortById(objects)).toEqual(expect.arrayContaining(sortById(expected)));
+};
+
+const sortById = (objects: any[]) => objects.sort((a, b) => a.id.localeCompare(b.id));

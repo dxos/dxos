@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CronJob } from 'cron';
+import { parseCronExpression } from 'cron-schedule';
 
 import { DeferredTask } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
@@ -24,22 +24,25 @@ export const createTimerTrigger: TriggerFactory<TimerTrigger> = async (
 
   let last = 0;
   let run = 0;
-  // https://www.npmjs.com/package/cron#constructor
-  const job = CronJob.from({
-    cronTime: spec.cron,
-    runOnInit: false,
-    onTick: () => {
-      // TODO(burdon): Check greater than 30s (use cron-parser).
-      const now = Date.now();
-      const delta = last ? now - last : 0;
-      last = now;
+  const schedule = parseCronExpression(spec.cron);
+  const getRunTimeout = () => Date.now() - schedule.getNextDate().getTime();
+  const runCron = () => {
+    if (ctx.disposed) {
+      return;
+    }
+    // TODO(burdon): Check greater than 30s (use cron-parser).
+    const now = Date.now();
+    const delta = last ? now - last : 0;
+    last = now;
 
-      run++;
-      log.info('tick', { space: space.key.truncate(), count: run, delta });
-      task.schedule();
-    },
-  });
+    run++;
+    log.info('tick', { space: space.key.truncate(), count: run, delta });
+    task.schedule();
 
-  job.start();
-  ctx.onDispose(() => job.stop());
+    timeout = setTimeout(runCron, getRunTimeout());
+  };
+
+  let timeout = setTimeout(runCron, getRunTimeout());
+
+  ctx.onDispose(() => clearTimeout(timeout));
 };

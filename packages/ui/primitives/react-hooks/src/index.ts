@@ -4,7 +4,7 @@
 
 export * from './useAsyncEffect';
 export * from './useAsyncState';
-export * from './useControlledValue';
+export * from './useControlledState';
 export * from './useDebugReactDeps';
 export * from './useDefaultValue';
 export * from './useDynamicRef';
@@ -15,4 +15,6 @@ export * from './useIsFocused';
 export * from './useMediaQuery';
 export * from './useMulticastObservable';
 export * from './useRefCallback';
+export * from './useResize';
+export * from './useTrackProps';
 export * from './useTransitions';

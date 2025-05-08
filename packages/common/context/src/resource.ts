@@ -118,6 +118,23 @@ export abstract class Resource implements Lifecycle {
     return this;
   }
 
+  /**
+   * Waits until the resource is open.
+   */
+  async waitUntilOpen() {
+    switch (this.#lifecycleState) {
+      case LifecycleState.OPEN:
+        return;
+      case LifecycleState.ERROR:
+        throw new Error(`Invalid state: ${this.#lifecycleState}`);
+    }
+
+    if (!this.#openPromise) {
+      throw new Error('Resource is not being opened');
+    }
+    await this.#openPromise;
+  }
+
   async [Symbol.asyncDispose]() {
     await this.close();
   }

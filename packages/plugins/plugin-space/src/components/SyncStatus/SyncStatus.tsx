@@ -6,16 +6,14 @@ import React, { useEffect, useState } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { useClient } from '@dxos/react-client';
-import { Icon, Popover, useTranslation } from '@dxos/react-ui';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { getSyncSummary, type SpaceSyncStateMap, useSyncState } from '@dxos/react-client/echo';
+import { Icon, useTranslation } from '@dxos/react-ui';
 
-import { SpaceRow, SYNC_STALLED_TIMEOUT } from './Space';
 import { createClientSaveTracker } from './save-tracker';
 import { getIcon, getStatus } from './status';
-import { type PeerSyncState, type SpaceSyncStateMap, getSyncSummary, useSyncState } from './sync-state';
 import { SPACE_PLUGIN } from '../../meta';
+
+const SYNC_STALLED_TIMEOUT = 5_000;
 
 export const SyncStatus = () => {
   const client = useClient();
@@ -56,47 +54,5 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
   const title = t(`${status} label`);
   const icon = <Icon icon={getIcon(status)} size={4} classNames={classNames} />;
 
-  if (offline) {
-    return <StatusBar.Item title={title}>{icon}</StatusBar.Item>;
-  } else {
-    return (
-      <Popover.Root>
-        <Popover.Trigger asChild>
-          <StatusBar.Button title={title}>{icon}</StatusBar.Button>
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content sideOffset={16}>
-            <SyncStatusDetail state={state} summary={summary} debug={false} />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-    );
-  }
-};
-
-export const SyncStatusDetail = ({
-  classNames,
-  state,
-  summary,
-  debug,
-}: ThemedClassName<{
-  state: SpaceSyncStateMap;
-  summary: PeerSyncState;
-  debug?: boolean;
-}>) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
-  const entries = Object.entries(state).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-
-  // TODO(burdon): Normalize to max document count?
-  return (
-    <div className={mx('flex flex-col gap-3 p-2 text-xs min-w-[16rem]', classNames)}>
-      <h1>{t('sync status title')}</h1>
-      <div className='flex flex-col gap-2'>
-        {entries.map(([spaceId, state]) => (
-          <SpaceRow key={spaceId} spaceId={spaceId} state={state} />
-        ))}
-      </div>
-      {debug && <SyntaxHighlighter language='json'>{JSON.stringify(summary, null, 2)}</SyntaxHighlighter>}
-    </div>
-  );
+  return <StatusBar.Item title={title}>{icon}</StatusBar.Item>;
 };

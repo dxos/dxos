@@ -25,18 +25,23 @@ export class SheetManager {
     return this.cellByText('Ready').waitFor({ state: 'visible' });
   }
 
-  async type(text: string) {
-    // TODO(thure): Why can’t the editor keep up in some cases?
-    await this.page.keyboard.type(text, { delay: 50 });
+  async fill(text: string) {
+    // TODO(thure): Do these timeouts help with test flakiness?
+    await this.page.waitForTimeout(200);
+    await this.cellEditor().fill(text);
+    await this.page.waitForTimeout(200);
   }
 
   async press(key: string) {
+    // TODO(thure): Does these timeouts help with test flakiness?
+    await this.page.waitForTimeout(200);
     await this.page.keyboard.press(key);
+    await this.page.waitForTimeout(200);
   }
 
   async commit(key: string) {
     // TODO(thure): Why do we need to wait? Enter is ignored otherwise…
-    await this.page.waitForTimeout(200);
+    await this.page.waitForTimeout(500);
     await this.press(key);
   }
 
@@ -45,22 +50,23 @@ export class SheetManager {
   }
 
   async setFocusedCellValue(text: string, commitKey: string) {
-    const mode = await this.grid.grid.getAttribute('data-grid-mode');
+    const mode = await this.grid.mode();
     if (mode === 'browse') {
-      await this.press('Enter');
-      await this.cellEditor().waitFor({ state: 'visible' });
+      await this.commit('Enter');
     }
-    await this.type(text);
+    await this.fill(text);
     await this.commit(commitKey);
   }
 
   async selectRange(start: DxGridPosition, end: DxGridPosition) {
-    const startBox = await this.grid.cell(start.col, start.row, start.plane).boundingBox();
-    const endBox = await this.grid.cell(end.col, end.row, end.plane).boundingBox();
-    await this.page.mouse.move(startBox!.x + startBox!.width / 2, startBox!.y + startBox!.height / 2);
-    await this.page.mouse.down();
-    await this.page.mouse.move(endBox!.x + endBox!.width / 2, endBox!.y + endBox!.height / 2, { steps: 10 });
-    await this.page.mouse.up();
+    const startCell = this.grid.cell(start.col, start.row, start.plane);
+    const endCell = this.grid.cell(end.col, end.row, end.plane);
+    const startBox = await startCell.boundingBox();
+    const endBox = await endCell.boundingBox();
+    await startCell.dragTo(endCell, {
+      sourcePosition: { x: startBox!.width / 2, y: startBox!.height / 2 },
+      targetPosition: { x: endBox!.width / 2, y: endBox!.height / 2 },
+    });
   }
 
   async deleteAxis(axis: DxGridAxis, position: number) {
@@ -76,7 +82,7 @@ export class SheetManager {
   }
 
   cellEditor() {
-    return this.page.getByTestId('grid.cell-editor');
+    return this.page.getByTestId('grid.cell-editor').getByRole('textbox');
   }
 
   rangeInList(a1Coords: string) {

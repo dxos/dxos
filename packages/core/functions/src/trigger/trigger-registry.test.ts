@@ -10,7 +10,8 @@ import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
-import { create, splitMeta } from '@dxos/echo-schema';
+import { splitMeta } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { range } from '@dxos/util';
 
 import { TriggerRegistry } from './trigger-registry';
@@ -84,7 +85,7 @@ describe('trigger registry', () => {
     });
 
     test('set meta', () => {
-      const trigger = create(FunctionTrigger, {
+      const trigger = live(FunctionTrigger, {
         function: 'example.com/function/webhook-test',
         spec: {
           type: TriggerKind.Webhook,
@@ -155,13 +156,13 @@ describe('trigger registry', () => {
         return 200;
       });
 
-      space.db.add(create(TestType, { title: '1' }));
+      space.db.add(live(TestType, { title: '1' }));
       await sleep(110);
       expect(count).to.eq(1);
 
       space.db.remove(echoTrigger);
       await sleep(110);
-      space.db.add(create(TestType, { title: '2' }));
+      space.db.add(live(TestType, { title: '2' }));
       await sleep(20);
       expect(count).to.eq(1);
     });
@@ -184,7 +185,7 @@ describe('trigger registry', () => {
 
       await registry.close();
 
-      space.db.add(create(TestType, { title: '1' }));
+      space.db.add(live(TestType, { title: '1' }));
       await sleep(20);
       expect(count).to.eq(0);
     });
@@ -235,7 +236,9 @@ describe('trigger registry', () => {
       const triggers = createTriggers(space, 3);
 
       const triggerLoaded = new Trigger();
-      registry.registered.on((fn) => triggerLoaded.wake());
+      registry.registered.on(() => {
+        triggerLoaded.wake();
+      });
 
       const triggerRemoved = new Trigger<FunctionTrigger>();
       registry.removed.on((fn) => {
@@ -262,7 +265,7 @@ describe('trigger registry', () => {
   const createTriggers = (space: Space, count: number) => {
     const triggers = range(count, () => {
       const { meta, object } = splitMeta(manifest.triggers![0]);
-      return create(FunctionTrigger, object, meta);
+      return live(FunctionTrigger, object, meta);
     });
 
     triggers.forEach((trigger) => space.db.add(trigger));

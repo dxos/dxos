@@ -5,17 +5,19 @@
 import { test, expect } from '@playwright/test';
 import { platform } from 'node:os';
 
+import { sleep } from '@dxos/async';
+
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
-  await host.openSpaceManager();
-  const invitationCode = await host.shell.createSpaceInvitation();
-  const authCode = await host.shell.getAuthCode();
+  await host.shareSpace();
+  const invitationCode = await host.createSpaceInvitation();
+  const authCode = await host.getAuthCode();
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
-  await host.shell.closeShell();
+  await host.navigateToObject();
 };
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
@@ -25,6 +27,7 @@ test.describe('Collaboration tests', () => {
   let guest: AppManager;
 
   test.beforeEach(async ({ browser, browserName }) => {
+    test.setTimeout(60_000);
     test.skip(browserName === 'firefox');
     test.skip(browserName === 'webkit' && platform() !== 'darwin');
 
@@ -62,7 +65,7 @@ test.describe('Collaboration tests', () => {
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(2);
+    await expect(guest.getObjectLinks()).toHaveCount(1);
 
     {
       // Update to use plank locator
@@ -75,7 +78,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test('host and guest can see each others’ presence when same document is in focus', async () => {
+  test('host and guest can see each others’ cursors when same document is in focus', async () => {
     await host.createSpace();
 
     // Focus on host's textbox and wait for it to be ready
@@ -89,21 +92,30 @@ test.describe('Collaboration tests', () => {
 
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(2);
+    await expect(guest.getObjectLinks()).toHaveCount(1);
 
     // Find the plank in the guest.
     const guestPlank = guest.deck.plank();
     await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
     await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
 
-    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0);
-    await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0);
+    await Promise.all([
+      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0),
+      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0),
+    ]);
 
-    await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus();
-    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus();
+    // TODO(wittjosiah): Focusing too quickly causes the cursors not to show up.
+    await sleep(1_000);
 
-    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/);
-    await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/);
+    await Promise.all([
+      Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus(),
+      Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus(),
+    ]);
+
+    await Promise.all([
+      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/),
+      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/),
+    ]);
   });
 
   test('host and guest can see each others’ changes in same document', async () => {
@@ -129,7 +141,7 @@ test.describe('Collaboration tests', () => {
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(2);
+    await expect(guest.getObjectLinks()).toHaveCount(1);
 
     // Get guest's markdown planks and find the locator for the shared document
     const guestPlank = guest.deck.plank();
@@ -170,7 +182,7 @@ test.describe('Collaboration tests', () => {
     await expect(guestTextbox).toContainText(allParts);
   });
 
-  test('guest can jump to document host is viewing', async () => {
+  test('peers can see each others presence', async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
@@ -185,7 +197,7 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(2);
+    await expect(guest.getObjectLinks()).toHaveCount(1);
 
     const guestPlank = guest.deck.plank();
     const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
@@ -197,27 +209,14 @@ test.describe('Collaboration tests', () => {
     const guestPresence = guestPlank.membersPresence();
 
     // TODO(wittjosiah): Initial viewing state is slow.
-    await expect(hostPresence).toHaveCount(1, { timeout: 30_000 });
-    await expect(guestPresence).toHaveCount(1, { timeout: 30_000 });
-    await expect(hostPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 });
-    await expect(guestPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 });
+    await Promise.all([
+      expect(hostPresence).toHaveCount(1, { timeout: 45_000 }),
+      expect(guestPresence).toHaveCount(1, { timeout: 45_000 }),
+    ]);
 
-    // TODO(zan): We need to update deck presence indications for this to be a valid test.
-
-    // await host.createObject('markdownPlugin');
-    // const newDocId = (await hostPlankManager.getPlanks({ filter: 'markdown' }))[0].qualifiedId;
-
-    // await waitForExpect(async () => {
-    //   expect((await hostPlankManager.getPlankPresence(newDocId))?.viewing).to.equal(0);
-    //   expect((await guestPlankManager.getPlankPresence(guestSharedMarkdownId))?.viewing).to.equal(0);
-    // });
-
-    // await guest.getSpacePresenceMembers().first().click();
-
-    // // TODO(wittjosiah): Second document is taking a while to sync.
-    // await waitForExpect(async () => {
-    //   expect((await host.getSpacePresenceCount()).viewing).to.equal(1);
-    //   expect((await guest.getSpacePresenceCount()).viewing).to.equal(1);
-    // }, 20_000);
+    await Promise.all([
+      expect(hostPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 }),
+      expect(guestPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 }),
+    ]);
   });
 });

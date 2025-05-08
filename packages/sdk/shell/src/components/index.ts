@@ -3,10 +3,7 @@
 //
 
 export * from './AgentConfig';
-export * from './Clipboard';
 export * from './CompoundButton';
-export * from './EmojiPicker';
-export * from './HuePicker';
 export * from './IdentityList';
 export * from './DeviceList';
 export * from './InvitationList';

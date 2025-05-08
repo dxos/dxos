@@ -11,7 +11,7 @@ import { log, logInfo } from '@dxos/log';
 import { type SwarmEvent, type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
+import { ComplexMap, isNonNullable } from '@dxos/util';
 
 import { type Connection, ConnectionState } from './connection';
 import { type ConnectionLimiter } from './connection-limiter';
@@ -104,7 +104,7 @@ export class Swarm {
   get connections() {
     return Array.from(this._peers.values())
       .map((peer) => peer.connection)
-      .filter(isNotNullOrUndefined);
+      .filter(isNonNullable);
   }
 
   get ownPeerId() {
@@ -170,7 +170,7 @@ export class Swarm {
   }
 
   @synchronized
-  onSwarmEvent(swarmEvent: SwarmEvent) {
+  async onSwarmEvent(swarmEvent: SwarmEvent): Promise<void> {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
     if (this._ctx.disposed) {
@@ -222,10 +222,24 @@ export class Swarm {
       return { accept: false };
     }
 
-    const peer = this._getOrCreatePeer(message.author);
+    const peer = this._getOfferSenderPeer(message.author);
     const answer = await peer.onOffer(message);
     this._topology.update();
     return answer;
+  }
+
+  private _getOfferSenderPeer(senderInfo: PeerInfo) {
+    const peer = this._getOrCreatePeer(senderInfo);
+
+    // Handle fast peer reconnect (eg. tab reload)
+    const connectionState = peer.connection?.state;
+    if (connectionState === ConnectionState.CLOSING || connectionState === ConnectionState.ABORTING) {
+      this._peers.delete(peer.remoteInfo);
+      this.disconnected.emit(peer.remoteInfo);
+      return this._getOrCreatePeer(peer.remoteInfo);
+    }
+
+    return peer;
   }
 
   async onSignal(message: SignalMessage): Promise<void> {
@@ -319,7 +333,7 @@ export class Swarm {
     const peer = this._peers.get(peerInfo);
     invariant(peer);
     this._peers.delete(peerInfo);
-    await peer.safeDestroy(new Error(reason));
+    await peer.safeDestroy(reason);
   }
 
   private _getSwarmController(): SwarmController {

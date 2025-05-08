@@ -1,12 +1,13 @@
 {
   "name": "@dxos/echo-generator",
-  "version": "0.7.1",
+  "version": "0.8.1",
   "description": "ECHO data generator for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -28,6 +29,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*"

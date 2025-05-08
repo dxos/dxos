@@ -2,29 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
+import { type ComponentFunction, type Theme, type Elevation } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { focusRing, modalSurface, surfaceElevation } from '../fragments';
+import { focusRing, modalSurface, surfaceShadow, surfaceZIndex } from '../fragments';
 
 export type PopoverStyleProps = Partial<{
-  constrainInline?: boolean;
   constrainBlock: boolean;
+  constrainInline: boolean;
+  elevation: Elevation;
 }>;
 
-export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainInline, constrainBlock }, ...etc) =>
+export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
   mx(
-    'p-1 rounded-lg',
-    constrainInline && 'max-is-[--radix-popover-content-available-width] overflow-x-auto',
+    'rounded-lg',
     constrainBlock && 'max-bs-[--radix-popover-content-available-height] overflow-y-auto',
+    constrainInline && 'max-is-[--radix-popover-content-available-width] overflow-x-auto',
     ...etc,
   );
 
-export const popoverContent: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
+export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'z-[30] border border-separator rounded-lg',
+    'border border-separator rounded-lg',
     modalSurface,
-    surfaceElevation({ elevation: 'group' }),
+    surfaceShadow({ elevation: 'positioned' }),
+    surfaceZIndex({ elevation, level: 'menu' }),
     focusRing,
     ...etc,
   );

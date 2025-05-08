@@ -4,8 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { create, Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { live, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { getObjectCore } from './echo-handler';
@@ -22,19 +23,19 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'B',
       }),
     );
     const obj3 = db2.add(
-      create(Expando, {
+      live(Expando, {
         type: 'record',
         title: 'C',
       }),
@@ -82,27 +83,27 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'B',
       }),
     );
 
-    obj1.link = obj2;
-    expect(obj1.link.title).to.eq('B');
+    obj1.link = makeRef(obj2);
+    expect(obj1.link.target?.title).to.eq('B');
 
     await Promise.all([db1.flush(), db2.flush()]);
-    expect(obj1.link.title).to.eq('B');
+    expect(obj1.link.target?.title).to.eq('B');
 
     await db1.close();
     await db1.open();
-    expect(obj1.link.title).to.eq('B');
+    expect(obj1.link.target?.title).to.eq('B');
   });
 
   // TODO(mykola): Broken.
@@ -116,20 +117,20 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      create(Expando, {
+      live(Expando, {
         type: 'task',
         title: 'B',
       }),
     );
-    obj1.link = obj2;
+    obj1.link = makeRef(obj2);
     await Promise.all([db1.flush(), db2.flush()]);
-    expect(obj1.link.title).to.eq('B');
+    expect(obj1.link.target?.title).to.eq('B');
 
     await db2.close();
 
@@ -139,7 +140,7 @@ describe('HyperGraph', () => {
     });
 
     await db2.open();
-    expect(obj1.link.title).to.eq('B');
+    expect(obj1.link.target?.title).to.eq('B');
     expect(called).to.eq(true);
   });
 });

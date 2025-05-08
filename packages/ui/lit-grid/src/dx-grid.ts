@@ -41,7 +41,7 @@ import {
   separator,
 } from './types';
 import {
-  toPlaneCellIndex,
+  toCellIndex,
   gap,
   resizeTolerance,
   sizeColMin,
@@ -58,6 +58,7 @@ import {
   resolveColPlane,
   resolveFrozenPlane,
   isSameCell,
+  isReadonly,
 } from './util';
 
 @customElement('dx-grid')
@@ -264,7 +265,7 @@ export class DxGrid extends LitElement {
       queueMicrotask(() =>
         this.dispatchEvent(
           new DxEditRequest({
-            cellIndex: toPlaneCellIndex(this.focusedCell),
+            cellIndex: toCellIndex(this.focusedCell),
             cellBox: this.focusedCellBox(),
             initialContent,
           }),
@@ -955,45 +956,69 @@ export class DxGrid extends LitElement {
   }
 
   /**
+   * Calculate the pixel offset for a given column in a plane.
+   * Sums all column sizes plus gaps up to the target column.
+   */
+  private inlineOffset(col: number, plane: DxGridPlane): number {
+    return [...Array(col)].reduce((acc, _, c0) => {
+      return acc + this.colSize(c0, plane) + gap;
+    }, 0);
+  }
+
+  /**
+   * Calculate the pixel offset for a given row in a plane.
+   * Sums all row sizes plus gaps up to the target row.
+   */
+  private blockOffset(row: number, plane: DxGridPlane): number {
+    return [...Array(row)].reduce((acc, _, r0) => {
+      return acc + this.rowSize(r0, plane) + gap;
+    }, 0);
+  }
+
+  /**
    * Updates `pos` so that a cell in focus is fully within the viewport
    */
   snapPosToFocusedCell() {
     const outOfVis = this.focusedCellOutOfVis();
     if (outOfVis.col < 0) {
       // align viewport start edge with focused cell start edge
-      this.posInline = this.clampPosInline(
-        [...Array(this.focusedCell.col)].reduce((acc, _, c0) => {
-          return acc + this.colSize(c0, 'grid') + gap;
-        }, 0),
-      );
+      this.posInline = this.clampPosInline(this.inlineOffset(this.focusedCell.col, 'grid'));
       this.updateVisInline();
     } else if (outOfVis.col > 0) {
       // align viewport end edge with focused cell end edge
-      this.posInline = this.clampPosInline(
-        [...Array(this.focusedCell.col + 1)].reduce((acc, _, c0) => {
-          return acc + this.colSize(c0, 'grid') + gap;
-        }, -this.sizeInline) - gap,
-      );
+      this.posInline = this.clampPosInline(this.inlineOffset(this.focusedCell.col + 1, 'grid') - this.sizeInline - gap);
       this.updateVisInline();
     }
 
     if (outOfVis.row < 0) {
       // align viewport start edge with focused cell start edge
-      this.posBlock = this.clampPosBlock(
-        [...Array(this.focusedCell.row)].reduce((acc, _, r0) => {
-          return acc + this.rowSize(r0, 'grid') + gap;
-        }, 0),
-      );
+      this.posBlock = this.clampPosBlock(this.blockOffset(this.focusedCell.row, 'grid'));
       this.updateVisBlock();
     } else if (outOfVis.row > 0) {
       // align viewport end edge with focused cell end edge
-      this.posBlock = this.clampPosBlock(
-        [...Array(this.focusedCell.row + 1)].reduce((acc, _, r0) => {
-          return acc + this.rowSize(r0, 'grid') + gap;
-        }, -this.sizeBlock) - gap,
-      );
+      this.posBlock = this.clampPosBlock(this.blockOffset(this.focusedCell.row + 1, 'grid') - this.sizeBlock - gap);
       this.updateVisBlock();
     }
+  }
+
+  scrollToCoord({ coords }: { coords: DxGridPosition }) {
+    const plane = coords.plane;
+    const { row, col } = coords;
+
+    this.updatePosBlock(this.blockOffset(row, plane));
+    this.updatePosInline(this.inlineOffset(col, plane));
+  }
+
+  scrollToColumn(col: number) {
+    this.updatePosInline(this.inlineOffset(col, 'grid'));
+  }
+
+  scrollToRow(row: number) {
+    this.updatePosBlock(this.blockOffset(row, 'grid'));
+  }
+
+  scrollToEndRow() {
+    this.updatePosBlock(Infinity);
   }
 
   //
@@ -1202,21 +1227,44 @@ export class DxGrid extends LitElement {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
 
+    // Check cell-specific setting first.
     const cellReadonly = this.cell(col, row, plane)?.readonly;
     if (cellReadonly !== undefined) {
-      return cellReadonly;
+      return isReadonly(cellReadonly);
     }
 
-    return (
-      (this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly) ||
-      (this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly)
-    );
+    // Check column/row defaults.
+    const colReadOnly = this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly;
+    const rowReadOnly = this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly;
+
+    return isReadonly(colReadOnly) || isReadonly(rowReadOnly);
+  }
+
+  /**
+   * Determines if the cell's text content should be selectable based on its readonly value.
+   * @returns true if the cells text content is selectable, false otherwise.
+   */
+  private cellTextSelectable(col: number, row: number, plane: DxGridPlane): boolean {
+    const colPlane = resolveColPlane(plane);
+    const rowPlane = resolveRowPlane(plane);
+
+    // Check cell-specific setting first.
+    const cellReadonly = this.cell(col, row, plane)?.readonly;
+    if (cellReadonly !== undefined) {
+      return cellReadonly === 'text-select';
+    }
+
+    // Check column/row defaults.
+    const colReadonly = this.columns?.[colPlane]?.[col]?.readonly ?? this.columnDefault?.[colPlane]?.readonly;
+    const rowReadonly = this.rows?.[rowPlane]?.[row]?.readonly ?? this.rowDefault?.[rowPlane]?.readonly;
+    return colReadonly === 'text-select' || rowReadonly === 'text-select';
   }
 
   private renderCell(col: number, row: number, plane: DxGridPlane, selected?: boolean, visCol = col, visRow = row) {
     const cell = this.cell(col, row, plane);
     const active = this.cellActive(col, row, plane);
     const readonly = this.cellReadonly(col, row, plane);
+    const textSelectable = this.cellTextSelectable(col, row, plane);
     const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
     const resizePlane = cell?.resizeHandle ? resolveFrozenPlane(cell.resizeHandle, plane) : undefined;
     const accessory = cell?.accessoryHtml ? staticHtml`${unsafeStatic(cell.accessoryHtml)}` : null;
@@ -1228,6 +1276,7 @@ export class DxGrid extends LitElement {
       class=${cell?.className ?? nothing}
       data-refs=${cell?.dataRefs ?? nothing}
       ?data-dx-active=${active}
+      data-text-selectable=${textSelectable ? 'true' : 'false'}
       data-dx-grid-action="cell"
       aria-colindex=${col}
       aria-rowindex=${row}
@@ -1490,6 +1539,14 @@ export class DxGrid extends LitElement {
   }
 }
 
-export { rowToA1Notation, colToA1Notation, closestAction, closestCell } from './util';
+export {
+  rowToA1Notation,
+  colToA1Notation,
+  closestAction,
+  closestCell,
+  parseCellIndex,
+  toPlaneCellIndex,
+  cellQuery,
+} from './util';
 
 export const commentedClassName = 'dx-grid__cell--commented';

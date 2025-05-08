@@ -29,16 +29,18 @@ export class EchoArray<T> extends Array<T> {
     for (const method of BATCHED_METHODS) {
       const handlerMethodName = `array${method.slice(0, 1).toUpperCase()}${method.slice(1)}`;
 
+      const fn = function (this: EchoArray<any>, ...args: any[]) {
+        let result!: any;
+        compositeRuntime.batch(() => {
+          const handler = this[symbolHandler];
+          result = ((handler as any)[handlerMethodName] as Function).apply(handler, [this, this[symbolPath], ...args]);
+        });
+        return result;
+      };
+      Object.defineProperty(fn, 'name', { value: method });
       Object.defineProperty(this.prototype, method, {
         enumerable: false,
-        value: function (this: EchoArray<any>, ...args: any[]) {
-          let result!: any;
-          compositeRuntime.batch(() => {
-            const handler = this[symbolHandler] as any;
-            result = (handler[handlerMethodName] as any).apply(handler, [this, this[symbolPath], ...args]);
-          });
-          return result;
-        },
+        value: fn,
       });
     }
   }

@@ -3,40 +3,12 @@
 //
 
 import { effect } from '@preact/signals-core';
+import { type SchemaAST as AST } from 'effect';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { invariant } from '@dxos/invariant';
-
-import { create } from '../handler';
-import { toJsonSchema } from '../json';
-import { MutableSchema, StoredSchema } from '../mutable';
-import { type AbstractSchema } from '../object';
-import { getTypeReference } from '../proxy';
+import { deepMapValues } from '@dxos/util';
 
 registerSignalsRuntime();
-
-/**
- * Create a reactive mutable schema that updates when the JSON schema is updated.
- */
-export const createMutableSchema = (schema: AbstractSchema): MutableSchema => {
-  const typeReference = getTypeReference(schema);
-  invariant(typeReference, 'Type reference not found.');
-
-  const mutableSchema = new MutableSchema(
-    create(StoredSchema, {
-      typename: typeReference.objectId,
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(schema),
-    }),
-  );
-
-  effect(() => {
-    const _ = mutableSchema.jsonSchema;
-    mutableSchema.invalidate();
-  });
-
-  return mutableSchema;
-};
 
 // TODO(burdon): Move to util.
 export const updateCounter = (touch: () => void) => {
@@ -54,3 +26,25 @@ export const updateCounter = (touch: () => void) => {
     },
   };
 };
+
+/**
+ * Converts AST to a format that can be compared with test matchers.
+ */
+export const prepareAstForCompare = (obj: AST.AST): any =>
+  deepMapValues(obj, (value: any, recurse, key) => {
+    if (typeof value === 'function') {
+      return null;
+    }
+
+    // Convert symbols to strings.
+    if (typeof value === 'object') {
+      const clone = { ...value };
+      for (const sym of Object.getOwnPropertySymbols(clone as any)) {
+        clone[sym.toString()] = clone[sym];
+        delete clone[sym];
+      }
+      return recurse(clone);
+    }
+
+    return recurse(value);
+  });

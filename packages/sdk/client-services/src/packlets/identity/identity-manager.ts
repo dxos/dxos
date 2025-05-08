@@ -5,12 +5,7 @@ import platform from 'platform';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import {
-  createCredentialSignerWithKey,
-  CredentialGenerator,
-  generateSeedPhrase,
-  keyPairFromSeedPhrase,
-} from '@dxos/credentials';
+import { createCredentialSignerWithKey, createDidFromIdentityKey, CredentialGenerator } from '@dxos/credentials';
 import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore } from '@dxos/feed-store';
@@ -335,29 +330,6 @@ export class IdentityManager {
     };
   }
 
-  async createRecoveryPhrase() {
-    const identity = this._identity;
-    invariant(identity);
-
-    const seedphrase = generateSeedPhrase();
-    const keypair = keyPairFromSeedPhrase(seedphrase);
-    const recoveryKey = PublicKey.from(keypair.publicKey);
-    const identityKey = identity.identityKey;
-    const credential = await identity.getIdentityCredentialSigner().createCredential({
-      subject: identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityRecovery',
-        recoveryKey,
-        identityKey,
-      },
-    });
-
-    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
-    await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-
-    return { seedphrase };
-  }
-
   private async _constructIdentity(identityRecord: IdentityRecord) {
     invariant(!this._identity);
     log('constructing identity', { identityRecord });
@@ -397,10 +369,12 @@ export class IdentityManager {
     await space.setControlFeed(controlFeed);
     await space.setDataFeed(dataFeed);
 
+    const did = await createDidFromIdentityKey(identityRecord.identityKey);
     const identity: Identity = new Identity({
       space,
       presence,
       signer: this._keyring,
+      did,
       identityKey: identityRecord.identityKey,
       deviceKey: identityRecord.deviceKey,
       edgeConnection: this._edgeConnection,

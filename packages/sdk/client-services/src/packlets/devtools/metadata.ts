@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { type SubscribeToMetadataResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { type ServiceContext } from '../services';

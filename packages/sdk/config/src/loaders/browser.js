@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
 
 export const Local = () => {
-  return __CONFIG_LOCAL__;
+  return typeof __CONFIG_LOCAL__ !== 'undefined' ? __CONFIG_LOCAL__ : {};
 };
 
 export const Dynamics = async () => {
@@ -33,11 +33,11 @@ export const Dynamics = async () => {
 };
 
 export const Envs = () => {
-  return __CONFIG_ENVS__;
+  return typeof __CONFIG_ENVS__ !== 'undefined' ? __CONFIG_ENVS__ : {};
 };
 
 export const Defaults = () => {
-  return __CONFIG_DEFAULTS__;
+  return typeof __CONFIG_DEFAULTS__ !== 'undefined' ? __CONFIG_DEFAULTS__ : {};
 };
 
 /**

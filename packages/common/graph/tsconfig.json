@@ -1,0 +1,52 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "ESNext"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../debug"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../random"
+    },
+    {
+      "path": "../util"
+    }
+  ]
+}

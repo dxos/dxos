@@ -7,19 +7,22 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { SurfaceProvider } from '@dxos/app-framework';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { ObjectId } from '@dxos/echo-schema';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { refFromDXN } from '@dxos/live-object';
+import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
+import { live, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ClientRepeater } from '@dxos/react-client/testing';
-import { Mosaic } from '@dxos/react-ui-mosaic';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { Thread } from '@dxos/react-ui-thread';
+import { MessageType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
-import { createChatThread } from './testing';
 import translations from '../translations';
 
 faker.seed(1);
@@ -28,40 +31,31 @@ const Story = () => {
   const client = useClient();
   const identity = useIdentity();
   const [space, setSpace] = useState<Space>();
-  const [thread, setThread] = useState<ThreadType | null>();
+  const [channel, setChannel] = useState<ChannelType | null>();
 
   useEffect(() => {
     if (identity) {
       setTimeout(async () => {
         const space = await client.spaces.create();
-        const thread = space.db.add(createChatThread(identity));
+        const channel = space.db.add(
+          live(ChannelType, {
+            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()])),
+          }),
+        );
         setSpace(space);
-        setThread(thread);
+        setChannel(channel);
       });
     }
   }, [identity]);
 
-  if (!identity || !thread) {
+  if (!identity || !channel || !space) {
     return null;
   }
 
   return (
-    <SurfaceProvider
-      value={{
-        components: {
-          ObjectMessage: ({ role }) => {
-            return <span>{JSON.stringify({ role })}</span>;
-          },
-        },
-      }}
-    >
-      <Mosaic.Root debug>
-        <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>
-          {space && <ChatContainer thread={thread} />}
-        </main>
-        <Mosaic.DragOverlay />
-      </Mosaic.Root>
-    </SurfaceProvider>
+    <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>
+      <ChatContainer space={space} dxn={channel.queue.dxn} />
+    </main>
   );
 };
 
@@ -70,9 +64,25 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-thread/Chat',
   component: Thread,
-  // TODO(burdon): Use decorator.
-  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType]} />,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  render: () => <Story />,
+  decorators: [
+    withPluginManager({
+      plugins: [IntentPlugin()],
+      capabilities: [
+        contributes(
+          Capabilities.ReactSurface,
+          createSurface({
+            id: 'test',
+            role: 'card',
+            component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
+          }),
+        ),
+      ],
+    }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+    withClientProvider({ createSpace: true, types: [ThreadType, MessageType] }),
+  ],
   parameters: { translations },
 };
 

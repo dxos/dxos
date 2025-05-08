@@ -4,60 +4,45 @@
 
 import React from 'react';
 
-import { useIntentDispatcher, useResolvePlugins } from '@dxos/app-framework';
-import { Input, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { useClient } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
+import { Input, toLocalizedString, useTranslation, List, ListItem, Button } from '@dxos/react-ui';
+import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { SpaceAction, SPACE_PLUGIN } from '../meta';
-import { parseSpaceInitPlugin, type SpaceSettingsProps } from '../types';
+import { SPACE_PLUGIN } from '../meta';
+import { SpaceAction, type SpaceSettingsProps } from '../types';
+import { getSpaceDisplayName } from '../util';
 
 export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const dispatch = useIntentDispatcher();
-  const plugins = useResolvePlugins(parseSpaceInitPlugin);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const client = useClient();
+  const spaces = useSpaces({ all: settings.showHidden });
 
+  // TODO(wittjosiah): Migrate to new form container.
   return (
-    <>
+    <DeprecatedFormContainer>
       <DeprecatedFormInput label={t('show hidden spaces label')}>
-        <Input.Switch
-          checked={settings.showHidden}
-          onCheckedChange={(checked) =>
-            dispatch({
-              plugin: SPACE_PLUGIN,
-              action: SpaceAction.TOGGLE_HIDDEN,
-              data: { state: !!checked },
-            })
-          }
-        />
+        <Input.Switch checked={settings.showHidden} onCheckedChange={(checked) => (settings.showHidden = !!checked)} />
       </DeprecatedFormInput>
-
-      <DeprecatedFormInput label={t('default on space create label')}>
-        <Select.Root
-          value={settings.onSpaceCreate}
-          onValueChange={(value) => {
-            settings.onSpaceCreate = value;
-          }}
-        >
-          <Select.TriggerButton />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {plugins.map(
-                  ({
-                    provides: {
-                      space: { onSpaceCreate },
-                    },
-                  }) => (
-                    <Select.Option key={onSpaceCreate.action} value={onSpaceCreate.action}>
-                      {toLocalizedString(onSpaceCreate.label, t)}
-                    </Select.Option>
-                  ),
-                )}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-      </DeprecatedFormInput>
-    </>
+      <div role='none'>
+        <h2 className='text-xl my-4'>Space Settings</h2>
+        <List classNames='max-w-md mx-auto'>
+          {spaces.map((space) => (
+            <ListItem.Root key={space.id}>
+              <ListItem.Heading classNames='flex flex-col grow truncate mbe-2'>
+                {toLocalizedString(getSpaceDisplayName(space, { personal: space === client.spaces.default }), t)}
+              </ListItem.Heading>
+              <ListItem.Endcap>
+                <Button onClick={() => dispatch(createIntent(SpaceAction.OpenSettings, { space }))}>
+                  {t('open space settings label')}
+                </Button>
+              </ListItem.Endcap>
+            </ListItem.Root>
+          ))}
+        </List>
+      </div>
+    </DeprecatedFormContainer>
   );
 };

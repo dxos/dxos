@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { create, S, TypedObject } from '@dxos/echo-schema';
-import { Task } from '@dxos/echo-schema/testing';
+import { S, TypedObject } from '@dxos/echo-schema';
+import { Testing } from '@dxos/echo-schema/testing';
 import { DXN } from '@dxos/keys';
+import { live } from '@dxos/live-object';
 
 import { Filter, ResultFormat } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -64,26 +65,46 @@ describe('Plain object format', () => {
     const { db } = await testBuilder.createDatabase();
 
     await db.insert([
-      { __typename: Task.typename, title: 'Task 1', completed: true },
+      { __typename: Testing.Task.typename, title: 'Task 1', completed: true },
       {
-        __typename: Task.typename,
+        __typename: Testing.Task.typename,
         title: 'Task 2',
         completed: false,
       },
-      { __typename: Task.typename, title: 'Task 3', completed: true },
+      { __typename: Testing.Task.typename, title: 'Task 3', completed: true },
     ]);
     await db.flush({ indexes: true });
 
     {
-      const { objects } = await db.query({ __typename: Task.typename }, { format: ResultFormat.Plain }).run();
+      const { objects } = await db.query({ __typename: Testing.Task.typename }, { format: ResultFormat.Plain }).run();
       expect(objects.length).to.eq(3);
     }
 
     {
       const { objects } = await db
-        .query({ __typename: Task.typename, completed: true }, { format: ResultFormat.Plain })
+        .query({ __typename: Testing.Task.typename, completed: true }, { format: ResultFormat.Plain })
         .run();
       expect(objects.length).to.eq(2);
+    }
+  });
+
+  test('query limit', async () => {
+    await using testBuilder = await new EchoTestBuilder().open();
+    const { db } = await testBuilder.createDatabase();
+
+    await db.insert([
+      { __typename: Testing.Task.typename, title: 'Task 1' },
+      {
+        __typename: Testing.Task.typename,
+        title: 'Task 2',
+      },
+      { __typename: Testing.Task.typename, title: 'Task 3' },
+    ]);
+    await db.flush({ indexes: true });
+
+    {
+      const { objects } = await db.query(Filter.all(), { format: ResultFormat.Plain, limit: 2 }).run();
+      expect(objects).to.have.length(2);
     }
   });
 
@@ -92,9 +113,13 @@ describe('Plain object format', () => {
     const { db } = await testBuilder.createDatabase();
 
     const [{ id: id1 }] = await db.insert([
-      { __typename: Task.typename, title: 'Task 1', completed: true },
       {
-        __typename: Task.typename,
+        __typename: Testing.Task.typename,
+        title: 'Task 1',
+        completed: true,
+      },
+      {
+        __typename: Testing.Task.typename,
         title: 'Task 2',
         completed: false,
       },
@@ -117,18 +142,18 @@ describe('Plain object format', () => {
     await using testBuilder = await new EchoTestBuilder().open();
     const { db } = await testBuilder.createDatabase();
 
-    const { id } = await db.insert({ __typename: Task.typename, title: 'A' });
+    const { id } = await db.insert({ __typename: Testing.Task.typename, title: 'A' });
     await db.insert({ data: 'foo' }); // random object
     await db.flush({ indexes: true });
 
     {
-      const { objects } = await db.query({ __typename: Task.typename }, { format: ResultFormat.Plain }).run();
+      const { objects } = await db.query({ __typename: Testing.Task.typename }, { format: ResultFormat.Plain }).run();
       expect(objects.length).to.eq(1);
       expect(objects[0].id).to.eq(id);
     }
 
     {
-      const { objects } = await db.query(Filter.schema(Task)).run();
+      const { objects } = await db.query(Filter.schema(Testing.Task)).run();
       expect(objects.length).to.eq(1);
       expect(objects[0].id).to.eq(id);
     }
@@ -214,10 +239,10 @@ describe('Plain object format', () => {
       field: S.String,
     }) {}
 
-    const stored = db.schemaRegistry.addSchema(TestSchema);
+    const [stored] = await db.schemaRegistry.register([TestSchema]);
     const schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
-    const object = db.add(create(stored, { field: 'test' }));
+    const object = db.add(live(stored, { field: 'test' }));
     await db.flush({ indexes: true });
 
     const { objects } = await db.query({ __typename: schemaDxn }, { format: ResultFormat.Plain }).run();

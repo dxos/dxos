@@ -17,7 +17,7 @@ import {
   ghostSelected,
   ghostSelectedTrackingInterFromNormal,
   mx,
-  surfaceElevation,
+  surfaceShadow,
 } from '@dxos/react-ui-theme';
 
 import { List, ListItem, type ListScopedProps } from './List';
@@ -124,7 +124,7 @@ export const ManySizesDraggable = {
           <p
             className={mx(
               index % 3 === 0 ? 'bs-20' : index % 2 === 0 ? 'bs-12' : 'bs-8',
-              surfaceElevation({ elevation: 'group' }),
+              surfaceShadow({ elevation: 'positioned' }),
               'mbe-2 p-2 bg-white dark:bg-neutral-800 rounded',
             )}
           >{`List item ${index + 1}`}</p>
@@ -199,7 +199,7 @@ export const Collapsible = {
 export const SelectableListbox = {
   render: () => {
     const [selectedId, setSelectedId] = useState<string>();
-    const domAttributes = useArrowNavigationGroup({ axis: 'vertical' });
+    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical' });
     const [items, _setItems] = useState(
       [...Array(12)].map((_, index) => ({
         id: `listItem-${index}`,
@@ -217,7 +217,7 @@ export const SelectableListbox = {
     };
 
     return (
-      <List selectable {...domAttributes}>
+      <List selectable {...arrowNavigationAttrs}>
         {items.map(({ id, text }) => (
           <ListItem.Root
             key={id}

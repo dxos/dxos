@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
+import { arc, interpolateString, select } from 'd3';
 import React, {
   type CSSProperties,
   type FC,
-  forwardRef,
   type HTMLAttributes,
+  type ReactElement,
+  forwardRef,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -17,7 +19,18 @@ import React, {
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { Composer } from '../../icons';
+const weights = new Map<IconWeight, ReactElement>([
+  [
+    'regular',
+    <>
+      <path d='M202.206,23.705l-25.956,36.48c-14.091,-10.026 -30.956,-15.413 -48.25,-15.413c-45.935,-0 -83.228,37.293 -83.228,83.228c-0,45.935 37.293,83.228 83.228,83.228c17.294,0 34.159,-5.387 48.25,-15.413l25.956,36.48c-21.672,15.42 -47.609,23.705 -74.206,23.705c-70.645,-0 -128,-57.355 -128,-128c0,-70.645 57.355,-128 128,-128c26.597,0 52.534,8.285 74.206,23.705Z' />{' '}
+    </>,
+  ],
+]);
+
+const Composer = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
+  <IconBase ref={ref} {...props} weights={weights} />
+));
 
 export interface AnimationController {
   spin: () => void;
@@ -57,7 +70,7 @@ const getLayers = (size: number, [a, b, c]: string[]): Props[] => {
   ];
 };
 
-export type ComposerLogoProps = { animate?: boolean; size?: number; classNames?: string[] } & Omit<
+type ComposerLogoProps = { animate?: boolean; size?: number; classNames?: string[] } & Omit<
   HTMLAttributes<HTMLDivElement>,
   'className'
 >;
@@ -170,8 +183,7 @@ export const ComposerSpinner: FC<{
   }, [animate]);
 
   useEffect(() => {
-    const svg = d3
-      .select(ref.current)
+    const svg = select(ref.current)
       .attr('width', size)
       .attr('height', size)
       .append('g')
@@ -197,44 +209,50 @@ export const ComposerSpinner: FC<{
     //   outerRadius,
     //   startAngle = (1 / 4) * Math.PI,
     //   endAngle = -(5 / 4) * Math.PI,
-    // }: Slice): ValueFn<SVGPathElement, d3.DefaultArcObject, string | null> =>
-    //   d3.arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle);
+    // }: Slice): ValueFn<SVGPathElement, DefaultArcObject, string | null> =>
+    //   arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle);
 
-    const trigger = arcs.map((arc) => {
-      const { color, duration } = arc;
-      const { innerRadius, outerRadius, startAngle = (1 / 4) * Math.PI, endAngle = -(5 / 4) * Math.PI } = arc;
+    const trigger = arcs.map(
+      ({
+        startAngle = (1 / 4) * Math.PI,
+        endAngle = -(5 / 4) * Math.PI,
+        innerRadius,
+        outerRadius,
+        color,
+        duration,
+      }) => {
+        const arcPath = svg
+          .append('path')
+          .attr(
+            'd',
+            arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle) as any,
+          )
+          .attr('fill', color);
+        const rotateArc = () => {
+          arcPath
+            .attr('opacity', 1)
+            .transition()
+            .duration(duration)
+            .attrTween('transform', (() => interpolateString('rotate(0)', 'rotate(360)')) as any)
+            .on('end', ((_: any, i: number, nodes: Node[]) => {
+              if (animateRef.current) {
+                rotateArc();
+              } else if (autoFade) {
+                fadeOut();
+                // d3.select(nodes[i])
+                //   .transition()
+                //   .duration(1000)
+                //   .attrTween('d', () => {
+                //     const interpolate = d3.interpolate(0, Math.PI);
+                //     return (t: number) => createArc(arc);
+                //   });
+              }
+            }) as any);
+        };
 
-      const arcPath = svg
-        .append('path')
-        .attr(
-          'd',
-          d3.arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle) as any,
-        )
-        .attr('fill', color);
-      const rotateArc = () => {
-        arcPath
-          .attr('opacity', 1)
-          .transition()
-          .duration(duration)
-          .attrTween('transform', (() => d3.interpolateString('rotate(0)', 'rotate(360)')) as any)
-          .on('end', ((_: any, i: number, nodes: Node[]) => {
-            if (animateRef.current) {
-              rotateArc();
-            } else if (autoFade) {
-              fadeOut();
-              // d3.select(nodes[i])
-              //   .transition()
-              //   .duration(1000)
-              //   .attrTween('d', () => {
-              //     const interpolate = d3.interpolate(0, Math.PI);
-              //     return (t: number) => createArc(arc);
-              //   });
-            }
-          }) as any);
-      };
-
-      return rotateArc;
-    });
+        return rotateArc;
+      },
+    );
 
     triggerRef.current = () => {
       count = trigger.length;
@@ -246,7 +264,7 @@ export const ComposerSpinner: FC<{
     }
 
     return () => {
-      d3.select(ref.current).selectChildren().remove();
+      select(ref.current).selectChildren().remove();
     };
   }, []);
 

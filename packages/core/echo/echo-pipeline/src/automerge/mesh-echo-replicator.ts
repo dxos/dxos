@@ -23,11 +23,17 @@ import { createIdFromSpaceKey } from '../common/space-id';
  * Used to replicate with other peers over the network.
  */
 export class MeshEchoReplicator implements EchoReplicator {
-  private readonly _connections = new Set<MeshReplicatorConnection>();
   /**
-   * Using automerge peerId as a key.
+   * We might have multiple connections open with a peer (one per space), but there'll be only one enabled
+   * connection at any given moment, because there's a single repo for all the spaces.
+   * When a connection closes (space was closed) it gets removed from the list and the next connection
+   * in the line gets enabled.
    */
-  private readonly _connectionsPerPeer = new Map<string, MeshReplicatorConnection>();
+  private readonly _connectionsPerPeer = new Map<string, MeshReplicatorConnection[]>();
+  /**
+   * A set of all connections (enabled and disabled).
+   */
+  private readonly _connections = new Set<MeshReplicatorConnection>();
 
   /**
    * spaceId -> deviceKey[]
@@ -41,12 +47,16 @@ export class MeshEchoReplicator implements EchoReplicator {
   }
 
   async disconnect() {
-    for (const connection of this._connectionsPerPeer.values()) {
-      this._context?.onConnectionClosed(connection);
+    for (const connection of this._connections) {
+      if (connection.isEnabled) {
+        this._context?.onConnectionClosed(connection);
+      }
     }
+
     for (const connection of this._connections) {
       await connection.close();
     }
+
     this._connections.clear();
     this._connectionsPerPeer.clear();
 
@@ -63,20 +73,42 @@ export class MeshEchoReplicator implements EchoReplicator {
         log('onRemoteConnected', { peerId: connection.peerId });
         invariant(this._context);
 
-        if (this._connectionsPerPeer.has(connection.peerId)) {
-          this._context.onConnectionAuthScopeChanged(connection);
+        const existingConnections = this._connectionsPerPeer.get(connection.peerId);
+        if (existingConnections?.length) {
+          const enabledConnection = existingConnections[0];
+          this._context.onConnectionAuthScopeChanged(enabledConnection);
+          existingConnections.push(connection);
         } else {
-          this._connectionsPerPeer.set(connection.peerId, connection);
+          this._connectionsPerPeer.set(connection.peerId, [connection]);
           this._context.onConnectionOpen(connection);
           connection.enable();
         }
       },
       onRemoteDisconnected: async () => {
         log('onRemoteDisconnected', { peerId: connection.peerId });
-        this._context?.onConnectionClosed(connection);
-        this._connectionsPerPeer.delete(connection.peerId);
-        connection.disable();
+
         this._connections.delete(connection);
+
+        const existingConnections = this._connectionsPerPeer.get(connection.peerId) ?? [];
+
+        const index = existingConnections.indexOf(connection);
+        if (index < 0) {
+          log.warn('disconnected connection not found', { peerId: connection.peerId });
+          return;
+        }
+
+        existingConnections.splice(index, 1);
+
+        if (connection.isEnabled) {
+          this._context?.onConnectionClosed(connection);
+          connection.disable();
+
+          // Promote the next connection to enabled
+          if (existingConnections.length > 0) {
+            this._context?.onConnectionOpen(existingConnections[0]);
+            existingConnections[0].enable();
+          }
+        }
       },
       shouldAdvertise: async (params: ShouldAdvertiseParams) => {
         log('shouldAdvertise', { peerId: connection.peerId, documentId: params.documentId });
@@ -88,10 +120,10 @@ export class MeshEchoReplicator implements EchoReplicator {
               documentId: params.documentId,
               peerId: connection.peerId,
             });
-            log('document not found locally for share policy check, accepting the remote document', {
+            log('document not found locally for share policy check', {
               peerId: connection.peerId,
               documentId: params.documentId,
-              remoteDocumentExists,
+              acceptDocument: remoteDocumentExists,
             });
             // If a document is not present locally return true if another peer claims to have it.
             // Simply returning true will add the peer to "generous peers list" for this document which will
@@ -153,7 +185,7 @@ export class MeshEchoReplicator implements EchoReplicator {
     const spaceId = await createIdFromSpaceKey(spaceKey);
     defaultMap(this._authorizedDevices, spaceId, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
     for (const connection of this._connections) {
-      if (connection.remoteDeviceKey && connection.remoteDeviceKey.equals(deviceKey)) {
+      if (connection.isEnabled && connection.remoteDeviceKey && connection.remoteDeviceKey.equals(deviceKey)) {
         if (this._connectionsPerPeer.has(connection.peerId)) {
           this._context?.onConnectionAuthScopeChanged(connection);
         }

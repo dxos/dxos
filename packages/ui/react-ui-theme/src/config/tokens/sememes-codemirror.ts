@@ -10,6 +10,10 @@ export const codeMirrorSememes = {
     light: ['neutral', '500/.1'],
     dark: ['neutral', '500/.1'],
   },
+  cmActiveLine: {
+    light: ['neutral', '200/.5'],
+    dark: ['neutral', '800/.5'],
+  },
   cmSeparator: {
     light: ['primary', 500],
     dark: ['primary', 500],
@@ -21,10 +25,6 @@ export const codeMirrorSememes = {
   cmSelection: {
     light: ['primary', 400],
     dark: ['primary', 600],
-  },
-  cmActiveLine: {
-    light: ['neutral', 200],
-    dark: ['neutral', 800],
   },
   cmHighlight: {
     light: ['neutral', 950],

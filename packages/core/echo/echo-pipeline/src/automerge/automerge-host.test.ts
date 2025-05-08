@@ -19,12 +19,12 @@ describe('AutomergeHost', () => {
   test('can create documents', async () => {
     const level = await createLevel();
     const host = await setupAutomergeHost({ level });
-    const handle = host.repo.create();
+    const handle = host.repo.create<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
     await host.repo.flush();
-    expect(handle.docSync().text).toEqual('Hello world');
+    expect(handle.docSync()!.text).toEqual('Hello world');
   });
 
   test('changes are preserved in storage', async () => {
@@ -41,9 +41,9 @@ describe('AutomergeHost', () => {
     await host.close();
 
     const host2 = await setupAutomergeHost({ level });
-    const handle2 = host2.repo.find(url);
+    const handle2 = host2.repo.find<any>(url);
     await handle2.whenReady();
-    expect(handle2.docSync().text).toEqual('Hello world');
+    expect(handle2.docSync()!.text).toEqual('Hello world');
     await host2.repo.flush();
   });
 
@@ -52,7 +52,7 @@ describe('AutomergeHost', () => {
 
     const host = await setupAutomergeHost({ level });
     const handle = host.createDoc({ text: 'Hello world' });
-    const expectedHeads = getHeads(handle.docSync());
+    const expectedHeads = getHeads(handle.docSync()!);
     await host.flush();
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
@@ -69,7 +69,7 @@ describe('AutomergeHost', () => {
 
     const host = await setupAutomergeHost({ level });
     const handles = range(2, () => host.createDoc({ text: 'Hello world' }));
-    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.docSync()));
+    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.docSync()!));
     await host.flush();
 
     const ids = handles.map((handle) => handle.documentId);

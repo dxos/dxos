@@ -38,7 +38,8 @@
         "{options.outputPath}"
       ]
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild",

@@ -1,46 +1,32 @@
 //
 // Copyright 2022 DXOS.org
 //
+import React from 'react';
 
+import { hues } from '@dxos/react-ui-theme';
 import '@dxos-theme';
+import { type ChromaticPalette, type MessageValence } from '@dxos/react-ui-types';
 
 import { Tag } from './Tag';
 import { withTheme } from '../../testing';
+
+const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as (ChromaticPalette | MessageValence)[];
 
 export default {
   title: 'ui/react-ui-core/Tag',
   component: Tag,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-  argTypes: {
-    palette: {
-      control: 'select',
-      options: [
-        'neutral',
-        'success',
-        'info',
-        'warning',
-        'error',
-        'red',
-        'orange',
-        'amber',
-        'yellow',
-        'lime',
-        'green',
-        'emerald',
-        'teal',
-        'cyan',
-        'sky',
-        'blue',
-        'indigo',
-        'violet',
-        'purple',
-        'fuchsia',
-        'pink',
-        'rose',
-      ],
-    },
-  },
-} as any;
+} as const;
 
-export const Default = { args: { children: 'Hello', palette: 'success' } };
+export const Default = {
+  render: () => (
+    <div role='grid' className='grid grid-cols-5 gap-2 max-is-screen-md'>
+      {palettes.map((palette) => (
+        <Tag key={palette} palette={palette}>
+          {palette}
+        </Tag>
+      ))}
+    </div>
+  ),
+};

@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { SpaceId } from '@dxos/keys';
@@ -278,7 +278,11 @@ const setup = async (kv = createTestLevel()) => {
   });
   await openAndClose(host);
 
-  const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
+  const dataService = new DataServiceImpl({
+    automergeHost: host,
+    spaceStateManager: new SpaceStateManager(),
+    updateIndexes: async () => {},
+  });
   return { kv, host, dataService };
 };
 

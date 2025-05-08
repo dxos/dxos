@@ -10,8 +10,9 @@ import {
   ACTION_TYPE,
   ACTION_GROUP_TYPE,
   isAction,
+  isActionLike,
 } from '@dxos/app-graph';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type FlattenedActions, type NavTreeItemGraphNode } from './types';
 
@@ -74,7 +75,7 @@ export const sortActions = (actions: Action[]): Action[] =>
       return 0;
     }
 
-    if (a.properties.disposition === 'toolbar') {
+    if (a.properties.disposition === 'list-item-primary') {
       return -1;
     }
 
@@ -94,7 +95,7 @@ export const getChildren = (
       const nextPath = [...path, node.id];
       return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
     })
-    .filter(nonNullable) as NavTreeItemGraphNode[];
+    .filter(isNonNullable) as NavTreeItemGraphNode[];
 };
 
 export const getActions = (graph: Graph, node: Node): FlattenedActions => {
@@ -125,4 +126,16 @@ export const expandChildren = (graph: Graph, node: Node) => {
 
 export const expandActions = (graph: Graph, node: Node) => {
   return Promise.all([graph.expand(node, 'outbound', ACTION_TYPE), graph.expand(node, 'outbound', ACTION_GROUP_TYPE)]);
+};
+
+export const l0ItemType = (item: Node<any>) => {
+  if (item.properties.disposition === 'collection') {
+    return 'collection';
+  } else if (isActionLike(item)) {
+    return 'action';
+  } else if (item.properties.disposition === 'navigation') {
+    return 'link';
+  } else {
+    return 'tab';
+  }
 };

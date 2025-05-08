@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
+import { IdentityDid } from '@dxos/keys';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
@@ -27,6 +28,7 @@ const noOpProps: IdentityPanelImplProps = {
   activeView: 'identity action chooser',
   createInvitationUrl: (code) => code,
   identity: {
+    did: IdentityDid.random(),
     identityKey: PublicKey.random(),
     profile: {
       displayName: faker.person.firstName(),
@@ -34,6 +36,7 @@ const noOpProps: IdentityPanelImplProps = {
   },
   devices: [],
   connectionState: ConnectionState.ONLINE,
+  onManageCredentials: async () => console.log('manage credentials'),
 };
 
 export default {

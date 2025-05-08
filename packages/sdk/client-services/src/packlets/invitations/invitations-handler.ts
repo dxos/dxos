@@ -3,7 +3,7 @@
 //
 
 import { type PushStream, scheduleTask, TimeoutError, type Trigger } from '@dxos/async';
-import { INVITATION_TIMEOUT } from '@dxos/client-protocol';
+import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, type SwarmNetworkManager, type SwarmConnection } from '@dxos/network-manager';
-import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
+import { InvalidInvitationError, InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
 import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -188,8 +188,9 @@ export class InvitationsHandler {
       return extension;
     };
 
-    if (invitation.lifetime && invitation.created) {
-      if (invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()) {
+    const expiresOn = getExpirationTime(invitation);
+    if (expiresOn) {
+      if (expiresOn.getTime() < Date.now()) {
         log.warn('invitation has already expired');
         guardedState.set(null, Invitation.State.EXPIRED);
         void ctx.dispose().catch((err) => log.catch(err));
@@ -204,7 +205,7 @@ export class InvitationsHandler {
           metrics.increment('dxos.invitation.expired');
           await ctx.dispose();
         },
-        invitation.created.getTime() + invitation.lifetime * 1000 - Date.now(),
+        expiresOn.getTime() - Date.now(),
       );
     }
 
@@ -397,7 +398,7 @@ export class InvitationsHandler {
     edgeInvitationHandler.handle(ctx, guardedState, protocol, deviceProfile);
 
     scheduleTask(ctx, async () => {
-      const error = protocol.checkInvitation(invitation);
+      const error = checkInvitation(protocol, invitation);
       if (error) {
         stream.error(error);
         await ctx.dispose();
@@ -498,6 +499,14 @@ export class InvitationsHandler {
     }
   }
 }
+
+const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invitation>) => {
+  const expiresOn = getExpirationTime(invitation);
+  if (expiresOn && expiresOn.getTime() < Date.now()) {
+    return new InvalidInvitationError('Invitation already expired.');
+  }
+  return protocol.checkInvitation(invitation);
+};
 
 export const createAdmissionKeypair = (): AdmissionKeypair => {
   const keypair = createKeyPair();

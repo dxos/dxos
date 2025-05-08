@@ -1,0 +1,43 @@
+{
+  "name": "@dxos/echo",
+  "version": "0.8.1",
+  "description": "ECHO API",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
+    "effect": "3.13.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}

@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { descriptionText, focusRing, modalSurface, surfaceElevation } from '../fragments';
+import { descriptionText, focusRing, modalSurface, surfaceShadow } from '../fragments';
 
 export type ToastStyleProps = Partial<{
   srOnly: boolean;
@@ -13,7 +13,8 @@ export type ToastStyleProps = Partial<{
 
 export const toastViewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'z-[70] fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
+    // TODO(burdon): block-end should take into account status bar.
+    'z-40 fixed block-end-[calc(env(safe-area-inset-bottom)+3rem)] inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)] w-auto md:inline-end-[calc(env(safe-area-inset-right)+1rem)] md:inline-start-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
     ...etc,
   );
 
@@ -21,7 +22,7 @@ export const toastRoot: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
     'rounded-lg flex p-2 gap-2',
     modalSurface,
-    surfaceElevation({ elevation: 'chrome' }),
+    surfaceShadow({ elevation: 'toast' }),
     'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
     'radix-state-closed:animate-toast-hide',
     'radix-swipe-end:animate-toast-swipe-out',
@@ -38,7 +39,7 @@ export const toastActions: ComponentFunction<ToastStyleProps> = (_props, ...etc)
   mx('shrink-0 flex flex-col gap-1 justify-center', ...etc);
 
 export const toastTitle: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
-  mx('shrink-0 text-md font-medium', srOnly && 'sr-only', ...etc);
+  mx('shrink-0 font-medium', srOnly && 'sr-only', ...etc);
 
 export const toastDescription: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
   mx(descriptionText, 'shrink-0', srOnly && 'sr-only', ...etc);

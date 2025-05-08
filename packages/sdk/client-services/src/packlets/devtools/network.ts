@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type SignalManager } from '@dxos/messaging';

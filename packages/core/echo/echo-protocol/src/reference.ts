@@ -2,61 +2,111 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DXN, LOCAL_SPACE_TAG, PublicKey } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, type PublicKey } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
 
-import type { LegacyEncodedReferenceObject } from './legacy';
-import { createIdFromSpaceKey } from './space-id';
-
 /**
- * Runtime representation of object reference.
+ * Runtime representation of an reference in ECHO.
+ * Implemented as a DXN, but we might extend it to other URIs in the future.
  */
 export class Reference {
   /**
    * Protocol references to runtime registered types.
+   * @deprecated
    */
   static TYPE_PROTOCOL = 'protobuf';
+
+  static fromDXN(dxn: DXN): Reference {
+    switch (dxn.kind) {
+      case DXN.kind.TYPE:
+        return new Reference(dxn.parts[0], Reference.TYPE_PROTOCOL, 'dxos.org', dxn);
+      case DXN.kind.ECHO:
+        if (dxn.parts[0] === LOCAL_SPACE_TAG) {
+          return new Reference(dxn.parts[1], undefined, undefined, dxn);
+        } else {
+          return new Reference(dxn.parts[1], undefined, dxn.parts[0], dxn);
+        }
+      default:
+        return new Reference(dxn.parts[0], undefined, dxn.parts[0], dxn);
+    }
+  }
 
   static fromValue(value: ReferenceProto): Reference {
     return new Reference(value.objectId, value.protocol, value.host);
   }
 
   /**
+   * Reference an object in the local space.
+   */
+  static localObjectReference(objectId: ObjectId): Reference {
+    return new Reference(objectId);
+  }
+
+  /**
    * @deprecated
    */
-  // TODO(burdon): Document/remove?
+  // TODO(dmaretskyi): Remove.
   static fromLegacyTypename(type: string): Reference {
     return new Reference(type, Reference.TYPE_PROTOCOL, 'dxos.org');
   }
 
-  static fromDXN(dxn: DXN): Reference {
-    switch (dxn.kind) {
-      case DXN.kind.TYPE:
-        return Reference.fromLegacyTypename(dxn.parts[0]);
-      case DXN.kind.ECHO:
-        if (dxn.parts[0] === LOCAL_SPACE_TAG) {
-          return new Reference(dxn.parts[1]);
-        } else {
-          return new Reference(dxn.parts[1], undefined, dxn.parts[0]);
-        }
-      default:
-        throw new Error(`Unsupported DXN kind: ${dxn.kind}`);
-    }
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): Remove
+  static fromObjectIdAndSpaceKey(objectId: ObjectId, spaceKey: PublicKey): Reference {
+    // TODO(dmaretskyi): FIX ME! This should be a space ID not a space key.
+    return new Reference(objectId, undefined, spaceKey.toHex());
   }
 
   // prettier-ignore
-  constructor(
-    public readonly objectId: ObjectId,
-    public readonly protocol?: string,
-    public readonly host?: string
+  private constructor(
+    // TODO(dmaretskyi): Remove and just leave DXN.
+    private readonly _objectId: ObjectId,
+    private readonly _protocol?: string,
+    private readonly _host?: string,
+    private readonly _dxn?: DXN,
   ) {}
+
+  get dxn(): DXN | undefined {
+    return this._dxn;
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): Remove.
+  get objectId(): ObjectId {
+    return this._objectId;
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): Remove.
+  get protocol(): string | undefined {
+    return this._protocol;
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): Remove.
+  get host(): string | undefined {
+    return this._host;
+  }
 
   encode(): ReferenceProto {
     return { objectId: this.objectId, host: this.host, protocol: this.protocol };
   }
 
+  // TODO(dmaretskyi): Remove in favor of `reference.dxn`.
   toDXN(): DXN {
+    if (this._dxn) {
+      return this._dxn;
+    }
+
     if (this.protocol === Reference.TYPE_PROTOCOL) {
       return new DXN(DXN.kind.TYPE, [this.objectId]);
     } else {
@@ -85,20 +135,17 @@ export const encodeReference = (reference: Reference): EncodedReference => ({
   '/': reference.toDXN().toString(),
 });
 
-export const decodeReference = (value: any) => Reference.fromDXN(DXN.parse(value['/']));
+export const decodeReference = (value: any) => {
+  if (
+    value.length % 2 === 0 &&
+    value.slice(0, value.length / 2) === value.slice(value.length / 2) &&
+    value.includes('dxn:echo')
+  ) {
+    throw new Error('Automerge bug detected!');
+  }
+
+  return Reference.fromDXN(DXN.parse(value['/']));
+};
 
 export const isEncodedReference = (value: any): value is EncodedReference =>
   typeof value === 'object' && value !== null && Object.keys(value).length === 1 && typeof value['/'] === 'string';
-
-export const convertLegacyReference = async (reference: LegacyEncodedReferenceObject): Promise<EncodedReference> => {
-  if (reference.protocol === Reference.TYPE_PROTOCOL) {
-    return encodeReference(Reference.fromLegacyTypename(reference.itemId));
-  }
-  if (!reference.itemId) {
-    throw new Error('Invalid reference');
-  }
-
-  const spaceKey = reference.host;
-  const spaceId = spaceKey != null ? await createIdFromSpaceKey(PublicKey.fromHex(spaceKey)) : undefined;
-  return encodeReference(new Reference(reference.itemId, reference.protocol ?? undefined, spaceId));
-};

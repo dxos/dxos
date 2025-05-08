@@ -6,7 +6,7 @@ import os from 'node:os';
 
 import { scheduleTaskInterval } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { AgentStatus, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';

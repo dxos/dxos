@@ -19,9 +19,11 @@
     "Expando",
     "Faas",
     "Hypergraph",
+    "keymap",
     "mykola",
     "protobuf",
-    "testutils"
+    "testutils",
+    "wittjosiah"
   ],
   "files.associations": {
     "nx.json": "jsonc",
@@ -51,12 +53,14 @@
   "debug.javascript.terminalOptions": {},
   "circleci.persistedProjectSelection": [],
   "vitest.disableWorkspaceWarning": true,
-  "typescript.tsserver.maxTsServerMemory": 8192,
   "typescript.preferences.autoImportSpecifierExcludeRegexes": [
     "^.*/src/.*$",
     "node:console",
     "console",
     "effect/Effect",
     "effect/Console"
-  ]
+  ],
+  "circleci.notifications.mine": true,
+  "search.useParentIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": false
 }

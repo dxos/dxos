@@ -76,7 +76,7 @@ export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
             )}
           </Tooltip.Trigger>
           <Tooltip.Portal>
-            <Tooltip.Content classNames='z-10'>
+            <Tooltip.Content>
               {t('persisted locally message')}
               <Tooltip.Arrow />
             </Tooltip.Content>

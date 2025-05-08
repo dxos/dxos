@@ -9,6 +9,7 @@ export default [
     'en-US': {
       [translationKey]: {
         'fields label': 'Fields',
+        'hidden fields label': 'Hidden Fields',
 
         // TODO(burdon): Standardize field/property.
         'button add property': 'Add property',
@@ -36,12 +37,13 @@ export default [
         'format hostname': 'Hostname',
         'format integer': 'Integer',
         'format json': 'JSON',
-        'format latlng': 'LatLng',
+        'format latlng': 'Geopoint',
         'format markdown': 'Markdown',
         'format percent': 'Percent',
         'format ref': 'Reference',
         'format regex': 'RegExp',
         'format string': 'String',
+        'format single-select': 'Select',
         'format text': 'Long text',
         'format time': 'Time',
         'format timestamp': 'Timestamp',
@@ -53,6 +55,13 @@ export default [
         // Placeholders
         'placeholder latitude': 'Latitude',
         'placeholder longitude': 'Longitude',
+
+        // SelectOptionsInput
+        'select option label': 'Label',
+        'select option label placeholder': 'Option label',
+        'select option color': 'Color',
+        'select option delete': 'Delete',
+        'select option add': 'Add option',
       },
     },
   },

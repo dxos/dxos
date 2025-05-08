@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { IdentityDid, PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -17,7 +17,7 @@ import translations from '../translations';
 const nViewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, () => ({
     role: HaloSpaceMember.Role.ADMIN,
-    identity: { identityKey: PublicKey.random() },
+    identity: { did: IdentityDid.random(), identityKey: PublicKey.random() },
     presence: SpaceMember.PresenceState.ONLINE,
     lastSeen: Date.now(),
     currentlyAttended,
@@ -61,30 +61,38 @@ export const Full = (props: MemberPresenceProps) => {
   );
 };
 
-export const Small = (props: MemberPresenceProps) => {
-  const p: MemberPresenceProps = {
-    ...props,
-  };
-
+export const Small = () => {
   return (
     <div className='p-4'>
-      <div className='p-3'>
-        <SmallPresence count={0} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={0} />
+        <SmallPresence count={0} attended />
+        <SmallPresence count={0} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={1} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={1} />
+        <SmallPresence count={1} attended />
+        <SmallPresence count={1} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={2} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={2} />
+        <SmallPresence count={2} attended />
+        <SmallPresence count={2} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={3} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={3} />
+        <SmallPresence count={3} attended />
+        <SmallPresence count={3} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={4} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={4} />
+        <SmallPresence count={4} attended />
+        <SmallPresence count={4} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={5} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={5} />
+        <SmallPresence count={5} attended />
+        <SmallPresence count={5} containsAttended />
       </div>
     </div>
   );

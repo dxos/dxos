@@ -59,12 +59,12 @@ export type ForeignKey = {
    * Name of the foreign database/system.
    * E.g., `github.com`.
    */
-  source?: string;
+  readonly source: string;
 
   /**
    * Id within the foreign database.
    */
-  id?: string;
+  readonly id: string;
 };
 
 /**
@@ -72,6 +72,11 @@ export type ForeignKey = {
  * (Is automerge specific.)
  */
 export type ObjectSystem = {
+  /**
+   * Entity kind.
+   */
+  kind?: 'object' | 'relation';
+
   /**
    * Object reference ('protobuf' protocol) type.
    */
@@ -81,4 +86,14 @@ export type ObjectSystem = {
    * Deletion marker.
    */
   deleted?: boolean;
+
+  /**
+   * Only for relations.
+   */
+  source?: EncodedReference;
+
+  /**
+   * Only for relations.
+   */
+  target?: EncodedReference;
 };

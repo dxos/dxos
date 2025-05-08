@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as pb from 'protobufjs';
+import pb from 'protobufjs';
 import * as ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';

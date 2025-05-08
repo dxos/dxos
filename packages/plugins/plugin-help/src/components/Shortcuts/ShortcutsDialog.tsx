@@ -9,6 +9,8 @@ import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { ShortcutsList } from './ShortcutsList';
 import { HELP_PLUGIN } from '../../meta';
 
+export const SHORTCUTS_DIALOG = `${HELP_PLUGIN}/ShortcutsDialog`;
+
 export const ShortcutsDialogContent = () => {
   const { t } = useTranslation(HELP_PLUGIN);
 
@@ -19,7 +21,7 @@ export const ShortcutsDialogContent = () => {
 
         <Dialog.Close asChild>
           <Button density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' size={3} />
+            <Icon icon='ph--x--bold' size={3} />
           </Button>
         </Dialog.Close>
       </div>

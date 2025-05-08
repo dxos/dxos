@@ -59,7 +59,7 @@ export const Default = {
   argTypes: {
     blockAlign: {
       type: 'select',
-      options: ['center', 'start'],
+      options: ['center', 'start', 'end'],
     },
   },
 };

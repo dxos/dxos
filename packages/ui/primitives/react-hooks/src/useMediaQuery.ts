@@ -29,6 +29,7 @@ const breakpointMediaQueries: Record<string, string> = {
  * @see Docs https://chakra-ui.com/docs/hooks/use-media-query
  */
 export const useMediaQuery = (query: string | string[], options: UseMediaQueryOptions = {}): boolean[] => {
+  // TODO(wittjosiah): Why is the default here true?
   const { ssr = true, fallback } = options;
 
   const queries = (Array.isArray(query) ? query : [query]).map((query) =>

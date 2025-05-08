@@ -21,7 +21,8 @@
         "{projectRoot}/dist/lib"
       ]
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild",

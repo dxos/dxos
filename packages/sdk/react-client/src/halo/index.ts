@@ -14,6 +14,7 @@ export {
 } from '@dxos/client/halo';
 
 export * from './useContacts';
+export * from './useCredentials';
 export * from './useDevices';
 export * from './useHaloInvitations';
 export * from './useIdentity';

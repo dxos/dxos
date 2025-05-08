@@ -4,26 +4,25 @@
 
 import { expect, test } from '@playwright/test';
 
-import { setupPage } from '@dxos/test-utils/playwright';
+import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { TableManager } from './TableManager';
 
-const storyId = 'ui-react-ui-table-table';
-const storyUrl = `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
+const storyUrl = storybookUrl('ui-react-ui-table-table--default');
 
 // NOTE(ZaymonFC): This test suite relies on the faker seed being set to 0 in the story.
 test.describe('Table', () => {
-  test('Loads', async ({ browser }) => {
+  test('Loads', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
-    // (name, email, salary, manager) * 10 rows.
     await table.grid.ready();
-    await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(40);
     await page.close();
   });
 
-  test('sort', async ({ browser }) => {
+  test('sort', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -38,7 +37,29 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test('delete row', async ({ browser }) => {
+  test('selection', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+    // Select All
+    await table.toggleSelectAll();
+    await expect(table.selection(0)).toBeChecked();
+    await expect(table.selection(1)).toBeChecked();
+    await expect(table.selection(2)).toBeChecked();
+
+    // Deselect All
+    await table.toggleSelectAll();
+    await expect(table.selection(0)).not.toBeChecked();
+    await expect(table.selection(1)).not.toBeChecked();
+    await expect(table.selection(2)).not.toBeChecked();
+
+    await page.close();
+  });
+
+  test('delete row', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -48,7 +69,8 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test('delete row--select all', async ({ browser }) => {
+  test('delete row--select all', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -64,11 +86,15 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test('delete column', async ({ browser }) => {
+  test('delete column', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
+    await table.deleteColumn(0);
+    await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(40);
+
     await table.deleteColumn(0);
     await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(30);
 
@@ -85,8 +111,10 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  // Rest of add column test remains the same as it's a more complex flow
-  test('add column', async ({ browser }) => {
+  // Rest of add column test remains the same as it's a more complex flow.
+  // TODO(ZaymonFC): Restore this after fixing format selection.
+  test('add column', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -95,11 +123,63 @@ test.describe('Table', () => {
 
     await table.addColumn({ label: newColumnLabel, format: 'number' });
 
-    // Delete first two columns to get the new column into view
-    await table.deleteColumn(0);
-    await table.deleteColumn(0);
-
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
+    await page.close();
+  });
+
+  test('reference > reference / create new object', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+
+    // Reference existing object.
+    // Scroll over to the manager column.
+    await table.grid.panByWheel(10000, 0);
+
+    await table.grid.cell(4, 0, 'grid').click();
+    await page.keyboard.press('A');
+    await page.keyboard.press('N');
+    await page.getByRole('option', { name: 'Anita Mayer' }).click();
+
+    // Assert that the value is shown in the cell.
+    await expect(page.getByRole('gridcell', { name: 'Anita Mayer' }).first()).toBeVisible();
+
+    // Create new object.
+    await table.grid.cell(4, 1, 'grid').click();
+    await page.keyboard.type('t');
+    await page.keyboard.type('e');
+    await page.keyboard.type('s');
+    await page.keyboard.type('t');
+    await page.getByText('Create new object', { exact: false }).click();
+    await page.getByTestId('save-button').click();
+
+    // Scroll to the left.
+    await page.getByRole('gridcell', { name: 'test' }).first().click();
+
+    await page.close();
+  });
+
+  test('test toggles', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+
+    await page.getByTestId('table-switch').first().click();
+    await page.getByTestId('table-switch').nth(7).click();
+
+    // Test that checks are durable in the data model by sorting.
+    await table.sortColumn(3, 'descending');
+
+    // Assert the first two switch checkboxes are checked.
+    await expect(page.getByTestId('table-switch').first()).toBeChecked();
+    await expect(page.getByTestId('table-switch').nth(1)).toBeChecked();
+    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Anita Mayer');
+    await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Uwe Øvergård');
+
     await page.close();
   });
 });

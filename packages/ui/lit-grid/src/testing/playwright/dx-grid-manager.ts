@@ -37,6 +37,10 @@ export class DxGridManager {
     );
   }
 
+  mode() {
+    return this.grid.locator('.dx-grid').getAttribute('data-grid-mode');
+  }
+
   panByWheel(deltaX: number, deltaY: number) {
     return this.grid.locator('.dx-grid [data-dx-grid-plane="grid"]').dispatchEvent('wheel', { deltaX, deltaY });
   }

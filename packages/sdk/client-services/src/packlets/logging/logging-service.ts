@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { PublicKey } from '@dxos/keys';
 import {
   type LogLevel,

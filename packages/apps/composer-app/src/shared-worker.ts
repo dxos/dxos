@@ -11,12 +11,14 @@ onconnect = async (event) => {
   const { onconnect, getWorkerServiceHost } = await import('@dxos/client/worker');
   const { initializeAppObservability } = await import('@dxos/observability');
   const { setupConfig } = await import('./config');
-  const { appKey } = await import('./constants');
+  const { APP_KEY } = await import('./constants');
+
   // Don't block on observability setup.
   void setupConfig().then(async (config) => {
-    const observability = await initializeAppObservability({ namespace: appKey, config });
+    const observability = await initializeAppObservability({ namespace: APP_KEY, config });
     const host = await getWorkerServiceHost();
     await observability.setIdentityTags(host.services);
   });
+
   await onconnect(event);
 };

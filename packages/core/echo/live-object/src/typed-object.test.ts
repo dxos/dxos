@@ -1,0 +1,99 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { Schema as S } from 'effect';
+import { describe, expect, test } from 'vitest';
+
+import { getSchema, TypedObject } from '@dxos/echo-schema';
+
+import { live } from './object';
+
+class Organization extends TypedObject({
+  typename: 'example.com/type/Organization',
+  version: '0.1.0',
+})({
+  name: S.String,
+}) {}
+
+class Contact extends TypedObject({
+  typename: 'example.com/type/Contact',
+  version: '0.1.0',
+})(
+  {
+    name: S.String,
+  },
+  {
+    partial: true,
+    record: true,
+  },
+) {}
+
+const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
+
+describe('EchoObject class DSL', () => {
+  test('static isInstance check', async () => {
+    const obj = live(Organization, TEST_ORG);
+    expect(obj instanceof Organization).to.be.true;
+  });
+
+  test('can get object schema', async () => {
+    const obj = live(Organization, TEST_ORG);
+    expect(getSchema(obj)).to.deep.eq(Organization);
+  });
+
+  describe('class options', () => {
+    test('can assign undefined to partial fields', async () => {
+      const person = live(Contact, { name: 'John' });
+      person.name = undefined;
+      person.recordField = 'hello';
+      expect(person.name).to.be.undefined;
+      expect(person.recordField).to.eq('hello');
+    });
+  });
+
+  test('record', () => {
+    const schema = S.mutable(
+      S.Struct({
+        meta: S.optional(S.mutable(S.Any)),
+        // NOTE: S.Record only supports shallow values.
+        // https://www.npmjs.com/package/@effect/schema#mutable-records
+        // meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
+        // meta: S.optional(S.mutable(S.object)),
+      }),
+    );
+
+    {
+      const object = live(schema, {});
+      (object.meta ??= {}).test = 100;
+      expect(object.meta.test).to.eq(100);
+    }
+
+    {
+      const object = live(schema, {});
+      object.meta = { test: { value: 300 } };
+      expect(object.meta.test.value).to.eq(300);
+    }
+
+    {
+      type Test1 = S.Schema.Type<typeof schema>;
+
+      const object: Test1 = {};
+      (object.meta ??= {}).test = 100;
+      expect(object.meta.test).to.eq(100);
+    }
+
+    {
+      class Test2 extends TypedObject({
+        typename: 'dxos.org/type/FunctionTrigger',
+        version: '0.1.0',
+      })({
+        meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
+      }) {}
+
+      const object = live(Test2, {});
+      (object.meta ??= {}).test = 100;
+      expect(object.meta.test).to.eq(100);
+    }
+  });
+});

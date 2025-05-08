@@ -1,17 +1,16 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import React, { type FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { type FC, useMemo } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { AnchoredOverflow } from '@dxos/react-ui';
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { Bitbar } from '../../../components';
 import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks';
+import { createTextBitbar } from '../../../util';
 
 type FeedInfo = {
   feedKey: PublicKey;
@@ -19,19 +18,12 @@ type FeedInfo = {
   maxLength: number;
 };
 
-const { helper, builder } = createColumnBuilder<FeedInfo>();
-const columns: TableColumnDef<FeedInfo, any>[] = [
-  helper.accessor('feedKey', builder.key({ tooltip: true })),
-  helper.accessor('downloaded', {
-    cell: (cell) => (
-      <Bitbar value={cell.getValue()} length={cell.row.original.maxLength} size={6} margin={1} height={8} />
-    ),
-  }),
-];
+export type FeedTableProps = {
+  onSelect?: (feed: FeedInfo | undefined) => void;
+};
 
-export const FeedTable: FC = () => {
+export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
   const { space } = useDevtoolsState();
-  const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
 
   // TODO(burdon): Constant updates.
@@ -43,19 +35,32 @@ export const FeedTable: FC = () => {
   const devtoolsHost = useDevtools();
   const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [feedKeys]);
   const maxLength = feeds.reduce((max, feed) => (feed?.length > max ? feed.length : max), 0);
-  const updatedFeeds = feeds.map((feed) => ({ ...feed, maxLength }));
 
-  const handleSelect = (selected: FeedInfo | undefined) => {
-    setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
-    navigate('/echo/feeds');
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'feedKey', format: FormatEnum.DID },
+      { name: 'progress', format: FormatEnum.String, size: 600 },
+    ],
+    [],
+  );
+
+  const rows = useMemo(() => {
+    return feeds.map((feed) => ({
+      id: feed.feedKey.toString(),
+      feedKey: feed.feedKey.toString(),
+      progress: createTextBitbar(feed.downloaded, maxLength),
+      _original: { ...feed, maxLength },
+    }));
+  }, [feeds, maxLength]);
+
+  const handleRowClick = (row: any) => {
+    if (row?._original !== undefined) {
+      setContext((ctx) => ({ ...ctx, feedKey: row._original?.feedKey }));
+      onSelect?.(row._original);
+    }
   };
 
-  return (
-    <Table.Root>
-      <Table.Viewport classNames='overflow-anchored'>
-        <Table.Main<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
-        <AnchoredOverflow.Anchor />
-      </Table.Viewport>
-    </Table.Root>
-  );
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
+  return <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />;
 };

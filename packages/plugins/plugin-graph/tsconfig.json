@@ -3,11 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
     "types": [
       "node"
     ]
@@ -20,5 +15,24 @@
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/react-client"
+    }
+  ]
 }

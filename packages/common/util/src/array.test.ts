@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { diff, intersection, distinctBy } from './array';
+import { diff, intersection, distinctBy, partition } from './array';
 
 describe('diff', () => {
   test('returns the difference between two sets', () => {
@@ -94,5 +94,87 @@ describe('distinctBy', () => {
       const distinct = distinctBy(array, (a) => a);
       expect(distinct).to.deep.eq([1, 2, null, undefined, 3]);
     }
+  });
+});
+
+describe('partition', () => {
+  test('should handle empty arrays', () => {
+    const input: number[] = [];
+    const isPositive = (n: number): n is number => n > 0;
+
+    const [positive, negative] = partition(input, isPositive);
+
+    expect(positive).toEqual([]);
+    expect(negative).toEqual([]);
+  });
+
+  test('should partition numbers by sign', () => {
+    const input = [-2, -1, 0, 1, 2];
+    const isPositive = (n: number): n is number => n > 0;
+
+    const [positive, negative] = partition(input, isPositive);
+
+    expect(positive).toEqual([1, 2]);
+    expect(negative).toEqual([-2, -1, 0]);
+  });
+
+  test('should maintain the original order within partitions', () => {
+    const input = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3];
+    const isEven = (n: number): n is number => n % 2 === 0;
+
+    const [evens, odds] = partition(input, isEven);
+
+    expect(evens).toEqual([4, 2, 6]);
+    expect(odds).toEqual([3, 1, 1, 5, 9, 5, 3]);
+  });
+
+  test('should handle nullable types', () => {
+    const input = ['hello', null, 'world', undefined, ''];
+    const isNonNullable = <T>(value: T | null | undefined): value is T => value != null;
+
+    const [nonNull, nullable] = partition(input, isNonNullable);
+
+    expect(nonNull).toEqual(['hello', 'world', '']);
+    expect(nullable).toEqual([null, undefined]);
+  });
+
+  test('should work with complex type guards', () => {
+    interface Success<T> {
+      status: 'success';
+      data: T;
+    }
+    interface Error {
+      status: 'error';
+      message: string;
+    }
+    type Result<T> = Success<T> | Error;
+
+    const results: Result<number>[] = [
+      { status: 'success', data: 42 },
+      { status: 'error', message: 'Invalid' },
+      { status: 'success', data: 123 },
+    ];
+
+    const isSuccess = <T>(result: Result<T>): result is Success<T> => result.status === 'success';
+
+    const [successes, errors] = partition(results, isSuccess);
+
+    expect(successes).toHaveLength(2);
+    expect(errors).toHaveLength(1);
+    expect(successes.every((s) => s.status === 'success')).toBe(true);
+    expect(errors.every((e) => e.status === 'error')).toBe(true);
+  });
+
+  test('should handle instance checks', () => {
+    const input = [new Date(), 'string', new Date(), 42];
+    const isDate = (value: unknown): value is Date => value instanceof Date;
+
+    const [dates, nonDates] = partition(input, isDate);
+
+    expect(dates).toHaveLength(2);
+    expect(nonDates).toHaveLength(2);
+    expect(dates.every((d) => d instanceof Date)).toBe(true);
+    expect(nonDates).toContain('string');
+    expect(nonDates).toContain(42);
   });
 });

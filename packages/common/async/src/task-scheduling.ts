@@ -9,8 +9,6 @@ import { type MaybePromise } from '@dxos/util';
 import { trackResource } from './track-leaks';
 import { Trigger } from './trigger';
 
-export type ClearCallback = () => void;
-
 /**
  * A task that can be scheduled to run in the next event loop iteration.
  * Could be triggered multiple times, but only runs once.
@@ -27,6 +25,10 @@ export class DeferredTask {
     private readonly _ctx: Context,
     private readonly _callback: () => Promise<void>,
   ) {}
+
+  get scheduled() {
+    return this._scheduled;
+  }
 
   /**
    * Schedule the task to run asynchronously.

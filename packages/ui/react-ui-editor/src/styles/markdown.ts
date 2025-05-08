@@ -13,7 +13,7 @@ const headings: Record<HeadingLevel, string> = {
   3: 'text-2xl',
   4: 'text-xl',
   5: 'text-lg',
-  6: 'text-md',
+  6: '', // TODO(burdon): Should be text-base, but that's a color in our system.
 };
 
 export const theme = {

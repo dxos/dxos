@@ -50,12 +50,12 @@ class NodeRtcConnectionFactory implements RtcConnectionFactory {
     });
   }
 
-  async createConnection(config: RTCConfiguration) {
+  async createConnection(config: RTCConfiguration): Promise<RTCPeerConnection> {
     return NodeRtcConnectionFactory._cleanupMutex.executeSynchronized(async () => {
       const { RTCPeerConnection } = await import('#node-datachannel/polyfill');
       NodeRtcConnectionFactory._createdConnections++;
       return new RTCPeerConnection(config);
-    });
+    }) as any;
   }
 
   async initConnection(connection: RTCPeerConnection, info: ConnectionInfo): Promise<void> {

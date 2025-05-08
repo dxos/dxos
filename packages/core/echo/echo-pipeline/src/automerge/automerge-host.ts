@@ -23,6 +23,7 @@ import {
   type PeerId,
   type StorageAdapterInterface,
   type StorageKey,
+  interpretAsDocumentId,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
@@ -34,6 +35,7 @@ import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
+import { bufferToArray } from '@dxos/util';
 
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
@@ -42,11 +44,21 @@ import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 
+export type PeerIdProvider = () => string | undefined;
+
+export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | undefined;
+
 export type AutomergeHostParams = {
   db: LevelDB;
 
   indexMetadataStore: IndexMetadataStore;
   dataMonitor?: EchoDataMonitor;
+
+  /**
+   * Used for creating stable ids. A random key is generated on open, if no value is provided.
+   */
+  peerIdProvider?: PeerIdProvider;
+  getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 };
 
 export type LoadDocOptions = {
@@ -82,9 +94,18 @@ export class AutomergeHost extends Resource {
   @trace.info()
   private _peerId!: PeerId;
 
+  private readonly _peerIdProvider?: PeerIdProvider;
+  private readonly _getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
+
   public readonly collectionStateUpdated = new Event<{ collectionId: CollectionId }>();
 
-  constructor({ db, indexMetadataStore, dataMonitor }: AutomergeHostParams) {
+  constructor({
+    db,
+    indexMetadataStore,
+    dataMonitor,
+    peerIdProvider,
+    getSpaceKeyByRootDocumentId,
+  }: AutomergeHostParams) {
     super();
     this._db = db;
     this._storage = new LevelDBStorageAdapter({
@@ -104,11 +125,12 @@ export class AutomergeHost extends Resource {
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
+    this._peerIdProvider = peerIdProvider;
+    this._getSpaceKeyByRootDocumentId = getSpaceKeyByRootDocumentId;
   }
 
   protected override async _open() {
-    // TODO(burdon): Should this be stable?
-    this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
+    this._peerId = `host-${this._peerIdProvider?.() ?? PublicKey.random().toHex()}` as PeerId;
 
     await this._storage.open?.();
 
@@ -123,14 +145,28 @@ export class AutomergeHost extends Resource {
       ],
     });
 
-    Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(this._ctx, ((e: PeerCandidatePayload) =>
-      this._onPeerConnected(e.peerId)) as any);
-    Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(this._ctx, ((e: PeerDisconnectedPayload) =>
-      this._onPeerDisconnected(e.peerId)) as any);
+    let updatingAuthScope = false;
+    Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
+      this._ctx,
+      ((e: PeerCandidatePayload) => !updatingAuthScope && this._onPeerConnected(e.peerId)) as any,
+    );
+    Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(
+      this._ctx,
+      ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(e.peerId)) as any,
+    );
 
-    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
+    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId, newDocsAppeared }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
       this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
+      // We use collection lookups during share policy check, so we might need to update share policy for the new doc
+      if (newDocsAppeared) {
+        updatingAuthScope = true;
+        try {
+          this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
+        } finally {
+          updatingAuthScope = false;
+        }
+      }
     });
 
     await this._echoNetworkAdapter.open();
@@ -194,17 +230,33 @@ export class AutomergeHost extends Resource {
     return handle;
   }
 
+  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
+    const documentId = interpretAsDocumentId(id);
+
+    const chunks = await this._storage.loadRange([documentId]);
+    return bufferToArray(Buffer.concat(chunks.map((c) => c.data!)));
+  }
+
   /**
    * Create new persisted document.
    */
-  createDoc<T>(initialValue?: T | Doc<T>, opts?: CreateDocOptions): DocHandle<T> {
+  createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): DocHandle<T> {
     if (opts?.preserveHistory) {
+      if (initialValue instanceof Uint8Array) {
+        return this._repo.import(initialValue);
+      }
+
       if (!isAutomerge(initialValue)) {
         throw new TypeError('Initial value must be an Automerge document');
       }
+
       // TODO(dmaretskyi): There's a more efficient way.
       return this._repo.import(save(initialValue as Doc<T>));
     } else {
+      if (initialValue instanceof Uint8Array) {
+        throw new Error('Cannot create document from Uint8Array without preserving history');
+      }
+
       return this._repo.create(initialValue);
     }
   }
@@ -227,7 +279,7 @@ export class AutomergeHost extends Resource {
     if (headsToWait.length > 0) {
       await Promise.all(
         headsToWait.map(async (entry, index) => {
-          const handle = await this.loadDoc(Context.default(), entry.documentId as DocumentId);
+          const handle = await this.loadDoc<SpaceDoc>(Context.default(), entry.documentId as DocumentId);
           await waitForHeads(handle, entry.heads!);
         }),
       );
@@ -342,16 +394,23 @@ export class AutomergeHost extends Resource {
 
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
     const doc = this._repo.handles[documentId as any]?.docSync();
-    if (!doc) {
-      return null;
+    if (doc) {
+      const spaceKeyHex = getSpaceKeyFromDoc(doc);
+      if (spaceKeyHex) {
+        return PublicKey.from(spaceKeyHex);
+      }
+    }
+    /**
+     * Edge case on the initial space setup.
+     * A peer is maybe trying to share space root document with us after a successful invitation.
+     * We don't have a document to check access block locally, so we need to rely on external sources (space metada).
+     */
+    const rootDocSpaceKey = this._getSpaceKeyByRootDocumentId?.(documentId);
+    if (rootDocSpaceKey) {
+      return rootDocSpaceKey;
     }
 
-    const spaceKeyHex = getSpaceKeyFromDoc(doc);
-    if (!spaceKeyHex) {
-      return null;
-    }
-
-    return PublicKey.from(spaceKeyHex);
+    return null;
   }
 
   /**
@@ -444,6 +503,10 @@ export class AutomergeHost extends Resource {
     this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
   }
 
+  async clearLocalCollectionState(collectionId: string) {
+    this._collectionSynchronizer.clearLocalCollectionState(collectionId);
+  }
+
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId) {
     this._collectionSynchronizer.onCollectionStateQueried(collectionId, peerId);
   }
@@ -483,7 +546,10 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    log.info('replication documents after collection sync', {
+    log.info('replicating documents after collection sync', {
+      collectionId,
+      peerId,
+      toReplicate,
       count: toReplicate.length,
     });
 
@@ -527,7 +593,7 @@ const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
   await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
-      if (changeIsPresentInDoc(handle.docSync(), changeHash)) {
+      if (changeIsPresentInDoc(handle.docSync()!, changeHash)) {
         unavailableHeads.delete(changeHash);
       }
     }

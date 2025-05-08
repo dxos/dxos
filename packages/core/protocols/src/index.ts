@@ -11,3 +11,6 @@ export * from './query.js';
 export * from './profile-archive.js';
 export * from './automerge.js';
 export * from './edge.js';
+export * from './queue.js';
+export * from './space-archive.js';
+export * from './edge-error.js';

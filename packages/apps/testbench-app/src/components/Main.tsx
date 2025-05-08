@@ -2,14 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
+import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
-import { create, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import { type Space, useQuery, Filter, useSpaces } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 
 import { AppToolbar } from './AppToolbar';
@@ -18,7 +19,7 @@ import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
 import { StatusBar } from './status';
-import { ItemType, DocumentType } from '../data';
+import { DocumentType, ItemType } from '../data';
 import { defs } from '../defs';
 import { exportData, importData } from '../util';
 
@@ -90,10 +91,10 @@ export const Main = () => {
 
     // TODO(burdon): Migrate generator from DebugPlugin.
     Array.from({ length: n }).forEach(() => {
-      let object: ReactiveObject<any>;
+      let object: Live<any>;
       switch (type) {
         case DocumentType.typename: {
-          object = create(DocumentType, {
+          object = live(DocumentType, {
             title: randWord(),
             content: randSentence(),
           });
@@ -102,7 +103,7 @@ export const Main = () => {
 
         case ItemType.typename:
         default: {
-          object = create(ItemType, {
+          object = live(ItemType, {
             content: randSentence(),
             // due: randBetweenDate(dateRange)
           });
@@ -192,7 +193,7 @@ export const Main = () => {
 
   return (
     <div className='flex flex-row grow justify-center overflow-hidden'>
-      <div className='flex flex-col grow bg-base'>
+      <div className='flex flex-col grow bg-baseSurface'>
         <AppToolbar
           onHome={() => window.open(defs.issueUrl, 'DXOS')}
           onProfile={() => {

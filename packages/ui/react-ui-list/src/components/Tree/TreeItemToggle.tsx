@@ -11,10 +11,11 @@ export type TreeItemToggleProps = {
   open?: boolean;
   isBranch?: boolean;
   onToggle?: () => void;
+  hidden?: boolean;
 };
 
 export const TreeItemToggle = memo(
-  forwardRef<HTMLButtonElement, TreeItemToggleProps>(({ open, isBranch, onToggle }, forwardedRef) => {
+  forwardRef<HTMLButtonElement, TreeItemToggleProps>(({ open, isBranch, hidden, onToggle }, forwardedRef) => {
     return (
       <Button
         ref={forwardedRef}
@@ -22,14 +23,10 @@ export const TreeItemToggle = memo(
         aria-expanded={open}
         variant='ghost'
         density='fine'
-        classNames={mx('is-6 !pli-1', !isBranch && 'invisible')}
+        classNames={mx('is-6 pli-0 dx-focus-ring-inset', hidden ? 'hidden' : !isBranch && 'invisible')}
         onClick={onToggle}
       >
-        <Icon
-          icon='ph--caret-right--regular'
-          size={3}
-          classNames={mx('transition duration-200', open && 'rotate-90')}
-        />
+        <Icon icon='ph--caret-right--bold' size={3} classNames={mx('transition duration-200', open && 'rotate-90')} />
       </Button>
     );
   }),

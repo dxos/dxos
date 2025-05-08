@@ -63,6 +63,7 @@ const TestStory = () => {
 };
 
 export default {
+  title: 'devtools/devtools/Bitbar',
   component: TestStory,
   decorators: [withTheme],
 };

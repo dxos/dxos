@@ -4,29 +4,29 @@
 
 import React, { type FC, type PropsWithChildren } from 'react';
 
-import { type BaseObject, type FormatEnum, type PropertyKey } from '@dxos/echo-schema';
+import { type FormatEnum } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
 import { Icon, Tooltip } from '@dxos/react-ui';
 import { errorText } from '@dxos/react-ui-theme';
 
-import { type FormHandler } from '../../hooks';
+import { type FormInputStateProps } from './FormContext';
 
 /**
  * Props passed to input components.
  */
-export type InputProps<T extends BaseObject<T>> = {
-  property: PropertyKey<T>;
+export type InputProps = {
   type: SimpleType;
   format?: FormatEnum;
   label: string;
   disabled?: boolean;
   placeholder?: string;
-} & Pick<FormHandler<T>, 'getStatus' | 'getValue' | 'onValueChange' | 'onBlur'>;
+  inputOnly?: boolean;
+} & FormInputStateProps;
 
 /**
  * Form input component.
  */
-export type InputComponent<T extends BaseObject<T>> = FC<InputProps<T>>;
+export type InputComponent = FC<InputProps>;
 
 export type InputHeaderProps = PropsWithChildren<{
   error?: string;

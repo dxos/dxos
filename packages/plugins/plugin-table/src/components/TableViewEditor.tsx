@@ -2,47 +2,46 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
-import { getSpace } from '@dxos/react-client/echo';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
+import { useClient } from '@dxos/react-client';
+import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { type TableType } from '@dxos/react-ui-table';
+import { ViewType } from '@dxos/schema';
 
-import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
 
 type TableViewEditorProps = { table: TableType };
 
 const TableViewEditor = ({ table }: TableViewEditorProps) => {
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const client = useClient();
   const space = getSpace(table);
+  const schema = useSchema(client, space, table.view?.target?.query.typename);
 
-  // TODO(ZaymonFC): The schema registry needs an API where we can query with initial value and
-  // endure typename changes. We shouldn't need to manage a subscription at this layer.
-  const [schema, setSchema] = useState(
-    space && table?.view?.query?.typename ? space.db.schemaRegistry.getSchema(table.view.query.typename) : undefined,
+  const views = useQuery(space, Filter.schema(ViewType));
+  const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);
+
+  const handleUpdateTypename = useCallback(
+    (newTypename: string) => {
+      invariant(schema);
+
+      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
+      for (const view of matchingViews) {
+        view.query.typename = newTypename;
+      }
+
+      schema.mutable.updateTypename(newTypename);
+    },
+    [views, schema],
   );
-  useEffect(() => {
-    if (space && table?.view?.query?.typename) {
-      const unsubscribe = space.db.schemaRegistry.subscribe((schemas) => {
-        const schema = schemas.find((schema) => schema.typename === table?.view?.query?.typename);
-        if (schema) {
-          setSchema(schema);
-        }
-      });
-
-      return unsubscribe;
-    }
-  }, [space, table?.view?.query?.typename]);
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch?.({
-        plugin: TABLE_PLUGIN,
-        action: TableAction.DELETE_COLUMN,
-        data: { table, fieldId },
-      });
+      void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
     },
     [dispatch, table],
   );
@@ -51,7 +50,15 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
     return null;
   }
 
-  return <ViewEditor registry={space.db.schemaRegistry} schema={schema} view={table.view} onDelete={handleDelete} />;
+  return (
+    <ViewEditor
+      registry={space.db.schemaRegistry}
+      schema={schema}
+      view={table.view.target!}
+      onTypenameChanged={schema.readonly ? undefined : handleUpdateTypename}
+      onDelete={schema.readonly ? undefined : handleDelete}
+    />
+  );
 };
 
 export default TableViewEditor;

@@ -2,16 +2,38 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeAgentStatus } from '@dxos/protocols';
-import { QueryAgentStatusResponse, type EdgeAgentService } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  QueryAgentStatusResponse,
+  EdgeStatus,
+  type QueryEdgeStatusResponse,
+  type EdgeAgentService,
+} from '@dxos/protocols/proto/dxos/client/services';
 
 import { type EdgeAgentManager } from './edge-agent-manager';
 
+// TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
 export class EdgeAgentServiceImpl implements EdgeAgentService {
-  constructor(private readonly _agentManagerProvider: () => Promise<EdgeAgentManager>) {}
+  constructor(
+    private readonly _agentManagerProvider: () => Promise<EdgeAgentManager>,
+    private readonly _edgeConnection?: EdgeConnection,
+  ) {}
 
-  public async createAgent(): Promise<void> {
+  // TODO(mykola): Reconcile with NetworkService.queryStatus.
+  queryEdgeStatus(): Stream<QueryEdgeStatusResponse> {
+    return new Stream(({ ctx, next }) => {
+      const update = () => {
+        next({ status: this._edgeConnection?.status ?? EdgeStatus.NOT_CONNECTED });
+      };
+
+      this._edgeConnection?.statusChanged.on(ctx, update);
+      update();
+    });
+  }
+
+  async createAgent(): Promise<void> {
     return (await this._agentManagerProvider()).createAgent();
   }
 

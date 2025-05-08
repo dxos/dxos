@@ -2,51 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type JsonPath, S } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
-import { type Comparator, getDeep, intersection, setDeep } from '@dxos/util';
+import { SchemaAST as AST, Schema as S } from 'effect';
 
-import { type HasId } from './ast';
-import { getProxyHandler } from './proxy';
+import { Reference } from '@dxos/echo-protocol';
+import { splitJsonPath, type JsonPath } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
+import { getDeep, setDeep } from '@dxos/util';
 
-export const data = Symbol.for('@dxos/schema/Data');
-
-// TODO(burdon): Move to client-protocol.
-export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
+import { getTypeIdentifierAnnotation, getTypeAnnotation, type HasId } from './ast';
+import { ObjectId, type ObjectMeta, getTypename } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
-export const ECHO_ATTR_ID = '@id';
-export const ECHO_ATTR_TYPE = '@type';
 export const ECHO_ATTR_META = '@meta';
-
-//
-// ForeignKey
-//
-
-const _ForeignKeySchema = S.Struct({
-  source: S.String,
-  id: S.String,
-});
-
-export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
-
-export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
-
-//
-// ObjectMeta
-//
-
-export const ObjectMetaSchema = S.mutable(
-  S.Struct({
-    keys: S.mutable(S.Array(ForeignKeySchema)),
-  }),
-);
-
-export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
-
-//
-// Objects
-//
 
 /**
  * Base type for all data objects (reactive, ECHO, and other raw objects).
@@ -54,36 +21,26 @@ export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
-export type BaseObject<T> = { [K in keyof T]: T[K] };
+// TODO(dmaretskyi): Rename AnyProperties.
+export type BaseObject = Record<string, any>;
 
-export type PropertyKey<T extends BaseObject<T>> = Extract<keyof ExcludeId<T>, string>;
+// TODO(burdon): Reconcile with ReactiveEchoObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
+export type WithId = BaseObject & HasId;
 
-export type ExcludeId<T extends BaseObject<T>> = Omit<T, 'id'>;
+export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
-// TODO(burdon): Reconcile with ReactiveEchoObject.
-export type WithId = HasId & BaseObject<any>;
+export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
 
 export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.
  */
-export const RawObject = <S extends S.Schema<any>>(
+export const RawObject = <S extends S.Schema.AnyNoContext>(
   schema: S,
 ): S.Schema<ExcludeId<S.Schema.Type<S>> & WithMeta, S.Schema.Encoded<S>> => {
   return S.make(AST.omit(schema.ast, ['id']));
 };
-
-/**
- * Reference to another ECHO object.
- */
-export type Ref<T extends WithId> = T | undefined;
-
-/**
- * Reactive object marker interface (does not change the shape of the object.)
- * Accessing properties triggers signal semantics.
- */
-export type ReactiveObject<T extends BaseObject<T>> = { [K in keyof T]: T[K] };
 
 //
 // Data
@@ -92,6 +49,7 @@ export type ReactiveObject<T extends BaseObject<T>> = { [K in keyof T]: T[K] };
 export interface CommonObjectData {
   id: string;
   // TODO(dmaretskyi): Document cases when this can be null.
+  // TODO(dmaretskyi): Convert to @typename and @meta.
   __typename: string | null;
   __meta: ObjectMeta;
 }
@@ -115,12 +73,6 @@ export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
 // Utils
 //
 
-export const getMeta = <T extends BaseObject<T>>(obj: T): ObjectMeta => {
-  const meta = getProxyHandler(obj).getMeta(obj);
-  invariant(meta);
-  return meta;
-};
-
 /**
  * Utility to split meta property from raw object.
  */
@@ -130,10 +82,127 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
-export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
-export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
-export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
-  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
+export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
+  return getDeep(
+    obj,
+    splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
+  );
+};
 
-export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
-export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);
+export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
+  return setDeep(
+    obj,
+    splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
+    value,
+  );
+};
+
+/**
+ * Returns a typename of a schema.
+ */
+export const getTypenameOrThrow = (schema: S.Schema.AnyNoContext): string => requireTypeReference(schema).objectId;
+
+/**
+ * Returns a reference that will be used to point to a schema.
+ */
+export const getTypeReference = (schema: S.Schema.AnyNoContext | undefined): Reference | undefined => {
+  if (!schema) {
+    return undefined;
+  }
+
+  const echoId = getTypeIdentifierAnnotation(schema);
+  if (echoId) {
+    return Reference.fromDXN(DXN.parse(echoId));
+  }
+
+  const annotation = getTypeAnnotation(schema);
+  if (annotation == null) {
+    return undefined;
+  }
+
+  return Reference.fromDXN(DXN.fromTypenameAndVersion(annotation.typename, annotation.version));
+};
+
+/**
+ * Returns a reference that will be used to point to a schema.
+ * @throws If it is not possible to reference this schema.
+ */
+export const requireTypeReference = (schema: S.Schema.AnyNoContext): Reference => {
+  const typeReference = getTypeReference(schema);
+  if (typeReference == null) {
+    // TODO(burdon): Catalog user-facing errors (this is too verbose).
+    throw new Error('Schema must be defined via TypedObject.');
+  }
+
+  return typeReference;
+};
+
+// TODO(dmaretskyi): Unify with `getTypeReference`.
+export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getTypeAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+};
+
+// TODO(burdon): Can we use `S.is`?
+export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
+  schema: Schema,
+  object: any,
+): object is S.Schema.Type<Schema> => {
+  if (object == null) {
+    return false;
+  }
+
+  const schemaDXN = getSchemaDXN(schema);
+  if (!schemaDXN) {
+    throw new Error('Schema must have an object annotation.');
+  }
+
+  const typename = getTypename(object);
+  if (!typename) {
+    return false;
+  }
+
+  if (typename.startsWith('dxn:')) {
+    return schemaDXN.toString() === typename;
+  } else {
+    const typeDXN = schemaDXN.asTypeDXN();
+    if (!typeDXN) {
+      return false;
+    }
+
+    return typeDXN.type === typename;
+  }
+};
+
+/**
+ * Object that has an associated typename.
+ * The typename is retrievable using {@link getTypename}.
+ * The object can be used with {@link isInstanceOf} to check if it is an instance of a schema.
+ */
+export type HasTypename = {};
+
+/**
+ * Returns a DXN for an object or schema.
+ */
+export const getDXN = (object: any): DXN | undefined => {
+  if (S.isSchema(object)) {
+    return getSchemaDXN(object as any);
+  }
+
+  if (typeof object !== 'object' || object == null) {
+    throw new TypeError('Object is not an object.');
+  }
+
+  if (!ObjectId.isValid(object.id)) {
+    throw new TypeError('Object id is not valid.');
+  }
+
+  return DXN.fromLocalObjectId(object.id);
+};
+
+export type BaseEchoObject = HasId & HasTypename;

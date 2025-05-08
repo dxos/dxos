@@ -6,7 +6,8 @@ import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type ReactiveEchoObject, createDocAccessor } from '@dxos/client/echo';
-import { getMeta, getSchema } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
+import { getMeta } from '@dxos/live-object';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {
   automerge,
@@ -114,7 +115,7 @@ const Editor = ({ object, prop }: { object: ReactiveEchoObject<any>; prop: strin
       extensions: [
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { content: { className: '!p-0' } } }),
+        createThemeExtensions({ themeMode, slots: { content: { className: 'p-0' } } }),
         automerge(createDocAccessor(object, [prop])),
       ],
     };

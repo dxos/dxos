@@ -4,38 +4,52 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import {
-  type AnyObjectData,
-  type BaseObject,
-  type ReactiveObject,
-  getProxyTarget,
-  getSchema,
-  isReactiveObject,
-} from '@dxos/echo-schema';
+import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type Live, getProxyTarget, getType, isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
-import { MutableSchemaRegistry } from './mutable-schema-registry';
-import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import { EchoSchemaRegistry } from './echo-schema-registry';
+import type { ObjectMigration } from './object-migration';
+import {
+  CoreDatabase,
+  type FlushOptions,
+  type LoadObjectOptions,
+  type ObjectCore,
+  type ObjectPlacement,
+} from '../core-db';
 import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-api';
 import {
   EchoReactiveHandler,
-  type ReactiveEchoObject,
   type ProxyTarget,
-  getObjectCore,
+  type ReactiveEchoObject,
   createObject,
+  getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
+import { Filter, type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
+};
+
+export type AddOptions = {
+  /**
+   * Where to place the object in the Automerge document tree.
+   * Root document is always loaded with the space.
+   * Linked documents are loaded lazily.
+   * Placing large number of objects in the root document may slow down the initial load.
+   *
+   * @default 'linked-doc'
+   */
+  placeIn?: ObjectPlacement;
 };
 
 /**
@@ -44,18 +58,13 @@ export type GetObjectByIdOptions = {
 // TODO(burdon): Document.
 // TODO(burdon): Rename DatabaseProxy.
 export interface EchoDatabase {
-  get spaceKey(): PublicKey;
+  get graph(): Hypergraph;
+  get schemaRegistry(): EchoSchemaRegistry;
 
+  get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
 
-  get schemaRegistry(): MutableSchemaRegistry;
-
-  get graph(): Hypergraph;
-
-  getObjectById<T extends BaseObject<T> = any>(
-    id: string,
-    opts?: GetObjectByIdOptions,
-  ): ReactiveEchoObject<T> | undefined;
+  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): ReactiveEchoObject<T> | undefined;
 
   /**
    * Query objects.
@@ -77,17 +86,22 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends BaseObject<T>>(obj: ReactiveObject<T>): ReactiveEchoObject<T>;
+  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): ReactiveEchoObject<T>;
 
   /**
    * Removes object from the database.
    */
-  remove<T extends ReactiveEchoObject<any>>(obj: T): void;
+  remove<T extends BaseObject>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.
    */
   flush(opts?: FlushOptions): Promise<void>;
+
+  /**
+   * Run migrations.
+   */
+  runMigrations(migrations: ObjectMigration[]): Promise<void>;
 
   /**
    * @deprecated
@@ -112,6 +126,8 @@ export type EchoDatabaseParams = {
    */
   reactiveSchemaQuery?: boolean;
 
+  preloadSchemaOnOpen?: boolean;
+
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 };
@@ -121,6 +137,7 @@ export type EchoDatabaseParams = {
  * Implements EchoDatabase interface.
  */
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
+  private readonly _schemaRegistry: EchoSchemaRegistry;
   /**
    * @internal
    */
@@ -134,8 +151,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   readonly _rootProxies = new Map<ObjectCore, ReactiveEchoObject<any>>();
 
-  public readonly schemaRegistry: MutableSchemaRegistry;
-
   constructor(params: EchoDatabaseParams) {
     super();
 
@@ -147,11 +162,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this.schemaRegistry = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
-  }
-
-  get graph(): Hypergraph {
-    return this._coreDatabase.graph;
+    this._schemaRegistry = new EchoSchemaRegistry(this, {
+      reactiveQuery: params.reactiveSchemaQuery,
+      preloadSchemaOnOpen: params.preloadSchemaOnOpen,
+    });
   }
 
   get spaceId(): SpaceId {
@@ -169,15 +183,26 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._rootUrl;
   }
 
+  get graph(): Hypergraph {
+    return this._coreDatabase.graph;
+  }
+
+  // TODO(burdon): Rename.
+  get schemaRegistry(): EchoSchemaRegistry {
+    return this._schemaRegistry;
+  }
+
   @synchronized
   protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
       await this._coreDatabase.open({ rootUrl: this._rootUrl });
     }
+    await this._schemaRegistry.open();
   }
 
   @synchronized
   protected override async _close(): Promise<void> {
+    await this._schemaRegistry.close();
     await this._coreDatabase.close();
   }
 
@@ -202,7 +227,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
 
     const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isReactiveObject(object));
+    invariant(isLiveObject(object));
     return object;
   }
 
@@ -237,7 +262,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends ReactiveObject<T>>(obj: T): ReactiveEchoObject<T> {
+  add<T extends BaseObject>(obj: T, opts?: AddOptions): ReactiveEchoObject<T> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
@@ -256,15 +281,15 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const target = getProxyTarget(obj) as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(getObjectCore(obj));
+    this._coreDatabase.addCore(getObjectCore(obj), opts);
 
-    return obj;
+    return obj as any;
   }
 
   /**
    * Remove reactive object.
    */
-  remove<T extends ReactiveEchoObject<T>>(obj: T): void {
+  remove<T extends BaseObject>(obj: T): void {
     invariant(isEchoObject(obj));
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
@@ -273,10 +298,33 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     await this._coreDatabase.flush(opts);
   }
 
+  async runMigrations(migrations: ObjectMigration[]): Promise<void> {
+    for (const migration of migrations) {
+      const { objects } = await this._coreDatabase.graph.query(Filter.typeDXN(migration.fromType.toString())).run();
+      log.verbose('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
+      for (const object of objects) {
+        const output = await migration.transform(object, { db: this });
+
+        // TODO(dmaretskyi): Output validation.
+        delete (output as any).id;
+
+        await this._coreDatabase.atomicReplaceObject(object.id, {
+          data: output,
+          type: migration.toType,
+        });
+        const postMigrationType = getType(object)?.toDXN();
+        invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
+
+        await migration.onMigration({ before: object, object, db: this });
+      }
+    }
+    await this.flush();
+  }
+
   /**
    * @internal
    */
-  async _loadObjectById<T extends BaseObject<T>>(
+  async _loadObjectById<T extends BaseObject>(
     objectId: string,
     options: LoadObjectOptions = {},
   ): Promise<ReactiveEchoObject<T> | undefined> {
@@ -286,7 +334,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
 
     const obj = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isReactiveObject(obj));
+    invariant(isLiveObject(obj));
     return obj;
   }
 
@@ -310,7 +358,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 // TODO(burdon): Create APIError class.
 const createSchemaNotRegisteredError = (schema?: any) => {
   const message = 'Schema not registered';
-
   if (schema?.typename) {
     return new Error(`${message} Schema: ${schema.typename}`);
   }

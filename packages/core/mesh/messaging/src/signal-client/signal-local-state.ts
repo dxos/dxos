@@ -3,7 +3,7 @@
 //
 
 import { asyncTimeout, Event } from '@dxos/async';
-import type { Stream } from '@dxos/codec-protobuf';
+import type { Stream } from '@dxos/codec-protobuf/stream';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

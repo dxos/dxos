@@ -4,8 +4,6 @@
     "lib": [
       "ESNext"
     ],
-    "module": "Preserve",
-    "moduleResolution": "Bundler",
     "types": [
       "@cloudflare/workers-types"
     ]
@@ -14,5 +12,15 @@
     "src",
     "vite.config.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/halo/keyring"
+    }
+  ]
 }

@@ -4,14 +4,16 @@
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { getProxyHandler, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
-import { type S } from '@dxos/echo-schema';
-import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
+import { getTypeReference, type S } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
+import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { getProxyHandler, getType } from '@dxos/live-object';
+import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT: TestSchema = {
+const TEST_OBJECT: Testing.TestSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -23,21 +25,32 @@ const TEST_OBJECT: TestSchema = {
 // TODO(dmaretskyi): Come up with a test fixture pattern?
 export interface TestConfiguration {
   objectsHaveId: boolean;
+  /**
+   * Whether to test assigning objects to properties in other objects.
+   * @default true
+   */
+  allowObjectAssignments?: boolean;
   beforeAllCb?: () => Promise<void>;
   afterAllCb?: () => Promise<void>;
-  createObjectFn: (props?: Partial<TestSchema>) => Promise<TestSchema>;
+  createObjectFn: (props?: Partial<Testing.TestSchema>) => Promise<Testing.TestSchema>;
 }
 
-export type TestConfigurationFactory = (schema: S.Schema<any> | undefined) => TestConfiguration | null;
+export type TestConfigurationFactory = (schema: S.Schema.AnyNoContext | undefined) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [undefined, TestSchema, TestSchemaType]) {
+  for (const schema of [undefined, Testing.TestSchema, Testing.TestSchemaType]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;
     }
 
-    const { objectsHaveId, beforeAllCb, afterAllCb, createObjectFn: createObject } = testConfig;
+    const {
+      objectsHaveId,
+      beforeAllCb,
+      afterAllCb,
+      createObjectFn: createObject,
+      allowObjectAssignments = true,
+    } = testConfig;
 
     beforeAll(async () => {
       await beforeAllCb?.();
@@ -50,7 +63,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
     describe(`Proxy properties(schema=${schema != null})`, () => {
       test('handler type', async () => {
         const obj = await createObject();
-        console.log('handler =', Object.getPrototypeOf(getProxyHandler(obj)).constructor.name);
+        log('handler', { handler: Object.getPrototypeOf(getProxyHandler(obj)).constructor.name });
       });
 
       test('object initializer', async () => {
@@ -145,7 +158,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('getTypeReference', async () => {
         const obj = await createObject({ number: 42 });
-        expect(getType(obj)).to.deep.eq(getTypeReference(getSchema(obj)));
+        expect(getType(obj)?.toDXN().toString()).to.deep.eq(getTypeReference(getSchema(obj))?.toDXN().toString());
       });
 
       test('can assign arrays with objects', async () => {
@@ -182,7 +195,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect(obj.objectArray === obj.objectArray).to.be.true;
       });
 
-      test('assigning another reactive object', async () => {
+      test.skipIf(!allowObjectAssignments)('assigning another reactive object', async () => {
         const obj = await createObject();
 
         const other = await createObject({ string: 'bar' });

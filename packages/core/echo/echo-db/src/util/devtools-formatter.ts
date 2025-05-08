@@ -3,7 +3,7 @@
 //
 
 import { type JsonML } from '@dxos/debug';
-import { data } from '@dxos/echo-schema';
+import { objectData } from '@dxos/live-object';
 
 // TODO(dmaretskyi): Fix those to work with the new reactive API.
 
@@ -42,7 +42,7 @@ const formatValue = (object: any, config?: any): JsonML => {
 };
 
 export const getBody = (obj: any /* TypedObject */): JsonML => {
-  const objData = obj[data];
+  const objData = obj[objectData];
   return [
     'ol',
     listStyle,

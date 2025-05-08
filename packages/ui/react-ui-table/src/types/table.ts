@@ -2,22 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, S, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space';
+import { EchoObject, Expando, LabelAnnotationId, ObjectId, Ref, S } from '@dxos/echo-schema';
+// import { ThreadType } from '@dxos/plugin-space/types';
 import { ViewType } from '@dxos/schema';
 
 export const TableSchema = S.Struct({
-  id: S.String,
+  id: ObjectId,
   name: S.optional(S.String),
-  view: S.optional(ref(ViewType)),
-  // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
-  threads: S.optional(S.Array(ref(ThreadType))),
+  view: S.optional(Ref(ViewType)),
+  // TODO(burdon): Document why threads is included here?
+  threads: S.optional(S.Array(Ref(Expando /* ThreadType */))),
+}).annotations({
+  // TODO(burdon): Move annotation to property.
+  [LabelAnnotationId]: 'name',
 });
 
-// type TableType = S.ClassType<typeof TableSchema>;
-
-// TODO(burdon): UX should not depend on ECHO types.
-export class TableType extends TypedObject({
-  typename: 'dxos.org/type/Table',
-  version: '0.1.0',
-})(TableSchema.fields) {}
+export const TableType = TableSchema.pipe(EchoObject({ typename: 'dxos.org/type/Table', version: '0.1.0' }));
+export interface TableType extends S.Schema.Type<typeof TableType> {}

@@ -90,6 +90,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
   private _activeEdgePollingIntervalHandle: any | undefined = undefined;
   private readonly _activeEdgePollingInterval: number;
+  private _activeEdgePollingEnabled = false;
 
   @logInfo
   private readonly _spaceId: SpaceId;
@@ -106,18 +107,15 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   }
 
   setActiveEdgePollingEnabled(enabled: boolean) {
-    invariant(this.isOpen);
     const client = this._edgeClient;
     invariant(client);
-    if (enabled && !this._activeEdgePollingIntervalHandle) {
-      this._activeEdgePollingIntervalHandle = setInterval(() => {
-        if (this._writer) {
-          this._notarizePendingEdgeCredentials(client, this._writer);
-        }
-      }, this._activeEdgePollingInterval);
-    } else if (!enabled && this._activeEdgePollingIntervalHandle) {
-      clearInterval(this._activeEdgePollingIntervalHandle);
-      this._activeEdgePollingIntervalHandle = undefined;
+    this._activeEdgePollingEnabled = enabled;
+    if (this.isOpen) {
+      if (enabled && !this._activeEdgePollingIntervalHandle) {
+        this._startPeriodicEdgePolling(client);
+      } else if (!enabled && this._activeEdgePollingIntervalHandle) {
+        this._stopPeriodicEdgePolling();
+      }
     }
   }
 
@@ -126,16 +124,18 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   }
 
   protected override async _open() {
-    if (this._edgeClient && this._writer) {
-      this._notarizePendingEdgeCredentials(this._edgeClient, this._writer);
+    if (this._edgeClient) {
+      if (this._activeEdgePollingEnabled) {
+        this._startPeriodicEdgePolling(this._edgeClient);
+      }
+      if (this._writer) {
+        this._notarizePendingEdgeCredentials(this._edgeClient, this._writer);
+      }
     }
   }
 
   protected override async _close() {
-    if (this._activeEdgePollingIntervalHandle) {
-      clearInterval(this._activeEdgePollingIntervalHandle);
-      this._activeEdgePollingIntervalHandle = undefined;
-    }
+    this._stopPeriodicEdgePolling();
     await this._ctx.dispose();
   }
 
@@ -273,8 +273,23 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   setWriter(writer: FeedWriter<Credential>) {
     invariant(!this._writer, 'Writer already set.');
     this._writer = writer;
-    if (this._edgeClient) {
+    if (this._edgeClient && this.isOpen) {
       this._notarizePendingEdgeCredentials(this._edgeClient, writer);
+    }
+  }
+
+  private _startPeriodicEdgePolling(client: EdgeHttpClient) {
+    this._activeEdgePollingIntervalHandle = setInterval(() => {
+      if (this._writer) {
+        this._notarizePendingEdgeCredentials(client, this._writer);
+      }
+    }, this._activeEdgePollingInterval);
+  }
+
+  private _stopPeriodicEdgePolling() {
+    if (this._activeEdgePollingIntervalHandle) {
+      clearInterval(this._activeEdgePollingIntervalHandle);
+      this._activeEdgePollingIntervalHandle = undefined;
     }
   }
 

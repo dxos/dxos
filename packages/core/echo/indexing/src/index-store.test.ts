@@ -25,10 +25,12 @@ describe('IndexStore', () => {
 
     const schemaURI = '@example.org/schema/Contact';
     const objects: Partial<ObjectStructure>[] = [
-      { data: { name: 'John' }, system: { type: encodeReference(new Reference(schemaURI)) } },
+      // TODO(dmaretskyi): Fix references
+      { data: { name: 'John' }, system: { type: encodeReference(Reference.localObjectReference(schemaURI)) } },
       {
         data: { title: 'first document' },
-        system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
+        // TODO(dmaretskyi): Fix references
+        system: { type: encodeReference(Reference.localObjectReference('@example.org/schema/Document')) },
       },
     ];
 
@@ -64,10 +66,12 @@ describe('IndexStore', () => {
 
     const schemaURI = '@example.org/schema/Contact';
     const objects: Partial<ObjectStructure>[] = [
-      { data: { name: 'John' }, system: { type: encodeReference(new Reference(schemaURI)) } },
+      // TODO(dmaretskyi): Fix references
+      { data: { name: 'John' }, system: { type: encodeReference(Reference.localObjectReference(schemaURI)) } },
       {
         data: { title: 'first document' },
-        system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
+        // TODO(dmaretskyi): Fix references
+        system: { type: encodeReference(Reference.localObjectReference('@example.org/schema/Document')) },
       },
     ];
 
@@ -89,7 +93,8 @@ describe('IndexStore', () => {
 
       await loadedIndex.update('3', {
         data: { name: 'John' },
-        system: { type: encodeReference(new Reference(schemaURI)) },
+        // TODO(dmaretskyi): Fix references
+        system: { type: encodeReference(Reference.localObjectReference(schemaURI)) },
       });
       await store.save(loadedIndex);
     }

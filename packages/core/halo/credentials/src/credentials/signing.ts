@@ -33,7 +33,7 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
 /**
  * Utility method to produce stable output for signing/verifying.
  */
-export const canonicalStringify = (obj: any) =>
+export const canonicalStringify = (obj: any): string =>
   stableStringify(obj, {
     /* The point of signing and verifying is not that the internal, private state of the objects be
      * identical, but that the public contents can be verified not to have been altered. For that reason,
@@ -79,7 +79,7 @@ export const canonicalStringify = (obj: any) =>
 
       return value;
     },
-  });
+  }) as string;
 
 /**
  * Old key truncation method (339d...9d66) to keep backwards compatibility with credentials signed with old method

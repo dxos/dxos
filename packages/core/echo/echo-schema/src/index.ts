@@ -5,16 +5,22 @@
 /**
  * Peer dependencies re-exported symbols that are effectively part of the ECHO API.
  */
-export { AST, JSONSchema, Schema as S } from '@effect/schema';
+export { SchemaAST as AST, JSONSchema, Schema as S } from 'effect';
 
-export { JsonPath, JsonProp } from '@dxos/effect';
+export { JsonPath, splitJsonPath, JsonProp } from '@dxos/effect';
 
 export * from './ast';
 export * from './formats';
-export * from './handler';
 export * from './json';
-export * from './mutable';
 export * from './object';
-export * from './proxy';
 export * from './query';
 export * from './types';
+export * from './utils';
+
+// TODO(burdon): Fix.
+// TODO(dmaretskyi): Omitting barrel export in the mutable directory due to circular deps.
+export * from './schema/echo-schema';
+export * from './schema/manipulation';
+export * from './schema/runtime-schema-registry';
+export * from './schema/snapshot';
+export * from './schema/stored-schema';

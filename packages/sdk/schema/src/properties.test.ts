@@ -36,6 +36,15 @@ describe('properties', () => {
     ]);
   });
 
+  test('arrays', ({ expect }) => {
+    const props = getSchemaProperties(TestSchema.ast);
+    const arrayProp = props.find((prop) => prop.array);
+
+    expect(arrayProp).to.not.eq(undefined);
+    expect(arrayProp?.type).to.eq('number');
+    expect(arrayProp?.name).to.eq('scores');
+  });
+
   test('discriminated unions', ({ expect }) => {
     const TestSpecSchema = S.Union(
       S.Struct({ kind: S.Literal('a'), label: S.String }),
@@ -90,5 +99,18 @@ describe('properties', () => {
         expect(props.length).to.eq(1);
       }
     }
+  });
+
+  test('literal unions', ({ expect }) => {
+    const ColorSchema = S.Struct({
+      color: S.Union(S.Literal('red'), S.Literal('green'), S.Literal('blue')),
+    });
+
+    const props = getSchemaProperties(ColorSchema.ast);
+    expect(props[0]).to.deep.include({
+      name: 'color',
+      type: 'literal',
+      options: ['red', 'green', 'blue'],
+    });
   });
 });

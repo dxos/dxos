@@ -1,5 +1,5 @@
-@layer base {
-  .ch-focus-ring, .ch-focus-ring-inset {
+@layer utilities {
+  .dx-focus-ring, .dx-focus-ring-inset {
     &:not([disabled]),
     &[disabled='false'] {
       &:focus {
@@ -7,11 +7,7 @@
       }
 
       &:focus-visible {
-        @apply ring-2 ring-offset-0 z-[1] ring-primary-350 ring-offset-white;
-
-        .dark & {
-          @apply ring-primary-450 ring-offset-black;
-        }
+        @apply ring-focusLine ring-offset-focusOffset z-[1] ring-accentFocusIndicator;
 
         &:hover {
           @apply outline-none;
@@ -24,7 +20,30 @@
     }
   }
 
-  .ch-focus-ring-inset {
+  .dx-focus-ring-group, .dx-focus-ring-group-x, .dx-focus-ring-group-y {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &:focus {
+        @apply outline-none;
+      }
+    }
+  }
+
+  .dx-focus-ring-group:focus-visible .dx-focus-ring-group-indicator,
+  .dx-focus-ring-group-x:focus-visible .dx-focus-ring-group-x-indicator,
+  .dx-focus-ring-group-y:focus-visible .dx-focus-ring-group-y-indicator {
+    @apply ring-focusLine ring-offset-focusOffset ring-accentFocusIndicator;
+
+    &:hover {
+      @apply outline-none;
+
+      .dark & {
+        @apply outline-none;
+      }
+    }
+  }
+
+  .dx-focus-ring-inset {
     &:not([disabled]),
     &[disabled='false'] {
       &:focus-visible {
@@ -33,7 +52,7 @@
     }
   }
 
-  .ch-focus-ring-inset-over-all, .ch-focus-ring-main {
+  .dx-focus-ring-inset-over-all, .dx-focus-ring-main[data-handles-focus="true"] {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {
@@ -47,11 +66,7 @@
 
       &:focus-visible {
         &::after {
-          @apply ring-2 ring-offset-0 ring-inset z-[1] ring-primary-350 ring-offset-white;
-
-          .dark & {
-            @apply ring-primary-450 ring-offset-black;
-          }
+          @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-accentFocusIndicator;
         }
 
         &:hover {
@@ -64,7 +79,8 @@
       }
     }
   }
-  .ch-focus-ring-inset-over-all {
+
+  .dx-focus-ring-inset-over-all {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {
@@ -72,7 +88,8 @@
       }
     }
   }
-  .ch-focus-ring-main {
+
+  .dx-focus-ring-main[data-handles-focus="true"] {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {
@@ -81,10 +98,12 @@
         inset-inline: 0;
         inset-block-end: var(--statusbar-size);
       }
+
       @media screen(lg) {
         &[data-sidebar-inline-start-state="open"]::after {
           inset-inline-start: var(--nav-sidebar-size);
         }
+
         &[data-sidebar-inline-end-state="open"]::after {
           inset-inline-end: var(--complementary-sidebar-size);
         }

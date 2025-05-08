@@ -11,14 +11,14 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { Graph, ROOT_ID, type Node } from '@dxos/app-graph';
-import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
+import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
-import { Path } from '@dxos/react-ui-mosaic';
+import { Path } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { NavTree } from '../components';
+import { StorybookNavTree } from './StorybookNavTree';
 import { getActions, getChildren } from '../util';
 
 faker.seed(3);
@@ -49,13 +49,13 @@ const createGraph = () => {
 };
 
 const graph = createGraph();
-const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>();
+const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
 export const Default = {};
 
-const meta: Meta<typeof NavTree> = {
+const meta: Meta<typeof StorybookNavTree> = {
   title: 'plugins/plugin-navtree/Graph',
-  component: NavTree,
+  component: StorybookNavTree,
   decorators: [withTheme, withLayout({ tooltips: true })],
   render: (args) => {
     useEffect(() => {
@@ -78,9 +78,10 @@ const meta: Meta<typeof NavTree> = {
       });
     }, []);
 
-    return <NavTree {...args} />;
+    return <StorybookNavTree {...args} />;
   },
   args: {
+    root: graph.root,
     id: graph.root.id,
     getActions: (node: Node) => getActions(graph, node),
     getItems: (node?: Node) => graph.nodes(node ?? graph.root),
@@ -97,7 +98,7 @@ const meta: Meta<typeof NavTree> = {
     },
     isOpen: (_path: string[]) => {
       const path = Path.create(..._path);
-      const value = state.get(path) ?? create({ open: false, current: false });
+      const value = state.get(path) ?? live({ open: false, current: false });
       if (!state.has(path)) {
         state.set(path, value);
       }
@@ -106,7 +107,7 @@ const meta: Meta<typeof NavTree> = {
     },
     isCurrent: (_path: string[]) => {
       const path = Path.create(..._path);
-      const value = state.get(path) ?? create({ open: false, current: false });
+      const value = state.get(path) ?? live({ open: false, current: false });
       if (!state.has(path)) {
         state.set(path, value);
       }

@@ -4,8 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { S, create } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { live } from '@dxos/live-object';
 
 import { RootSettingsStore, SettingsStore } from './store';
 import { createLocalStorageMock } from './testing';
@@ -29,6 +30,7 @@ const TestSchema = S.mutable(
       ),
     ),
     status: S.optional(S.Enums(TestEnum)),
+    literals: S.optional(S.Literal('inactive', 'active')),
   }),
 );
 
@@ -40,7 +42,7 @@ describe('ObjectStore', () => {
   test('basic', () => {
     const mock = createLocalStorageMock();
 
-    const value = create<TestType>({ nums: [], services: [] });
+    const value = live<TestType>({ nums: [], services: [] });
     const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
     store.value.num = 42;
     expect(mock.store).to.deep.eq({
@@ -60,7 +62,7 @@ describe('ObjectStore', () => {
     const mock = createLocalStorageMock();
 
     {
-      const value = create<TestType>({ nums: [], services: [] });
+      const value = live<TestType>({ nums: [], services: [] });
       const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
       expect(store.value.activePreset).to.be.undefined;
 
@@ -79,10 +81,12 @@ describe('ObjectStore', () => {
       store.value.services.push({ url: 'example.com/bar' });
 
       store.value.status = TestEnum.ACTIVE;
+      store.value.literals = 'active';
     }
 
     expect(mock.store).to.deep.eq({
       'dxos.org/setting/active-preset': 'false',
+      'dxos.org/setting/literals': 'active',
       'dxos.org/setting/num': '42',
       'dxos.org/setting/nums': '[1,2]',
       'dxos.org/setting/name': 'foobar',
@@ -91,7 +95,7 @@ describe('ObjectStore', () => {
     });
 
     {
-      const value = create<TestType>({ nums: [], services: [] });
+      const value = live<TestType>({ nums: [], services: [] });
       const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
 
       expect(store.value.activePreset).to.be.false;
@@ -100,12 +104,14 @@ describe('ObjectStore', () => {
       expect(store.value.name).to.eq('foobar');
       expect(store.value.services).to.deep.eq([{ url: 'example.com/foo' }, { url: 'example.com/bar' }]);
       expect(store.value.status).to.deep.eq(TestEnum.ACTIVE);
+      expect(store.value.literals).to.eq('active');
 
       store.value.activePreset = undefined;
       store.value.nums.splice(1, 1, 3);
       store.value.name = undefined;
       store.value.services.splice(0, 1);
       store.value.status = TestEnum.INACTIVE;
+      store.value.literals = 'inactive';
     }
 
     expect(mock.store).to.deep.eq({
@@ -113,10 +119,11 @@ describe('ObjectStore', () => {
       'dxos.org/setting/nums': '[1,3]',
       'dxos.org/setting/services': '[{"url":"example.com/bar"}]',
       'dxos.org/setting/status': '0',
+      'dxos.org/setting/literals': 'inactive',
     });
 
     {
-      const value = create<TestType>({ nums: [], services: [] });
+      const value = live<TestType>({ nums: [], services: [] });
       const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
 
       expect(store.value.activePreset).to.be.undefined;
@@ -125,6 +132,7 @@ describe('ObjectStore', () => {
       expect(store.value.name).to.be.undefined;
       expect(store.value.services).to.deep.eq([{ url: 'example.com/bar' }]);
       expect(store.value.status).to.deep.eq(TestEnum.INACTIVE);
+      expect(store.value.literals).to.eq('inactive');
 
       store.reset();
     }

@@ -69,3 +69,66 @@ export const distinctBy = <T, K>(array: T[], selector: (item: T) => K): T[] => {
     return true;
   });
 };
+
+/**
+ * Remove elements from array.
+ * @param array
+ * @param test
+ * @returns removed elements.
+ */
+export const removeBy = <T>(array: T[], test: (element: T, index: number) => boolean): T[] => {
+  const removed: T[] = [];
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (test(array[i], i)) {
+      removed.push(...array.splice(i, 1));
+    }
+  }
+
+  return removed;
+};
+
+/**
+ * Splits an array based on a type guard predicate function.
+ * Infers the output tuple types from the guard function.
+ */
+export const partition = <T>(array: T[], guard: (item: T, index: number, array: T[]) => boolean): [T[], T[]] => {
+  return array.reduce<[T[], T[]]>(
+    ([accepted, rejected], item, index, array) =>
+      guard(item, index, array) ? [[...accepted, item], rejected] : [accepted, [...rejected, item]],
+    [[], []],
+  );
+};
+
+/**
+ * Returns elements that exist in all provided arrays based on a selector function.
+ *
+ * @param arrays - Arrays to intersect.
+ * @param selector - Function to extract the comparison value from each element.
+ * @returns Array containing elements from the first array that exist in all other arrays.
+ */
+export const intersectBy = <T, K>(arrays: T[][], selector: (item: T) => K): T[] => {
+  if (arrays.length === 0) {
+    return [];
+  }
+
+  if (arrays.length === 1) {
+    return [...arrays[0]];
+  }
+
+  const [first, ...rest] = arrays;
+
+  // Create lookup maps for all other arrays.
+  const lookups = rest.map((array) => {
+    const map = new Map<K, T>();
+    for (const item of array) {
+      map.set(selector(item), item);
+    }
+    return map;
+  });
+
+  // Keep items from first array that exist in all other arrays.
+  return first.filter((item) => {
+    const key = selector(item);
+    return lookups.every((lookup) => lookup.has(key));
+  });
+};

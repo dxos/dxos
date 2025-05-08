@@ -6,6 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const PWA_PLUGIN = 'dxos.org/plugin/pwa';
 
-export default {
+export const meta: PluginMeta = {
   id: PWA_PLUGIN,
-} satisfies PluginMeta;
+  name: 'PWA',
+};

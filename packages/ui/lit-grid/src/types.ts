@@ -45,6 +45,8 @@ export type DxGridPointer =
   | { state: 'maybeSelecting'; pageX: number; pageY: number }
   | { state: 'selecting' };
 
+export type DxGridReadonlyValue = boolean | 'no-text-select' | 'text-select';
+
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
@@ -78,16 +80,16 @@ export type DxGridCellValue = {
    */
   resizeHandle?: DxGridAxis;
   /**
-   * Whether this cell is read-only.
+   * Controls the read-only state of the cell.
    */
-  readonly?: boolean;
+  readonly?: DxGridReadonlyValue;
 };
 
 export type DxGridAxisMetaProps = {
   size: number;
   description?: string;
   resizeable?: boolean;
-  readonly?: boolean;
+  readonly?: DxGridReadonlyValue;
 };
 
 export type DxGridAxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
@@ -154,7 +156,7 @@ export class DxAxisResizeInternal extends Event {
 export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox' | 'initialContent'>;
 
 export class DxEditRequest extends Event {
-  public readonly cellIndex: DxGridPlaneCellIndex;
+  public readonly cellIndex: DxGridCellIndex;
   public readonly cellBox: Record<'insetInlineStart' | 'insetBlockStart' | 'inlineSize' | 'blockSize', number>;
   public readonly initialContent?: string;
   constructor(props: DxEditRequestProps) {

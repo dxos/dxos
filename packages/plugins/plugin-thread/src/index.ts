@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ThreadPlugin } from './ThreadPlugin';
-
-export default ThreadPlugin;
-
+export { ThreadCapabilities } from './capabilities';
+export * from './events';
 export * from './hooks';
-export * from './types';
+export * from './meta';
 
 export * from './ThreadPlugin';

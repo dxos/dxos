@@ -418,6 +418,10 @@ message Runtime {
       optional string url = 1;
     }
 
+    message Ai {
+      optional string server = 1;
+    }
+
     optional Kube kube = 1;
     optional AppServer app = 2;
     optional Dxns dxns = 3;
@@ -433,6 +437,7 @@ message Runtime {
     optional Faasd faasd = 12;
     optional AgentHosting agent_hosting = 13;
     optional Edge edge = 15;
+    optional Ai ai = 16;
   }
 
   message Keys {

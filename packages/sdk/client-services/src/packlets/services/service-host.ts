@@ -329,7 +329,11 @@ export class ClientServicesHost {
       DataService: this._serviceContext.echoHost.dataService,
       QueryService: this._serviceContext.echoHost.queryService,
 
-      NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
+      NetworkService: new NetworkServiceImpl(
+        this._serviceContext.networkManager,
+        this._serviceContext.signalManager,
+        this._edgeConnection,
+      ),
 
       LoggingService: this._loggingService,
       TracingService: this._tracingService,
@@ -341,7 +345,7 @@ export class ClientServicesHost {
         context: this._serviceContext,
       }),
 
-      EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider),
+      EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider, this._edgeConnection),
     });
 
     await this._serviceContext.open(ctx);

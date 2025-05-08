@@ -100,7 +100,7 @@ export class Indexer extends Resource {
   }
 
   @synchronized
-  setConfig(config: IndexConfig) {
+  async setConfig(config: IndexConfig): Promise<void> {
     if (this._indexConfig) {
       log.warn('Index config is already set');
       return;

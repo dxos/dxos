@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, Locator, Page } from '@playwright/test';
+import type { Browser, ConsoleMessage, Locator, Page } from '@playwright/test';
 import os from 'node:os';
 
+import { Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 
@@ -24,6 +25,8 @@ export class AppManager {
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
+  private _invitationCode = new Trigger<string>();
+  private _authCode = new Trigger<string>();
 
   // prettier-ignore
   constructor(
@@ -40,8 +43,9 @@ export class AppManager {
 
     const { page } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
+    this.page.on('console', (message) => this._onConsoleMessage(message));
 
-    await this.isAuthenticated();
+    await this.isAuthenticated({ timeout: 15_000 });
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
@@ -71,23 +75,65 @@ export class AppManager {
     await this.page.keyboard.press(`${modifier}+KeyV`);
   }
 
-  async openIdentityManager() {
+  isAuthenticated({ timeout = 5_000 } = {}) {
+    return this.page
+      .getByTestId('treeView.userAccount')
+      .waitFor({ timeout })
+      .then(() => true)
+      .catch(() => false);
+  }
+
+  async openUserAccount() {
     const platform = os.platform();
     const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
     await this.page.keyboard.press(shortcut);
   }
 
-  async openSpaceManager() {
+  async openUserDevices() {
+    await this.openUserAccount();
+    await this.page.getByTestId('clientPlugin.devices').click();
+  }
+
+  async createDeviceInvitation(): Promise<string> {
+    this._invitationCode = new Trigger<string>();
+    this._authCode = new Trigger<string>();
+    await this.page.getByTestId('devicesContainer.createInvitation').click();
+    return await this._invitationCode.wait();
+  }
+
+  async getAuthCode(): Promise<string> {
+    return await this._authCode.wait();
+  }
+
+  async resetDevice(confirmInput = 'RESET') {
+    await this.page.getByTestId('devicesContainer.reset').click();
+    await this.page.getByTestId('reset-storage.reset-identity-input').fill(confirmInput);
+    await this.page.getByTestId('reset-storage.reset-identity-confirm').click();
+  }
+
+  async joinNewIdentity(confirmInput = 'RESET') {
+    await this.page.getByTestId('devicesContainer.joinExisting').click();
+    await this.page.getByTestId('join-new-identity.reset-identity-input').fill(confirmInput);
+    await this.page.getByTestId('join-new-identity.reset-identity-confirm').click();
+  }
+
+  async shareSpace() {
     const shortcut = isMac ? 'Meta+.' : 'Alt+.';
     await this.page.keyboard.press(shortcut);
   }
 
-  isAuthenticated({ timeout = 5_000 } = {}) {
-    return this.page
-      .getByTestId('treeView.haloButton')
-      .waitFor({ timeout })
-      .then(() => true)
-      .catch(() => false);
+  async createSpaceInvitation(): Promise<string> {
+    this._invitationCode = new Trigger<string>();
+    this._authCode = new Trigger<string>();
+    await this.page.getByTestId('membersContainer.createInvitation.more').click();
+    await this.page.getByTestId('membersContainer.inviteOne').click();
+    await this.page.getByTestId('membersContainer.createInvitation').click();
+    return await this._invitationCode.wait();
+  }
+
+  async confirmRecoveryCode() {
+    await this.page.getByTestId('recoveryCode.confirm').click();
+    await this.page.getByTestId('recoveryCode.continue').click();
   }
 
   //
@@ -106,17 +152,24 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace(timeout = 10_000) {
-    await this.page.getByTestId('spacePlugin.createSpace').getByTestId('treeItem.heading').click();
+  async createSpace({ type = 'Document', timeout = 10_000 }: { type?: string; timeout?: number } = {}) {
+    await this.page.getByTestId('spacePlugin.addSpace').click();
+    await this.page.getByTestId('spacePlugin.createSpace').click();
+    await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
+
+    await this.page.getByTestId('create-object-form.schema-input').fill(type);
+    await this.page.keyboard.press('Enter');
+
     await this.waitForSpaceReady(timeout);
   }
 
   async joinSpace() {
-    await this.page.getByTestId('spacePlugin.joinSpace').getByTestId('treeItem.heading').click();
+    await this.page.getByTestId('spacePlugin.addSpace').click();
+    await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
   async waitForSpaceReady(timeout = 30_000) {
-    await this.page.getByTestId('spacePlugin.shareSpaceButton').waitFor({ timeout });
+    await this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout });
   }
 
   getSpacePresenceMembers() {
@@ -124,10 +177,10 @@ export class AppManager {
   }
 
   async toggleSpaceCollapsed(nth = 0, nextState?: boolean) {
-    const toggle = this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first();
+    const toggle = this.page.getByTestId('spacePlugin.space').nth(nth);
 
     if (typeof nextState !== 'undefined') {
-      const state = await toggle.getAttribute('aria-expanded');
+      const state = await toggle.getAttribute('aria-selected');
       if (state !== nextState.toString()) {
         await toggle.click();
       }
@@ -140,18 +193,26 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
   }
 
-  // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
-  async createObject(plugin: string, nth?: number) {
+  async createObject({ type, name, nth = 0 }: { type: string; name?: string; nth?: number }) {
     const object = this.page.getByTestId('spacePlugin.createObject');
-    await (nth ? object.nth(nth) : object.last()).click();
-    return this.page.getByTestId(`${plugin}.createObject`).click();
+    await object.nth(nth).click();
+
+    await this.page.getByTestId('create-object-form.schema-input').fill(type);
+    await this.page.keyboard.press('Enter');
+
+    const objectForm = this.page.getByTestId('create-object-form');
+    if (!(await objectForm.isVisible())) {
+      return;
+    }
+
+    if (name) {
+      await objectForm.getByLabel('Name').fill(name);
+    }
+    await objectForm.getByTestId('save-button').click();
   }
 
-  // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
-  async createCollection(nth?: number) {
-    const object = this.page.getByTestId('spacePlugin.createObject');
-    await (nth ? object.nth(nth) : object.last()).click();
-    return this.page.getByTestId('spacePlugin.createCollection').click();
+  async navigateToObject(nth = 0) {
+    await this.page.getByTestId('spacePlugin.object').nth(nth).click();
   }
 
   async renameObject(newName: string, nth = 0) {
@@ -179,6 +240,7 @@ export class AppManager {
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
+    await this.page.pause();
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
     await this.page.keyboard.press('Enter');
   }
@@ -217,17 +279,25 @@ export class AppManager {
   //
 
   async openSettings() {
-    await this.page.getByTestId('treeView.openSettings').click();
+    await this.page.getByTestId('treeView.appSettings').click();
   }
 
-  async toggleExperimenalPlugins() {
-    await this.page.getByTestId('pluginSettings.experimental').click();
+  async openPluginRegistry() {
+    await this.page.getByTestId('treeView.pluginRegistry').click();
+  }
+
+  async openRegistryCategory(category: string) {
+    await this.page.getByTestId(`pluginRegistry.${category}`).click();
+  }
+
+  getPluginToggle(plugin: string) {
+    return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
   }
 
   async enablePlugin(plugin: string) {
-    await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
+    await this.getPluginToggle(plugin).click();
     await this.page.goto(INITIAL_URL);
-    await this.page.getByTestId('treeView.haloButton').waitFor();
+    await this.page.getByTestId('treeView.userAccount').waitFor();
   }
 
   async changeStorageVersionInMetadata(version: number) {
@@ -248,5 +318,18 @@ export class AppManager {
   async reset() {
     await this.page.getByTestId('resetDialog.reset').click();
     await this.page.getByTestId('resetDialog.confirmReset').click();
+  }
+
+  private async _onConsoleMessage(message: ConsoleMessage) {
+    try {
+      const text = message.text();
+      const json = JSON.parse(text.slice(text.indexOf('{')));
+      if (json.invitationCode) {
+        this._invitationCode.wake(json.invitationCode);
+      }
+      if (json.authCode) {
+        this._authCode.wake(json.authCode);
+      }
+    } catch {}
   }
 }

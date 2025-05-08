@@ -25,10 +25,12 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
+import { type SpaceStateManager } from './space-state-manager';
 import { deriveCollectionIdFromSpaceId, type AutomergeHost } from '../automerge';
 
 export type DataServiceParams = {
   automergeHost: AutomergeHost;
+  spaceStateManager: SpaceStateManager;
   updateIndexes: () => Promise<void>;
 };
 
@@ -44,10 +46,12 @@ export class DataServiceImpl implements DataService {
   private readonly _subscriptions = new Map<string, DocumentsSynchronizer>();
 
   private readonly _automergeHost: AutomergeHost;
+  private readonly _spaceStateManager: SpaceStateManager;
   private readonly _updateIndexes: () => Promise<void>;
 
   constructor(params: DataServiceParams) {
     this._automergeHost = params.automergeHost;
+    this._spaceStateManager = params.spaceStateManager;
     this._updateIndexes = params.updateIndexes;
   }
 
@@ -124,11 +128,21 @@ export class DataServiceImpl implements DataService {
 
   subscribeSpaceSyncState(request: GetSpaceSyncStateRequest): Stream<SpaceSyncState> {
     return new Stream<SpaceSyncState>(({ ctx, next, ready }) => {
-      invariant(SpaceId.isValid(request.spaceId));
-      const collectionId = deriveCollectionIdFromSpaceId(request.spaceId);
+      const spaceId = request.spaceId;
+      invariant(SpaceId.isValid(spaceId));
+
+      const rootDocumentId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
+      let collectionId = rootDocumentId && deriveCollectionIdFromSpaceId(spaceId, rootDocumentId);
+      this._spaceStateManager.spaceDocumentListUpdated.on(ctx, (event) => {
+        const newId = deriveCollectionIdFromSpaceId(spaceId, event.spaceRootId);
+        if (newId !== collectionId) {
+          collectionId = newId;
+          scheduler.trigger();
+        }
+      });
 
       const scheduler = new UpdateScheduler(ctx, async () => {
-        const state = await this._automergeHost.getCollectionSyncState(collectionId);
+        const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
 
         next({
           peers: state.peers.map((peer) => ({

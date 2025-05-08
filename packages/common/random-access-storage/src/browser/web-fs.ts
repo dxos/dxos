@@ -275,7 +275,7 @@ export class WebFile extends EventEmitter implements File {
     stat: callbackify(this.stat.bind(this)),
     destroy: callbackify(this.destroy.bind(this)),
     truncate: callbackify(this.truncate?.bind(this)),
-  } as RandomAccessStorage;
+  } as any as RandomAccessStorage;
 
   private async _loadBuffer() {
     const fileHandle = await this._fileHandle;

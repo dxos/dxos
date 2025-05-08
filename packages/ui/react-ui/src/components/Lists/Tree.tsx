@@ -16,6 +16,7 @@ import {
   LIST_ITEM_NAME,
   useListItemContext,
 } from './List';
+import { TreeDropIndicator } from './TreeDropIndicator';
 import { type ThemedClassName } from '../../util';
 
 type TreeRootProps = ListProps;
@@ -60,12 +61,14 @@ export const TreeItem: {
   Body: ForwardRefExoticComponent<TreeItemBodyProps>;
   OpenTrigger: ForwardRefExoticComponent<TreeItemOpenTriggerProps>;
   MockOpenTrigger: FC<ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>>;
+  DropIndicator: typeof TreeDropIndicator;
 } = {
   Root: TreeItemRoot,
   Heading: TreeItemHeading,
   Body: TreeItemBody,
   OpenTrigger: TreeItemOpenTrigger,
   MockOpenTrigger: MockTreeItemOpenTrigger,
+  DropIndicator: TreeDropIndicator,
 };
 
 export type { TreeRootProps, TreeItemProps, TreeItemHeadingProps, TreeItemBodyProps, TreeItemOpenTriggerProps };

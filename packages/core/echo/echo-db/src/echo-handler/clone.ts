@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BaseObject, createObjectId } from '@dxos/echo-schema';
+import { type BaseObject, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { assertParameter } from '@dxos/protocols';
 
 import { type ReactiveEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
@@ -32,19 +33,20 @@ const requireAutomergeCore = (obj: ReactiveEchoObject<any>) => {
  * Returns new unbound clone of the object.
  * @deprecated
  */
-export const clone = <T extends BaseObject<T>>(
+export const clone = <T extends BaseObject>(
   obj: ReactiveEchoObject<T>,
   { retainId = true, additional = [] }: CloneOptions = {},
 ): T => {
+  assertParameter('obj', isEchoObject(obj), 'ReactiveEchoObject');
   if (retainId === false && additional.length > 0) {
     throw new Error('Updating ids is not supported when cloning with nested objects.');
   }
 
-  const clone = cloneInner(obj, retainId ? obj.id : createObjectId());
+  const clone = cloneInner(obj, retainId ? obj.id : ObjectId.random());
   const clones: ReactiveEchoObject<any>[] = [clone];
   for (const innerObj of additional) {
     if (innerObj) {
-      clones.push(cloneInner(innerObj, retainId ? innerObj.id : createObjectId()));
+      clones.push(cloneInner(innerObj, retainId ? innerObj.id : ObjectId.random()));
     }
   }
 
@@ -67,7 +69,7 @@ export const clone = <T extends BaseObject<T>>(
   return clone;
 };
 
-const cloneInner = <T extends BaseObject<T>>(obj: ReactiveEchoObject<T>, id: string): ReactiveEchoObject<T> => {
+const cloneInner = <T extends BaseObject>(obj: ReactiveEchoObject<T>, id: string): ReactiveEchoObject<T> => {
   const core = requireAutomergeCore(obj);
   const coreClone = new ObjectCore();
   coreClone.initNewObject();

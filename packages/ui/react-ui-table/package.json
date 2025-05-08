@@ -1,17 +1,18 @@
 {
   "name": "@dxos/react-ui-table",
-  "version": "0.7.1",
+  "version": "0.8.1",
   "description": "A table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     "./deprecated": {
-      "types": "./dist/types/src/_deprecated/index.d.ts",
-      "browser": "./dist/lib/browser/_deprecated/index.mjs",
-      "node": "./dist/lib/node-esm/_deprecated/index.mjs"
+      "types": "./dist/types/src/deprecated/index.d.ts",
+      "browser": "./dist/lib/browser/deprecated/index.mjs",
+      "node": "./dist/lib/node-esm/deprecated/index.mjs"
     },
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -28,7 +29,7 @@
   "typesVersions": {
     "*": {
       "deprecated": [
-        "dist/types/src/_deprecated/index.d.ts"
+        "dist/types/src/deprecated/index.d.ts"
       ],
       "types": [
         "dist/types/src/types/index.d.ts"
@@ -46,30 +47,33 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/react-ui-tag-picker": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.19.0",
+    "@fluentui/react-tabster": "^9.24.2",
     "@preact/signals-core": "^1.6.0",
-    "@radix-ui/react-context": "^1.0.0",
-    "@radix-ui/react-primitive": "^1.0.2",
-    "@radix-ui/react-slot": "^1.0.1",
-    "@radix-ui/react-use-controllable-state": "^1.0.0",
-    "@tanstack/react-table": "^8.13.2",
-    "@tanstack/react-virtual": "^3.9.0",
+    "@radix-ui/react-context": "1.1.1",
+    "@radix-ui/react-primitive": "2.0.2",
+    "@radix-ui/react-slot": "1.1.2",
+    "@radix-ui/react-use-controllable-state": "1.1.0",
     "date-fns": "^3.3.1",
     "lodash.orderby": "^4.6.0"
   },

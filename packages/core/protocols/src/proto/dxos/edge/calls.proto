@@ -1,0 +1,60 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+import "dxos/keys.proto";
+
+package dxos.edge.calls;
+
+message Tracks {
+  optional string audio = 1;
+  optional bool audio_enabled = 2;
+  optional string video = 3;
+  optional bool video_enabled = 4;
+  optional string screenshare = 5;
+  optional bool screenshare_enabled = 6;
+}
+
+message UserState {
+  string id = 1;
+  string name = 2;
+  optional string transceiver_session_id = 3;
+  bool raised_hand = 4;
+  bool speaking = 5;
+  bool joined = 6;
+  Tracks tracks = 7;
+  map<string, Activity> activities = 8;
+}
+
+/**
+ * Activity state.
+ * It will be merged across all users in the room based on the Lamport timestamp (last one wins).
+ */
+message Activity {
+  LamportTimestamp lamport_timestamp = 1;
+
+  google.protobuf.Struct payload = 10;
+}
+
+/**
+ * Transcription state.
+ *
+ * Used to encode/decode the Any payload of a call activity for the transcription plugin.
+ */
+ message TranscriptionPayload {
+  bool enabled = 1;
+  string queue_dxn = 2;
+}
+
+/**
+ * Lamport Timestamp.
+ * @see https://en.wikipedia.org/wiki/Lamport_timestamp
+ */
+message LamportTimestamp {
+  int32 version = 1;
+  string id = 2;
+}

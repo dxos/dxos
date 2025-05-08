@@ -4,10 +4,10 @@
 
 import { effect } from '@preact/signals-core';
 
-import { type UnsubscribeCallback } from '@dxos/async';
-import { type ReactiveObject, create } from '@dxos/echo-schema';
+import { type CleanupFn } from '@dxos/async';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
+import { live, type Live } from '@dxos/live-object';
 import { hyphenize } from '@dxos/util';
 
 type PropType<T> = {
@@ -117,9 +117,9 @@ export class LocalStorageStore<T extends object> {
     };
   }
 
-  private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
+  private readonly _subscriptions = new Map<string, CleanupFn>();
 
-  private readonly _values: ReactiveObject<T>;
+  private readonly _values: Live<T>;
 
   constructor(
     private readonly _prefix: string,
@@ -127,10 +127,10 @@ export class LocalStorageStore<T extends object> {
   ) {
     // TODO(burdon): Should this be externalized.
     registerSignalsRuntime();
-    this._values = create(defaults ?? ({} as T));
+    this._values = live(defaults ?? ({} as T));
   }
 
-  get values(): ReactiveObject<T> {
+  get values(): Live<T> {
     return this._values;
   }
 

@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { S } from '@dxos/effect';
 import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
-import { create } from '../handler';
-import { TypedObject } from '../object';
 
 describe('schema-validator', () => {
   describe('validateSchema', () => {
@@ -26,7 +24,7 @@ describe('schema-validator', () => {
     test('has annotation', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const TestSchema: S.Schema<any> = S.Struct({
+      const TestSchema: S.Schema.AnyNoContext = S.Struct({
         name: S.String.annotations({ [annotationId]: annotationValue }),
         parent: S.optional(S.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
         friends: S.suspend(() => S.mutable(S.Array(TestSchema.annotations({ [annotationId]: annotationValue })))),
@@ -38,7 +36,7 @@ describe('schema-validator', () => {
 
     test('no annotation', () => {
       const annotationId = Symbol('foo');
-      const Person: S.Schema<any> = S.Struct({
+      const Person: S.Schema.AnyNoContext = S.Struct({
         name: S.String,
         parent: S.optional(S.suspend(() => Person)),
         friends: S.suspend(() => S.mutable(S.Array(Person))),
@@ -51,7 +49,7 @@ describe('schema-validator', () => {
 
   describe('getPropertySchema', () => {
     const validateValueToAssign = (args: {
-      schema: S.Schema<any>;
+      schema: S.Schema.AnyNoContext;
       target: any;
       path: string[];
       valueToAssign: any;
@@ -85,7 +83,7 @@ describe('schema-validator', () => {
     test('preserves annotations', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const Person: S.Schema<any> = S.Struct({
+      const Person: S.Schema.AnyNoContext = S.Struct({
         parent: S.optional(S.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
         friends: S.suspend(() => S.mutable(S.Array(Person.annotations({ [annotationId]: annotationValue })))),
       });
@@ -131,52 +129,6 @@ describe('schema-validator', () => {
         valueToAssign: { any: 'value' },
       });
     });
-
-    test('record', () => {
-      const schema = S.mutable(
-        S.Struct({
-          meta: S.optional(S.mutable(S.Any)),
-          // NOTE: S.Record only supports shallow values.
-          // https://www.npmjs.com/package/@effect/schema#mutable-records
-          // meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
-          // meta: S.optional(S.mutable(S.object)),
-        }),
-      );
-
-      {
-        const object = create(schema, {});
-        (object.meta ??= {}).test = 100;
-        expect(object.meta.test).to.eq(100);
-      }
-
-      {
-        const object = create(schema, {});
-        object.meta = { test: { value: 300 } };
-        expect(object.meta.test.value).to.eq(300);
-      }
-
-      {
-        type Test1 = S.Schema.Type<typeof schema>;
-
-        const object: Test1 = {};
-        (object.meta ??= {}).test = 100;
-        expect(object.meta.test).to.eq(100);
-      }
-
-      {
-        class Test2 extends TypedObject({
-          typename: 'dxos.org/type/FunctionTrigger',
-          version: '0.1.0',
-        })({
-          meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
-        }) {}
-
-        const object = create(Test2, {});
-        (object.meta ??= {}).test = 100;
-        expect(object.meta.test).to.eq(100);
-      }
-    });
-
     test('index signatures', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({

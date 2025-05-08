@@ -2,11 +2,28 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "outDir": "dist"
+    "outDir": "dist",
+    "target": "ESNext"
   },
   "include": [
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../tools/protobuf-test"
+    },
+    {
+      "path": "../codec-protobuf"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    }
+  ]
 }

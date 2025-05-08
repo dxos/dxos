@@ -2,71 +2,32 @@
 // Copyright 2024 DXOS.org
 //
 
+import { SchemaAST as AST, Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { AST, S } from '@dxos/effect';
-
 import { TypedObject } from './typed-object';
-import { create } from '../handler';
-import { getSchema } from '../proxy';
 
-class OrganizationType extends TypedObject({
+class Organization extends TypedObject({
   typename: 'example.com/type/Organization',
   version: '0.1.0',
 })({
   name: S.String,
 }) {}
 
-class PersonType extends TypedObject<PersonType>({
-  typename: 'example.com/type/Person',
-  version: '0.1.0',
-})(
-  {
-    name: S.String,
-  },
-  {
-    partial: true,
-    record: true,
-  },
-) {}
-
-const TEST_ORG: Omit<OrganizationType, 'id'> = { name: 'Test' };
-
 describe('EchoObject class DSL', () => {
   test('type is a valid schema', async () => {
-    expect(S.isSchema(OrganizationType)).to.be.true;
+    expect(S.isSchema(Organization)).to.be.true;
   });
 
   test('static typename accessor', async () => {
-    expect(OrganizationType.typename).to.eq('example.com/type/Organization');
-  });
-
-  test('static isInstance check', async () => {
-    const obj = create(OrganizationType, TEST_ORG);
-    expect(obj instanceof OrganizationType).to.be.true;
-    expect({ id: '12345', ...TEST_ORG } instanceof OrganizationType).to.be.false;
+    expect(Organization.typename).to.eq('example.com/type/Organization');
   });
 
   test('expect constructor to throw', async () => {
-    expect(() => new OrganizationType()).to.throw();
+    expect(() => new Organization()).to.throw();
   });
 
   test('expect schema', async () => {
-    console.log(AST.isTypeLiteral(OrganizationType.ast));
-  });
-
-  test('can get object schema', async () => {
-    const obj = create(OrganizationType, TEST_ORG);
-    expect(getSchema(obj)).to.deep.eq(OrganizationType);
-  });
-
-  describe('class options', () => {
-    test('can assign undefined to partial fields', async () => {
-      const person = create(PersonType, { name: 'John' });
-      person.name = undefined;
-      person.recordField = 'hello';
-      expect(person.name).to.be.undefined;
-      expect(person.recordField).to.eq('hello');
-    });
+    expect(AST.isTypeLiteral(Organization.ast)).to.be.true;
   });
 });

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, type CleanupFn } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
 import { type BaseObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -10,18 +10,15 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type Filter } from './filter';
 import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.
-export type Sort<T extends BaseObject<T>> = (a: T, b: T) => -1 | 0 | 1;
+export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;
 
-// TODO(burdon): Change to SubscriptionHandle (standardize with common/async utils).
-export type Subscription = () => void;
-
-export type QueryResult<T extends BaseObject<T> = any> = {
+export type QueryResult<T extends BaseObject = any> = {
   id: string;
 
   spaceId: SpaceId;
@@ -58,12 +55,12 @@ export type QueryResult<T extends BaseObject<T> = any> = {
   };
 };
 
-export type OneShotQueryResult<T extends BaseObject<T> = any> = {
+export type OneShotQueryResult<T extends BaseObject = any> = {
   results: QueryResult<T>[];
   objects: T[];
 };
 
-export interface QueryContext<T extends BaseObject<T> = any> {
+export interface QueryContext<T extends BaseObject = any> {
   getResults(): QueryResult<T>[];
 
   // TODO(dmaretskyi): Update info?
@@ -110,7 +107,7 @@ export type QueryRunOptions = {
 /**
  * Predicate based query.
  */
-export class Query<T extends BaseObject<T> = any> {
+export class Query<T extends BaseObject = any> {
   private readonly _filter: Filter;
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<Query<T>>();
@@ -187,11 +184,21 @@ export class Query<T extends BaseObject<T> = any> {
   }
 
   /**
+   * Runs the query synchronously and returns all results.
+   * WARNING: This method will only return the data already cached and may return incomplete results.
+   * Use `this.run()` for a complete list of results stored on-disk.
+   */
+  runSync(): QueryResult<T>[] {
+    this._ensureCachePresent();
+    return this._resultCache!;
+  }
+
+  /**
    * Subscribe to query results.
    * Queries that have at least one subscriber are updated reactively when the underlying data changes.
    */
   // TODO(burdon): Change to SubscriptionHandle (make uniform).
-  subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): Subscription {
+  subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
     log('subscribe', { filter: this._filter.type, active: this._isActive });
@@ -234,7 +241,7 @@ export class Query<T extends BaseObject<T> = any> {
     const seen = new Set<unknown>();
     return results
       .map((result) => result.object)
-      .filter(nonNullable)
+      .filter(isNonNullable)
       .filter((object: any) => {
         // Assuming objects have `id` property we can use to dedup.
         if (object.id == null) {

@@ -4,11 +4,12 @@
 
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
-import { createMutableSchema, ref, S } from '@dxos/echo-schema';
+import { Ref, S } from '@dxos/echo-schema';
+import { createEchoSchema, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
-import { type TestMutationsMap, type TestGeneratorMap, type TestSchemaMap } from './types';
+import { type TestGeneratorMap, type TestMutationsMap, type TestSchemaMap } from './types';
 import { randomText } from './util';
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
@@ -26,7 +27,7 @@ export enum TestSchemaType {
 }
 
 const testSchemas = (): TestSchemaMap<TestSchemaType> => {
-  const document = createMutableSchema(
+  const document = createEchoSchema(
     {
       typename: TestSchemaType.document,
       version: '0.1.0',
@@ -37,7 +38,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     },
   );
 
-  const organization = createMutableSchema(
+  const organization = createEchoSchema(
     {
       typename: TestSchemaType.organization,
       version: '0.1.0',
@@ -49,7 +50,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     },
   );
 
-  const contact = createMutableSchema(
+  const contact = createEchoSchema(
     {
       typename: TestSchemaType.contact,
       version: '0.1.0',
@@ -57,13 +58,13 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     {
       name: S.String.annotations({ description: 'name of the person' }),
       email: S.String,
-      org: ref(organization),
+      org: Ref(organization),
       lat: S.Number,
       lng: S.Number,
     },
   );
 
-  const project = createMutableSchema(
+  const project = createEchoSchema(
     {
       typename: TestSchemaType.project,
       version: '0.1.0',
@@ -76,7 +77,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       status: S.String,
       priority: S.Number,
       active: S.Boolean,
-      org: ref(organization),
+      org: Ref(organization),
     },
   );
 
@@ -108,7 +109,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
       email: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.email() : undefined,
       org:
         organizations?.length && faker.datatype.boolean({ probability: 0.3 })
-          ? faker.helpers.arrayElement(organizations)
+          ? makeRef(faker.helpers.arrayElement(organizations))
           : undefined,
       ...location,
     };

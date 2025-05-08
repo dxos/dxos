@@ -9,6 +9,7 @@
   "targets": {
     "build": {},
     "lint": {},
+    "pack": {},
     "storage": {
       "dependsOn": [
         "build"

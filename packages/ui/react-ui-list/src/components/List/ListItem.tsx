@@ -25,15 +25,14 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, ListItem as NaturalListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DropIndicator } from './DropIndicator';
 import { useListContext } from './ListRoot';
 
 export type ListItemRecord = {};
 
-export type ItemState =
+export type ItemDragState =
   | {
       type: 'idle';
     }
@@ -49,9 +48,9 @@ export type ItemState =
       closestEdge: Edge | null;
     };
 
-export const idle: ItemState = { type: 'idle' };
+export const idle: ItemDragState = { type: 'idle' };
 
-const stateStyles: { [Key in ItemState['type']]?: HTMLAttributes<HTMLDivElement>['className'] } = {
+const stateStyles: { [Key in ItemDragState['type']]?: HTMLAttributes<HTMLDivElement>['className'] } = {
   'is-dragging': 'opacity-50',
 };
 
@@ -75,17 +74,18 @@ export const [ListItemProvider, useListItemContext] = createContext<ListItemCont
 export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
   PropsWithChildren<{
     item: T;
-  }>
+  }> &
+    HTMLAttributes<HTMLDivElement>
 >;
 
 /**
  * Draggable list item.
  */
-export const ListItem = <T extends ListItemRecord>({ children, classNames, item }: ListItemProps<T>) => {
+export const ListItem = <T extends ListItemRecord>({ children, classNames, item, ...props }: ListItemProps<T>) => {
   const { isItem, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
   const ref = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLElement | null>(null);
-  const [state, setState] = useState<ItemState>(idle);
+  const [state, setState] = useState<ItemDragState>(idle);
   useEffect(() => {
     const element = ref.current;
     invariant(element);
@@ -113,6 +113,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item 
                   container.style.width = rect.width + 'px';
                   setState({ type: 'preview', container });
                   setRootState({ type: 'preview', container, item });
+                  return () => {}; // TODO(burdon): Cleanup.
                 },
               });
             }
@@ -164,11 +165,18 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item 
 
   return (
     <ListItemProvider item={item} dragHandleRef={dragHandleRef}>
-      <div className='relative'>
-        <div ref={ref} role='listitem' className={mx('flex overflow-hidden', classNames, stateStyles[state.type])}>
+      <div role='none' className='relative'>
+        <div
+          ref={ref}
+          role='listitem'
+          className={mx('flex overflow-hidden', classNames, stateStyles[state.type])}
+          {...props}
+        >
           {children}
         </div>
-        {state.type === 'is-dragging-over' && state.closestEdge && <DropIndicator edge={state.closestEdge} />}
+        {state.type === 'is-dragging-over' && state.closestEdge && (
+          <NaturalListItem.DropIndicator edge={state.closestEdge} />
+        )}
       </div>
     </ListItemProvider>
   );
@@ -194,18 +202,30 @@ export const ListItemDeleteButton = ({
   autoHide = true,
   classNames,
   disabled,
+  icon = 'ph--x--regular',
   ...props
-}: Omit<IconButtonProps, 'icon'> & { autoHide?: boolean }) => {
+}: Partial<Pick<IconButtonProps, 'icon'>> & Omit<IconButtonProps, 'icon'> & { autoHide?: boolean }) => {
   const { state } = useListContext('DELETE_BUTTON');
   const isDisabled = state.type !== 'idle' || disabled;
   return (
     <IconButton
-      icon='ph--x--regular'
+      icon={icon}
       disabled={isDisabled}
       classNames={[classNames, autoHide && disabled && 'hidden']}
       {...props}
     />
   );
+};
+
+export const ListItemButton = ({
+  autoHide = true,
+  classNames,
+  disabled,
+  ...props
+}: IconButtonProps & { autoHide?: boolean }) => {
+  const { state } = useListContext('ITEM_BUTTON');
+  const isDisabled = state.type !== 'idle' || disabled;
+  return <IconButton disabled={isDisabled} classNames={[classNames, autoHide && disabled && 'hidden']} {...props} />;
 };
 
 export const ListItemDragHandle = () => {

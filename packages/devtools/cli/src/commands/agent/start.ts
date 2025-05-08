@@ -221,11 +221,11 @@ export default class Start extends BaseCommand<typeof Start> {
     const sendTelemetry = async () => {
       // TODO(nf): move to observability
       const installationId = this._observability?.getTag('installationId');
-      const userId = this._observability?.getTag('identityKey');
-      this._observability?.event({
+      const did = this._observability?.getTag('did');
+      this._observability?.track({
         installationId: installationId?.value,
-        identityId: userId?.value,
-        name: 'cli.command.run.agent',
+        did: did?.value,
+        action: 'cli.command.run.agent',
         properties: {
           profile: this.flags.profile,
           duration: this.duration,

@@ -22,7 +22,7 @@ describe('EpochMonitor', () => {
       runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/epoch-monitor' }] } },
     });
 
-    const client = new Client({ config, services: await fromHost(config) });
+    client = new Client({ config, services: await fromHost(config) });
     await client.initialize();
     await client.halo.createIdentity();
 

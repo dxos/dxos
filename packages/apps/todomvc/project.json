@@ -33,6 +33,7 @@
     },
     "e2e": {},
     "lint": {},
+    "pack": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {

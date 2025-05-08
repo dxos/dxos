@@ -5,7 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 
 import { MyKey } from './my-key';
 import { schema } from './proto';

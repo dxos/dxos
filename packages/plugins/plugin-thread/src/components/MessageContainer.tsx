@@ -7,13 +7,12 @@ import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type MessageType } from '@dxos/plugin-space/types';
+import { RefArray } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
 import { type ReactiveEchoObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
-import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
   getSize,
   hoverableControlItem,
@@ -22,11 +21,11 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { nonNullable } from '@dxos/util';
+import { type TextContentBlock, type MessageType } from '@dxos/schema';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
-import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
+import { THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
 
 // TODO(thure): #8149
@@ -35,28 +34,36 @@ const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverable
 export const MessageContainer = ({
   message,
   members,
+  editable = false,
   onDelete,
 }: {
   message: MessageType;
   members: SpaceMember[];
+  editable?: boolean;
   onDelete?: (id: string) => void;
 }) => {
   const senderIdentity = members.find(
-    (member) => message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey),
+    (member) =>
+      (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
+      (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
   )?.identity;
   const messageMetadata = getMessageMetadata(message.id, senderIdentity);
-  const userIsAuthor = useIdentity()?.identityKey.toHex() === messageMetadata.authorId;
+  const userIsAuthor = useIdentity()?.did === messageMetadata.authorId;
   const [editing, setEditing] = useState(false);
   const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
   const { t } = useTranslation(THREAD_PLUGIN);
   const editLabel = t(editing ? 'save message label' : 'edit message label');
   const deleteLabel = t('delete message label');
+  const textBlock = message.blocks.find((block) => block.type === 'text');
+  const references = message.blocks.filter((block) => block.type === 'reference').map((block) => block.reference);
+
+  useOnEditAnalytics(message, textBlock, !!editing);
 
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
         <ButtonGroup classNames='mie-1'>
-          {userIsAuthor && (
+          {userIsAuthor && editable && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <Button
@@ -70,7 +77,7 @@ export const MessageContainer = ({
                 </Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content classNames='z-[21]'>
+                <Tooltip.Content>
                   {editLabel}
                   <Tooltip.Arrow />
                 </Tooltip.Content>
@@ -91,7 +98,7 @@ export const MessageContainer = ({
                 </Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content classNames='z-[21]'>
+                <Tooltip.Content>
                   {deleteLabel}
                   <Tooltip.Arrow />
                 </Tooltip.Content>
@@ -100,48 +107,46 @@ export const MessageContainer = ({
           )}
         </ButtonGroup>
       </MessageHeading>
-      <TextboxBlock message={message} isAuthor={userIsAuthor} editing={editing} />
-      {message.parts?.filter(nonNullable).map((part, index) => <MessagePart key={index} part={part} />)}
+      {textBlock && <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} />}
+      {RefArray.targets(references).map((reference, index) => (
+        <MessagePart key={index} part={reference} />
+      ))}
     </MessageRoot>
   );
 };
 
 const MessagePart = ({ part }: { part: Expando }) => {
-  return (
-    <Mosaic.Container id={part.id}>
-      <Mosaic.DraggableTile type={THREAD_ITEM} path={part.id} item={part} Component={MessageBlockObjectTile} />
-    </Mosaic.Container>
-  );
+  return <MessageBlockObjectTile subject={part} />;
 };
 
 const TextboxBlock = ({
-  message,
+  block,
   isAuthor,
   editing,
 }: {
-  message: MessageType;
+  block: TextContentBlock;
   editing?: boolean;
   isAuthor?: boolean;
   identity?: Identity;
 }) => {
   const { themeMode } = useThemeContext();
-  const inMemoryContentRef = useRef(message.text);
+  const inMemoryContentRef = useRef(block.text);
 
   const handleDocumentChange = useCallback((newState: string) => {
     inMemoryContentRef.current = newState;
   }, []);
 
   const saveDocumentChange = useCallback(() => {
-    message.text = inMemoryContentRef.current;
-  }, [message]);
+    block.text = inMemoryContentRef.current;
+  }, [block]);
 
   useOnTransition(editing, true, false, saveDocumentChange);
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
-      initialValue: message.text,
+      initialValue: block.text,
       extensions: [
-        createBasicExtensions({ readonly: !isAuthor || !editing }),
+        createBasicExtensions({ readOnly: !isAuthor || !editing }),
         createThemeExtensions({ themeMode }),
         command,
         EditorView.updateListener.of((update) => {
@@ -151,21 +156,19 @@ const TextboxBlock = ({
         }),
       ],
     }),
-    [message.text, editing, isAuthor, themeMode, handleDocumentChange],
+    [block.text, editing, isAuthor, themeMode, handleDocumentChange],
   );
 
   useEffect(() => {
     editing && view?.focus();
   }, [editing, view]);
 
-  useOnEditAnalytics(message, !!editing);
-
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const MessageBlockObjectTile: MosaicTileComponent<ReactiveEchoObject<any>> = forwardRef(
-  ({ draggableStyle, draggableProps, item, active, ref: _ref, ...props }, forwardedRef) => {
-    let title = item.name ?? item.title ?? item.type ?? 'Object';
+const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: ReactiveEchoObject<any> }>(
+  ({ subject }, forwardedRef) => {
+    let title = subject.name ?? subject.title ?? subject.type ?? 'Object';
     if (typeof title !== 'string') {
       title = title?.content ?? '';
     }
@@ -174,17 +177,9 @@ const MessageBlockObjectTile: MosaicTileComponent<ReactiveEchoObject<any>> = for
       <div
         role='group'
         className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
-        style={draggableStyle}
         ref={forwardedRef}
       >
-        <Surface
-          role='card'
-          limit={1}
-          data={{ content: item }}
-          draggableProps={draggableProps}
-          fallback={title}
-          {...props}
-        />
+        <Surface role='card' limit={1} data={{ subject }} fallback={title} />
       </div>
     );
   },

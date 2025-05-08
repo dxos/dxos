@@ -6,17 +6,18 @@ import { type Command } from '@oclif/core';
 
 import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
-import { create, ECHO_ATTR_META, ECHO_ATTR_TYPE, getObjectAnnotation, type ObjectMeta, S } from '@dxos/echo-schema';
-import { FUNCTION_TYPES } from '@dxos/functions';
+import { ECHO_ATTR_META, ECHO_ATTR_TYPE, getTypeAnnotation, type ObjectMeta, S } from '@dxos/echo-schema';
+import { FUNCTION_TYPES } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
-import { nonNullable } from '@dxos/util';
+import { live } from '@dxos/live-object';
+import { isNonNullable } from '@dxos/util';
 
 /**
  * Plugin base command.
  */
 export abstract class BaseCommand<T extends typeof Command = any> extends AbstractBaseCommand<T> {
   // TODO(burdon): Move to BaseCommand.
-  protected _schemaMap?: Map<string, S.Schema<any>>;
+  protected _schemaMap?: Map<string, S.Schema.AnyNoContext>;
 
   get schemaMap() {
     invariant(this._schemaMap, 'Schema map not initialized.');
@@ -31,7 +32,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
    * build typename
    */
   protected async addTypes(client: Client) {
-    const schemaMap = new Map<string, S.Schema<any>>();
+    const schemaMap = new Map<string, S.Schema.AnyNoContext>();
     // TODO(burdon): Enable dynamic import? (e.g., from npm.)
     // const types = await import('@braneframe/types');
     if (this.flags.verbose) {
@@ -41,7 +42,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
     const schemata = [...FUNCTION_TYPES]
       .map((schema) => {
         if (S.isSchema(schema)) {
-          const { typename } = getObjectAnnotation(schema as any) ?? {};
+          const { typename } = getTypeAnnotation(schema as any) ?? {};
           if (typename) {
             return [typename, schema];
           }
@@ -49,7 +50,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
 
         return null;
       })
-      .filter<[string, any]>(nonNullable<any>)
+      .filter<[string, any]>(isNonNullable<any>)
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 
     for (const [typename, schema] of schemata) {
@@ -67,7 +68,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
   /**
    * Parse object.
    */
-  protected parseObject(schemaMap: Map<string, S.Schema<any>>, data: any): any {
+  protected parseObject(schemaMap: Map<string, S.Schema.AnyNoContext>, data: any): any {
     if (Array.isArray(data)) {
       return data.map((item) => this.parseObject(schemaMap, item));
     } else if (typeof data === 'object') {
@@ -90,7 +91,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
         //   this.log(JSON.stringify({ object, meta }, undefined, 2));
         // }
 
-        return create(type, object, meta);
+        return live(type, object, meta);
       }
     }
 

@@ -9,7 +9,7 @@ import {
   InvitationEncoder,
   type Invitations,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

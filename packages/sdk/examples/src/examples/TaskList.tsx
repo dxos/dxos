@@ -7,7 +7,7 @@ import React, { type KeyboardEventHandler, useState, type ChangeEventHandler } f
 
 import type { PublicKey } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
-import { create } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Button, Input } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
@@ -25,7 +25,7 @@ const TaskList = ({ id, spaceKey }: { id: number; spaceKey?: PublicKey }) => {
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === 'Enter' && space && value) {
-      const task = create(TaskType, { title: value, completed: false });
+      const task = live(TaskType, { title: value, completed: false });
       setValue('');
       space.db.add(task);
     }

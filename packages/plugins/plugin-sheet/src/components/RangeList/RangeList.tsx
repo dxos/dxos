@@ -4,13 +4,14 @@
 
 import React, { useCallback } from 'react';
 
+import { rangeToA1Notation } from '@dxos/compute';
 import { S } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover } from '@dxos/react-ui-theme';
 
-import { rangeFromIndex, rangeToA1Notation } from '../../defs';
 import { SHEET_PLUGIN } from '../../meta';
+import { rangeFromIndex } from '../../types';
 import { Range, type SheetType } from '../../types';
 
 export type RangeListProps = {
