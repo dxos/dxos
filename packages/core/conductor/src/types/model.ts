@@ -5,7 +5,7 @@
 import { ObjectId } from '@dxos/echo-schema';
 import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
-import { live } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
@@ -70,7 +70,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
     const targetId = isComputeGraph(target.node)
       ? this.createNode({
           type: DXN.parse(target.node.graph.id!).toString(),
-          subgraph: Ref.make(target.node),
+          subgraph: makeRef(target.node),
         }).id
       : typeof target.node === 'string'
         ? target.node
