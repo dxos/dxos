@@ -139,15 +139,16 @@ export const ViewEditor = ({
   );
 
   return (
-    <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
+    <div role='none' className={mx('grid grid-rows-[1fr_1fr] min-bs-0', classNames)}>
       <Form<ViewMetaType>
         autoSave
         schema={ViewMetaSchema}
         values={viewValues}
         onSave={schema.readonly ? undefined : handleUpdate}
+        classNames='min-bs-0 overflow-y-auto'
       />
 
-      <div>
+      <div role='none' className='border-bs border-separator min-bs-0 overflow-y-auto'>
         {/* TODO(burdon): Clean up common form ux. */}
         <div role='none' className='p-2'>
           <label className={mx(inputTextLabel)}>{t('fields label')}</label>
