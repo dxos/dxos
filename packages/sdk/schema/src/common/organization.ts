@@ -15,6 +15,14 @@ import {
 
 import { IconAnnotationId } from '../annotations';
 
+export const organizationStatusOptions = [
+  { id: 'prospect', title: 'Prospect', color: 'indigo' },
+  { id: 'qualified', title: 'Qualified', color: 'purple' },
+  { id: 'active', title: 'Active', color: 'amber' },
+  { id: 'commit', title: 'Commit', color: 'emerald' },
+  { id: 'reject', title: 'Reject', color: 'red' },
+];
+
 /**
  * Organization schema.
  */
@@ -22,24 +30,26 @@ export const OrganizationSchema = S.Struct({
   id: Type.ObjectId,
   name: S.optional(S.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' })),
   description: S.optional(S.String.annotations({ title: 'Description' })),
-  // TODO(wittjosiah): Support ref?
+  // TODO(wittjosiah): Remove.
   status: S.optional(
-    S.Union(S.Literal('first'), S.Literal('second'), S.Literal('third'), S.Literal('fourth')).annotations({
+    S.Union(
+      S.Literal('prospect'),
+      S.Literal('qualified'),
+      S.Literal('active'),
+      S.Literal('commit'),
+      S.Literal('reject'),
+    ).annotations({
       title: 'Status',
       [PropertyMetaAnnotationId]: {
         singleSelect: {
-          options: [
-            { id: 'first', title: 'First', color: 'emerald' },
-            { id: 'second', title: 'Second', color: 'red' },
-            { id: 'third', title: 'Third', color: 'amber' },
-            { id: 'fourth', title: 'Fourth', color: 'indigo' },
-          ],
+          options: organizationStatusOptions,
         },
       },
       [FormatAnnotationId]: 'single-select',
     }),
   ),
-  image: S.optional(Format.URL.annotations({ title: 'Image' })),
+  // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
+  image: S.optional(S.String.annotations({ title: 'Image' })),
   website: S.optional(
     Format.URL.annotations({
       title: 'Website',

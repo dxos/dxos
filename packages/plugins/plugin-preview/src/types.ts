@@ -10,6 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 export type PreviewProps<T extends object> = PropsWithChildren<
   ThemedClassName<{
     subject: T;
+    role: string;
   }>
 >;
 
@@ -31,7 +32,9 @@ export type PreviewProps<T extends object> = PropsWithChildren<
  *   </Card.Body>
  * </Card.Root>
  */
-export const previewCard = 'popover-max-width rounded-lg overflow-hidden';
+export const popoverCard = 'popover-consistent-width rounded-lg overflow-hidden';
+export const defaultCard = '';
+export const kanbanCardWithoutPoster = 'pbs-[--rail-action]';
 export const previewTitle = 'text-lg font-medium line-clamp-2';
 export const previewProse = 'pli-3 mlb-3';
 export const previewChrome = 'pli-1.5 mlb-1.5 [&_.dx-button]:pli-1.5 [&_.dx-button]:text-start [&_.dx-button]:is-full';

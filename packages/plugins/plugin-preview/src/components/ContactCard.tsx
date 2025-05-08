@@ -8,17 +8,18 @@ import { Icon, Avatar, Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Contact, type Organization } from '@dxos/schema';
 
-import { type PreviewProps, previewCard, previewTitle, previewProse, previewChrome } from '../types';
+import { type PreviewProps, popoverCard, previewTitle, previewProse, previewChrome, defaultCard } from '../types';
 
 export const ContactCard = ({
   children,
   classNames,
+  role,
   subject: { fullName, image, organization, emails },
   onOrgClick,
 }: PreviewProps<Contact> & { onOrgClick?: (org: Organization) => void }) => {
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
-    <div role='none' className={mx(previewCard, classNames)}>
+    <div role='none' className={mx(role === 'popover' ? popoverCard : defaultCard, classNames)}>
       <Avatar.Root>
         <div role='group' className={mx(previewProse, 'grid gap-3 grid-cols-[min-content_1fr]')}>
           <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} hue='neutral' />

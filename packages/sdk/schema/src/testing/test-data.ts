@@ -53,10 +53,31 @@ const createContact = ({
   });
 };
 
+const createTranscriptMessage = (sender: Contact, blocks: string[]) => {
+  return create(MessageType, {
+    sender: {
+      name: sender.fullName,
+    },
+    // don't care about timestamps
+    created: getDate(0),
+    blocks: blocks.map(
+      (block) =>
+        ({
+          type: 'transcription',
+          // don't care about timestamps
+          started: getDate(0),
+          text: block,
+        }) as const,
+    ),
+  });
+};
+
 export const createTestData = () => {
   const organizations: Record<string, Organization> = {
     amco: createOrganization({ name: 'Amco', website: 'amco.org' }),
     cyberdyne: createOrganization({ name: 'Cyberdyne', website: 'cyberdyne.com' }),
+    dxos: createOrganization({ name: 'DXOS', website: 'dxos.org' }),
+    inkandswitch: createOrganization({ name: 'Ink & Switch', website: 'inkandswitch.com' }),
   };
 
   const contacts: Record<string, Contact> = {
@@ -91,6 +112,18 @@ export const createTestData = () => {
     }),
     unknown1: createContact({ fullName: 'Bitcoin Support', email: 'support@btc-wallet-verify.com' }),
     unknown2: createContact({ fullName: 'HR Department', email: 'hr-department@techvison-company.co' }),
+    peter: createContact({
+      fullName: 'Peter van Hardenberg',
+      email: 'pvh@inkandswitch.com',
+      preferredName: 'Peter',
+      organization: organizations.inkandswitch,
+    }),
+    ray: createContact({
+      fullName: 'Raymmar',
+      email: 'raymmar@dxos.org',
+      preferredName: 'Ray',
+      organization: organizations.dxos,
+    }),
   };
 
   const documents: Testing.DocumentType[] = [
@@ -136,330 +169,95 @@ export const createTestData = () => {
       'Headquarters Relocation Plan: Downtown Campus\n\nTimeline:\n- Phase 1: Planning & Design (3 months)\n- Phase 2: Construction & Buildout (5 months)\n- Phase 3: Move Execution (1 month)\n- Target completion: December 15\n\nSpace Details:\n- 45,000 sq ft across 3 floors\n- 320 workstations (30% hot-desking)\n- 18 conference rooms of varying sizes\n- 5 specialized collaboration spaces\n- Expanded lab and testing facilities\n\nBudget Summary:\n- Lease: $42/sq ft annually ($1.89M/year)\n- Buildout: $185/sq ft ($8.3M total)\n- Furniture & Equipment: $2.4M\n- Moving & Logistics: $350K\n- Technology Infrastructure: $1.2M\n\nDepartment Migration Schedule:\n- Engineering: December 3-4\n- Product & Design: December 5-6\n- Sales & Marketing: December 10-11\n- Executive & Operations: December 12-13',
     ),
     createDocument('Computation Irreducibility', 'This is really cool'),
+    createDocument('Composer VIP call', ''),
+  ];
+
+  const transcriptWoflram: MessageType[] = [
+    createTranscriptMessage(contacts.john, [
+      "And what I'd like to talk today about is Steven Wolfram's concept of a computational irreducibility.",
+    ]),
+  ];
+
+  const transcriptJosiah: MessageType[] = [
+    createTranscriptMessage(contacts.john, [
+      'Today, I need to talk to Peter Van Hardenburg about the Composer VIP call.',
+    ]),
+    createTranscriptMessage(contacts.peter, ['Hey Ray, can you pull up the Composer VIP call?']),
+    createTranscriptMessage(contacts.john, ['Peter works at Ink and Switch.']),
   ];
 
   const transcriptMessages: MessageType[] = [
-    create(MessageType, {
-      sender: {
-        name: contacts.john.fullName,
-      },
-      created: getDate(0),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(30),
-          text: "And what I'd like to talk today about is Steven Wolfram's concept of a computational irreducibility.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.john.fullName,
-      },
-      created: getDate(0),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(0),
-          text: 'Good morning everyone. Thanks for joining the quarterly strategy meeting. I see Sarah and Emma are here from Amco. Are we still waiting for David?',
-        },
-        {
-          type: 'transcription',
-          started: getDate(30),
-          text: 'While we wait, let me pull up the Q3 Financial Report that we need to review today.',
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.sarah.fullName,
-      },
-      created: getDate(45),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(45),
-          text: "Morning John. David texted me that he's running about 5 minutes late. Something about finalizing some numbers for us.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.emma.fullName,
-      },
-      created: getDate(60),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(60),
-          text: "Hi everyone. I've already reviewed the Q3 report. I'm particularly concerned about the marketing budget overrun. 23% over allocation is significant.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.john.fullName,
-      },
-      created: getDate(90),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(90),
-          text: "I agree, Emma. That's definitely one of our top concerns. We also need to address the underperforming new product line at Cyberdyne. It's 35% below projections.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.david.fullName,
-      },
-      created: getDate(120),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(120),
-          text: "Sorry I'm late everyone. I was just finalizing the numbers for our Asia Market Expansion strategy to discuss today.",
-        },
-        {
-          type: 'transcription',
-          started: getDate(135),
-          text: "I see you're already discussing the Q3 report. The margin decrease is concerning, but I think it's related to our investment in the new markets.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.sarah.fullName,
-      },
-      created: getDate(160),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(160),
-          text: "David, regarding the Asia expansion, I've been working with Michael from the Singapore office. The regulatory environment there definitely favors local partnerships as mentioned in our strategy document.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.emma.fullName,
-      },
-      created: getDate(190),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(190),
-          text: 'I think we should also consider the TechGiant acquisition offer in light of our expansion plans. The $450M all-cash transaction would give us significant resources for the Asia push.',
-        },
-        {
-          type: 'transcription',
-          started: getDate(210),
-          text: 'Has anyone spoken with Alex about this? As our CFO, his input would be valuable.',
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.john.fullName,
-      },
-      created: getDate(240),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(240),
-          text: "I had lunch with Alex yesterday. He's running the numbers, but his initial reaction was positive. The 35% premium over our last funding round is attractive.",
-        },
-        {
-          type: 'transcription',
-          started: getDate(260),
-          text: "Let's shift gears to the Product Roadmap for 2023-2024. Sarah, can you give us an update on the Q3 deliverables?",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.sarah.fullName,
-      },
-      created: getDate(290),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(290),
-          text: 'Sure. The core platform v5.0 is on track for release next month. The redesigned UI has tested well with focus groups, and performance improvements are exceeding our 50% faster loading target.',
-        },
-        {
-          type: 'transcription',
-          started: getDate(320),
-          text: "I've been working closely with Jennifer's team on the enhanced security features. They've done an excellent job.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.david.fullName,
-      },
-      created: getDate(350),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(350),
-          text: 'Speaking of security, I received an email from someone claiming to be from Bitcoin Support. It looked suspicious, so I forwarded it to our IT security team.',
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.john.fullName,
-      },
-      created: getDate(380),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(380),
-          text: "Good call, David. There's been an increase in phishing attempts lately. Everyone should remain vigilant.",
-        },
-        {
-          type: 'transcription',
-          started: getDate(400),
-          text: 'Now, regarding our Strategic Partnership Proposal with Example Corp, I had a productive call with their CEO yesterday.',
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.emma.fullName,
-      },
-      created: getDate(430),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(430),
-          text: "That's great to hear. The partnership framework looks solid. I particularly like the co-branded offerings for the enterprise segment. That aligns well with our Q4 goals.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.sarah.fullName,
-      },
-      created: getDate(460),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(460),
-          text: 'By the way, has everyone completed their items for the Annual Audit Checklist? The HR Department sent a reminder yesterday about the payroll reconciliations and tax filings.',
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.david.fullName,
-      },
-      created: getDate(490),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(490),
-          text: "I've submitted all the finance department items. The general ledger, trial balance, and bank reconciliations are all ready for review.",
-        },
-        {
-          type: 'transcription',
-          started: getDate(510),
-          text: "I'm still working on the accounts receivable aging report with bad debt analysis. Should have that done by tomorrow.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.john.fullName,
-      },
-      created: getDate(540),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(540),
-          text: "Excellent. Let's wrap up with action items. Emma, can you lead the marketing budget reallocation for Q4?",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.emma.fullName,
-      },
-      created: getDate(570),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(570),
-          text: "Yes, I'll work with the marketing team to focus on high-performing channels as recommended in the Q3 report.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.john.fullName,
-      },
-      created: getDate(600),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(600),
-          text: 'Sarah, please continue leading the product release and coordinate with Jennifer on the security features.',
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.sarah.fullName,
-      },
-      created: getDate(630),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(630),
-          text: "Will do. I'll also follow up with Michael about the Singapore regulatory requirements for our Asia expansion.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.john.fullName,
-      },
-      created: getDate(660),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(660),
-          text: 'And David, please finalize the accounts receivable report and continue your analysis of the TechGiant offer with Alex.',
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.david.fullName,
-      },
-      created: getDate(690),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(690),
-          text: "I'm on it. I'll have a detailed analysis ready for our next meeting.",
-        },
-      ],
-    }),
-    create(MessageType, {
-      sender: {
-        name: contacts.john.fullName,
-      },
-      created: getDate(720),
-      blocks: [
-        {
-          type: 'transcription',
-          started: getDate(720),
-          text: "Great. Thanks everyone for a productive meeting. Let's reconvene next week to follow up on these items.",
-        },
-      ],
-    }),
+    ...transcriptWoflram,
+    ...transcriptJosiah,
+
+    createTranscriptMessage(contacts.john, [
+      'Good morning everyone. Thanks for joining the quarterly strategy meeting. I see Sarah and Emma are here from Amco. Are we still waiting for David?',
+      'While we wait, let me pull up the Q3 Financial Report that we need to review today.',
+    ]),
+    createTranscriptMessage(contacts.sarah, [
+      "Morning John. David texted me that he's running about 5 minutes late. Something about finalizing some numbers for us.",
+    ]),
+    createTranscriptMessage(contacts.emma, [
+      "Hi everyone. I've already reviewed the Q3 report. I'm particularly concerned about the marketing budget overrun. 23% over allocation is significant.",
+    ]),
+    createTranscriptMessage(contacts.john, [
+      "I agree, Emma. That's definitely one of our top concerns. We also need to address the underperforming new product line at Cyberdyne. It's 35% below projections.",
+    ]),
+    createTranscriptMessage(contacts.david, [
+      "Sorry I'm late everyone. I was just finalizing the numbers for our Asia Market Expansion strategy to discuss today.",
+      "I see you're already discussing the Q3 report. The margin decrease is concerning, but I think it's related to our investment in the new markets.",
+    ]),
+    createTranscriptMessage(contacts.sarah, [
+      "David, regarding the Asia expansion, I've been working with Michael from the Singapore office. The regulatory environment there definitely favors local partnerships as mentioned in our strategy document.",
+    ]),
+    createTranscriptMessage(contacts.emma, [
+      'I think we should also consider the TechGiant acquisition offer in light of our expansion plans. The $450M all-cash transaction would give us significant resources for the Asia push.',
+      'Has anyone spoken with Alex about this? As our CFO, his input would be valuable.',
+    ]),
+    createTranscriptMessage(contacts.john, [
+      "I had lunch with Alex yesterday. He's running the numbers, but his initial reaction was positive. The 35% premium over our last funding round is attractive.",
+      "Let's shift gears to the Product Roadmap for 2023-2024. Sarah, can you give us an update on the Q3 deliverables?",
+    ]),
+    createTranscriptMessage(contacts.sarah, [
+      'Sure. The core platform v5.0 is on track for release next month. The redesigned UI has tested well with focus groups, and performance improvements are exceeding our 50% faster loading target.',
+      "I've been working closely with Jennifer's team on the enhanced security features. They've done an excellent job.",
+    ]),
+    createTranscriptMessage(contacts.david, [
+      'Speaking of security, I received an email from someone claiming to be from Bitcoin Support. It looked suspicious, so I forwarded it to our IT security team.',
+    ]),
+    createTranscriptMessage(contacts.john, [
+      "Good call, David. There's been an increase in phishing attempts lately. Everyone should remain vigilant.",
+      'Now, regarding our Strategic Partnership Proposal with Example Corp, I had a productive call with their CEO yesterday.',
+    ]),
+    createTranscriptMessage(contacts.emma, [
+      "That's great to hear. The partnership framework looks solid. I particularly like the co-branded offerings for the enterprise segment. That aligns well with our Q4 goals.",
+    ]),
+    createTranscriptMessage(contacts.sarah, [
+      'By the way, has everyone completed their items for the Annual Audit Checklist? The HR Department sent a reminder yesterday about the payroll reconciliations and tax filings.',
+    ]),
+    createTranscriptMessage(contacts.david, [
+      "I've submitted all the finance department items. The general ledger, trial balance, and bank reconciliations are all ready for review.",
+      "I'm still working on the accounts receivable aging report with bad debt analysis. Should have that done by tomorrow.",
+    ]),
+    createTranscriptMessage(contacts.john, [
+      "Excellent. Let's wrap up with action items. Emma, can you lead the marketing budget reallocation for Q4?",
+    ]),
+    createTranscriptMessage(contacts.emma, [
+      "Yes, I'll work with the marketing team to focus on high-performing channels as recommended in the Q3 report.",
+    ]),
+    createTranscriptMessage(contacts.john, [
+      'Sarah, please continue leading the product release and coordinate with Jennifer on the security features.',
+    ]),
+    createTranscriptMessage(contacts.sarah, [
+      "Will do. I'll also follow up with Michael about the Singapore regulatory requirements for our Asia expansion.",
+    ]),
+    createTranscriptMessage(contacts.john, [
+      'And David, please finalize the accounts receivable report and continue your analysis of the TechGiant offer with Alex.',
+    ]),
+    createTranscriptMessage(contacts.david, ["I'm on it. I'll have a detailed analysis ready for our next meeting."]),
+    createTranscriptMessage(contacts.john, [
+      "Great. Thanks everyone for a productive meeting. Let's reconvene next week to follow up on these items.",
+    ]),
   ];
 
   const emails: MessageType[] = [
@@ -719,6 +517,8 @@ export const createTestData = () => {
     organizations,
     contacts,
     documents,
+    transcriptWoflram,
+    transcriptJosiah,
     transcriptMessages,
     emails,
     labels,

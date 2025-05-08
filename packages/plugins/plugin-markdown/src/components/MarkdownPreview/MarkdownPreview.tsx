@@ -2,11 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { type PreviewProps, previewCard, previewTitle, previewProse, previewChrome } from '@dxos/plugin-preview';
+import {
+  type PreviewProps,
+  popoverCard,
+  previewTitle,
+  previewProse,
+  previewChrome,
+  defaultCard,
+  kanbanCardWithoutPoster,
+} from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -34,18 +43,35 @@ const getSnippet = (subject: DocumentType | TextType, fallback: string) => {
   }
 };
 
-export const MarkdownPreview = ({ classNames, subject }: PreviewProps<DocumentType | TextType>) => {
+export const MarkdownPreview = ({ classNames, subject, role }: PreviewProps<DocumentType | TextType>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const snippet = getSnippet(subject, t('fallback abstract'));
 
+  // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.
   const handleNavigate = useCallback(
-    async () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(subject)] })),
+    () =>
+      dispatch(
+        pipe(
+          createIntent(LayoutAction.UpdatePopover, {
+            part: 'popover',
+            subject: null,
+            options: { state: false, anchorId: '' },
+          }),
+          chain(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(subject)] }),
+        ),
+      ),
     [dispatch, subject],
   );
 
   return (
-    <div role='none' className={mx(previewCard, classNames)}>
+    <div
+      role='none'
+      className={mx(
+        role === 'popover' ? popoverCard : role === 'card--kanban' ? kanbanCardWithoutPoster : defaultCard,
+        classNames,
+      )}
+    >
       <h2 className={mx(previewTitle, previewProse)}>{getTitle(subject, t('fallback title'))}</h2>
       {snippet && <p className={mx(previewProse, 'line-clamp-3 break-words col-span-2')}>{snippet}</p>}
       <div role='none' className={previewChrome}>

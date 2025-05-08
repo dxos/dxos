@@ -2,16 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S, TypedObject, FormatEnum, TypeEnum, type JsonProp, type EchoSchema } from '@dxos/echo-schema';
+import {
+  AST,
+  S,
+  TypedObject,
+  FormatEnum,
+  TypeEnum,
+  type JsonProp,
+  type EchoSchema,
+  getTypenameOrThrow,
+  toJsonSchema,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
-import { type Space, live, Ref.make } from '@dxos/react-client/echo';
+import { type Space, live, Ref } from '@dxos/react-client/echo';
+import { type Client, PublicKey } from '@dxos/react-client';
+import { KanbanType } from '@dxos/react-ui-kanban';
 import { createView, ViewProjection, createFieldId, getSchemaProperties } from '@dxos/schema';
 import { capitalize } from '@dxos/util';
 
-import { KanbanType } from '../defs';
+// TODO(wittjosiah): UI package shouldn't depend on client.
 
 type InitializeKanbanProps = {
+  client: Client;
   space: Space;
   name?: string;
   typename?: string;
@@ -42,29 +55,35 @@ const createDefaultTaskSchema = () => {
 };
 
 export const initializeKanban = async ({
+  client,
   space,
   name,
   typename,
   initialPivotColumn,
-}: InitializeKanbanProps): Promise<{ kanban: KanbanType; schema: EchoSchema }> => {
+}: InitializeKanbanProps): Promise<{ kanban: KanbanType; schema?: EchoSchema }> => {
   if (typename) {
+    const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => getTypenameOrThrow(schema) === typename);
     const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-    invariant(schema, `Schema not found: ${typename}`);
 
-    const fields = getSchemaProperties(schema.ast)
+    const ast = staticSchema?.ast ?? schema?.ast;
+    const jsonSchema = staticSchema ? toJsonSchema(staticSchema) : schema?.jsonSchema;
+    invariant(ast, `Schema not found: ${typename}`);
+    invariant(jsonSchema, `Schema not found: ${typename}`);
+
+    const fields = getSchemaProperties(ast)
       .filter((prop) => prop.type !== 'object' || prop.format === FormatEnum.Ref)
       .map((prop) => prop.name);
 
     const view = createView({
       name: "Kanban's card view",
-      typename: schema.typename,
-      jsonSchema: schema.jsonSchema,
+      typename,
+      jsonSchema,
       fields,
     });
 
     const kanban = live(KanbanType, { cardView: Ref.make(view), columnFieldId: undefined, name });
     if (initialPivotColumn) {
-      const viewProjection = new ViewProjection(schema.jsonSchema, view);
+      const viewProjection = new ViewProjection(jsonSchema, view);
       const fieldId = viewProjection.getFieldId(initialPivotColumn);
       if (fieldId) {
         kanban.columnFieldId = fieldId;

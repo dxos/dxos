@@ -28,8 +28,8 @@ const meta: Meta<typeof MarkdownPreview> = {
   render: ({ subject }) => {
     return (
       <Popover.Root open>
-        <Popover.Content classNames='popover-max-width overflow-hidden'>
-          <MarkdownPreview subject={subject} />
+        <Popover.Content>
+          <MarkdownPreview subject={subject} role='popover' />
           <Popover.Arrow />
         </Popover.Content>
         <Popover.Trigger>
