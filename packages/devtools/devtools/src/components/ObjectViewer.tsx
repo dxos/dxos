@@ -2,16 +2,22 @@ import React, { type ComponentType } from 'react';
 
 import { DXN } from '@dxos/keys';
 import { createElement, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Clipboard, Input } from '@dxos/react-ui';
 
 export type ObjectViewerProps = {
   object: any;
+  /**
+   * Renders a copyable link to the object.
+   * Prefer to use the DXN from the object.
+   */
+  id?: string;
   onNavigate?: (dxn: DXN) => void;
 };
 
 /**
  * Renders a JSON object with navigatable DXN links.
  */
-export const ObjectViewer = ({ object, onNavigate }: ObjectViewerProps) => {
+export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
   const text = JSON.stringify(object, null, 2);
 
   const rowRenderer = ({
@@ -53,9 +59,25 @@ export const ObjectViewer = ({ object, onNavigate }: ObjectViewerProps) => {
   };
 
   return (
-    <SyntaxHighlighter classNames='text-sm' language='json' renderer={rowRenderer}>
-      {text}
-    </SyntaxHighlighter>
+    <>
+      {id && (
+        <Clipboard.Provider>
+          <div className='flex flex-col'>
+            <Input.Root>
+              <div role='none' className='flex flex-col gap-1'>
+                <div role='none' className='flex gap-1'>
+                  <Input.TextInput disabled value={id} />
+                  <Clipboard.IconButton value={id} />
+                </div>
+              </div>
+            </Input.Root>
+          </div>
+        </Clipboard.Provider>
+      )}
+      <SyntaxHighlighter classNames='text-sm' language='json' renderer={rowRenderer}>
+        {text}
+      </SyntaxHighlighter>
+    </>
   );
 };
 

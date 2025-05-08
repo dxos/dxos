@@ -164,9 +164,13 @@ export const SchemaPanel = (props: { space?: Space }) => {
         </div>
 
         <div className='min-bs-0 bs-full !border-separator border-is border-bs'>
-          <div className={mx('p-1 min-bs-0 overflow-auto')}>
+          <div className={mx('p-1 min-bs-0 h-full overflow-auto')}>
             {selected ? (
-              <ObjectViewer object={toJsonSchema(selected)} onNavigate={onNavigate} />
+              <ObjectViewer
+                object={toJsonSchema(selected)}
+                id={getSchemaDXN(selected)?.toString()}
+                onNavigate={onNavigate}
+              />
             ) : (
               <Placeholder label='Data' />
             )}

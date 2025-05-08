@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import type { State as AmState } from '@dxos/automerge/automerge';
 import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
-import { FormatEnum, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
+import { FormatEnum, getDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { getType, isDeleted } from '@dxos/live-object';
 import { QueryOptions, useQuery, type Space } from '@dxos/react-client/echo';
@@ -208,7 +208,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
           <div className={mx('p-1 min-bs-0 overflow-auto')}>
             {selected ? (
-              <ObjectViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
+              <ObjectViewer
+                object={selectedVersionObject ?? selected}
+                id={getDXN(selected)?.toString()}
+                onNavigate={onNavigate}
+              />
             ) : (
               <Placeholder label='Data' />
             )}
