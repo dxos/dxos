@@ -14,6 +14,7 @@ import {
   previewProse,
   previewChrome,
   defaultCard,
+  kanbanCardWithoutPoster,
 } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
@@ -64,7 +65,13 @@ export const MarkdownPreview = ({ classNames, subject, role }: PreviewProps<Docu
   );
 
   return (
-    <div role='none' className={mx(role === 'popover' ? popoverCard : defaultCard, classNames)}>
+    <div
+      role='none'
+      className={mx(
+        role === 'popover' ? popoverCard : role === 'card--kanban' ? kanbanCardWithoutPoster : defaultCard,
+        classNames,
+      )}
+    >
       <h2 className={mx(previewTitle, previewProse)}>{getTitle(subject, t('fallback title'))}</h2>
       {snippet && <p className={mx(previewProse, 'line-clamp-3 break-words col-span-2')}>{snippet}</p>}
       <div role='none' className={previewChrome}>

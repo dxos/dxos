@@ -43,6 +43,7 @@ import { Contact, Organization, Project } from '@dxos/schema';
 import { ContactCard, OrganizationCard, ProjectCard } from './components';
 import { meta, PREVIEW_PLUGIN } from './meta';
 import translations from './translations';
+import { kanbanCardWithoutPoster } from './types';
 
 const customEventOptions = { capture: true, passive: false };
 
@@ -190,14 +191,21 @@ export const PreviewPlugin = () =>
             role: ['popover', 'card--kanban'],
             position: 'fallback',
             filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-            component: ({ data }) => {
+            component: ({ data, role }) => {
               const schema = getSchema(data.subject);
               const { t } = useTranslation(PREVIEW_PLUGIN);
               if (!schema) {
                 return <p className={descriptionMessage}>{t('unable to create preview message')}</p>;
               }
 
-              return <Form schema={schema} values={data.subject} readonly />;
+              return (
+                <Form
+                  schema={schema}
+                  values={data.subject}
+                  readonly
+                  {...(role === 'card--kanban' && { classNames: kanbanCardWithoutPoster })}
+                />
+              );
             },
           }),
         ]),
