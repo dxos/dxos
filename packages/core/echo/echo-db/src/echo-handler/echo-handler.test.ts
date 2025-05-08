@@ -728,7 +728,7 @@ describe('Reactive Object with ECHO database', () => {
 
       const obj1 = db.add(live(Expando, { title: 'Object 1' }));
       const obj2 = live(Expando, { title: 'Object 2' });
-      obj1.nested = { object: { ref: Ref.make(live(Expando, { title: 'Object 2' })) } };
+      obj1.nested = { object: { ref: Ref.make(obj2) } };
       expect(obj1.nested.object.ref.target).toEqual(obj2);
 
       const obj3 = db.add(live(Expando, { title: 'Object 3' }));
