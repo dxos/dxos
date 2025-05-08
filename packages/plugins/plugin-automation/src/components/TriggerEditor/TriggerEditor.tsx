@@ -15,7 +15,7 @@ import {
   TriggerKind,
 } from '@dxos/functions/types';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { useTranslation, useOnTransition } from '@dxos/react-ui';
 import { type CustomInputMap, Form, SelectInput, useFormValues, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
@@ -61,7 +61,6 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         />
       ),
       // TODO(ZaymonFC): This should get it's own component.
-      // TODO(ZaymonFC): When the input schema changes (by switching function), we should set meta to {}.
       ['meta' as const]: (props) => {
         const selectedFunctionValue = useFormValues(['function' as JsonPath]);
         const selectedFunctionName = useMemo(
@@ -71,6 +70,14 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         const selectedFunction = useMemo(
           () => functions.find((f) => f.name === selectedFunctionName),
           [functions, selectedFunctionName],
+        );
+
+        // Clear function parameter meta when the function changes.
+        useOnTransition(
+          selectedFunctionValue,
+          (prevValue) => prevValue !== undefined && prevValue !== selectedFunctionValue,
+          (currValue) => currValue !== undefined,
+          () => props.onValueChange('object', {}),
         );
 
         const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
