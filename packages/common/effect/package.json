@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "effect": "3.14.20"
+    "effect": "3.14.21"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

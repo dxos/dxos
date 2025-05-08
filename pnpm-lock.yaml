@@ -106,7 +106,7 @@ importers:
         version: link:packages/common/typings
       '@effect/vitest':
         specifier: ~0.17.3
-        version: 0.17.8(effect@3.14.20)(vitest@3.1.1)
+        version: 0.17.8(effect@3.14.21)(vitest@3.1.1)
       '@mdx-js/react':
         specifier: ^2.1.3
         version: 2.1.5(react@18.2.0)
@@ -258,8 +258,8 @@ importers:
         specifier: ^1.4.7
         version: 1.4.7
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       esbuild:
         specifier: ^0.23.1
         version: 0.23.1
@@ -649,8 +649,8 @@ importers:
         specifier: ^5.0.20
         version: 5.0.20
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0(encoding@0.1.13)
@@ -714,7 +714,7 @@ importers:
         version: link:../../../tools/vite-plugin-icons
       '@effect/platform':
         specifier: 0.75.1
-        version: 0.75.1(effect@3.14.20)
+        version: 0.75.1(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -1327,8 +1327,8 @@ importers:
         specifier: workspace:*
         version: link:../log
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
 
   packages/common/errors: {}
 
@@ -2314,10 +2314,10 @@ importers:
         version: link:../../common/util
       '@effect/platform':
         specifier: 0.75.1
-        version: 0.75.1(effect@3.14.20)
+        version: 0.75.1(effect@3.14.21)
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       jsonpath-plus:
         specifier: 10.2.0
         version: 10.2.0
@@ -2416,8 +2416,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
 
   packages/core/echo/echo-db:
     dependencies:
@@ -2485,8 +2485,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
@@ -2735,8 +2735,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       ulidx:
         specifier: ^2.3.0
         version: 2.3.0
@@ -2860,8 +2860,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       ulidx:
         specifier: ^2.3.0
         version: 2.3.0
@@ -2929,8 +2929,8 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -3548,8 +3548,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0(@bufbuild/protobuf@2.1.0)
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
 
   packages/devtools/cli:
     dependencies:
@@ -3901,8 +3901,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       fast-check:
         specifier: ^3.19.0
         version: 3.19.0
@@ -4221,7 +4221,7 @@ importers:
         version: link:../../common/util
       '@effect/platform':
         specifier: 0.75.1
-        version: 0.75.1(effect@3.14.20)
+        version: 0.75.1(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -4250,8 +4250,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       flame-chart-js:
         specifier: ^3.3.0
         version: 3.3.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(use-resize-observer@9.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))
@@ -4559,8 +4559,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/log
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       handlebars:
         specifier: 4.7.8
         version: 4.7.8
@@ -4612,8 +4612,8 @@ importers:
         version: 1.0.0
     devDependencies:
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -4673,8 +4673,8 @@ importers:
         specifier: ^1.10.9
         version: 1.10.9
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       inquirer:
         specifier: ^12.0.0
         version: 12.0.0(@types/node@22.10.2)
@@ -4751,8 +4751,8 @@ importers:
         version: link:../../common/log
     devDependencies:
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -5470,8 +5470,8 @@ importers:
         specifier: 1.0.4
         version: 1.0.4
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1
@@ -5695,8 +5695,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -5805,8 +5805,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6037,8 +6037,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -6161,8 +6161,8 @@ importers:
         specifier: 1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       immer:
         specifier: ^10.1.1
         version: 10.1.1
@@ -6482,8 +6482,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -6783,8 +6783,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.13.3
-        version: 3.13.3
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6977,8 +6977,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7079,8 +7079,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react-dropzone:
         specifier: ^14.2.3
         version: 14.2.3(react@18.2.0)
@@ -7239,8 +7239,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       extendable-media-recorder:
         specifier: ^9.2.19
         version: 9.2.20
@@ -7572,8 +7572,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.79
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7796,8 +7796,8 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3
       effect:
-        specifier: 3.13.3
-        version: 3.13.3
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7863,8 +7863,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/random
       effect:
-        specifier: 3.13.3
-        version: 3.13.3
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8190,8 +8190,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8262,8 +8262,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       exa-js:
         specifier: ^1.5.12
         version: 1.5.13(encoding@0.1.13)
@@ -8510,8 +8510,8 @@ importers:
         specifier: ^1.8.8
         version: 1.8.8
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8609,8 +8609,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8769,8 +8769,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -8957,8 +8957,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9013,8 +9013,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9092,7 +9092,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.14.20)
+        version: 0.75.5(effect@3.14.21)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -9110,8 +9110,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.79
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9610,8 +9610,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       extendable-media-recorder:
         specifier: ^9.2.19
         version: 9.2.20
@@ -9841,8 +9841,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       idb-keyval:
         specifier: ^6.2.1
         version: 6.2.1
@@ -9957,8 +9957,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.79
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -10788,7 +10788,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.14.20)
+        version: 0.75.5(effect@3.14.21)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -10796,8 +10796,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       jsonpath:
         specifier: ^1.1.1
         version: 1.1.1
@@ -11414,8 +11414,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -11517,7 +11517,7 @@ importers:
         version: link:../../common/util
       '@effect/platform':
         specifier: 0.75.1
-        version: 0.75.1(effect@3.14.20)
+        version: 0.75.1(effect@3.14.21)
       chess.js:
         specifier: ^1.0.0
         version: 1.0.0
@@ -11545,7 +11545,7 @@ importers:
         version: link:../../common/storybook-utils
       '@effect/ai':
         specifier: 0.8.0
-        version: 0.8.0(@effect/platform@0.75.1(effect@3.14.20))(effect@3.14.20)
+        version: 0.8.0(@effect/platform@0.75.1(effect@3.14.21))(effect@3.14.21)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -11556,8 +11556,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -11686,8 +11686,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -12138,8 +12138,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       fast-check:
         specifier: ^3.19.0
         version: 3.23.1
@@ -12545,8 +12545,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.20
-        version: 3.14.20
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -24916,11 +24916,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@3.13.3:
-    resolution: {integrity: sha512-r58d/ky/NC22/sQJWssKkRB5DSJ+cKZHAMDe+ANhbatkIDgUfxsOdeXsrERR+ng2pVZJ6s7GLneAs44Wa60HUw==}
-
-  effect@3.14.20:
-    resolution: {integrity: sha512-c3r1jpnev6epl1DU/baCsEU1P4571ExTEm9M8OTreIbMT5AFGC0lJoVrHFkjv0IMtIz8cwPObbjjsIhhSPPWKA==}
+  effect@3.14.21:
+    resolution: {integrity: sha512-TKR7zfWcuZgEdWd+oIGA8LdREj/c+1Q0wz4pWqQtYT7VHnkW/QQEYCXgrDI5dT6lJgRTgyQAC1bAnpAf6MdjIA==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -38458,25 +38455,25 @@ snapshots:
 
   '@dxos/automerge-wasm@0.17.1': {}
 
-  '@effect/ai@0.8.0(@effect/platform@0.75.1(effect@3.14.20))(effect@3.14.20)':
+  '@effect/ai@0.8.0(@effect/platform@0.75.1(effect@3.14.21))(effect@3.14.21)':
     dependencies:
-      '@effect/platform': 0.75.1(effect@3.14.20)
-      effect: 3.14.20
+      '@effect/platform': 0.75.1(effect@3.14.21)
+      effect: 3.14.21
 
-  '@effect/platform@0.75.1(effect@3.14.20)':
+  '@effect/platform@0.75.1(effect@3.14.21)':
     dependencies:
-      effect: 3.14.20
+      effect: 3.14.21
       find-my-way-ts: 0.1.5
       multipasta: 0.2.5
 
-  '@effect/schema@0.75.5(effect@3.14.20)':
+  '@effect/schema@0.75.5(effect@3.14.21)':
     dependencies:
-      effect: 3.14.20
+      effect: 3.14.21
       fast-check: 3.23.1
 
-  '@effect/vitest@0.17.8(effect@3.14.20)(vitest@3.1.1)':
+  '@effect/vitest@0.17.8(effect@3.14.21)(vitest@3.1.1)':
     dependencies:
-      effect: 3.14.20
+      effect: 3.14.21
       vitest: 3.1.1(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.1.1)(@vitest/ui@3.1.1)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
   '@emnapi/core@1.2.0':
@@ -49398,12 +49395,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  effect@3.13.3:
-    dependencies:
-      '@standard-schema/spec': 1.0.0
-      fast-check: 3.23.1
-
-  effect@3.14.20:
+  effect@3.14.21:
     dependencies:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.1
