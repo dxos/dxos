@@ -16,7 +16,15 @@ import {
 } from '@dxos/functions/types';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation, useOnTransition } from '@dxos/react-ui';
-import { type CustomInputMap, Form, SelectInput, useFormValues, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import {
+  type CustomInputMap,
+  Form,
+  type FormInputStateProps,
+  type QueryRefOptions,
+  SelectInput,
+  useFormValues,
+  useRefQueryLookupHandler,
+} from '@dxos/react-ui-form';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
 
@@ -60,58 +68,9 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
           }))}
         />
       ),
-      // TODO(ZaymonFC): This should get it's own component.
-      ['meta' as const]: (props) => {
-        const selectedFunctionValue = useFormValues(['function' as JsonPath]);
-        const selectedFunctionName = useMemo(
-          () => selectedFunctionValue?.split('dxn:worker:').at(1),
-          [selectedFunctionValue],
-        );
-        const selectedFunction = useMemo(
-          () => functions.find((f) => f.name === selectedFunctionName),
-          [functions, selectedFunctionName],
-        );
-
-        // Clear function parameter meta when the function changes.
-        useOnTransition(
-          selectedFunctionValue,
-          (prevValue) => prevValue !== undefined && prevValue !== selectedFunctionValue,
-          (currValue) => currValue !== undefined,
-          () => props.onValueChange('object', {}),
-        );
-
-        const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
-        const effectSchema = useMemo(() => (inputSchema ? toEffectSchema(inputSchema) : undefined), [inputSchema]);
-        const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
-
-        const values = useMemo(() => props.getValue() ?? {}, [props]);
-
-        const handleSave = useCallback(
-          (values: any) => {
-            props.onValueChange('object', values);
-          },
-          [props],
-        );
-
-        if (selectedFunction === undefined || effectSchema === undefined || propertyCount === 0) {
-          return null;
-        }
-
-        return (
-          <>
-            <h3 className='text-md'>Function parameters</h3>
-            {/* TODO(ZaymonFC): Try using <FormFields /> internal component for this nesting.
-                                This would allow errors to flow up to the root context. */}
-            <Form
-              schema={effectSchema}
-              values={values}
-              classNames='p-0'
-              onValuesChanged={handleSave}
-              onQueryRefOptions={handleRefQueryLookup}
-            />
-          </>
-        );
-      },
+      ['meta' as const]: (props) => (
+        <FunctionMetaEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
+      ),
     }),
     [workflows, scripts, functions, t],
   );
@@ -137,4 +96,65 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
 const getFunctionOptions = (scripts: ScriptType[], functions: FunctionType[]) => {
   const getLabel = (fn: FunctionType) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:worker:${fn.name}` }));
+};
+
+type FunctionMetaEditorProps = {
+  functions: FunctionType[];
+  onQueryRefOptions: QueryRefOptions;
+} & FormInputStateProps;
+
+/**
+ * Editor component for function meta parameters.
+ */
+const FunctionMetaEditor = ({ functions, getValue, onValueChange, onQueryRefOptions }: FunctionMetaEditorProps) => {
+  const selectedFunctionValue = useFormValues(['function' as JsonPath]);
+  const selectedFunctionName = useMemo(
+    () => selectedFunctionValue?.split('dxn:worker:').at(1),
+    [selectedFunctionValue],
+  );
+
+  const selectedFunction = useMemo(
+    () => functions.find((f) => f.name === selectedFunctionName),
+    [functions, selectedFunctionName],
+  );
+
+  // Clear function parameter meta when the function changes.
+  useOnTransition(
+    selectedFunctionValue,
+    (prevValue) => prevValue !== undefined && prevValue !== selectedFunctionValue,
+    (currValue) => currValue !== undefined,
+    () => onValueChange('object', {}),
+  );
+
+  const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
+  const effectSchema = useMemo(() => (inputSchema ? toEffectSchema(inputSchema) : undefined), [inputSchema]);
+  const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
+
+  const values = useMemo(() => getValue() ?? {}, [getValue]);
+
+  const handleSave = useCallback(
+    (values: any) => {
+      onValueChange('object', values);
+    },
+    [onValueChange],
+  );
+
+  if (selectedFunction === undefined || effectSchema === undefined || propertyCount === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      <h3 className='text-md'>Function parameters</h3>
+      {/* TODO(ZaymonFC): Try using <FormFields /> internal component for this nesting.
+                          This would allow errors to flow up to the root context. */}
+      <Form
+        schema={effectSchema}
+        values={values}
+        classNames='p-0'
+        onValuesChanged={handleSave}
+        onQueryRefOptions={onQueryRefOptions}
+      />
+    </>
+  );
 };
