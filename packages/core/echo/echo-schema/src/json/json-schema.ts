@@ -95,7 +95,7 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   if (objectAnnotation) {
     // EchoIdentifier annotation takes precedence but the id can also be defined by the typename.
     if (!jsonSchema.$id) {
-      jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
+      jsonSchema.$id = new DXN(DXN.kind.TYPE, [objectAnnotation.typename, objectAnnotation.version]).toString();
     }
     jsonSchema.entityKind = objectAnnotation.kind;
     jsonSchema.version = objectAnnotation.version;

@@ -113,6 +113,7 @@ export const EchoObject: {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
+      // TODO(dmaretskyi): TypeIdentifierAnnotationId?
     });
 
     return makeEchoObjectSchema<Self>(/* self.fields, */ ast, typename, version);
@@ -157,6 +158,7 @@ export const EchoRelation = <TSource extends S.Schema.AnyNoContext, TTarget exte
         sourceSchema: sourceDXN.toString(),
         targetSchema: targetDXN.toString(),
       } satisfies TypeAnnotation,
+      // TODO(dmaretskyi): TypeIdentifierAnnotationId?
     });
 
     return makeEchoObjectSchema<Self>(/* self.fields, */ ast, options.typename, options.version);
