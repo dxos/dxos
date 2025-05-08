@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, Option, pipe, SchemaAST as AST, Schema as S, Predicate } from 'effect';
+import { flow, Option, pipe, SchemaAST as AST, Schema as S, Predicate, type Schema } from 'effect';
 import { isPropertySignature } from 'effect/Schema';
 import { type Simplify } from 'effect/Types';
 
@@ -13,6 +13,10 @@ import { type Primitive } from '@dxos/util';
 import { EntityKind } from './entity-kind';
 import { type HasId } from './types';
 import { type BaseObject } from '../types';
+import { DXN } from '../formats';
+import { getSchemaDXN } from './schema';
+import { raise } from '@dxos/debug';
+import type { RelationSourceTargetRefs } from '../object';
 
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -46,6 +50,18 @@ export const TypeAnnotation = S.Struct({
   kind: S.Enums(EntityKind),
   typename: Typename,
   version: Version,
+
+  /**
+   * If this is a relation, the schema of the source object.
+   * Must be present if entity kind is {@link EntityKind.Relation}.
+   */
+  sourceSchema: S.optional(DXN),
+
+  /**
+   * If this is a relation, the schema of the target object.
+   * Must be present if entity kind is {@link EntityKind.Relation}.
+   */
+  targetSchema: S.optional(DXN),
 });
 
 export interface TypeAnnotation extends S.Schema.Type<typeof TypeAnnotation> {}
@@ -85,12 +101,13 @@ export const getSchemaVersion = (schema: S.Schema.All): string | undefined => ge
 export const EchoObject: {
   // TODO(burdon): Tighten Self type to S.TypeLiteral or S.Struct to facilitate definition of `make` method.
   // (meta: TypeMeta): <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
-  (meta: TypeMeta): <Self extends S.Schema.Any>(self: Self) => EchoObjectSchema<Self>;
+  (meta: TypeMeta): <Self extends S.Schema.Any>(self: Self) => EchoTypeSchema<Self>;
 } = ({ typename, version }) => {
-  return <Self extends S.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
+  return <Self extends S.Schema.Any>(self: Self): EchoTypeSchema<Self> => {
     invariant(AST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
+    // TODO(dmaretskyi): Do not do mutable here.
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
     const ast = AST.annotations(schemaWithId.ast, {
       // TODO(dmaretskyi): `extend` kills the annotations.
@@ -102,8 +119,52 @@ export const EchoObject: {
   };
 };
 
+type EchoRelationOptions<TSource extends S.Schema.AnyNoContext, TTarget extends S.Schema.AnyNoContext> = {
+  typename: string;
+  version: string;
+  source: TSource;
+  target: TTarget;
+};
+
+// TODO(dmaretskyi): Rename?
+export const EchoRelation = <TSource extends S.Schema.AnyNoContext, TTarget extends S.Schema.AnyNoContext>(
+  options: EchoRelationOptions<TSource, TTarget>,
+) => {
+  const sourceDXN = getSchemaDXN(options.source) ?? raise(new Error('Source schema must be an echo object schema.'));
+  const targetDXN = getSchemaDXN(options.target) ?? raise(new Error('Target schema must be an echo object schema.'));
+  if (getEntityKind(options.source) !== EntityKind.Object) {
+    raise(new Error('Source schema must be an echo object schema.'));
+  }
+  if (getEntityKind(options.target) !== EntityKind.Object) {
+    raise(new Error('Target schema must be an echo object schema.'));
+  }
+
+  return <Self extends S.Schema.Any>(
+    self: Self,
+  ): EchoTypeSchema<Self, RelationSourceTargetRefs<S.Schema.Type<TSource>, S.Schema.Type<TTarget>>> => {
+    invariant(AST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
+
+    // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
+    // TODO(dmaretskyi): Do not do mutable here.
+    const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
+    const ast = AST.annotations(schemaWithId.ast, {
+      // TODO(dmaretskyi): `extend` kills the annotations.
+      ...self.ast.annotations,
+      [TypeAnnotationId]: {
+        kind: EntityKind.Relation,
+        typename: options.typename,
+        version: options.version,
+        sourceSchema: sourceDXN.toString(),
+        targetSchema: targetDXN.toString(),
+      } satisfies TypeAnnotation,
+    });
+
+    return makeEchoObjectSchema<Self>(/* self.fields, */ ast, options.typename, options.version);
+  };
+};
+
 // type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
-type EchoObjectSchemaType<T> = Simplify<HasId & ToMutable<T>>;
+type EchoTypeSchemaProps<T, ExtraFields = {}> = Simplify<HasId & ToMutable<T> & ExtraFields>;
 type MakeOptions =
   | boolean
   | {
@@ -135,12 +196,12 @@ const _lazilyMergeDefaults = (
 const _getDisableValidationMakeOption = (options: MakeOptions | undefined): boolean =>
   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
 
-export interface EchoObjectSchema<Self extends S.Schema.Any>
+export interface EchoTypeSchema<Self extends S.Schema.Any, ExtraFields = {}>
   extends TypeMeta,
     S.AnnotableClass<
-      EchoObjectSchema<Self>,
-      EchoObjectSchemaType<S.Schema.Type<Self>>,
-      EchoObjectSchemaType<S.Schema.Encoded<Self>>,
+      EchoTypeSchema<Self, ExtraFields>,
+      EchoTypeSchemaProps<S.Schema.Type<Self>, ExtraFields>,
+      EchoTypeSchemaProps<S.Schema.Encoded<Self>, ExtraFields>,
       S.Schema.Context<Self>
     > {
   // make(
@@ -158,19 +219,19 @@ const makeEchoObjectSchema = <Self extends S.Schema.Any>(
   ast: AST.AST,
   typename: string,
   version: string,
-): EchoObjectSchema<Self> => {
+): EchoTypeSchema<Self> => {
   return class EchoObjectSchemaClass extends S.make<
-    EchoObjectSchemaType<S.Schema.Type<Self>>,
-    EchoObjectSchemaType<S.Schema.Encoded<Self>>,
+    EchoTypeSchemaProps<S.Schema.Type<Self>>,
+    EchoTypeSchemaProps<S.Schema.Encoded<Self>>,
     S.Schema.Context<Self>
   >(ast) {
     static readonly typename = typename;
     static readonly version = version;
 
     static override annotations(
-      annotations: S.Annotations.GenericSchema<EchoObjectSchemaType<S.Schema.Type<Self>>>,
-    ): EchoObjectSchema<Self> {
-      const schema = S.make<EchoObjectSchemaType<S.Schema.Type<Self>>>(ast).annotations(annotations);
+      annotations: S.Annotations.GenericSchema<EchoTypeSchemaProps<S.Schema.Type<Self>>>,
+    ): EchoTypeSchema<Self> {
+      const schema = S.make<EchoTypeSchemaProps<S.Schema.Type<Self>>>(ast).annotations(annotations);
       return makeEchoObjectSchema<Self>(/* fields, */ schema.ast, typename, version);
     }
 

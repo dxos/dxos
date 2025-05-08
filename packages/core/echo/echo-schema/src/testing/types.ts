@@ -4,7 +4,7 @@
 
 import { Schema as S } from 'effect';
 
-import { EchoObject } from '../ast';
+import { EchoObject, EchoRelation } from '../ast';
 import { Expando, TypedObject, TypedRelation } from '../object';
 import { Ref, type Ref$ } from '../ref';
 
@@ -197,11 +197,14 @@ export namespace Testing {
     { partial: true },
   ) {}
 
-  // TODO(burdon): Convert to pipe?
-  export class HasManager extends TypedRelation({
-    typename: 'example.org/relation/HasManager',
-    version: '0.1.0',
-  })({
+  export const HasManager = S.Struct({
     since: S.optional(S.String),
-  }) {}
+  }).pipe(
+    EchoRelation({
+      typename: 'example.com/type/HasManager',
+      version: '0.1.0',
+      source: Contact,
+      target: Contact,
+    }),
+  );
 }
