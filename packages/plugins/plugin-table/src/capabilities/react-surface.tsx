@@ -31,7 +31,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/companion/schema`,
       role: 'article',
-      filter: (data): data is { subject: TableType } =>
+      filter: (data): data is { subject: TableType; variant: 'schema' } =>
         isInstanceOf(TableType, data.subject) && data.variant === 'schema',
       component: ({ data, role }) => {
         return (

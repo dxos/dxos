@@ -22,7 +22,7 @@ export default (context: PluginsContext) =>
         {
           id: [node.id, 'schema'].join(ATTENDABLE_PATH_SEPARATOR),
           type: PLANK_COMPANION_TYPE,
-          data: 'schema',
+          data: node.data,
           properties: {
             label: ['companion schema label', { ns: meta.id }],
             icon: 'ph--database--regular',
