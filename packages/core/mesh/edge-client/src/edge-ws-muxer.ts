@@ -1,7 +1,6 @@
 //
 // Copyright 2025 DXOS.org
 //
-import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -25,22 +24,23 @@ const FLAG_SEGMENT_SEQ = 1;
 const FLAG_SEGMENT_SEQ_TERMINATED = 1 << 1;
 
 /**
- * 1MB websocket message limit: https://developers.cloudflare.com/durable-objects/platform/limits/
+ * https://developers.cloudflare.com/durable-objects/platform/limits/
  */
-export const CLOUDFLARE_MESSAGE_LENGTH_LIMIT = 1024 * 1024;
+export const CLOUDFLARE_MESSAGE_MAX_BYTES = 1000 * 1000; // 1MB
+export const CLOUDFLARE_RPC_MAX_BYTES = 32 * 1000 * 1000; // 32MB
 
 const MAX_CHUNK_LENGTH = 16384;
-const MAX_BUFFERED_AMOUNT = CLOUDFLARE_MESSAGE_LENGTH_LIMIT;
+const MAX_BUFFERED_AMOUNT = CLOUDFLARE_MESSAGE_MAX_BYTES;
 const BUFFER_FULL_BACKOFF_TIMEOUT = 100;
 
 export class WebSocketMuxer {
-  private readonly _incomingMessageAccumulator = new Map<number, Buffer[]>();
-  private readonly _outgoingMessageChunks = new Map<number, MessageChunk[]>();
-  private readonly _serviceToChannel = new Map<string, number>();
+  private readonly _inMessageAccumulator = new Map<number, Buffer[]>();
+  private readonly _outMessageChunks = new Map<number, MessageChunk[]>();
+  private readonly _outMessageChannelByService = new Map<string, number>();
 
   private _sendTimeout: any | undefined;
 
-  constructor(private readonly _ws: WebSocket) {}
+  constructor(private readonly _ws: WebSocketCompat) {}
 
   /**
    * Resolves when all the message chunks get enqueued for sending.
@@ -48,11 +48,15 @@ export class WebSocketMuxer {
   public async send(message: Message): Promise<void> {
     const binary = buf.toBinary(MessageSchema, message);
     const channelId = this._resolveChannel(message);
-    if (channelId == null && binary.length > CLOUDFLARE_MESSAGE_LENGTH_LIMIT) {
-      log.error('Large message dropped because channel resolution failed.', {
+    if (
+      (channelId == null && binary.byteLength > CLOUDFLARE_MESSAGE_MAX_BYTES) ||
+      binary.byteLength > CLOUDFLARE_RPC_MAX_BYTES
+    ) {
+      log.error('Large message dropped', {
         byteLength: binary.byteLength,
         serviceId: message.serviceId,
         payload: protocol.getPayloadType(message),
+        channelId,
       });
       return;
     }
@@ -77,11 +81,11 @@ export class WebSocketMuxer {
       }
     }
 
-    const queuedMessages = this._outgoingMessageChunks.get(channelId);
+    const queuedMessages = this._outMessageChunks.get(channelId);
     if (queuedMessages) {
       queuedMessages.push(...messageChunks);
     } else {
-      this._outgoingMessageChunks.set(channelId, messageChunks);
+      this._outMessageChunks.set(channelId, messageChunks);
     }
 
     this._sendChunkedMessages();
@@ -95,12 +99,12 @@ export class WebSocketMuxer {
     }
 
     const [flags, channelId, ...payload] = data;
-    let chunkAccumulator = this._incomingMessageAccumulator.get(channelId);
+    let chunkAccumulator = this._inMessageAccumulator.get(channelId);
     if (chunkAccumulator) {
       chunkAccumulator.push(Buffer.from(payload));
     } else {
       chunkAccumulator = [Buffer.from(payload)];
-      this._incomingMessageAccumulator.set(channelId, chunkAccumulator);
+      this._inMessageAccumulator.set(channelId, chunkAccumulator);
     }
 
     if ((flags & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
@@ -108,7 +112,7 @@ export class WebSocketMuxer {
     }
 
     const message = buf.fromBinary(MessageSchema, Buffer.concat(chunkAccumulator));
-    this._incomingMessageAccumulator.delete(channelId);
+    this._inMessageAccumulator.delete(channelId);
     return message;
   }
 
@@ -117,12 +121,12 @@ export class WebSocketMuxer {
       clearTimeout(this._sendTimeout);
       this._sendTimeout = undefined;
     }
-    for (const channelChunks of this._outgoingMessageChunks.values()) {
+    for (const channelChunks of this._outMessageChunks.values()) {
       channelChunks.forEach((chunk) => chunk.trigger?.wake());
     }
-    this._outgoingMessageChunks.clear();
-    this._incomingMessageAccumulator.clear();
-    this._serviceToChannel.clear();
+    this._outMessageChunks.clear();
+    this._inMessageAccumulator.clear();
+    this._outMessageChannelByService.clear();
   }
 
   private _sendChunkedMessages() {
@@ -139,10 +143,12 @@ export class WebSocketMuxer {
 
       let timeout = 0;
       const emptyChannels: number[] = [];
-      for (const [channelId, messages] of this._outgoingMessageChunks.entries()) {
-        if (this._ws.bufferedAmount + MAX_CHUNK_LENGTH > MAX_BUFFERED_AMOUNT) {
-          timeout = BUFFER_FULL_BACKOFF_TIMEOUT;
-          break;
+      for (const [channelId, messages] of this._outMessageChunks.entries()) {
+        if (this._ws.bufferedAmount != null) {
+          if (this._ws.bufferedAmount + MAX_CHUNK_LENGTH > MAX_BUFFERED_AMOUNT) {
+            timeout = BUFFER_FULL_BACKOFF_TIMEOUT;
+            break;
+          }
         }
 
         const nextMessage = messages.shift();
@@ -154,9 +160,9 @@ export class WebSocketMuxer {
         }
       }
 
-      emptyChannels.forEach((channelId) => this._outgoingMessageChunks.delete(channelId));
+      emptyChannels.forEach((channelId) => this._outMessageChunks.delete(channelId));
 
-      if (this._outgoingMessageChunks.size > 0) {
+      if (this._outMessageChunks.size > 0) {
         this._sendTimeout = setTimeout(send, timeout);
       } else {
         this._sendTimeout = undefined;
@@ -169,14 +175,23 @@ export class WebSocketMuxer {
     if (!message.serviceId) {
       return undefined;
     }
-    let id = this._serviceToChannel.get(message.serviceId);
+    let id = this._outMessageChannelByService.get(message.serviceId);
     if (!id) {
-      id = this._serviceToChannel.size + 1;
-      this._serviceToChannel.set(message.serviceId, id);
+      id = this._outMessageChannelByService.size + 1;
+      this._outMessageChannelByService.set(message.serviceId, id);
     }
     return id;
   }
 }
+
+type WebSocketCompat = {
+  readonly readyState: number;
+  /**
+   * Not available in workerd.
+   */
+  bufferedAmount?: number;
+  send(message: (ArrayBuffer | ArrayBufferView) | string): void;
+};
 
 type MessageChunk = {
   payload: Buffer;
