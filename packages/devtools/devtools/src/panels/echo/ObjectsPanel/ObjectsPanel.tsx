@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import type { State as AmState } from '@dxos/automerge/automerge';
 import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
 import { FormatEnum, getDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 import { getType, isDeleted } from '@dxos/live-object';
 import { QueryOptions, useQuery, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

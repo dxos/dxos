@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Option, type Schema } from 'effect';
+import { getDescriptionAnnotation, getTitleAnnotation } from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -18,8 +20,6 @@ import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Option, type Schema } from 'effect';
-import { getDescriptionAnnotation, getTitleAnnotation } from 'effect/SchemaAST';
 import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
@@ -68,8 +68,6 @@ export const SchemaPanel = (props: { space?: Space }) => {
   // NOTE: Always call setSelected with a function: setSelected(() => item) because schema is a class constructor.
   const [selected, setSelected] = useState<Schema.Schema.AnyNoContext>();
 
-  console.log({ schema, space });
-
   const onNavigate = (dxn: DXN) => {
     const selectedSchema = schema.find((item) => getSchemaDXN(item) && DXN.equals(getSchemaDXN(item)!, dxn));
     if (selectedSchema) {
@@ -82,7 +80,6 @@ export const SchemaPanel = (props: { space?: Space }) => {
       const latestSchema = schema.find((item) => getSchemaDXN(item)?.toString().startsWith(dxn.toString()));
       if (latestSchema) {
         setSelected(() => latestSchema);
-        return;
       }
     }
   };
