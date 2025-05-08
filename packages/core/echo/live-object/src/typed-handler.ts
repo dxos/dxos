@@ -19,7 +19,7 @@ import {
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { getObjectMeta } from './object';
+import { getObjectMeta } from './meta';
 import {
   createProxy,
   isValidProxyTarget,

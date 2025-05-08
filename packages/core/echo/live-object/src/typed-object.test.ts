@@ -5,29 +5,33 @@
 import { Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { getSchema, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, getSchema, TypedObject } from '@dxos/echo-schema';
 
 import { live } from './object';
 
-class Organization extends TypedObject({
-  typename: 'example.com/type/Organization',
-  version: '0.1.0',
-})({
+const Organization = S.Struct({
   name: S.String,
-}) {}
+}).pipe(
+  EchoObject({
+    typename: 'example.com/type/Organization',
+    version: '0.1.0',
+  }),
+);
+interface Organization extends S.Schema.Type<typeof Organization> {}
 
-class Contact extends TypedObject({
-  typename: 'example.com/type/Contact',
-  version: '0.1.0',
-})(
+const Contact = S.Struct(
   {
     name: S.String,
   },
-  {
-    partial: true,
-    record: true,
-  },
-) {}
+  { key: S.String, value: S.Any },
+).pipe(
+  S.partial,
+  EchoObject({
+    typename: 'example.com/type/Contact',
+    version: '0.1.0',
+  }),
+);
+interface Contact extends S.Schema.Type<typeof Contact> {}
 
 const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 

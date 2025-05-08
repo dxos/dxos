@@ -5,7 +5,7 @@
 import { type Reference } from '@dxos/echo-protocol';
 import { type ObjectMeta } from '@dxos/echo-schema';
 
-import { getObjectMeta } from './object';
+import { getObjectMeta } from './meta';
 import { type ReactiveHandler } from './proxy';
 
 export class LoggingReactiveHandler implements ReactiveHandler<any> {
