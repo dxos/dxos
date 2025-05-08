@@ -19,17 +19,17 @@ export const useRefQueryLookupHandler = ({ space }: UseRefQueryLookupProps) => {
         return [];
       }
       const query = space.db.query(Filter.typename(typeInfo.typename));
-      const results = query.runSync();
+      const { objects } = await query.run();
 
-      return results
-        .map((result) => {
-          const dxn = getDXN(result.object);
+      return objects
+        .map((object) => {
+          const dxn = getDXN(object);
           if (!dxn) {
             return undefined;
           }
 
           // TODO(Zaymon): Better fallback object names?
-          const item = { dxn, label: result?.object?.name ?? result?.object?.id ?? '' };
+          const item = { dxn, label: object?.name ?? object?.id ?? '' };
           return item;
         })
         .filter(isNonNullable);
