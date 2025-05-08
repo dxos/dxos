@@ -21,11 +21,12 @@ import { createElement, SyntaxHighlighter } from '@dxos/react-ui-syntax-highligh
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
-import type { Schema } from 'effect';
+import { Option, type Schema } from 'effect';
 import { PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
+import { getDescriptionAnnotation, getTitleAnnotation } from 'effect/SchemaAST';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -34,10 +35,11 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: ReactiveEchoObject<any>) => {
+  return (item: Schema.Schema.AnyNoContext) => {
     let match = false;
-    match ||= !!getType(item)?.objectId.match(matcher);
-    match ||= !!String((item as any).title ?? '').match(matcher);
+    match ||= !!getSchemaDXN(item)?.toString().match(matcher);
+    match ||= !!getTitleAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
+    match ||= !!getDescriptionAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
     return match;
   };
 };
