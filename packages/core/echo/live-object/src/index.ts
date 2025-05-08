@@ -20,3 +20,5 @@ export const makeRef = Ref.make;
  * @deprecated Use {@link Ref.fromDXN} instead.
  */
 export const refFromDXN = Ref.fromDXN;
+
+export { RefArray } from '@dxos/echo-schema';
