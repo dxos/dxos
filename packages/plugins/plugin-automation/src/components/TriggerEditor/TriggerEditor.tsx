@@ -16,7 +16,7 @@ import {
 } from '@dxos/functions/types';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { type CustomInputMap, Form, SelectInput, useFormValues } from '@dxos/react-ui-form';
+import { type CustomInputMap, Form, SelectInput, useFormValues, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
@@ -42,29 +42,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
     onSave?.(values);
   };
 
-  // TODO(ZaymonFC): We should have a hook that provisions this.
-  const handleRefQueryLookup = async (typeInfo: TypeAnnotation) => {
-    console.log({ ti: typeof typeInfo.typename });
-    // TODO(ZaymonFC): Use async, push async consumption down into form.
-    const query = space.db.query(Filter.typename(typeInfo.typename));
-    const results = query.runSync();
-
-    console.log('Query results:', results);
-
-    return results
-      .map((result) => {
-        console.log('Processing result:', result);
-        const dxn = getDXN(result.object);
-        if (dxn) {
-          // TODO(Zaymon): Better fallback object names?
-          const item = { dxn, label: result?.object?.name ?? result?.object?.id ?? '' };
-          console.log('Created item:', item);
-          return item;
-        }
-        return undefined;
-      })
-      .filter(isNonNullable);
-  };
+  const handleRefQueryLookup = useRefQueryLookupHandler({ space });
 
   const Custom = useMemo(
     (): CustomInputMap => ({
@@ -85,7 +63,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
       ),
       // TODO(wittjosiah): Form should be able to handle arbitrary records by default.
       // TODO(ZaymonFC): This should get it's own component.
-      // TODO(ZaymonFC): When the input schema changes, we should set values to {}.
+      // TODO(ZaymonFC): When the input schema changes (by switching function), we should set meta to {}.
       ['meta' as const]: (props) => {
         const selectedFunctionValue = useFormValues(['function' as JsonPath]);
         const selectedFunctionName = useMemo(
