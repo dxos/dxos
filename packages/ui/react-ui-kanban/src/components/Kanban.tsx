@@ -27,7 +27,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   const { select, clear } = useSelectionActions([model.id, model.schema.typename]);
   const selectedItems = useSelectedItems(model.id);
-  const [focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
+  const [_focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
 
   const handleAddCard = useCallback(
@@ -207,7 +207,7 @@ type CardFormProps<T extends BaseKanbanItem> = {
   autoFocus: boolean;
 };
 
-const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFormProps<T>) => {
+const _CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFormProps<T>) => {
   const handleSave = useCallback(
     debounce((values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
       const id = values.id;
