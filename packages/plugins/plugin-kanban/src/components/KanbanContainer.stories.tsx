@@ -21,7 +21,8 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { ViewProjection, Contact, Organization } from '@dxos/schema';
+import { ViewProjection, Contact, Organization, organizationStatusOptions } from '@dxos/schema';
+import { withLayout } from '@dxos/storybook-utils';
 
 import { initializeKanban } from '../testing';
 import translations from '../translations';
@@ -31,6 +32,14 @@ faker.seed(0);
 //
 // Story components.
 //
+
+const rollOrg = () => ({
+  name: faker.commerce.productName(),
+  description: faker.lorem.paragraph(),
+  image: faker.image.url(),
+  website: faker.internet.url(),
+  status: faker.helpers.arrayElement(organizationStatusOptions).id,
+});
 
 const StorybookKanban = () => {
   const client = useClient();
@@ -70,8 +79,7 @@ const StorybookKanban = () => {
       const path = model?.columnFieldPath;
       if (space && schema && path) {
         const card = live(schema, {
-          title: faker.commerce.productName(),
-          description: faker.lorem.paragraph(),
+          ...rollOrg(),
           [path]: columnValue,
         });
 
@@ -135,6 +143,7 @@ const meta: Meta<StoryProps> = {
   render: () => <StorybookKanban />,
   parameters: { translations },
   decorators: [
+    withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
@@ -144,18 +153,18 @@ const meta: Meta<StoryProps> = {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const { schema, kanban } = await initializeKanban({ space, client });
+            const { schema, kanban } = await initializeKanban({
+              space,
+              client,
+              typename: Organization.typename,
+              initialPivotColumn: 'status',
+            });
             space.db.add(kanban);
 
             if (schema) {
               // TODO(burdon): Replace with sdk/schema/testing.
               Array.from({ length: 80 }).map(() => {
-                return space.db.add(
-                  live(schema, {
-                    title: faker.commerce.productName(),
-                    description: faker.lorem.paragraph(),
-                  }),
-                );
+                return space.db.add(live(schema, rollOrg()));
               });
             }
           },
