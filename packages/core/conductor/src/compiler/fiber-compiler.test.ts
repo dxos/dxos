@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 
 import { Ref, S } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-
 import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';

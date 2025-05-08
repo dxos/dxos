@@ -4,18 +4,20 @@
 
 import { SchemaAST as AST, JSONSchema, Option, Schema as S, type Types } from 'effect';
 import { JSONSchemaAnnotationId } from 'effect/SchemaAST';
+import type { Mutable } from 'effect/Types';
 
+import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { clearUndefined, orderKeys } from '@dxos/util';
 
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   EntityKind,
   EntityKindSchema,
   getNormalizedEchoAnnotations,
-  getSchemaDXN,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   TypeAnnotationId,
@@ -26,9 +28,6 @@ import {
 } from '../ast';
 import { Expando, ObjectId } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
-import type { Mutable } from 'effect/Types';
-import { raise } from '@dxos/debug';
 
 /**
  * Create object jsonSchema.

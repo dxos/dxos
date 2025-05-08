@@ -3,6 +3,7 @@
 //
 
 import { DescriptionAnnotationId, TitleAnnotationId } from 'effect/SchemaAST';
+
 import {
   GeneratorAnnotationId,
   LabelAnnotationId,

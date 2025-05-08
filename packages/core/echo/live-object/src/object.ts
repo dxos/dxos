@@ -17,10 +17,10 @@ import {
 import { invariant } from '@dxos/invariant';
 
 import type { Live } from './live';
+import { symbolMeta } from './meta';
 import { createProxy, isValidProxyTarget } from './proxy';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { symbolMeta } from './meta';
 
 /**
  * Creates a reactive object from a plain Javascript object.
@@ -82,10 +82,9 @@ const setIdOnTarget = (target: any) => {
   target.id = ObjectId.random();
 };
 
-
 /**
  * Set metadata on object.
-*/
+ */
 const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
   prepareTypedTarget(meta, ObjectMetaSchema);
   defineHiddenProperty(obj, symbolMeta, createProxy(meta, TypedReactiveHandler.instance as any));

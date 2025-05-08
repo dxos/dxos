@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(dmaretskyi): Remove deprecated exports.
+import { Ref } from '@dxos/echo-schema';
+
 export * from './proxy';
 export * from './accessors';
 export * from './object';
 export * from './schema';
 export * from './live';
-
-// TODO(dmaretskyi): Remove deprecated exports.
-import { Ref } from '@dxos/echo-schema';
 
 /**
  * @deprecated Use {@link Ref.make} instead.

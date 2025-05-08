@@ -7,12 +7,12 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { getSchema, getSchemaDXN } from '../ast';
-import { Testing } from '../testing';
-import { isInstanceOf } from '../types';
 import { create } from './create';
 import { serializeStatic } from './json-serializer';
 import { getTypename } from './typename';
+import { getSchema, getSchemaDXN } from '../ast';
+import { Testing } from '../testing';
+import { isInstanceOf } from '../types';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {

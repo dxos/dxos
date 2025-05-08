@@ -4,7 +4,6 @@
 
 import { invariant } from '@dxos/invariant';
 
-
 const KEY_REGEX = /\w+/;
 
 // NOTE: The `relation` is different from the `type`.

@@ -6,10 +6,10 @@ import { type Schema as S } from 'effect';
 
 import { failedInvariant } from '@dxos/invariant';
 
-import { getSchemaDXN, getTypeAnnotation, setSchema } from '../ast';
 import { ObjectId } from './ids';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { setTypename } from './typename';
+import { getSchemaDXN, getTypeAnnotation, setSchema } from '../ast';
 
 // Make `id` optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;

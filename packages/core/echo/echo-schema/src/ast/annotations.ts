@@ -2,21 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, Option, pipe, SchemaAST as AST, Schema as S, Predicate, type Schema } from 'effect';
+import { flow, Option, pipe, SchemaAST as AST, Schema as S, Predicate } from 'effect';
 import { isPropertySignature } from 'effect/Schema';
 import { type Simplify } from 'effect/Types';
 
+import { raise } from '@dxos/debug';
 import { getField, type JsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';
-import { type HasId } from './types';
-import { type BaseObject } from '../types';
-import { DXN } from '../formats';
 import { getSchemaDXN } from './schema';
-import { raise } from '@dxos/debug';
+import { type HasId } from './types';
+import { DXN } from '../formats';
 import type { RelationSourceTargetRefs } from '../object';
+import { type BaseObject } from '../types';
 
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }

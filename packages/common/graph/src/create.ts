@@ -4,7 +4,6 @@
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { FormatEnum, getSchema } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSchemaProperties } from '@dxos/schema';

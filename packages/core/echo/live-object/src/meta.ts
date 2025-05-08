@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-
-import { ObjectMeta } from '@dxos/echo-schema';
 
 // TODO(dmaretskyi): Move to echo-schema.
 

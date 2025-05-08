@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DXN } from '@dxos/keys';
 import { type Schema as S } from 'effect';
+
+import { DXN } from '@dxos/keys';
+
 import { getTypeAnnotation } from './annotations';
 
 /**

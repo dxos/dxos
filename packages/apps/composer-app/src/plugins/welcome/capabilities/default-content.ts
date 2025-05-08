@@ -6,7 +6,6 @@ import { createIntent, LayoutAction } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-
 import { SPACES } from '@dxos/plugin-space';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';

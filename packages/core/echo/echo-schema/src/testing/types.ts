@@ -5,7 +5,7 @@
 import { Schema as S } from 'effect';
 
 import { EchoObject, EchoRelation } from '../ast';
-import { Expando, TypedObject, TypedRelation } from '../object';
+import { Expando, TypedObject } from '../object';
 import { Ref, type Ref$ } from '../ref';
 
 // TODO(burdon): These are non-canonical test types, so we really shouldn't export and use in other classes (compare with @dxos/sdk/testing).

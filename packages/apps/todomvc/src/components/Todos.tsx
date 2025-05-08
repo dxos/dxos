@@ -5,8 +5,8 @@
 import React, { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
-import { live, SpaceState, type Space } from '@dxos/react-client/echo';
 import { Ref } from '@dxos/echo-schema';
+import { live, SpaceState, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { Header } from './Header';
