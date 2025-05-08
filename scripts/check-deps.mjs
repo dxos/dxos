@@ -8,6 +8,7 @@ import chalk from 'chalk';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import precinct from 'precinct';
+import yaml from 'yaml';
 
 // Parse command line arguments
 const argv = yargs(hideBin(process.argv))
@@ -146,9 +147,65 @@ async function searchDependencyInFiles(depName, pkgPath) {
 }
 
 /**
+ * Parse pnpm-lock.yaml and build a map of all peer dependencies
+ */
+async function buildPeerDependencyMap() {
+  const lockfilePath = path.join(process.cwd(), 'pnpm-lock.yaml');
+  const lockfileContent = await fs.readFile(lockfilePath, 'utf-8');
+  const lockfile = yaml.parse(lockfileContent);
+
+  const peerDepsMap = new Map();
+
+  // Iterate through all packages in the lockfile
+  for (const [pkgPath, pkg] of Object.entries(lockfile.packages || {})) {
+    if (!pkg.peerDependencies) continue;
+
+    // Extract the package name and version from the path
+    // Format is /package-name@version or /@scope/package-name@version
+    const nameMatch = pkgPath.match(/\/?(@[^/]+\/)?([^@/]+)@/);
+    if (!nameMatch) continue;
+
+    const pkgName = nameMatch[1] ? `${nameMatch[1]}${nameMatch[2]}` : nameMatch[2];
+
+    // Add all peer dependencies for this package
+    for (const peerDep of Object.keys(pkg.peerDependencies)) {
+      const peers = peerDepsMap.get(peerDep) || new Set();
+      peers.add(pkgName);
+      peerDepsMap.set(peerDep, peers);
+    }
+  }
+
+  if (argv.verbose) {
+    console.log(chalk.gray('\nPeer dependency map:'));
+    for (const [dep, peers] of peerDepsMap.entries()) {
+      console.log(chalk.gray(`  ${dep} is peer dependency of: ${[...peers].join(', ')}`));
+    }
+  }
+
+  return peerDepsMap;
+}
+
+/**
+ * Check if a package is a peer dependency of any other package
+ */
+async function shouldKeepDependency(pkgPath, depName, peerDepsMap) {
+  // If the package is a peer dependency of any other package, keep it
+  if (peerDepsMap.has(depName)) {
+    if (argv.verbose) {
+      const peers = peerDepsMap.get(depName);
+      console.log(
+        chalk.gray(`Keeping ${depName} in ${pkgPath} because it's a peer dependency of: ${[...peers].join(', ')}`),
+      );
+    }
+    return true;
+  }
+  return false;
+}
+
+/**
  * Analyze dependencies for a package
  */
-async function analyzeDependencies(pkg) {
+async function analyzeDependencies(pkg, peerDepsMap) {
   const pkgJson = await readPackageJson(pkg.path);
   const dependencies = new Set(Object.keys(pkgJson.dependencies || {}));
   const devDependencies = new Set(Object.keys(pkgJson.devDependencies || {}));
@@ -193,23 +250,24 @@ async function analyzeDependencies(pkg) {
     console.log([...usedInTests].map((d) => `  ${d}`).join('\n'));
   }
 
-  // Check for unused dependencies and search for text references
+  // Check for unused dependencies and filter out peer dependencies
   const unusedDeps = [];
   const potentiallyUsedDeps = [];
   for (const dep of [...dependencies].filter((dep) => !usedInSource.has(dep))) {
-    const foundInText = await searchDependencyInFiles(dep, pkg.path);
-    if (foundInText) {
+    const shouldKeep = await shouldKeepDependency(pkg.path, dep, peerDepsMap);
+    if (shouldKeep) {
       potentiallyUsedDeps.push(dep);
     } else {
       unusedDeps.push(dep);
     }
   }
 
+  // Check for unused dev dependencies and filter out peer dependencies
   const unusedDevDeps = [];
   const potentiallyUsedDevDeps = [];
   for (const dep of [...devDependencies].filter((dep) => !usedInTests.has(dep))) {
-    const foundInText = await searchDependencyInFiles(dep, pkg.path);
-    if (foundInText) {
+    const shouldKeep = await shouldKeepDependency(pkg.path, dep, peerDepsMap);
+    if (shouldKeep) {
       potentiallyUsedDevDeps.push(dep);
     } else {
       unusedDevDeps.push(dep);
@@ -245,15 +303,21 @@ async function removeDependencies(pkgPath, depsToRemove, isDev) {
 
   if (!pkgJson[depType]) return;
 
+  const depsToActuallyRemove = [];
+
   for (const dep of depsToRemove) {
-    delete pkgJson[depType][dep];
+    const shouldKeep = await shouldKeepDependency(pkgPath, dep, peerDepsMap);
+    if (!shouldKeep) {
+      delete pkgJson[depType][dep];
+      depsToActuallyRemove.push(dep);
+    }
   }
 
   await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
 
-  if (argv.verbose) {
+  if (argv.verbose && depsToActuallyRemove.length > 0) {
     console.log(chalk.gray(`Removed ${isDev ? 'dev ' : ''}dependencies from ${pkgJsonPath}:`));
-    depsToRemove.forEach((dep) => console.log(chalk.gray(`  ${dep}`)));
+    depsToActuallyRemove.forEach((dep) => console.log(chalk.gray(`  ${dep}`)));
   }
 }
 
@@ -262,6 +326,9 @@ async function main() {
     const packages = await getWorkspacePackages();
     const rootPath = process.cwd();
     let hasErrors = false;
+
+    // Build the peer dependency map once
+    const peerDepsMap = await buildPeerDependencyMap();
 
     for (const pkg of packages) {
       // Skip the root package
@@ -280,7 +347,7 @@ async function main() {
         continue;
       }
 
-      const analysis = await analyzeDependencies(pkg);
+      const analysis = await analyzeDependencies(pkg, peerDepsMap);
       const relativePackageJson = path.relative(process.cwd(), path.join(pkg.path, 'package.json'));
 
       // Collect all dependencies to remove if --fix is enabled
@@ -295,7 +362,11 @@ async function main() {
       }
 
       for (const dep of analysis.potentiallyUsedDeps) {
-        console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dependency not imported but found in text`));
+        if (peerDepsMap.has(dep)) {
+          console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dependency is a peer dependency`));
+        } else {
+          console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dependency not imported but found in text`));
+        }
       }
 
       for (const dep of analysis.unusedDevDeps) {
@@ -307,7 +378,11 @@ async function main() {
       }
 
       for (const dep of analysis.potentiallyUsedDevDeps) {
-        console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dev dependency not imported but found in text`));
+        if (peerDepsMap.has(dep)) {
+          console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dev dependency is a peer dependency `));
+        } else {
+          console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dev dependency not imported but found in text`));
+        }
       }
 
       for (const dep of analysis.shouldBeDevDeps) {
