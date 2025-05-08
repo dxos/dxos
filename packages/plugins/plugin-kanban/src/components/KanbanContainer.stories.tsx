@@ -18,13 +18,12 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useSpaces, useQuery, useSchema, live } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
+import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { ViewProjection, Contact, Organization, organizationStatusOptions } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { KanbanContainer } from './KanbanContainer';
 import { initializeKanban } from '../testing';
 import translations from '../translations';
 
@@ -109,7 +108,7 @@ const StorybookKanban = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      {model ? <KanbanContainer kanban={kanban} role='article' /> : <div />}
+      {model ? <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
       <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
         {kanban.cardView && (
           <ViewEditor
@@ -161,8 +160,6 @@ const meta: Meta<StoryProps> = {
               initialPivotColumn: 'status',
             });
             space.db.add(kanban);
-
-            console.log('[schema]');
 
             if (schema) {
               // TODO(burdon): Replace with sdk/schema/testing.
