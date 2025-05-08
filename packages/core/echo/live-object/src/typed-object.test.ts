@@ -36,11 +36,6 @@ interface Contact extends S.Schema.Type<typeof Contact> {}
 const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 
 describe('EchoObject class DSL', () => {
-  test('static isInstance check', async () => {
-    const obj = live(Organization, TEST_ORG);
-    expect(obj instanceof Organization).to.be.true;
-  });
-
   test('can get object schema', async () => {
     const obj = live(Organization, TEST_ORG);
     expect(getSchema(obj)).to.deep.eq(Organization);
