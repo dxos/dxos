@@ -2,15 +2,20 @@
 import { globby } from 'globby';
 import madge from 'madge';
 
-const files = await globby(['**/*.ts', '**/*.tsx'], {
-  ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
+const CONFIG = {
+  // TODO(dmaretskyi): Add more packages.
+  include: ['packages/{common,core}/**/*.{ts,tsx}'],
+  ignoreGlobs: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
+  ignorePathSegments: ['gen/', 'dist/'],
   gitignore: true,
+};
+
+const files = await globby(CONFIG.include, {
+  ignore: CONFIG.ignoreGlobs,
+  gitignore: CONFIG.gitignore,
 });
 
-// TODO(dmaretskyi): Glob ignore is not working.
-const IGNORED = ['gen', 'dist'];
-
-const filteredFiles = files.filter((file) => !IGNORED.some((ignored) => file.includes(ignored)));
+const filteredFiles = files.filter((file) => !CONFIG.ignorePathSegments.some((ignored) => file.includes(ignored)));
 
 console.log(`Running circular dependency check on ${filteredFiles.length} files`);
 
@@ -25,7 +30,7 @@ const res = await madge(filteredFiles, {
 // TODO(dmaretskyi): Can also output dot graph.
 let circular = res.circular();
 
-circular = circular.filter((c) => !IGNORED.some((ignored) => c[0].includes(ignored)));
+circular = circular.filter((c) => !CONFIG.ignorePathSegments.some((ignored) => c[0].includes(ignored)));
 
 if (circular.length) {
   const grouped = groupBy(circular, (c) => c[0].split('/src/')[0]);
