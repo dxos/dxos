@@ -36,7 +36,7 @@ describe('effect-to-json', () => {
       version: '0.1.0',
     })({ name: S.String }) {}
     const jsonSchema = toJsonSchema(Schema);
-    expect((jsonSchema as any).$id).toEqual('dxn:type:example.com/type/Test:0.1.0');
+    expect((jsonSchema as any).$id).toEqual('dxn:type:example.com/type/Test');
     expect((jsonSchema as any).version).toEqual('0.1.0');
   });
 
@@ -120,7 +120,7 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(Schema);
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:example.com/type/Contact:0.1.0',
+      $id: 'dxn:type:example.com/type/Contact',
 
       entityKind: EntityKind.Object,
       typename: 'example.com/type/Contact',
@@ -163,7 +163,7 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(Contact);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:example.com/type/Contact:0.1.0',
+      $id: 'dxn:type:example.com/type/Contact',
 
       entityKind: EntityKind.Object,
       typename: 'example.com/type/Contact',
@@ -261,16 +261,18 @@ describe('effect-to-json', () => {
     const schema = Testing.HasManager;
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: 'dxn:type:example.com/type/HasManager:0.1.0',
+      $id: 'dxn:type:example.com/type/HasManager',
       $schema: 'http://json-schema.org/draft-07/schema#',
       entityKind: 'relation',
       typename: 'example.com/type/HasManager',
       version: '0.1.0',
       relationSource: {
-        $ref: 'dxn:type:example.com/type/Contact:0.1.0',
+        // TODO(dmaretskyi): Should those point to specific schema version?
+        $ref: 'dxn:type:example.com/type/Contact',
       },
       relationTarget: {
-        $ref: 'dxn:type:example.com/type/Contact:0.1.0',
+        // TODO(dmaretskyi): Should those point to specific schema version?
+        $ref: 'dxn:type:example.com/type/Contact',
       },
       type: 'object',
       properties: {

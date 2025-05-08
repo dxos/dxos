@@ -89,6 +89,8 @@ const _JsonSchemaType = S.Struct({
    * Identifier for this schema.
    * This schema might be referenced by $ref clause in other schemas.
    */
+  // TODO(dmaretskyi): Specify how the ids are generated.
+  // TODO(dmaretskyi): For type dxns, should this include the version?
   $id: S.optional(S.String),
 
   /**

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, Option, pipe, SchemaAST as AST, Schema as S, Predicate } from 'effect';
+import { SchemaAST as AST, flow, Option, pipe, Predicate, Schema as S } from 'effect';
 import { isPropertySignature } from 'effect/Schema';
 import { type Simplify } from 'effect/Types';
 
@@ -11,12 +11,12 @@ import { getField, type JsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type Primitive } from '@dxos/util';
 
-import { EntityKind } from './entity-kind';
-import { getSchemaDXN } from './schema';
-import { type HasId } from './types';
-import { DXN } from '../formats';
+import { DXN as DXNSchema } from '../formats';
+import { DXN } from '@dxos/keys';
 import type { RelationSourceTargetRefs } from '../object';
 import { type BaseObject } from '../types';
+import { EntityKind } from './entity-kind';
+import { type HasId } from './types';
 
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -55,13 +55,13 @@ export const TypeAnnotation = S.Struct({
    * If this is a relation, the schema of the source object.
    * Must be present if entity kind is {@link EntityKind.Relation}.
    */
-  sourceSchema: S.optional(DXN),
+  sourceSchema: S.optional(DXNSchema),
 
   /**
    * If this is a relation, the schema of the target object.
    * Must be present if entity kind is {@link EntityKind.Relation}.
    */
-  targetSchema: S.optional(DXN),
+  targetSchema: S.optional(DXNSchema),
 });
 
 export interface TypeAnnotation extends S.Schema.Type<typeof TypeAnnotation> {}
@@ -127,12 +127,25 @@ type EchoRelationOptions<TSource extends S.Schema.AnyNoContext, TTarget extends 
   target: TTarget;
 };
 
+const getDXNForRelationSchemaRef = (schema: S.Schema.Any): string => {
+  const identifier = getTypeIdentifierAnnotation(schema);
+  if (identifier) {
+    return identifier;
+  }
+
+  const typename = getSchemaTypename(schema);
+  if (!typename) {
+    throw new Error('Schema must have a typename');
+  }
+  return DXN.fromTypename(typename).toString();
+};
+
 // TODO(dmaretskyi): Rename?
 export const EchoRelation = <TSource extends S.Schema.AnyNoContext, TTarget extends S.Schema.AnyNoContext>(
   options: EchoRelationOptions<TSource, TTarget>,
 ) => {
-  const sourceDXN = getSchemaDXN(options.source) ?? raise(new Error('Source schema must be an echo object schema.'));
-  const targetDXN = getSchemaDXN(options.target) ?? raise(new Error('Target schema must be an echo object schema.'));
+  const sourceDXN = getDXNForRelationSchemaRef(options.source);
+  const targetDXN = getDXNForRelationSchemaRef(options.target);
   if (getEntityKind(options.source) !== EntityKind.Object) {
     raise(new Error('Source schema must be an echo object schema.'));
   }
@@ -155,8 +168,8 @@ export const EchoRelation = <TSource extends S.Schema.AnyNoContext, TTarget exte
         kind: EntityKind.Relation,
         typename: options.typename,
         version: options.version,
-        sourceSchema: sourceDXN.toString(),
-        targetSchema: targetDXN.toString(),
+        sourceSchema: sourceDXN,
+        targetSchema: targetDXN,
       } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
     });

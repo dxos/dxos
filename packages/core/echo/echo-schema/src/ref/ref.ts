@@ -203,7 +203,8 @@ export const createEchoReferenceSchema = (
 
   const referenceInfo: JsonSchemaReferenceInfo = {
     schema: {
-      $ref: echoId ?? `dxn:type:${typename}`,
+      // TODO(dmaretskyi): Include version?
+      $ref: echoId ?? DXN.fromTypename(typename!).toString(),
     },
     schemaVersion: version,
   };
