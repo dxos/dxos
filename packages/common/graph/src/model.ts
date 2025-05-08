@@ -7,7 +7,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type MakeOptional, isNotFalsy, removeBy, stripUndefined } from '@dxos/util';
 
-import { type Graph, type GraphNode, type GraphEdge, type BaseGraphNode, type BaseGraphEdge } from './types';
+import { type BaseGraphEdge, type BaseGraphNode, type Graph, type GraphEdge, type GraphNode } from './types';
 import { createEdgeId } from './util';
 
 /**
