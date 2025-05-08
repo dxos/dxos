@@ -17,6 +17,11 @@ const argv = yargs(hideBin(process.argv))
     description: 'Run with verbose logging',
     default: false,
   })
+  .option('fix', {
+    type: 'boolean',
+    description: 'Automatically remove unused dependencies',
+    default: false,
+  })
   .help().argv;
 
 // Make zx silent by default
@@ -219,10 +224,33 @@ async function analyzeDependencies(pkg) {
   };
 }
 
+/**
+ * Remove dependencies from package.json
+ */
+async function removeDependencies(pkgPath, depsToRemove, isDev) {
+  const pkgJsonPath = path.join(pkgPath, 'package.json');
+  const pkgJson = JSON.parse(await fs.readFile(pkgJsonPath, 'utf-8'));
+  const depType = isDev ? 'devDependencies' : 'dependencies';
+
+  if (!pkgJson[depType]) return;
+
+  for (const dep of depsToRemove) {
+    delete pkgJson[depType][dep];
+  }
+
+  await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
+
+  if (argv.verbose) {
+    console.log(chalk.gray(`Removed ${isDev ? 'dev ' : ''}dependencies from ${pkgJsonPath}:`));
+    depsToRemove.forEach((dep) => console.log(chalk.gray(`  ${dep}`)));
+  }
+}
+
 async function main() {
   try {
     const packages = await getWorkspacePackages();
     const rootPath = process.cwd();
+    let hasErrors = false;
 
     for (const pkg of packages) {
       // Skip the root package
@@ -236,9 +264,15 @@ async function main() {
       const analysis = await analyzeDependencies(pkg);
       const relativePackageJson = path.relative(process.cwd(), path.join(pkg.path, 'package.json'));
 
+      // Collect all dependencies to remove if --fix is enabled
+      const depsToRemove = [];
+      const devDepsToRemove = [];
+
       // Output diagnostics in format: <level-5-chars> <package.json-path> <dep-name> <message>
       for (const dep of analysis.unusedDeps) {
         console.log(chalk.red(`error ${relativePackageJson} ${dep} Dependency is not used in source or found in text`));
+        if (argv.fix) depsToRemove.push(dep);
+        hasErrors = true;
       }
 
       for (const dep of analysis.potentiallyUsedDeps) {
@@ -249,6 +283,8 @@ async function main() {
         console.log(
           chalk.red(`error ${relativePackageJson} ${dep} Dev dependency is not used in tests or found in text`),
         );
+        if (argv.fix) devDepsToRemove.push(dep);
+        hasErrors = true;
       }
 
       for (const dep of analysis.potentiallyUsedDevDeps) {
@@ -257,11 +293,53 @@ async function main() {
 
       for (const dep of analysis.shouldBeDevDeps) {
         console.log(chalk.red(`error ${relativePackageJson} ${dep} Dependency should be moved to devDependencies`));
+        if (argv.fix) {
+          depsToRemove.push(dep);
+          devDepsToRemove.push(dep); // Will be added to devDependencies
+        }
+        hasErrors = true;
       }
 
       for (const dep of analysis.duplicatedDevDeps) {
         console.log(chalk.red(`error ${relativePackageJson} ${dep} Dev dependency is duplicated in root package.json`));
+        if (argv.fix) devDepsToRemove.push(dep);
+        hasErrors = true;
       }
+
+      // Apply fixes if --fix is enabled and there are dependencies to remove
+      if (argv.fix && (depsToRemove.length > 0 || devDepsToRemove.length > 0)) {
+        if (depsToRemove.length > 0) {
+          await removeDependencies(pkg.path, depsToRemove, false);
+        }
+        if (devDepsToRemove.length > 0) {
+          await removeDependencies(pkg.path, devDepsToRemove, true);
+        }
+
+        // For dependencies that should be moved to devDependencies
+        const depsToMove = analysis.shouldBeDevDeps.filter((dep) => depsToRemove.includes(dep));
+        if (depsToMove.length > 0) {
+          const pkgJsonPath = path.join(pkg.path, 'package.json');
+          const pkgJson = JSON.parse(await fs.readFile(pkgJsonPath, 'utf-8'));
+
+          // Add to devDependencies
+          pkgJson.devDependencies = pkgJson.devDependencies || {};
+          for (const dep of depsToMove) {
+            pkgJson.devDependencies[dep] = pkgJson.dependencies[dep];
+          }
+
+          await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
+
+          if (argv.verbose) {
+            console.log(chalk.gray(`Moved dependencies to devDependencies in ${pkgJsonPath}:`));
+            depsToMove.forEach((dep) => console.log(chalk.gray(`  ${dep}`)));
+          }
+        }
+      }
+    }
+
+    // Exit with error code if there were errors and --fix was not enabled
+    if (hasErrors && !argv.fix) {
+      process.exit(1);
     }
   } catch (error) {
     console.error(chalk.red('Error:', error.message));
