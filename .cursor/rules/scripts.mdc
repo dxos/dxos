@@ -1,0 +1,55 @@
+---
+description: Writing repo-level scripts
+globs: 
+alwaysApply: false
+---
+- Args parsing with yargs
+- ZX for subshell
+- Make sure imported deps are installed as workspace-level dev dependencis
+- CONFIG top level global and extract config there
+- esm and top-level await
+- .mjs file extension
+- chmod +x
+- Comment with script docs, examples, and principles of how it works
+
+Example:
+
+```ts
+#!/usr/bin/env node
+
+import { $ } from 'zx';
+import fs from 'fs/promises';
+import path from 'path';
+import { globby } from 'globby';
+import chalk from 'chalk';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import precinct from 'precinct';
+import yaml from 'yaml';
+
+const CONFIG = {
+  implicitDependencies: ['@dxos/node-std'],
+};
+
+// Parse command line arguments
+const argv = yargs(hideBin(process.argv))
+  .option('verbose', {
+    alias: 'v',
+    type: 'boolean',
+    description: 'Run with verbose logging',
+    default: false,
+  })
+  .option('fix', {
+    type: 'boolean',
+    description: 'Automatically remove unused dependencies',
+    default: false,
+  })
+  .option('path', {
+    type: 'string',
+    description: 'Only check packages whose path contains this string',
+  })
+  .help().argv;
+
+// Make zx silent by default
+$.verbose = false;
+```

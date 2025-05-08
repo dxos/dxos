@@ -10,6 +10,10 @@ import { hideBin } from 'yargs/helpers';
 import precinct from 'precinct';
 import yaml from 'yaml';
 
+const CONFIG = {
+  implicitDependencies: ['@dxos/node-std'],
+};
+
 // Parse command line arguments
 const argv = yargs(hideBin(process.argv))
   .option('verbose', {
@@ -207,8 +211,13 @@ async function shouldKeepDependency(pkgPath, depName, peerDepsMap) {
  */
 async function analyzeDependencies(pkg, peerDepsMap) {
   const pkgJson = await readPackageJson(pkg.path);
-  const dependencies = new Set(Object.keys(pkgJson.dependencies || {}));
-  const devDependencies = new Set(Object.keys(pkgJson.devDependencies || {}));
+  // Filter out implicit dependencies from the check
+  const dependencies = new Set(
+    Object.keys(pkgJson.dependencies || {}).filter((dep) => !CONFIG.implicitDependencies.includes(dep)),
+  );
+  const devDependencies = new Set(
+    Object.keys(pkgJson.devDependencies || {}).filter((dep) => !CONFIG.implicitDependencies.includes(dep)),
+  );
 
   // Find source and test files
   const sourceFiles = await findSourceFiles(pkg.path, [
@@ -322,6 +331,22 @@ async function removeDependencies(pkgPath, depsToRemove, isDev, peerDepsMap) {
   }
 }
 
+/**
+ * Check if package has bundled dependencies in project.json
+ */
+async function hasBundledDependencies(pkgPath) {
+  try {
+    const projectJsonPath = path.join(pkgPath, 'project.json');
+    const projectJson = JSON.parse(await fs.readFile(projectJsonPath, 'utf-8'));
+
+    // Check if compile.options.bundlePackages exists and has entries
+    return !!projectJson.targets?.compile?.options?.bundlePackages?.length;
+  } catch (error) {
+    // If project.json doesn't exist or can't be parsed, assume no bundled deps
+    return false;
+  }
+}
+
 async function main() {
   try {
     const packages = await getWorkspacePackages();
@@ -344,6 +369,15 @@ async function main() {
       if (argv.path && !pkg.path.includes(argv.path)) {
         if (argv.verbose) {
           console.log(chalk.gray(`\nSkipping package ${pkg.path} (doesn't match path filter)`));
+        }
+        continue;
+      }
+
+      // Skip packages with bundled dependencies
+      const hasBundled = await hasBundledDependencies(pkg.path);
+      if (hasBundled) {
+        if (argv.verbose) {
+          console.log(chalk.gray(`\nSkipping package ${pkg.path} (has bundled dependencies)`));
         }
         continue;
       }
