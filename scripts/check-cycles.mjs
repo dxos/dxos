@@ -1,19 +1,20 @@
 /* eslint-disable no-undef */
-import glob from 'glob';
+import { globby } from 'globby';
 import madge from 'madge';
 
-let files = glob.sync('packages/**/src/**/*.{ts,tsx}', {
-  ignore: ['**/gen/**', '**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
+const files = await globby(['**/*.ts', '**/*.tsx'], {
+  ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
+  gitignore: true,
 });
 
 // TODO(dmaretskyi): Glob ignore is not working.
 const IGNORED = ['gen', 'dist'];
 
-files = files.filter((file) => !IGNORED.some((ignored) => file.includes(ignored)));
+const filteredFiles = files.filter((file) => !IGNORED.some((ignored) => file.includes(ignored)));
 
-console.log(`Running circular dependency check on ${files.length} files`);
+console.log(`Running circular dependency check on ${filteredFiles.length} files`);
 
-const res = await madge(files, {
+const res = await madge(filteredFiles, {
   detectiveOptions: {
     ts: {
       skipTypeImports: true,
