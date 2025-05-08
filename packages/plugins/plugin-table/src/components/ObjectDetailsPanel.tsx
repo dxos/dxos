@@ -4,15 +4,14 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { getDXN, type JsonPath, setValue, type TypeAnnotation } from '@dxos/echo-schema';
+import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useSelectedItems } from '@dxos/react-ui-attention';
-import { Form } from '@dxos/react-ui-form';
+import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { type ViewType } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
 
 import { TABLE_PLUGIN } from '../meta';
 
@@ -49,26 +48,7 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
     [queriedObjects],
   );
 
-  // TODO(ZaymonFC): We should have a hook that provisions this.
-  const handleRefQueryLookup = async (typeInfo: TypeAnnotation) => {
-    if (!space) {
-      return [];
-    }
-    const query = space.db.query(Filter.typename(typeInfo.typename));
-    const results = query.runSync();
-
-    return results
-      .map((result) => {
-        const dxn = getDXN(result.object);
-        if (dxn) {
-          const label: string = result?.object?.name ?? result?.object?.id ?? '';
-          const item = { dxn, label };
-          return item;
-        }
-        return undefined;
-      })
-      .filter(isNonNullable);
-  };
+  const handleRefQueryLookup = useRefQueryLookupHandler({ space });
 
   return (
     <div role='none' className='bs-full is-full flex flex-col gap-1 overflow-y-auto p-1'>

@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S, toJsonSchema } from '@dxos/echo-schema';
+import { ContactType } from '@dxos/client/testing';
+import { AST, Ref, S, toJsonSchema } from '@dxos/echo-schema';
 
 export const functions = [
   {
@@ -27,6 +28,17 @@ export const functions = [
         }),
         to: S.String.annotations({
           [AST.TitleAnnotationId]: 'Currency to',
+        }),
+      }),
+    ),
+  },
+  {
+    name: 'example.com/function/ping-contact',
+    version: '0.0.1',
+    inputSchema: toJsonSchema(
+      S.Struct({
+        contact: Ref(ContactType).annotations({
+          [AST.TitleAnnotationId]: 'Contact',
         }),
       }),
     ),

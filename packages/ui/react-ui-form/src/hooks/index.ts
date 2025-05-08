@@ -3,3 +3,4 @@
 //
 
 export * from './useForm';
+export * from './useRefQueryLookupHandler';
