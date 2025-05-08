@@ -6,7 +6,7 @@ import { SchemaAST as AST, JSONSchema, Option, Schema as S, type Types } from 'e
 import { JSONSchemaAnnotationId } from 'effect/SchemaAST';
 
 import { mapAst } from '@dxos/effect';
-import { invariant, raise } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { clearUndefined, orderKeys } from '@dxos/util';
 
@@ -28,6 +28,7 @@ import { Expando, ObjectId } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import type { Mutable } from 'effect/Types';
+import { raise } from '@dxos/debug';
 
 /**
  * Create object jsonSchema.
