@@ -22,6 +22,10 @@ const argv = yargs(hideBin(process.argv))
     description: 'Automatically remove unused dependencies',
     default: false,
   })
+  .option('path', {
+    type: 'string',
+    description: 'Only check packages whose path contains this string',
+  })
   .help().argv;
 
 // Make zx silent by default
@@ -102,6 +106,13 @@ async function extractDependencies(filePath) {
         }
         // For regular packages (pkg/subpath), keep only pkg
         return dep.split('/')[0];
+      })
+      .flatMap((dep) => {
+        // For each non-types package, also check for its @types version
+        if (!dep.startsWith('@types/')) {
+          return [dep, `@types/${dep.replace(/^@/, '').replace('/', '__')}`];
+        }
+        return [dep];
       });
   } catch (error) {
     if (argv.verbose) {
@@ -144,15 +155,15 @@ async function analyzeDependencies(pkg) {
 
   // Find source and test files
   const sourceFiles = await findSourceFiles(pkg.path, [
-    'src/**/*.{js,jsx,ts,tsx}',
-    'lib/**/*.{js,jsx,ts,tsx}',
-    'index.{js,jsx,ts,tsx}',
+    'src/**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}',
+    'lib/**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}',
+    'index.{js,jsx,ts,tsx,mjs,cjs,mts,cts}',
   ]);
   const testFiles = await findSourceFiles(pkg.path, [
-    'test/**/*.{js,jsx,ts,tsx}',
-    'tests/**/*.{js,jsx,ts,tsx}',
-    'src/**/*.test.{js,jsx,ts,tsx}',
-    'src/**/*.spec.{js,jsx,ts,tsx}',
+    'test/**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}',
+    'tests/**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}',
+    'src/**/*.test.{js,jsx,ts,tsx,mjs,cjs,mts,cts}',
+    'src/**/*.spec.{js,jsx,ts,tsx,mjs,cjs,mts,cts}',
   ]);
 
   if (argv.verbose) {
@@ -261,6 +272,14 @@ async function main() {
         continue;
       }
 
+      // Skip packages that don't match the path filter
+      if (argv.path && !pkg.path.includes(argv.path)) {
+        if (argv.verbose) {
+          console.log(chalk.gray(`\nSkipping package ${pkg.path} (doesn't match path filter)`));
+        }
+        continue;
+      }
+
       const analysis = await analyzeDependencies(pkg);
       const relativePackageJson = path.relative(process.cwd(), path.join(pkg.path, 'package.json'));
 
@@ -276,7 +295,7 @@ async function main() {
       }
 
       for (const dep of analysis.potentiallyUsedDeps) {
-        console.log(chalk.yellow(`warn  ${relativePackageJson} ${dep} Dependency not imported but found in text`));
+        console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dependency not imported but found in text`));
       }
 
       for (const dep of analysis.unusedDevDeps) {
@@ -288,7 +307,7 @@ async function main() {
       }
 
       for (const dep of analysis.potentiallyUsedDevDeps) {
-        console.log(chalk.yellow(`warn  ${relativePackageJson} ${dep} Dev dependency not imported but found in text`));
+        console.log(chalk.blue(`info  ${relativePackageJson} ${dep} Dev dependency not imported but found in text`));
       }
 
       for (const dep of analysis.shouldBeDevDeps) {
