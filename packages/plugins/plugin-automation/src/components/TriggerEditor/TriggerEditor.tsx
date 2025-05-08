@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { getDXN, type JsonPath, toEffectSchema, type TypeAnnotation } from '@dxos/echo-schema';
+import { type JsonPath, toEffectSchema } from '@dxos/echo-schema';
 import {
   FunctionType,
   FunctionTriggerSchema,
@@ -17,7 +17,6 @@ import {
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type CustomInputMap, Form, SelectInput, useFormValues, useRefQueryLookupHandler } from '@dxos/react-ui-form';
-import { isNonNullable } from '@dxos/util';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
 
@@ -61,7 +60,6 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
           }))}
         />
       ),
-      // TODO(wittjosiah): Form should be able to handle arbitrary records by default.
       // TODO(ZaymonFC): This should get it's own component.
       // TODO(ZaymonFC): When the input schema changes (by switching function), we should set meta to {}.
       ['meta' as const]: (props) => {
