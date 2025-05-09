@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { Ref, TypedObject, create, foreignKey, getSchema, isInstanceOf } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 
-import { getMeta } from './accessors';
+import { getMeta } from '@dxos/echo-schema';
 import { live } from './object';
 
 describe('complex schema validations', () => {

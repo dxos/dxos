@@ -4,14 +4,10 @@
 
 // TODO(dmaretskyi): Remove deprecated exports.
 
-//
-// Deprecated APIs.
-//
-
 import * as EchoSchemaModule from '@dxos/echo-schema';
 
 export * from './proxy';
-export * from './accessors';
+export * from './snapshot';
 export * from './object';
 export * from './schema';
 export * from './live';
@@ -45,3 +41,8 @@ export const isDeleted = EchoSchemaModule.isDeleted;
  * @deprecated Import from `@dxos/echo-schema` instead.
  */
 export const getType = EchoSchemaModule.getType;
+
+/**
+ * @deprecated Import from `@dxos/echo-schema` instead.
+ */
+export const getMeta = EchoSchemaModule.getMeta;

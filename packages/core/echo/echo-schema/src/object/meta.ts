@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Comparator, intersection } from '@dxos/util';
 import { Schema as S } from 'effect';
 import { IdentifierAnnotationId } from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
+import type { BaseObject } from '../types';
 
 //
 // ForeignKey
@@ -44,10 +46,23 @@ export const symbolMeta = Symbol.for('@dxos/schema/ObjectMeta');
 /**
  * Get metadata from object.
  * Only callable on the object root.
+ * @deprecated Use {@link getMeta}.
  */
-// TODO(dmaretskyi): Combine with `getMeta`
+// TODO(dmaretskyi): Remove.
 export const getObjectMeta = (object: any): ObjectMeta => {
-  const metadata = object[symbolMeta];
+  return getMeta(object);
+};
+
+/*
+ * Get metadata from object.
+ * Only callable on the object root.
+ */
+export const getMeta = (obj: BaseObject): ObjectMeta => {
+  const metadata = (obj as any)[symbolMeta];
   invariant(metadata, 'ObjectMeta not found.');
   return metadata;
 };
+
+// TODO(dmaretskyi): Move to echo-schema.
+export const compareForeignKeys: Comparator<BaseObject> = (a: BaseObject, b: BaseObject) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;

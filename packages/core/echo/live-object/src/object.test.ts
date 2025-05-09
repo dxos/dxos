@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { getSnapshot } from './accessors';
+import { getSnapshot } from './snapshot';
 import { live } from './object';
 
 describe('Object', () => {
