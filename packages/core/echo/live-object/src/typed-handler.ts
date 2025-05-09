@@ -171,10 +171,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return getTypeReference(target[symbolSchema]);
   }
 
-  getMeta(target: any): ObjectMeta {
-    return getObjectMeta(target);
-  }
-
   private _validateValue(target: any, prop: string | symbol, value: any) {
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
     const _ = S.asserts(schema)(value);

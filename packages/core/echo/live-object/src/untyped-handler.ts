@@ -132,10 +132,6 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   getTypeReference() {
     return undefined;
   }
-
-  getMeta(target: any): ObjectMeta {
-    return getObjectMeta(target);
-  }
 }
 
 const toJSON = (target: any): any => {
