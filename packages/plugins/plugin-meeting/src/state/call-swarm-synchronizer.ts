@@ -4,7 +4,7 @@
 
 import md5Hex from 'md5-hex';
 
-import { DeferredTask, Event, synchronized } from '@dxos/async';
+import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Device, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { ConnectionState, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { isNonNullable } from '@dxos/util';
 
 import { codec, type ActivityState, type UserState } from '../types';
@@ -54,6 +54,11 @@ export type CallState = {
 export type CallSwarmSynchronizerParams = { networkService: NetworkService };
 
 /**
+ * Period for peer to reconnect to the call swarm gracefully if connection was lost abruptly.
+ */
+const DISCONNECTED_ABRUPT_TIMEOUT = 2_000; // [ms]
+
+/**
  * Sends and receives state to/from Swarm network.
  */
 export class CallSwarmSynchronizer extends Resource {
@@ -61,6 +66,8 @@ export class CallSwarmSynchronizer extends Resource {
 
   private readonly _state: CallState = { activities: {} };
   private readonly _networkService: NetworkService;
+  private _lastSwarmEvent?: SwarmResponse = undefined;
+  private _reconcileSwarmStateTask?: DeferredTask = undefined;
 
   private _identityKey?: string = undefined;
   private _deviceKey?: string = undefined;
@@ -153,10 +160,15 @@ export class CallSwarmSynchronizer extends Resource {
     this._sendStateTask = new DeferredTask(this._ctx, async () => {
       await this._sendState();
     });
+
+    this._reconcileSwarmStateTask = new DeferredTask(this._ctx, async () => {
+      await this._reconcileSwarmState();
+    });
   }
 
   protected override async _close() {
     this._sendStateTask = undefined;
+    this._reconcileSwarmStateTask = undefined;
   }
 
   @synchronized
@@ -235,9 +247,28 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private _processSwarmEvent(swarmEvent: SwarmResponse) {
-    const users = swarmEvent.peers?.map((peer) => codec.decode(peer.state!)) ?? [];
+    this._lastSwarmEvent = swarmEvent;
+    this._reconcileSwarmStateTask!.schedule();
+  }
+
+  private async _reconcileSwarmState() {
+    const swarmEvent = this._lastSwarmEvent;
+    invariant(swarmEvent);
+    // We include inactive peers that were disconnected abruptly and have not yet reconnected to not drop them from call.
+    // Websocket connection could be unstable and we include graceful period for peers to reconnect.
+    const peers = [
+      ...(swarmEvent.peers ?? []),
+      ...(swarmEvent.inactivePeers ?? []).filter(
+        ({ disconnected, connectionState }) =>
+          connectionState === ConnectionState.DISCONNECTED_ABRUPT &&
+          disconnected &&
+          disconnected > Date.now() - DISCONNECTED_ABRUPT_TIMEOUT,
+      ),
+    ];
+    const users = peers.map((peer) => codec.decode(peer.state!));
     this._state.users = users;
     this._state.self = users.find((user) => user.id === this._deviceKey);
+    log('reconciling swarm state', { users });
     if (users.length === 0) {
       return;
     }
@@ -253,8 +284,16 @@ export class CallSwarmSynchronizer extends Resource {
         this._state.activities![key] = lastActivity;
       }
     });
-
     this.stateUpdated.emit(this._state);
+
+    // Schedule next reconcile if there are inactive peer to drop them after timeout.
+    if (peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
+      scheduleTaskInterval(
+        this._ctx,
+        async () => this._reconcileSwarmStateTask!.schedule(),
+        DISCONNECTED_ABRUPT_TIMEOUT / 2,
+      );
+    }
   }
 }
 
