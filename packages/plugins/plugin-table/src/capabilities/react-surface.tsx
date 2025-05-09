@@ -31,12 +31,12 @@ export default () =>
     createSurface({
       id: `${meta.id}/companion/schema`,
       role: 'article',
-      filter: (data): data is { subject: TableType } =>
-        isInstanceOf(TableType, data.subject) && data.variant === 'schema',
+      filter: (data): data is { companionTo: TableType; subject: 'schema' } =>
+        isInstanceOf(TableType, data.companionTo) && data.subject === 'schema',
       component: ({ data, role }) => {
         return (
           <StackItem.Content role={role}>
-            <TableViewEditor table={data.subject} />
+            <TableViewEditor table={data.companionTo} />
           </StackItem.Content>
         );
       },
