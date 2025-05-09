@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Comparator, intersection } from '@dxos/util';
 import { Schema as S } from 'effect';
 import { IdentifierAnnotationId } from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
+import { type Comparator, intersection } from '@dxos/util';
+
 import type { BaseObject } from '../types';
 
 //

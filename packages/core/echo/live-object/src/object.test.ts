@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { getSnapshot } from './snapshot';
 import { live } from './object';
+import { getSnapshot } from './snapshot';
 
 describe('Object', () => {
   test.skip('ulid stress test', () => {
