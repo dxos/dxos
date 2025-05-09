@@ -11,6 +11,10 @@ export * from './object';
 export * from './schema';
 export * from './live';
 
+//
+// Deprecated APIs.
+//
+
 /**
  * @deprecated Use {@link Ref.make} instead.
  */
@@ -21,4 +25,4 @@ export const makeRef = Ref.make;
  */
 export const refFromDXN = Ref.fromDXN;
 
-export { RefArray } from '@dxos/echo-schema';
+export { RefArray, getObjectMeta } from '@dxos/echo-schema';

@@ -17,7 +17,7 @@ import {
 import { invariant } from '@dxos/invariant';
 
 import type { Live } from './live';
-import { symbolMeta } from './meta';
+import { symbolMeta } from '@dxos/echo-schema';
 import { createProxy, isValidProxyTarget } from './proxy';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
