@@ -2,9 +2,8 @@ import { Schema } from 'effect';
 /// ISSUE(dm): Is it okay to have one entry point for all of the types like object id and type definitions and will it prohibit us from building isolated storybooks that don't pull in echo? DX vs tree shaking.
 // So that type and relation API should be separate from echo database API.
 // Potentially, some part of the database API could be included in there. Things like query builders. So only the declarative API, not the actual execution layer.
-import { Type } from '.';
 import { test } from 'vitest';
-import { getDXN, RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
+import { Type } from '.';
 
 declare const create: any;
 declare const Relation: any;
