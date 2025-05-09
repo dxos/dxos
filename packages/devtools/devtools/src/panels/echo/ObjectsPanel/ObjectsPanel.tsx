@@ -28,7 +28,7 @@ const textFilter = (text?: string) => {
   const matcher = new RegExp(text, 'i');
   return (item: ReactiveEchoObject<any>) => {
     let match = false;
-    match ||= !!getType(item)?.objectId.match(matcher);
+    match ||= !!getType(item)?.toString().match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
     return match;
   };

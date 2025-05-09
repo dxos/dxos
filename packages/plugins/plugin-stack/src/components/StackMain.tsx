@@ -13,25 +13,24 @@ import {
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { live, getType, fullyQualifiedId, isLiveObject, makeRef } from '@dxos/client/echo';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { type CollectionType } from '@dxos/plugin-space/types';
+import { fullyQualifiedId, getTypename, isLiveObject, live, makeRef } from '@dxos/client/echo';
+import { SpaceAction, type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-import { StackContext } from './StackContext';
-import { StackSection } from './StackSection';
 import { STACK_PLUGIN } from '../meta';
 import {
   StackViewType,
+  type AddSectionPosition,
   type CollapsedSections,
+  type StackSectionItem,
   type StackSectionMetadata,
   type StackSectionView,
-  type StackSectionItem,
-  type AddSectionPosition,
 } from '../types';
+import { StackContext } from './StackContext';
+import { StackSection } from './StackSection';
 
 type StackMainProps = {
   id: string;
@@ -60,7 +59,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
       .map((object) => object.target)
       .filter(isNonNullable)
       .map((object) => {
-        const metadata = allMetadata.find((m) => m.id === (getType(object)?.objectId ?? 'never'))
+        const metadata = allMetadata.find((m) => m.id === (getTypename(object) ?? 'never'))
           ?.metadata as StackSectionMetadata;
         const view = {
           ...stack.sections[object.id],
