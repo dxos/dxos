@@ -95,6 +95,7 @@ export const ContactWithImage = {
     Component: ContactCard,
     icon: 'ph--user--regular',
     subject: data.contact,
+    role: 'popover',
   },
 };
 
@@ -103,6 +104,7 @@ export const ContactNoImage = {
     Component: ContactCard,
     icon: 'ph--user--regular',
     subject: omitImage(data.contact),
+    role: 'popover',
   },
 };
 
@@ -111,6 +113,7 @@ export const OrganizationWithImage = {
     Component: OrganizationCard,
     icon: 'ph--building-office--regular',
     subject: data.organization,
+    role: 'popover',
   },
 };
 
@@ -119,6 +122,7 @@ export const OrganizationNoImage = {
     Component: OrganizationCard,
     icon: 'ph--building-office--regular',
     subject: omitImage(data.organization),
+    role: 'popover',
   },
 };
 
@@ -127,6 +131,7 @@ export const ProjectWithImage = {
     Component: ProjectCard,
     icon: 'ph--building--regular',
     subject: data.project,
+    role: 'popover',
   },
 };
 
@@ -135,5 +140,6 @@ export const ProjectNoImage = {
     Component: ProjectCard,
     icon: 'ph--building--regular',
     subject: omitImage(data.project),
+    role: 'popover',
   },
 };
