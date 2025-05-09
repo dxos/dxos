@@ -98,7 +98,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
         size: 100,
         config: {
           options: [
-            { id: 'object', title: 'OBJECT', color: 'red' },
+            { id: 'object', title: 'OBJECT', color: 'indigo' },
             { id: 'relation', title: 'RELATION', color: 'green' },
           ],
         },
