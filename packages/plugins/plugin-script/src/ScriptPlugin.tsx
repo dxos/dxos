@@ -11,7 +11,14 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
+import {
+  AppGraphBuilder,
+  ArtifactDefinition,
+  Compiler,
+  IntentResolver,
+  ReactSurface,
+  ScriptSettings,
+} from './capabilities';
 import { ScriptEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
@@ -77,9 +84,9 @@ export const ScriptPlugin = () =>
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
-    // defineModule({
-    //   id: `${meta.id}/module/artifact-definition`,
-    //   activatesOn: Events.SetupArtifactDefinition,
-    //   activate: ArtifactDefinition,
-    // }),
+    defineModule({
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
+    }),
   ]);
