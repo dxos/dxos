@@ -11,3 +11,5 @@ export * from './errors';
 export * from './auth';
 export * from './edge-http-client';
 export * from './edge-identity';
+export * from './edge-ws-muxer';
+export { EDGE_WEBSOCKET_PROTOCOL_V0, EDGE_WEBSOCKET_PROTOCOL_V1 } from './edge-ws-connection';

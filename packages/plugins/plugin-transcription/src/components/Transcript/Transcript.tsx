@@ -90,5 +90,11 @@ export const Transcript = ({
     };
   }, [space, model]);
 
-  return <div ref={parentRef} className={mx('flex grow overflow-hidden', editorWidth, classNames)} />;
+  return (
+    <div
+      ref={parentRef}
+      className={mx('flex grow overflow-hidden', editorWidth, classNames)}
+      data-popover-collision-boundary={true}
+    />
+  );
 };

@@ -231,6 +231,7 @@ export const MarkdownEditor = ({
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className={stackItemContentEditorClassNames(role)}
+        data-popover-collision-boundary={true}
         {...focusAttributes}
       />
     </StackItem.Content>

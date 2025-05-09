@@ -45,6 +45,9 @@
       "path": "../../plugins/plugin-space"
     },
     {
+      "path": "../../sdk/app-framework"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {

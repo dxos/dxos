@@ -4,7 +4,7 @@
 
 import { signal } from '@preact/signals-core';
 
-import { FormatEnum, getValue } from '@dxos/echo-schema';
+import { FormatEnum, getDXN, getValue } from '@dxos/echo-schema';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridPlane,
@@ -124,10 +124,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
       if (props.format === FormatEnum.Ref && props.referenceSchema) {
         const targetObj = getValue(obj, field.path)?.target;
         if (targetObj) {
-          cell.accessoryHtml = tableButtons.referencedCell.render({
-            targetId: targetObj.id as any as string,
-            schemaId: props.referenceSchema,
-          });
+          const dxn = getDXN(targetObj)?.toString();
+          cell.accessoryHtml = `<dx-ref-tag ref=${dxn} class="dx-button block is-6 pli-[3px] plb-[3px] pbe-[2px] min-bs-0 absolute inline-end-1"><dx-icon icon="ph--link-simple--regular"/></dx-ref-tag>`;
         }
       }
 
