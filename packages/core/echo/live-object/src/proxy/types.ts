@@ -20,9 +20,6 @@ export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
    * Called when a proxy is created for this target.
    */
   init(target: T): void;
-
-  // TODO(dmaretskyi): Remove and use schemaSymbol.
-  getSchema(target: T): S.Schema.AnyNoContext | undefined;
 }
 
 /**
