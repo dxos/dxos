@@ -18,9 +18,10 @@ import {
   getEntityKind,
   RelationSourceId,
   RelationTargetId,
+  getRefSavedTarget,
 } from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { getRefSavedTarget, type Live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { createProxy, getMeta, getProxyHandler, getProxySlot, getProxyTarget, isLiveObject } from '@dxos/live-object';
 import { deepMapValues } from '@dxos/util';
 
@@ -225,7 +226,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
       if (Ref.isRef(value)) {
         // Pass refs as is.
       } else if (value instanceof EchoSchema || isTypedObjectProxy(value)) {
-        throw new Error('Object references must be wrapped with `makeRef`');
+        throw new Error('Object references must be wrapped with `Ref.make`');
       } else {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);

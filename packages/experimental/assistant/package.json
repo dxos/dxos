@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@types/parsimmon": "^1.10.9",
-    "effect": "3.13.3",
+    "effect": "3.14.21",
     "inquirer": "^12.0.0"
   },
   "peerDependencies": {

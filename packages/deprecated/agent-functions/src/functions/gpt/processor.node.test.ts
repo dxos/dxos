@@ -4,7 +4,7 @@
 
 import { onTestFinished, describe, expect, test } from 'vitest';
 
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 
@@ -31,7 +31,7 @@ describe('RequestProcessor', () => {
       space.db.add(
         live(TemplateType, {
           prompts: [
-            makeRef(
+            Ref.make(
               live(TemplateType, {
                 command,
                 template,
@@ -88,7 +88,7 @@ describe('RequestProcessor', () => {
       space.db.add(
         live(TemplateType, {
           prompts: [
-            makeRef(
+            Ref.make(
               live(TemplateType, {
                 command: 'extract',
                 template: str(
