@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import { Surface } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
-import { mx, descriptionText } from '@dxos/react-ui-theme';
 
 import { StatusBar } from './StatusBar';
 import { VersionNumber } from './VersionNumber';
@@ -48,10 +47,10 @@ export const StatusBarPanel = () => {
 };
 
 const ENV_LABELS: Record<string, string> = {
-  'edge-production': 'PROD',
-  'edge-labs': 'LABS',
-  'edge-main': 'MAIN',
-  'edge-dev': 'DEV',
+  'edge-dev': 'D',
+  'edge-main': 'M',
+  'edge-labs': 'L',
+  'edge-production': 'P',
 };
 
 const EnvironmentLabel = () => {
@@ -60,11 +59,14 @@ const EnvironmentLabel = () => {
   if (!edgeUrl) {
     return null;
   }
+  const edgeEnv = ENV_LABELS[new URL(edgeUrl).host.split('.')[0]];
+  if (!edgeEnv) {
+    return null;
+  }
 
-  const edgeEnv = ENV_LABELS[new URL(edgeUrl).host.split('.')[0]] ?? 'DEV';
   return (
     <StatusBar.Item>
-      <StatusBar.Text classNames={mx('text-xs', descriptionText)}>{edgeEnv}</StatusBar.Text>
+      <StatusBar.Text classNames='text-xs text-subdued border rounded-full px-1'>{edgeEnv}</StatusBar.Text>
     </StatusBar.Item>
   );
 };
