@@ -54,6 +54,7 @@ export namespace Devtools {
     export const Space = `${Devtools.Echo.id}.space`;
     export const Feeds = `${Devtools.Echo.id}.feeds`;
     export const Objects = `${Devtools.Echo.id}.objects`;
+    export const Schema = `${Devtools.Echo.id}.schema`;
     export const Automerge = `${Devtools.Echo.id}.automerge`;
     export const Queues = `${Devtools.Echo.id}.queues`;
     export const Members = `${Devtools.Echo.id}.members`;

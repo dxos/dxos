@@ -10,9 +10,9 @@ import { DXN } from '@dxos/keys';
 import { create } from './create';
 import { serializeStatic } from './json-serializer';
 import { getTypename } from './typename';
-import { getSchema } from '../ast';
+import { getSchema, getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
-import { getSchemaDXN, isInstanceOf } from '../types';
+import { isInstanceOf } from '../types';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {

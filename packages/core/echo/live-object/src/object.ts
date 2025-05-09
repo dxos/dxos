@@ -14,6 +14,7 @@ import {
   type ObjectMeta,
   ObjectMetaSchema,
 } from '@dxos/echo-schema';
+import { symbolMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import type { Live } from './live';
@@ -81,22 +82,10 @@ const setIdOnTarget = (target: any) => {
   target.id = ObjectId.random();
 };
 
-const symbolMeta = Symbol.for('@dxos/schema/ObjectMeta');
-
 /**
  * Set metadata on object.
  */
 const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
   prepareTypedTarget(meta, ObjectMetaSchema);
   defineHiddenProperty(obj, symbolMeta, createProxy(meta, TypedReactiveHandler.instance as any));
-};
-
-/**
- * Get metadata from object.
- * @internal
- */
-export const getObjectMeta = (object: any): ObjectMeta => {
-  const metadata = object[symbolMeta];
-  invariant(metadata, 'ObjectMeta not found.');
-  return metadata;
 };

@@ -7,8 +7,8 @@ import { capitalize } from 'effect/String';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { Format, getTypename, toJsonSchema } from '@dxos/echo-schema';
-import { live, createStoredSchema, makeRef } from '@dxos/live-object';
+import { Format, getTypename, toJsonSchema, Ref } from '@dxos/echo-schema';
+import { live, createStoredSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { getSchemaProperties } from './properties';
@@ -54,7 +54,7 @@ describe('View', () => {
     const contact = live(Testing.Contact, {
       name: 'Alice',
       email: 'alice@example.com',
-      organization: makeRef(organization),
+      organization: Ref.make(organization),
     });
     log('schema', { organization: toJsonSchema(Testing.Organization), contact: toJsonSchema(Testing.Contact) });
     log('objects', { organization, contact });

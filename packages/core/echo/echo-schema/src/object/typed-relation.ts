@@ -37,6 +37,7 @@ export type TypedRelationProps = TypeMeta & {
 
 /**
  * Base class factory for typed objects.
+ * @deprecated Use {@link EchoRelation} instead.
  */
 export const TypedRelation = ({ typename: _typename, version: _version, disableValidation }: TypedRelationProps) => {
   const typename = Typename.make(_typename, { disableValidation });

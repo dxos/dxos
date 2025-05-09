@@ -17,15 +17,14 @@ export const RelationTargetId: unique symbol = Symbol('@dxos/echo-db/RelationSou
 /**
  * Source and target props on relations.
  */
-export type RelationSourceTargetRefs = {
-  // TODO(dmaretskyi): Type those better.
+export type RelationSourceTargetRefs<TSource = any, TTarget = any> = {
   /**
    * Source ECHO live object.
    */
-  [RelationSourceId]: any;
+  [RelationSourceId]: TSource;
 
   /**
    * Target ECHO live object.
    */
-  [RelationTargetId]: any;
+  [RelationTargetId]: TTarget;
 };

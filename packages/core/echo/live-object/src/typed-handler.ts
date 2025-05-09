@@ -9,17 +9,17 @@ import { inspectCustom } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
 import {
   defineHiddenProperty,
+  DeletedSymbol,
   getTypeReference,
-  type ObjectMeta,
   SchemaMetaSymbol,
   SchemaValidator,
   symbolSchema,
   TYPENAME_SYMBOL,
+  TypeSymbol,
 } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { getObjectMeta } from './object';
 import {
   createProxy,
   isValidProxyTarget,
@@ -74,6 +74,8 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
+    defineHiddenProperty(target, DeletedSymbol, false);
+
     for (const key of Object.getOwnPropertyNames(target)) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
       if (descriptor.get) {
@@ -90,22 +92,26 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    if (prop === objectData) {
-      target[symbolSignal].notifyRead();
-      return toJSON(target);
-    }
-
-    if (prop === TYPENAME_SYMBOL) {
-      if ((target as any)[TYPENAME_SYMBOL] !== undefined) {
-        return (target as any)[TYPENAME_SYMBOL];
+    switch (prop) {
+      case objectData: {
+        target[symbolSignal].notifyRead();
+        return toJSON(target);
       }
+      case TYPENAME_SYMBOL: {
+        if ((target as any)[TYPENAME_SYMBOL] !== undefined) {
+          return (target as any)[TYPENAME_SYMBOL];
+        }
 
-      const schema = this.getSchema(target);
-      // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
-      if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
-        return (schema as any)[SchemaMetaSymbol].typename;
+        const schema = this.getSchema(target);
+        // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
+        if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
+          return (schema as any)[SchemaMetaSymbol].typename;
+        }
+        return this.getTypeReference(target)?.objectId;
       }
-      return this.getTypeReference(target)?.objectId;
+      case TypeSymbol: {
+        return this.getTypeReference(target)?.toDXN();
+      }
     }
 
     // Handle getter properties. Will not subscribe the value signal.
@@ -159,20 +165,12 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  isDeleted(): boolean {
-    return false;
-  }
-
   getSchema(target: any) {
     return target[symbolSchema];
   }
 
   getTypeReference(target: any): Reference | undefined {
     return getTypeReference(target[symbolSchema]);
-  }
-
-  getMeta(target: any): ObjectMeta {
-    return getObjectMeta(target);
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {

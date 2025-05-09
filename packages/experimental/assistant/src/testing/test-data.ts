@@ -6,9 +6,16 @@ import { type Schema as S } from 'effect';
 
 import { raise } from '@dxos/debug';
 import type { EchoDatabase } from '@dxos/echo-db';
-import { JSON_SCHEMA_ECHO_REF_ID, ObjectId, toJsonSchema, type JsonSchemaType, type Ref } from '@dxos/echo-schema';
+import {
+  JSON_SCHEMA_ECHO_REF_ID,
+  ObjectId,
+  toJsonSchema,
+  type JsonSchemaType,
+  type Ref,
+  Ref as RefImpl,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import {
   type DataSource,
@@ -60,79 +67,79 @@ export const seedTestData = (db: EchoDatabase) => {
   const _taskComposer1 = db.add(
     live(Task, {
       name: 'Optimize startup performance',
-      project: makeRef(projectComposer),
-      assignee: makeRef(contactJosiah),
+      project: RefImpl.make(projectComposer),
+      assignee: RefImpl.make(contactJosiah),
     }),
   );
   const _taskComposer2 = db.add(
     live(Task, {
       name: 'Create form builder',
-      project: makeRef(projectComposer),
-      assignee: makeRef(contactRich),
+      project: RefImpl.make(projectComposer),
+      assignee: RefImpl.make(contactRich),
     }),
   );
   const _taskComposer3 = db.add(
     live(Task, {
       name: 'Add support for custom themes',
-      project: makeRef(projectComposer),
-      assignee: makeRef(contactJosiah),
+      project: RefImpl.make(projectComposer),
+      assignee: RefImpl.make(contactJosiah),
     }),
   );
   const _taskComposer5 = db.add(
     live(Task, {
       name: 'Implement community plugin',
-      project: makeRef(projectComposer),
-      assignee: makeRef(contactFred),
+      project: RefImpl.make(projectComposer),
+      assignee: RefImpl.make(contactFred),
     }),
   );
   const _taskComposer4 = db.add(
     live(Task, {
       name: 'Implement dark mode',
-      project: makeRef(projectComposer),
-      assignee: makeRef(contactRich),
+      project: RefImpl.make(projectComposer),
+      assignee: RefImpl.make(contactRich),
     }),
   );
   const _taskEcho1 = db.add(
     live(Task, {
       name: 'Implement cypher query engine',
-      project: makeRef(projectEcho),
-      assignee: makeRef(contactDima),
+      project: RefImpl.make(projectEcho),
+      assignee: RefImpl.make(contactDima),
     }),
   );
   const _taskEcho2 = db.add(
     live(Task, {
       name: 'Add schema editor',
-      project: makeRef(projectEcho),
-      assignee: makeRef(contactRich),
+      project: RefImpl.make(projectEcho),
+      assignee: RefImpl.make(contactRich),
     }),
   );
   const _taskDoodles1 = db.add(
     live(Task, {
       name: 'Add support for custom themes',
-      project: makeRef(projectDoodles),
-      assignee: makeRef(contactFred),
+      project: RefImpl.make(projectDoodles),
+      assignee: RefImpl.make(contactFred),
     }),
   );
   const _taskDoodles2 = db.add(
     live(Task, {
       name: 'Implement dark mode',
-      project: makeRef(projectDoodles),
-      assignee: makeRef(contactJosiah),
+      project: RefImpl.make(projectDoodles),
+      assignee: RefImpl.make(contactJosiah),
     }),
   );
 
   const _orgDxos = db.add(
     live(Organization, {
       name: 'DXOS',
-      employees: [makeRef(contactRich), makeRef(contactJosiah), makeRef(contactDima)],
-      projects: [makeRef(projectEcho)],
+      employees: [RefImpl.make(contactRich), RefImpl.make(contactJosiah), RefImpl.make(contactDima)],
+      projects: [RefImpl.make(projectEcho)],
     }),
   );
   const _orgBraneframe = db.add(
     live(Organization, {
       name: 'Braneframe',
-      employees: [makeRef(contactJosiah), makeRef(contactRich)],
-      projects: [makeRef(projectComposer)],
+      employees: [RefImpl.make(contactJosiah), RefImpl.make(contactRich)],
+      projects: [RefImpl.make(projectComposer)],
     }),
   );
 };
@@ -174,69 +181,69 @@ export const createTestData = (): MockDataSource => {
   const _taskComposer1 = dataSource.add(Task, {
     id: ObjectId.random(),
     name: 'Optimize startup performance',
-    project: makeRef(projectComposer),
-    assignee: makeRef(contactJosiah),
+    project: RefImpl.make(projectComposer),
+    assignee: RefImpl.make(contactJosiah),
   });
   const _taskComposer2 = dataSource.add(Task, {
     id: ObjectId.random(),
     name: 'Create form builder',
-    project: makeRef(projectComposer),
-    assignee: makeRef(contactRich),
+    project: RefImpl.make(projectComposer),
+    assignee: RefImpl.make(contactRich),
   });
   const _taskComposer3 = dataSource.add(Task, {
     id: ObjectId.random(),
     name: 'Add support for custom themes',
-    project: makeRef(projectComposer),
-    assignee: makeRef(contactJosiah),
+    project: RefImpl.make(projectComposer),
+    assignee: RefImpl.make(contactJosiah),
   });
   const _taskComposer5 = dataSource.add(Task, {
     id: ObjectId.random(),
     name: 'Implement community plugin',
-    project: makeRef(projectComposer),
-    assignee: makeRef(contactFred),
+    project: RefImpl.make(projectComposer),
+    assignee: RefImpl.make(contactFred),
   });
   const _taskComposer4 = dataSource.add(Task, {
     id: ObjectId.random(),
     name: 'Implement dark mode',
-    project: makeRef(projectComposer),
-    assignee: makeRef(contactRich),
+    project: RefImpl.make(projectComposer),
+    assignee: RefImpl.make(contactRich),
   });
   const _taskEcho1 = dataSource.add(Task, {
     id: ObjectId.random(),
     name: 'Implement cypher query engine',
-    project: makeRef(projectEcho),
-    assignee: makeRef(contactDima),
+    project: RefImpl.make(projectEcho),
+    assignee: RefImpl.make(contactDima),
   });
   const _taskEcho2 = dataSource.add(Task, {
     id: ObjectId.random(),
     name: 'Add schema editor',
-    project: makeRef(projectEcho),
-    assignee: makeRef(contactRich),
+    project: RefImpl.make(projectEcho),
+    assignee: RefImpl.make(contactRich),
   });
   const _taskDoodles1 = dataSource.add(Task, {
     id: ObjectId.random(),
     name: 'Add support for custom themes',
-    project: makeRef(projectDoodles),
-    assignee: makeRef(contactFred),
+    project: RefImpl.make(projectDoodles),
+    assignee: RefImpl.make(contactFred),
   });
   const _taskDoodles2 = dataSource.add(Task, {
     id: ObjectId.random(),
     name: 'Implement dark mode',
-    project: makeRef(projectDoodles),
-    assignee: makeRef(contactJosiah),
+    project: RefImpl.make(projectDoodles),
+    assignee: RefImpl.make(contactJosiah),
   });
 
   const _orgDxos = dataSource.add(Organization, {
     id: ObjectId.random(),
     name: 'DXOS',
-    employees: [makeRef(contactRich), makeRef(contactJosiah), makeRef(contactDima)],
-    projects: [makeRef(projectEcho)],
+    employees: [RefImpl.make(contactRich), RefImpl.make(contactJosiah), RefImpl.make(contactDima)],
+    projects: [RefImpl.make(projectEcho)],
   });
   const _orgBraneframe = dataSource.add(Organization, {
     id: ObjectId.random(),
     name: 'Braneframe',
-    employees: [makeRef(contactJosiah), makeRef(contactRich)],
-    projects: [makeRef(projectComposer)],
+    employees: [RefImpl.make(contactJosiah), RefImpl.make(contactRich)],
+    projects: [RefImpl.make(projectComposer)],
   });
   dataSource.computeGraph();
 

@@ -13,9 +13,9 @@ import {
   oneOf,
 } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { RefArray } from '@dxos/live-object';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
+import { RefArray } from '@dxos/react-client/echo';
 import { osTranslations } from '@dxos/shell/react';
 
 import {
@@ -26,11 +26,11 @@ import {
   ReactRoot,
   ReactSurface,
   Schema,
-  Tools,
   SpaceCapabilities,
   SpaceSettings,
   SpacesReady,
   SpaceState,
+  Tools,
 } from './capabilities';
 import { SpaceEvents } from './events';
 import { meta } from './meta';

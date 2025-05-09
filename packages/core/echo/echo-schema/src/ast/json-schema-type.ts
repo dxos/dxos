@@ -4,7 +4,7 @@
 
 import { Schema as S } from 'effect';
 
-import { type JsonProp } from '@dxos/effect';
+import { JsonPath, type JsonProp } from '@dxos/effect';
 
 import { EntityKind } from './entity-kind';
 import { FormatAnnotationId } from '../formats';
@@ -26,6 +26,58 @@ const JsonSchemaOrBoolean = S.Union(
 export const EntityKindSchema = S.Enums(EntityKind);
 
 /**
+ * Go under the `annotations` property.
+ */
+export const JsonSchemaEchoAnnotations = S.Struct({
+  /**
+   * Label for this schema.
+   * Mapped from {@link LabelAnnotationId}.
+   */
+  labelProp: S.optional(S.Union(JsonPath, S.Array(JsonPath))),
+
+  /**
+   * Generator function for this schema.
+   * Mapped from {@link GeneratorAnnotationId}.
+   */
+  generator: S.optional(S.String),
+
+  /**
+   * {@link PropertyMeta} annotations get serialized here.
+   */
+  meta: S.optional(
+    S.Record({
+      key: S.String,
+      value: S.Any,
+    }).pipe(S.mutable),
+  ),
+
+  /**
+   * @deprecated
+   */
+  // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe
+  type: S.optional(
+    S.Struct({
+      typename: S.String,
+      version: S.String,
+
+      // Not used.
+      schemaId: S.optional(S.String),
+    }).pipe(S.mutable),
+  ),
+
+  /**
+   * @deprecated Superseded by `meta`.
+   */
+  annotations: S.optional(
+    S.Record({
+      key: S.String,
+      value: S.Any,
+    }).pipe(S.mutable),
+  ),
+}).pipe(S.mutable);
+export type JsonSchemaEchoAnnotations = S.Schema.Type<typeof JsonSchemaEchoAnnotations>;
+
+/**
  * Describes a schema for the JSON-schema objects stored in ECHO.
  * Contains extensions for ECHO (e.g., references).
  * Ref: https://json-schema.org/draft-07/schema
@@ -37,6 +89,8 @@ const _JsonSchemaType = S.Struct({
    * Identifier for this schema.
    * This schema might be referenced by $ref clause in other schemas.
    */
+  // TODO(dmaretskyi): Specify how the ids are generated.
+  // TODO(dmaretskyi): For type dxns, should this include the version?
   $id: S.optional(S.String),
 
   /**
@@ -74,12 +128,43 @@ const _JsonSchemaType = S.Struct({
    */
   version: S.optional(S.String),
 
+  /**
+   * Target of this relation.
+   * Only for relation schemas.
+   * The referenced schema must be an object schema.
+   */
+  relationTarget: S.optional(S.suspend(() => JsonSchemaType)),
+
+  /**
+   * Source of this relation.
+   * Only for relation schemas.
+   * The referenced schema must be an object schema.
+   */
+  relationSource: S.optional(S.suspend(() => JsonSchemaType)),
+
+  /**
+   * Title of this schema.
+   */
   title: S.optional(S.String),
+
+  /**
+   * Description of this schema.
+   */
   description: S.optional(S.String),
 
+  /**
+   * Whether this schema is read-only.
+   */
   readOnly: S.optional(S.Boolean),
+
+  /**
+   * Whether this schema is write-only.
+   */
   writeOnly: S.optional(S.Boolean),
 
+  /**
+   * Examples of instances of this schema.
+   */
   examples: S.optional(S.Array(S.Any)),
 
   /**
@@ -87,7 +172,14 @@ const _JsonSchemaType = S.Struct({
    */
   default: S.optional(S.Any),
 
+  /**
+   * This schema only matches values that are equal to this value.
+   */
   const: S.optional(S.Any),
+
+  /**
+   * This schema only matches one of the values in this array.
+   */
   enum: S.optional(S.Array(S.Any)),
 
   /**
@@ -162,20 +254,16 @@ const _JsonSchemaType = S.Struct({
 
   additionalProperties: S.optional(JsonSchemaOrBoolean),
   properties: S.optional(
-    S.mutable(
-      S.Record({
-        key: S.String,
-        value: S.suspend(() => JsonSchemaType),
-      }),
-    ),
+    S.Record({
+      key: S.String,
+      value: S.suspend(() => JsonSchemaType),
+    }).pipe(S.mutable),
   ),
   patternProperties: S.optional(
-    S.mutable(
-      S.Record({
-        key: S.String,
-        value: S.suspend(() => JsonSchemaType),
-      }),
-    ),
+    S.Record({
+      key: S.String,
+      value: S.suspend(() => JsonSchemaType),
+    }).pipe(S.mutable),
   ),
   propertyNames: S.optional(S.suspend(() => JsonSchemaType)),
 
@@ -233,44 +321,15 @@ const _JsonSchemaType = S.Struct({
   ),
 
   /**
-   * @deprecated
+   * ECHO-specific annotations.
    */
-  // TODO(dmaretskyi): Extract `annotations` and remove the namespace property.
-  echo: S.optional(
-    S.mutable(
-      S.Struct({
-        /**
-         * @deprecated
-         */
-        // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe
-        type: S.optional(
-          S.Struct({
-            typename: S.String,
-            version: S.String,
+  // TODO(dmaretskyi): Since we are adding a lot of new extensions to the JSON Schema, it is safer to namespace them here.
+  annotations: S.optional(S.mutable(JsonSchemaEchoAnnotations)),
 
-            // Not used.
-            schemaId: S.optional(S.String),
-          }).pipe(S.mutable),
-        ),
-
-        /**
-         * {@link PropertyMeta} annotations get serialized here.
-         */
-        annotations: S.optional(
-          S.Record({
-            key: S.String,
-            value: S.Any,
-          }),
-        ),
-
-        /**
-         * Generator function for this schema.
-         * Mapped from {@link GeneratorAnnotationId}.
-         */
-        generator: S.optional(S.String),
-      }),
-    ),
-  ),
+  /**
+   * @deprecated Use `annotations` instead.
+   */
+  echo: S.optional(S.mutable(JsonSchemaEchoAnnotations)),
 }).annotations({ identifier: 'jsonSchema', description: 'JSON Schema' });
 
 export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
@@ -293,4 +352,52 @@ export const setSchemaProperty = (schema: JsonSchemaType, property: JsonProp, va
   schema.properties ??= {};
   schema.properties[property] = value;
   return schema;
+};
+
+/**
+ * @internal
+ */
+export const ECHO_ANNOTATIONS_NS_DEPRECATED_KEY: keyof JsonSchemaType = 'echo';
+
+/**
+ * @internal
+ */
+export const ECHO_ANNOTATIONS_NS_KEY = 'annotations';
+
+/**
+ * @internal
+ * @returns ECHO annotations namespace object in its normalized form.
+ *
+ * `meta` holds PropertyMeta annotations.
+ * `annotations` holds other annotations.
+ */
+export const getNormalizedEchoAnnotations = (obj: JsonSchemaType): JsonSchemaEchoAnnotations | undefined => {
+  if (obj[ECHO_ANNOTATIONS_NS_KEY] != null && obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] != null) {
+    return normalizeEchoAnnotations({
+      ...obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY],
+      ...obj[ECHO_ANNOTATIONS_NS_KEY],
+    });
+  } else if (obj[ECHO_ANNOTATIONS_NS_KEY] != null) {
+    return normalizeEchoAnnotations(obj[ECHO_ANNOTATIONS_NS_KEY]!);
+  } else if (obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] != null) {
+    return normalizeEchoAnnotations(obj[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY]!);
+  } else {
+    return undefined;
+  }
+};
+
+const normalizeEchoAnnotations = (obj: JsonSchemaEchoAnnotations): JsonSchemaEchoAnnotations => {
+  if (!obj.annotations) {
+    return obj;
+  } else {
+    const res = {
+      ...obj,
+      meta: {
+        ...obj.annotations,
+        ...(obj.meta ?? {}),
+      },
+    };
+    delete res.annotations;
+    return res;
+  }
 };
