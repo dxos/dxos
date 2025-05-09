@@ -9,8 +9,7 @@ import { failedInvariant } from '@dxos/invariant';
 import { ObjectId } from './ids';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { setTypename } from './typename';
-import { setSchema, getTypeAnnotation } from '../ast';
-import { getSchemaDXN } from '../types';
+import { getSchemaDXN, getTypeAnnotation, setSchema } from '../ast';
 
 // Make `id` optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;

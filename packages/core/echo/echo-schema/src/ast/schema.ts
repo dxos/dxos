@@ -4,6 +4,10 @@
 
 import { type Schema as S } from 'effect';
 
+import { DXN } from '@dxos/keys';
+
+import { getTypeAnnotation } from './annotations';
+
 /**
  * For attaching schema to objects.
  */
@@ -32,4 +36,15 @@ export const setSchema = (obj: any, schema: S.Schema.AnyNoContext) => {
     enumerable: false,
     configurable: false,
   });
+};
+
+// TODO(dmaretskyi): Unify with `getTypeReference`.
+export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getTypeAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };

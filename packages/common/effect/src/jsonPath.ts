@@ -17,7 +17,10 @@ const PROP_REGEX = /\w+/;
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
  */
-export const JsonPath = S.String.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
+export const JsonPath = S.String.pipe(S.pattern(PATH_REGEX)).annotations({
+  title: 'JSON path',
+  description: 'JSON path to a property',
+}) as any as S.Schema<JsonPath>;
 export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
 
 export const isJsonPath = (value: unknown): value is JsonPath => {

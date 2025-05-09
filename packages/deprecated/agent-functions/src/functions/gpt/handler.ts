@@ -6,7 +6,7 @@ import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { S, foreignKey, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { live, getMeta, makeRef } from '@dxos/live-object';
+import { live, getMeta, Ref.make } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TemplateType } from '@dxos/plugin-automation/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -132,7 +132,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
               },
             );
 
-            thread.messages.push(makeRef(response));
+            thread.messages.push(Ref.make(response));
           } else if (success) {
             // Check success to avoid modifying the message with an "Error generating response" block.
             // TODO(burdon): Mark the message as "processed".

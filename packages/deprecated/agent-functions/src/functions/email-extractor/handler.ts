@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { live, makeRef } from '@dxos/client/echo';
+import { live, Ref.make } from '@dxos/client/echo';
 import { Filter, hasType } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -53,12 +53,12 @@ export const handler = subscriptionHandler(async ({ event }) => {
 
   // Lookup contacts.
   for (const message of messages ?? []) {
-    message.sender.contact = makeRef(getOrCreateContact(message.sender));
+    message.sender.contact = Ref.make(getOrCreateContact(message.sender));
     message.properties?.to?.forEach((to: ActorType) => {
-      to.contact = makeRef(getOrCreateContact(to));
+      to.contact = Ref.make(getOrCreateContact(to));
     });
     message.properties?.cc?.forEach((cc: ActorType) => {
-      cc.contact = makeRef(getOrCreateContact(cc));
+      cc.contact = Ref.make(getOrCreateContact(cc));
     });
   }
 

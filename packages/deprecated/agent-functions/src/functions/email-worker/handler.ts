@@ -6,7 +6,7 @@ import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
 import { foreignKey, S } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';
@@ -50,7 +50,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
         ChannelType,
         {
           name: account,
-          threads: [makeRef(live(ThreadType, { name: 'Inbox', messages: [] }))],
+          threads: [Ref.make(live(ThreadType, { name: 'Inbox', messages: [] }))],
         },
         {
           keys: [
@@ -86,7 +86,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
         ),
       );
 
-      mailbox.threads[0].target?.messages?.push(makeRef(object));
+      mailbox.threads[0].target?.messages?.push(Ref.make(object));
     }
   }
 

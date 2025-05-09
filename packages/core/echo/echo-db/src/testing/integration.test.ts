@@ -21,12 +21,13 @@ import {
   S,
   TypedObject,
   type ObjectId,
+  Ref,
 } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
@@ -146,7 +147,7 @@ describe('Integration tests', () => {
     {
       await using db = await peer.createDatabase();
       const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner: makeRef(inner) });
+      const outer = db.add({ inner: Ref.make(inner) });
       outerId = outer.id;
       await db.flush();
     }
@@ -179,7 +180,7 @@ describe('Integration tests', () => {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
       const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner: makeRef(inner) });
+      const outer = db.add({ inner: Ref.make(inner) });
       outerId = outer.id;
       await db.flush();
     }

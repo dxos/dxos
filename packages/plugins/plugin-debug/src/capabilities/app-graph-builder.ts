@@ -196,6 +196,15 @@ export default (context: PluginsContext) =>
                     type: DEVTOOLS_TYPE,
                     properties: {
                       label: ['objects label', { ns: DEBUG_PLUGIN }],
+                      icon: 'ph--cube--regular',
+                    },
+                  },
+                  {
+                    id: `${Devtools.Echo.Schema}-${node.id}`,
+                    data: Devtools.Echo.Schema,
+                    type: DEVTOOLS_TYPE,
+                    properties: {
+                      label: ['schema label', { ns: DEBUG_PLUGIN }],
                       icon: 'ph--database--regular',
                     },
                   },
