@@ -10,7 +10,7 @@ import { type BaseObject, Expando, getTypename, Ref } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { DXN, PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { live, dangerouslySetProxyId, getMeta, getType, type Live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';

@@ -19,7 +19,6 @@ import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId }
 import { type JsonSchemaType } from '../ast';
 import { ObjectId } from '../object';
 import type { BaseObject, WithId } from '../types';
-import { log } from '@dxos/log';
 
 /**
  * The `$id` field for an ECHO reference schema.

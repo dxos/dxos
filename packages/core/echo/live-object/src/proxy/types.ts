@@ -2,10 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
-
-import { type Reference } from '@dxos/echo-protocol';
-import { type BaseObject, type ObjectMeta } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo-schema';
 
 /**
  * Reactive object proxy.

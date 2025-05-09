@@ -20,6 +20,8 @@ import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
+import { StackContext } from './StackContext';
+import { StackSection } from './StackSection';
 import { STACK_PLUGIN } from '../meta';
 import {
   StackViewType,
@@ -29,8 +31,6 @@ import {
   type StackSectionMetadata,
   type StackSectionView,
 } from '../types';
-import { StackContext } from './StackContext';
-import { StackSection } from './StackSection';
 
 type StackMainProps = {
   id: string;

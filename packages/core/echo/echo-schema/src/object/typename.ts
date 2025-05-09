@@ -3,9 +3,9 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import type { DXN } from '@dxos/keys';
 
 import { type BaseObject } from '../types';
-import type { DXN } from '@dxos/keys';
 
 // TODO(burdon): Change to `@typename`.
 export const ECHO_ATTR_TYPE = '@type';

@@ -11,7 +11,6 @@ import {
   defineHiddenProperty,
   DeletedSymbol,
   getTypeReference,
-  type ObjectMeta,
   SchemaMetaSymbol,
   SchemaValidator,
   symbolSchema,
@@ -21,7 +20,6 @@ import {
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { getObjectMeta } from '@dxos/echo-schema';
 import {
   createProxy,
   isValidProxyTarget,

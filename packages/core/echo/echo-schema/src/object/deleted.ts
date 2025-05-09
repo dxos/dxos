@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { BaseObject } from '../types';
 
 export const DeletedSymbol = Symbol.for('@dxos/schema/Deleted');

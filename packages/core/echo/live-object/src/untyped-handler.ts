@@ -3,11 +3,9 @@
 //
 
 import { defineHiddenProperty, DeletedSymbol, getTypename, TYPENAME_SYMBOL } from '@dxos/echo-schema';
-import { type ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { getObjectMeta } from '@dxos/echo-schema';
 import { createProxy, isValidProxyTarget, objectData, ReactiveArray, type ReactiveHandler } from './proxy';
 import { TypedReactiveHandler } from './typed-handler';
 

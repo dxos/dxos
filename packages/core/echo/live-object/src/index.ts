@@ -4,17 +4,17 @@
 
 // TODO(dmaretskyi): Remove deprecated exports.
 
-export * from './proxy';
-export * from './accessors';
-export * from './object';
-export * from './schema';
-export * from './live';
-
 //
 // Deprecated APIs.
 //
 
 import * as EchoSchemaModule from '@dxos/echo-schema';
+
+export * from './proxy';
+export * from './accessors';
+export * from './object';
+export * from './schema';
+export * from './live';
 
 /**
  * @deprecated Use {@link Ref.make} instead.

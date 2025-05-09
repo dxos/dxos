@@ -4,6 +4,7 @@
 
 import { Schema as S } from 'effect';
 import { IdentifierAnnotationId } from 'effect/SchemaAST';
+
 import { invariant } from '@dxos/invariant';
 
 //
