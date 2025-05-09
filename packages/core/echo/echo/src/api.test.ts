@@ -38,6 +38,26 @@ namespace Testing {
 
   export interface Contact extends S.Schema.Type<typeof Contact> {}
 
+  // export const WorksFor = S.Struct({
+  //   id: Type.ObjectId,
+  //   since: S.String,
+  //   jobTitle: S.String,
+  //   ...Range({ from, to }),
+  //   ...Provenance({ source: 'duckduckgo.com', confidence: 0.9 }), // keys
+  //   ...Relation.make({ source: Contact, target: Organization }),
+  // }).pipe(
+  //   Relation.def({
+  //     typename: 'example.com/relation/WorksFor',
+  //     version: '0.1.0',
+  //   }),
+  // );
+
+  // {
+  //   const contact = db.add(create(Contact, { name: 'Test' }));
+  //   const organization = db.add(create(Organization, { name: 'DXOS' }));
+  //   db.add(create(WorksFor, { source: contact, target: organization }));
+  // }
+
   export const Message = S.Struct({
     // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
     // TODO(burdon): Support defaults (update create and create).

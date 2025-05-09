@@ -306,7 +306,7 @@ export const L0Menu = ({
         <ScrollArea.Viewport>
           <div
             role='none'
-            className='grid auto-rows-[calc(var(--l0-size)-.5rem)] plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)] [body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]'
+            className='grid auto-rows-[calc(var(--l0-size)-.5rem)] [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)] [body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]'
           >
             {topLevelItems.map((item) => {
               if (l0ItemType(item) === 'collection') {
@@ -329,7 +329,7 @@ export const L0Menu = ({
           ))}
       </div>
       {userAccountItem && (
-        <div role='none' className='grid py-2 app-no-drag'>
+        <div role='none' className='grid app-no-drag'>
           <L0Item key={userAccountItem.id} item={userAccountItem} parent={parent} path={path} userAccount />
         </div>
       )}

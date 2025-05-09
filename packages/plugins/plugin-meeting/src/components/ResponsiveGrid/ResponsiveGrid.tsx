@@ -56,7 +56,7 @@ const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
 export const ResponsiveGrid = <T extends object = any>({
   classNames,
   Cell,
-  gap = 0,
+  gap = 2,
   getId = defaultGetId,
   items,
   pinned,
