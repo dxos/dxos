@@ -205,6 +205,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is S.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
         S.is(LayoutAction.SwitchWorkspace.fields.input)(data),
       resolve: ({ subject }) => {
+        const { graph } = context.requestCapability(Capabilities.AppGraph);
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         batch(() => {
           // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
@@ -223,6 +224,14 @@ export default (context: PluginsContext) =>
           return {
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
+        } else {
+          const node = graph.findNode(subject);
+          const [item] = node ? graph.nodes(node) : [];
+          if (item) {
+            return {
+              intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],
+            };
+          }
         }
       },
     }),

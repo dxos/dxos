@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
+import { getCompanionId, useDeckCompanions } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 
 export const ToggleSidebarButton = ({
@@ -47,16 +48,34 @@ export const CloseSidebarButton = () => {
   );
 };
 
-export const ToggleComplementarySidebarButton = ({ inR0, classNames }: ThemedClassName<{ inR0?: boolean }>) => {
+export const ToggleComplementarySidebarButton = ({
+  inR0,
+  classNames,
+  current,
+}: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
+
+  const companions = useDeckCompanions();
+  const handleClick = useCallback(async () => {
+    layoutContext.complementarySidebarState =
+      layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
+    const firstCompanion = companions[0];
+    if (layoutContext.complementarySidebarState === 'expanded' && !current && firstCompanion) {
+      await dispatch(
+        createIntent(LayoutAction.UpdateComplementary, {
+          part: 'complementary',
+          subject: getCompanionId(firstCompanion.id),
+        }),
+      );
+    }
+  }, [layoutContext, current, companions, dispatch]);
+
   return (
     <IconButton
       iconOnly
-      onClick={() =>
-        (layoutContext.complementarySidebarState =
-          layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded')
-      }
+      onClick={handleClick}
       variant='ghost'
       label={t('open complementary sidebar label')}
       classNames={['[&>svg]:-scale-x-100', classNames]}
