@@ -14,6 +14,7 @@ import { type SpaceId, type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryResult } from '@dxos/protocols';
 import { isNonNullable } from '@dxos/util';
+import type { FunctionTrigger } from './types';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -23,13 +24,28 @@ import { isNonNullable } from '@dxos/util';
 /**
  * Function handler.
  */
-export type FunctionHandler<TData = {}, TMeta = {}, TOutput = any> = (params: {
-  context: FunctionContext;
-  event: FunctionEvent<TData, TMeta>;
+export type FunctionHandler<TData = {}, TOutput = any> = (params: {
   /**
-   * @deprecated
+   * Services and context available to the function.
    */
-  response: FunctionResponse;
+  context: FunctionContext;
+
+  /**
+   * Trigger that invoked the function.
+   * In case the function is part of a workflow, this will be the trigger for the overall workflow.
+   */
+  trigger: FunctionTrigger;
+
+  /**
+   * Data passed as the input to the function.
+   * Must match the function's input schema.
+   */
+  data: TData;
+
+  /**
+   * Event data from the trigger.
+   */
+  event: EventType;
 }) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any>;
 
 /**
@@ -62,27 +78,37 @@ export interface FunctionContextAi {
   run(model: string, inputs: any, options?: any): Promise<any>;
 }
 
-/**
- * Event payload.
- */
-// TODO(dmaretskyi): Update type definitions to match the actual payload.
-export type FunctionEvent<TData = {}, TMeta = {}> = {
-  data: FunctionEventMeta<TMeta> & TData;
-};
+// TODO(dmaretskyi): Move trigger event types from conductor.
+type EventType = unknown; // EmailTriggerOutput | WebhookTriggerOutput | QueueTriggerOutput | SubscriptionTriggerOutput | TimerTriggerOutput;
+/*
 
-/**
- * Metadata from trigger.
- */
-export type FunctionEventMeta<TMeta = {}> = {
-  meta: TMeta;
-};
+export const EmailTriggerOutput = S.mutable(
+  S.Struct({
+    from: S.String,
+    to: S.String,
+    subject: S.String,
+    created: S.String,
+    body: S.String,
+  }),
+);
 
-/**
- * Function response.
- */
-export type FunctionResponse = {
-  status(code: number): FunctionResponse;
-};
+export const WebhookTriggerOutput = S.mutable(
+  S.Struct({
+    url: S.String,
+    method: S.Literal('GET', 'POST'),
+    headers: S.Record({ key: S.String, value: S.String }),
+    bodyText: S.String,
+  }),
+);
+
+export const QueueTriggerOutput = S.mutable(
+  S.Struct({
+    queue: DXN,
+    item: S.Any,
+    cursor: S.String,
+  }),
+);
+*/
 
 //
 // API.
