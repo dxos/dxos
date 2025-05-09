@@ -102,7 +102,7 @@ describe('EchoSchema', () => {
     // }).to.throw();
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
-    expect(getType(object)?.objectId).to.be.eq(schema.id);
+    expect(getType(object)?.asEchoDXN()?.echoId).to.be.eq(schema.id);
     expect(getTypename(object)).to.be.eq(Testing.EmptySchemaType.typename);
 
     db.add(object);

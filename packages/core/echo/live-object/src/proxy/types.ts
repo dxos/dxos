@@ -23,13 +23,6 @@ export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
 
   // TODO(dmaretskyi): Remove and use schemaSymbol.
   getSchema(target: T): S.Schema.AnyNoContext | undefined;
-
-  /**
-   * We always store a type reference together with an object, but schema might not have been
-   * registered or replicated yet.
-   */
-  // TODO(dmaretskyi): Remove and use typenameSymbol.
-  getTypeReference(target: T): Reference | undefined;
 }
 
 /**

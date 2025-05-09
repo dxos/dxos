@@ -31,6 +31,7 @@ import {
   getRefSavedTarget,
   symbolMeta,
   DeletedSymbol,
+  TypeSymbol,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -157,6 +158,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case TYPENAME_SYMBOL:
           return this._getTypename(target);
+        case TypeSymbol:
+          return this.getTypeReference(target)?.toDXN();
         case symbolMeta:
           return this.getMeta(target);
         case DeletedSymbol:

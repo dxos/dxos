@@ -6,11 +6,11 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type BaseObject, Expando, Ref } from '@dxos/echo-schema';
+import { type BaseObject, Expando, getTypename, Ref } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { live, dangerouslySetProxyId, getMeta, getType, type Live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -195,7 +195,8 @@ describe('Database', () => {
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
     expect(getSchema(task)?.ast).to.eq(Testing.Task.ast);
-    expect(getType(task)?.objectId).to.eq('example.com/type/Task');
+    expect(getType(task)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
+    expect(getTypename(task)).to.eq('example.com/type/Task');
 
     db.add(task);
     await db.flush();
@@ -257,8 +258,8 @@ describe('Database', () => {
       const { objects } = await db.query(Filter.schema(Testing.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(getType(container.objects![0].target!)?.objectId).to.equal(Testing.Task.typename);
-      expect(getType(container.objects![1].target!)?.objectId).to.equal(Testing.Contact.typename);
+      expect(getTypename(container.objects![0].target!)).to.equal(Testing.Task.typename);
+      expect(getTypename(container.objects![1].target!)).to.equal(Testing.Contact.typename);
     }
   });
 
@@ -349,7 +350,7 @@ describe('Database', () => {
       }),
     );
 
-    expect(getType(task.subTasks![0].target)?.objectId).to.eq('example.com/type/Task');
+    expect(getTypename(task.subTasks![0].target!)).to.eq('example.com/type/Task');
     expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']['/']).to.eq(
       'dxn:type:example.com/type/Task:0.1.0',
     );
