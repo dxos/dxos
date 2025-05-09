@@ -4,17 +4,19 @@
 
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
-export { getTypename, Expando, type TypedObject, type ObjectMeta, getSchema } from '@dxos/echo-schema';
 export {
-  type Live,
+  getTypename,
+  Expando,
+  type TypedObject,
+  type ObjectMeta,
+  getSchema,
+  Ref,
   RefArray,
-  live,
   getMeta,
   getType,
-  isLiveObject,
   compareForeignKeys,
-  makeRef,
-} from '@dxos/live-object';
+} from '@dxos/echo-schema';
+export { type Live, live, isLiveObject, makeRef, refFromDXN } from '@dxos/live-object';
 export {
   DocAccessor,
   type EchoDatabase,

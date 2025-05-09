@@ -5,11 +5,10 @@
 import { Schema as S } from 'effect';
 import { test } from 'vitest';
 
-import { getTypename, Ref, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { getTypename, toJsonSchema, TypedObject, Ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { live } from './object';
-import { makeRef } from './ref';
 
 test('static schema definitions with references', async ({ expect }) => {
   // TODO(dmaretskyi): Extract test schema.
@@ -24,7 +23,7 @@ test('static schema definitions with references', async ({ expect }) => {
   }) {}
 
   const organization = live(Organization, { name: 'Organization' });
-  const person = live(Contact, { name: 'John', email: 'john@example.com', organization: makeRef(organization) });
+  const person = live(Contact, { name: 'John', email: 'john@example.com', organization: Ref.make(organization) });
   log('schema', { organization: toJsonSchema(Organization), person: toJsonSchema(Contact) });
   log('objects', { organization, person });
   expect(getTypename(organization)).to.eq(Organization.typename);

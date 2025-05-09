@@ -16,6 +16,7 @@ export * from './object';
 export * from './query';
 export * from './types';
 export * from './utils';
+export * from './ref';
 
 // TODO(burdon): Fix.
 // TODO(dmaretskyi): Omitting barrel export in the mutable directory due to circular deps.

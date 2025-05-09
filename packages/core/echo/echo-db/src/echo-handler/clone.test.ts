@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Expando } from '@dxos/echo-schema';
-import { live, makeRef } from '@dxos/live-object';
+import { Expando, Ref } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 
 import { clone } from './clone';
 import { EchoTestBuilder } from '../testing';
@@ -71,7 +71,7 @@ describe('clone', () => {
     const task1 = live(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: makeRef(
+      assignee: Ref.make(
         live(Expando, {
           type: 'Person',
           name: 'John Doe',

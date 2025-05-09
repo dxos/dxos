@@ -6,8 +6,8 @@ import { Schema as S } from 'effect';
 import { describe, test } from 'vitest';
 
 import { composeSchema } from './compose';
-import { ECHO_REFINEMENT_KEY, toJsonSchema } from './json-schema';
-import { FieldPath } from '../ast';
+import { toJsonSchema } from './json-schema';
+import { ECHO_ANNOTATIONS_NS_DEPRECATED_KEY, FieldPath } from '../ast';
 import { FormatAnnotation, FormatEnum } from '../formats';
 import { TypedObject } from '../object';
 
@@ -28,11 +28,10 @@ describe('schema composition', () => {
     expect(composedSchema.properties).to.deep.eq({
       email: {
         type: 'string',
-        title: 'string',
-        description: 'a string',
         format: FormatEnum.Email,
-        [ECHO_REFINEMENT_KEY]: {
-          annotations: {
+        // TODO(dmaretskyi): Should use the new field.
+        [ECHO_ANNOTATIONS_NS_DEPRECATED_KEY]: {
+          meta: {
             path: '$.email',
           },
         },

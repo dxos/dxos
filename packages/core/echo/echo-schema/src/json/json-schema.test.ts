@@ -9,24 +9,23 @@ import { describe, expect, test } from 'vitest';
 import { findAnnotation, type JsonProp } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
+import { toEffectSchema, toJsonSchema } from './json-schema';
 import {
-  PropertyMeta,
-  setSchemaProperty,
+  EntityKind,
+  FieldLookupAnnotationId,
+  getNormalizedEchoAnnotations,
   getSchemaProperty,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-  EntityKind,
   JsonSchemaType,
-  createSchemaReference,
-  getSchemaReference,
-  Ref,
-  FieldLookupAnnotationId,
+  PropertyMeta,
+  setSchemaProperty,
 } from '../ast';
-import { FormatAnnotationId, Email } from '../formats';
+import { Email, FormatAnnotationId } from '../formats';
 import { TypedObject } from '../object';
+import { createSchemaReference, getSchemaReference, Ref } from '../ref';
 import { StoredSchema } from '../schema';
-import { Testing, prepareAstForCompare } from '../testing';
+import { prepareAstForCompare, Testing } from '../testing';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -41,7 +40,7 @@ describe('effect-to-json', () => {
     expect((jsonSchema as any).version).toEqual('0.1.0');
   });
 
-  test('field meta annotation', () => {
+  test('property meta annotation', () => {
     const meta = { maxLength: 0 };
     class Schema extends TypedObject({
       typename: 'example.com/type/Test',
@@ -50,7 +49,7 @@ describe('effect-to-json', () => {
       name: S.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-    expect(getEchoProp(jsonSchema.properties!.name).annotations[EXAMPLE_NAMESPACE]).to.deep.eq(meta);
+    expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)!.meta![EXAMPLE_NAMESPACE]).to.deep.eq(meta);
   });
 
   test('reference annotation', () => {
@@ -61,13 +60,14 @@ describe('effect-to-json', () => {
       name: Ref(Nested),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-    log('schema', { jsonSchema });
+    // log.info('schema', { jsonSchema });
     const nested = jsonSchema.properties!.name;
     expectReferenceAnnotation(nested);
   });
 
   // TODO(ZaymonFC): @dmaretskyi we still need to fix this.
   // eslint-disable-next-line mocha/no-skipped-tests
+  // TODO(dmaretskyi): Remove FieldLookupAnnotationId.
   test.skip('reference annotation with lookup property', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
       name: S.String,
@@ -108,8 +108,8 @@ describe('effect-to-json', () => {
   test('regular objects are not annotated', () => {
     const object = S.Struct({ name: S.Struct({ name: S.String }) });
     const jsonSchema = toJsonSchema(object);
-    expect(getEchoProp(jsonSchema)).to.be.undefined;
-    expect(getEchoProp(jsonSchema.properties!.name)).to.be.undefined;
+    expect(getNormalizedEchoAnnotations(jsonSchema)).to.be.undefined;
+    expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)).to.be.undefined;
   });
 
   test('annotations', () => {
@@ -129,11 +129,11 @@ describe('effect-to-json', () => {
       type: 'object',
       required: ['name', 'email', 'id'],
       properties: {
-        id: { type: 'string', title: 'string', description: 'a string' },
+        id: { type: 'string' },
         name: { type: 'string', title: 'Name', description: 'Person name' },
         email: {
           type: 'string',
-          title: 'string',
+
           description: 'Email address',
           format: 'email',
         },
@@ -158,6 +158,8 @@ describe('effect-to-json', () => {
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }) {}
 
+    // log.info('Contact', { ast: Contact.ast });
+
     const jsonSchema = toJsonSchema(Contact);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
@@ -173,17 +175,12 @@ describe('effect-to-json', () => {
       properties: {
         id: {
           type: 'string',
-          title: 'string',
-          description: 'a string',
         },
         name: {
           type: 'string',
-          title: 'string',
-          description: 'a string',
         },
         organization: {
           $id: '/schemas/echo/ref',
-          title: 'Ref',
           description: 'Contact organization',
           reference: {
             schema: {
@@ -258,6 +255,38 @@ describe('effect-to-json', () => {
         Option.getOrUndefined,
       ),
     ).to.eq('Custom Title');
+  });
+
+  test('relation schema', () => {
+    const schema = Testing.HasManager;
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toEqual({
+      $id: 'dxn:type:example.com/type/HasManager',
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      entityKind: 'relation',
+      typename: 'example.com/type/HasManager',
+      version: '0.1.0',
+      relationSource: {
+        // TODO(dmaretskyi): Should those point to specific schema version?
+        $ref: 'dxn:type:example.com/type/Contact',
+      },
+      relationTarget: {
+        // TODO(dmaretskyi): Should those point to specific schema version?
+        $ref: 'dxn:type:example.com/type/Contact',
+      },
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+        },
+        since: {
+          type: 'string',
+        },
+      },
+      propertyOrder: ['since', 'id'],
+      required: ['id'],
+      additionalProperties: false,
+    });
   });
 
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
@@ -384,5 +413,61 @@ describe('json-to-effect', () => {
     const effectSchema = toEffectSchema(jsonSchema);
     const jsonSchema2 = toJsonSchema(effectSchema);
     expect(jsonSchema2.properties!.name.description).to.eq('Name');
+  });
+
+  test('relation schema roundtrip', () => {
+    const schema = Testing.HasManager;
+    const jsonSchema = toJsonSchema(schema);
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
+  });
+});
+
+describe('reference', () => {
+  test('reference annotation', () => {
+    const schema = Ref(Testing.Contact);
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toEqual({
+      $id: '/schemas/echo/ref',
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      reference: {
+        schema: {
+          $ref: 'dxn:type:example.com/type/Contact',
+        },
+        schemaVersion: '0.1.0',
+      },
+    });
+  });
+
+  test('title annotation', () => {
+    const schema = Ref(Testing.Contact).annotations({ title: 'My custom title' });
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toEqual({
+      $id: '/schemas/echo/ref',
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      reference: {
+        schema: {
+          $ref: 'dxn:type:example.com/type/Contact',
+        },
+        schemaVersion: '0.1.0',
+      },
+      title: 'My custom title',
+    });
+  });
+
+  test('description annotation', () => {
+    const schema = Ref(Testing.Contact).annotations({ description: 'My custom description' });
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toEqual({
+      $id: '/schemas/echo/ref',
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      reference: {
+        schema: {
+          $ref: 'dxn:type:example.com/type/Contact',
+        },
+        schemaVersion: '0.1.0',
+      },
+      description: 'My custom description',
+    });
   });
 });

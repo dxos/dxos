@@ -9,8 +9,8 @@ import { splitJsonPath, type JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getTypeIdentifierAnnotation, getTypeAnnotation, type HasId } from './ast';
-import { ObjectId, type ObjectMeta, getTypename } from './object';
+import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation, type HasId } from './ast';
+import { getTypename, ObjectId, type ObjectMeta } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_META = '@meta';
@@ -135,17 +135,6 @@ export const requireTypeReference = (schema: S.Schema.AnyNoContext): Reference =
   }
 
   return typeReference;
-};
-
-// TODO(dmaretskyi): Unify with `getTypeReference`.
-export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
-  // TODO(dmaretskyi): Add support for dynamic schema.
-  const objectAnnotation = getTypeAnnotation(schema);
-  if (!objectAnnotation) {
-    return undefined;
-  }
-
-  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };
 
 // TODO(burdon): Can we use `S.is`?

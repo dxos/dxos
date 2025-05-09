@@ -32,6 +32,7 @@ import {
   NetworkPanel,
   ObjectsPanel,
   QueuesPanel,
+  SchemaPanel,
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
@@ -270,6 +271,15 @@ export default (context: PluginsContext) =>
       component: () => {
         const space = useCurrentSpace();
         return <ObjectsPanel space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/echo/schema`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Echo.Schema,
+      component: () => {
+        const space = useCurrentSpace();
+        return <SchemaPanel space={space} />;
       },
     }),
     createSurface({

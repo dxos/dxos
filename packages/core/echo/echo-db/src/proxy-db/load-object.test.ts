@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { loadObjectReferences } from './load-object';
@@ -161,7 +161,7 @@ describe.skip('loadObjectReferences', () => {
     const kv = createTestLevel();
     const spaceKey = PublicKey.random();
     const testPeer = await testBuilder.createPeer(kv);
-    const object = live(TestSchema, { nested: [makeRef(live(Nested, { value: 42 }))] });
+    const object = live(TestSchema, { nested: [Ref.make(live(Nested, { value: 42 }))] });
     const db = await testPeer.createDatabase(spaceKey);
     db.graph.schemaRegistry.addSchema([TestSchema, Nested]);
     db.add(object);
