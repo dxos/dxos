@@ -9,12 +9,14 @@ import { type Comparator, deepMapValues, intersection } from '@dxos/util';
 import type { Live } from './live';
 import { getProxyHandler } from './proxy';
 
+// TODO(dmaretskyi): Combine with `getObjectMeta`.
 export const getMeta = <T extends BaseObject>(obj: T): ObjectMeta => {
   const meta = getProxyHandler(obj).getMeta(obj);
   invariant(meta);
   return meta;
 };
 
+// TODO(dmaretskyi): Move to echo-schema.
 export const compareForeignKeys: Comparator<Live<any>> = (a: Live<any>, b: Live<any>) =>
   intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
 
