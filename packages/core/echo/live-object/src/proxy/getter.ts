@@ -8,12 +8,6 @@ import { type BaseObject } from '@dxos/echo-schema';
 import { getProxyHandler } from './proxy';
 import { isLiveObject } from '../live';
 
-// TODO(dmaretskyi): Change to isDeleted symbol property
-// TODO(dmaretskyi): Move to `@dxos/echo-schema`
-export const isDeleted = <T extends BaseObject>(obj: T): boolean => {
-  return getProxyHandler(obj).isDeleted(obj) ?? false;
-};
-
 /**
  * @deprecated Use `getTypename` instead.
  */

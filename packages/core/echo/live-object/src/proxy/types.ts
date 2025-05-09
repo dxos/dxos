@@ -21,9 +21,6 @@ export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
    */
   init(target: T): void;
 
-  // TODO(dmaretskyi): Remove, change to symbol getter.
-  isDeleted(target: T): boolean;
-
   // TODO(dmaretskyi): Remove and use schemaSymbol.
   getSchema(target: T): S.Schema.AnyNoContext | undefined;
 

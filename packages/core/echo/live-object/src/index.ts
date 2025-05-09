@@ -25,4 +25,4 @@ export const makeRef = Ref.make;
  */
 export const refFromDXN = Ref.fromDXN;
 
-export { RefArray, getObjectMeta } from '@dxos/echo-schema';
+export { RefArray, getObjectMeta, isDeleted } from '@dxos/echo-schema';

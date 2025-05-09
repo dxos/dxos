@@ -9,6 +9,7 @@ import { inspectCustom } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
 import {
   defineHiddenProperty,
+  DeletedSymbol,
   getTypeReference,
   type ObjectMeta,
   SchemaMetaSymbol,
@@ -73,6 +74,8 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
+
+    defineHiddenProperty(target, DeletedSymbol, false);
 
     for (const key of Object.getOwnPropertyNames(target)) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
@@ -157,10 +160,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
     target[symbolPropertySignal].notifyWrite();
     return result;
-  }
-
-  isDeleted(): boolean {
-    return false;
   }
 
   getSchema(target: any) {
