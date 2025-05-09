@@ -7,11 +7,10 @@ import React, { forwardRef, useCallback } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import {
-  Button,
   ButtonGroup,
   type ButtonGroupProps,
-  type ButtonProps,
-  Icon,
+  IconButton,
+  type IconButtonProps,
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
@@ -38,14 +37,11 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   pin?: 'start' | 'end' | 'both';
 };
 
-const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
+const PlankControl = ({ icon, label, ...props }: IconButtonProps) => {
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <Button variant='ghost' {...props}>
-          <span className='sr-only'>{label}</span>
-          <Icon icon={icon} size={5} />
-        </Button>
+        <IconButton variant='ghost' icon={icon} label={label} iconOnly size={5} {...props} />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom'>{label}</Tooltip.Content>
@@ -54,7 +50,7 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
   );
 };
 
-const plankControlSpacing = 'pli-2 plb-3';
+const plankControlSpacing = 'pli-2';
 
 type PlankComplimentControlsProps = {
   primary?: string;

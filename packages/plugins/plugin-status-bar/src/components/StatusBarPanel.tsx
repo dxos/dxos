@@ -17,23 +17,10 @@ export const StatusBarActions = () => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const [open, setOpen] = useState(false);
 
-  const config = useConfig();
-  const edgeUrl = config.values.runtime?.services?.edge?.url;
-  const edgeEnv = edgeUrl?.includes('edge-production')
-    ? 'PROD'
-    : edgeUrl?.includes('edge-labs')
-      ? 'LABS'
-      : edgeUrl?.includes('edge-main')
-        ? 'MAIN'
-        : 'DEV';
-
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <StatusBar.Item>
-        <StatusBar.Text classNames={mx('text-xs', descriptionText)}>{edgeEnv}</StatusBar.Text>
-      </StatusBar.Item>
+      <EnvironmentLabel />
       <VersionNumber />
-      {/* TODO(zan): Configure this label? */}
       <StatusBar.Button asChild>
         <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
           <Icon icon='ph--discord-logo--regular' size={4} />
@@ -57,5 +44,27 @@ export const StatusBarPanel = () => {
       <span role='separator' className='grow' />
       <Surface role='status' />
     </>
+  );
+};
+
+const ENV_LABELS: Record<string, string> = {
+  'edge-production': 'PROD',
+  'edge-labs': 'LABS',
+  'edge-main': 'MAIN',
+  'edge-dev': 'DEV',
+};
+
+const EnvironmentLabel = () => {
+  const config = useConfig();
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
+  if (!edgeUrl) {
+    return null;
+  }
+
+  const edgeEnv = ENV_LABELS[new URL(edgeUrl).host.split('.')[0]] ?? 'DEV';
+  return (
+    <StatusBar.Item>
+      <StatusBar.Text classNames={mx('text-xs', descriptionText)}>{edgeEnv}</StatusBar.Text>
+    </StatusBar.Item>
   );
 };
