@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Option, Schema as S, SchemaAST } from 'effect';
+import { Effect, Option, ParseResult, Schema as S, Schema, SchemaAST } from 'effect';
 import {
   getDescriptionAnnotation,
   getIdentifierAnnotation,
@@ -12,13 +12,14 @@ import {
 
 import { Reference, type EncodedReference } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
 import { type JsonSchemaType } from '../ast';
 import { ObjectId } from '../object';
 import type { BaseObject, WithId } from '../types';
+import { log } from '@dxos/log';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -89,6 +90,8 @@ interface RefFn {
  * Schema builder for references.
  */
 export const Ref: RefFn = <T extends WithId>(schema: S.Schema<T, any>): Ref$<T> => {
+  assertArgument(Schema.isSchema(schema), 'Must call with an instance of effect-schema');
+
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO schema.');
@@ -224,6 +227,10 @@ export const createEchoReferenceSchema = (
           // TODO(dmaretskyi): This branch seems to be taken by Schema.is
           if (Ref.isRef(value)) {
             return Effect.succeed(value);
+          }
+
+          if (typeof value !== 'object' || value == null || typeof (value as any)['/'] !== 'string') {
+            return Effect.fail(new ParseResult.Unexpected(value, 'reference'));
           }
 
           return Effect.succeed(Ref.fromDXN(DXN.parse((value as any)['/'])));

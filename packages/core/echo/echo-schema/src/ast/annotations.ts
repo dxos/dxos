@@ -72,11 +72,13 @@ export type TypeMeta = Pick<TypeAnnotation, 'typename' | 'version'>;
  * @returns {@link TypeAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
-export const getTypeAnnotation = (schema: S.Schema.All): TypeAnnotation | undefined =>
-  flow(
+export const getTypeAnnotation = (schema: S.Schema.All): TypeAnnotation | undefined => {
+  assertArgument(schema != null && schema.ast != null, 'invalid schema');
+  return flow(
     AST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
+};
 
 /**
  * @returns {@link EntityKind} from a schema.

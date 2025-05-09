@@ -109,7 +109,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
       email: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.email() : undefined,
       org:
         organizations?.length && faker.datatype.boolean({ probability: 0.3 })
-          ? Ref(faker.helpers.arrayElement(organizations))
+          ? Ref.make(faker.helpers.arrayElement(organizations))
           : undefined,
       ...location,
     };
