@@ -265,7 +265,17 @@ export class CallSwarmSynchronizer extends Resource {
           disconnected > Date.now() - DISCONNECTED_ABRUPT_TIMEOUT,
       ),
     ];
-    const users = peers.map((peer) => codec.decode(peer.state!));
+    log.info('reconciling swarm state', { peers });
+    const users = peers
+      .map((peer) => {
+        try {
+          return codec.decode(peer.state!);
+        } catch (error) {
+          log.error('error decoding peer state', { error, peer });
+          return undefined;
+        }
+      })
+      .filter(isNonNullable);
     this._state.users = users;
     this._state.self = users.find((user) => user.id === this._deviceKey);
     log('reconciling swarm state', { users });
