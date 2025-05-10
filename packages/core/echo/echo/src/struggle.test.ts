@@ -70,6 +70,7 @@ test('db', async () => {
   }
 
   {
+    // TODO(dmaretskyi): Consider a simpler API that only allows simple linear traversals and returns a limited to only sets of objects or relations.
     const contact2 = await db
       .query(
         Query.build(() => {
