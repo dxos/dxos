@@ -4,7 +4,6 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Button, type ButtonProps, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
@@ -17,13 +16,6 @@ import { NavTreeItemColumns } from './NavTreeItemColumns';
 import { useLoadDescendents } from '../hooks';
 import { NAVTREE_PLUGIN } from '../meta';
 import { l0ItemType } from '../util';
-
-export type L1PanelProps = {
-  item: Node<any>;
-  path: string[];
-  currentItemId: string;
-  onBack?: () => void;
-};
 
 const headingBackButtonLabel =
   'absolute inset-0 min-is-0 truncate flex items-center pis-6 transition-[transform,opacity] ease-in-out duration-200';
@@ -57,8 +49,15 @@ const HeadingBackButton = ({ title, onClick }: { title: string } & Pick<ButtonPr
   );
 };
 
-const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
-  const layout = useLayout();
+export type L1PanelProps = {
+  open?: boolean;
+  item: Node<any>;
+  path: string[];
+  currentItemId: string;
+  onBack?: () => void;
+};
+
+const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
   const { isAlternateTree, setAlternateTree, ...navTreeContext } = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
@@ -100,7 +99,7 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
       ]}
       tabIndex={-1}
       aria-label={title}
-      {...(!layout.sidebarOpen && { inert: 'true' })}
+      {...(!open && { inert: 'true' })}
     >
       {item.id === currentItemId && (
         <>
@@ -156,7 +155,7 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
   );
 };
 
-const L1PanelCollection = ({ item, path, currentItemId }: L1PanelProps) => {
+const L1PanelCollection = ({ item, path, ...props }: L1PanelProps) => {
   const { getItems } = useNavTreeContext();
   useLoadDescendents(item);
   const collectionItems = getItems(item);
@@ -166,31 +165,27 @@ const L1PanelCollection = ({ item, path, currentItemId }: L1PanelProps) => {
       {collectionItems
         .filter((item) => l0ItemType(item) === 'tab')
         .map((item) => (
-          <L1Panel key={item.id} item={item} path={groupPath} currentItemId={currentItemId} />
+          <L1Panel key={item.id} item={item} path={groupPath} {...props} />
         ))}
     </>
   );
 };
 
-export const L1Panels = ({
-  topLevelItems,
-  path,
-  currentItemId,
-  onBack,
-}: Pick<L1PanelProps, 'onBack'> & {
+export type L1PanelsProps = Pick<L1PanelProps, 'open' | 'currentItemId' | 'onBack'> & {
   topLevelItems: Node<any>[];
   path: string[];
-  currentItemId: string;
-}) => {
+};
+
+export const L1Panels = ({ topLevelItems, onBack, ...props }: L1PanelsProps) => {
   return (
     <>
       {topLevelItems.map((item) => {
         const type = l0ItemType(item);
         switch (type) {
           case 'collection':
-            return <L1PanelCollection key={item.id} item={item} path={path} currentItemId={currentItemId} />;
+            return <L1PanelCollection key={item.id} item={item} {...props} />;
           case 'tab':
-            return <L1Panel key={item.id} item={item} path={path} currentItemId={currentItemId} onBack={onBack} />;
+            return <L1Panel key={item.id} item={item} onBack={onBack} {...props} />;
           default:
             return null;
         }

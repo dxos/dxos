@@ -4,18 +4,21 @@
 
 import React, { useMemo } from 'react';
 
+import { type TreeProps } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { byPosition } from '@dxos/util';
 
 import { L0Menu } from './L0Menu';
-import { L1Panels } from './L1Panels';
+import { L1Panels, type L1PanelsProps } from './L1Panels';
 import { useNavTreeContext } from './NavTreeContext';
-import { type NavTreeProps } from './types';
 import { useLoadDescendents } from '../hooks';
+import { type NavTreeItemGraphNode } from '../types';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export const NavTree = ({ id, root }: NavTreeProps) => {
+export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1PanelsProps, 'open'>;
+
+export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
   const { tab, getItems, onBack } = useNavTreeContext();
   const topLevelActions = getItems(root, 'item').toSorted((a, b) => byPosition(a.properties, b.properties));
   const topLevelCollections = getItems(root, 'collection');
@@ -45,7 +48,7 @@ export const NavTree = ({ id, root }: NavTreeProps) => {
         path={path}
         parent={root}
       />
-      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} />
+      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
     </Tabs.Root>
   );
 };

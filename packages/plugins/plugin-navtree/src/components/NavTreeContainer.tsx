@@ -315,7 +315,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   return (
     <NavTreeContext.Provider value={navTreeContextValue}>
-      <NavTree root={graph.root} id={graph.root.id} />
+      <NavTree id={graph.root.id} root={graph.root} open={layout.sidebarOpen} />
     </NavTreeContext.Provider>
   );
 });

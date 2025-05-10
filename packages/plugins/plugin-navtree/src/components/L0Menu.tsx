@@ -7,8 +7,8 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
 import {
-  attachClosestEdge,
   type Edge,
+  attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import React, { type MouseEvent, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';

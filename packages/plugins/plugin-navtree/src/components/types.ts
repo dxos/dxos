@@ -12,15 +12,6 @@ import type { MaybePromise } from '@dxos/util';
 import { type L1PanelProps } from './L1Panels';
 import type { FlattenedActions, NavTreeItemGraphNode } from '../types';
 
-export type NavTreeItemColumnsProps = {
-  path: string[];
-  item: Node;
-  open: boolean;
-  density?: Density;
-};
-
-export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'>;
-
 export type NavTreeContextValue = Pick<
   TreeProps<NavTreeItemGraphNode>,
   'getProps' | 'isCurrent' | 'isOpen' | 'onOpenChange' | 'canDrop' | 'onSelect'
@@ -37,3 +28,10 @@ export type NavTreeContextValue = Pick<
     isAlternateTree?: (path: string[], item: NavTreeItemGraphNode) => boolean;
     setAlternateTree?: (path: string[], open: boolean) => void;
   };
+
+export type NavTreeItemColumnsProps = {
+  path: string[];
+  item: Node;
+  open: boolean; // TODO(burdon): Map to Layout.sidebarOpen?
+  density?: Density;
+};
