@@ -17,15 +17,15 @@ import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-frame
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import {
+  Icon,
+  ListItem,
   Popover,
   ScrollArea,
-  toLocalizedString,
   Tooltip,
+  toLocalizedString,
   useMediaQuery,
   useSidebars,
   useTranslation,
-  ListItem,
-  Icon,
 } from '@dxos/react-ui';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -65,6 +65,15 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
+        case 'action': {
+          const {
+            data: invoke,
+            properties: { caller },
+          } = item;
+
+          return invoke?.(caller ? { node: parent, caller } : { node: parent });
+        }
+
         case 'tab':
           // TODO(thure): This dispatch should be in `onTabChange`, but that callback wasn’t reacting to changes to its dependencies.
           void dispatch(
@@ -83,15 +92,9 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
             }),
           );
           return onTabChange?.(item);
+
         case 'link':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
-        case 'action': {
-          const {
-            data: invoke,
-            properties: { caller },
-          } = item;
-          return invoke?.(caller ? { node: parent, caller } : { node: parent });
-        }
       }
     },
     [item, type, onSelect, isCurrent, parent, tab, navigationSidebarState, isLg, dispatch],
@@ -103,7 +106,8 @@ const l0Breakpoints: Record<string, string> = {
 };
 
 // TODO(burdon): Create stories for individual items?
-//  This is getting really complex; e.g., should this be used for the avatar and other non-draggable components?
+//  This is getting really complex; e.g., only tabs should be draggable.
+//  The graph should be mapped onto UX sections rather than trying to treat each item as an agnostic entity.
 const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const itemElement = useRef<HTMLElement | null>(null);
@@ -112,7 +116,6 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
   const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { getProps, popoverAnchorId } = useNavTreeContext();
   const { id, testId } = getProps?.(item, path) ?? {};
-  const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
   const handleClick = useL0ItemClick({ item, path: itemPath, parent }, type);
   const rootProps =
     type === 'tab'
@@ -122,11 +125,11 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
         : { onClick: handleClick };
   const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
+  const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
   const avatarValue = useMemo(
     () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('').toUpperCase() : []),
     [type, item.properties.label, t],
   );
-  const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
 
   useLayoutEffect(() => {
     // NOTE(thure): This is copied from StackItem, perhaps this should be DRYed out.
@@ -184,13 +187,16 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
     );
   }, [item, onRearrange]);
 
+  const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
+
   // TODO(burdon): Memoize?
   const l0ItemTrigger = (
     <Root
       {...(rootProps as any)}
       data-type={type}
       className={mx(
-        'group/l0i dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
+        'group/l0item dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
+        type === 'action' && 'flex justify-center items-center',
         l0Breakpoints[item.properties.l0Breakpoint],
       )}
       ref={itemElement}
@@ -201,37 +207,37 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
           hue={item.properties.hue}
           emoji={item.properties.emoji}
           status={item.properties.status}
+          size={10}
         />
       ) : (
         <div
           role='none'
           data-frame={true}
           className={mx(
-            'absolute grid dx-focus-ring-group-indicator transition-colors',
-            type === 'tab' || pinned ? 'rounded' : 'rounded-full',
+            'absolute grid dx-focus-ring-group-indicator transition-colors rounded',
             pinned
-              ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
-              : 'bg-groupSurface inset-inline-3 inset-block-2',
+              ? 'bg-transparent group-hover/l0item:bg-groupSurface inset-inline-1 inset-block-0.5'
+              : type === 'action'
+                ? 'bg-groupSurface is-[--rail-action] bs-[--rail-action]'
+                : 'bg-groupSurface inset-inline-3 inset-block-2',
+            // TODO(burdon): Experiment
+            // : 'bg-groupSurface is-[--rail-action] bs-[--rail-action]',
           )}
           {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
         >
           {(item.properties.icon && (
-            <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+            <Icon icon={item.properties.icon} size={pinned ? 5 : 5} classNames='place-self-center' {...hueFgStyle} />
           )) ||
-            (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
-              <span role='img' className='place-self-center text-3xl font-light' {...hueFgStyle}>
+            (type === 'tab' && item.properties.disposition !== 'pin-end' && (
+              <span role='img' className='place-self-center text-xl font-light' {...hueFgStyle}>
                 {avatarValue}
               </span>
-            ) : (
-              item.properties.icon && (
-                <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
-              )
             ))}
         </div>
       )}
       <div
         role='none'
-        className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
+        className='hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
       />
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
@@ -319,27 +325,39 @@ export const L0Menu = ({ topLevelItems, pinnedItems, userAccountItem, parent, pa
     <Tabs.Tablist
       classNames={[
         'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg',
-        'grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] gap-1 contain-layout',
+        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] gap-1 contain-layout',
         '!is-[--l0-size] bg-baseSurface border-ie border-separator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
+      <div role='none' className='grid grid-rows'>
+        {topLevelItems
+          .filter((item) => l0ItemType(item) === 'action')
+          .map((item) => {
+            return <L0Item key={item.id} item={item} parent={parent} path={path} />;
+          })}
+      </div>
+
       <ScrollArea.Root>
         <ScrollArea.Viewport>
           <div
             role='none'
             className={mx([
+              // TODO(burdon): Experiment.
+              // 'grid auto-rows-[calc(var(--l0-size))]',
               'grid auto-rows-[calc(var(--l0-size)-.5rem)]',
               '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
           >
-            {topLevelItems.map((item) => {
-              if (l0ItemType(item) === 'collection') {
-                return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
-              } else {
-                return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-              }
-            })}
+            {topLevelItems
+              .filter((item) => l0ItemType(item) !== 'action')
+              .map((item) => {
+                if (l0ItemType(item) === 'collection') {
+                  return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
+                } else {
+                  return <L0Item key={item.id} item={item} parent={parent} path={path} />;
+                }
+              })}
           </div>
           <ScrollArea.Scrollbar orientation='vertical'>
             <ScrollArea.Thumb />

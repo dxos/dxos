@@ -27,9 +27,9 @@ export default [
         'comments heading': 'Comments',
         'chat heading': 'Chat',
         'draft button': 'DRAFT',
-        'no comments title': 'No comments (yet)',
+        'no comments title': 'Comments',
         'no comments message':
-          'To start a comment thread, select a range of text in a document and click the <commentIcon></commentIcon> Create comment button in the toolbar.',
+          'Click on the <commentIcon></commentIcon> button in the document toolbar to create a comment thread on the selected text.',
         'toggle show resolved': 'Show resolved',
         'unnamed object threads label': 'Threads',
         'mark as resolved label': 'Mark as resolved',

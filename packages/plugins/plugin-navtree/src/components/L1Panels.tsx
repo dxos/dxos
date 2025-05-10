@@ -94,7 +94,9 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
       key={item.id}
       value={item.id}
       classNames={[
-        'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr] pbs-[env(safe-area-inset-top)]',
+        'absolute inset-block-0 inline-end-0',
+        'is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
+        'pbs-[env(safe-area-inset-top)]',
         item.id === currentItemId && 'grid',
       ]}
       tabIndex={-1}
@@ -185,7 +187,7 @@ export const L1Panels = ({ topLevelItems, onBack, ...props }: L1PanelsProps) => 
           case 'collection':
             return <L1PanelCollection key={item.id} item={item} {...props} />;
           case 'tab':
-            return <L1Panel key={item.id} item={item} onBack={onBack} {...props} />;
+            return <L1Panel key={item.id} item={item} {...props} onBack={onBack} />;
           default:
             return null;
         }
