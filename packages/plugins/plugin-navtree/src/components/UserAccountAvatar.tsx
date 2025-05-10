@@ -23,7 +23,7 @@ export const UserAccountAvatar = (props: UserAccountAvatarProps) => {
       <Avatar.Root>
         <Avatar.Content
           variant='circle'
-          size={props.size ?? 9}
+          size={props.size ?? 12}
           status={props.status ?? 'active'}
           hue={props.hue || fallbackValue.hue}
           fallback={props.emoji || fallbackValue.emoji}
