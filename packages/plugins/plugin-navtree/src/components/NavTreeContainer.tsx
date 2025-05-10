@@ -58,8 +58,8 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
-  const layout = useLayout();
   const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
+  const layout = useLayout();
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
@@ -120,7 +120,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [graph],
   );
 
-  const onOpenChange = useCallback(
+  const handleOpenChange = useCallback(
     ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
       // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
       setItem(path, 'open', open);
@@ -133,7 +133,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [graph],
   );
 
-  const onTabChange = useCallback(
+  const handleTabChange = useCallback(
     async (node: NavTreeItemGraphNode) => {
       await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: node.id }));
       // Open the first item if the workspace is empty.
@@ -201,7 +201,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [graph, dispatch, isCurrent, isLg],
   );
 
-  const onBack = useCallback(
+  const handleBack = useCallback(
     () => dispatch(createIntent(LayoutAction.RevertWorkspace, { part: 'workspace', options: { revert: true } })),
     [dispatch],
   );
@@ -275,8 +275,6 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const navTreeContextValue = useMemo(
     () => ({
       tab,
-      onTabChange,
-      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -286,16 +284,16 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       getProps,
       isCurrent,
       isOpen,
-      onOpenChange,
       canDrop,
-      onSelect: handleSelect,
       isAlternateTree,
       setAlternateTree,
+      onTabChange: handleTabChange,
+      onOpenChange: handleOpenChange,
+      onSelect: handleSelect,
+      onBack: handleBack,
     }),
     [
       tab,
-      onTabChange,
-      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -305,11 +303,13 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       getProps,
       isCurrent,
       isOpen,
-      onOpenChange,
       canDrop,
-      handleSelect,
       isAlternateTree,
       setAlternateTree,
+      handleTabChange,
+      handleOpenChange,
+      handleSelect,
+      handleBack,
     ],
   );
 

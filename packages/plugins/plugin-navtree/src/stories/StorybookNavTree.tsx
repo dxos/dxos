@@ -7,6 +7,8 @@ import React, { useMemo, useState } from 'react';
 import { NavTree, NavTreeContext, type NavTreeContextValue, type NavTreeProps } from '../components';
 import { type NavTreeItemGraphNode } from '../types';
 
+export type StorybookNavTreeProps = NavTreeProps & NavTreeContextValue;
+
 export const StorybookNavTree = ({
   getActions,
   loadDescendents,
@@ -20,13 +22,11 @@ export const StorybookNavTree = ({
   isOpen,
   onOpenChange,
   ...props
-}: NavTreeProps & NavTreeContextValue) => {
+}: StorybookNavTreeProps) => {
   const [tab, setTab] = useState('never');
-
   const contextValue = useMemo(
     () => ({
       tab,
-      onTabChange: (node: NavTreeItemGraphNode) => setTab(node.id),
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -38,6 +38,7 @@ export const StorybookNavTree = ({
       onOpenChange,
       canDrop,
       onSelect,
+      onTabChange: (node: NavTreeItemGraphNode) => setTab(node.id),
     }),
     [
       tab,
@@ -55,9 +56,10 @@ export const StorybookNavTree = ({
       onSelect,
     ],
   );
+
   return (
     <NavTreeContext.Provider value={contextValue}>
-      <NavTree {...props} />
+      <NavTree {...props} open={true} />
     </NavTreeContext.Provider>
   );
 };

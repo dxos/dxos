@@ -51,7 +51,7 @@ type L0ItemProps = {
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   const { tab, onTabChange, onSelect, isCurrent } = useNavTreeContext();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher(); // TODO(burdon): Remove dependency from low-level components?
   const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
 
@@ -125,6 +125,7 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
     if (!itemElement.current || !onRearrange) {
       return;
     }
+
     return combine(
       draggable({
         element: itemElement.current,
@@ -245,7 +246,7 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
   );
 };
 
-const L0Collection = ({ item, path, parent }: L0ItemProps) => {
+const L0Collection = ({ item, path }: L0ItemProps) => {
   const navTreeContext = useNavTreeContext();
   useLoadDescendents(item);
   const collectionItems = navTreeContext.getItems(item);
@@ -266,6 +267,7 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
     },
     [collectionItems, item.properties.onRearrangeChildren],
   );
+
   return (
     <div
       role='group'
@@ -287,19 +289,15 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
   );
 };
 
-export const L0Menu = ({
-  topLevelItems,
-  pinnedItems,
-  userAccountItem,
-  parent,
-  path,
-}: {
+export type L0MenuProps = {
   topLevelItems: Node<any>[];
   pinnedItems: Node<any>[];
   userAccountItem: Node<any>;
   parent?: Node<any>;
   path: string[];
-}) => {
+};
+
+export const L0Menu = ({ topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
   return (
     <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-baseSurface border-ie border-separator app-drag  pbe-[env(safe-area-inset-bottom)]'>
       <ScrollArea.Root>
@@ -321,6 +319,7 @@ export const L0Menu = ({
           </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
+
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')
@@ -328,11 +327,13 @@ export const L0Menu = ({
             <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
           ))}
       </div>
+
       {userAccountItem && (
         <div role='none' className='grid app-no-drag'>
           <L0Item key={userAccountItem.id} item={userAccountItem} parent={parent} path={path} userAccount />
         </div>
       )}
+
       <div
         role='none'
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'

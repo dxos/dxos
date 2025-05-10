@@ -6,9 +6,11 @@ import '@dxos-theme';
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { isActionLike, type NodeArg } from '@dxos/app-graph';
 import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
@@ -16,50 +18,67 @@ import { isTreeData, type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { StorybookNavTree } from '../stories/StorybookNavTree';
+import { StorybookNavTree, type StorybookNavTreeProps } from '../stories';
 import { createTree, updateState } from '../testing';
 
 faker.seed(1234);
 
-const tree = live<NodeArg<any>>(createTree());
-const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
+const DefaultStory = (args: StorybookNavTreeProps) => {
+  useEffect(() => {
+    return monitorForElements({
+      canMonitor: ({ source }) => isTreeData(source),
+      onDrop: ({ location, source }) => {
+        // Didn't drop on anything.
+        if (!location.current.dropTargets.length) {
+          return;
+        }
+
+        const target = location.current.dropTargets[0];
+        const instruction: Instruction | null = extractInstruction(target.data);
+        if (instruction !== null) {
+          updateState({
+            state: tree,
+            instruction,
+            source: source.data as TreeData,
+            target: target.data as TreeData,
+          });
+        }
+      },
+    });
+  }, []);
+
+  return <StorybookNavTree {...args} />;
+};
 
 const meta: Meta<typeof StorybookNavTree> = {
   title: 'plugins/plugin-navtree/NavTree',
   component: StorybookNavTree,
-  decorators: [withTheme, withLayout({ tooltips: true })],
-  render: (args) => {
-    useEffect(() => {
-      return monitorForElements({
-        canMonitor: ({ source }) => isTreeData(source),
-        onDrop: ({ location, source }) => {
-          // Didn't drop on anything.
-          if (!location.current.dropTargets.length) {
-            return;
-          }
+  render: DefaultStory,
+  decorators: [
+    // TODO(burdon): Remove plugin dependency?
+    withPluginManager({ plugins: [IntentPlugin()] }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+  ],
+};
 
-          const target = location.current.dropTargets[0];
-          const instruction: Instruction | null = extractInstruction(target.data);
-          if (instruction !== null) {
-            updateState({
-              state: tree,
-              instruction,
-              source: source.data as TreeData,
-              target: target.data as TreeData,
-            });
-          }
-        },
-      });
-    }, []);
+export default meta;
 
-    return <StorybookNavTree {...args} />;
-  },
+type Story = StoryObj<typeof StorybookNavTree>;
+
+// TODO(burdon): This story is currently broken; nothing is visible, and same key warning.
+//  Remove the complexity of global variables and create a real story component.
+const tree = live<NodeArg<any>>(createTree());
+const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
+
+export const Default: Story = {
   args: {
     id: tree.id,
     getActions: (arg: NodeArg<any>) => ({
       actions: arg.nodes?.filter((node) => isActionLike(node)) ?? [],
       groupedActions: {},
     }),
+    // TODO(burdon): Why cast?
     getItems: (testItem?: any) => {
       return testItem?.nodes ?? tree.nodes ?? [];
     },
@@ -101,7 +120,3 @@ const meta: Meta<typeof StorybookNavTree> = {
     },
   },
 };
-
-export default meta;
-
-export const Default = {};

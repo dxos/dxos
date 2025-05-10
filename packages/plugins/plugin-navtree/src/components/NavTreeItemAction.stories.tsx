@@ -40,7 +40,7 @@ const menuActions = faker.helpers.multiple(
 export default {
   title: 'plugins/plugin-navtree/NavTreeItemAction',
   component: NavTreeItemAction,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [withTheme, withLayout({ tooltips: true })],
   args: {
     icon: 'ph--list--regular',
     parent,
@@ -50,6 +50,9 @@ export default {
       console.log(action);
     },
   } satisfies Partial<NavTreeItemActionMenuProps>,
+  parameters: {
+    layout: 'centered',
+  },
 };
 
 export const Default = {};
