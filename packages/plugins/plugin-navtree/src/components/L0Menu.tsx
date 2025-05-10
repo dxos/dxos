@@ -38,7 +38,14 @@ import { useLoadDescendents } from '../hooks';
 import { NAVTREE_PLUGIN } from '../meta';
 import { l0ItemType } from '../util';
 
-type L0ItemData = { id: L0ItemProps['item']['id']; type: 'l0Item' };
+//
+// L0Item
+//
+
+type L0ItemData = {
+  id: L0ItemProps['item']['id'];
+  type: 'l0Item';
+};
 
 type L0ItemProps = {
   item: Node<any>;
@@ -59,8 +66,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
     (event: MouseEvent) => {
       switch (type) {
         case 'tab':
-          // TODO(thure): This dispatch should rightly be in `onTabChange`, but that callback wasn’t reacting to changes
-          //  to its dependencies.
+          // TODO(thure): This dispatch should be in `onTabChange`, but that callback wasn’t reacting to changes to its dependencies.
           void dispatch(
             createIntent(LayoutAction.UpdateSidebar, {
               part: 'sidebar',
@@ -96,6 +102,8 @@ const l0Breakpoints: Record<string, string> = {
   lg: 'hidden lg:grid',
 };
 
+// TODO(burdon): Create stories for individual items?
+//  This is getting really complex; e.g., should this be used for the avatar and other non-draggable components?
 const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const itemElement = useRef<HTMLElement | null>(null);
@@ -176,6 +184,7 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
     );
   }, [item, onRearrange]);
 
+  // TODO(burdon): Memoize?
   const l0ItemTrigger = (
     <Root
       {...(rootProps as any)}
@@ -246,6 +255,10 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
   );
 };
 
+//
+// L0Collection
+//
+
 const L0Collection = ({ item, path }: L0ItemProps) => {
   const navTreeContext = useNavTreeContext();
   useLoadDescendents(item);
@@ -289,6 +302,10 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
   );
 };
 
+//
+// L0Menu
+//
+
 export type L0MenuProps = {
   topLevelItems: Node<any>[];
   pinnedItems: Node<any>[];
@@ -299,12 +316,22 @@ export type L0MenuProps = {
 
 export const L0Menu = ({ topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
   return (
-    <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-baseSurface border-ie border-separator app-drag  pbe-[env(safe-area-inset-bottom)]'>
+    <Tabs.Tablist
+      classNames={[
+        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg',
+        'grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] gap-1 contain-layout',
+        '!is-[--l0-size] bg-baseSurface border-ie border-separator app-drag pbe-[env(safe-area-inset-bottom)]',
+      ]}
+    >
       <ScrollArea.Root>
         <ScrollArea.Viewport>
           <div
             role='none'
-            className='grid auto-rows-[calc(var(--l0-size)-.5rem)] [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)] [body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]'
+            className={mx([
+              'grid auto-rows-[calc(var(--l0-size)-.5rem)]',
+              '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
+              '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
+            ])}
           >
             {topLevelItems.map((item) => {
               if (l0ItemType(item) === 'collection') {
