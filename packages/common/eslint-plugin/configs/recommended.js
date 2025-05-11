@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// TOOD(burdon): Configure eslint-plugin-simple-import-sort
-
 module.exports = {
   extends: ['semistandard'],
   plugins: [
@@ -11,6 +9,7 @@ module.exports = {
     '@dxos/rules',
     '@stayradiated/prefer-arrow-functions',
     'prettier',
+    // TOOD(burdon): Configure eslint-plugin-simple-import-sort
     // 'simple-import-sort',
     'unused-imports',
   ],
@@ -48,6 +47,11 @@ module.exports = {
     'import/order': [
       'error',
       {
+        alphabetize: {
+          order: 'asc',
+        },
+        groups: [['builtin', 'external'], 'internal'],
+        'newlines-between': 'always',
         pathGroups: [
           {
             pattern: '@{dxos,braneframe}/**',
@@ -55,12 +59,7 @@ module.exports = {
             position: 'before',
           },
         ],
-        'newlines-between': 'always',
         pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**'],
-        groups: [['builtin', 'external'], 'internal'],
-        alphabetize: {
-          order: 'asc',
-        },
       },
     ],
     indent: 'off',
@@ -98,9 +97,9 @@ module.exports = {
     'unused-imports/no-unused-vars': [
       'error',
       {
+        args: 'none',
         vars: 'all',
         varsIgnorePattern: '^_',
-        args: 'none',
       },
     ],
     'yield-star-spacing': 'off',
