@@ -9,7 +9,7 @@ import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { DataType, type TranscriptionContentBlock } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
@@ -173,7 +173,7 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _onSegments(segments: TranscriptionContentBlock[]) {
+  private async _onSegments(segments: DataType.MessageBlock.Transcription[]) {
     if (!this.isOpen || !this._queue) {
       return;
     }

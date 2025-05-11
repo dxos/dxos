@@ -15,7 +15,8 @@ import {
 
 import { IconAnnotationId } from '../annotations';
 
-export const organizationStatusOptions = [
+// TODO(burdon): Remove.
+export const OrganizationStatusOptions = [
   { id: 'prospect', title: 'Prospect', color: 'indigo' },
   { id: 'qualified', title: 'Qualified', color: 'purple' },
   { id: 'active', title: 'Active', color: 'amber' },
@@ -30,7 +31,7 @@ export const OrganizationSchema = S.Struct({
   id: Type.ObjectId,
   name: S.optional(S.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' })),
   description: S.optional(S.String.annotations({ title: 'Description' })),
-  // TODO(wittjosiah): Remove.
+  // TODO(wittjosiah): Remove; change to relation.
   status: S.optional(
     S.Union(
       S.Literal('prospect'),
@@ -42,7 +43,7 @@ export const OrganizationSchema = S.Struct({
       title: 'Status',
       [PropertyMetaAnnotationId]: {
         singleSelect: {
-          options: organizationStatusOptions,
+          options: OrganizationStatusOptions,
         },
       },
       [FormatAnnotationId]: 'single-select',

@@ -14,7 +14,7 @@ import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
-import { DataType, type TranscriptionContentBlock } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
 
 import { processTranscriptMessage } from '../entity-extraction';
@@ -64,7 +64,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     };
   }
 
-  createBlock(): TranscriptionContentBlock {
+  createBlock(): DataType.MessageBlock.Transcription {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();

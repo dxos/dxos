@@ -5,7 +5,7 @@
 import { S } from '@dxos/echo-schema';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
-import { ActorSchema, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { THREAD_PLUGIN } from './meta';
 
@@ -61,7 +61,7 @@ export namespace ThreadAction {
     input: S.Struct({
       subject: EchoObjectSchema,
       thread: ThreadType,
-      sender: ActorSchema,
+      sender: DataType.Actor,
       text: S.String,
     }),
     output: S.Void,

@@ -21,7 +21,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, ViewProjection, organizationStatusOptions } from '@dxos/schema';
+import { DataType, ViewProjection } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { initializeKanban } from '../testing';
@@ -38,7 +38,7 @@ const rollOrg = () => ({
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
   website: faker.internet.url(),
-  status: faker.helpers.arrayElement(organizationStatusOptions).id,
+  status: faker.helpers.arrayElement(DataType.OrganizationStatusOptions).id,
 });
 
 const StorybookKanban = () => {

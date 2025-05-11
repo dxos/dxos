@@ -21,7 +21,7 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { type TextContentBlock, type DataType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
@@ -31,17 +31,14 @@ import { getMessageMetadata } from '../util';
 // TODO(thure): #8149
 const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverableControlItem];
 
-export const MessageContainer = ({
-  message,
-  members,
-  editable = false,
-  onDelete,
-}: {
+export type MessageContainerProps = {
   message: DataType.Message;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;
-}) => {
+};
+
+export const MessageContainer = ({ message, members, editable = false, onDelete }: MessageContainerProps) => {
   const senderIdentity = members.find(
     (member) =>
       (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
@@ -124,7 +121,7 @@ const TextboxBlock = ({
   isAuthor,
   editing,
 }: {
-  block: TextContentBlock;
+  block: DataType.MessageBlock.Text;
   editing?: boolean;
   isAuthor?: boolean;
   identity?: Identity;
