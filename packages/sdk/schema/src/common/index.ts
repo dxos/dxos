@@ -5,6 +5,7 @@
 import * as AccessToken$ from './access-token';
 import * as Actor$ from './actor';
 import * as Contact$ from './contact';
+import * as Event$ from './event';
 import * as Message$ from './message';
 import * as Organization$ from './organization';
 import * as PostalAddress$ from './postal-address';
@@ -18,12 +19,12 @@ export * from './task';
 
 // TODO(burdon): Replace instanceof checks.
 // TODO(burdon): Remove Type suffix from other type defs (after API changes).
+// TODO(wittjosiah): Introduce a generic canvas type which stores data using OCIF (https://www.canvasprotocol.org/).
 
 /**
  * Common data types.
  * https://schema.org/docs/schemas.html
  */
-// TODO(wittjosiah): Introduce a generic canvas type which stores data using OCIF (https://www.canvasprotocol.org/).
 export namespace DataType {
   //
   // AccessToken
@@ -50,10 +51,13 @@ export namespace DataType {
   export const Contact = Contact$.Contact;
   export type Contact = Contact$.Contact;
 
+  //
+  // Event
+  //
+
   // TODO(burdon): Move from plugin-inbox.
-  // https://schema.org/Event
-  // export const Event = Event$.EventType;
-  // export type Event = Event$.EventType;
+  export const Event = Event$.Event;
+  export type Event = Event$.Event;
 
   //
   // Message
@@ -88,6 +92,7 @@ export namespace DataType {
 
   export const Organization = Organization$.Organization;
   export type Organization = Organization$.Organization;
+  // TODO(burdon): Remove.
   export const OrganizationStatusOptions = Organization$.OrganizationStatusOptions;
 
   export const PostalAddress = PostalAddress$.PostalAddress;
