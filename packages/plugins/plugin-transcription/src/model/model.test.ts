@@ -9,7 +9,11 @@ import { type DataType } from '@dxos/schema';
 
 import { SerializationModel, DocumentAdapter, type ChunkRenderer } from './model';
 
-const blockToMarkdown: ChunkRenderer<DataType.Message> = (message: DataType.Message, index: number, debug = true): string[] => {
+const blockToMarkdown: ChunkRenderer<DataType.Message> = (
+  message: DataType.Message,
+  index: number,
+  debug = true,
+): string[] => {
   return [
     `###### ${message.sender.name}`,
     ...message.blocks.filter((block) => block.type === 'transcription').map((block) => block.text),
