@@ -5,7 +5,7 @@
 import { S, SpaceIdSchema } from '@dxos/echo-schema';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
-import { DataType, Message } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { THREAD_PLUGIN } from './meta';
 
@@ -71,7 +71,7 @@ export namespace ThreadAction {
       thread: ThreadType,
       subject: EchoObjectSchema,
       messageId: S.String,
-      message: S.optional(Message),
+      message: S.optional(DataType.Message),
       messageIndex: S.optional(S.Number),
     }),
     output: S.Void,
