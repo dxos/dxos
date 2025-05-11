@@ -84,25 +84,24 @@ export const ReferenceContentBlock = S.extend(
 export type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
 
 /**
- * Transcription
+ * Transcript
  */
-export const TranscriptionContentBlock = S.extend(
+export const TranscriptContentBlock = S.extend(
   AbstractContentBlock,
   S.Struct({
-    type: S.Literal('transcription'),
-    // TODO(burdon): TS from service is not Unix TS (x1000).
+    type: S.Literal('transcription'), // TODO(burdon): Change to `transcript` (migration?).
     started: S.String,
     text: S.String,
   }),
 ).pipe(S.mutable);
-export type TranscriptionContentBlock = S.Schema.Type<typeof TranscriptionContentBlock>;
+export type TranscriptContentBlock = S.Schema.Type<typeof TranscriptContentBlock>;
 
 export const MessageContentBlock = S.Union(
   TextContentBlock,
   JsonContentBlock,
   ImageContentBlock,
   ReferenceContentBlock,
-  TranscriptionContentBlock,
+  TranscriptContentBlock,
 );
 
 /**

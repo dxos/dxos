@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EchoObject, Format, ObjectId, S } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { Format, ObjectId, S } from '@dxos/echo-schema';
 
-export const AccessTokenSchema = S.Struct({
+export const AccessTokenType = S.Struct({
   id: ObjectId,
 
   /**
@@ -31,11 +32,11 @@ export const AccessTokenSchema = S.Struct({
     title: 'Token',
     description: 'The token provided by the service.',
   }),
-});
-
-// TODO(wittjosiah): This is a temporary solution, long term these should be stored in HALO.
-export const AccessTokenType = AccessTokenSchema.pipe(
-  EchoObject({ typename: 'dxos.org/type/AccessToken', version: '0.1.0' }),
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/AccessToken',
+    version: '0.1.0',
+  }),
 );
 
 export type AccessTokenType = S.Schema.Type<typeof AccessTokenType>;

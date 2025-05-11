@@ -20,8 +20,6 @@ import * as Text$ from './text';
  */
 // TODO(wittjosiah): Introduce a generic canvas type which stores data using OCIF (https://www.canvasprotocol.org/).
 export namespace DataType {
-  // TODO(burdon): Remove (when combinator is changed)
-  export const AccessTokenSchema = AccessToken$.AccessTokenSchema;
   export const AccessToken = AccessToken$.AccessTokenType;
   export type AccessToken = AccessToken$.AccessTokenType;
 
@@ -38,7 +36,6 @@ export namespace DataType {
   // export const Event = Event$.EventType;
   // export type Event = Event$.EventType;
 
-  // TODO(burdon): Remove (when combinator is changed)
   export const Message = Message$.Message;
   export type Message = Message$.Message;
   export namespace MessageBlock {
@@ -50,8 +47,8 @@ export namespace DataType {
     export type Reference = Message$.ReferenceContentBlock;
     export const Text = Message$.TextContentBlock;
     export type Text = Message$.TextContentBlock;
-    export const Transcription = Message$.TranscriptionContentBlock;
-    export type Transcription = Message$.TranscriptionContentBlock;
+    export const Transcription = Message$.TranscriptContentBlock;
+    export type Transcription = Message$.TranscriptContentBlock;
   }
   /** @deprecated */
   export const MessageV1 = Message$.MessageV1;
@@ -69,13 +66,11 @@ export namespace DataType {
   export const Project = Project$.Project;
   export type Project = Project$.Project;
 
-  // TODO(burdon): Remove (when combinator is changed)
-  export const TaskSchema = Task$.TaskSchema;
   export const Task = Task$.Task;
   export type Task = Task$.Task;
 
   export const Text = Text$.TextType;
   export type Text = Text$.TextType;
 
-  // TOOD(burdon): Move Thread from plugin-space
+  // TOOD(burdon): Move Thread from plugin-space?
 }

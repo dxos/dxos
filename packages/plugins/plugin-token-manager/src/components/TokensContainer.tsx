@@ -24,7 +24,7 @@ const initialValues = {
   token: '',
 };
 
-const FormSchema = DataType.AccessTokenSchema.pipe(S.omit('id'));
+const FormSchema = DataType.AccessToken.pipe(S.omit('id'));
 type TokenForm = S.Schema.Type<typeof FormSchema>;
 
 export const TokensContainer = ({ space }: { space: Space }) => {

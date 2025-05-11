@@ -79,7 +79,6 @@ export namespace ThreadAction {
 }
 
 export const ThreadSettingsSchema = S.mutable(S.Struct({}));
-
 export type ThreadSettingsProps = S.Schema.Type<typeof ThreadSettingsSchema>;
 
 export interface ThreadModel {

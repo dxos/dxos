@@ -31,12 +31,12 @@ export namespace OutlinerAction {
   }) {}
 
   // TODO(burdon): Move to plugin-task.
-  export class CreateTask extends S.TaggedClass<CreateOutline>()(`${OUTLINER_ACTION}/create-task`, {
+  export class CreateTask extends S.TaggedClass<CreateTask>()(`${OUTLINER_ACTION}/create-task`, {
     input: S.Struct({
       node: TreeNodeType,
     }),
     output: S.Struct({
-      object: DataType.TaskSchema,
+      object: DataType.Task,
     }),
   }) {}
 }
