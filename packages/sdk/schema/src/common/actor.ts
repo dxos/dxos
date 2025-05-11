@@ -6,9 +6,11 @@ import { Ref, S } from '@dxos/echo-schema';
 
 import { Person } from './person';
 
+// TOOD(burdon): Rename; this is very specific to AI.
 export const ActorRoles = ['user', 'assistant'] as const;
 
 export const ActorRole = S.Literal(...ActorRoles);
+export type ActorRole = S.Schema.Type<typeof ActorRole>; // TODO(burdon): Remove.
 
 /**
  * https://schema.org/actor

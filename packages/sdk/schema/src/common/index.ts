@@ -39,6 +39,7 @@ export namespace DataType {
 
   export const ActorRoles = Actor$.ActorRoles;
   export const ActorRole = Actor$.ActorRole;
+  export type ActorRole = Actor$.ActorRole;
   export const Actor = Actor$.Actor;
   export type Actor = Actor$.Actor;
 

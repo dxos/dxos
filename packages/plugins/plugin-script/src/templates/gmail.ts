@@ -153,10 +153,9 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
   return undefined;
 };
 
-// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
-
 //
 // Schemas
+// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
 //
 
 const ActorRoles = ['user', 'assistant'] as const;
@@ -222,7 +221,6 @@ const ReferenceContentBlock = S.extend(
 type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
 const MessageContentBlock = S.Union(TextContentBlock, JsonContentBlock, ImageContentBlock, ReferenceContentBlock);
 
-// TODO(burdon): Import from @dxos/schema.
 const MessageType = S.Struct({
   id: ObjectId,
   created: S.String.annotations({
