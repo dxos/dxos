@@ -12,6 +12,10 @@ import * as Project$ from './project';
 import * as Task$ from './task';
 import * as Text$ from './text';
 
+// TODO(burdon): Remove (fix The inferred type of 'DeleteMessage' cannot be named without a reference.)
+export * from './message';
+export * from './task';
+
 // TODO(burdon): Replace instanceof checks.
 // TODO(burdon): Remove Type suffix from other type defs (after API changes).
 

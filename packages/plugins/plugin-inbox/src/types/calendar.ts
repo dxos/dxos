@@ -3,12 +3,12 @@
 //
 
 import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
-import { ActorSchema } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 export class EventType extends TypedObject({ typename: 'dxos.org/type/Event', version: '0.1.0' })({
   name: S.optional(S.String),
-  owner: ActorSchema,
-  attendees: S.mutable(S.Array(ActorSchema)),
+  owner: DataType.Actor,
+  attendees: S.mutable(S.Array(DataType.Actor)),
   startDate: S.String,
   links: S.mutable(S.Array(Ref(Expando))),
 }) {}
