@@ -12,7 +12,7 @@ import { DataType } from '@dxos/schema';
 import { AppGraphBuilder, ArtifactDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
-import { CalendarType, EventType, InboxAction, MailboxType } from './types';
+import { CalendarType, InboxAction, MailboxType } from './types';
 
 export const InboxPlugin = () =>
   definePlugin(meta, [
@@ -52,10 +52,10 @@ export const InboxPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: EventType.typename,
+          id: DataType.Event.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (event: EventType) => await RefArray.loadAll(event.links ?? []),
+            loadReferences: async (event: DataType.Event) => await RefArray.loadAll(event.links ?? []),
           },
         }),
       ],
