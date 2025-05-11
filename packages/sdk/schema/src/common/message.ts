@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
-import { Expando, ObjectId, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, ObjectIdSchema, Ref, S, TypedObject } from '@dxos/echo-schema';
 
 import { Actor } from './actor';
 
@@ -111,7 +111,7 @@ export const MessageContentBlock = S.Union(
 //  - Read receipts need to be per space member.
 //  - Read receipts don't need to be added to schema until they being implemented.
 const MessageSchema = S.Struct({
-  id: ObjectId,
+  id: ObjectIdSchema,
   created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
   }),

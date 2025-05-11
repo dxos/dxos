@@ -3,10 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { Format, ObjectId, S } from '@dxos/echo-schema';
+import { Format, ObjectIdSchema, S } from '@dxos/echo-schema';
 
 export const AccessToken = S.Struct({
-  id: ObjectId,
+  id: ObjectIdSchema,
   note: S.optional(
     S.String.annotations({
       title: 'Note',
@@ -24,7 +24,7 @@ export const AccessToken = S.Struct({
   }),
 }).pipe(
   S.annotations({
-    description: 'A token for accessing a service.',
+    description: 'A credential or token for accessing a service.',
   }),
   Type.def({
     typename: 'dxos.org/type/AccessToken',
