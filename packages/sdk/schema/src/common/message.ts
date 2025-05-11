@@ -5,7 +5,7 @@
 import { defineObjectMigration } from '@dxos/echo-db';
 import { Expando, ObjectId, Ref, S, TypedObject } from '@dxos/echo-schema';
 
-import { ActorSchema } from './actor';
+import { Actor } from './actor';
 
 export const AbstractContentBlock = S.Struct({
   pending: S.optional(S.Boolean),
@@ -116,7 +116,7 @@ export class Message extends TypedObject({ typename: 'dxos.org/type/Message', ve
   created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
   }),
-  sender: S.mutable(ActorSchema).annotations({
+  sender: S.mutable(Actor).annotations({
     description: 'Identity of the message sender.',
   }),
   blocks: S.mutable(S.Array(MessageContentBlock)).annotations({
@@ -141,7 +141,7 @@ enum MessageV1State {
 export class MessageV1 extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
   timestamp: S.String,
   state: S.optional(S.Enums(MessageV1State)),
-  sender: ActorSchema,
+  sender: Actor,
   text: S.String,
   parts: S.optional(S.mutable(S.Array(Ref(Expando)))),
   properties: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),

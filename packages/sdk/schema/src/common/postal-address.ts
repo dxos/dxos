@@ -5,7 +5,7 @@
 import { S } from '@dxos/echo-schema';
 
 // Based on https://schema.org/PostalAddress
-export const PostalAddressSchema = S.Struct({
+export const PostalAddress = S.Struct({
   street: S.optional(
     S.String.annotations({
       description: 'The street address.',

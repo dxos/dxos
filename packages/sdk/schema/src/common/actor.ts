@@ -11,7 +11,10 @@ export const ActorRoles = ['user', 'assistant'] as const;
 export const ActorRole = S.Literal(...ActorRoles);
 export type ActorRole = S.Schema.Type<typeof ActorRole>;
 
-export const ActorSchema = S.Struct({
+/**
+ * https://schema.org/actor
+ */
+export const Actor = S.Struct({
   contact: S.optional(Ref(Contact)),
   identityDid: S.optional(S.String),
   /** @deprecated */
@@ -22,4 +25,4 @@ export const ActorSchema = S.Struct({
   role: S.optional(ActorRole),
 });
 
-export interface ActorSchema extends S.Schema.Type<typeof ActorSchema> {}
+export interface Actor extends S.Schema.Type<typeof Actor> {}

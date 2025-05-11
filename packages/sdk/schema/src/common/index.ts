@@ -17,27 +17,47 @@ import * as Text$ from './text';
 
 /**
  * Common data types.
+ * https://schema.org/docs/schemas.html
  */
 // TODO(wittjosiah): Introduce a generic canvas type which stores data using OCIF (https://www.canvasprotocol.org/).
 export namespace DataType {
-  export const AccessToken = AccessToken$.AccessTokenType;
-  export type AccessToken = AccessToken$.AccessTokenType;
+  //
+  // AccessToken
+  //
+
+  export const AccessToken = AccessToken$.AccessToken;
+  export type AccessToken = AccessToken$.AccessToken;
+
+  //
+  // Actor
+  //
 
   export const ActorRoles = Actor$.ActorRoles;
   export const ActorRole = Actor$.ActorRole;
   export type ActorRole = Actor$.ActorRole;
-  export const Actor = Actor$.ActorSchema;
-  export type Actor = Actor$.ActorSchema;
+  export const Actor = Actor$.Actor;
+  export type Actor = Actor$.Actor;
 
+  //
+  // Contact
+  //
+
+  // TODO(burdon): Rename Person.
   export const Contact = Contact$.Contact;
   export type Contact = Contact$.Contact;
 
   // TODO(burdon): Move from plugin-inbox.
+  // https://schema.org/Event
   // export const Event = Event$.EventType;
   // export type Event = Event$.EventType;
 
+  //
+  // Message
+  //
+
   export const Message = Message$.Message;
   export type Message = Message$.Message;
+
   export namespace MessageBlock {
     export const Image = Message$.ImageContentBlock;
     export type Image = Message$.ImageContentBlock;
@@ -50,6 +70,7 @@ export namespace DataType {
     export const Transcription = Message$.TranscriptContentBlock;
     export type Transcription = Message$.TranscriptContentBlock;
   }
+
   /** @deprecated */
   export const MessageV1 = Message$.MessageV1;
   /** @deprecated */
@@ -57,20 +78,36 @@ export namespace DataType {
   /** @deprecated */
   export const MessageV1ToV2 = Message$.MessageV1ToV2;
 
+  //
+  // Organization
+  //
+
   export const Organization = Organization$.Organization;
   export type Organization = Organization$.Organization;
   export const OrganizationStatusOptions = Organization$.OrganizationStatusOptions;
 
-  export const PostalAddress = PostalAddress$.PostalAddressSchema;
+  export const PostalAddress = PostalAddress$.PostalAddress;
+
+  //
+  // Project
+  //
 
   export const Project = Project$.Project;
   export type Project = Project$.Project;
 
+  //
+  // Task
+  //
+
   export const Task = Task$.Task;
   export type Task = Task$.Task;
 
-  export const Text = Text$.TextType;
-  export type Text = Text$.TextType;
+  //
+  // Text
+  //
+
+  export const Text = Text$.Text;
+  export type Text = Text$.Text;
 
   // TOOD(burdon): Move Thread from plugin-space?
 }

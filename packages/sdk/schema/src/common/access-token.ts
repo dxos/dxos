@@ -5,7 +5,7 @@
 import { Type } from '@dxos/echo';
 import { Format, ObjectId, S } from '@dxos/echo-schema';
 
-export const AccessTokenType = S.Struct({
+export const AccessToken = S.Struct({
   id: ObjectId,
 
   /**
@@ -39,4 +39,4 @@ export const AccessTokenType = S.Struct({
   }),
 );
 
-export type AccessTokenType = S.Schema.Type<typeof AccessTokenType>;
+export type AccessToken = S.Schema.Type<typeof AccessToken>;

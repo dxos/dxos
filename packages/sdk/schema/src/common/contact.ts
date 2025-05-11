@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { Format, GeneratorAnnotationId, Ref, S } from '@dxos/echo-schema';
 
 import { Organization } from './organization';
-import { PostalAddressSchema } from './postal-address';
+import { PostalAddress } from './postal-address';
 
 // TODO(burdon): Materialize link for Role (Organization => [Role] => Contact).
 // TODO(burdon): Address sub type with geo location.
@@ -67,7 +67,7 @@ export const ContactSchema = S.Struct({
       S.Array(
         S.Struct({
           label: S.optional(S.String),
-          value: PostalAddressSchema,
+          value: PostalAddress,
         }),
       ),
     ),
