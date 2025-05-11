@@ -7,24 +7,25 @@ import { Format, ObjectId, S } from '@dxos/echo-schema';
 
 export const AccessToken = S.Struct({
   id: ObjectId,
-  note: S.String.annotations({
-    title: 'Note',
-    description: 'User-provided note about the token.',
-  }),
-
-  /**
-   * @example `github.com`
-   */
+  note: S.optional(
+    S.String.annotations({
+      title: 'Note',
+      description: 'User-provided note about the token.',
+    }),
+  ),
   source: Format.Hostname.annotations({
     title: 'Source',
     description: 'The domain name of the service that issued the token.',
-    examples: ['github.com']
+    examples: ['github.com'],
   }),
   token: S.String.annotations({
     title: 'Token',
     description: 'The token provided by the service.',
   }),
 }).pipe(
+  S.annotations({
+    description: 'A token for accessing a service.',
+  }),
   Type.def({
     typename: 'dxos.org/type/AccessToken',
     version: '0.1.0',
