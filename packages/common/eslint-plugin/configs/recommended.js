@@ -2,11 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
+// TOOD(burdon): Configure eslint-plugin-simple-import-sort
+
 module.exports = {
   extends: ['semistandard'],
-  plugins: ['prettier', 'unused-imports', '@stayradiated/prefer-arrow-functions', '@dxos/rules'],
+  plugins: [
+    // prettier-ignore
+    '@dxos/rules',
+    '@stayradiated/prefer-arrow-functions',
+    'prettier',
+    // 'simple-import-sort',
+    'unused-imports',
+  ],
   rules: {
-    'no-console': 'error',
     '@dxos/rules/comment': 'off',
     '@dxos/rules/header': 'error',
     '@dxos/rules/no-empty-promise-catch': 'error',
@@ -36,18 +44,19 @@ module.exports = {
     //  https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/no-cycle.md
     // 'import/no-cycle': 1,
     'import/no-self-import': 2,
+    // TODO(burdon): Change to: https://github.com/lydell/eslint-plugin-simple-import-sort
     'import/order': [
       'error',
       {
         pathGroups: [
           {
-            pattern: '@{dxos}/**',
+            pattern: '@{dxos,braneframe}/**',
             group: 'internal',
             position: 'before',
           },
         ],
-        newlinesBetween: 'always',
-        pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**', '@{mui,material-ui}/**'],
+        'newlines-between': 'always',
+        pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**'],
         groups: [['builtin', 'external'], 'internal'],
         alphabetize: {
           order: 'asc',
@@ -55,10 +64,14 @@ module.exports = {
       },
     ],
     indent: 'off',
+    'mocha/handle-done-callback': 'off',
     'multiline-ternary': 'off',
+    'n/handle-callback-err': 'off',
     'n/no-callback-literal': 'off',
     'node/no-callback-literal': 'off',
+    'no-console': 'error',
     'no-extra-parens': 'off',
+    'no-labels': 'off',
     'no-lone-blocks': 'off',
     'no-restricted-imports': [
       'error',
@@ -76,9 +89,9 @@ module.exports = {
         allowAsStatement: true,
       },
     ],
-    'quote-props': 'off',
     'padded-blocks': 'off',
     'prettier/prettier': 'error',
+    'quote-props': 'off',
     'space-before-function-paren': 'off',
     'standard/no-callback-literal': 'off',
     'unused-imports/no-unused-imports': 'error',
@@ -91,8 +104,5 @@ module.exports = {
       },
     ],
     'yield-star-spacing': 'off',
-    'n/handle-callback-err': 'off',
-    'no-labels': 'off',
-    'mocha/handle-done-callback': 'off',
   },
 };
