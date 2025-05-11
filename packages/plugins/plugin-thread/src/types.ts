@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { S, SpaceIdSchema } from '@dxos/echo-schema';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
@@ -14,8 +14,7 @@ export namespace ThreadAction {
 
   export class CreateChannel extends S.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
     input: S.Struct({
-      // TODO(wittjosiah): Should be SpaceId.
-      spaceId: S.String,
+      spaceId: SpaceIdSchema,
       name: S.optional(S.String),
     }),
     output: S.Struct({
@@ -34,6 +33,15 @@ export namespace ThreadAction {
     }),
   }) {}
 
+  export class Delete extends S.TaggedClass<Delete>()(`${THREAD_ACTION}/delete`, {
+    input: S.Struct({
+      thread: ThreadType,
+      subject: EchoObjectSchema,
+      cursor: S.optional(S.String),
+    }),
+    output: S.Void,
+  }) {}
+
   export class Select extends S.TaggedClass<Select>()(`${THREAD_ACTION}/select`, {
     input: S.Struct({
       current: S.String,
@@ -44,15 +52,6 @@ export namespace ThreadAction {
   export class ToggleResolved extends S.TaggedClass<ToggleResolved>()(`${THREAD_ACTION}/toggle-resolved`, {
     input: S.Struct({
       thread: ThreadType,
-    }),
-    output: S.Void,
-  }) {}
-
-  export class Delete extends S.TaggedClass<Delete>()(`${THREAD_ACTION}/delete`, {
-    input: S.Struct({
-      thread: ThreadType,
-      subject: EchoObjectSchema,
-      cursor: S.optional(S.String),
     }),
     output: S.Void,
   }) {}

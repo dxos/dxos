@@ -36,7 +36,7 @@ export namespace OutlinerAction {
       node: TreeNodeType,
     }),
     output: S.Struct({
-      object: DataType.Task,
+      object: DataType.TaskSchema,
     }),
   }) {}
 }
