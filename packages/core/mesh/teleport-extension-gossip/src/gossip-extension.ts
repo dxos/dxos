@@ -51,7 +51,9 @@ export class GossipExtension implements TeleportExtension {
           },
         },
       },
-      port: await context.createPort('rpc', { contentType: 'application/x-protobuf; DataType.Message="dxos.rpc.Message"' }),
+      port: await context.createPort('rpc', {
+        contentType: 'application/x-protobuf; DataType.Message="dxos.rpc.Message"',
+      }),
     });
     await this._rpc.open();
     this._opened.wake();
