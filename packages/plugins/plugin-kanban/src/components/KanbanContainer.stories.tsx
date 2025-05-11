@@ -148,7 +148,7 @@ const meta: Meta<StoryProps> = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [DataType.Organization, DataType.Contact, KanbanType],
+          types: [DataType.Organization, DataType.Person, KanbanType],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();

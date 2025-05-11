@@ -15,8 +15,8 @@ export const RelatedContacts = ({
   contacts,
   onContactClick,
 }: {
-  contacts: DataType.Contact[];
-  onContactClick?: (contact: DataType.Contact) => void;
+  contacts: DataType.Person[];
+  onContactClick?: (contact: DataType.Person) => void;
 }) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   return contacts.length ? (

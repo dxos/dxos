@@ -85,7 +85,7 @@ export const InboxPlugin = () =>
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
       activate: () =>
-        contributes(ClientCapabilities.Schema, [DataType.Contact, DataType.Organization, DataType.Project]),
+        contributes(ClientCapabilities.Schema, [DataType.Person, DataType.Organization, DataType.Project]),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
@@ -110,6 +110,6 @@ export const InboxPlugin = () =>
     defineModule({
       id: `${meta.id}/module/whitelist-schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [DataType.Organization, DataType.Contact]),
+      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [DataType.Organization, DataType.Person]),
     }),
   ]);

@@ -19,7 +19,7 @@ type ProcessEmailParams = {
   context: {
     labels: Testing.Label[];
     documents?: Testing.DocumentType[];
-    contacts?: DataType.Contact[];
+    contacts?: DataType.Person[];
   };
 };
 

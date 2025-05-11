@@ -14,7 +14,7 @@ export enum TaskStatus {
 /**
  * Task schema.
  */
-export const TaskSchema = S.Struct({
+const TaskSchema = S.Struct({
   text: S.String,
   // TODO(wittjosiah): Why closed and status?
   closed: S.optional(S.Boolean),

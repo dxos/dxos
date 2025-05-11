@@ -71,7 +71,7 @@ export const PreviewPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [contributes(ClientCapabilities.Schema, [DataType.Contact, DataType.Organization])],
+      activate: () => [contributes(ClientCapabilities.Schema, [DataType.Person, DataType.Organization])],
     }),
     defineModule({
       id: `${meta.id}/module/preview-popover`,
@@ -128,7 +128,7 @@ export const PreviewPlugin = () =>
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
             role: ['popover', 'card--kanban'],
-            filter: (data): data is { subject: DataType.Contact } => isInstanceOf(DataType.Contact, data.subject),
+            filter: (data): data is { subject: DataType.Person } => isInstanceOf(DataType.Person, data.subject),
             component: ({ data, role }) => {
               const { dispatchPromise: dispatch } = useIntentDispatcher();
               const handleOrgClick = useCallback(

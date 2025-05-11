@@ -32,7 +32,7 @@ export const createMessage = (space?: Space) => {
 
     for (let i = 0; i < linkCount; i++) {
       const fullName = faker.person.fullName();
-      const obj = space.db.add(live(DataType.Contact, { fullName }));
+      const obj = space.db.add(live(DataType.Person, { fullName }));
       const dxn = makeRef(obj).dxn.toString();
 
       const position = Math.floor(Math.random() * words.length);

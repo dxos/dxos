@@ -67,7 +67,7 @@ export default () =>
     createSurface({
       id: `${INBOX_PLUGIN}/contact-related`,
       role: 'related',
-      filter: (data): data is { subject: DataType.Contact } => isInstanceOf(DataType.Contact, data.subject),
+      filter: (data): data is { subject: DataType.Person } => isInstanceOf(DataType.Person, data.subject),
       component: ({ data: { subject: contact } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = useSpace();
@@ -118,10 +118,10 @@ export default () =>
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(organization);
         const defaultSpace = useSpace();
-        const currentSpaceContacts = useQuery(space, Filter.schema(DataType.Contact));
+        const currentSpaceContacts = useQuery(space, Filter.schema(DataType.Person));
         const defaultSpaceContacts = useQuery(
           defaultSpace === space ? undefined : defaultSpace,
-          Filter.schema(DataType.Contact),
+          Filter.schema(DataType.Person),
         );
         const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
         const related = contacts.filter((contact) =>
@@ -131,14 +131,14 @@ export default () =>
         const currentSpaceTables = useQuery(space, Filter.schema(TableType));
         const defaultSpaceTables = useQuery(defaultSpace, Filter.schema(TableType));
         const currentSpaceContactTable = currentSpaceTables?.find((table) => {
-          return table.view?.target?.query?.typename === DataType.Contact.typename;
+          return table.view?.target?.query?.typename === DataType.Person.typename;
         });
         const defaultSpaceContactTable = defaultSpaceTables?.find((table) => {
-          return table.view?.target?.query?.typename === DataType.Contact.typename;
+          return table.view?.target?.query?.typename === DataType.Person.typename;
         });
 
         const handleContactClick = useCallback(
-          async (contact: DataType.Contact) => {
+          async (contact: DataType.Person) => {
             const table = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
             await dispatch(
               createIntent(LayoutAction.UpdatePopover, {

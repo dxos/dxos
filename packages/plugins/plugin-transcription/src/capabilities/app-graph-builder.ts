@@ -128,7 +128,7 @@ export default (context: PluginsContext) =>
                     // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
                     //  This forced me to add a dependency on markdown plugin.
                     //  This will be replaced with a vector search index anyway, so its not a big deal.
-                    contextTypes: [DocumentType, DataType.Contact, DataType.Organization],
+                    contextTypes: [DocumentType, DataType.Person, DataType.Organization],
                     space,
                   });
                 }

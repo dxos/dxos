@@ -85,8 +85,8 @@ const DefaultStory = () => {
   const { model: orgModel, presentation: orgPresentation } = useTestModel<DataType.Organization>(orgSchema, 50);
 
   // TODO(burdon): Generate links with references.
-  const contactSchema = useMemo(() => new ImmutableSchema(DataType.Contact), []);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel<DataType.Contact>(contactSchema, 50);
+  const contactSchema = useMemo(() => new ImmutableSchema(DataType.Person), []);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel<DataType.Person>(contactSchema, 50);
 
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
@@ -106,7 +106,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, DataType.Organization, DataType.Contact],
+      types: [TableType, ViewType, DataType.Organization, DataType.Person],
       createIdentity: true,
       createSpace: true,
     }),

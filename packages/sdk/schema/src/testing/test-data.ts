@@ -45,17 +45,17 @@ const createContact = ({
   organization,
   ...props
 }: { email: string; organization?: DataType.Organization } & Partial<
-  Omit<DataType.Contact, 'organization'>
->): DataType.Contact => {
+  Omit<DataType.Person, 'organization'>
+>): DataType.Person => {
   // TODO(dmaretskyi): `create` with nested refs throws an error when added to db.
-  return live(DataType.Contact, {
+  return live(DataType.Person, {
     organization: organization ? Ref.make(organization) : undefined,
     emails: [{ value: email }],
     ...props,
   });
 };
 
-const createTranscriptMessage = (sender: DataType.Contact, blocks: string[]) => {
+const createTranscriptMessage = (sender: DataType.Person, blocks: string[]) => {
   return create(DataType.Message, {
     sender: {
       name: sender.fullName,
@@ -82,7 +82,7 @@ export const createTestData = () => {
     inkandswitch: createOrganization({ name: 'Ink & Switch', website: 'inkandswitch.com' }),
   };
 
-  const contacts: Record<string, DataType.Contact> = {
+  const contacts: Record<string, DataType.Person> = {
     john: createContact({ fullName: 'John Doe', email: 'john.doe@example.com', organization: organizations.dxos }),
     sarah: createContact({
       fullName: 'Sarah Johnson',
@@ -528,7 +528,7 @@ export const createTestData = () => {
 };
 
 export const seedTestData = async (space: Space) => {
-  const schemas = [DataType.Contact, DataType.Organization, Testing.DocumentType];
+  const schemas = [DataType.Person, DataType.Organization, Testing.DocumentType];
   for (const schema of schemas) {
     if (!space.db.graph.schemaRegistry.hasSchema(schema)) {
       space.db.graph.schemaRegistry.addSchema([schema]);

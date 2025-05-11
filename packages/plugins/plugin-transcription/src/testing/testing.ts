@@ -112,7 +112,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     const { objects } = await this.space.db
       .query(
         Filter.or(
-          Filter.schema(DataType.Contact),
+          Filter.schema(DataType.Person),
           Filter.schema(DataType.Organization),
           Filter.schema(Testing.DocumentType),
         ),

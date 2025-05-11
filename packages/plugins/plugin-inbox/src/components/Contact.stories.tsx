@@ -26,7 +26,7 @@ import { seedTestData } from '@dxos/schema/testing';
 import { InboxPlugin } from '../InboxPlugin';
 import { MailboxType } from '../types';
 
-const ContactItem = ({ contact }: { contact: DataType.Contact }) => {
+const ContactItem = ({ contact }: { contact: DataType.Person }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const ref = useRef<HTMLLIElement>(null);
 
@@ -95,7 +95,7 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
 export const Contacts = {
   render: () => {
     const space = useSpace();
-    const contacts = useQuery(space, Filter.schema(DataType.Contact));
+    const contacts = useQuery(space, Filter.schema(DataType.Person));
 
     return (
       <List>
@@ -129,7 +129,7 @@ const meta: Meta = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [MailboxType, DataType.Message, DataType.Contact, DataType.Organization],
+          types: [MailboxType, DataType.Message, DataType.Person, DataType.Organization],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

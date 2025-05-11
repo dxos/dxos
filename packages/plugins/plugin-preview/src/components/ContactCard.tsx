@@ -16,7 +16,7 @@ export const ContactCard = ({
   role,
   subject: { fullName, image, organization, emails },
   onOrgClick,
-}: PreviewProps<DataType.Contact> & { onOrgClick?: (org: DataType.Organization) => void }) => {
+}: PreviewProps<DataType.Person> & { onOrgClick?: (org: DataType.Organization) => void }) => {
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
     <div role='none' className={mx(role === 'popover' ? popoverCard : defaultCard, classNames)}>

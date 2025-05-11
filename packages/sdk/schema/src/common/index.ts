@@ -4,10 +4,10 @@
 
 import * as AccessToken$ from './access-token';
 import * as Actor$ from './actor';
-import * as Contact$ from './contact';
 import * as Event$ from './event';
 import * as Message$ from './message';
 import * as Organization$ from './organization';
+import * as Person$ from './person';
 import * as PostalAddress$ from './postal-address';
 import * as Project$ from './project';
 import * as Task$ from './task';
@@ -44,18 +44,9 @@ export namespace DataType {
   export type Actor = Actor$.Actor;
 
   //
-  // Contact
-  //
-
-  // TODO(burdon): Rename Person.
-  export const Contact = Contact$.Contact;
-  export type Contact = Contact$.Contact;
-
-  //
   // Event
   //
 
-  // TODO(burdon): Move from plugin-inbox.
   export const Event = Event$.Event;
   export type Event = Event$.Event;
 
@@ -96,6 +87,13 @@ export namespace DataType {
   export const OrganizationStatusOptions = Organization$.OrganizationStatusOptions;
 
   export const PostalAddress = PostalAddress$.PostalAddress;
+
+  //
+  // Person
+  //
+
+  export const Person = Person$.Person;
+  export type Person = Person$.Person;
 
   //
   // Project

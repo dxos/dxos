@@ -25,7 +25,7 @@ export const OrganizationStatusOptions = [
 ];
 
 /**
- * Organization schema.
+ * https://schema.org/Organization
  */
 export const OrganizationSchema = S.Struct({
   id: Type.ObjectId,

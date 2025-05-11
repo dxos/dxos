@@ -4,7 +4,7 @@
 
 import { Ref, S } from '@dxos/echo-schema';
 
-import { Contact } from './contact';
+import { Person } from './person';
 
 export const ActorRoles = ['user', 'assistant'] as const;
 
@@ -15,7 +15,7 @@ export type ActorRole = S.Schema.Type<typeof ActorRole>;
  * https://schema.org/actor
  */
 export const Actor = S.Struct({
-  contact: S.optional(Ref(Contact)),
+  contact: S.optional(Ref(Person)),
   identityDid: S.optional(S.String),
   /** @deprecated */
   identityKey: S.optional(S.String),

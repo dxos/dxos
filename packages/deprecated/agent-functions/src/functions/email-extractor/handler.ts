@@ -13,11 +13,11 @@ export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event.data;
   invariant(space);
 
-  const { objects: contacts } = await space.db.query(Filter.schema(DataType.Contact)).run();
-  const objectsByEmail = new Map<string, DataType.Contact>();
+  const { objects: contacts } = await space.db.query(Filter.schema(DataType.Person)).run();
+  const objectsByEmail = new Map<string, DataType.Person>();
 
   let i = 0;
-  const getOrCreateContact = (recipient: DataType.Actor): DataType.Contact => {
+  const getOrCreateContact = (recipient: DataType.Actor): DataType.Person => {
     invariant(recipient.email);
     let contact =
       objectsByEmail.get(recipient.email.toLowerCase()) ??

@@ -99,7 +99,7 @@ const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
         const { objects } = await space.db
           .query(
             Filter.or(
-              Filter.schema(DataType.Contact),
+              Filter.schema(DataType.Person),
               Filter.schema(DataType.Organization),
               Filter.schema(Testing.DocumentType),
             ),
@@ -230,7 +230,7 @@ const meta: Meta<typeof AudioFile> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [TestItem, DataType.Contact, DataType.Organization, Testing.DocumentType],
+          types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

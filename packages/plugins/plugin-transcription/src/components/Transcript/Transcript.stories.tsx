@@ -186,7 +186,7 @@ const meta: Meta<typeof QueueStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [TestItem, Testing.DocumentType, DataType.Contact, DataType.Organization],
+          types: [TestItem, Testing.DocumentType, DataType.Person, DataType.Organization],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },

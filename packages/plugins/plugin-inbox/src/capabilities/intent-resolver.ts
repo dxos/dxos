@@ -72,7 +72,7 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const { objects: existingContacts } = await space.db.query(Filter.schema(DataType.Contact)).run();
+        const { objects: existingContacts } = await space.db.query(Filter.schema(DataType.Person)).run();
 
         // Check for existing contact
         const existingContact = existingContacts.find((contact) =>
@@ -84,7 +84,7 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const newContact = live(DataType.Contact, {
+        const newContact = live(DataType.Person, {
           emails: [{ value: email }],
         });
 
@@ -134,7 +134,7 @@ export default (context: PluginsContext) =>
 
         const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
         const contactTable = tables.find((table) => {
-          return table.view?.target?.query?.typename === DataType.Contact.typename;
+          return table.view?.target?.query?.typename === DataType.Person.typename;
         });
 
         if (!contactTable) {
@@ -145,7 +145,7 @@ export default (context: PluginsContext) =>
                 createIntent(TableAction.Create, {
                   space,
                   name: 'Contacts',
-                  typename: DataType.Contact.typename,
+                  typename: DataType.Person.typename,
                 }),
                 chain(SpaceAction.AddObject, { target: space }),
               ),

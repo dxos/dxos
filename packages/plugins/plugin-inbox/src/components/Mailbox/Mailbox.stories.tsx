@@ -69,7 +69,7 @@ export const WithCompanion = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [MailboxType, DataType.Message, DataType.Contact],
+          types: [MailboxType, DataType.Message, DataType.Person],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
