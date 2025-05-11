@@ -70,4 +70,4 @@ export const Organization = OrganizationSchema.pipe(
   }),
 );
 
-export type Organization = S.Schema.Type<typeof Organization>;
+export interface Organization extends S.Schema.Type<typeof Organization> {}

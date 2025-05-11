@@ -39,4 +39,4 @@ export const AccessToken = S.Struct({
   }),
 );
 
-export type AccessToken = S.Schema.Type<typeof AccessToken>;
+export interface AccessToken extends S.Schema.Type<typeof AccessToken> {}

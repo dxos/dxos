@@ -9,7 +9,6 @@ import { Person } from './person';
 export const ActorRoles = ['user', 'assistant'] as const;
 
 export const ActorRole = S.Literal(...ActorRoles);
-export type ActorRole = S.Schema.Type<typeof ActorRole>;
 
 /**
  * https://schema.org/actor
@@ -24,5 +23,4 @@ export const Actor = S.Struct({
   name: S.optional(S.String),
   role: S.optional(ActorRole),
 });
-
 export interface Actor extends S.Schema.Type<typeof Actor> {}

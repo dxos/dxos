@@ -28,4 +28,4 @@ export const Project = ProjectSchema.pipe(
   }),
 );
 
-export type Project = S.Schema.Type<typeof Project>;
+export interface Project extends S.Schema.Type<typeof Project> {}
