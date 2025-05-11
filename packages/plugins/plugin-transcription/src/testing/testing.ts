@@ -14,7 +14,7 @@ import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { live, makeRef, useQueue, type Space } from '@dxos/react-client/echo';
-import { Contact, MessageType, Organization, type TranscriptionContentBlock } from '@dxos/schema';
+import { DataType, type TranscriptionContentBlock } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
 
 import { processTranscriptMessage } from '../entity-extraction';
@@ -34,7 +34,7 @@ export const TestItem = S.Struct({
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.
 abstract class AbstractMessageBuilder {
-  abstract createMessage(numSegments?: number): Promise<MessageType>;
+  abstract createMessage(numSegments?: number): Promise<DataType.Message>;
 }
 
 /**
@@ -55,7 +55,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     super();
   }
 
-  override async createMessage(numSegments = 1): Promise<MessageType> {
+  override async createMessage(numSegments = 1): Promise<DataType.Message> {
     return {
       id: ObjectId.random().toString(),
       created: this.next().toISOString(),
@@ -96,7 +96,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
   space: Space | undefined;
   currentMessage: number = 0;
-  transcriptMessages: MessageType[] = [];
+  transcriptMessages: DataType.Message[] = [];
 
   async connect(space: Space) {
     this.space = space;
@@ -104,13 +104,19 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     this.transcriptMessages = transcriptMessages;
   }
 
-  override async createMessage(): Promise<MessageType> {
+  override async createMessage(): Promise<DataType.Message> {
     if (!this.space) {
       throw new Error('Space not connected');
     }
 
     const { objects } = await this.space.db
-      .query(Filter.or(Filter.schema(Contact), Filter.schema(Organization), Filter.schema(Testing.DocumentType)))
+      .query(
+        Filter.or(
+          Filter.schema(DataType.Contact),
+          Filter.schema(DataType.Organization),
+          Filter.schema(Testing.DocumentType),
+        ),
+      )
       .run();
 
     log.info('context', { objects });
@@ -135,7 +141,7 @@ type UseTestTranscriptionQueue = (
   queueId?: ObjectId,
   running?: boolean,
   interval?: number,
-) => Queue<MessageType> | undefined;
+) => Queue<DataType.Message> | undefined;
 
 /**
  * Test transcriptionqueue.
@@ -147,7 +153,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   interval = 1_000,
 ) => {
   const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<MessageType>(queueDxn);
+  const queue = useQueue<DataType.Message>(queueDxn);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
   useEffect(() => {
@@ -157,7 +163,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then((message) => {
-        queue.append([create(MessageType, message)]);
+        queue.append([create(DataType.Message, message)]);
       });
     }, interval);
     return () => clearInterval(i);
@@ -177,7 +183,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
   interval = 1_000,
 ) => {
   const queueDxn = useMemo(() => (space ? createQueueDxn(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<MessageType>(queueDxn);
+  const queue = useQueue<DataType.Message>(queueDxn);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
   useEffect(() => {
@@ -194,7 +200,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        queue.append([create(MessageType, message)]);
+        queue.append([create(DataType.Message, message)]);
       },
       interval,
     );

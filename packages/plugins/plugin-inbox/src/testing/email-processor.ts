@@ -10,16 +10,16 @@ import { MixedStreamParser } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { create } from '@dxos/echo-schema';
 import { failedInvariant } from '@dxos/invariant';
-import { type MessageType, type Contact } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { type Testing } from '@dxos/schema/testing';
 
 type ProcessEmailParams = {
-  email: MessageType;
+  email: DataType.Message;
   aiService: AIServiceClient;
   context: {
     labels: Testing.Label[];
     documents?: Testing.DocumentType[];
-    contacts?: Contact[];
+    contacts?: DataType.Contact[];
   };
 };
 

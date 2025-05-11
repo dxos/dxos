@@ -8,7 +8,7 @@ import { live, Ref, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { type RequestContext } from './context';
 import { type ParseResult } from './parser';
@@ -74,7 +74,7 @@ export class ResponseBuilder {
       this._context.object.objects.push(
         Ref.make(
           live(DocumentType, {
-            content: Ref.make(live(TextType, { content: formattedContent })),
+            content: Ref.make(live(DataType.Text, { content: formattedContent })),
             threads: [],
           }),
         ),
@@ -96,7 +96,7 @@ export class ResponseBuilder {
             for (const { name, type } of schema.getProperties()) {
               const value = obj[name];
               if (value !== undefined && value !== null && AST.isStringKeyword(type)) {
-                data[name.toString()] = live(TextType, { content: value });
+                data[name.toString()] = live(DataType.Text, { content: value });
               }
             }
 

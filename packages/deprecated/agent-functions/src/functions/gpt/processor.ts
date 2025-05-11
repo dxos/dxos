@@ -12,16 +12,17 @@ import { type JSONSchema } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type TemplateInput, TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
-import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
+import { type ThreadType } from '@dxos/plugin-space/types';
+import { type DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { type ChainResources } from '../../chain';
-import { type ModelInvocationArgs, type ModelInvoker } from '../../chain/model-invoker';
 import { createContext, type RequestContext } from './context';
 import { parseMessage } from './parser';
 import { type ResolverMap } from './resolvers';
 import { ResponseBuilder } from './response';
 import { createStatusNotifier } from './status';
+import { type ChainResources } from '../../chain';
+import { type ModelInvocationArgs, type ModelInvoker } from '../../chain/model-invoker';
 
 export type SequenceOptions = {
   prompt?: TemplateType;
@@ -39,7 +40,7 @@ export type RequestProcessorProps = {
    * In addition, `thread.context` can be used for extracting additional prompt inputs.
    */
   thread?: ThreadType;
-  message: MessageType;
+  message: DataType.Message;
 
   /**
    * RequestProcessor first looks for an explicit prompt trigger at the beginning of a message:
@@ -256,7 +257,7 @@ export class RequestProcessor {
         return () => {
           if (value) {
             const obj = get(context, value);
-            // TODO(burdon): Hack in case returning a TextType object.
+            // TODO(burdon): Hack in case returning a DataType.Text object.
             if (obj?.content) {
               return obj.content;
             }

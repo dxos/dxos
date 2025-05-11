@@ -222,6 +222,7 @@ const ReferenceContentBlock = S.extend(
 type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
 const MessageContentBlock = S.Union(TextContentBlock, JsonContentBlock, ImageContentBlock, ReferenceContentBlock);
 
+// TODO(burdon): Import from @dxos/schema.
 const MessageType = S.Struct({
   id: ObjectId,
   created: S.String.annotations({

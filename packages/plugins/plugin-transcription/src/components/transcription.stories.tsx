@@ -33,7 +33,7 @@ import { createQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Contact, MessageType, Organization } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { seedTestData, Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -46,7 +46,7 @@ import { TestItem } from '../testing';
 import { type TranscriberParams } from '../transcriber';
 
 const TranscriptionStory: FC<{
-  model: SerializationModel<MessageType>;
+  model: SerializationModel<DataType.Message>;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
 }> = ({ model, running, onRunningChange }) => {
@@ -81,14 +81,14 @@ const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
 
   // Queue.
   const queueDxn = useMemo(() => createQueueDxn(), []);
-  const queue = useMemo(() => new MemoryQueue<MessageType>(queueDxn), [queueDxn]);
+  const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const space = useSpace();
 
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = create(MessageType, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      const message = create(DataType.Message, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
 
       if (entityExtraction) {
         if (!space) {
@@ -97,7 +97,13 @@ const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
         }
         // TODO(dmaretskyi): Move to vector search index.
         const { objects } = await space.db
-          .query(Filter.or(Filter.schema(Contact), Filter.schema(Organization), Filter.schema(Testing.DocumentType)))
+          .query(
+            Filter.or(
+              Filter.schema(DataType.Contact),
+              Filter.schema(DataType.Organization),
+              Filter.schema(Testing.DocumentType),
+            ),
+          )
           .run();
 
         log.info('context', { objects });
@@ -176,11 +182,11 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   }, [audio, running]);
 
   // Transcriber.
-  const queue = useQueue<MessageType>(queueDxn, { pollInterval: 500 });
+  const queue = useQueue<DataType.Message>(queueDxn, { pollInterval: 500 });
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = create(MessageType, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
+      const message = create(DataType.Message, { sender: { name: 'You' }, created: new Date().toISOString(), blocks });
       void queue?.append([message]);
     },
     [queue],
@@ -224,7 +230,7 @@ const meta: Meta<typeof AudioFile> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [TestItem, Contact, Organization, Testing.DocumentType],
+          types: [TestItem, DataType.Contact, DataType.Organization, Testing.DocumentType],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

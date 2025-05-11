@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import { fullyQualifiedId, getSpace } from '@dxos/client/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { Transcript, renderMarkdown } from './Transcript';
 import { useQueueModelAdapter } from '../hooks';
@@ -17,7 +17,7 @@ export const TranscriptionContainer: FC<{ role: string; transcript: TranscriptTy
   const attendableId = fullyQualifiedId(transcript);
   const space = getSpace(transcript);
   const members = useMembers(space?.key).map((member) => member.identity);
-  const queue = useQueue<MessageType>(transcript.queue.dxn, { pollInterval: 1_000 });
+  const queue = useQueue<DataType.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
   const model = useQueueModelAdapter(renderMarkdown(members), queue);
 
   return (

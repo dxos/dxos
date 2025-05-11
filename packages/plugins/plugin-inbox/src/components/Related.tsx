@@ -7,7 +7,7 @@ import React from 'react';
 import { previewChrome, previewProse } from '@dxos/plugin-preview';
 import { Avatar, Button, Icon, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type Contact, type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { INBOX_PLUGIN } from '../meta';
 
@@ -15,8 +15,8 @@ export const RelatedContacts = ({
   contacts,
   onContactClick,
 }: {
-  contacts: Contact[];
-  onContactClick?: (contact: Contact) => void;
+  contacts: DataType.Contact[];
+  onContactClick?: (contact: DataType.Contact) => void;
 }) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   return contacts.length ? (
@@ -49,8 +49,8 @@ export const RelatedMessages = ({
   messages,
   onMessageClick,
 }: {
-  messages: MessageType[];
-  onMessageClick?: (message: MessageType) => void;
+  messages: DataType.Message[];
+  onMessageClick?: (message: DataType.Message) => void;
 }) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   return messages.length ? (

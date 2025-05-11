@@ -9,7 +9,7 @@ import { contributes, Capabilities, createResolver, createIntent, LayoutAction }
 import { ScriptType } from '@dxos/functions/types';
 import { live, makeRef } from '@dxos/live-object';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { DEPLOYMENT_DIALOG } from '../components';
 import { defaultScriptsForIntegration } from '../meta';
@@ -49,7 +49,7 @@ export default () =>
           data: {
             object: live(ScriptType, {
               name,
-              source: makeRef(live(TextType, { content })),
+              source: makeRef(live(DataType.Text, { content })),
             }),
           },
         };

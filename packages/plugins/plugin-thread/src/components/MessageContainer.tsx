@@ -21,7 +21,7 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { type TextContentBlock, type MessageType } from '@dxos/schema';
+import { type TextContentBlock, type DataType } from '@dxos/schema';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
@@ -37,7 +37,7 @@ export const MessageContainer = ({
   editable = false,
   onDelete,
 }: {
-  message: MessageType;
+  message: DataType.Message;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;

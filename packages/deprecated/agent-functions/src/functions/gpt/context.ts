@@ -7,7 +7,8 @@ import { type ReactiveEchoObject, createDocAccessor, getTextInRange, loadObjectR
 import { isInstanceOf } from '@dxos/echo-schema';
 import { type EchoSchema, toJsonSchema } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
+import { type ThreadType } from '@dxos/plugin-space/types';
+import { type DataType } from '@dxos/schema';
 
 // TODO(burdon): Evolve.
 export type RequestContext = {
@@ -18,7 +19,7 @@ export type RequestContext = {
 
 export const createContext = async (
   space: Space,
-  message: MessageType,
+  message: DataType.Message,
   thread: ThreadType | undefined,
 ): Promise<RequestContext> => {
   let object: ReactiveEchoObject<any> | undefined;

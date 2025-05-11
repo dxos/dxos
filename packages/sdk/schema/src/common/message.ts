@@ -112,7 +112,7 @@ export const MessageContentBlock = S.Union(
 // TODO(wittjosiah): Add read status:
 //  - Read receipts need to be per space member.
 //  - Read receipts don't need to be added to schema until they being implemented.
-export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.2.0' })({
+export class Message extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.2.0' })({
   id: ObjectId,
   created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
@@ -139,7 +139,7 @@ enum MessageV1State {
   SPAM = 3,
 }
 
-export class MessageTypeV1 extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
+export class MessageV1 extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
   timestamp: S.String,
   state: S.optional(S.Enums(MessageV1State)),
   sender: ActorSchema,
@@ -149,9 +149,9 @@ export class MessageTypeV1 extends TypedObject({ typename: 'dxos.org/type/Messag
   context: S.optional(Ref(Expando)),
 }) {}
 
-export const MessageTypeV1ToV2 = defineObjectMigration({
-  from: MessageTypeV1,
-  to: MessageType,
+export const MessageV1ToV2 = defineObjectMigration({
+  from: MessageV1,
+  to: Message,
   transform: async (from) => {
     return {
       id: from.id,

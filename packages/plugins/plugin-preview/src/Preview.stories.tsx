@@ -11,7 +11,7 @@ import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { makeRef } from '@dxos/react-client/echo';
 import { Icon, Popover } from '@dxos/react-ui';
-import { Contact, Organization, Project } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ContactCard, OrganizationCard, ProjectCard } from './components';
@@ -52,7 +52,7 @@ export default meta;
 const omitImage = ({ image, ...rest }: any) => rest;
 
 const data = (() => {
-  const organization = create(Organization, {
+  const organization = create(DataType.Organization, {
     name: faker.company.name(),
     image:
       'https://plus.unsplash.com/premium_photo-1672116452571-896980a801c8?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -60,7 +60,7 @@ const data = (() => {
     description: faker.lorem.paragraph(),
   });
 
-  const contact = create(Contact, {
+  const contact = create(DataType.Contact, {
     fullName: faker.person.fullName(),
     image:
       'https://plus.unsplash.com/premium_photo-1664536392779-049ba8fde933?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -81,7 +81,7 @@ const data = (() => {
     ],
   });
 
-  const project = create(Project, {
+  const project = create(DataType.Project, {
     name: faker.person.fullName(),
     image: 'https://dxos.network/dxos-logotype-blue.png',
     description: faker.lorem.paragraph(),

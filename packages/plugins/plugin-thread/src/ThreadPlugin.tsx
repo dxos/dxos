@@ -9,7 +9,7 @@ import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
 import { ChannelType, defineObjectForm, ThreadType } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { MessageType, MessageTypeV1, MessageTypeV1ToV2 } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
 import { ThreadEvents as LocalThreadEvents } from './events';
@@ -58,10 +58,10 @@ export const ThreadPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: MessageType.typename,
+          id: DataType.Message.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (message: MessageType) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
+            loadReferences: (message: DataType.Message) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -96,12 +96,12 @@ export const ThreadPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, MessageType, MessageTypeV1]),
+      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, DataType.Message, DataType.MessageV1]),
     }),
     defineModule({
       id: `${meta.id}/module/migration`,
       activatesOn: ClientEvents.SetupMigration,
-      activate: () => contributes(ClientCapabilities.Migration, [MessageTypeV1ToV2]),
+      activate: () => contributes(ClientCapabilities.Migration, [DataType.MessageV1ToV2]),
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,

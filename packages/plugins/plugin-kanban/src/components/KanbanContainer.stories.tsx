@@ -21,7 +21,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { ViewProjection, Contact, Organization, organizationStatusOptions } from '@dxos/schema';
+import { DataType, ViewProjection, organizationStatusOptions } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { initializeKanban } from '../testing';
@@ -148,7 +148,7 @@ const meta: Meta<StoryProps> = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [Organization, Contact, KanbanType],
+          types: [DataType.Organization, DataType.Contact, KanbanType],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
@@ -156,7 +156,7 @@ const meta: Meta<StoryProps> = {
             const { schema, kanban } = await initializeKanban({
               space,
               client,
-              typename: Organization.typename,
+              typename: DataType.Organization.typename,
               initialPivotColumn: 'status',
             });
             space.db.add(kanban);

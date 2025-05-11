@@ -12,7 +12,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { live, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
 import { THREAD_PLUGIN } from '../meta';
@@ -172,7 +172,7 @@ export default (context: PluginsContext) =>
         invariant(space, 'Space not found');
         const intents = [];
 
-        const message = live(MessageType, {
+        const message = live(DataType.Message, {
           sender,
           created: new Date().toISOString(),
           blocks: [{ type: 'text', text }],

@@ -9,8 +9,8 @@ import { Context } from '@dxos/context';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
 import { TemplateType } from '@dxos/plugin-automation/types';
-import { MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { ThreadType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import { type ChainResources, type ChainVariant, createChainResources } from '../../../chain';
 import { getConfig, getKey } from '../../../util';
@@ -31,7 +31,7 @@ export class TestProcessorBuilder {
     await this._client.halo.createIdentity();
 
     this._space = await this._client.spaces.create();
-    this._client.addTypes([TextType, MessageType, ThreadType, TemplateType]);
+    this._client.addTypes([DataType.Text, DataType.Message, ThreadType, TemplateType]);
 
     this._resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'ollama', {
       baseDir: '/tmp/dxos/testing/agent/functions/embedding',

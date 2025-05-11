@@ -6,7 +6,7 @@ import React, { Fragment } from 'react';
 
 import { Icon, Avatar, Button } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type Contact, type Organization } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { type PreviewProps, popoverCard, previewTitle, previewProse, previewChrome, defaultCard } from '../types';
 
@@ -16,7 +16,7 @@ export const ContactCard = ({
   role,
   subject: { fullName, image, organization, emails },
   onOrgClick,
-}: PreviewProps<Contact> & { onOrgClick?: (org: Organization) => void }) => {
+}: PreviewProps<DataType.Contact> & { onOrgClick?: (org: DataType.Organization) => void }) => {
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
     <div role='none' className={mx(role === 'popover' ? popoverCard : defaultCard, classNames)}>

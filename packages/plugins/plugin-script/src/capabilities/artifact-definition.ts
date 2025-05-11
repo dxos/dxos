@@ -10,7 +10,7 @@ import { ScriptType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { live, makeRef, type Space } from '@dxos/react-client/echo';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 // TODO(burdon): Factor out.
@@ -155,7 +155,7 @@ export default () => {
           const script = live(ScriptType, {
             name,
             source: makeRef(
-              live(TextType, {
+              live(DataType.Text, {
                 content: code,
               }),
             ),

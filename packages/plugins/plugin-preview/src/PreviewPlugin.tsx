@@ -38,7 +38,7 @@ import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-edit
 import { Form } from '@dxos/react-ui-form';
 import { TableType } from '@dxos/react-ui-table';
 import { descriptionMessage } from '@dxos/react-ui-theme';
-import { Contact, Organization, Project } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from './components';
 import { meta, PREVIEW_PLUGIN } from './meta';
@@ -71,7 +71,7 @@ export const PreviewPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [contributes(ClientCapabilities.Schema, [Contact, Organization])],
+      activate: () => [contributes(ClientCapabilities.Schema, [DataType.Contact, DataType.Organization])],
     }),
     defineModule({
       id: `${meta.id}/module/preview-popover`,
@@ -128,15 +128,15 @@ export const PreviewPlugin = () =>
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
             role: ['popover', 'card--kanban'],
-            filter: (data): data is { subject: Contact } => isInstanceOf(Contact, data.subject),
+            filter: (data): data is { subject: DataType.Contact } => isInstanceOf(DataType.Contact, data.subject),
             component: ({ data, role }) => {
               const { dispatchPromise: dispatch } = useIntentDispatcher();
               const handleOrgClick = useCallback(
-                async (org: Organization) => {
+                async (org: DataType.Organization) => {
                   const space = getSpace(org);
                   const tablesQuery = await space?.db.query(Filter.schema(TableType)).run();
                   const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
-                    return table.view?.target?.query?.typename === Organization.typename;
+                    return table.view?.target?.query?.typename === DataType.Organization.typename;
                   });
                   await dispatch(
                     createIntent(LayoutAction.UpdatePopover, {
@@ -169,7 +169,8 @@ export const PreviewPlugin = () =>
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
             role: ['popover', 'card--kanban'],
-            filter: (data): data is { subject: Organization } => isInstanceOf(Organization, data.subject),
+            filter: (data): data is { subject: DataType.Organization } =>
+              isInstanceOf(DataType.Organization, data.subject),
             component: ({ data, role }) => (
               <OrganizationCard subject={data.subject} role={role}>
                 {role === 'popover' && <Surface role='related' data={data} />}
@@ -179,7 +180,7 @@ export const PreviewPlugin = () =>
           createSurface({
             id: `${PREVIEW_PLUGIN}/schema-popover`,
             role: ['popover', 'card--kanban'],
-            filter: (data): data is { subject: Project } => isInstanceOf(Project, data.subject),
+            filter: (data): data is { subject: DataType.Project } => isInstanceOf(DataType.Project, data.subject),
             component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
           }),
 

@@ -14,7 +14,7 @@ import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
-import { createView, TextType } from '@dxos/schema';
+import { createView, DataType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
@@ -42,7 +42,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         return space.db.add(
           live(DocumentType, {
             name: faker.commerce.productName(),
-            content: makeRef(live(TextType, { content: faker.lorem.sentences(5) })),
+            content: makeRef(live(DataType.Text, { content: faker.lorem.sentences(5) })),
             threads: [],
           }),
         );

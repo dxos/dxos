@@ -134,11 +134,11 @@ describe('Client', () => {
 
     const client1 = new Client({
       services: testBuilder.createLocalClientServices(),
-      types: [ThreadType, MessageType, TextV0Type],
+      types: [MessageType, ThreadType, TextV0Type],
     });
     const client2 = new Client({
       services: testBuilder.createLocalClientServices(),
-      types: [ThreadType, MessageType, TextV0Type],
+      types: [MessageType, ThreadType, TextV0Type],
     });
 
     await client1.initialize();

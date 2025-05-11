@@ -22,7 +22,7 @@ import {
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 import { bundleScript, findFunctionByDeploymentId } from '../../util';
@@ -145,7 +145,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     scriptFileName: string,
     scriptFileContent: string,
   ): Promise<void> {
-    client.addTypes([ScriptType, TextType]);
+    client.addTypes([ScriptType, DataType.Text]);
 
     if (functionObject.source) {
       const script = await functionObject.source.load();
@@ -155,7 +155,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         this.log(`Updated source of ${script.id}`);
       }
     } else {
-      const sourceObj = space.db.add(live(TextType, { content: scriptFileContent }));
+      const sourceObj = space.db.add(live(DataType.Text, { content: scriptFileContent }));
       const obj = space.db.add(
         live(ScriptType, { name: this.flags.name ?? scriptFileName, source: makeRef(sourceObj) }),
       );

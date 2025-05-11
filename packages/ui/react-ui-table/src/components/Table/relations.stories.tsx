@@ -12,7 +12,7 @@ import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { Contact, createView, Organization, ViewProjection, ViewType } from '@dxos/schema';
+import { DataType, createView, ViewProjection, ViewType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -81,12 +81,12 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 
 const DefaultStory = () => {
   // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
-  const orgSchema = useMemo(() => new ImmutableSchema(Organization), []);
-  const { model: orgModel, presentation: orgPresentation } = useTestModel<Organization>(orgSchema, 50);
+  const orgSchema = useMemo(() => new ImmutableSchema(DataType.Organization), []);
+  const { model: orgModel, presentation: orgPresentation } = useTestModel<DataType.Organization>(orgSchema, 50);
 
   // TODO(burdon): Generate links with references.
-  const contactSchema = useMemo(() => new ImmutableSchema(Contact), []);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel<Contact>(contactSchema, 50);
+  const contactSchema = useMemo(() => new ImmutableSchema(DataType.Contact), []);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel<DataType.Contact>(contactSchema, 50);
 
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
@@ -106,7 +106,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Organization, Contact],
+      types: [TableType, ViewType, DataType.Organization, DataType.Contact],
       createIdentity: true,
       createSpace: true,
     }),

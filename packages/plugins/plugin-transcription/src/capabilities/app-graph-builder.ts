@@ -20,7 +20,7 @@ import { MeetingCapabilities, type CallState, type MediaState } from '@dxos/plug
 import { MeetingType, type MeetingCallProperties } from '@dxos/plugin-meeting/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type TranscriptionPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type MessageType, Contact, Organization } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { TranscriptionCapabilities } from './capabilities';
 import { processTranscriptMessage } from '../entity-extraction';
@@ -128,7 +128,7 @@ export default (context: PluginsContext) =>
                     // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
                     //  This forced me to add a dependency on markdown plugin.
                     //  This will be replaced with a vector search index anyway, so its not a big deal.
-                    contextTypes: [DocumentType, Contact, Organization],
+                    contextTypes: [DocumentType, DataType.Contact, DataType.Organization],
                     space,
                   });
                 }
@@ -179,7 +179,7 @@ type EntityExtractionEnricherFactoryOptions = {
 };
 
 const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
-  return async (message: MessageType) => {
+  return async (message: DataType.Message) => {
     const { objects } = await space.db.query(Filter.or(...contextTypes.map((s) => Filter.schema(s)))).run();
     log.info('context', { objects });
 

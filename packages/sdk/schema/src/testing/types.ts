@@ -18,13 +18,21 @@ import {
 
 import { IconAnnotationId } from '../annotations';
 
+/**
+ * @deprecated
+ */
 // TODO(wittjosiah): Migrate to using common types.
 export namespace Testing {
+  //
+  // Document
+  //
+
   export const DocumentType = S.Struct({
     id: ObjectId,
     name: S.String,
     content: S.String,
   }).pipe(EchoObject({ typename: 'dxos.org/example/Document', version: '0.1.0' }));
+
   export type DocumentType = typeof DocumentType.Type;
 
   //

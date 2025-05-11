@@ -15,7 +15,7 @@ export default async (context: PluginsContext) => {
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { DocumentType } = await import('@dxos/plugin-markdown/types');
   const { CollectionType } = await import('@dxos/plugin-space/types');
-  const { TextType } = await import('@dxos/schema');
+  const { DataType } = await import('@dxos/schema');
 
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
   const { graph } = context.requestCapability(Capabilities.AppGraph);
@@ -25,7 +25,7 @@ export default async (context: PluginsContext) => {
   const readme = live(DocumentType, {
     name: INITIAL_DOC_TITLE,
     content: Ref.make(
-      live(TextType, {
+      live(DataType.Text, {
         content: INITIAL_CONTENT.join('\n\n'),
       }),
     ),

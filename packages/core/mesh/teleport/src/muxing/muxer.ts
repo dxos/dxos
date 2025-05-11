@@ -31,7 +31,7 @@ export type CreateChannelOpts = {
    *
    * Examples:
    *  - application/octet-stream
-   *  - application/x-protobuf; messageType="dxos.rpc.Message"
+   *  - application/x-protobuf; DataType.Message="dxos.rpc.Message"
    */
   contentType?: string;
 };

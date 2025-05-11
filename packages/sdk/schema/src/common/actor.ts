@@ -7,6 +7,7 @@ import { Ref, S } from '@dxos/echo-schema';
 import { Contact } from './contact';
 
 export const ActorRoles = ['user', 'assistant'] as const;
+
 export const ActorRole = S.Literal(...ActorRoles);
 export type ActorRole = S.Schema.Type<typeof ActorRole>;
 

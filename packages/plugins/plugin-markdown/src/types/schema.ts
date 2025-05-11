@@ -5,12 +5,12 @@
 import { EchoObject, Expando, LabelAnnotationId, Ref, S } from '@dxos/echo-schema';
 import { makeRef, live } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 export const DocumentSchema = S.Struct({
   name: S.optional(S.String),
   fallbackName: S.optional(S.String),
-  content: Ref(TextType),
+  content: Ref(DataType.Text),
   threads: S.mutable(S.Array(Ref(ThreadType))),
   assistantChatQueue: S.optional(Ref(Expando)),
 }).annotations({
@@ -23,7 +23,7 @@ export type DocumentType = S.Schema.Type<typeof DocumentType>;
 
 // TODO(burdon): Replace when defaults are supported.
 export const createDocument = ({ name, content }: { name: string; content: string }) =>
-  live(DocumentType, { name, content: makeRef(live(TextType, { content })), threads: [] });
+  live(DocumentType, { name, content: makeRef(live(DataType.Text, { content })), threads: [] });
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.
