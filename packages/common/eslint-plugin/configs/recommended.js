@@ -41,13 +41,13 @@ module.exports = {
       {
         pathGroups: [
           {
-            pattern: '@{dxos,braneframe}/**',
+            pattern: '@{dxos}/**',
             group: 'internal',
             position: 'before',
           },
         ],
+        newlinesBetween: 'always',
         pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**', '@{mui,material-ui}/**'],
-        'newlines-between': 'always',
         groups: [['builtin', 'external'], 'internal'],
         alphabetize: {
           order: 'asc',
