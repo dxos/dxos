@@ -5,11 +5,15 @@
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
-import { type Project } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { type PreviewProps, popoverCard, previewTitle, defaultCard } from '../types';
 
-export const ProjectCard = ({ classNames, role, subject: { name, image, description } }: PreviewProps<Project>) => {
+export const ProjectCard = ({
+  classNames,
+  role,
+  subject: { name, image, description },
+}: PreviewProps<DataType.Project>) => {
   return (
     <div role='none' className={mx(role === 'popover' ? popoverCard : defaultCard, classNames)}>
       {image && <img className='is-full bs-auto' src={image} alt={name} />}

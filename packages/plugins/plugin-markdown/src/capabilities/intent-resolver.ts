@@ -17,7 +17,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { resolveRef } from '@dxos/react-client';
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
 import { DocumentType, MarkdownAction } from '../types';
@@ -29,7 +29,7 @@ export default (context: PluginsContext) =>
       resolve: ({ name, spaceId, content }) => {
         const doc = live(DocumentType, {
           name,
-          content: makeRef(live(TextType, { content: content ?? '' })),
+          content: makeRef(live(DataType.Text, { content: content ?? '' })),
           assistantChatQueue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
           threads: [],
         });

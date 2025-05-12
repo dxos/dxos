@@ -52,7 +52,7 @@ import {
   SpaceState,
   isSpace,
   isEchoObject,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   type Live,
   type Space,
   parseId,
@@ -139,7 +139,7 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/wireframe`,
       role: ['article', 'section'],
       position: 'hoist',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => {
+      filter: (data): data is { subject: AnyLiveObject<any> } => {
         const settings = context
           .requestCapability(Capabilities.SettingsStore)
           .getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
@@ -152,7 +152,7 @@ export default (context: PluginsContext) =>
     createSurface({
       id: `${DEBUG_PLUGIN}/object-debug`,
       role: 'article',
-      filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
+      filter: (data): data is { companionTo: AnyLiveObject<any> } =>
         data.subject === 'debug' && isEchoObject(data.companionTo),
       component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
     }),

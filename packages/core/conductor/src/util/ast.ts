@@ -2,10 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST as AST, Schema } from 'effect';
-import * as Arr from 'effect/Array';
-import * as Option from 'effect/Option';
-import * as Predicate from 'effect/Predicate';
+import { Array, Option, Predicate, Schema, SchemaAST } from 'effect';
 
 /**
  *
@@ -23,7 +20,7 @@ export const pickProperty = <S extends Schema.Schema.Any, K extends keyof Schema
 // TODO(burdon): Reconcile with common/effect.
 
 /** @internal */
-export const getPropertyKeyIndexedAccess = (ast: AST.AST, name: PropertyKey): AST.PropertySignature => {
+export const getPropertyKeyIndexedAccess = (ast: SchemaAST.AST, name: PropertyKey): SchemaAST.PropertySignature => {
   switch (ast._tag) {
     case 'TypeLiteral': {
       const ps = getTypeLiteralPropertySignature(ast, name);
@@ -33,9 +30,9 @@ export const getPropertyKeyIndexedAccess = (ast: AST.AST, name: PropertyKey): AS
       break;
     }
     case 'Union':
-      return new AST.PropertySignature(
+      return new SchemaAST.PropertySignature(
         name,
-        AST.Union.make(ast.types.map((ast) => getPropertyKeyIndexedAccess(ast, name).type)),
+        SchemaAST.Union.make(ast.types.map((ast) => getPropertyKeyIndexedAccess(ast, name).type)),
         false,
         true,
       );
@@ -45,22 +42,22 @@ export const getPropertyKeyIndexedAccess = (ast: AST.AST, name: PropertyKey): AS
       return getPropertyKeyIndexedAccess(ast.from, name);
   }
 
-  return new AST.PropertySignature(name, AST.neverKeyword, false, true);
+  return new SchemaAST.PropertySignature(name, SchemaAST.neverKeyword, false, true);
 };
 
 const getTypeLiteralPropertySignature = (
-  ast: AST.TypeLiteral,
+  ast: SchemaAST.TypeLiteral,
   name: PropertyKey,
-): AST.PropertySignature | undefined => {
+): SchemaAST.PropertySignature | undefined => {
   // from property signatures...
-  const ops = Arr.findFirst(ast.propertySignatures, (ps) => ps.name === name);
+  const ops = Array.findFirst(ast.propertySignatures, (ps) => ps.name === name);
   if (Option.isSome(ops)) {
     return ops.value;
   }
 
   // from index signatures...
   if (Predicate.isString(name)) {
-    let out: AST.PropertySignature | undefined;
+    let out: SchemaAST.PropertySignature | undefined;
     for (const is of ast.indexSignatures) {
       const parameterBase = getParameterBase(is.parameter);
       switch (parameterBase._tag) {
@@ -74,7 +71,7 @@ const getTypeLiteralPropertySignature = (
         }
         case 'StringKeyword': {
           if (out === undefined) {
-            out = new AST.PropertySignature(name, is.type, false, true);
+            out = new SchemaAST.PropertySignature(name, is.type, false, true);
           }
         }
       }
@@ -85,14 +82,16 @@ const getTypeLiteralPropertySignature = (
   } else if (Predicate.isSymbol(name)) {
     for (const is of ast.indexSignatures) {
       const parameterBase = getParameterBase(is.parameter);
-      if (AST.isSymbolKeyword(parameterBase)) {
-        return new AST.PropertySignature(name, is.type, false, true);
+      if (SchemaAST.isSymbolKeyword(parameterBase)) {
+        return new SchemaAST.PropertySignature(name, is.type, false, true);
       }
     }
   }
 };
 
-export const getParameterBase = (ast: AST.Parameter): AST.StringKeyword | AST.SymbolKeyword | AST.TemplateLiteral => {
+export const getParameterBase = (
+  ast: SchemaAST.Parameter,
+): SchemaAST.StringKeyword | SchemaAST.SymbolKeyword | SchemaAST.TemplateLiteral => {
   switch (ast._tag) {
     case 'StringKeyword':
     case 'SymbolKeyword':

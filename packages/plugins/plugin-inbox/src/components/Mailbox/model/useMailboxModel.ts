@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react';
 
 import { type DXN } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
-import { type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { MailboxModel, type SortDirection } from './mailbox-model';
 import { MessageState } from '../../../types';
@@ -19,7 +19,7 @@ import { MessageState } from '../../../types';
  */
 export const useMailboxModel = (queueDxn: DXN, sortDirection: SortDirection = 'desc'): MailboxModel => {
   const model = useMemo(() => new MailboxModel([], sortDirection), [sortDirection]);
-  const queue = useQueue<MessageType>(queueDxn);
+  const queue = useQueue<DataType.Message>(queueDxn);
   const items = useMemo(() => queue?.items ?? [], [queue?.items]);
 
   const messages = useMemo(

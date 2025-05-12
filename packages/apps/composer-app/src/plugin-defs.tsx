@@ -52,7 +52,7 @@ import { WnfsPlugin, WNFS_PLUGIN } from '@dxos/plugin-wnfs';
 import { isNotFalsy } from '@dxos/util';
 
 import { steps } from './help';
-import { WelcomePlugin, WELCOME_PLUGIN } from './plugins/welcome';
+import { WelcomePlugin, WELCOME_PLUGIN } from './plugins';
 
 export type State = {
   appKey: string;

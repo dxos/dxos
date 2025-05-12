@@ -5,7 +5,7 @@
 import { IdentityDid } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 faker.seed(1);
 
@@ -15,7 +15,7 @@ export const createMessages = (count = 10) => {
   // TODO(burdon): Timestamp.
   return faker.helpers.multiple(
     () =>
-      live(MessageType, {
+      live(DataType.Message, {
         sender: {
           identityDid: IdentityDid.random(),
           name: faker.person.fullName(),

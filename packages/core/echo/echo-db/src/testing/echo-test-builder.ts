@@ -16,7 +16,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 
 type OpenDatabaseOptions = {
@@ -171,7 +171,7 @@ export const createDataAssertion = ({
   onlyObject = true,
   numObjects = 1,
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
-  let seedObjects: ReactiveEchoObject<any>[];
+  let seedObjects: AnyLiveObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
     const { objects } = await db.query().run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));

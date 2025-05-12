@@ -3,7 +3,7 @@
 //
 
 import { S, TypedObject } from '@dxos/echo-schema';
-import { isEchoObject, ReactiveObjectSchema, type ReactiveEchoObject } from '@dxos/react-client/echo';
+import { isEchoObject, ReactiveObjectSchema, type AnyLiveObject } from '@dxos/react-client/echo';
 
 import { TEMPLATE_PLUGIN } from './meta';
 
@@ -22,7 +22,7 @@ export namespace TemplateAction {
 
 // TODO(burdon): Warning: Encountered two children with the same key, `dxos.org/plugin/template`.
 // TODO(burdon): Better way to detect?
-export const isObject = (object: unknown): object is ReactiveEchoObject<any> => {
+export const isObject = (object: unknown): object is AnyLiveObject<any> => {
   return isEchoObject(object) && object.type === 'template';
 };
 

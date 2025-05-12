@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { type ReactiveEchoObject } from '@dxos/client/echo';
+import { type AnyLiveObject } from '@dxos/client/echo';
 import { Clipboard, Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
-  object: ReactiveEchoObject<any>;
+  object: AnyLiveObject<any>;
 };
 
 // TODO(burdon): Get schema and traverse references.

@@ -31,7 +31,7 @@ import {
   type FilterSource,
   type Query,
   type QueryOptions,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   type Space,
 } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
@@ -109,7 +109,7 @@ const getCollectionGraphNodePartials = ({
       // Change on disk.
       collection.objects = nextOrder.filter(isEchoObject).map(makeRef);
     },
-    onTransferStart: (child: Node<ReactiveEchoObject<any>>, index?: number) => {
+    onTransferStart: (child: Node<AnyLiveObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -138,7 +138,7 @@ const getCollectionGraphNodePartials = ({
 
       // }
     },
-    onTransferEnd: (child: Node<ReactiveEchoObject<any>>, destination: Node) => {
+    onTransferEnd: (child: Node<AnyLiveObject<any>>, destination: Node) => {
       // Remove child from origin collection.
       const index = collection.objects.findIndex((object) => object.target === child.data);
       if (index > -1) {
@@ -154,7 +154,7 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<ReactiveEchoObject<any>>, index?: number) => {
+    onCopy: async (child: Node<AnyLiveObject<any>>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, space);
       space.db.add(newObject);
@@ -333,7 +333,7 @@ export const createObjectNode = ({
   navigable = false,
   resolve,
 }: {
-  object: ReactiveEchoObject<any>;
+  object: AnyLiveObject<any>;
   space: Space;
   navigable?: boolean;
   resolve: (typename: string) => Record<string, any>;
@@ -375,7 +375,7 @@ export const constructObjectActions = ({
   dispatch,
   navigable = false,
 }: {
-  node: Node<ReactiveEchoObject<any>>;
+  node: Node<AnyLiveObject<any>>;
   dispatch: PromiseIntentDispatcher;
   navigable?: boolean;
 }) => {
@@ -493,9 +493,9 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: ReactiveEchoObject<any>,
+  object: AnyLiveObject<any>,
   resolve: (typename: string) => Record<string, any>,
-): Promise<ReactiveEchoObject<any>[]> => {
+): Promise<AnyLiveObject<any>[]> => {
   const type = getTypename(object);
   if (!type) {
     return [];
@@ -507,7 +507,7 @@ export const getNestedObjects = async (
     return [];
   }
 
-  const objects: ReactiveEchoObject<any>[] = await loadReferences(object);
+  const objects: AnyLiveObject<any>[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };

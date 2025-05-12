@@ -2,60 +2,70 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
-import { Type } from '@dxos/echo';
+import { Format, Type } from '@dxos/echo';
 import {
-  EchoObject,
   FieldLookupAnnotationId,
-  Format,
   FormatAnnotation,
   FormatEnum,
   GeneratorAnnotationId,
   LabelAnnotationId,
-  ObjectId,
 } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
+/**
+ * @deprecated
+ */
 // TODO(wittjosiah): Migrate to using common types.
 export namespace Testing {
-  export const DocumentType = S.Struct({
-    id: ObjectId,
-    name: S.String,
-    content: S.String,
-  }).pipe(EchoObject({ typename: 'dxos.org/example/Document', version: '0.1.0' }));
+  //
+  // Document
+  //
+
+  export const DocumentType = Schema.Struct({
+    id: Type.ObjectId,
+    name: Schema.String,
+    content: Schema.String,
+  }).pipe(
+    Type.def({
+      typename: 'dxos.org/example/Document',
+      version: '0.1.0',
+    }),
+  );
+
   export type DocumentType = typeof DocumentType.Type;
 
   //
   // Organization
   //
 
-  export const OrganizationSchema = S.Struct({
+  export const OrganizationSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: S.String.annotations({
+    name: Schema.String.annotations({
       [GeneratorAnnotationId]: 'company.name',
     }),
-    description: S.optional(S.String),
-    image: S.optional(
+    description: Schema.optional(Schema.String),
+    image: Schema.optional(
       Format.URL.annotations({
-        [AST.TitleAnnotationId]: 'Preview image',
+        [SchemaAST.TitleAnnotationId]: 'Preview image',
         [GeneratorAnnotationId]: 'image.url',
       }),
     ),
-    website: S.optional(
+    website: Schema.optional(
       Format.URL.annotations({
-        [AST.TitleAnnotationId]: 'Website',
+        [SchemaAST.TitleAnnotationId]: 'Website',
         [GeneratorAnnotationId]: 'internet.url',
       }),
     ),
   }).annotations({
-    [AST.TitleAnnotationId]: 'Organization',
+    [SchemaAST.TitleAnnotationId]: 'Organization',
     [LabelAnnotationId]: 'name',
     [IconAnnotationId]: 'ph--building--regular',
   });
 
-  // export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
+  // export type OrgSchemaType = Schema.Schema.Type<typeof OrgSchema>;
 
   export const Organization = OrganizationSchema.pipe(
     Type.def({
@@ -63,7 +73,7 @@ export namespace Testing {
       version: '0.1.0',
     }),
   );
-  export type Organization = S.Schema.Type<typeof Organization>;
+  export type Organization = Schema.Schema.Type<typeof Organization>;
 
   //
   // Contact
@@ -74,42 +84,42 @@ export namespace Testing {
   // TODO(burdon): Reconcile with user id.
   //
 
-  export const AddressSchema = S.Struct({
-    street: S.optional(S.String),
-    city: S.optional(S.String),
-    state: S.optional(S.String),
-    zip: S.optional(S.String),
+  export const AddressSchema = Schema.Struct({
+    street: Schema.optional(Schema.String),
+    city: Schema.optional(Schema.String),
+    state: Schema.optional(Schema.String),
+    zip: Schema.optional(Schema.String),
     // TODO(burdon): Unknown error (handling tuples?)
-    // location: S.optional(Format.GeoPoint),
-    // location: S.Tuple(S.Number, S.Number),
+    // location: Schema.optional(Format.GeoPoint),
+    // location: Schema.Tuple(S.Number, Schema.Number),
   });
 
-  export const ContactSchema = S.Struct({
+  export const ContactSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: S.String.pipe(FormatAnnotation.set(FormatEnum.DateTime)).annotations({
+    name: Schema.String.pipe(FormatAnnotation.set(FormatEnum.DateTime)).annotations({
       [GeneratorAnnotationId]: 'person.fullName',
     }),
-    image: S.optional(
+    image: Schema.optional(
       Format.URL.annotations({
-        [AST.TitleAnnotationId]: 'Preview image',
+        [SchemaAST.TitleAnnotationId]: 'Preview image',
         [GeneratorAnnotationId]: 'image.url',
       }),
     ),
-    email: S.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
-    organization: S.optional(
+    email: Schema.optional(Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' })),
+    organization: Schema.optional(
       Type.Ref(Organization).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
     // TODO(burdon): This breaks the table view.
-    // address: S.optional(AddressSchema),
+    // address: Schema.optional(AddressSchema),
   }).annotations({
-    [AST.TitleAnnotationId]: 'Contact',
+    [SchemaAST.TitleAnnotationId]: 'Contact',
     [LabelAnnotationId]: 'name',
     [IconAnnotationId]: 'ph--user--regular',
   });
 
-  // export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
+  // export type ContactSchemaType = Schema.Schema.Type<typeof ContactSchema>;
 
   export const Contact = ContactSchema.pipe(
     Type.def({
@@ -117,25 +127,25 @@ export namespace Testing {
       version: '0.1.0',
     }),
   );
-  export type Contact = S.Schema.Type<typeof Contact>;
+  export type Contact = Schema.Schema.Type<typeof Contact>;
 
   //
   // Project
   // TODO(burdon): Use with concrete Task type.
   //
 
-  export const ProjectSchema = S.Struct({
+  export const ProjectSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
-    description: S.optional(S.String),
-    image: S.optional(Format.URL.annotations({ [GeneratorAnnotationId]: 'image.url' })),
+    name: Schema.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
+    description: Schema.optional(Schema.String),
+    image: Schema.optional(Format.URL.annotations({ [GeneratorAnnotationId]: 'image.url' })),
   }).annotations({
-    [AST.TitleAnnotationId]: 'Project',
+    [SchemaAST.TitleAnnotationId]: 'Project',
     [LabelAnnotationId]: 'name',
     [IconAnnotationId]: 'ph--kanban--regular',
   });
 
-  // export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
+  // export type ProjectSchemaType = Schema.Schema.Type<typeof ProjectSchema>;
 
   export const Project = ProjectSchema.pipe(
     Type.def({
@@ -143,23 +153,23 @@ export namespace Testing {
       version: '0.1.0',
     }),
   );
-  export type Project = S.Schema.Type<typeof Project>;
+  export type Project = Schema.Schema.Type<typeof Project>;
 
   //
   // Message
   //
 
-  export const MessageSchema = S.Struct({
-    from: S.String,
-    created: S.String,
-    title: S.String,
-    content: S.String,
+  export const MessageSchema = Schema.Struct({
+    from: Schema.String,
+    created: Schema.String,
+    title: Schema.String,
+    content: Schema.String,
   }).annotations({
-    [AST.TitleAnnotationId]: 'Message',
+    [SchemaAST.TitleAnnotationId]: 'Message',
     [LabelAnnotationId]: 'title',
   });
 
-  // export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
+  // export type MessageSchemaType = Schema.Schema.Type<typeof MessageSchema>;
 
   export const Message = MessageSchema.pipe(
     Type.def({
@@ -167,7 +177,7 @@ export namespace Testing {
       version: '0.1.0',
     }),
   );
-  export type Message = S.Schema.Type<typeof Message>;
+  export type Message = Schema.Schema.Type<typeof Message>;
 
   //
   // Label

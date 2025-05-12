@@ -3,7 +3,7 @@
 //
 
 import { S } from '@dxos/echo-schema';
-import { Task } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { TreeNodeType } from './tree';
 import { JournalType, OutlineType } from './types';
@@ -31,12 +31,12 @@ export namespace OutlinerAction {
   }) {}
 
   // TODO(burdon): Move to plugin-task.
-  export class CreateTask extends S.TaggedClass<CreateOutline>()(`${OUTLINER_ACTION}/create-task`, {
+  export class CreateTask extends S.TaggedClass<CreateTask>()(`${OUTLINER_ACTION}/create-task`, {
     input: S.Struct({
       node: TreeNodeType,
     }),
     output: S.Struct({
-      object: Task,
+      object: DataType.Task,
     }),
   }) {}
 }

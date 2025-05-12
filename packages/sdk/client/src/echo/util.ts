@@ -3,7 +3,7 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { type SpaceSyncState, type ReactiveEchoObject, getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
+import { type SpaceSyncState, type AnyLiveObject, getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
@@ -28,7 +28,7 @@ export const ReactiveObjectSchema: S.Schema<Live<any>> = S.Any.pipe(
   S.filter((x) => isLiveObject(x)),
   S.annotations({ title: 'Live' }),
 );
-export const EchoObjectSchema: S.Schema<ReactiveEchoObject<any>> = S.Any.pipe(
+export const EchoObjectSchema: S.Schema<AnyLiveObject<any>> = S.Any.pipe(
   S.filter((x) => isEchoObject(x)),
   S.annotations({ title: 'EchoObject' }),
 );

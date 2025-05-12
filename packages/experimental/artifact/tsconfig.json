@@ -21,6 +21,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     }
   ]

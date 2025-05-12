@@ -11,7 +11,7 @@ import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { loadObjectReferences } from './load-object';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type AnyLiveObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 // TODO(dmaretskyi): Refactor to test Ref.load() instead.
@@ -177,6 +177,6 @@ describe.skip('loadObjectReferences', () => {
   });
 });
 
-const createExpando = (props: any = {}): ReactiveEchoObject<Expando> => {
+const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
   return live(Expando, props);
 };

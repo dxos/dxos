@@ -3,7 +3,7 @@
 //
 
 import { AST, getSchema, type S } from '@dxos/echo-schema';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { type SearchResult } from '../types';
 
@@ -43,7 +43,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 
   return objects.reduce<SearchResult[]>((results, object) => {
     // TODO(burdon): Hack to ignore Text objects.
-    if (object instanceof TextType) {
+    if (object instanceof DataType.Text) {
       return results;
     }
 
@@ -109,7 +109,7 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
     const value = object[key] as any;
-    if (typeof value === 'string' || value instanceof TextType) {
+    if (typeof value === 'string' || value instanceof DataType.Text) {
       try {
         fields[key] = String(value);
       } catch (err) {

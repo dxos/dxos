@@ -10,16 +10,16 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type ComputeRequirements,
   type ComputeGraph,
-  type WorkflowLoader,
   EventLogger,
+  FunctionCallService,
   GptService,
   OllamaGpt,
   SpaceService,
+  QueueService,
+  type WorkflowLoader,
   createDxosEventLogger,
   makeValueBag,
   unwrapValueBag,
-  QueueService,
-  FunctionCallService,
 } from '@dxos/conductor';
 import { AST } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';

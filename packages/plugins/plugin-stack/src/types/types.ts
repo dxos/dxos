@@ -6,7 +6,7 @@ import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
 import { type CollectionType } from '@dxos/plugin-space/types';
-import { type ReactiveEchoObject } from '@dxos/react-client/echo';
+import { type AnyLiveObject } from '@dxos/react-client/echo';
 import { type Label } from '@dxos/react-ui';
 import { type StackItemSize } from '@dxos/react-ui-stack';
 
@@ -40,7 +40,7 @@ export type StackSectionMetadata = {
 
 export type StackSectionItem = {
   id: string;
-  object: ReactiveEchoObject<any>;
+  object: AnyLiveObject<any>;
   view: StackSectionView;
   metadata: StackSectionMetadata;
 };

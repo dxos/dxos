@@ -13,7 +13,7 @@ import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { type MenuActionHandler } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type MessageType, Contact } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { Message } from './Message';
 import { type ViewMode } from './MessageHeader';
@@ -23,7 +23,7 @@ import { type MailboxType, InboxAction } from '../../types';
 
 export type MessageContainerProps = {
   space?: Space;
-  message?: MessageType;
+  message?: DataType.Message;
   inMailbox: MailboxType;
 };
 
@@ -42,8 +42,8 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   const viewMode = useSignal<ViewMode>(initialViewMode);
 
   const hasEmail = useComputed(() => !!message?.sender.email);
-  const contacts = useQuery(space, Filter.schema(Contact));
-  const existingContact = useSignal<Contact | undefined>(undefined);
+  const contacts = useQuery(space, Filter.schema(DataType.Person));
+  const existingContact = useSignal<DataType.Person | undefined>(undefined);
   const contactDxn = useComputed(() => (existingContact.value ? getDXN(existingContact.value)?.toString() : undefined));
 
   useEffect(() => {

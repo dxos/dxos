@@ -11,12 +11,12 @@ import { asyncTimeout } from '@dxos/async';
 import { type BaseEchoObject, create, ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import SYSTEM_PROMPT from './system-prompt.tpl?raw';
 
 type ProcessTranscriptMessageParams = {
-  message: MessageType;
+  message: DataType.Message;
   aiService: AIServiceClient;
   context: {
     objects?: BaseEchoObject[];
@@ -38,7 +38,7 @@ type ProcessTranscriptMessageParams = {
 };
 
 type ProcessTranscriptMessageResult = {
-  message: MessageType;
+  message: DataType.Message;
   timeElapsed: number;
 };
 
@@ -98,7 +98,7 @@ export const processTranscriptMessage = async (
       log.info('entity extraction result', { refs: result.references });
 
       return {
-        message: create(MessageType, {
+        message: create(DataType.Message, {
           ...params.message,
           blocks: params.message.blocks.map((block, i) =>
             block.type !== 'transcription'

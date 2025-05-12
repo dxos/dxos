@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, pipe } from 'effect';
+import { Schema, SchemaAST, Option, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 
 import {
-  AST,
-  S,
   FormatEnum,
   getFormatAnnotation,
   getSchemaReference,
@@ -34,7 +32,7 @@ import { log } from '@dxos/log';
  */
 export type SchemaProperty<T extends BaseObject, V = any> = {
   name: PropertyKey<T>;
-  ast: AST.AST;
+  ast: SchemaAST.AST;
   optional: boolean;
   readonly: boolean;
   type: SimpleType;
@@ -52,11 +50,11 @@ export type SchemaProperty<T extends BaseObject, V = any> = {
  * Handle discriminated unions.
  */
 export const getSchemaProperties = <T extends BaseObject>(
-  ast: AST.AST,
+  ast: SchemaAST.AST,
   value: any = {},
   includeId: boolean = false,
 ): SchemaProperty<T>[] => {
-  if (AST.isUnion(ast)) {
+  if (SchemaAST.isUnion(ast)) {
     const baseType = getDiscriminatedType(ast, value);
     if (baseType) {
       return getSchemaProperties(baseType, value, includeId);
@@ -65,11 +63,11 @@ export const getSchemaProperties = <T extends BaseObject>(
     return [];
   }
 
-  invariant(AST.isTypeLiteral(ast));
-  const knownProperties = AST.getPropertySignatures(ast).reduce<SchemaProperty<T>[]>((props, prop) => {
+  invariant(SchemaAST.isTypeLiteral(ast));
+  const knownProperties = SchemaAST.getPropertySignatures(ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const name = prop.name.toString() as PropertyKey<T>;
     // TODO(burdon): Handle special case?
-    const identifier = AST.getAnnotation(prop.type, AST.IdentifierAnnotationId).pipe(Option.getOrUndefined);
+    const identifier = SchemaAST.getAnnotation(prop.type, SchemaAST.IdentifierAnnotationId).pipe(Option.getOrUndefined);
     if (name === 'id' && identifier !== false && !includeId) {
       return props;
     }
@@ -85,7 +83,7 @@ export const getSchemaProperties = <T extends BaseObject>(
   if (ast.indexSignatures.length) {
     invariant(ast.indexSignatures.length === 1, 'Multi-index signature is not supported.');
     const indexSignature = ast.indexSignatures[0];
-    const validator = S.is(S.make(indexSignature.type));
+    const validator = Schema.is(Schema.make(indexSignature.type));
     for (const [key, val] of Object.entries(value)) {
       if (knownProperties.some((prop) => prop.name === key)) {
         continue;
@@ -109,13 +107,13 @@ export const getSchemaProperties = <T extends BaseObject>(
 
 const processProperty = <T extends BaseObject>(
   name: PropertyKey<T>,
-  prop: { type: AST.AST; isReadonly: boolean; isOptional: boolean },
+  prop: { type: SchemaAST.AST; isReadonly: boolean; isOptional: boolean },
 ): SchemaProperty<T> | undefined => {
   // Annotations.
-  const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId);
-  const description = findAnnotation<string>(prop.type, AST.DescriptionAnnotationId);
-  const examples = findAnnotation<string[]>(prop.type, AST.ExamplesAnnotationId);
-  const defaultValue = findAnnotation(prop.type, AST.DefaultAnnotationId);
+  const title = findAnnotation<string>(prop.type, SchemaAST.TitleAnnotationId);
+  const description = findAnnotation<string>(prop.type, SchemaAST.DescriptionAnnotationId);
+  const examples = findAnnotation<string[]>(prop.type, SchemaAST.ExamplesAnnotationId);
+  const defaultValue = findAnnotation(prop.type, SchemaAST.DefaultAnnotationId);
   let options: (string | number)[] | undefined = findAnnotation<OptionsAnnotationType[]>(
     prop.type,
     OptionsAnnotationId,
@@ -143,7 +141,7 @@ const processProperty = <T extends BaseObject>(
   let baseType = findNode(prop.type, isSimpleType);
 
   // First check if reference.
-  const jsonSchema = findAnnotation<JsonSchemaType>(prop.type, AST.JSONSchemaAnnotationId);
+  const jsonSchema = findAnnotation<JsonSchemaType>(prop.type, SchemaAST.JSONSchemaAnnotationId);
   if (jsonSchema && '$id' in jsonSchema) {
     const { typename } = getSchemaReference(jsonSchema) ?? {};
     if (typename) {
@@ -157,16 +155,16 @@ const processProperty = <T extends BaseObject>(
     } else {
       // Transformations.
       // https://effect.website/docs/schema/transformations
-      baseType = findNode(prop.type, AST.isTransformation);
+      baseType = findNode(prop.type, SchemaAST.isTransformation);
       if (baseType) {
-        invariant(AST.isTransformation(baseType));
+        invariant(SchemaAST.isTransformation(baseType));
         type = getSimpleType(baseType.from);
       } else {
         // Tuples.
         // https://effect.website/docs/schema/basic-usage/#rest-element
-        baseType = findNode(prop.type, AST.isTupleType);
+        baseType = findNode(prop.type, SchemaAST.isTupleType);
         if (baseType) {
-          invariant(AST.isTupleType(baseType));
+          invariant(SchemaAST.isTupleType(baseType));
           const [tupleType] = baseType.rest ?? [];
           if (tupleType) {
             invariant(baseType.elements.length === 0);
@@ -182,9 +180,9 @@ const processProperty = <T extends BaseObject>(
           baseType = findNode(prop.type, isLiteralUnion);
           if (baseType) {
             type = 'literal';
-            if (AST.isUnion(baseType)) {
+            if (SchemaAST.isUnion(baseType)) {
               const x = baseType.types
-                .map((type) => (AST.isLiteral(type) ? type.literal : null))
+                .map((type) => (SchemaAST.isLiteral(type) ? type.literal : null))
                 .filter((v): v is string | number => v !== null);
 
               options = x;
