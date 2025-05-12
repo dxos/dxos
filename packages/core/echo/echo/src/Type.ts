@@ -112,7 +112,11 @@ export namespace Type {
 
   // TODO(burdon): Reconcile getDXN and getTypename.
   export const getDXN = getSchemaDXN;
-  export const getTypename = getSchemaTypename;
+  export const getTypename = (schema: Schema.Schema.AnyNoContext): string => {
+    const typename = getSchemaTypename(schema);
+    invariant(typename, 'Invalid object');
+    return typename;
+  };
   export const getVersion = getSchemaVersion;
   export const toJsonSchema = toJsonSchema$;
 }

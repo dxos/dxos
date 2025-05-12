@@ -6,12 +6,7 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 
-export type TaskProps = {
-  title: string;
-  completed: boolean;
-};
-
-const Task = Schema.Struct({
+export const Task = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
 }).pipe(

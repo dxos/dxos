@@ -36,7 +36,7 @@ export const Todos = () => {
 
     const title = inputRef.current?.value.trim();
     if (title && list) {
-      list.todos.push(Type.Ref.make(live(Todo, { title, completed: false })));
+      list.todos.push(Type.ref(live(Todo, { title, completed: false })));
       inputRef.current!.value = '';
     }
   };
