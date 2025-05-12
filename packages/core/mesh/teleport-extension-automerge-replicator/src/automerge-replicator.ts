@@ -94,7 +94,9 @@ export class AutomergeReplicator implements TeleportExtension {
           },
         },
       },
-      port: await context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' }),
+      port: await context.createPort('rpc', {
+        contentType: 'application/x-protobuf; DataType.Message="dxos.rpc.Message"',
+      }),
     });
     await this._rpc.open();
     // Announce to remote peer that we are ready to start replication.

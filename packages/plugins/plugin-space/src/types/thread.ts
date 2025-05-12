@@ -3,7 +3,7 @@
 //
 
 import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): These types were placed here rather than in @dxos/plugin-thread
 //   in order to avoid a circular dependency between threads and other objects that use threads.
@@ -15,7 +15,7 @@ export class ThreadType extends TypedObject({ typename: 'dxos.org/type/Thread', 
   /** AM cursor-range: 'from:to'. */
   anchor: S.optional(S.String),
   status: S.optional(ThreadStatus),
-  messages: S.mutable(S.Array(Ref(MessageType))),
+  messages: S.mutable(S.Array(Ref(DataType.Message))),
 }) {}
 
 export class ChannelType extends TypedObject({ typename: 'dxos.org/type/Channel', version: '0.1.0' })({

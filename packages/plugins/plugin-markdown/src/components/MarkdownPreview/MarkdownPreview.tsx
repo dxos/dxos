@@ -9,41 +9,41 @@ import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/ap
 import { isInstanceOf } from '@dxos/echo-schema';
 import {
   type PreviewProps,
+  defaultCard,
+  kanbanCardWithoutPoster,
   popoverCard,
   previewTitle,
   previewProse,
   previewChrome,
-  defaultCard,
-  kanbanCardWithoutPoster,
 } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MARKDOWN_PLUGIN } from '../../meta';
 import { DocumentType } from '../../types';
 import { getAbstract, getFallbackName } from '../../util';
 
 // TODO(burdon): Factor out.
-const getTitle = (subject: DocumentType | TextType, fallback: string) => {
+const getTitle = (subject: DocumentType | DataType.Text, fallback: string) => {
   if (isInstanceOf(DocumentType, subject)) {
     return subject.name ?? subject.fallbackName ?? getFallbackName(subject.content?.target?.content ?? fallback);
-  } else if (isInstanceOf(TextType, subject)) {
+  } else if (isInstanceOf(DataType.Text, subject)) {
     return getFallbackName(subject.content);
   }
 };
 
 // TODO(burdon): Factor out.
-const getSnippet = (subject: DocumentType | TextType, fallback: string) => {
+const getSnippet = (subject: DocumentType | DataType.Text, fallback: string) => {
   if (isInstanceOf(DocumentType, subject)) {
     return getAbstract(subject.content?.target?.content ?? fallback);
-  } else if (isInstanceOf(TextType, subject)) {
+  } else if (isInstanceOf(DataType.Text, subject)) {
     return getAbstract(subject.content);
   }
 };
 
-export const MarkdownPreview = ({ classNames, subject, role }: PreviewProps<DocumentType | TextType>) => {
+export const MarkdownPreview = ({ classNames, subject, role }: PreviewProps<DocumentType | DataType.Text>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const snippet = getSnippet(subject, t('fallback abstract'));

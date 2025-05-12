@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type S } from '@dxos/echo-schema';
+import { type Schema } from 'effect';
 
 import { type Tool } from './tools';
 
@@ -34,7 +34,7 @@ export type ArtifactDefinition = {
   /**
    * Schema that describes the shape of data which matches the artifact.
    */
-  schema: S.Schema.AnyNoContext;
+  schema: Schema.Schema.AnyNoContext;
 
   /**
    * Tools that can be used to act on data which matches the artifact.

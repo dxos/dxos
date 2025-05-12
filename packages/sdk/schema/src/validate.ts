@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ParseResult, Schema as S, Effect, Either } from 'effect';
+import { Schema, ParseResult, Effect, Either } from 'effect';
 
 export type ValidationError = { path: string; message: string };
 
 // TODO(burdon): Validate each field separately.
-export const validateSchema = <T>(schema: S.Schema<T>, values: any): ValidationError[] | undefined => {
-  const validator = S.decodeUnknownEither(schema, { errors: 'all' });
+export const validateSchema = <T>(schema: Schema.Schema<T>, values: any): ValidationError[] | undefined => {
+  const validator = Schema.decodeUnknownEither(schema, { errors: 'all' });
   const result = validator(values);
   if (Either.isLeft(result)) {
     const errors = Effect.runSync(ParseResult.ArrayFormatter.formatError(result.left));

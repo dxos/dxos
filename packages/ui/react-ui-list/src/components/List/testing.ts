@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { S, ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 export const TestItemSchema = S.Struct({
-  id: S.String,
+  id: ObjectId,
   name: S.String,
 });
 

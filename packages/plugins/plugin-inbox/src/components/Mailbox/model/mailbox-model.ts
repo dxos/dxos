@@ -4,7 +4,7 @@
 
 import { computed, signal, type Signal, type ReadonlySignal } from '@preact/signals-core';
 
-import { type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { intersectBy } from '@dxos/util';
 
 /**
@@ -24,15 +24,15 @@ export type Tag = { label: string; hue: string };
  */
 const sortByDate =
   (direction = -1) =>
-  ({ created: a = '' }: MessageType, { created: b = '' }: MessageType) =>
+  ({ created: a = '' }: DataType.Message, { created: b = '' }: DataType.Message) =>
     a < b ? -direction : a > b ? direction : 0;
 
 /**
  * Creates a map of tag labels to arrays of messages containing that tag.
  * @param messages - Array of messages to process.
  */
-const createTagToMessageIndex = (messages: MessageType[]): Map<string, MessageType[]> => {
-  const tagToMessagesMap = new Map<string, MessageType[]>();
+const createTagToMessageIndex = (messages: DataType.Message[]): Map<string, DataType.Message[]> => {
+  const tagToMessagesMap = new Map<string, DataType.Message[]>();
 
   for (const message of messages) {
     const messageTags = message.properties?.tags || [];
@@ -52,7 +52,7 @@ const createTagToMessageIndex = (messages: MessageType[]): Map<string, MessageTy
  * Creates a map of tag labels to Tag objects.
  * @param messages - Array of messages to process.
  */
-const createTagIndex = (messages: MessageType[]): Map<string, Tag> => {
+const createTagIndex = (messages: DataType.Message[]): Map<string, Tag> => {
   const tagIndex = new Map<string, Tag>();
 
   for (const message of messages) {
@@ -72,22 +72,22 @@ const createTagIndex = (messages: MessageType[]): Map<string, Tag> => {
  */
 export class MailboxModel {
   // Primary signals (direct inputs).
-  private _messages: Signal<MessageType[]>;
+  private _messages: Signal<DataType.Message[]>;
   private _sortDirection: Signal<SortDirection>;
   private _selectedTagLabels: Signal<string[]>;
 
   // Computed signals (derived state).
-  private _tagToMessagesIndex: ReadonlySignal<Map<string, MessageType[]>>;
+  private _tagToMessagesIndex: ReadonlySignal<Map<string, DataType.Message[]>>;
   private _tagIndex: ReadonlySignal<Map<string, Tag>>;
-  private _filteredMessages: ReadonlySignal<MessageType[]>;
-  private _sortedFilteredMessages: ReadonlySignal<MessageType[]>;
+  private _filteredMessages: ReadonlySignal<DataType.Message[]>;
+  private _sortedFilteredMessages: ReadonlySignal<DataType.Message[]>;
 
   /**
    * Creates a new instance of MailboxModel.
    * @param messages - Initial list of messages from the queue (optional).
    * @param sortDirection - Direction to sort (optional).
    */
-  constructor(messages: MessageType[] = [], sortDirection: SortDirection = 'desc') {
+  constructor(messages: DataType.Message[] = [], sortDirection: SortDirection = 'desc') {
     // Initialize primary signals
     this._messages = signal(messages);
     this._sortDirection = signal(sortDirection);
@@ -121,7 +121,7 @@ export class MailboxModel {
   /**
    * Gets the current list of messages in the mailbox, filtered and sorted.
    */
-  get messages(): MessageType[] {
+  get messages(): DataType.Message[] {
     return this._sortedFilteredMessages.value;
   }
 
@@ -166,7 +166,7 @@ export class MailboxModel {
    * Sets the list of messages in the mailbox.
    * @param messages - New list of messages from the queue.
    */
-  set messages(messages: MessageType[]) {
+  set messages(messages: DataType.Message[]) {
     this._messages.value = messages;
   }
 

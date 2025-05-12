@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { TitleAnnotationId } from 'effect/SchemaAST';
+import { SchemaAST } from 'effect';
 
 import { S } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
@@ -29,13 +29,13 @@ export const CreateKanbanSchema = S.Struct({
   typename: S.optional(
     S.String.annotations({
       [TypenameAnnotationId]: true,
-      [TitleAnnotationId]: 'Select card schema (leave empty to start fresh)',
+      [SchemaAST.TitleAnnotationId]: 'Select card schema (leave empty to start fresh)',
     }),
   ),
   initialPivotColumn: S.optional(
     S.String.annotations({
       [PivotColumnAnnotationId]: true,
-      [TitleAnnotationId]: 'Pivot column',
+      [SchemaAST.TitleAnnotationId]: 'Pivot column',
     }),
   ),
 });

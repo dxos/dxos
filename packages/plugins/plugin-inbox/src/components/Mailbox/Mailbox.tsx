@@ -16,7 +16,7 @@ import {
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
 import { type Tag } from './model';
@@ -36,7 +36,7 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: MessageType, now: Date, isCurrent?: boolean) => {
+const renderMessageCell = (message: DataType.Message, now: Date, isCurrent?: boolean) => {
   const id = message.id;
   // Always use the first text block for display in the mailbox list.
   const textBlocks = message.blocks.filter((block) => 'text' in block);
@@ -95,7 +95,7 @@ export type MailboxActionHandler = (action: MailboxAction) => void;
 
 export type MailboxProps = Pick<MailboxType, 'name'> & {
   id: string;
-  messages: MessageType[];
+  messages: DataType.Message[];
   ignoreAttention?: boolean;
   currentMessageId?: string;
   onAction?: MailboxActionHandler;

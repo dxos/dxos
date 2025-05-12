@@ -15,7 +15,7 @@ import {
 import { type GraphData, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { Filter, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
+import { Filter, type AnyLiveObject, type Space } from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
@@ -32,7 +32,7 @@ type SchemaGraphNode = {
 type ObjectGraphNode = {
   id: string;
   type: 'object';
-  data: { typename: string; object: ReactiveEchoObject<any> };
+  data: { typename: string; object: AnyLiveObject<any> };
 };
 
 export type EchoGraphNode = SchemaGraphNode | ObjectGraphNode;
@@ -48,7 +48,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
 
   private _schema?: EchoSchema[];
   private _schemaSubscription?: CleanupFn;
-  private _objects?: ReactiveEchoObject<any>[];
+  private _objects?: AnyLiveObject<any>[];
   private _objectsSubscription?: CleanupFn;
 
   constructor(private readonly _options: SpaceGraphModelOptions = {}) {
@@ -59,7 +59,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
     return this._graph;
   }
 
-  get objects(): ReactiveEchoObject<any>[] {
+  get objects(): AnyLiveObject<any>[] {
     return this._objects ?? [];
   }
 

@@ -62,7 +62,7 @@ describe('Muxer', () => {
     for (const peer of [peer1, peer2]) {
       const client = createRpc(
         await peer.createPort('example.extension/rpc', {
-          contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
+          contentType: 'application/x-protobuf; DataType.Message="dxos.rpc.Message"',
         }),
         async ({ data }) => ({ data }),
       );
@@ -94,7 +94,7 @@ describe('Muxer', () => {
       {
         const client = createRpc(
           await peer.createPort('example.extension/rpc1', {
-            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
+            contentType: 'application/x-protobuf; DataType.Message="dxos.rpc.Message"',
           }),
           async ({ data }) => ({ data: data + '-rpc1' }),
         );
@@ -108,7 +108,7 @@ describe('Muxer', () => {
       {
         const client = createRpc(
           await peer.createPort('example.extension/rpc2', {
-            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
+            contentType: 'application/x-protobuf; DataType.Message="dxos.rpc.Message"',
           }),
           async ({ data }) => ({ data: data + '-rpc2' }),
         );

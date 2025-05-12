@@ -18,7 +18,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
 import { type Filter, type QueryResult } from '../query';
@@ -30,7 +30,7 @@ export type LoadObjectParams = {
 };
 
 export interface ObjectLoader {
-  loadObject(params: LoadObjectParams): Promise<ReactiveEchoObject<any> | undefined>;
+  loadObject(params: LoadObjectParams): Promise<AnyLiveObject<any> | undefined>;
 }
 
 export type IndexQueryProviderParams = {

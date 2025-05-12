@@ -27,7 +27,7 @@ export {
   type ObjectMigration,
   type Queue,
   type Query,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   ResultFormat,
   type Selection,
   type SubscriptionHandle,

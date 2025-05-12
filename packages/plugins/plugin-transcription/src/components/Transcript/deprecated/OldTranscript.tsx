@@ -7,7 +7,8 @@ import { yieldOrContinue } from 'main-thread-scheduling';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
-import { EchoObject, S } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { S } from '@dxos/echo-schema';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -41,7 +42,12 @@ const TranscriptBlock = S.Struct({
   authorName: S.optional(S.String), // TODO(burdon): Replace with identityDid.
   authorHue: S.optional(S.String), // TOOD(burdon): Remove.
   segments: S.Array(TranscriptSegment),
-}).pipe(EchoObject({ typename: 'dxos.org/type/TranscriptBlock', version: '0.1.0' }));
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/TranscriptBlock',
+    version: '0.1.0',
+  }),
+);
 
 type TranscriptBlock = S.Schema.Type<typeof TranscriptBlock>;
 

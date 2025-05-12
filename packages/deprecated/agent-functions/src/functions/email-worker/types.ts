@@ -3,7 +3,7 @@
 //
 
 import { live } from '@dxos/live-object';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 export const SOURCE_ID = 'hub.dxos.network/mailbox';
 
@@ -18,4 +18,4 @@ export type EmailMessage = {
   body: string;
 };
 
-export const text = (content: string) => live(TextType, { content });
+export const text = (content: string) => live(DataType.Text, { content });

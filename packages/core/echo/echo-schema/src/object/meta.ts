@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
-import { IdentifierAnnotationId } from 'effect/SchemaAST';
+import { Schema, SchemaAST } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
@@ -14,25 +13,25 @@ import type { BaseObject } from '../types';
 // ForeignKey
 //
 
-const _ForeignKeySchema = S.Struct({
-  source: S.String,
+const _ForeignKeySchema = Schema.Struct({
+  source: Schema.String,
   // TODO(wittjosiah): This annotation is currently used to ensure id field shows up in forms.
-  id: S.String.annotations({ [IdentifierAnnotationId]: false }),
+  id: Schema.String.annotations({ [SchemaAST.IdentifierAnnotationId]: false }),
 });
 
-export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
+export type ForeignKey = Schema.Schema.Type<typeof _ForeignKeySchema>;
 
-export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
+export const ForeignKeySchema: Schema.Schema<ForeignKey> = _ForeignKeySchema;
 
 //
 // ObjectMeta
 //
 
-export const ObjectMetaSchema = S.Struct({
-  keys: S.mutable(S.Array(ForeignKeySchema)),
+export const ObjectMetaSchema = Schema.Struct({
+  keys: Schema.mutable(Schema.Array(ForeignKeySchema)),
 });
 
-export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
+export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
 
 export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
 export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;

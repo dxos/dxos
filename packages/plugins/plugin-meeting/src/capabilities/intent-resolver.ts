@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { live, makeRef } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { getMeetingContent, summarizeTranscript } from '../summarize';
 import { MeetingAction, MeetingType } from '../types';
@@ -44,7 +44,7 @@ export default (context: PluginsContext) =>
         let doc = (await meeting.artifacts[typename]?.load()) as DocumentType;
         let text = await doc?.content?.load();
         if (!isInstanceOf(DocumentType, doc)) {
-          text = live(TextType, { content: '' });
+          text = live(DataType.Text, { content: '' });
           doc = live(DocumentType, { content: makeRef(text), threads: [] });
           meeting.artifacts[getSchemaTypename(DocumentType)!] = makeRef(doc);
         }

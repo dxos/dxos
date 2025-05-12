@@ -47,7 +47,7 @@ import {
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { createObject, isEchoObject, type ReactiveEchoObject } from './create';
+import { createObject, isEchoObject, type AnyLiveObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -574,7 +574,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
-      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as ReactiveEchoObject<any>);
+      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as AnyLiveObject<any>);
       return Reference.localObjectReference(otherObjId);
     }
 
@@ -765,7 +765,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   }
 };
 
-// TODO(burdon): Move ProxyTarget def to echo-schema and make ReactiveEchoObject inherit?
+// TODO(burdon): Move ProxyTarget def to echo-schema and make AnyLiveObject inherit?
 export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore => {
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
     throw new Error('object is not an EchoObject');
@@ -778,7 +778,7 @@ export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore =>
  * @returns Automerge document (or a part of it) that backs the object.
  * Mostly used for debugging.
  */
-export const getObjectDocument = (obj: ReactiveEchoObject<any>): A.Doc<ObjectStructure> => {
+export const getObjectDocument = (obj: AnyLiveObject<any>): A.Doc<ObjectStructure> => {
   const core = getObjectCore(obj);
   return getDeep(core.getDoc(), core.mountPath)!;
 };

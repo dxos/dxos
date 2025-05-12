@@ -9,7 +9,7 @@ import { WaveFile } from 'wavefile';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type TranscriptionContentBlock } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { openAndClose } from '@dxos/test-utils';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
@@ -93,7 +93,7 @@ describe.skip('Transcriber', () => {
   });
 
   test.skip('transcription of audio recording', { timeout: 10_000 }, async () => {
-    const trigger = new Trigger<TranscriptionContentBlock[]>({ autoReset: true });
+    const trigger = new Trigger<DataType.MessageBlock.Transcription[]>({ autoReset: true });
     const recorder = new MockAudioRecorder({
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,
@@ -127,7 +127,7 @@ describe.skip('Transcriber', () => {
   });
 
   test.skip('transcription of audio recording with overlapping chunks', { timeout: 20_000 }, async () => {
-    const trigger = new Trigger<TranscriptionContentBlock[]>({ autoReset: true });
+    const trigger = new Trigger<DataType.MessageBlock.Transcription[]>({ autoReset: true });
     const recorder = new MockAudioRecorder({
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,

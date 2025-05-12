@@ -4,7 +4,7 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
-import { S } from '@dxos/echo-schema';
+import { S, ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 
@@ -18,7 +18,7 @@ export type TestItem = {
 };
 
 export const TestItemSchema = S.Struct({
-  id: S.String,
+  id: ObjectId,
   name: S.String,
   icon: S.optional(S.String),
   items: S.mutable(S.Array(S.suspend((): S.Schema<TestItem> => TestItemSchema))),

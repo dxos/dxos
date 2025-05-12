@@ -17,7 +17,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
-import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
+import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
@@ -388,7 +388,7 @@ describe('Queries', () => {
 describe('Query reactivity', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
-  let objects: ReactiveEchoObject<any>[];
+  let objects: AnyLiveObject<any>[];
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();

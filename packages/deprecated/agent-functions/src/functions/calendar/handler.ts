@@ -7,19 +7,19 @@ import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';
 
-import { type ReactiveEchoObject, Filter } from '@dxos/echo-db';
+import { type AnyLiveObject, Filter } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { live, getMeta } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { EventType } from '@dxos/plugin-inbox/types';
 import { type ActorType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { ObjectSyncer } from '../../sync';
 import { getYaml } from '../../util';
 
-const types = [TextType, EventType];
+const types = [DataType.Text, EventType];
 
 // TODO(burdon): Prevent multiple calls from scheduler.
 export const handler = subscriptionHandler(async ({ event, response }) => {
@@ -59,7 +59,7 @@ export const handler = subscriptionHandler(async ({ event, response }) => {
   });
 
   const sourceId = 'google.com/calendar';
-  const syncer = new ObjectSyncer<ReactiveEchoObject<EventType>>(Filter.schema(EventType), (object) => {
+  const syncer = new ObjectSyncer<AnyLiveObject<EventType>>(Filter.schema(EventType), (object) => {
     for (const { id, source } of getMeta(object).keys ?? []) {
       if (source === sourceId) {
         return id;

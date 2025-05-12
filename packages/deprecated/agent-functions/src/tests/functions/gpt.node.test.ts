@@ -12,8 +12,8 @@ import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
 import { live } from '@dxos/live-object';
 import { TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
-import { MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { ThreadType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import { type ChainResources, ModelInvokerFactory } from '../../chain';
 import { StubModelInvoker } from '../../functions/gpt/testing';
@@ -197,7 +197,7 @@ const waitForCall = async (stub: StubModelInvoker) => {
   await waitForCondition({ condition: () => stub.lastCallArguments != null });
 };
 
-const waitForGptResponse = async (message: MessageType, thread?: ThreadType) => {
+const waitForGptResponse = async (message: DataType.Message, thread?: ThreadType) => {
   const hasAiMeta = (obj: any) => getMeta(obj).keys[0].source === 'dxos.org/service/ai';
   if (thread) {
     await waitForCondition({ condition: () => hasAiMeta(thread.messages[thread.messages.length - 1]) });
@@ -215,7 +215,7 @@ const setupTest = async (testBuilder: TestBuilder) => {
   });
   const [app] = await createInitializedClients(testBuilder);
   const space = await app.spaces.create();
-  app.addTypes([TemplateType, FunctionDef, FunctionTrigger, MessageType, TextType, ThreadType]);
+  app.addTypes([TemplateType, FunctionDef, FunctionTrigger, DataType.Message, DataType.Text, ThreadType]);
   await inviteMember(space, functions.client);
   const trigger = createTrigger(space);
   return { space, functions, trigger, app };
@@ -226,10 +226,10 @@ const createMessage = (
   content: string,
   options?: {
     thread?: ThreadType;
-    context?: MessageType['context'];
+    context?: DataType.Message['context'];
   },
 ) => {
-  const message = live(MessageType, {
+  const message = live(DataType.Message, {
     timestamp: new Date().toISOString(),
     sender: { name: 'unknown' },
     text: content,
@@ -261,7 +261,7 @@ const createTrigger = (space: Space, options?: { meta?: FunctionTrigger['meta'] 
       meta: options?.meta,
       spec: {
         type: TriggerKind.Subscription,
-        filter: { type: MessageType.typename },
+        filter: { type: DataType.Message.typename },
       },
     }),
   );

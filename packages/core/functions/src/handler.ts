@@ -8,7 +8,7 @@ import { type Effect } from 'effect';
 import { type AIServiceClient } from '@dxos/assistant';
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import type { CoreDatabase, EchoDatabase, ReactiveEchoObject } from '@dxos/echo-db';
+import type { CoreDatabase, EchoDatabase, AnyLiveObject } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -156,7 +156,7 @@ export type RawSubscriptionData = {
 
 export type SubscriptionData = {
   space?: Space;
-  objects?: ReactiveEchoObject<any>[];
+  objects?: AnyLiveObject<any>[];
 };
 
 /**
@@ -184,9 +184,7 @@ export const subscriptionHandler = <TMeta>(
 
     registerTypes(space, types);
     const objects = space
-      ? data.objects
-          ?.map<ReactiveEchoObject<any> | undefined>((id) => space!.db.getObjectById(id))
-          .filter(isNonNullable)
+      ? data.objects?.map<AnyLiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(isNonNullable)
       : [];
 
     if (!!data.spaceKey && !space) {

@@ -23,7 +23,7 @@ import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from './core-db';
-import { type ReactiveEchoObject, getObjectCore } from './echo-handler';
+import { type AnyLiveObject, getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
@@ -55,7 +55,7 @@ export class Hypergraph {
   private readonly _owningObjects = new Map<SpaceId, unknown>();
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<ReactiveEchoObject<any>>>>();
+  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<AnyLiveObject<any>>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
@@ -210,8 +210,8 @@ export class Hypergraph {
   _lookupRef(
     db: EchoDatabase,
     ref: Reference,
-    onResolve: (obj: ReactiveEchoObject<any>) => void,
-  ): ReactiveEchoObject<any> | undefined {
+    onResolve: (obj: AnyLiveObject<any>) => void,
+  ): AnyLiveObject<any> | undefined {
     let spaceId: SpaceId | undefined, objectId: ObjectId | undefined;
 
     if (ref.dxn && ref.dxn.asEchoDXN()) {
@@ -466,7 +466,7 @@ class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _filter: Filter | undefined = undefined;
-  private _results?: QueryResult<ReactiveEchoObject<any>>[] = undefined;
+  private _results?: QueryResult<AnyLiveObject<any>>[] = undefined;
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
 
@@ -510,7 +510,7 @@ class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(filter: Filter): Promise<QueryResult<ReactiveEchoObject<any>>[]> {
+  async run(filter: Filter): Promise<QueryResult<AnyLiveObject<any>>[]> {
     if (!this._isValidSourceForFilter(filter)) {
       return [];
     }
@@ -522,14 +522,14 @@ class SpaceQuerySource implements QuerySource {
       return cores.map((core) => this._mapCoreToResult(core));
     }
 
-    let results: QueryResult<ReactiveEchoObject<any>>[] = [];
+    let results: QueryResult<AnyLiveObject<any>>[] = [];
     prohibitSignalActions(() => {
       results = this._query(filter);
     });
     return results;
   }
 
-  getResults(): QueryResult<ReactiveEchoObject<any>>[] {
+  getResults(): QueryResult<AnyLiveObject<any>>[] {
     if (!this._filter) {
       return [];
     }
@@ -543,7 +543,7 @@ class SpaceQuerySource implements QuerySource {
     return this._results!;
   }
 
-  update(filter: Filter<ReactiveEchoObject<any>>): void {
+  update(filter: Filter<AnyLiveObject<any>>): void {
     if (!this._isValidSourceForFilter(filter)) {
       this._filter = undefined;
       return;
@@ -559,7 +559,7 @@ class SpaceQuerySource implements QuerySource {
     this.changed.emit();
   }
 
-  private _query(filter: Filter): QueryResult<ReactiveEchoObject<any>>[] {
+  private _query(filter: Filter): QueryResult<AnyLiveObject<any>>[] {
     const filteredCores = filter.isObjectIdFilter()
       ? filter
           .objectIds!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -572,7 +572,7 @@ class SpaceQuerySource implements QuerySource {
     return filteredCores.map((core) => this._mapCoreToResult(core));
   }
 
-  private _isValidSourceForFilter(filter: Filter<ReactiveEchoObject<any>>): boolean {
+  private _isValidSourceForFilter(filter: Filter<AnyLiveObject<any>>): boolean {
     // Disabled by spaces filter.
     if (filter.spaceIds !== undefined && !filter.spaceIds.some((id) => id === this.spaceId)) {
       return false;
@@ -587,7 +587,7 @@ class SpaceQuerySource implements QuerySource {
     return true;
   }
 
-  private _mapCoreToResult(core: ObjectCore): QueryResult<ReactiveEchoObject<any>> {
+  private _mapCoreToResult(core: ObjectCore): QueryResult<AnyLiveObject<any>> {
     return {
       id: core.id,
       spaceId: this.spaceId,

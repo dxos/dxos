@@ -15,7 +15,8 @@ import {
   type MessageContentBlock,
 } from '@dxos/artifact';
 import { AIServiceEdgeClient } from '@dxos/assistant';
-import { create, EchoObject, ObjectId } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -28,7 +29,12 @@ const CalendarEventSchema = S.Struct({
   startTime: S.String,
   endTime: S.String,
   description: S.String,
-}).pipe(EchoObject({ typename: 'example.com/type/CalendarEvent', version: '0.1.0' }));
+}).pipe(
+  Type.def({
+    typename: 'example.com/type/CalendarEvent',
+    version: '0.1.0',
+  }),
+);
 
 type CalendarEvent = S.Schema.Type<typeof CalendarEventSchema>;
 

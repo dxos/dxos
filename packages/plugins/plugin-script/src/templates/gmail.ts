@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { create, defineFunction, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
+import { create, defineFunction, Filter, ObjectId, S } from 'dxos:functions';
 import {
   HttpClient,
   HttpClientRequest,
@@ -12,6 +12,8 @@ import {
 } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
 // @ts-ignore
 import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
+
+import { Type } from '@dxos/echo';
 
 // TODO(ZaymonFC): Calculate this dynamically and expose a parameter.
 const DEFAULT_AFTER = '2025-01-01';
@@ -153,10 +155,9 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
   return undefined;
 };
 
-// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
-
 //
 // Schemas
+// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
 //
 
 const ActorRoles = ['user', 'assistant'] as const;
@@ -240,5 +241,10 @@ const MessageType = S.Struct({
       }),
     ),
   ),
-}).pipe(EchoObject({ typename: 'dxos.org/type/Message', version: '0.1.0' }));
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/Message',
+    version: '0.1.0',
+  }),
+);
 type MessageType = S.Schema.Type<typeof MessageType>;

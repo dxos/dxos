@@ -10,7 +10,7 @@ import { SpaceId } from '@dxos/keys';
 // TODO(dmaretskyi): Make brand.
 // export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
 // export const ObjectIdSchema = S.ULID.pipe(S.brand(ObjectIdBrand));
-export const ObjectIdSchema = S.ULID;
+const ObjectIdSchema = S.ULID;
 
 export type ObjectId = typeof ObjectIdSchema.Type;
 
