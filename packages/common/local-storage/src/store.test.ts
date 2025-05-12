@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { live } from '@dxos/live-object';
-import { Schema } from 'effect';
+
 import { RootSettingsStore, SettingsStore } from './store';
 import { createLocalStorageMock } from './testing';
 

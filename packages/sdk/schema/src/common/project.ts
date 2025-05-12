@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { S, AST, Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
+import { AST, Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
@@ -16,7 +16,7 @@ export const ProjectSchema = Schema.Struct({
   id: Type.ObjectId,
   name: Schema.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
   image: Schema.optional(Format.URL),
-  description: Schema.optional(S.String),
+  description: Schema.optional(Schema.String),
 }).annotations({
   [AST.TitleAnnotationId]: 'Project',
   [LabelAnnotationId]: 'name',

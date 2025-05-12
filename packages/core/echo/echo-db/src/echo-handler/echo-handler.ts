@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
 import type * as A from '@dxos/automerge/automerge';
@@ -20,7 +21,6 @@ import {
   Ref,
   RelationSourceId,
   RelationTargetId,
-  S,
   SchemaMetaSymbol,
   SchemaValidator,
   StoredSchema,
@@ -278,7 +278,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
-    if (database && S.is(StoredSchema)(object)) {
+    if (database && Schema.is(StoredSchema)(object)) {
       return database.schemaRegistry._registerSchema(object);
     }
 
@@ -349,7 +349,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return unwrappedValue;
     }
 
-    const _ = S.asserts(propertySchema)(unwrappedValue);
+    const _ = Schema.asserts(propertySchema)(unwrappedValue);
     return unwrappedValue;
   }
 
@@ -374,7 +374,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
   }
 
-  getSchema(target: ProxyTarget): S.Schema.AnyNoContext | undefined {
+  getSchema(target: ProxyTarget): Schema.Schema.AnyNoContext | undefined {
     if (target[symbolNamespace] === META_NAMESPACE) {
       // TODO(dmaretskyi): Breaks tests.
       // if (target[symbolPath].length !== 0) {

@@ -26,12 +26,12 @@ import {
   IntentResolver,
   ReactRoot,
   ReactSurface,
-  Schema,
+  SchemaDefs,
+  SchemaTools,
   SpaceCapabilities,
   SpaceSettings,
   SpacesReady,
   SpaceState,
-  Tools,
 } from './capabilities';
 import { SpaceEvents } from './events';
 import { meta } from './meta';
@@ -117,7 +117,7 @@ export const SpacePlugin = ({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.ClientReady,
       activatesBefore: [ClientEvents.SetupSchema],
-      activate: Schema,
+      activate: SchemaDefs,
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,
@@ -168,7 +168,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/tools`,
       activatesOn: Events.SetupArtifactDefinition,
-      activate: Tools,
+      activate: SchemaTools,
     }),
   ]);
 };

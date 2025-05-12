@@ -3,7 +3,6 @@
 //
 
 import { untracked } from '@preact/signals-core';
-
 import { Schema } from 'effect';
 
 import { live, type Live } from '@dxos/live-object';

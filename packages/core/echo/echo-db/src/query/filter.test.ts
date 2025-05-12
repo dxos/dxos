@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { type Reference } from '@dxos/echo-protocol';
-import { ObjectId, S, TypedObject } from '@dxos/echo-schema';
+import { ObjectId, TypedObject } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -88,7 +89,7 @@ describe('Filter', () => {
 
   test('dynamic schema', async () => {
     class GeneratedSchema extends TypedObject({ typename: 'example.com/dynamic', version: '0.1.0' })({
-      title: S.String,
+      title: Schema.String,
     }) {}
     const { db } = await builder.createDatabase();
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);

@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect';
+
 import { Reference } from '@dxos/echo-protocol';
 import {
   getSchema,
@@ -10,7 +12,6 @@ import {
   EchoSchema,
   EntityKind,
   type ObjectMeta,
-  type S,
   SchemaValidator,
   Ref,
   RelationSourceId,
@@ -169,14 +170,17 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   return createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
 };
 
-const validateSchema = (schema: S.Schema.AnyNoContext) => {
+const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
   requireTypeReference(schema);
   const entityKind = getEntityKind(schema);
   invariant(entityKind === 'object' || entityKind === 'relation');
   SchemaValidator.validateSchema(schema);
 };
 
-const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.Schema.AnyNoContext | undefined) => {
+const setSchemaPropertiesOnObjectCore = (
+  internals: ObjectInternals,
+  schema: Schema.Schema.AnyNoContext | undefined,
+) => {
   if (schema != null) {
     internals.core.setType(requireTypeReference(schema));
 
@@ -189,7 +193,7 @@ const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.S
 const setRelationSourceAndTarget = (
   target: ProxyTarget,
   core: ObjectCore,
-  schema: S.Schema.AnyNoContext | undefined,
+  schema: Schema.Schema.AnyNoContext | undefined,
 ) => {
   const kind = schema && getEntityKind(schema);
   if (kind === EntityKind.Relation) {
