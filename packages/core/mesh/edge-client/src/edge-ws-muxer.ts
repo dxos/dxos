@@ -40,7 +40,14 @@ export class WebSocketMuxer {
 
   private _sendTimeout: any | undefined;
 
-  constructor(private readonly _ws: WebSocketCompat) {}
+  private readonly _maxChunkLength: number;
+
+  constructor(
+    private readonly _ws: WebSocketCompat,
+    config?: { maxChunkLength: number },
+  ) {
+    this._maxChunkLength = config?.maxChunkLength ?? MAX_CHUNK_LENGTH;
+  }
 
   /**
    * Resolves when all the message chunks get enqueued for sending.
@@ -61,7 +68,7 @@ export class WebSocketMuxer {
       return;
     }
 
-    if (channelId == null || binary.length < MAX_CHUNK_LENGTH) {
+    if (channelId == null || binary.length < this._maxChunkLength) {
       const flags = Buffer.from([0]);
       this._ws.send(Buffer.concat([flags, binary]));
       return;
@@ -69,14 +76,14 @@ export class WebSocketMuxer {
 
     const terminatorSentTrigger = new Trigger();
     const messageChunks: MessageChunk[] = [];
-    for (let i = 0; i < binary.length; i += MAX_CHUNK_LENGTH) {
-      const chunk = binary.slice(i, i + MAX_CHUNK_LENGTH);
-      const isLastChunk = i + MAX_CHUNK_LENGTH < binary.length;
+    for (let i = 0; i < binary.length; i += this._maxChunkLength) {
+      const chunk = binary.slice(i, i + this._maxChunkLength);
+      const isLastChunk = i + this._maxChunkLength >= binary.length;
       if (isLastChunk) {
         const flags = Buffer.from([FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED, channelId]);
         messageChunks.push({ payload: Buffer.concat([flags, chunk]), trigger: terminatorSentTrigger });
       } else {
-        const flags = Buffer.from([FLAG_SEGMENT_SEQ]);
+        const flags = Buffer.from([FLAG_SEGMENT_SEQ, channelId]);
         messageChunks.push({ payload: Buffer.concat([flags, chunk]) });
       }
     }
@@ -200,3 +207,11 @@ type MessageChunk = {
    */
   trigger?: Trigger;
 };
+
+/**
+ * To avoid using isomorphic-ws on edge.
+ */
+enum WebSocket {
+  CLOSING = 2,
+  CLOSED = 3,
+}
