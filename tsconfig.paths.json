@@ -19,6 +19,9 @@
       "@dxos/functions/bundler": [
         "packages/core/functions/src/bundler/index.ts"
       ],
+      "@dxos/functions/edge": [
+        "packages/core/functions/src/edge/index.ts"
+      ],
       "@dxos/functions": [
         "packages/core/functions/src/index.ts"
       ],
