@@ -34,11 +34,7 @@ export const filterMatch = (
   return filter.not && !core.isDeleted() ? !result : result;
 };
 
-const filterMatchInner = (
-  filter: Filter,
-  core: ObjectCore,
-  echoObject?: AnyLiveObject<any> | undefined,
-): boolean => {
+const filterMatchInner = (filter: Filter, core: ObjectCore, echoObject?: AnyLiveObject<any> | undefined): boolean => {
   const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
   if (core.isDeleted()) {
     if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {

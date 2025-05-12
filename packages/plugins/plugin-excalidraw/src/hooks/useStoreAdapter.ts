@@ -12,10 +12,7 @@ import { type DiagramType } from '@dxos/plugin-sketch/types';
 import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adapter';
 import { EXCALIDRAW_SCHEMA } from '../types';
 
-export const useStoreAdapter = (
-  object?: AnyLiveObject<DiagramType>,
-  options: ExcalidrawStoreAdapterProps = {},
-) => {
+export const useStoreAdapter = (object?: AnyLiveObject<DiagramType>, options: ExcalidrawStoreAdapterProps = {}) => {
   const [adapter] = useState(new ExcalidrawStoreAdapter(options));
   const [_, forceUpdate] = useState({});
   useEffect(() => {

@@ -29,10 +29,7 @@ export const getReferenceWithSpaceKey = (obj: AnyLiveObject<any>): Reference | u
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Impl query by meta.
-export const findObjectWithForeignKey = <T extends BaseObject>(
-  objects: AnyLiveObject<T>[],
-  foreignKey: ForeignKey,
-) => {
+export const findObjectWithForeignKey = <T extends BaseObject>(objects: AnyLiveObject<T>[], foreignKey: ForeignKey) => {
   return objects.find((result) => {
     return getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
   });
