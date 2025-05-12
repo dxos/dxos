@@ -41,7 +41,7 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
       // prettier-ignore
       ...l0Items,
       ...pinnedItems,
-      userAccountItem,
+      ...(userAccountItem ? [userAccountItem] : []),
     ],
     [l0Items, pinnedItems, userAccountItem],
   );

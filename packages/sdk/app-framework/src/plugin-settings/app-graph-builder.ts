@@ -81,11 +81,12 @@ export default (context: PluginsContext) =>
 
           {
             id: `${SETTINGS_KEY}:custom-plugins`,
-            type: 'collection',
+            type: 'category',
             properties: {
               label: ['custom plugins label', { ns: SETTINGS_PLUGIN }],
               icon: 'ph--squares-four--regular',
               role: 'branch',
+              disposition: 'collection',
             },
           },
         ];

@@ -9,7 +9,7 @@ import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-a
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
-import { isActionLike, type NodeArg } from '@dxos/app-graph';
+import { isAction, isActionLike, type NodeArg } from '@dxos/app-graph';
 import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type TreeData } from '@dxos/react-ui-list';
@@ -72,8 +72,15 @@ export const Default: Story = {
       groupedActions: {},
     }),
     // TODO(burdon): Why cast?
-    getItems: (testItem?: any) => {
-      return testItem?.nodes ?? tree.nodes ?? [];
+    getItems: (testItem?: any, disposition?: string) => {
+      return (testItem?.nodes ?? tree.nodes ?? []).filter((node: NodeArg<any>) => {
+        if (!disposition) {
+          const action = isAction(node);
+          return !action;
+        } else {
+          return node.properties?.disposition === disposition;
+        }
+      });
     },
     getProps: (testItem: NodeArg<any>) => ({
       id: testItem.id,
