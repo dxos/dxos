@@ -8,10 +8,10 @@ import {
   type BaseEchoObject,
   type BaseSchema,
   type EchoSchema,
-  type Expando as Expando$,
+  Expando as Expando$,
   type ImmutableSchema,
   type JsonSchemaType,
-  ObjectId,
+  ObjectId as ObjectId$,
   SpaceIdSchema,
   type TypeMeta,
   EchoObject,
@@ -25,7 +25,7 @@ import {
   isInstanceOf,
   toJsonSchema,
 } from '@dxos/echo-schema';
-import { type SpaceId } from '@dxos/keys';
+import { type SpaceId as SpaceId$ } from '@dxos/keys';
 import { live as create$ } from '@dxos/live-object';
 
 // NOTES:
@@ -38,14 +38,15 @@ import { live as create$ } from '@dxos/live-object';
 
 export type {
   // prettier-ignore
-  BaseEchoObject as Any,
+  BaseEchoObject as AnyObject,
   JsonSchemaType as JsonSchema,
-  SpaceId,
+  SpaceId$ as SpaceId,
   TypeMeta as Meta,
 };
 export {
+  Expando$ as Expando,
   EntityKind as Kind,
-  ObjectId,
+  ObjectId$ as ObjectId,
   SpaceIdSchema, // TODO(burdon): Rename SpaceId
   getTypeAnnotation as getMeta,
   getSchema,
@@ -57,24 +58,49 @@ export {
 };
 
 /**
- * Type API.
+ * Type System API.
  *
  * @category api namespace
  * @since 0.9.0
  */
 export namespace Type {
   //
+  // Keys
+  //
+
+  export type SpaceId = SpaceId$;
+  export const SpaceId = SpaceIdSchema;
+
+  export type ObjectId = ObjectId$;
+  export const ObjectId = ObjectId$;
+
+  //
+  // Objects
+  //
+
+  export type Any = BaseEchoObject;
+
+  //
   // Schema
   //
+
+  export type JsonSchema = JsonSchemaType;
 
   /**
    * A schema that can be extended with arbitrary properties.
    */
   export type Expando = Expando$;
 
+  // TODO(burdon): Review/remove.
   export type Abstract<T = any> = BaseSchema<T>;
   export type ImmutableType<T> = ImmutableSchema<T>;
   export type MutableType<T> = EchoSchema<T>;
+
+  //
+  // Utils
+  //
+
+  export const instanceOf = isInstanceOf;
 }
 
 //

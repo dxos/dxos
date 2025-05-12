@@ -2,16 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Expando, LabelAnnotationId, ObjectId, Ref, S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { Type } from '@dxos/echo';
 // import { ThreadType } from '@dxos/plugin-space/types';
+import { LabelAnnotationId } from '@dxos/echo-schema';
 import { ViewType } from '@dxos/schema';
 
-export const TableSchema = S.Struct({
-  id: ObjectId,
-  name: S.optional(S.String),
-  view: S.optional(Ref(ViewType)),
+export const TableSchema = Schema.Struct({
+  id: Type.ObjectId,
+  name: Schema.optional(Schema.String),
+  view: Schema.optional(Type.Ref(ViewType)),
   // TODO(burdon): Document why threads is included here?
-  threads: S.optional(S.Array(Ref(Expando /* ThreadType */))),
+  threads: Schema.optional(Schema.Array(Type.Ref(Type.Expando /* ThreadType */))),
 }).annotations({
   // TODO(burdon): Move annotation to property.
   [LabelAnnotationId]: 'name',
@@ -23,4 +26,4 @@ export const TableType = TableSchema.pipe(
     version: '0.1.0',
   }),
 );
-export interface TableType extends S.Schema.Type<typeof TableType> {}
+export interface TableType extends Schema.Schema.Type<typeof TableType> {}

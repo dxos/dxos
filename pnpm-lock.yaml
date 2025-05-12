@@ -8056,6 +8056,9 @@ importers:
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -9549,6 +9552,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -12964,6 +12970,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -13051,6 +13060,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       lodash.orderby:
         specifier: ^4.6.0
         version: 4.6.0

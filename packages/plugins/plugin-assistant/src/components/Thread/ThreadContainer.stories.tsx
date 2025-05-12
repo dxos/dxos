@@ -44,7 +44,7 @@ import translations from '../../translations';
 const endpoints = localServiceEndpoints;
 
 type RenderProps = {
-  items?: Type.Any[];
+  items?: Type.AnyObject[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 

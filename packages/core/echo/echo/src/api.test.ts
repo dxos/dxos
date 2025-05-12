@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 import { raise } from '@dxos/debug';
 import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
 
-// Deliberately testing top-level import as if external consumer for @dxos/echo.
 import { Type } from '.';
 
 namespace Testing {

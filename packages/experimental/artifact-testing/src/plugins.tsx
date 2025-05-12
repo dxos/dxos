@@ -9,9 +9,9 @@ import { Capabilities, contributes, createSurface, type AnyCapability } from '@d
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { isImage } from '@dxos/conductor';
+import { Format, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { Format, Type } from '@dxos/schema';
 
 export const MapSchema = S.Struct({
   coordinates: Format.GeoPoint,
