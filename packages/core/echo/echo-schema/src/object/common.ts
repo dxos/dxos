@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import { Schema } from 'effect';
 
 import { getTypename } from './typename';
 import { schemaVariance } from '../ast';

@@ -160,7 +160,7 @@ const withEchoRefinements = (
         },
       });
     } else {
-      const jsonSchema = toJsonSchema(S.make(suspendedAst));
+      const jsonSchema = toJsonSchema(Schema.make(suspendedAst));
       recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
         [AST.JSONSchemaAnnotationId]: jsonSchema,
       });
@@ -243,7 +243,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
         break;
       }
       case 'integer': {
-        result = Schema.Number.pipe(S.int());
+        result = Schema.Number.pipe(Schema.int());
         break;
       }
       case 'boolean': {
@@ -271,7 +271,9 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     const refSegments = root.$ref!.split('/');
     const jsonSchema = defs[refSegments[refSegments.length - 1]];
     invariant(jsonSchema, `missing definition for ${root.$ref}`);
-    result = toEffectSchema(jsonSchema, defs).pipe(S.annotations({ identifier: refSegments[refSegments.length - 1] }));
+    result = toEffectSchema(jsonSchema, defs).pipe(
+      Schema.annotations({ identifier: refSegments[refSegments.length - 1] }),
+    );
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
@@ -328,7 +330,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   }
 
   if (immutableIdField) {
-    schema = Schema.extend(S.mutable(schema), Schema.Struct({ id: immutableIdField }));
+    schema = Schema.extend(Schema.mutable(schema), Schema.Struct({ id: immutableIdField }));
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
@@ -450,7 +452,7 @@ const decodeTypeAnnotation = (schema: JsonSchemaType): TypeAnnotation | undefine
 };
 
 const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations => {
-  const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
+  const annotations: Types.Mutable<Schema.Annotations.Schema<any>> = {};
 
   const echoAnnotations: JsonSchemaEchoAnnotations = getNormalizedEchoAnnotations(schema) ?? {};
   if (echoAnnotations) {

@@ -35,4 +35,4 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
   }
 };
 
-export const SpaceIdSchema: Schema.Schema<SpaceId, string> = Schema.String.pipe(S.filter(SpaceId.isValid));
+export const SpaceIdSchema: Schema.Schema<SpaceId, string> = Schema.String.pipe(Schema.filter(SpaceId.isValid));

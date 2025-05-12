@@ -21,7 +21,7 @@ describe('create (static version)', () => {
         Schema.optional,
         Schema.withConstructorDefault(() => 'Anonymous'),
       ),
-      email: Schema.String.pipe(S.optional),
+      email: Schema.String.pipe(Schema.optional),
     });
 
     const obj = Contact.make({});

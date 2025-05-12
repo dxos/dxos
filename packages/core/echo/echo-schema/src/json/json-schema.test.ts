@@ -30,24 +30,24 @@ const EXAMPLE_NAMESPACE = '@example';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
-    class Schema extends TypedObject({
+    class Test extends TypedObject({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({ name: Schema.String }) {}
-    const jsonSchema = toJsonSchema(Schema);
+    const jsonSchema = toJsonSchema(Test);
     expect((jsonSchema as any).$id).toEqual('dxn:type:example.com/type/Test');
     expect((jsonSchema as any).version).toEqual('0.1.0');
   });
 
   test('property meta annotation', () => {
     const meta = { maxLength: 0 };
-    class Schema extends TypedObject({
+    class Test extends TypedObject({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({
       name: Schema.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
     }) {}
-    const jsonSchema = toJsonSchema(Schema);
+    const jsonSchema = toJsonSchema(Test);
     expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)!.meta![EXAMPLE_NAMESPACE]).to.deep.eq(meta);
   });
 
@@ -55,10 +55,10 @@ describe('effect-to-json', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
       name: Schema.String,
     }) {}
-    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       name: Ref(Nested),
     }) {}
-    const jsonSchema = toJsonSchema(Schema);
+    const jsonSchema = toJsonSchema(Test);
     // log.info('schema', { jsonSchema });
     const nested = jsonSchema.properties!.name;
     expectReferenceAnnotation(nested);
@@ -71,10 +71,10 @@ describe('effect-to-json', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
       name: Schema.String,
     }) {}
-    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
     }) {}
-    const jsonSchema = toJsonSchema(Schema);
+    const jsonSchema = toJsonSchema(Test);
     const effectSchema = toEffectSchema(jsonSchema);
 
     const annotation = findAnnotation<string>(effectSchema.ast, FieldLookupAnnotationId);
@@ -85,11 +85,11 @@ describe('effect-to-json', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
       name: Schema.String,
     }) {}
-    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       name: Schema.Array(Ref(Nested)),
     }) {}
 
-    const jsonSchema = toJsonSchema(Schema);
+    const jsonSchema = toJsonSchema(Test);
     expectReferenceAnnotation((jsonSchema.properties!.name as any).items);
   });
 
@@ -97,10 +97,10 @@ describe('effect-to-json', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
       name: Schema.String,
     }) {}
-    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       name: Schema.optional(Ref(Nested)),
     }) {}
-    const jsonSchema = toJsonSchema(Schema);
+    const jsonSchema = toJsonSchema(Test);
     expectReferenceAnnotation(jsonSchema.properties!.name);
   });
 
@@ -112,11 +112,11 @@ describe('effect-to-json', () => {
   });
 
   test('annotations', () => {
-    class Schema extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
+    class TestSchema extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
       name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
       email: Schema.String.annotations({ description: 'Email address', [FormatAnnotationId]: 'email' }),
     }) {}
-    const jsonSchema = toJsonSchema(Schema);
+    const jsonSchema = toJsonSchema(TestSchema);
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Contact',
@@ -320,7 +320,7 @@ describe('json-to-effect', () => {
         field: Schema.String,
       }) {}
 
-      class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })(
+      class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })(
         {
           string: Schema.String,
           number: Schema.Number.pipe(PropertyMeta(EXAMPLE_NAMESPACE, { is_date: true })),
@@ -337,16 +337,16 @@ describe('json-to-effect', () => {
         partial ? { partial } : {},
       ) {}
 
-      const jsonSchema = toJsonSchema(Schema);
+      const jsonSchema = toJsonSchema(Test);
       // log.info('schema', { jsonSchema });
 
       const schema = toEffectSchema(jsonSchema);
 
-      expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
-      expect(() => expect(prepareAstForCompare(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
-      expect(() => expect(schema.ast).to.deep.eq(prepareAstForCompare(Schema.ast))).to.throw();
+      expect(() => expect(schema.ast).to.deep.eq(Test.ast)).to.throw();
+      expect(() => expect(prepareAstForCompare(Test.ast)).to.deep.eq(Test.ast)).to.throw();
+      expect(() => expect(schema.ast).to.deep.eq(prepareAstForCompare(Test.ast))).to.throw();
       // log.info('', { original: prepareAstForCompare(Schema.ast), deserialized: prepareAstForCompare(schema.ast) });
-      expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(Schema.ast));
+      expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(Test.ast));
 
       // TODO(dmaretskyi): Fix.
       // expect(

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
+
 import { failedInvariant } from '@dxos/invariant';
 
 import { ObjectId } from './ids';
@@ -42,10 +44,10 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  */
 // TODO(burdon): Handle defaults (see Schema.make).
 // TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
-export const create = <Schema extends Schema.Schema.AnyNoContext>(
-  schema: Schema,
-  data: CreateData<S.Schema.Type<Schema>>,
-): CreateData<S.Schema.Type<Schema>> & { id: string } => {
+export const create = <S extends Schema.Schema.AnyNoContext>(
+  schema: S,
+  data: CreateData<Schema.Schema.Type<S>>,
+): CreateData<Schema.Schema.Type<S>> & { id: string } => {
   const annotation = getTypeAnnotation(schema);
   if (!annotation) {
     throw new Error('Schema is not an object schema');
