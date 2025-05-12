@@ -25,10 +25,11 @@ import {
   isInstanceOf,
   toJsonSchema as toJsonSchema$,
 } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { type SpaceId as SpaceId$ } from '@dxos/keys';
 import { live as create$ } from '@dxos/live-object';
 
-// TODO(burdon): Type vs. Object.
+// TODO(burdon): Type vs. Relation vs. Object.
 
 /**
  * Type System API.

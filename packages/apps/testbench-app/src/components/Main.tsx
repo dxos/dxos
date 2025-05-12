@@ -3,6 +3,7 @@
 //
 
 import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
+import { type Schema } from 'effect';
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
@@ -52,7 +53,7 @@ export const Main = () => {
       [Item, Document].reduce((map, type) => {
         map.set(Type.getTypename(type), type);
         return map;
-      }, new Map<string, S.Schema<any>>()),
+      }, new Map<string, Schema.Schema<any>>()),
     [],
   );
 

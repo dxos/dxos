@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Type } from '@dxos/echo';
@@ -9,7 +10,7 @@ import { type Live } from '@dxos/live-object';
 import { DynamicTable } from '@dxos/react-ui-table';
 
 export type ItemTableProps<T> = {
-  schema: S.Schema<T>;
+  schema: Schema.Schema<T>;
   objects?: T[];
 };
 
