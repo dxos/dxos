@@ -5,13 +5,13 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import {
-  Filter,
-  isSpace,
   type Echo,
+  Filter,
   type FilterSource,
   type Query,
   type QueryOptions,
   type Space,
+  isSpace,
 } from '@dxos/client/echo';
 import type { BaseObject } from '@dxos/echo-schema';
 
