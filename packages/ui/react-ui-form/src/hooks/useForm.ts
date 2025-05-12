@@ -45,7 +45,7 @@ export interface FormOptions<T extends BaseObject> {
   /**
    * Effect schema (Type literal).
    */
-  schema: S.Schema<T>;
+  schema: S.Schema<T, any>;
 
   /**
    * Initial values (which may not pass validation).
