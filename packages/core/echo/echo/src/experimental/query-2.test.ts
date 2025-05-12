@@ -49,3 +49,6 @@ const allTasksForEmployeesOfCyberdyne = Query.type(Org, { name: 'Cyberdyne' })
   .incomingRelations(WorksFor)
   .sources()
   .referencedBy(Task, 'assignee');
+
+// Query<Person | Org>
+const allPeopleOrOrgs = Query.all(Query.type(Person), Query.type(Org));
