@@ -25,12 +25,6 @@
       "@dxos/functions": [
         "packages/core/functions/src/index.ts"
       ],
-      "@dxos/functions/testing": [
-        "packages/core/functions/src/testing/index.ts"
-      ],
-      "@dxos/functions/types": [
-        "packages/core/functions/src/types/index.ts"
-      ],
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
       ],

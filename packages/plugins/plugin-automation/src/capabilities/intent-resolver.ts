@@ -10,6 +10,7 @@ import {
   createIntent,
   LayoutAction,
 } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -36,18 +37,14 @@ export default (context: PluginsContext) =>
               objects: [fn],
             } = await space.db.query(Filter.schema(FunctionType, { source: script })).run();
             if (fn) {
-              trigger.function = `dxn:worker:${fn.name}`;
+              trigger.function = Type.ref(fn);
             }
           }
         }
 
-        if (payload) {
-          trigger.meta = payload;
-        }
-
         switch (template.type) {
           case 'timer': {
-            trigger.spec = { type: TriggerKind.Timer, cron: template.cron };
+            trigger.spec = { type: TriggerKind.Timer, cron: template.cron, payload };
             break;
           }
           case 'queue': {
