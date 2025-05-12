@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { String, pipe } from 'effect';
+import { pipe } from 'effect';
+import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
@@ -42,7 +43,7 @@ export const FormField = ({
   const inputProps = useInputProps(path);
   const { ast, name, type, format, title, description, options, examples, array } = property;
 
-  const label = useMemo(() => title ?? pipe(name, String.capitalize), [title, name]);
+  const label = useMemo(() => title ?? pipe(name, capitalize), [title, name]);
   const placeholder = useMemo(
     () => (examples?.length ? `Example: "${examples[0]}"` : description),
     [examples, description],

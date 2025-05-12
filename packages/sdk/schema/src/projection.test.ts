@@ -539,7 +539,7 @@ describe('ViewProjection', () => {
     // expect(() => Schema.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
     // expect(() => Schema.validateSync(effectSchema)({ tags: 'invalid-status' })).to.throw();
 
-    const properties = getPropertySignatures(effectSchema.ast);
+    const properties = SchemaAST.getPropertySignatures(effectSchema.ast);
     const statusProperty = properties.find((p) => p.name === 'tags');
     invariant(statusProperty);
     const statusPropertyMeta = getPropertyMetaAnnotation(statusProperty, 'multiSelect');
