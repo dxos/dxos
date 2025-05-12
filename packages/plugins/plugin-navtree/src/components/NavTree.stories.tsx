@@ -9,8 +9,6 @@ import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-a
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
-import { withPluginManager } from '@dxos/app-framework/testing';
 import { isActionLike, type NodeArg } from '@dxos/app-graph';
 import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
@@ -54,12 +52,7 @@ const meta: Meta<typeof StorybookNavTree> = {
   title: 'plugins/plugin-navtree/NavTree',
   component: StorybookNavTree,
   render: DefaultStory,
-  decorators: [
-    // TODO(burdon): Remove plugin dependency?
-    withPluginManager({ plugins: [IntentPlugin()] }),
-    withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
-  ],
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
 };
 
 export default meta;

@@ -13,7 +13,6 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import React, { type MouseEvent, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import {
@@ -24,7 +23,6 @@ import {
   Tooltip,
   toLocalizedString,
   useMediaQuery,
-  useSidebars,
   useTranslation,
 } from '@dxos/react-ui';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
@@ -58,8 +56,6 @@ type L0ItemProps = {
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   const { tab, onTabChange, onSelect, isCurrent } = useNavTreeContext();
-  const { dispatchPromise: dispatch } = useIntentDispatcher(); // TODO(burdon): Remove dependency from low-level components?
-  const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
 
   return useCallback(
@@ -75,29 +71,13 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
         }
 
         case 'tab':
-          // TODO(thure): This dispatch should be in `onTabChange`, but that callback wasn’t reacting to changes to its dependencies.
-          void dispatch(
-            createIntent(LayoutAction.UpdateSidebar, {
-              part: 'sidebar',
-              options: {
-                state:
-                  item.id === tab
-                    ? navigationSidebarState === 'expanded'
-                      ? isLg
-                        ? 'collapsed'
-                        : 'closed'
-                      : 'expanded'
-                    : 'expanded',
-              },
-            }),
-          );
           return onTabChange?.(item);
 
         case 'link':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
       }
     },
-    [item, type, onSelect, isCurrent, parent, tab, navigationSidebarState, isLg, dispatch],
+    [item, type, onSelect, isCurrent, parent, tab, isLg],
   );
 };
 

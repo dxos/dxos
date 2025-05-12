@@ -19,7 +19,7 @@ import {
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
-import { useMediaQuery } from '@dxos/react-ui';
+import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -28,6 +28,7 @@ import { NAV_TREE_ITEM, NavTree } from './NavTree';
 import { NavTreeContext } from './NavTreeContext';
 import { type NavTreeContextValue } from './types';
 import { NavTreeCapabilities } from '../capabilities';
+import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import {
   expandActions,
@@ -60,6 +61,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const { graph } = useAppGraph();
   const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
   const layout = useLayout();
+  const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
@@ -135,7 +137,24 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const handleTabChange = useCallback(
     async (node: NavTreeItemGraphNode) => {
+      await dispatch(
+        createIntent(LayoutAction.UpdateSidebar, {
+          part: 'sidebar',
+          options: {
+            state:
+              node.id === tab
+                ? navigationSidebarState === 'expanded'
+                  ? isLg
+                    ? 'collapsed'
+                    : 'closed'
+                  : 'expanded'
+                : 'expanded',
+          },
+        }),
+      );
+
       await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: node.id }));
+
       // Open the first item if the workspace is empty.
       if (layout.active.length === 0) {
         const [item] = getItems(node).filter((node) => !isActionLike(node));
