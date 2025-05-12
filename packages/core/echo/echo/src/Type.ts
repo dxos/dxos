@@ -30,7 +30,7 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId as SpaceId$ } from '@dxos/keys';
-import { live as create$ } from '@dxos/live-object';
+import { live as live$ } from '@dxos/live-object';
 
 // TODO(burdon): Type vs. Relation vs. Object.
 
@@ -77,7 +77,7 @@ export namespace Type {
   export type MutableType<T> = EchoSchema<T>;
   export type StoredType = StoredSchema;
 
-  export const create = create$;
+  export const create = live$;
 
   /**
    * Type definition combinator.
