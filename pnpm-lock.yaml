@@ -474,9 +474,9 @@ importers:
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -902,9 +902,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -975,15 +975,15 @@ importers:
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -1102,9 +1102,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

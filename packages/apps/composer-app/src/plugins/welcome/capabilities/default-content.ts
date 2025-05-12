@@ -4,7 +4,7 @@
 
 import { createIntent, LayoutAction } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
-import { ObjectId } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { SPACES } from '@dxos/plugin-space';
 
@@ -30,7 +30,7 @@ export default async (context: PluginsContext) => {
       }),
     ),
     assistantChatQueue: Ref.fromDXN(
-      new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, defaultSpace.id, ObjectId.random()]),
+      new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, defaultSpace.id, Type.ObjectId.random()]),
     ),
     threads: [],
   });

@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type ReactiveEchoObject, createDocAccessor } from '@dxos/client/echo';
-import { getSchema } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { getMeta } from '@dxos/live-object';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {
@@ -54,7 +54,7 @@ export type ItemProps<T> = {
 // TODO(burdon): Use ui list with key nav/selection.
 // TODO(burdon): Toggle options to show deleted.
 export const Item = ({ object, onDelete }: ItemProps<ReactiveEchoObject<any>>) => {
-  const schema = getSchema(object);
+  const schema = Type.getSchema(object);
   if (!schema) {
     return <DebugItem object={object} onDelete={onDelete} />;
   }

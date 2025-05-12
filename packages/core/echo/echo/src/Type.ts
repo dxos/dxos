@@ -41,11 +41,11 @@ export namespace Type {
   // Keys
   //
 
-  export type SpaceId = SpaceId$;
   export const SpaceId = SpaceIdSchema;
+  export type SpaceId = SpaceId$;
 
-  export type ObjectId = ObjectId$;
   export const ObjectId = ObjectId$;
+  export type ObjectId = ObjectId$;
 
   //
   // Objects
@@ -63,8 +63,8 @@ export namespace Type {
   /**
    * A schema that can be extended with arbitrary properties.
    */
-  export type Expando = Expando$;
   export const Expando = Expando$;
+  export type Expando = Expando$;
 
   // TODO(burdon): Review/remove.
   export type Abstract<T = any> = BaseSchema<T>;
@@ -99,14 +99,20 @@ export namespace Type {
   export const ref = Ref$.make;
 
   //
-  // Utils
+  // Object utils
   //
 
-  export const getDXN = getSchemaDXN;
   export const getMeta = getTypeAnnotation;
   export const getSchema = getSchema$;
+  export const instanceOf = isInstanceOf;
+
+  //
+  // Type utils
+  //
+
+  // TODO(burdon): Reconcile getDXN and getTypename.
+  export const getDXN = getSchemaDXN;
   export const getTypename = getSchemaTypename;
   export const getVersion = getSchemaVersion;
-  export const instanceOf = isInstanceOf;
   export const toJsonSchema = toJsonSchema$;
 }

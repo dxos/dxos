@@ -2,16 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 
 export type TaskProps = {
   title: string;
   completed: boolean;
 };
 
-export class TaskType extends TypedObject({ typename: 'example.com/type/Task', version: '0.1.0' })({
-  title: S.String,
-  completed: S.Boolean,
-}) {}
+const Task = Schema.Struct({
+  title: Schema.String,
+  completed: Schema.Boolean,
+}).pipe(
+  Type.def({
+    typename: 'example.com/type/Task',
+    version: '0.1.0',
+  }),
+);
+
+export type Task = Schema.Schema.Type<typeof Task>;
