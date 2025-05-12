@@ -59,13 +59,25 @@ export {
  * @since 0.9.0
  */
 export declare namespace Type {
-  export type Any = BaseEchoObject;
+  //
+  // Keys
+  //
 
   export const ObjectId = ObjectId$;
   export type ObjectId = ObjectId$;
 
   export const SpaceId = SpaceIdSchema;
   export type SpaceId = SpaceId$;
+
+  //
+  // Objects
+  //
+
+  export type Any = BaseEchoObject;
+
+  //
+  // Schema
+  //
 
   /**
    * A schema that can be extended with arbitrary properties.

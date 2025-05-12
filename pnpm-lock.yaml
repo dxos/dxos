@@ -7018,6 +7018,9 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../core/echo/automerge
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
