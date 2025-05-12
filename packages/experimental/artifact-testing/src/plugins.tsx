@@ -9,24 +9,26 @@ import { Capabilities, contributes, createSurface, type AnyCapability } from '@d
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { isImage } from '@dxos/conductor';
-import { EchoObject, GeoPoint, ObjectId, type HasId, type HasTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Format, Type } from '@dxos/schema';
 
 export const MapSchema = S.Struct({
-  coordinates: GeoPoint,
-}).pipe(EchoObject({ typename: 'example.com/type/Map', version: '0.1.0' }));
+  coordinates: Format.GeoPoint,
+}).pipe(
+  Type.def({
+    typename: 'example.com/type/Map',
+    version: '0.1.0',
+  }),
+);
 
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
 // TODO(burdon): Move ot ECHO def.
-export type IsObject = HasTypename & HasId;
-
-// TODO(burdon): Move ot ECHO def.
 export type ArtifactsContext = {
-  items: IsObject[];
-  getArtifacts: () => IsObject[];
-  addArtifact: (artifact: IsObject) => void;
+  items: Type.AnyObject[];
+  getArtifacts: () => Type.AnyObject[];
+  addArtifact: (artifact: Type.AnyObject) => void;
 };
 
 declare global {
@@ -39,7 +41,7 @@ export const genericTools = [
   defineTool('testing', {
     name: 'focus',
     description: 'Focus on the given artifact. Use this tool to bring the artifact to the front of the canvas.',
-    schema: S.Struct({ id: ObjectId }),
+    schema: S.Struct({ id: Type.ObjectId }),
     execute: async ({ id }, { extensions }) => {
       invariant(extensions?.artifacts, 'No artifacts context');
       const artifactIndex = extensions.artifacts.items.findIndex((artifact) => artifact.id === id);

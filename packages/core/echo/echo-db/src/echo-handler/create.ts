@@ -6,13 +6,13 @@ import { Reference } from '@dxos/echo-protocol';
 import { getSchema } from '@dxos/echo-schema';
 import {
   type BaseObject,
-  type HasId,
   EchoSchema,
+  EntityKind,
+  type HasId,
   type ObjectMeta,
   type S,
   SchemaValidator,
   Ref,
-  EntityKind,
   RelationSourceId,
   RelationTargetId,
   requireTypeReference,

@@ -21,6 +21,7 @@ import {
   getSchemaTypename,
   getSchemaVersion,
   isInstanceOf,
+  type BaseEchoObject,
 } from '@dxos/echo-schema';
 import { live as create$ } from '@dxos/live-object';
 
@@ -51,6 +52,8 @@ export {
  * @since 0.9.0
  */
 export declare namespace Type {
+  export type Any = BaseEchoObject;
+
   /**
    * A schema that can be extended with arbitrary properties.
    */

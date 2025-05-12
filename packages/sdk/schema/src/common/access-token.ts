@@ -3,10 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { Format, ObjectIdSchema, S } from '@dxos/echo-schema';
+import { Format, ObjectId, S } from '@dxos/echo-schema';
 
 export const AccessToken = S.Struct({
-  id: ObjectIdSchema,
+  id: ObjectId,
   note: S.optional(
     S.String.annotations({
       title: 'Note',

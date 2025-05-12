@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum } from '@dxos/echo-schema';
+import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum, ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
 import { createView, type ViewProjection } from '@dxos/schema';
@@ -12,7 +12,7 @@ import { createView, type ViewProjection } from '@dxos/schema';
 import { TableType } from '../types';
 
 export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  id: S.String,
+  id: ObjectId,
   name: S.optional(S.String),
   age: S.optional(S.Number),
   active: S.optional(S.Boolean),

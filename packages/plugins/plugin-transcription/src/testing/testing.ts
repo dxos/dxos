@@ -9,7 +9,8 @@ import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { scheduleTaskInterval } from '@dxos/async';
 import { createQueueDxn, Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { AST, create, EchoObject, ObjectId, S } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { AST, create, ObjectId, S } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -30,7 +31,12 @@ export const TestItem = S.Struct({
     [AST.TitleAnnotationId]: 'Description',
     [AST.DescriptionAnnotationId]: 'Product description',
   }),
-}).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/Test',
+    version: '0.1.0',
+  }),
+);
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.
 abstract class AbstractMessageBuilder {

@@ -4,8 +4,7 @@
 
 import { Schema as S } from 'effect';
 
-import { EchoObject, ObjectId, SpaceIdSchema } from '@dxos/echo-schema';
-import { type SpaceId } from '@dxos/keys';
+import { Type } from '@dxos/echo';
 
 // TODO(dmaretskyi): Extract IDs to protocols.
 // TODO(dmaretskyi): Dedupe package with dxos/edge.
@@ -19,8 +18,8 @@ export interface Space extends S.Schema.Type<typeof Space> {}
 
 /** @deprecated */
 export const Thread = S.Struct({
-  id: ObjectId,
-  spaceId: SpaceIdSchema,
+  id: Type.ObjectId,
+  spaceId: Type.SpaceId,
 });
 /** @deprecated */
 export interface Thread extends S.Schema.Type<typeof Thread> {}
@@ -150,7 +149,12 @@ const MessageSchema = S.Struct({
  * @deprecated
  */
 // TODO(burdon): Reconcile with Chat/Message types?
-export const Message = MessageSchema.pipe(EchoObject({ typename: 'dxos.org/type/Message', version: '0.1.0' }));
+export const Message = MessageSchema.pipe(
+  Type.def({
+    typename: 'dxos.org/type/Message',
+    version: '0.1.0',
+  }),
+);
 export type Message = S.Schema.Type<typeof Message>;
 
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({

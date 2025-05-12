@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EchoObject, Expando, LabelAnnotationId, Ref, S } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { Expando, LabelAnnotationId, Ref, S } from '@dxos/echo-schema';
 import { makeRef, live } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
@@ -18,7 +19,12 @@ export const DocumentSchema = S.Struct({
   [LabelAnnotationId]: ['name', 'fallbackName'],
 });
 
-export const DocumentType = DocumentSchema.pipe(EchoObject({ typename: 'dxos.org/type/Document', version: '0.1.0' }));
+export const DocumentType = DocumentSchema.pipe(
+  Type.def({
+    typename: 'dxos.org/type/Document',
+    version: '0.1.0',
+  }),
+);
 export type DocumentType = S.Schema.Type<typeof DocumentType>;
 
 // TODO(burdon): Replace when defaults are supported.

@@ -11,7 +11,7 @@ export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
   version: '0.1.0',
 })({
-  id: S.String,
+  id: ObjectId,
   name: S.optional(S.String.pipe(S.annotations({ [AST.DescriptionAnnotationId]: 'Full name.' }))),
   email: Format.Email.pipe(S.optional),
   // TODO(burdon): Define transforms for objects?

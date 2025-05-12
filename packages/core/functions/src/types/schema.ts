@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EchoObject, JsonSchemaType, LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
-import { DataType } from '@dxos/schema';
+import { JsonSchemaType, LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { DataType, EchoObject } from '@dxos/schema';
 
 /**
  * Source script.
@@ -17,7 +17,12 @@ export const ScriptType = S.Struct({
   source: Ref(DataType.Text),
 })
   .annotations({ [LabelAnnotationId]: 'name' })
-  .pipe(EchoObject({ typename: 'dxos.org/type/Script', version: '0.1.0' }));
+  .pipe(
+    EchoObject({
+      typename: 'dxos.org/type/Script',
+      version: '0.1.0',
+    }),
+  );
 
 export type ScriptType = S.Schema.Type<typeof ScriptType>;
 

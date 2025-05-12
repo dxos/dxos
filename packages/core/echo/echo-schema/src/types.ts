@@ -194,4 +194,5 @@ export const getDXN = (object: any): DXN | undefined => {
   return DXN.fromLocalObjectId(object.id);
 };
 
+// TODO(burdon): Reconcile with Type.Any.
 export type BaseEchoObject = HasId & HasTypename;

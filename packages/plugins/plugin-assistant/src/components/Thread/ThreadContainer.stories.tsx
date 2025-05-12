@@ -18,8 +18,9 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
+import { genericTools, localServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
+import { type Type } from '@dxos/echo';
 import { create, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -43,7 +44,7 @@ import translations from '../../translations';
 const endpoints = localServiceEndpoints;
 
 type RenderProps = {
-  items?: IsObject[];
+  items?: Type.Any[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 

@@ -4,13 +4,13 @@
 
 import { Schema as S } from 'effect';
 
-import { EntityKind, TypeAnnotationId, Ref, ObjectIdSchema } from '@dxos/echo-schema';
+import { EntityKind, TypeAnnotationId, Ref, ObjectId } from '@dxos/echo-schema';
 
 // TODO(burdon): Remove (use @dxos/schema DataType).
 
 /** @deprecated */
 export const Contact = S.Struct({
-  id: ObjectIdSchema,
+  id: ObjectId,
   name: S.String.annotations({ description: 'The name of the person.' }),
   email: S.optional(S.String).annotations({ description: 'Email address.' }),
 })
@@ -27,7 +27,7 @@ export interface Contact extends S.Schema.Type<typeof Contact> {}
 
 /** @deprecated */
 export const Project = S.Struct({
-  id: ObjectIdSchema,
+  id: ObjectId,
   name: S.String.annotations({ description: 'The name of the project.' }),
   description: S.optional(S.String).annotations({ description: 'The description of the project.' }),
 })
@@ -43,7 +43,7 @@ export const Project = S.Struct({
 export interface Project extends S.Schema.Type<typeof Project> {}
 
 export const Task = S.Struct({
-  id: ObjectIdSchema,
+  id: ObjectId,
   name: S.String.annotations({ description: 'The name of the task.' }),
   description: S.optional(S.String).annotations({ description: 'The description of the task.' }),
   project: Ref(Project),
@@ -62,7 +62,7 @@ export interface Task extends S.Schema.Type<typeof Task> {}
 
 /** @deprecated */
 export const Organization = S.Struct({
-  id: ObjectIdSchema,
+  id: ObjectId,
   name: S.String.annotations({ description: 'The name of the organization.' }),
   projects: S.Array(Ref(Project)),
   employees: S.Array(Ref(Contact)),

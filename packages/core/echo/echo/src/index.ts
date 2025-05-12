@@ -4,6 +4,8 @@
 
 import { DXN } from '@dxos/keys';
 
+export { Format } from '@dxos/echo-schema';
+
 export { DXN };
 
 export * as Database from './Database';

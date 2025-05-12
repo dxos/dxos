@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EchoObject, Expando, LabelAnnotationId, ObjectId, Ref, S } from '@dxos/echo-schema';
+import { Expando, LabelAnnotationId, ObjectId, Ref, S } from '@dxos/echo-schema';
 // import { ThreadType } from '@dxos/plugin-space/types';
 import { ViewType } from '@dxos/schema';
 
@@ -17,5 +17,10 @@ export const TableSchema = S.Struct({
   [LabelAnnotationId]: 'name',
 });
 
-export const TableType = TableSchema.pipe(EchoObject({ typename: 'dxos.org/type/Table', version: '0.1.0' }));
+export const TableType = TableSchema.pipe(
+  Type.def({
+    typename: 'dxos.org/type/Table',
+    version: '0.1.0',
+  }),
+);
 export interface TableType extends S.Schema.Type<typeof TableType> {}

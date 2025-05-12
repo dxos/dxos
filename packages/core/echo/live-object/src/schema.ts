@@ -10,15 +10,16 @@ import {
   toJsonSchema,
   EchoObject,
   EchoSchema,
+  type JsonSchemaType,
   StoredSchema,
   TypeAnnotationId,
-  type JsonSchemaType,
   type TypeMeta,
   type TypeAnnotation,
 } from '@dxos/echo-schema';
 
 import type { Live } from './live';
 import { live } from './object';
+
 /**
  * Create ECHO object representing schema.
  */

@@ -4,7 +4,7 @@
 
 import { Schema as S, Schema } from 'effect';
 
-import { toJsonSchema, type JsonSchemaType } from '@dxos/echo-schema';
+import { toJsonSchema, type JsonSchemaType } from '@dxos/echo';
 import { failedInvariant } from '@dxos/invariant';
 
 import type { Message } from './message';
