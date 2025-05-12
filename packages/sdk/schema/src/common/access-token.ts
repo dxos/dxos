@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
-import { Format, ObjectId, S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-export const AccessToken = S.Struct({
-  id: ObjectId,
-  note: S.optional(
-    S.String.annotations({
+import { Format, Type } from '@dxos/echo';
+
+export const AccessToken = Schema.Struct({
+  id: Type.ObjectId,
+  note: Schema.optional(
+    Schema.String.annotations({
       title: 'Note',
       description: 'User-provided note about the token.',
     }),
@@ -18,12 +19,12 @@ export const AccessToken = S.Struct({
     description: 'The domain name of the service that issued the token.',
     examples: ['github.com'],
   }),
-  token: S.String.annotations({
+  token: Schema.String.annotations({
     title: 'Token',
     description: 'The token provided by the service.',
   }),
 }).pipe(
-  S.annotations({
+  Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
   Type.def({
@@ -32,4 +33,4 @@ export const AccessToken = S.Struct({
   }),
 );
 
-export interface AccessToken extends S.Schema.Type<typeof AccessToken> {}
+export interface AccessToken extends Schema.Schema.Type<typeof AccessToken> {}
