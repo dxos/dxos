@@ -10,16 +10,15 @@ import path from 'path';
 import { asyncTimeout } from '@dxos/async';
 import { CollectionType } from '@dxos/cli-composer';
 import { type Client } from '@dxos/client';
-import { type ReactiveEchoObject, makeRef } from '@dxos/client/echo';
-import { live, getMeta } from '@dxos/client/echo';
+import { type ReactiveEchoObject, getMeta, live, makeRef } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import {
-  incrementSemverPatch,
-  setUserFunctionUrlInMetadata,
-  uploadWorkerFunction,
-  makeFunctionUrl,
   FunctionType,
   ScriptType,
+  incrementSemverPatch,
+  makeFunctionUrl,
+  setUserFunctionUrlInMetadata,
+  uploadWorkerFunction,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';

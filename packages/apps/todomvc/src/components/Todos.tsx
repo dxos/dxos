@@ -5,7 +5,8 @@
 import React, { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
-import { live, SpaceState, type Space, makeRef } from '@dxos/react-client/echo';
+import { Ref } from '@dxos/echo-schema';
+import { live, SpaceState, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { Header } from './Header';
@@ -35,7 +36,7 @@ export const Todos = () => {
 
     const title = inputRef.current?.value.trim();
     if (title && list) {
-      list.todos.push(makeRef(live(TodoType, { title, completed: false })));
+      list.todos.push(Ref.make(live(TodoType, { title, completed: false })));
       inputRef.current!.value = '';
     }
   };

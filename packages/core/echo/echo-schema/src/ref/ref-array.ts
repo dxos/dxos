@@ -2,8 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BaseObject, type ObjectId, Ref } from '@dxos/echo-schema';
 import { isNonNullable } from '@dxos/util';
+
+import { Ref } from './ref';
+import type { ObjectId } from '../object';
+import type { BaseObject } from '../types';
 
 /**
  * Helper functions for working with arrays of refs.

@@ -230,7 +230,7 @@ export class AISession {
     } catch (err) {
       log.catch(err);
       if (err instanceof Error && err.message.includes('Overloaded')) {
-        error = new AIServiecOverloadedError('AI service overloaded', { cause: err });
+        error = new AIServiecOverloadedError('AI service overloaded', { cause: err } as any); // TODO(dmaretskyi): Schema errors cant have cause
       } else {
         error = new Error('AI service error', { cause: err });
       }

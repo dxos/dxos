@@ -8,13 +8,14 @@ import {
   type AST,
   Expando,
   getTypeAnnotation,
+  Ref,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type TypeAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation, type SimpleType } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { refFromDXN, RefImpl } from '@dxos/live-object';
+import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
@@ -97,7 +98,7 @@ export const RefField = ({
       if (typeof formValue === 'string') {
         return formValue;
       }
-      if (formValue instanceof RefImpl) {
+      if (Ref.isRef(formValue)) {
         return formValue.dxn.toString();
       }
 
@@ -121,7 +122,7 @@ export const RefField = ({
   const handleGetValue = () => {
     const formValue = getValue();
 
-    if (formValue instanceof RefImpl) {
+    if (Ref.isRef(formValue)) {
       return formValue.dxn.toString();
     }
 

@@ -7,11 +7,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFin
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { Expando, RelationSourceId, RelationTargetId, S, TypedObject, type Ref } from '@dxos/echo-schema';
+import { Expando, RelationSourceId, RelationTargetId, S, TypedObject, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, getMeta, makeRef } from '@dxos/live-object';
+import { live, getMeta } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -111,7 +111,7 @@ describe('Queries', () => {
 
     test('filter by reference', async () => {
       const objA = db.add(live(Expando, { label: 'obj a' }));
-      const objB = db.add(live(Expando, { label: 'obj b', ref: makeRef(objA) }));
+      const objB = db.add(live(Expando, { label: 'obj b', ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
       const { objects } = await db.query(Filter.schema(Expando, { ref: objA })).run();
@@ -566,7 +566,7 @@ test('map over refs in query result', async () => {
   const folder = db.add(live(Expando, { name: 'folder', objects: [] as any[] }));
   const objects = range(3).map((idx) => createTestObject(idx));
   for (const object of objects) {
-    folder.objects.push(makeRef(object));
+    folder.objects.push(Ref.make(object));
   }
 
   const queryResult = await db.query({ name: 'folder' }).run();

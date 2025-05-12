@@ -346,9 +346,6 @@
       "@dxos/react-ui-kanban": [
         "packages/ui/react-ui-kanban/src/index.ts"
       ],
-      "@dxos/react-ui-kanban/testing": [
-        "packages/ui/react-ui-kanban/src/testing/index.ts"
-      ],
       "@dxos/react-ui-list": [
         "packages/ui/react-ui-list/src/index.ts"
       ],

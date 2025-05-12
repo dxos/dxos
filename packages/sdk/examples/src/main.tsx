@@ -9,11 +9,11 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
-import { type Space, type TypedObject } from '@dxos/react-client/echo';
+import { Ref, type Space, type TypedObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
@@ -55,7 +55,7 @@ const main = async () => {
     onSpaceCreated: ({ space }) => {
       space.db.add(
         live(DocumentType, {
-          content: makeRef(live(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' })),
+          content: Ref.make(live(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' })),
           threads: [],
         }),
       );
