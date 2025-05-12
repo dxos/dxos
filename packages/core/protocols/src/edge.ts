@@ -175,3 +175,11 @@ export type InitiateOAuthFlowResponse = {
 export type OAuthFlowResult =
   | { success: true; accessToken: string; accessTokenId: string }
   | { success: false; reason: string };
+
+export enum EdgeWebsocketProtocol {
+  V0 = 'edge-ws-v0',
+  /**
+   * Enables message framing and muxing by service-id.
+   */
+  V1 = 'edge-ws-v1',
+}
