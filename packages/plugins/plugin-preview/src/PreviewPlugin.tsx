@@ -25,7 +25,7 @@ import {
   getSpace,
   isEchoObject,
   parseId,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   type Space,
 } from '@dxos/client/echo';
 import { isInstanceOf } from '@dxos/echo-schema';
@@ -191,7 +191,7 @@ export const PreviewPlugin = () =>
             id: `${PREVIEW_PLUGIN}/fallback-popover`,
             role: ['popover', 'card--kanban'],
             position: 'fallback',
-            filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+            filter: (data): data is { subject: AnyLiveObject<any> } => isEchoObject(data.subject),
             component: ({ data, role }) => {
               const schema = getSchema(data.subject);
               const { t } = useTranslation(PREVIEW_PLUGIN);

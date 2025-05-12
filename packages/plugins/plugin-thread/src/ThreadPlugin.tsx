@@ -7,7 +7,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
 import { ChannelType, defineObjectForm, ThreadType } from '@dxos/plugin-space/types';
-import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
+import { type AnyLiveObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
 
@@ -67,7 +67,7 @@ export const ThreadPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: THREAD_ITEM,
           metadata: {
-            parse: (item: ReactiveEchoObject<any>, type: string) => {
+            parse: (item: AnyLiveObject<any>, type: string) => {
               switch (type) {
                 case 'node':
                   return { id: item.id, label: item.title, data: item };

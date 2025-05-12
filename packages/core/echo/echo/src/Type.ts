@@ -4,8 +4,10 @@
 
 import { type Schema } from 'effect';
 
+import { type AnyLiveObject as AnyLiveObject$ } from '@dxos/echo-db';
 import {
   type BaseEchoObject,
+  type BaseObject,
   type BaseSchema,
   type EchoSchema,
   Expando as Expando$,
@@ -54,6 +56,7 @@ export namespace Type {
 
   export const Kind = EntityKind;
   export type AnyObject = BaseEchoObject;
+  export type AnyLiveObject<T extends BaseObject> = AnyLiveObject$<T>;
 
   //
   // Schema

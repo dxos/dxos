@@ -7,7 +7,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { SPACE_PLUGIN } from '@dxos/plugin-space';
-import { isEchoObject, type ReactiveEchoObject, parseId } from '@dxos/react-client/echo';
+import { isEchoObject, type AnyLiveObject, parseId } from '@dxos/react-client/echo';
 
 import { DEBUG_PLUGIN } from '../meta';
 import { Devtools } from '../types';
@@ -393,7 +393,7 @@ export default (context: PluginsContext) =>
     // Debug object companion.
     createExtension({
       id: `${DEBUG_PLUGIN}/debug-object`,
-      filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+      filter: (node): node is Node<AnyLiveObject<any>> => isEchoObject(node.data),
       connector: ({ node }) => [
         {
           id: [node.id, 'debug'].join(ATTENDABLE_PATH_SEPARATOR),

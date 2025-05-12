@@ -5,7 +5,7 @@
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
 import { live, getMeta } from '@dxos/client/echo';
-import { type ReactiveEchoObject } from '@dxos/echo-db';
+import { type AnyLiveObject } from '@dxos/echo-db';
 import { type ForeignKey } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -39,7 +39,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
       // Try to query organization.
       if (!project.org && repoData.organization?.id) {
         const foreignKey: ForeignKey = { source: 'github.com', id: String(repoData.organization.id) };
-        project.org = space.db.query((object: ReactiveEchoObject<any>) =>
+        project.org = space.db.query((object: AnyLiveObject<any>) =>
           getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
         ).objects[0];
       }
@@ -78,7 +78,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
 
         const foreignKey: ForeignKey = { source: 'github.com', id: String(user.id) };
         const { objects: existing } = await space.db
-          .query((object: ReactiveEchoObject<any>) =>
+          .query((object: AnyLiveObject<any>) =>
             getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
           )
           .run();

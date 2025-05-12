@@ -3,12 +3,12 @@
 //
 
 import { Reference } from '@dxos/echo-protocol';
-import { getSchema } from '@dxos/echo-schema';
 import {
+  getSchema,
+  type BaseEchoObject,
   type BaseObject,
   EchoSchema,
   EntityKind,
-  type HasId,
   type ObjectMeta,
   type S,
   SchemaValidator,
@@ -30,14 +30,13 @@ import { ObjectInternals, type ProxyTarget, symbolInternals, symbolNamespace, sy
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
-// TODO(burdon): Rename EchoObject and reconcile with proto name.
-export type ReactiveEchoObject<T extends BaseObject> = Live<T> & HasId;
+export type AnyLiveObject<T extends BaseObject> = Live<T> & BaseEchoObject;
 
 /**
  * @returns True if `value` is a reactive object with an EchoHandler backend.
  */
 // TODO(dmaretskyi): Reconcile with `isTypedObjectProxy`.
-export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
+export const isEchoObject = (value: any): value is AnyLiveObject<any> => {
   if (!isLiveObject(value)) {
     return false;
   }
@@ -74,7 +73,7 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T> => {
+export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => {
   assertArgument(!isEchoObject(obj), 'Object is already an ECHO object');
   const schema = getSchema(obj);
   if (schema != null) {
@@ -135,7 +134,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
 };
 
 // TODO(burdon): Call and remove subscriptions.
-export const destroyObject = <T extends BaseObject>(proxy: ReactiveEchoObject<T>) => {
+export const destroyObject = <T extends BaseObject>(proxy: AnyLiveObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];
@@ -157,7 +156,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
 /**
  * @internal
  */
-export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): ReactiveEchoObject<any> => {
+export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): AnyLiveObject<any> => {
   const target: ProxyTarget = {
     [symbolInternals]: new ObjectInternals(core, database),
     [symbolPath]: [],

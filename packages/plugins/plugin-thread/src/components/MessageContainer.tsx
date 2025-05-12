@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'rea
 import { Surface } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
-import { type ReactiveEchoObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
+import { type AnyLiveObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
@@ -163,7 +163,7 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: ReactiveEchoObject<any> }>(
+const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: AnyLiveObject<any> }>(
   ({ subject }, forwardedRef) => {
     let title = subject.name ?? subject.title ?? subject.type ?? 'Object';
     if (typeof title !== 'string') {

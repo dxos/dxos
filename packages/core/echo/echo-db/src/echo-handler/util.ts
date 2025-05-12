@@ -7,7 +7,7 @@ import { type BaseObject, type ForeignKey } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getMeta, getProxyTarget, type Live } from '@dxos/live-object';
 
-import { isEchoObject, type ReactiveEchoObject } from './create';
+import { isEchoObject, type AnyLiveObject } from './create';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
 import { type EchoDatabase } from '../proxy-db';
 
@@ -21,7 +21,7 @@ export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined 
   return target[symbolInternals].database;
 };
 
-export const getReferenceWithSpaceKey = (obj: ReactiveEchoObject<any>): Reference | undefined => {
+export const getReferenceWithSpaceKey = (obj: AnyLiveObject<any>): Reference | undefined => {
   invariant(obj);
   const db = getDatabaseFromObject(obj);
   return db && Reference.fromObjectIdAndSpaceKey(obj.id, db.spaceKey);
@@ -30,7 +30,7 @@ export const getReferenceWithSpaceKey = (obj: ReactiveEchoObject<any>): Referenc
 // TODO(burdon): Factor out.
 // TODO(burdon): Impl query by meta.
 export const findObjectWithForeignKey = <T extends BaseObject>(
-  objects: ReactiveEchoObject<T>[],
+  objects: AnyLiveObject<T>[],
   foreignKey: ForeignKey,
 ) => {
   return objects.find((result) => {

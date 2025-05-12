@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Filter, type Query, type ReactiveEchoObject } from '@dxos/echo-db';
+import { Filter, type Query, type AnyLiveObject } from '@dxos/echo-db';
 import { Expando, Ref } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -67,7 +67,7 @@ describe('Index queries', () => {
     return client;
   };
 
-  const addObjects = async <T extends {}>(space: Space, objects: ReactiveEchoObject<T>[]) => {
+  const addObjects = async <T extends {}>(space: Space, objects: AnyLiveObject<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
       return space.db.add(object);
@@ -77,8 +77,8 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: Query, objects: ReactiveEchoObject<any>[]) => {
-    const receivedIndexedObject = new Trigger<ReactiveEchoObject<any>[]>();
+  const matchObjects = async (query: Query, objects: AnyLiveObject<any>[]) => {
+    const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.results.filter((result) => result.resolution?.source === 'index');

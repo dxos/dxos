@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
-import { type ReactiveEchoObject } from '@dxos/client/echo';
+import { type AnyLiveObject } from '@dxos/client/echo';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
@@ -14,8 +14,8 @@ export default (context: PluginsContext) =>
     createExtension({
       id: `${meta.id}/comments`,
       // TODO(wittjosiah): Support comments on any object.
-      // filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
-      filter: (node): node is Node<ReactiveEchoObject<any>> =>
+      // filter: (node): node is Node<AnyLiveObject<any>> => isEchoObject(node.data),
+      filter: (node): node is Node<AnyLiveObject<any>> =>
         !!node.data && typeof node.data === 'object' && 'threads' in node.data && Array.isArray(node.data.threads),
       connector: ({ node }) => [
         {

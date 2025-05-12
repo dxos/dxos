@@ -10,7 +10,7 @@ import path from 'path';
 import { asyncTimeout } from '@dxos/async';
 import { CollectionType } from '@dxos/cli-composer';
 import { type Client } from '@dxos/client';
-import { type ReactiveEchoObject, getMeta, live, makeRef } from '@dxos/client/echo';
+import { type AnyLiveObject, getMeta, live, makeRef } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import {
   FunctionType,
@@ -180,7 +180,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
   }
 }
 
-const makeObjectNavigableInComposer = async (client: Client, space: Space, obj: ReactiveEchoObject<any>) => {
+const makeObjectNavigableInComposer = async (client: Client, space: Space, obj: AnyLiveObject<any>) => {
   const collection = space.properties['dxos.org/type/Collection'];
   if (collection) {
     client.addTypes([CollectionType]);

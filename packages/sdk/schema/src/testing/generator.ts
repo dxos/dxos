@@ -4,7 +4,7 @@
 
 import { SchemaAST as AST, Effect } from 'effect';
 
-import { type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
+import { type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
 import {
   FormatEnum,
   GeneratorAnnotationId,
@@ -114,7 +114,7 @@ export const createReactiveObject = <T extends BaseObject>(type: S.Schema<T>) =>
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
-  return <T extends BaseObject>(obj: Live<T>): ReactiveEchoObject<T> => db.add(obj);
+  return <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> => db.add(obj);
 };
 
 export const noop = (obj: any) => obj;
@@ -160,7 +160,7 @@ export const createObjectPipeline = <T extends BaseObject>(
     };
   } else {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<ReactiveEchoObject<any>, never, never> = Effect.gen(function* (_) {
+      const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* (_) {
         // logObject('before')(obj);
         const withProps = createProps(generator, type, optional)(obj);
         const liveObj = createReactiveObject(type)(withProps);
