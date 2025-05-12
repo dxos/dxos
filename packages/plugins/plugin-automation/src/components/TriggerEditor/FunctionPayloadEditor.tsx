@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type JsonPath, Ref, RefImpl, toEffectSchema } from '@dxos/echo-schema';
+import { type JsonPath, RefImpl, toEffectSchema } from '@dxos/echo-schema';
 import { type FunctionType } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
 import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';

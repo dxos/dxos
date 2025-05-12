@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
+import { DXN } from '@dxos/echo';
 import {
   FunctionType,
   FunctionTriggerSchema,
@@ -12,7 +13,6 @@ import {
   type FunctionTrigger,
   ScriptType,
 } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
 import { Filter, Ref, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
