@@ -51,9 +51,9 @@ export default (context: PluginsContext) =>
         if (message) {
           // TODO(wittjosiah): Static to live object fails.
           //  Needs to be a live object because graph is live and the current message is included in the companion.
-          const { '@type': _, id, ...messageWithoutType } = { ...message } as any;
+          const { '@type': _, ...messageWithoutType } = { ...message } as any;
           const liveMessage = live(DataType.Message, messageWithoutType);
-          liveMessage.id = id;
+          // liveMessage.id = id;
           state[mailboxId] = liveMessage;
         } else {
           delete state[mailboxId];
