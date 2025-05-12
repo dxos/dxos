@@ -6,19 +6,19 @@ import { Reference } from '@dxos/echo-protocol';
 import { getSchema } from '@dxos/echo-schema';
 import {
   type BaseObject,
-  getTypeAnnotation,
   type HasId,
   EchoSchema,
   type ObjectMeta,
   type S,
   SchemaValidator,
-  requireTypeReference,
   Ref,
   EntityKind,
-  getEntityKind,
   RelationSourceId,
   RelationTargetId,
+  requireTypeReference,
+  getEntityKind,
   getRefSavedTarget,
+  getTypeAnnotation,
 } from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';
