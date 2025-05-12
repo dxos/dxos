@@ -14,24 +14,10 @@ import translations from '../../translations';
 
 const DefaultStory = (props: any) => {
   return (
-    <div className='flex flex-col-reverse p-4 '>
+    <div className='flex flex-col-reverse p-4'>
       <SyncStatusIndicator {...props} />
     </div>
   );
-};
-
-export const Default: StoryObj<typeof SyncStatusIndicator> = {
-  args: {
-    state: {},
-    saved: true,
-  },
-};
-
-export const Saving: StoryObj<typeof SyncStatusIndicator> = {
-  args: {
-    state: {},
-    saved: false,
-  },
 };
 
 const meta: Meta = {
@@ -43,3 +29,19 @@ const meta: Meta = {
 };
 
 export default meta;
+
+type Story = StoryObj<typeof SyncStatusIndicator>;
+
+export const Default: Story = {
+  args: {
+    state: {},
+    saved: true,
+  },
+};
+
+export const Saving: Story = {
+  args: {
+    state: {},
+    saved: false,
+  },
+};

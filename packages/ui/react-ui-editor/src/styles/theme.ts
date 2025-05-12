@@ -71,13 +71,16 @@ export const defaultTheme: ThemeStyles = {
   /**
    * Gutters
    * NOTE: Gutters should have the same top margin as the content.
-   * NOTE: They can't be transparent since the content needs to scroll below.
    */
   '.cm-gutters': {
-    background: 'var(--surface-bg)',
     borderRight: 'none',
+    background: 'transparent',
   },
   '.cm-gutter': {},
+  '.cm-gutter.cm-lineNumbers': {
+    paddingRight: '4px',
+    borderRight: '1px solid var(--dx-separator)',
+  },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
     minWidth: '40px',
     alignContent: 'center',
@@ -87,7 +90,7 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-gutterElement': {
     alignItems: 'center',
-    fontSize: '16px',
+    fontSize: '12px',
   },
 
   /**
@@ -138,6 +141,7 @@ export const defaultTheme: ThemeStyles = {
   '.cm-link': {
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
+    textDecorationColor: 'var(--dx-separator)',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
   },
@@ -149,7 +153,7 @@ export const defaultTheme: ThemeStyles = {
    * Tooltip.
    */
   '.cm-tooltip': {
-    background: 'var(--dx-base)',
+    background: 'var(--dx-baseSurface)',
   },
   '.cm-tooltip-below': {},
 

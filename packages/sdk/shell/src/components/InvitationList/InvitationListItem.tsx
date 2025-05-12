@@ -13,20 +13,20 @@ import {
 } from '@dxos/react-client/invitations';
 import {
   Button,
+  Clipboard,
   ListItem,
   useTranslation,
   Avatar,
   useThemeContext,
-  type AvatarRootProps,
   Tooltip,
   type ThemedClassName,
+  type AvatarContentProps,
 } from '@dxos/react-ui';
 import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
 import { AuthCode } from '../AuthCode';
-import { CopyButtonIconOnly } from '../Clipboard';
 
 export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;
@@ -44,13 +44,13 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
-const avatarProps: Pick<AvatarRootProps, 'size' | 'variant'> = { size: 10, variant: 'circle' };
+const avatarProps: Pick<AvatarContentProps, 'size' | 'variant'> = { size: 10, variant: 'circle' };
 
 const AvatarStackEffect = ({
   animation,
   status,
   reverseEffects,
-}: Pick<AvatarRootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => {
+}: Pick<AvatarContentProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => {
   const { tx } = useThemeContext();
   return (
     <>
@@ -154,15 +154,20 @@ export const InvitationListItemImpl = ({
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
       <Tooltip.Root>
-        <Avatar.Root {...avatarProps} animation={avatarAnimation} status={avatarStatus}>
+        <Avatar.Root>
           <Tooltip.Trigger asChild>
-            <Avatar.Frame tabIndex={0} classNames={[focusRing, 'relative rounded-full place-self-center']}>
-              <Avatar.Fallback text={hexToEmoji(invitationId)} />
-            </Avatar.Frame>
+            <Avatar.Content
+              {...avatarProps}
+              animation={avatarAnimation}
+              status={avatarStatus}
+              fallback={hexToEmoji(invitationId)}
+              tabIndex={0}
+              classNames={[focusRing, 'relative rounded-full place-self-center']}
+            />
           </Tooltip.Trigger>
         </Avatar.Root>
         <Tooltip.Portal>
-          <Tooltip.Content side='left' classNames='z-[70]'>
+          <Tooltip.Content side='left'>
             {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
@@ -181,10 +186,10 @@ export const InvitationListItemImpl = ({
                 <span>{t('open share panel label')}</span>
               </Button>
             </Tooltip.Trigger>
-            <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
+            <Clipboard.IconButton variant='ghost' value={invitationUrl} />
           </>
           <Tooltip.Portal>
-            <Tooltip.Content side='left' classNames='z-[70]'>
+            <Tooltip.Content side='left'>
               {invitationHasLifetime && <span>Expires {invitationTimeLeft}</span>}
             </Tooltip.Content>
           </Tooltip.Portal>

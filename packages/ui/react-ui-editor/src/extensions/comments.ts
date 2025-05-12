@@ -4,12 +4,12 @@
 
 import { invertedEffects } from '@codemirror/commands';
 import {
+  type ChangeDesc,
+  type EditorState,
   type Extension,
   StateEffect,
   StateField,
   type Text,
-  type ChangeDesc,
-  type EditorState,
 } from '@codemirror/state';
 import {
   hoverTooltip,
@@ -22,14 +22,16 @@ import {
   ViewPlugin,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
-import { debounce, type UnsubscribeCallback } from '@dxos/async';
+import { debounce, type CleanupFn } from '@dxos/async';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { documentId } from './selection';
-import { type Comment, type Range } from '../types';
+import { type EditorToolbarState } from '../components';
+import { type RenderCallback, type Comment, type Range } from '../types';
 import { Cursor, overlap, singleValueFacet, callbackWrapper } from '../util';
 
 //
@@ -85,7 +87,7 @@ export const commentsState = StateField.define<CommentsState>({
             const range = Cursor.getRangeFromCursor(tr.state, comment.cursor);
             return range && { comment, range };
           })
-          .filter(nonNullable);
+          .filter(isNonNullable);
 
         return { ...value, comments: commentStates };
       }
@@ -149,7 +151,7 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
       const mark = createCommentMark(comment.comment.id, comment.comment.id === current);
       return mark.range(range.from, range.to);
     })
-    .filter(nonNullable);
+    .filter(isNonNullable);
 
   return Decoration.set(decorations);
 });
@@ -179,6 +181,7 @@ const handleCommentClick = EditorView.domEventHandlers({
     return false;
   },
 });
+
 //
 // Cut-and-paste.
 //
@@ -343,6 +346,10 @@ export type CommentsOptions = {
    */
   key?: string;
   /**
+   * Called to render tooltip.
+   */
+  renderTooltip?: RenderCallback<{ shortcut: string }>;
+  /**
    * Called to create a new thread and return the thread id.
    */
   onCreate?: (params: { cursor: string; from: number; location?: Rect | null }) => void;
@@ -358,10 +365,6 @@ export type CommentsOptions = {
    * Called to notify which thread is currently closest to the cursor.
    */
   onSelect?: (state: CommentsState) => void;
-  /**
-   * Called to render tooltip.
-   */
-  onHover?: (el: Element, shortcut: string) => void;
 };
 
 const optionsFacet = singleValueFacet<CommentsOptions>();
@@ -405,7 +408,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     // Hover tooltip (for key shortcut hints, etc.)
     // TODO(burdon): Factor out to generic hints extension for current selection/line.
     //
-    options.onHover &&
+    options.renderTooltip &&
       hoverTooltip(
         (view, pos) => {
           const selection = view.state.selection.main;
@@ -416,7 +419,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
               above: true,
               create: () => {
                 const el = document.createElement('div');
-                options.onHover!(el, shortcut);
+                options.renderTooltip!(el, { shortcut }, view);
                 return { dom: el, offset: { x: 0, y: 8 } };
               },
             };
@@ -505,7 +508,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     }),
 
     options.onUpdate && trackPastedComments(options.onUpdate),
-  ].filter(nonNullable);
+  ].filter(isNonNullable);
 };
 
 //
@@ -573,12 +576,7 @@ const hasActiveSelection = (state: EditorState): boolean => {
 class ExternalCommentSync implements PluginValue {
   private readonly unsubscribe: () => void;
 
-  constructor(
-    view: EditorView,
-    id: string,
-    subscribe: (sink: () => void) => UnsubscribeCallback,
-    getComments: () => Comment[],
-  ) {
+  constructor(view: EditorView, id: string, subscribe: (sink: () => void) => CleanupFn, getComments: () => Comment[]) {
     const updateComments = () => {
       const comments = getComments();
       if (id === view.state.facet(documentId)) {
@@ -597,7 +595,7 @@ class ExternalCommentSync implements PluginValue {
 // TODO(burdon): Needs comment.
 export const createExternalCommentSync = (
   id: string,
-  subscribe: (sink: () => void) => UnsubscribeCallback,
+  subscribe: (sink: () => void) => CleanupFn,
   getComments: () => Comment[],
 ): Extension =>
   ViewPlugin.fromClass(
@@ -608,26 +606,17 @@ export const createExternalCommentSync = (
     },
   );
 
-export const useCommentState = (): [{ comment: boolean; selection: boolean }, Extension] => {
-  const [state, setState] = useState<{ comment: boolean; selection: boolean }>({
-    comment: false,
-    selection: false,
-  });
-
-  const observer = useMemo(
+export const useCommentState = (state: Live<EditorToolbarState>): Extension => {
+  return useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          setState({
-            comment: selectionOverlapsComment(update.state),
-            selection: hasActiveSelection(update.state),
-          });
+          state.comment = selectionOverlapsComment(update.state);
+          state.selection = hasActiveSelection(update.state);
         }
       }),
-    [],
+    [state],
   );
-
-  return [state, observer];
 };
 
 /**

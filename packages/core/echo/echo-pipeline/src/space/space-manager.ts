@@ -3,7 +3,8 @@
 //
 
 import { synchronized, trackLeaks, Trigger } from '@dxos/async';
-import { type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
+import { type AutomergeUrl, parseAutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { getCredentialAssertion, type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -167,5 +168,20 @@ export class SpaceManager {
     } finally {
       await protocol.stop();
     }
+  }
+
+  public findSpaceByRootDocumentId(documentId: string): Space | undefined {
+    return [...this._spaces.values()].find((space) => {
+      return space.spaceState.credentials.some((credential) => {
+        const assertion = getCredentialAssertion(credential);
+        if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
+          return false;
+        }
+        if (!assertion?.automergeRoot) {
+          return false;
+        }
+        return parseAutomergeUrl(assertion.automergeRoot as AutomergeUrl).documentId === documentId;
+      });
+    });
   }
 }

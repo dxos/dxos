@@ -5,8 +5,11 @@
 import { untracked } from '@preact/signals-core';
 
 import { S } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
+
+// NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
+export const ATTENDABLE_PATH_SEPARATOR = '~';
 
 export const AttentionSchema = S.mutable(
   S.Struct({
@@ -28,8 +31,8 @@ const stringKey = (key: string[]) => key.join(',');
 export class AttentionManager {
   // Each attention path is associated with an attention object.
   // The lookup is not a reactive object to ensure that attention for each path is subscribable independently.
-  private readonly _map = new ComplexMap<string[], ReactiveObject<Attention>>(stringKey);
-  private readonly _state = create<{ current: string[] }>({ current: [] });
+  private readonly _map = new ComplexMap<string[], Live<Attention>>(stringKey);
+  private readonly _state = live<{ current: string[] }>({ current: [] });
 
   constructor(initial: string[] = []) {
     if (initial.length > 0) {
@@ -39,34 +42,38 @@ export class AttentionManager {
 
   /**
    * Currently attended element.
+   *
+   * @reactive
    */
-  get current() {
+  get current(): Live<readonly string[]> {
     return this._state.current;
   }
 
   /**
    * All attention paths.
    */
-  keys() {
+  keys(): string[][] {
     return Array.from(this._map.keys());
   }
 
   /**
    * Get the attention state for a given path.
    */
-  get(key: string[]): ReactiveObject<Attention> {
+  get(key: string[]): Live<Attention> {
     const object = this._map.get(key);
     if (object) {
       return object;
     }
 
-    const newObject = create(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
+    const newObject = live(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
     this._map.set(key, newObject);
     return newObject;
   }
 
   /**
    * Update the currently attended element.
+   *
+   * @internal
    */
   update(nextKey: string[]) {
     const currentKey = untracked(() => this.current);
@@ -115,7 +122,7 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
   if (closestAttendable) {
     const attendableId = closestAttendable.getAttribute('data-attendable-id');
     if (!attendableId) {
-      // this has an id of an aria-controls elsewhere on the page, move cursor to that trigger
+      // This has an id of an aria-controls elsewhere on the page, move cursor to that trigger.
       const trigger = document.querySelector(`[aria-controls="${closestAttendable.getAttribute('id')}"]`);
       if (!trigger) {
         return acc;
@@ -123,8 +130,8 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
         return getAttendables(selector, trigger, acc);
       }
     } else {
-      acc.push(attendableId);
-      // (attempt tail recursion)
+      acc.push(...attendableId.split(ATTENDABLE_PATH_SEPARATOR));
+      // TODO: Attempt tail recursion.
       return !closestAttendable.parentElement ? acc : getAttendables(selector, closestAttendable.parentElement, acc);
     }
   }

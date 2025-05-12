@@ -56,7 +56,7 @@ export const getLevel = (digest: Uint8Array): number => {
 };
 
 export const formatDigest = (digest: Uint8Array) => {
-  return arrayToHex(digest);
+  return arrayToHex(digest.buffer);
 };
 
 export const getLevelHex = (digest: string): number => {

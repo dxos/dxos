@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type Schema as S } from '@effect/schema';
-import { Option, pipe } from 'effect';
+import { SchemaAST as AST, type Schema as S, Option, pipe } from 'effect';
 
 import { decamelize } from '@dxos/util';
 

@@ -7,7 +7,7 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
 import { type S } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -91,10 +91,10 @@ export const Main = () => {
 
     // TODO(burdon): Migrate generator from DebugPlugin.
     Array.from({ length: n }).forEach(() => {
-      let object: ReactiveObject<any>;
+      let object: Live<any>;
       switch (type) {
         case DocumentType.typename: {
-          object = create(DocumentType, {
+          object = live(DocumentType, {
             title: randWord(),
             content: randSentence(),
           });
@@ -103,7 +103,7 @@ export const Main = () => {
 
         case ItemType.typename:
         default: {
-          object = create(ItemType, {
+          object = live(ItemType, {
             content: randSentence(),
             // due: randBetweenDate(dateRange)
           });
@@ -193,7 +193,7 @@ export const Main = () => {
 
   return (
     <div className='flex flex-row grow justify-center overflow-hidden'>
-      <div className='flex flex-col grow bg-base'>
+      <div className='flex flex-col grow bg-baseSurface'>
         <AppToolbar
           onHome={() => window.open(defs.issueUrl, 'DXOS')}
           onProfile={() => {

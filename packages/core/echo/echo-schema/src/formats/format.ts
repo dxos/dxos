@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import * as DateUtil from './date';
 import * as NumberUtil from './number';
-import { CurrencyAnnotationId } from './number';
 import * as ObjectUtil from './object';
 import * as StringUtil from './string';
-import { FormatAnnotationId } from './types';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 // TODO(burdon): Media encoding.
@@ -49,11 +47,3 @@ export namespace Format {
   // Objects
   export const GeoPoint = ObjectUtil.GeoPoint;
 }
-
-/**
- * List of annotations for JSON encoding/decoding.
- */
-export const CustomAnnotations = {
-  format: FormatAnnotationId,
-  currency: CurrencyAnnotationId,
-};

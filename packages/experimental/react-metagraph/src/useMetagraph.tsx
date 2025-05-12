@@ -62,7 +62,7 @@ export const useModules = (query: Query, { polling }: UseModulesOptions = {}): M
       return;
     }
 
-    let interval: NodeJS.Timeout;
+    let interval: any;
     let unsubscribe: () => void | undefined;
     setTimeout(async () => {
       const observable = await metagraph.modules.query(query);

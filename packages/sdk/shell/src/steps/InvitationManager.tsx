@@ -7,22 +7,12 @@ import React, { useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
-import { useId, useTranslation } from '@dxos/react-ui';
+import { Clipboard, useId, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { type StepProps } from './StepProps';
-import {
-  Actions,
-  Action,
-  AuthCode,
-  Emoji,
-  Label,
-  Viewport,
-  type ViewportViewProps,
-  CopyButton,
-  Centered,
-} from '../components';
+import { Actions, Action, AuthCode, Emoji, Label, Viewport, type ViewportViewProps, Centered } from '../components';
 import { invitationStatusValue } from '../util';
 
 export type InvitationManagerProps = StepProps &
@@ -93,7 +83,7 @@ export const InvitationManager = ({
             <span id={qrLabel} className='sr-only'>
               {t('qr label')}
             </span>
-            <CopyButton variant='ghost' value={invitationUrl ?? 'never'} />
+            <Clipboard.Button variant='ghost' value={invitationUrl ?? 'never'} />
           </InvitationManagerView>
           <InvitationManagerView id='showing auth code'>
             <Label>{t('auth code message')}</Label>

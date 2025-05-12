@@ -4,7 +4,7 @@
 
 import { type NodeArg } from '@dxos/app-graph';
 import { S, TypedObject } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -15,12 +15,12 @@ import { range } from '@dxos/util';
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
 type ObjectDataGenerator = {
-  createSchema?: () => S.Schema<any>;
+  createSchema?: () => S.Schema.AnyNoContext;
   createData: () => any;
 };
 
-type ObjectFactory<T extends ReactiveObject<any>> = {
-  schema?: S.Schema<any>; // TODO(burdon): Support both typed and expando schema.
+type ObjectFactory<T extends Live<any>> = {
+  schema?: S.Schema.AnyNoContext; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };
 
@@ -30,7 +30,7 @@ const createFactory = ({ createSchema, createData }: ObjectDataGenerator) => {
   const schema = createSchema?.();
   return {
     schema,
-    createObject: () => (schema ? create(schema, createData()) : create(createData())),
+    createObject: () => (schema ? live(schema, createData()) : live(createData())),
   };
 };
 
@@ -56,12 +56,13 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      class ProjectType extends TypedObject({ typename: 'dxos.test.Project', version: '0.1.0' })({
+      class ProjectType extends TypedObject({ typename: 'example.com/type/Project', version: '0.1.0' })({
         title: S.String,
         repo: S.String,
         status: S.String,
         priority: S.Number,
       }) {},
+
     createData: () => ({
       title: faker.commerce.productName(),
       repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
@@ -86,7 +87,7 @@ export class TestObjectGenerator {
       }, {});
   }
 
-  get schema(): S.Schema<any>[] {
+  get schema(): S.Schema.AnyNoContext[] {
     return Object.values(this.factories).map((f) => f.schema!);
   }
 

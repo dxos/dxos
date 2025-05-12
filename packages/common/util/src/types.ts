@@ -10,7 +10,33 @@ export type MaybeProvider<T, V = void> = T | ((arg: V) => T);
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
+export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
+
+export type DeepReadonly<T> = {
+  readonly [P in keyof T]: T[P] extends Record<string, any>
+    ? DeepReadonly<T[P]>
+    : T[P] extends Array<infer U>
+      ? ReadonlyArray<DeepReadonly<U>>
+      : T[P];
+};
+
+export type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
+
+/**
+ * Simplifies type (copied from effect).
+ */
+export type Simplify<A> = { [K in keyof A]: A[K] } extends infer B ? B : never;
+
+/**
+ * Replace types of specified keys.
+ */
+export type Specialize<T, U> = Simplify<Omit<T, keyof U> & U>;
+
+/**
+ * Make specified keys optional.
+ */
+// TODO(burdon): Wrapping with Simplify fails.
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 /**
  * All types that evaluate to false when cast to a boolean.
@@ -22,12 +48,8 @@ export type Falsy = false | 0 | '' | null | undefined;
  * NOTE: To filter by type:
  * items.filter((item: any): item is RangeSet<Decoration> => item instanceof RangeSet)
  */
-// TODO(burdon): Reconcile names and variants.
 export const isNotFalsy = <T>(value: T): value is Exclude<T, Falsy> => !!value;
-export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
-export const isNotNullOrUndefined = <T>(value: T): value is Exclude<T, null | undefined> => value != null;
-// export const isNotNullish = <T>(value: T | null | undefined): value is T => value !== undefined && value !== null;
-export const boolGuard = <T>(value: T | null | undefined): value is T => Boolean(value);
+export const isNonNullable = <T>(value: T | null | undefined): value is T => value != null;
 
 // TODO(burdon): Replace use of setTimeout everywhere?
 //  Would remove the need to cancel (and associated errors), but would change the operation of the code
@@ -55,14 +77,14 @@ export const getAsyncProviderValue = <T, V = void>(
 /**
  * Remove keys with undefined values.
  */
-export const stripUndefinedValues = <T extends { [index: string]: any }>(obj: T): T => {
+export const stripUndefined = <T extends { [index: string]: any }>(obj: T): T => {
   if (typeof obj === 'object') {
     Object.keys(obj).forEach((key) => {
       const value = obj[key];
       if (value === undefined) {
         delete obj[key];
       } else if (value !== null && typeof value === 'object') {
-        stripUndefinedValues(value); // TODO(burdon): Test recursion.
+        stripUndefined(value); // TODO(burdon): Test recursion.
       }
     });
   }
@@ -87,13 +109,4 @@ export const sortKeys = <T extends object>(obj: T): T =>
 export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
   return array;
-};
-
-export const safeParseInt = (value: string | undefined, defaultValue?: number) => {
-  try {
-    const n = parseInt(value ?? '');
-    return isNaN(n) ? defaultValue : n;
-  } catch (err) {
-    return defaultValue;
-  }
 };

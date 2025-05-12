@@ -5,6 +5,8 @@
 import { batch, signal } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
+import { updateCounter } from '@dxos/echo-schema/testing';
+
 import { ACTION_TYPE, ROOT_ID, ROOT_TYPE } from './graph';
 import { GraphBuilder, createExtension, memoize } from './graph-builder';
 import { type Node } from './node';
@@ -173,6 +175,40 @@ describe('GraphBuilder', () => {
 
       name.value = 'updated';
       expect(node.properties.label).to.equal('updated');
+    });
+
+    test('updates with new extensions', async () => {
+      const name = signal('default');
+      const builder = new GraphBuilder();
+      builder.addExtension(
+        createExtension({
+          id: 'connector',
+          connector: () => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name, properties: { label: name.value } }],
+        }),
+      );
+      const graph = builder.graph;
+      await graph.expand(graph.root);
+
+      let nodes: Node[] = [];
+      using updates = updateCounter(() => {
+        nodes = graph.nodes(graph.root);
+      });
+
+      expect(updates.count).to.equal(0);
+      expect(nodes).has.length(1);
+      expect(nodes[0].id).to.equal(EXAMPLE_ID);
+
+      builder.addExtension(
+        createExtension({
+          id: 'connector-2',
+          connector: () => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: 0 }],
+        }),
+      );
+
+      expect(updates.count).to.equal(1);
+      expect(nodes).has.length(2);
+      expect(nodes[0].id).to.equal(EXAMPLE_ID);
+      expect(nodes[1].id).to.equal(exampleId(2));
     });
 
     test('removes', async () => {

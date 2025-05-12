@@ -2,27 +2,31 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IntentDispatcher, type Layout, LayoutAction, NavigationAction } from '@dxos/app-framework';
-import { EventSubscriptions, type Trigger } from '@dxos/async';
+import { pipe } from 'effect';
+
+import { chain, createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
-import { HELP_PLUGIN, HelpAction } from '@dxos/plugin-help/meta';
-import { SPACE_PLUGIN, SpaceAction } from '@dxos/plugin-space';
+import { Account, ClientAction } from '@dxos/plugin-client/types';
+import { HelpAction } from '@dxos/plugin-help/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
-import { type Credential, type Identity } from '@dxos/react-client/halo';
+import { DeviceType, type Credential, type Identity } from '@dxos/react-client/halo';
 
+import { WELCOME_SCREEN } from './components';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
-import { removeQueryParamByValue } from '../../util';
+import { WELCOME_PLUGIN } from './meta';
+import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 
 export type OnboardingManagerParams = {
-  dispatch: IntentDispatcher;
+  dispatch: PromiseIntentDispatcher;
   client: Client;
-  layout: Layout;
   firstRun?: Trigger;
   hubUrl?: string;
   token?: string;
+  tokenType?: 'login' | 'verify';
   recoverIdentity?: boolean;
   deviceInvitationCode?: string;
   spaceInvitationCode?: string;
@@ -30,14 +34,13 @@ export type OnboardingManagerParams = {
 
 export class OnboardingManager {
   private readonly _ctx = new Context();
-  private readonly _subscriptions = new EventSubscriptions();
-  private readonly _dispatch: IntentDispatcher;
+  private readonly _subscriptions = new SubscriptionList();
+  private readonly _dispatch: PromiseIntentDispatcher;
   private readonly _client: Client;
-  private readonly _layout: Layout;
-  private readonly _firstRun?: Trigger;
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
   private readonly _token?: string;
+  private readonly _tokenType?: 'login' | 'verify';
   private readonly _recoverIdentity?: boolean;
   private readonly _deviceInvitationCode?: string;
   private readonly _spaceInvitationCode?: string;
@@ -48,10 +51,9 @@ export class OnboardingManager {
   constructor({
     dispatch,
     client,
-    layout,
-    firstRun,
     hubUrl,
     token,
+    tokenType,
     recoverIdentity,
     deviceInvitationCode,
     spaceInvitationCode,
@@ -60,11 +62,10 @@ export class OnboardingManager {
 
     this._dispatch = dispatch;
     this._client = client;
-    this._layout = layout;
-    this._firstRun = firstRun;
     this._hubUrl = hubUrl;
     this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
     this._token = token;
+    this._tokenType = tokenType;
     this._recoverIdentity = recoverIdentity || false;
     this._deviceInvitationCode = deviceInvitationCode;
     this._spaceInvitationCode = spaceInvitationCode;
@@ -88,31 +89,46 @@ export class OnboardingManager {
   }
 
   async initialize() {
-    await this.fetchCredential();
+    await this._fetchBetaCredential();
     if (this._credential && this._hubUrl) {
-      await this._upgradeCredential();
+      // Don't block app loading on network request.
+      void this._upgradeCredential();
+      // Automatically start join space flow if already authed.
       this._spaceInvitationCode && (await this._openJoinSpace());
+      // Ensure that recovery credential is present.
+      await this._setupRecovery();
+      // Ensure that agent is present.
+      await this._createAgent();
       return;
     } else if (!this._skipAuth) {
+      // Show welcome screen if no credential found and not skipping auth.
       await this._showWelcome();
     }
 
     if (this._deviceInvitationCode !== undefined) {
+      // If device invitation code is present, open join identity flow.
       await this._openJoinIdentity();
     } else if (this._recoverIdentity) {
+      // If recovery flag is present, open recover identity flow.
       await this._openRecoverIdentity();
-    } else if (!this._identity && (this._token || this._skipAuth)) {
+    } else if (!this._identity && ((this._token && this._tokenType === 'verify') || this._skipAuth)) {
+      // If there's no existing identity and a verification token (or if skipping auth), setup a new identity.
       await this._createIdentity();
-      !this._skipAuth && (await this._startHelp());
-    }
-
-    if (this._skipAuth) {
-      this._spaceInvitationCode && (await this._openJoinSpace());
-      return;
-    }
-
-    if (this._identity) {
+      await this._setupRecovery();
+      await this._startHelp();
+      await this._createAgent();
       await this._activateAccount();
+    } else if (!this._identity && this._token && this._tokenType === 'login') {
+      // If there's no existing identity and a login token, recover the identity.
+      await this._login();
+    } else if (this._identity && this._token) {
+      // If there's an existing identity and a verification token, activate the account.
+      await this._activateAccount();
+    }
+
+    if (this._skipAuth && this._spaceInvitationCode) {
+      // If skipping auth and a space invitation code is present, open join space flow.
+      await this._openJoinSpace();
     }
   }
 
@@ -120,8 +136,45 @@ export class OnboardingManager {
     await this._ctx.dispose();
   }
 
-  async fetchCredential() {
-    const credentials = await this._queryAllCredentials();
+  private async _queryRecoveryCredentials() {
+    const credentials = await queryAllCredentials(this._client);
+    return credentials.filter(
+      (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    );
+  }
+
+  private async _setupRecovery() {
+    const credentials = await this._queryRecoveryCredentials();
+    if (this._skipAuth || credentials.length > 0) {
+      return;
+    }
+
+    await this._dispatch(
+      createIntent(LayoutAction.AddToast, {
+        part: 'toast',
+        subject: {
+          id: 'passkey-setup-toast',
+          title: ['passkey setup toast title', { ns: WELCOME_PLUGIN }],
+          description: ['passkey setup toast description', { ns: WELCOME_PLUGIN }],
+          duration: Infinity,
+          icon: 'ph--key--regular',
+          closeLabel: ['close label', { ns: 'os' }],
+          actionLabel: ['passkey setup toast action label', { ns: WELCOME_PLUGIN }],
+          actionAlt: ['passkey setup toast action alt', { ns: WELCOME_PLUGIN }],
+          onAction: () => {
+            const intent = pipe(
+              createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
+              chain(LayoutAction.Open, { part: 'main', subject: [Account.Security] }),
+            );
+            void this._dispatch(intent);
+          },
+        },
+      }),
+    );
+  }
+
+  private async _fetchBetaCredential() {
+    const credentials = await queryAllCredentials(this._client);
     this._setCredential(credentials);
   }
 
@@ -134,38 +187,6 @@ export class OnboardingManager {
       // Ensure that if the credential is ever found that onboarding is closed to the app is accessible.
       void this._closeWelcome();
     }
-  }
-
-  // TODO(wittjosiah): Factor out to sdk.
-  //   Currently the HaloProxy.queryCredentials method is synchronous.
-  //   Since it is synchronous, it only returns credentials that are already loaded in the client.
-  //   This function ensures that all credentials on disk are loaded into the client before returning.
-  private _queryAllCredentials() {
-    const identitySpace = this._client.halo.identity.get()?.spaceKey;
-    if (!identitySpace) {
-      return Promise.resolve([] as Credential[]);
-    }
-
-    invariant(this._client.services.services.SpacesService, 'SpacesService not available');
-    const stream = this._client.services.services.SpacesService.queryCredentials({
-      spaceKey: identitySpace,
-      noTail: true,
-    });
-    return new Promise<Credential[]>((resolve, reject) => {
-      const credentials: Credential[] = [];
-      stream?.subscribe(
-        (credential) => {
-          credentials.push(credential);
-        },
-        (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(credentials);
-          }
-        },
-      );
-    });
   }
 
   private async _upgradeCredential() {
@@ -183,9 +204,9 @@ export class OnboardingManager {
         const newCredential = await upgradeCredential({ hubUrl: this._hubUrl, presentation });
         await this._client.halo.writeCredentials([newCredential]);
       }
-    } catch (error) {
+    } catch (err) {
       // If failed to upgrade, log the error and continue. Most likely offline.
-      log.catch(error);
+      log.catch(err);
     }
   }
 
@@ -195,69 +216,68 @@ export class OnboardingManager {
       invariant(this._identity);
       const credential = await activateAccount({ hubUrl: this._hubUrl, identity: this._identity, token: this._token });
       await this._client.halo.writeCredentials([credential]);
-      log('beta credential saved', { credential });
+      log.info('beta credential saved', { credential });
       this._token && removeQueryParamByValue(this._token);
+      this._tokenType && removeQueryParamByValue(this._tokenType);
     } catch {
       // No-op. This is expected for referred users who have an identity but no token yet.
     }
   }
 
+  private async _login() {
+    invariant(this._token);
+    await this._dispatch(createIntent(ClientAction.RedeemToken, { token: this._token }));
+    this._token && removeQueryParamByValue(this._token);
+    this._tokenType && removeQueryParamByValue(this._tokenType);
+  }
+
   private async _showWelcome() {
-    await this._dispatch([
-      {
-        action: LayoutAction.SET_LAYOUT_MODE,
-        data: { layoutMode: 'fullscreen' },
-      },
-      {
-        action: NavigationAction.OPEN,
-        // NOTE: Active parts cannot contain '/' characters currently.
-        data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-      },
-    ]);
+    // NOTE: Active parts cannot contain '/' characters currently.
+    await this._dispatch(
+      createIntent(LayoutAction.SetLayoutMode, {
+        part: 'mode',
+        subject: `surface:${WELCOME_SCREEN}`,
+        options: { mode: 'fullscreen' },
+      }),
+    );
   }
 
   private async _closeWelcome() {
-    await this._dispatch([
-      ...(this._layout.layoutMode !== 'deck'
-        ? [
-            {
-              action: LayoutAction.SET_LAYOUT_MODE,
-              data: { layoutMode: 'solo' },
-            },
-          ]
-        : []),
-      {
-        action: NavigationAction.CLOSE,
-        data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-      },
-    ]);
+    await this._dispatch(
+      createIntent(LayoutAction.Close, {
+        part: 'main',
+        subject: [`surface:${WELCOME_SCREEN}`],
+        options: { state: false },
+      }),
+    );
   }
 
   private async _createIdentity() {
-    await this._dispatch({
-      plugin: CLIENT_PLUGIN,
-      action: ClientAction.CREATE_IDENTITY,
-    });
-    this._firstRun?.wake();
+    await this._dispatch(createIntent(ClientAction.CreateIdentity));
+  }
+
+  private async _createAgent() {
+    const devices = this._client.halo.devices.get();
+    const edgeAgent = devices.find(
+      (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
+    );
+    if (edgeAgent) {
+      return;
+    }
+
+    await this._dispatch(createIntent(ClientAction.CreateAgent));
   }
 
   private async _openJoinIdentity() {
     invariant(this._deviceInvitationCode !== undefined);
 
-    await this._dispatch({
-      plugin: CLIENT_PLUGIN,
-      action: ClientAction.JOIN_IDENTITY,
-      data: { invitationCode: this._deviceInvitationCode },
-    });
+    await this._dispatch(createIntent(ClientAction.JoinIdentity, { invitationCode: this._deviceInvitationCode }));
 
     removeQueryParamByValue(this._deviceInvitationCode);
   }
 
   private async _openRecoverIdentity() {
-    await this._dispatch({
-      plugin: CLIENT_PLUGIN,
-      action: ClientAction.RECOVER_IDENTITY,
-    });
+    await this._dispatch(createIntent(ClientAction.RecoverIdentity));
 
     removeQueryParamByValue('true');
   }
@@ -265,19 +285,16 @@ export class OnboardingManager {
   private async _openJoinSpace() {
     invariant(this._spaceInvitationCode);
 
-    await this._dispatch({
-      plugin: SPACE_PLUGIN,
-      action: SpaceAction.JOIN,
-      data: { invitationCode: this._spaceInvitationCode },
-    });
+    await this._dispatch(createIntent(SpaceAction.Join, { invitationCode: this._spaceInvitationCode }));
 
     removeQueryParamByValue(this._spaceInvitationCode);
   }
 
   private async _startHelp() {
-    await this._dispatch({
-      plugin: HELP_PLUGIN,
-      action: HelpAction.START,
-    });
+    if (this._skipAuth) {
+      return;
+    }
+
+    await this._dispatch(createIntent(HelpAction.Start));
   }
 }

@@ -7,8 +7,7 @@ import { EXPANDO_TYPENAME, foreignKeyEquals } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { isReactiveObject } from '@dxos/live-object';
-import { log } from '@dxos/log';
+import { isLiveObject } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type Filter } from './filter';
@@ -29,7 +28,7 @@ export const filterMatch = (
     return false;
   }
 
-  invariant(!echoObject || isReactiveObject(echoObject));
+  invariant(!echoObject || isLiveObject(echoObject));
   const result = filterMatchInner(filter, core, echoObject);
   // Don't apply filter negation to deleted object handling, as it's part of filter options.
   return filter.not && !core.isDeleted() ? !result : result;
@@ -69,8 +68,7 @@ const filterMatchInner = (
 
   if (filter.type) {
     const type = core.getType()?.toDXN() ?? DXN.fromTypename(EXPANDO_TYPENAME);
-    log('type compare', { type, filterType: filter.type });
-    if (!filter.type.some((filterType) => DXN.equals(filterType, type))) {
+    if (!filter.type.some((filterType) => compareTypes(filterType, type))) {
       return false;
     }
   }
@@ -115,7 +113,7 @@ const filterMatchInner = (
 
 // TODO(dmaretskyi): Should be resolved at the DSL level.
 const sanitizePropertyFilter = (value: any) => {
-  if (isReactiveObject(value)) {
+  if (isLiveObject(value)) {
     const core = getObjectCore(value as any);
     return Reference.fromDXN(DXN.fromLocalObjectId(core.id));
   }
@@ -130,4 +128,27 @@ const compareValues = (a: any, b: any) => {
   }
 
   return a === b;
+};
+
+const compareTypes = (filter: DXN, object: DXN) => {
+  switch (filter.kind) {
+    case DXN.kind.TYPE: {
+      if (object.kind !== DXN.kind.TYPE) {
+        return false;
+      }
+
+      const filterParsed = filter.asTypeDXN()!;
+      const objectParsed = object.asTypeDXN()!;
+
+      // NOTE: If the object version is not set, it will match any version.
+      return (
+        filterParsed.type === objectParsed.type &&
+        (!filterParsed.version || !objectParsed.version || filterParsed.version === objectParsed.version)
+      );
+    }
+    case DXN.kind.ECHO: {
+      // TODO(dmaretskyi): Handle DXNs with the local space tag & explicit space id.
+      return DXN.equals(filter, object);
+    }
+  }
 };

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
+import { SchemaAST as AST, Schema as S } from 'effect';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
@@ -18,9 +18,8 @@ import {
   isOption,
   isSimpleType,
   visit,
-  type JsonPath,
-  type JsonProp,
 } from './ast';
+import { type JsonPath, type JsonProp } from './jsonPath';
 
 const ZipCode = S.String.pipe(
   S.pattern(/^\d{5}$/, {

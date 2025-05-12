@@ -7,13 +7,17 @@ import { keymap } from '@codemirror/view';
 import { vim } from '@replit/codemirror-vim';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 
+import { S } from '@dxos/echo-schema';
+
 import { singleValueFacet } from '../util';
 
 export const EditorViewModes = ['preview', 'readonly', 'source'] as const;
-export type EditorViewMode = (typeof EditorViewModes)[number];
+export const EditorViewMode = S.Union(...EditorViewModes.map((mode) => S.Literal(mode)));
+export type EditorViewMode = S.Schema.Type<typeof EditorViewMode>;
 
 export const EditorInputModes = ['default', 'vim', 'vscode'] as const;
-export type EditorInputMode = (typeof EditorInputModes)[number];
+export const EditorInputMode = S.Union(...EditorInputModes.map((mode) => S.Literal(mode)));
+export type EditorInputMode = S.Schema.Type<typeof EditorInputMode>;
 
 export type EditorInputConfig = {
   type?: string;

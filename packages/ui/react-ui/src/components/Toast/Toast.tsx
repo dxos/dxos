@@ -45,7 +45,7 @@ const ToastRoot = forwardRef<HTMLLIElement, ToastRootProps>(({ classNames, child
   const { tx } = useThemeContext();
   return (
     <ToastRootPrimitive {...props} className={tx('toast.root', 'toast', {}, classNames)} ref={forwardedRef}>
-      <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+      <ElevationProvider elevation='toast'>{children}</ElevationProvider>
     </ToastRootPrimitive>
   );
 });

@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 const port = browser.runtime.connect({ name: 'content' });
 
 // Forward messages from background script to DXOS Client.
-port.onMessage.addListener((message) => {
+port.onMessage.addListener((message: any) => {
   log('Received message from background:', message);
 
   window.postMessage(

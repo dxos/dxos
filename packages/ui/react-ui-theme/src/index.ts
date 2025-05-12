@@ -10,4 +10,6 @@ export * from './styles';
 export * from './types';
 export * from './util';
 
+export { userDefaultTokenSet, hues } from './config/tokens';
+
 export { tokens };

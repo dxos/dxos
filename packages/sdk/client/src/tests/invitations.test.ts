@@ -35,6 +35,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
   onTestFinished(async () => {
     await peer.close();
   });
+
   return peer;
 };
 
@@ -63,7 +64,6 @@ const successfulInvitation = async ({
 
       expect(host.dataSpaceManager!.spaces.get(hostInvitation!.spaceKey!)).to.exist;
       expect(guest.dataSpaceManager!.spaces.get(guestInvitation!.spaceKey!)).to.exist;
-
       break;
 
     case Invitation.Kind.DEVICE:
@@ -72,12 +72,8 @@ const successfulInvitation = async ({
       expect(guestInvitation!.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
 
       // Check devices.
-      // TODO(burdon): Incorrect number of devices.
       await expect.poll(() => host.identityManager.identity!.authorizedDeviceKeys.size).toEqual(2);
       await expect.poll(() => guest.identityManager.identity!.authorizedDeviceKeys.size).toEqual(2);
-
-      // console.log(host.identityManager.identity!.authorizedDeviceKeys.size);
-      // console.log(guest.identityManager.identity!.authorizedDeviceKeys.size);
       break;
   }
 };

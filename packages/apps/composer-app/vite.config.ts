@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -17,9 +17,10 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { mergeConfig } from 'vitest/config';
 import { baseConfig } from '../../../vitest.shared';
 
-import { appKey } from './src/constants';
+import { APP_KEY } from './src/constants';
 
 const rootDir = resolve(__dirname, '../../..');
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -27,10 +28,12 @@ const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/asse
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 
-// https://vitejs.dev/config
+/**
+ * https://vitejs.dev/config
+ */
 export default defineConfig((env) => ({
   // Vitest config.
-  test: baseConfig({ cwd: __dirname })['test'] as any,
+  test: mergeConfig(baseConfig({ cwd: __dirname }), defineConfig({ test: { environment: 'jsdom' } }))['test'] as any,
   server: {
     host: true,
     https:
@@ -75,6 +78,9 @@ export default defineConfig((env) => ({
       external: [
         // Provided at runtime by socket supply shell.
         'socket:application',
+        'socket:process',
+        'socket:window',
+        'socket:os',
       ],
     },
   },
@@ -84,7 +90,7 @@ export default defineConfig((env) => ({
     },
   },
   worker: {
-    format: 'es',
+    format: 'es' as const,
     plugins: () => [WasmPlugin(), SourceMapsPlugin()],
   },
   plugins: [
@@ -124,6 +130,7 @@ export default defineConfig((env) => ({
     isTrue(process.env.DX_INSPECT) && Inspect(),
     WasmPlugin(),
     ReactPlugin({
+      tsDecorators: true,
       plugins: [
         [
           '@dxos/swc-log-plugin',
@@ -158,6 +165,35 @@ export default defineConfig((env) => ({
         ],
       ],
     }),
+    importMapPlugin({
+      modules: [
+        '@dxos/app-framework',
+        '@dxos/app-graph',
+        '@dxos/client',
+        '@dxos/client/devtools',
+        '@dxos/client/echo',
+        '@dxos/client/halo',
+        '@dxos/client/invitations',
+        '@dxos/client/mesh',
+        '@dxos/client-protocol',
+        '@dxos/client-services',
+        '@dxos/config',
+        '@dxos/echo-schema',
+        '@dxos/echo-signals',
+        '@dxos/live-object',
+        '@dxos/react-client',
+        '@dxos/react-client/devtools',
+        '@dxos/react-client/echo',
+        '@dxos/react-client/halo',
+        '@dxos/react-client/invitations',
+        '@dxos/react-client/mesh',
+        '@dxos/schema',
+        '@effect/platform',
+        'effect',
+        'react',
+        'react-dom',
+      ],
+    }),
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
       // No PWA in dev to make it easier to ensure the latest version is being used.
@@ -174,29 +210,30 @@ export default defineConfig((env) => ({
       manifest: {
         name: 'DXOS Composer',
         short_name: 'Composer',
-        description: 'DXOS Composer Application',
+        description: 'DXOS Composer',
         theme_color: '#003E70',
         icons: [
           {
-            src: 'favicon-16x16.png',
-            sizes: '16x16',
-            type: 'image/png',
+            "src": "pwa-64x64.png",
+            "sizes": "64x64",
+            "type": "image/png"
           },
           {
-            src: 'favicon-32x32.png',
-            sizes: '32x32',
-            type: 'image/png',
+            "src": "pwa-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
           },
           {
-            src: 'android-chrome-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
+            "src": "pwa-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
           },
           {
-            src: 'android-chrome-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
+            "src": "maskable-icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+          }
         ],
       },
     }),
@@ -211,7 +248,7 @@ export default defineConfig((env) => ({
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
       disable: process.env.DX_ENVIRONMENT !== 'production',
       release: {
-        name: `${appKey}@${process.env.npm_package_version}`,
+        name: `${APP_KEY}@${process.env.npm_package_version}`,
       },
     }),
     ...(process.env.DX_STATS
@@ -267,4 +304,51 @@ function chunkFileNames(chunkInfo: any) {
   }
 
   return 'assets/[name]-[hash].js';
+}
+
+function importMapPlugin(options: { modules: string[] }) {
+  const chunkRefIds: Record<string, string> = {};
+  let imports: Record<string, string> = {};
+
+  return [
+    {
+      name: 'import-map:get-chunk-ref-ids',
+      async buildStart() {
+        for (const m of options.modules) {
+          const resolved = await this.resolve(m);
+          if (resolved) {
+            // Emit the chunk during build start.
+            chunkRefIds[m] = this.emitFile({
+              type: 'chunk',
+              id: resolved.id,
+              // Preserve the original exports.
+              preserveSignature: 'strict',
+            });
+          }
+        }
+      },
+
+      generateBundle() {
+        imports = Object.fromEntries(options.modules.map(m => [m, `/${this.getFileName(chunkRefIds[m])}`]));
+      }
+    },
+    {
+      name: 'import-map:transform-index-html',
+      enforce: 'post',
+      transformIndexHtml(html: string) {
+        const tags = [{
+          tag: 'script',
+          attrs: {
+            type: 'importmap',
+          },
+          children: JSON.stringify({ imports }, null, 2),
+        }];
+
+        return {
+          html,
+          tags,
+        }
+      }
+    }
+  ] satisfies Plugin[];
 }

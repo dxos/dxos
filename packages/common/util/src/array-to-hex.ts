@@ -11,7 +11,7 @@ for (let n = 0; n <= 0xff; ++n) {
   byteToHex.push(hexOctet);
 }
 
-export const arrayToHex = (buf: ArrayBuffer) => {
+export const arrayToHex = (buf: ArrayBufferLike) => {
   const buff = new Uint8Array(buf);
   const hexOctets = []; // new Array(buff.length) is even faster (preallocates necessary array size), then use hexOctets[i] instead of .push()
 

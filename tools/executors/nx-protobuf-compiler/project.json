@@ -9,7 +9,8 @@
         "outputPath": "{projectRoot}/dist"
       }
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
     "log-hook",

@@ -8,3 +8,4 @@ export * from './echo-host';
 export * from './database-root';
 export * from './query-state';
 export * from './query-service';
+export * from './space-state-manager';

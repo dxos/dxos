@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, pipe } from 'effect';
+import { SchemaAST as AST, Effect } from 'effect';
 
 import { type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
 import {
@@ -14,10 +14,12 @@ import {
   type ExcludeId,
   type JsonSchemaType,
   type S,
+  type TypedObject,
+  Ref,
 } from '@dxos/echo-schema';
-import { AST, findAnnotation } from '@dxos/effect';
+import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
@@ -31,20 +33,46 @@ export type ValueGenerator<T = any> = Record<string, () => T>;
 const randomBoolean = (p = 0.5) => Math.random() < p;
 const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random() * elements.length)];
 
+export type TypeSpec = {
+  type: TypedObject;
+  count: number;
+};
+
+/**
+ * Create sets of objects.
+ */
+export const createObjectFactory =
+  (db: EchoDatabase, generator: ValueGenerator) =>
+  async (specs: TypeSpec[]): Promise<Map<string, Live<any>[]>> => {
+    const map = new Map<string, Live<any>[]>();
+    for (const { type, count } of specs) {
+      try {
+        const pipeline = createObjectPipeline(generator, type, { db });
+        const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
+        map.set(type.typename, objects);
+        await db.flush();
+      } catch (err) {
+        log.catch(err);
+      }
+    }
+
+    return map;
+  };
+
 /**
  * Set properties based on generator annotation.
  */
-export const createProps = <T extends BaseObject>(generator: ValueGenerator, schema: S.Schema<T>) => {
+export const createProps = <T extends BaseObject>(generator: ValueGenerator, schema: S.Schema<T>, optional = false) => {
   return (data: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
     return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
       if (obj[property.name] === undefined) {
-        if (!property.optional || randomBoolean()) {
+        if (!property.optional || optional || randomBoolean()) {
           const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
           const fn = gen && getDeep<() => any>(generator, gen.split('.'));
           if (fn) {
             obj[property.name] = fn();
           } else if (!property.optional) {
-            log.warn('missing generator for required property', { property });
+            log.warn('missing generator for required property', { property, schema });
           }
         }
       }
@@ -70,7 +98,7 @@ export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: 
             const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
             if (objects.length) {
               const object = randomElement(objects);
-              (obj as any)[property.name] = object;
+              (obj as any)[property.name] = Ref.make(object);
             }
           }
         }
@@ -82,11 +110,11 @@ export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: 
 };
 
 export const createReactiveObject = <T extends BaseObject>(type: S.Schema<T>) => {
-  return (data: ExcludeId<T>) => create<T>(type, data);
+  return (data: ExcludeId<T>) => live<T>(type, data);
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
-  return <T extends BaseObject>(obj: ReactiveObject<T>): ReactiveEchoObject<T> => db.add(obj);
+  return <T extends BaseObject>(obj: Live<T>): ReactiveEchoObject<T> => db.add(obj);
 };
 
 export const noop = (obj: any) => obj;
@@ -98,44 +126,49 @@ export const createObjectArray = <T extends BaseObject>(n: number): ExcludeId<T>
 
 export const createArrayPipeline = <T extends BaseObject>(
   n: number,
-  pipeline: (obj: ExcludeId<T>) => Effect.Effect<ReactiveObject<T>, never, never>,
+  pipeline: (obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>,
 ) => {
   return Effect.forEach(createObjectArray<T>(n), pipeline);
 };
 
+export type CreateOptions = {
+  /** Database for references. */
+  db?: EchoDatabase;
+  /** If true, set all optional properties, otherwise randomly set them. */
+  optional?: boolean;
+};
+
 /**
  * Create an object creation pipeline.
- * - Allows for mix of sync and async transformations.
- * - Consistent error processing.
  */
 export const createObjectPipeline = <T extends BaseObject>(
   generator: ValueGenerator,
   type: S.Schema<T>,
-  db?: EchoDatabase,
-): ((obj: ExcludeId<T>) => Effect.Effect<ReactiveObject<T>, never, never>) => {
+  { db, optional }: CreateOptions,
+): ((obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>) => {
   if (!db) {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<ReactiveObject<T>> = pipe(
-        Effect.succeed(obj),
-        // Effect.tap(logObject('before')),
-        Effect.map((obj) => createProps(generator, type)(obj)),
-        Effect.map((obj) => createReactiveObject(type)(obj)),
-        // Effect.tap(logObject('after')),
-      );
+      const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* (_) {
+        // logObject('before')(obj);
+        const withProps = createProps(generator, type, optional)(obj);
+        const liveObj = createReactiveObject(type)(withProps);
+        // logObject('after')(liveObj);
+        return liveObj;
+      });
 
       return pipeline;
     };
   } else {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<ReactiveEchoObject<any>, never, never> = pipe(
-        Effect.succeed(obj),
-        // Effect.tap(logObject('before')),
-        Effect.map((obj) => createProps(generator, type)(obj)),
-        Effect.map((obj) => createReactiveObject(type)(obj)),
-        Effect.flatMap((obj) => Effect.promise(() => createReferences(type, db)(obj))),
-        Effect.map((obj) => addToDatabase(db)(obj)),
-        // Effect.tap(logObject('after')),
-      );
+      const pipeline: Effect.Effect<ReactiveEchoObject<any>, never, never> = Effect.gen(function* (_) {
+        // logObject('before')(obj);
+        const withProps = createProps(generator, type, optional)(obj);
+        const liveObj = createReactiveObject(type)(withProps);
+        const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));
+        const dbObj = addToDatabase(db)(withRefs);
+        // logObject('after')(dbObj);
+        return dbObj;
+      });
 
       return pipeline;
     };
@@ -143,15 +176,18 @@ export const createObjectPipeline = <T extends BaseObject>(
 };
 
 export type ObjectGenerator<T extends BaseObject> = {
-  createObject: () => ReactiveObject<T>;
-  createObjects: (n: number) => ReactiveObject<T>[];
+  createObject: () => Live<T>;
+  createObjects: (n: number) => Live<T>[];
 };
 
+// TODO(ZaymonFC): Sync generator doesn't work with db -- createReferences is async and
+//   can't be invoked with `Effect.runSync`.
 export const createGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
   type: S.Schema<T>,
+  options: Omit<CreateOptions, 'db'> = {},
 ): ObjectGenerator<T> => {
-  const pipeline = createObjectPipeline(generator, type);
+  const pipeline = createObjectPipeline(generator, type, options);
 
   return {
     createObject: () => Effect.runSync(pipeline({} as ExcludeId<T>)),
@@ -160,16 +196,16 @@ export const createGenerator = <T extends BaseObject>(
 };
 
 export type AsyncObjectGenerator<T extends BaseObject> = {
-  createObject: () => Promise<ReactiveObject<T>>;
-  createObjects: (n: number) => Promise<ReactiveObject<T>[]>;
+  createObject: () => Promise<Live<T>>;
+  createObjects: (n: number) => Promise<Live<T>[]>;
 };
 
 export const createAsyncGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
   type: S.Schema<T>,
-  db: EchoDatabase,
+  options: CreateOptions = {},
 ): AsyncObjectGenerator<T> => {
-  const pipeline = createObjectPipeline(generator, type, db);
+  const pipeline = createObjectPipeline(generator, type, options);
 
   return {
     createObject: () => Effect.runPromise(pipeline({} as ExcludeId<T>)),

@@ -11,3 +11,4 @@ export * from './errors';
 export * from './auth';
 export * from './edge-http-client';
 export * from './edge-identity';
+export * from './edge-ws-muxer';

@@ -6,7 +6,7 @@ import { asyncTimeout } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { getFirstStreamValue } from '@dxos/codec-protobuf';
 import { type Config, type ConfigProto } from '@dxos/config';
-import { credentialTypeFilter } from '@dxos/credentials';
+import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
@@ -120,6 +120,7 @@ export const createDiagnostics = async (
       if (identity) {
         // Identity.
         diagnostics.identity = {
+          did: identity.did,
           identityKey: identity.identityKey,
           spaceKey: identity.space.key,
           profile: identity.profileDocument,
@@ -179,19 +180,22 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
         id: credential.id,
       })),
 
-    members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
-      role: member.role,
-      identity: {
-        identityKey: member.key,
-        profile: {
-          displayName: member.assertion.profile?.displayName,
+    members: await Promise.all(
+      Array.from(space.inner.spaceState.members.values()).map(async (member) => ({
+        role: member.role,
+        identity: {
+          did: await createDidFromIdentityKey(member.key),
+          identityKey: member.key,
+          profile: {
+            displayName: member.assertion.profile?.displayName,
+          },
         },
-      },
-      presence:
-        space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
-          ? SpaceMember.PresenceState.ONLINE
-          : SpaceMember.PresenceState.OFFLINE,
-    })),
+        presence:
+          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+            ? SpaceMember.PresenceState.ONLINE
+            : SpaceMember.PresenceState.OFFLINE,
+      })),
+    ),
 
     pipeline: {
       // TODO(burdon): Pick properties from credentials if needed.

@@ -7,13 +7,12 @@ import { createRoot } from 'react-dom/client';
 
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
 import { AgentHostingProvider, ClientProvider, ClientServicesProxy, Config, ShellDisplay } from '@dxos/react-client';
-import { Button, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { Shell } from './Shell';
 import { ShellRuntimeImpl } from './shell-runtime';
-import { ClipboardProvider } from '../../components';
 import { osTranslations } from '../../translations';
 
 export const runShell = async (config: Config = new Config()) => {
@@ -28,13 +27,13 @@ export const runShell = async (config: Config = new Config()) => {
       <StrictMode>
         <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
           <ClientProvider config={config} services={services} noBanner>
-            <ClipboardProvider>
+            <Clipboard.Provider>
               <Tooltip.Provider>
                 <AgentHostingProvider>
                   <Shell runtime={runtime} />
                 </AgentHostingProvider>
               </Tooltip.Provider>
-            </ClipboardProvider>
+            </Clipboard.Provider>
           </ClientProvider>
         </ThemeProvider>
       </StrictMode>,

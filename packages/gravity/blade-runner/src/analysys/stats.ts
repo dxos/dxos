@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Series } from 'danfojs-node';
+import mathjs from 'mathjs';
 
 import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
@@ -10,34 +10,6 @@ import { entry, range } from '@dxos/util';
 import { LogReader, type TraceEvent, zapPreprocessor } from './logging';
 import { type ReplicantsSummary, type TestParams } from '../plan';
 import { type SignalTestSpec } from '../spec';
-
-const seriesToJson = (s: Series) => {
-  const indexes = s.index;
-  return Object.fromEntries(
-    (s.values as Array<number>).map((val, i) => {
-      return [indexes[i], val];
-    }),
-  );
-};
-
-const getStats = (series: number[], additionalMetrics: Record<string, number> = {}) => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { Series } = require('danfojs-node');
-  const stats = new Series(series).describe() as Series;
-
-  const values: number[] = [];
-  const indexes: string[] = [];
-  Object.entries(additionalMetrics).forEach(([key, value]) => {
-    values.push(value);
-    indexes.push(key);
-  });
-
-  stats.append(values, indexes, { inplace: true });
-  stats.config.setMaxRow(20);
-  stats.print();
-
-  return seriesToJson(stats);
-};
 
 export const mapToJson = (m: Map<string, any>) => {
   return Object.fromEntries(
@@ -66,8 +38,8 @@ export const analyzeMessages = async (results: ReplicantsSummary) => {
     if (entry.message !== 'dxos.test.signal') {
       continue;
     }
-    const data: TraceEvent = entry.context;
 
+    const data: TraceEvent = entry.context;
     if (data.type !== 'SENT_MESSAGE' && data.type !== 'RECEIVE_MESSAGE') {
       continue;
     }
@@ -87,21 +59,19 @@ export const analyzeMessages = async (results: ReplicantsSummary) => {
 
   const failures = Array.from(messages.values()).filter((x) => !x.received || !x.sent).length;
   const lagTimes = Array.from(messages.values())
-    .filter((x) => !!x.sent && !!x.received)
-    .map((x) => x.received! - x.sent!);
+    .filter((message) => !!message.sent && !!message.received)
+    .map((message) => message.received! - message.sent!);
 
-  return getStats(lagTimes, {
+  return {
     failures,
     failureRate: failures / (lagTimes.length + failures),
     ...(await analyzeRunFailures(reader)),
-  });
+  };
 };
 
 export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, results: ReplicantsSummary) => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { Series } = require('danfojs-node');
-
   const start = Date.now();
+
   /**
    * topic -> peerId -> { join: time, left: time, seen: peerId -> ts}
    */
@@ -263,23 +233,20 @@ export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, res
 
   log.info(`analyzeSwarmEvents: ${Date.now() - start}ms`);
 
-  const processLagS = new Series(processLag);
-  const notifyLagS = new Series(notifyLag);
-
-  return getStats(discoverLag, {
-    processMean: processLagS.mean(),
-    processStd: processLagS.std(),
-    notifyMean: notifyLagS.mean(),
-    notifyStd: notifyLagS.std(),
+  return {
+    processMean: mathjs.mean(processLag),
+    processStd: mathjs.std(processLag),
+    notifyMean: mathjs.mean(notifyLag),
+    notifyStd: mathjs.std(notifyLag),
     ignored,
     failures,
     failureRate: failures / (discoverLag.length + failures),
-    fttMean: failureTtt.length > 0 ? new Series(failureTtt).mean() : NaN,
+    fttMean: failureTtt.length > 0 ? mathjs.mean(failureTtt) : NaN,
     ...(await analyzeRunFailures(reader)),
-  });
+  };
 };
 
-export const getReader = (replicants: ReplicantsSummary<any>) => {
+export const getReader = (replicants: ReplicantsSummary) => {
   const start = Date.now();
   const reader = new LogReader();
 

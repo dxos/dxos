@@ -3,9 +3,11 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 
-import { LayoutAction, useIntentResolver } from '@dxos/app-framework';
+import { createResolver, LayoutAction, useIntentResolver } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { Cursor, setSelection } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -14,12 +16,21 @@ import { MARKDOWN_PLUGIN } from '../meta';
  * Handle scrolling and selection of the current thread in a markdown editor.
  */
 export const useSelectCurrentThread = (editorView: EditorView | undefined, documentId: string) => {
-  const handleScrollIntoView = useCallback(
-    ({ action, data }: { action: string; data?: any }) => {
-      if (action === LayoutAction.SCROLL_INTO_VIEW) {
-        if (editorView && data?.id === documentId && data?.cursor) {
-          // TODO(burdon): We need typed intents.
-          const range = Cursor.getRangeFromCursor(editorView.state, data.cursor);
+  const scrollIntoViewResolver = useMemo(
+    () =>
+      createResolver({
+        intent: LayoutAction.UpdateLayout,
+        position: 'hoist',
+        filter: (data): data is { part: 'current'; subject: string; options: { cursor: string } } => {
+          if (!S.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
+            return false;
+          }
+
+          return !!editorView && data.subject === documentId && !!data.options?.cursor;
+        },
+        resolve: ({ options: { cursor } }) => {
+          invariant(editorView, 'Editor view is not defined.');
+          const range = Cursor.getRangeFromCursor(editorView.state, cursor!);
           if (range) {
             const selection = editorView.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
             const effects = [
@@ -35,14 +46,11 @@ export const useSelectCurrentThread = (editorView: EditorView | undefined, docum
               effects,
               selection: selection ? { anchor: range.from } : undefined,
             });
-
-            return { data: true };
           }
-        }
-      }
-    },
+        },
+      }),
     [documentId, editorView],
   );
 
-  useIntentResolver(MARKDOWN_PLUGIN, handleScrollIntoView);
+  useIntentResolver(MARKDOWN_PLUGIN, scrollIntoViewResolver);
 };

@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import {
   QueryAgentStatusResponse,
-  QueryEdgeStatusResponse,
+  EdgeStatus,
+  type QueryEdgeStatusResponse,
   type EdgeAgentService,
 } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -20,19 +21,15 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
     private readonly _edgeConnection?: EdgeConnection,
   ) {}
 
+  // TODO(mykola): Reconcile with NetworkService.queryStatus.
   queryEdgeStatus(): Stream<QueryEdgeStatusResponse> {
     return new Stream(({ ctx, next }) => {
-      next({ status: QueryEdgeStatusResponse.EdgeStatus.NOT_CONNECTED });
-      if (!this._edgeConnection) {
-        return;
-      }
+      const update = () => {
+        next({ status: this._edgeConnection?.status ?? EdgeStatus.NOT_CONNECTED });
+      };
 
-      ctx.onDispose(
-        // TODO(wittjosiah): EdgeConnection should include a disconnected event as well.
-        this._edgeConnection.onReconnected(() => {
-          next({ status: QueryEdgeStatusResponse.EdgeStatus.CONNECTED });
-        }),
-      );
+      this._edgeConnection?.statusChanged.on(ctx, update);
+      update();
     });
   }
 

@@ -2,7 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonProp } from '@dxos/echo-schema';
+import {
+  AST,
+  DecimalPrecision,
+  TypeEnum,
+  FormatEnum,
+  S,
+  JsonProp,
+  SelectOptionSchema,
+  type SelectOption,
+} from '@dxos/echo-schema';
 
 /**
  * Base schema.
@@ -49,6 +58,7 @@ interface FormatSchemaCommon extends BaseProperty {
   currency?: string;
   referenceSchema?: string;
   referencePath?: string;
+  options?: SelectOption[];
 }
 
 /**
@@ -100,6 +110,24 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.UUID]: extend(FormatEnum.UUID, TypeEnum.String),
 
   //
+  // Select
+  //
+
+  [FormatEnum.SingleSelect]: extend(FormatEnum.SingleSelect, TypeEnum.String, {
+    options: S.Array(SelectOptionSchema).annotations({
+      [AST.TitleAnnotationId]: 'Options',
+      [AST.DescriptionAnnotationId]: 'Available choices',
+    }),
+  }),
+
+  [FormatEnum.MultiSelect]: extend(FormatEnum.MultiSelect, TypeEnum.Object, {
+    options: S.Array(SelectOptionSchema).annotations({
+      [AST.TitleAnnotationId]: 'Options',
+      [AST.DescriptionAnnotationId]: 'Available choices',
+    }),
+  }),
+
+  //
   // Numbers
   //
 
@@ -131,7 +159,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   // Objects
   //
 
-  [FormatEnum.LatLng]: extend(FormatEnum.LatLng, TypeEnum.Object),
+  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Object),
 };
 
 /**
@@ -159,6 +187,8 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.Regex],
   formatToSchema[FormatEnum.URL],
   formatToSchema[FormatEnum.UUID],
+  formatToSchema[FormatEnum.SingleSelect],
+  formatToSchema[FormatEnum.MultiSelect],
 
   //
   // Numbers
@@ -181,12 +211,12 @@ export const PropertySchema = S.Union(
   // Objects
   //
 
-  formatToSchema[FormatEnum.LatLng],
+  formatToSchema[FormatEnum.GeoPoint],
 );
 
 export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}
 
-export const getFormatSchema = (format?: FormatEnum): S.Schema<any> => {
+export const getFormatSchema = (format?: FormatEnum): S.Schema.AnyNoContext => {
   if (format === undefined) {
     return formatToSchema[FormatEnum.None];
   }

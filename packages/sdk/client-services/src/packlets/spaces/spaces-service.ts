@@ -2,20 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
-import { createAdmissionCredentials, type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
+import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { Stream } from '@dxos/codec-protobuf/stream';
+import {
+  type CredentialProcessor,
+  createAdmissionCredentials,
+  createDidFromIdentityKey,
+  getCredentialAssertion,
+} from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, assertState, invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  ApiError,
-  SpaceNotFoundError,
   encodeError,
-  IdentityNotInitializedError,
+  ApiError,
   AuthorizationError,
+  IdentityNotInitializedError,
+  SpaceNotFoundError,
 } from '@dxos/protocols';
 import {
   SpaceMember,
@@ -35,6 +42,10 @@ import {
   type JoinSpaceResponse,
   type JoinBySpaceKeyRequest,
   type CreateEpochResponse,
+  type ExportSpaceResponse,
+  type ExportSpaceRequest,
+  type ImportSpaceRequest,
+  type ImportSpaceResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -44,6 +55,7 @@ import { type Provider } from '@dxos/util';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
 import { type IdentityManager } from '../identity';
+import { extractSpaceArchive, SpaceArchiveWriter } from '../space-export';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -115,7 +127,9 @@ export class SpacesServiceImpl implements SpacesService {
         ctx,
         async () => {
           const dataSpaceManager = await this._getDataSpaceManager();
-          const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space));
+          const spaces = await Promise.all(
+            Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space)),
+          );
           log('update', () => ({ ids: spaces.map((space) => space.id) }));
           await this._updateMetrics();
           next({ spaces });
@@ -126,7 +140,7 @@ export class SpacesServiceImpl implements SpacesService {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
 
-        const subscriptions = new EventSubscriptions();
+        const subscriptions = new SubscriptionList();
         ctx.onDispose(() => subscriptions.clear());
 
         // TODO(dmaretskyi): Create a pattern for subscribing to a set of objects.
@@ -249,6 +263,37 @@ export class SpacesServiceImpl implements SpacesService {
     return this._joinByAdmission({ credential });
   }
 
+  async exportSpace(request: ExportSpaceRequest): Promise<ExportSpaceResponse> {
+    await using writer = await new SpaceArchiveWriter().open();
+    assertArgument(SpaceId.isValid(request.spaceId), 'Invalid space ID');
+
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));
+    await writer.begin({ spaceId: space.id });
+    const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
+    assertState(rootUrl, 'Space does not have a root URL');
+    await writer.setCurrentRootUrl(rootUrl);
+
+    for await (const [documentId, data] of space.getAllDocuments()) {
+      await writer.writeDocument(documentId, data);
+    }
+
+    const archive = await writer.finish();
+    return { archive };
+  }
+
+  async importSpace(request: ImportSpaceRequest): Promise<ImportSpaceResponse> {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const extracted = await extractSpaceArchive(request.archive);
+    invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
+    const space = await dataSpaceManager.createSpace({
+      documents: extracted.documents,
+      rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
+    });
+    await this._updateMetrics();
+    return { newSpaceId: space.id };
+  }
+
   private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {
     const assertion = getCredentialAssertion(credential);
     invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
@@ -265,10 +310,10 @@ export class SpacesServiceImpl implements SpacesService {
       await myIdentity.controlPipeline.writer.write({ credential: { credential } });
     }
 
-    return { space: this._serializeSpace(dataSpace) };
+    return { space: await this._serializeSpace(dataSpace) };
   }
 
-  private _serializeSpace(space: DataSpace): Space {
+  private async _serializeSpace(space: DataSpace): Promise<Space> {
     return {
       id: space.id,
       spaceKey: space.key,
@@ -291,24 +336,27 @@ export class SpacesServiceImpl implements SpacesService {
 
         spaceRootUrl: space.databaseRoot?.url,
       },
-      members: Array.from(space.inner.spaceState.members.values()).map((member) => {
-        const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
-        const isMe = this._identityManager.identity?.identityKey.equals(member.key);
+      members: await Promise.all(
+        Array.from(space.inner.spaceState.members.values()).map(async (member) => {
+          const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
+          const isMe = this._identityManager.identity?.identityKey.equals(member.key);
 
-        if (isMe) {
-          peers.push(space.presence.getLocalState());
-        }
+          if (isMe) {
+            peers.push(space.presence.getLocalState());
+          }
 
-        return {
-          identity: {
-            identityKey: member.key,
-            profile: member.profile ?? {},
-          },
-          role: member.role,
-          presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
-          peerStates: peers,
-        };
-      }),
+          return {
+            identity: {
+              did: await createDidFromIdentityKey(member.key),
+              identityKey: member.key,
+              profile: member.profile ?? {},
+            },
+            role: member.role,
+            presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
+            peerStates: peers,
+          };
+        }),
+      ),
       creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,

@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { scheduleMicroTask, scheduleTaskInterval } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';

@@ -31,8 +31,9 @@ import {
   type LoadDocOptions,
   type CreateDocOptions,
   type EchoReplicator,
-  type CollectionSyncState,
   type EchoDataStats,
+  type PeerIdProvider,
+  type RootDocumentSpaceKeyProvider,
 } from '../automerge';
 
 const INDEXER_CONFIG: IndexConfig = {
@@ -42,6 +43,8 @@ const INDEXER_CONFIG: IndexConfig = {
 
 export type EchoHostParams = {
   kv: LevelDB;
+  peerIdProvider?: PeerIdProvider;
+  getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 };
 
 /**
@@ -59,7 +62,7 @@ export class EchoHost extends Resource {
   private readonly _spaceStateManager = new SpaceStateManager();
   private readonly _echoDataMonitor: EchoDataMonitor;
 
-  constructor({ kv }: EchoHostParams) {
+  constructor({ kv, peerIdProvider, getSpaceKeyByRootDocumentId }: EchoHostParams) {
     super();
 
     this._indexMetadataStore = new IndexMetadataStore({ db: kv.sublevel('index-metadata') });
@@ -70,6 +73,8 @@ export class EchoHost extends Resource {
       db: kv,
       dataMonitor: this._echoDataMonitor,
       indexMetadataStore: this._indexMetadataStore,
+      peerIdProvider,
+      getSpaceKeyByRootDocumentId,
     });
 
     this._indexer = new Indexer({
@@ -79,7 +84,7 @@ export class EchoHost extends Resource {
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
       indexCooldownTime: process.env.NODE_ENV === 'test' ? 0 : undefined,
     });
-    this._indexer.setConfig(INDEXER_CONFIG);
+    void this._indexer.setConfig(INDEXER_CONFIG);
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
@@ -88,6 +93,7 @@ export class EchoHost extends Resource {
 
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
+      spaceStateManager: this._spaceStateManager,
       updateIndexes: async () => {
         await this._indexer.updateIndexes();
       },
@@ -160,7 +166,15 @@ export class EchoHost extends Resource {
     await this._spaceStateManager.open(ctx);
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
+      if (e.previousRootId) {
+        void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
+      }
+      // TODO(yaroslav): remove collection without spaceRootId after release (production<->staging interop)
       void this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
+      void this._automergeHost.updateLocalCollectionState(
+        deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
+        e.documentIds,
+      );
     });
   }
 
@@ -190,6 +204,10 @@ export class EchoHost extends Resource {
    */
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
     return await this._automergeHost.loadDoc(ctx, documentId, opts);
+  }
+
+  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
+    return await this._automergeHost.exportDoc(ctx, id);
   }
 
   /**
@@ -223,7 +241,7 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = this._automergeHost.repo.find(automergeUrl);
+    const handle = this._automergeHost.repo.find<SpaceDoc>(automergeUrl);
 
     return this._spaceStateManager.assignRootToSpace(spaceId, handle);
   }
@@ -245,11 +263,6 @@ export class EchoHost extends Resource {
    */
   async removeReplicator(replicator: EchoReplicator): Promise<void> {
     await this._automergeHost.removeReplicator(replicator);
-  }
-
-  async getSpaceSyncState(spaceId: SpaceId): Promise<CollectionSyncState> {
-    const collectionId = deriveCollectionIdFromSpaceId(spaceId);
-    return this._automergeHost.getCollectionSyncState(collectionId);
   }
 }
 

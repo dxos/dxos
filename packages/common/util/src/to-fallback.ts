@@ -17,8 +17,8 @@ export const idEmoji = [
   // – less likely to evoke negative feelings (no meat, no drugs, no weapons, etc)
   // – less common as a signifier in UX
   // NOTE that this is intentionally an array of strings because of the way emoji graphemes work.
-  '👹',
   '👻',
+  '👹',
   '👽',
   '🤖',
   '🎃',
@@ -171,17 +171,18 @@ export const idHue = [
   'rose' as const,
 ];
 
-export const keyToEmoji = (key: PublicKey) => hexToEmoji(key.toHex());
+// TODO(wittjosiah): Do we need all of these variants?
+export const keyToEmoji = (key: PublicKey) => keyToFallback(key).emoji;
 
-export const hexToEmoji = (hex: string) => toEmoji(parseInt(hex, 16));
+export const hexToEmoji = (hex: string) => hexToFallback(hex).emoji;
 
-export const toEmoji = (hash: number) => idEmoji[hash % idEmoji.length];
+export const toEmoji = (hash: number) => toFallback(hash).emoji;
 
-export const keyToHue = (key: PublicKey) => hexToHue(key.toHex());
+export const keyToHue = (key: PublicKey) => keyToFallback(key).hue;
 
-export const hexToHue = (hex: string) => toHue(parseInt(hex, 16));
+export const hexToHue = (hex: string) => hexToFallback(hex).hue;
 
-export const toHue = (hash: number) => idHue[hash % idHue.length];
+export const toHue = (hash: number) => toFallback(hash).hue;
 
 export type FallbackValue = {
   emoji: string;
@@ -190,6 +191,24 @@ export type FallbackValue = {
 
 export const keyToFallback = (key: PublicKey) => hexToFallback(key.toHex());
 
+// TODO(wittjosiah): Support non-hex strings (e.g. DIDs, UUIDs, etc.)
 export const hexToFallback = (hex: string) => toFallback(parseInt(hex, 16));
 
-export const toFallback = (hash: number): FallbackValue => ({ emoji: toEmoji(hash), hue: toHue(hash) });
+export const toFallback = (hash: number): FallbackValue => {
+  // Calculate total possible combinations of emoji and hue pairs
+  const totalCombinations = idEmoji.length * idHue.length;
+
+  // Get a deterministic index within the range of all possible combinations
+  const combinationIndex = hash % totalCombinations;
+
+  // Calculate which emoji to use based on the combination index
+  const emojiIndex = Math.floor(combinationIndex / idHue.length);
+
+  // Calculate which hue to use based on the combination index
+  const hueIndex = combinationIndex % idHue.length;
+
+  return {
+    emoji: idEmoji[emojiIndex],
+    hue: idHue[hueIndex],
+  };
+};

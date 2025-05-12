@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
-import { ObjectAnnotationId, ref } from '@dxos/echo-schema';
+import { EntityKind, TypeAnnotationId, Ref } from '@dxos/echo-schema';
 
 // TODO(burdon): Reconcile with sdk/schema/testing.
 // TODO(burdon): Convert interface to type.
@@ -19,7 +19,8 @@ export const Contact = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
+      kind: EntityKind.Object,
       typename: 'example.com/type/Contact',
       version: '0.1.0',
     },
@@ -34,7 +35,8 @@ export const Project = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
+      kind: EntityKind.Object,
       typename: 'example.com/type/Project',
       version: '0.1.0',
     },
@@ -46,12 +48,13 @@ export const Task = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the task.' }),
   description: S.optional(S.String).annotations({ description: 'The description of the task.' }),
-  project: ref(Project),
-  assignee: ref(Contact),
+  project: Ref(Project),
+  assignee: Ref(Contact),
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
+      kind: EntityKind.Object,
       typename: 'example.com/type/Task',
       version: '0.1.0',
     },
@@ -59,18 +62,19 @@ export const Task = S.Struct({
   });
 export interface Task extends S.Schema.Type<typeof Task> {}
 
-export const Org = S.Struct({
+export const Organization = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the organization.' }),
-  projects: S.Array(ref(Project)),
-  employees: S.Array(ref(Contact)),
+  projects: S.Array(Ref(Project)),
+  employees: S.Array(Ref(Contact)),
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
-      typename: 'example.com/type/Org',
+    [TypeAnnotationId]: {
+      kind: EntityKind.Object,
+      typename: 'example.com/type/Organization',
       version: '0.1.0',
     },
     description: 'Contact information.',
   });
-export interface Org extends S.Schema.Type<typeof Org> {}
+export interface Organization extends S.Schema.Type<typeof Organization> {}

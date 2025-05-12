@@ -8,7 +8,8 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Filter } from '@dxos/echo-db';
-import { create } from '@dxos/live-object';
+import { Ref } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
@@ -169,22 +170,24 @@ describe('Client', () => {
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;
     await space2.waitUntilReady();
-    const thread2 = space2.db.add(create(ThreadType, { messages: [] }));
+    const thread2 = space2.db.add(live(ThreadType, { messages: [] }));
     await space2.db.flush();
 
     const thread1 = await threadQueried.wait({ timeout: 2_000 });
 
     const text = 'Hello world';
     const message = space2.db.add(
-      create(MessageType, {
-        blocks: [{ timestamp: new Date().toISOString(), content: create(TextV0Type, { content: text }) }],
+      live(MessageType, {
+        blocks: [{ timestamp: new Date().toISOString(), content: Ref.make(live(TextV0Type, { content: text })) }],
       }),
     );
-    thread2.messages.push(message);
+    thread2.messages.push(Ref.make(message));
     await space2.db.flush();
 
     await expect.poll(() => thread1.messages.length, { timeout: 1_000 }).toEqual(1);
-    await expect.poll(() => thread1.messages[0]!.blocks[0].content?.content, { timeout: 1_000 }).toEqual(text);
+    await expect
+      .poll(() => thread1.messages[0].target!.blocks[0].content?.target?.content, { timeout: 1_000 })
+      .toEqual(text);
   });
 
   // TODO(wittjosiah): This functionality is currently disabled because it was unreliable.

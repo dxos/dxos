@@ -3,15 +3,17 @@
 //
 
 import { SHEET_PLUGIN } from './meta';
+import { SheetType } from './types';
 
 export default [
   {
     'en-US': {
+      [SheetType.typename]: {
+        'typename label': 'Sheet',
+        'object name placeholder': 'New sheet',
+      },
       [SHEET_PLUGIN]: {
         'plugin name': 'Sheets',
-        'sheet title placeholder': 'New sheet',
-        'create sheet label': 'Create sheet',
-        'create sheet section label': 'Create sheet',
         'cell placeholder': 'Cell value...',
         'range key alignment label': 'Align',
         'range key style label': 'Style',

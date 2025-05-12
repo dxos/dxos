@@ -3,15 +3,18 @@
 //
 
 export * from './AwaitingObject';
+export * from './CreateDialog';
 export * from './CollectionMain';
 export * from './CollectionSection';
-export * from './DefaultObjectSettings';
 export * from './JoinDialog';
+export * from './MembersContainer';
 export * from './MenuFooter';
+export * from './ObjectSettings';
 export * from './PersistenceStatus';
+export * from './PopoverAddSpace';
 export * from './PopoverRenameObject';
 export * from './PopoverRenameSpace';
-export * from './ShareSpaceButton';
+export * from './SchemaContainer';
 export * from './SpacePresence';
 export * from './SpacePluginSettings';
 export * from './SpaceSettings';

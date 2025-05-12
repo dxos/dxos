@@ -5,39 +5,57 @@
 import React, { useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Icon, Popover } from '@dxos/react-ui';
+import { useConfig } from '@dxos/react-client';
+import { Icon, Popover, useTranslation } from '@dxos/react-ui';
+import { mx, descriptionText } from '@dxos/react-ui-theme';
 
-import { FeedbackForm } from './FeedbackForm';
 import { StatusBar } from './StatusBar';
+import { VersionNumber } from './VersionNumber';
+import { STATUS_BAR_PLUGIN } from '../meta';
 
-export const StatusBarPanel = () => {
+export const StatusBarActions = () => {
+  const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const [open, setOpen] = useState(false);
 
-  // TODO(wittjosiah): Factor out feedback and discord buttons.
+  const config = useConfig();
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
+  const edgeEnv = edgeUrl?.includes('edge-production')
+    ? 'PROD'
+    : edgeUrl?.includes('edge-labs')
+      ? 'LABS'
+      : edgeUrl?.includes('edge-main')
+        ? 'MAIN'
+        : 'DEV';
+
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <StatusBar.Container>
-        <StatusBar.EndContent>
-          <Surface role='status' />
-          <Popover.Trigger asChild>
-            <StatusBar.Button aria-label='Give feedback about composer' data-joyride='welcome/feedback'>
-              <Icon icon='ph--paper-plane-tilt--regular' size={4} />
-              <StatusBar.Text classNames='hidden sm:block'>Feedback</StatusBar.Text>
-            </StatusBar.Button>
-          </Popover.Trigger>
-          {/* TODO(zan): Configure this label? */}
-          <StatusBar.Button aria-label='Open DXOS Discord' asChild>
-            <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
-              <Icon icon='ph--discord-logo--regular' size={4} />
-              <StatusBar.Text classNames='hidden sm:block'>Discord</StatusBar.Text>
-            </a>
-          </StatusBar.Button>
-        </StatusBar.EndContent>
-      </StatusBar.Container>
-      <Popover.Content classNames='shadow-lg'>
-        <FeedbackForm onClose={() => setOpen(false)} />
-        <Popover.Arrow />
-      </Popover.Content>
+      <StatusBar.Item>
+        <StatusBar.Text classNames={mx('text-xs', descriptionText)}>{edgeEnv}</StatusBar.Text>
+      </StatusBar.Item>
+      <VersionNumber />
+      {/* TODO(zan): Configure this label? */}
+      <StatusBar.Button asChild>
+        <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
+          <Icon icon='ph--discord-logo--regular' size={4} />
+          <StatusBar.Text classNames='hidden sm:block'>{t('discord label')}</StatusBar.Text>
+        </a>
+      </StatusBar.Button>
+      <StatusBar.Button asChild>
+        <a href='https://github.com/dxos/dxos' target='_blank' rel='noopener noreferrer'>
+          <Icon icon='ph--github-logo--regular' size={4} />
+          <StatusBar.Text classNames='hidden sm:block'>{t('github label')}</StatusBar.Text>
+        </a>
+      </StatusBar.Button>
     </Popover.Root>
+  );
+};
+
+export const StatusBarPanel = () => {
+  return (
+    <>
+      <StatusBarActions />
+      <span role='separator' className='grow' />
+      <Surface role='status' />
+    </>
   );
 };

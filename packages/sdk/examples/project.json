@@ -26,6 +26,7 @@
         "quiet": true
       }
     },
+    "pack": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {

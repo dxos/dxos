@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isEncodedReference, type EncodedReference, type ForeignKey } from '@dxos/echo-protocol';
+import { type EncodedReference, type ForeignKey, isEncodedReference } from '@dxos/echo-protocol';
 import { type BaseObject, requireTypeReference, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -13,13 +13,18 @@ import {
   type QueryOptions_DataLocation,
   type QueryOptions_ShowDeletedOption,
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
-import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type Filter as FilterProto, type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type ReactiveEchoObject, getReferenceWithSpaceKey } from '../echo-handler';
+import { getReferenceWithSpaceKey } from '../echo-handler';
 
+// TODO(dmaretskyi): Rename `hasInstanceOf`.
+// TODO(dmaretskyi): Remove from echo api
+/**
+ * @deprecated Use `isInstanceOf` instead.
+ */
 export const hasType =
-  <T extends ReactiveEchoObject<T>>(type: { new (): T }) =>
-  (object: ReactiveEchoObject<any> | undefined): object is T =>
+  <T extends BaseObject>(type: { new (): T }) =>
+  (object: BaseObject | undefined): object is T =>
     object instanceof type;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
@@ -146,14 +151,14 @@ export class Filter<T extends BaseObject = any> {
     return new Filter({ not: true });
   }
 
-  // TODO(burdon): Tighten to AbstractTypedObject.
+  // TODO(burdon): Tighten to TypedObject.
   static schema<S extends S.Schema.All>(
     schema: S,
     filter?: Record<string, any> | OperatorFilter<S.Schema.Type<S>>,
   ): Filter<S.Schema.Type<S>>;
 
-  // TODO(burdon): Tighten to AbstractTypedObject.
-  static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
+  // TODO(burdon): Tighten to TypedObject.
+  static schema(schema: S.Schema.AnyNoContext, filter?: Record<string, any> | OperatorFilter): Filter {
     if (!schema) {
       throw new TypeError('`schema` parameter is required.');
     }
@@ -240,11 +245,14 @@ export class Filter<T extends BaseObject = any> {
       {
         type: proto.type?.map((type) => DXN.parse(type)),
         properties: proto.properties,
+        objectIds: proto.objectIds,
         text: proto.text,
         not: proto.not,
         and: proto.and?.map((filter) => Filter.fromProto(filter)),
         or: proto.or?.map((filter) => Filter.fromProto(filter)),
-      },
+        metaKeys: undefined,
+        predicate: undefined,
+      } satisfies Record<keyof FilterParams, any>,
       options,
     );
   }

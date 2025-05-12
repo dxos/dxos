@@ -4,5 +4,18 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../common/crypto"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../protocols"
+    }
+  ]
 }

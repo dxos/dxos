@@ -23,7 +23,7 @@ const BANNER = (client: Client) => {
 let bannerPrinted = false;
 
 export const printBanner = (client: Client) => {
-  if (bannerPrinted) {
+  if (bannerPrinted || window.location.hostname === 'localhost') {
     return;
   }
 

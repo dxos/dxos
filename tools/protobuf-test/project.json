@@ -15,6 +15,7 @@
       "outputs": [
         "{projectRoot}/dist"
       ]
-    }
+    },
+    "pack": {}
   }
 }

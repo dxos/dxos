@@ -1,13 +1,15 @@
 {
   "extends": "../../../../tsconfig.base.json",
-  "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ]
-  },
+  "compilerOptions": {},
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../rpc"
+    }
+  ]
 }

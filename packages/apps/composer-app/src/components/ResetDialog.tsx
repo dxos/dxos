@@ -6,17 +6,20 @@ import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/react-client';
+import { type Observability } from '@dxos/observability';
+import { FeedbackForm } from '@dxos/plugin-observability';
+import { type UserFeedback } from '@dxos/plugin-observability/types';
 import {
   AlertDialog,
   type AlertDialogRootProps,
   Button,
   DropdownMenu,
+  IconButton,
   Message,
+  Popover,
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { type Provider } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -28,8 +31,11 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
   const translatedMessage = t(`${error.name} message`, context);
   const message = translatedMessage === `${error.name} message` ? t('fatal error message') : translatedMessage;
 
+  const cause =
+    error.cause instanceof Error ? String(error.cause.stack) : error.cause ? String(error.cause) : undefined;
+
   // Removes indents.
-  const stack = String(error?.stack)
+  const stack = `${String(error.stack)}${cause ? `\nCaused by: ${cause}` : ''}`
     .split('\n')
     .map((text) => text.trim())
     .join('\n');
@@ -39,13 +45,13 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 
 export type FatalErrorProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
-  config?: Config | Provider<Promise<Config>>;
+  observability?: Promise<Observability>;
   isDev?: boolean;
 };
 
 export const ResetDialog = ({
   error: propsError,
-  config: configProvider,
+  observability: observabilityPromise,
   defaultOpen,
   open,
   onOpenChange,
@@ -57,20 +63,37 @@ export const ResetDialog = ({
     updateServiceWorker,
   } = useRegisterSW();
   const [showStack, setShowStack] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const handleCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(error));
   }, [error]);
 
   const handleReset = async () => {
-    const config = new Config(await Storage(), Envs(), Local(), Defaults());
-
-    const { ClientServicesHost } = await import('@dxos/client-services');
-    const services = new ClientServicesHost({ config });
-    await services.reset();
     localStorage.clear();
-    window.location.pathname = '/';
+    window.location.href = window.location.origin;
   };
+
+  const handleSaveFeedback = useCallback(
+    async (values: UserFeedback) => {
+      if (!observabilityPromise) {
+        return;
+      }
+
+      const observability = await observabilityPromise;
+      observability.captureUserFeedback(values.message);
+      setFeedbackOpen(false);
+    },
+    [observabilityPromise],
+  );
+
+  const handleReload = useCallback(() => {
+    if (needRefresh) {
+      void updateServiceWorker(true);
+    } else {
+      location.reload();
+    }
+  }, [needRefresh, updateServiceWorker]);
 
   const Caret = showStack ? CaretDown : CaretRight;
 
@@ -98,52 +121,59 @@ export const ResetDialog = ({
                 <Message.Root
                   key={error.message}
                   valence='error'
-                  className='mlb-4 overflow-auto max-bs-72'
+                  className='mlb-4 overflow-auto max-bs-72 relative'
                   data-testid='resetDialog.stackTrace'
                 >
                   <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <Button onClick={handleCopyError} classNames='absolute top-2 right-2'>
+                        <Clipboard weight='duotone' size='1em' />
+                      </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>{t('copy error label')}</Tooltip.Content>
+                  </Tooltip.Root>
                 </Message.Root>
               )}
             </>
           )}
           <div role='none' className='flex gap-2 mbs-4'>
-            {showStack && (
-              <Tooltip.Root>
-                <Tooltip.Trigger>
-                  <Button onClick={handleCopyError}>
-                    <Clipboard weight='duotone' size='1em' />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content classNames='z-[51]'>{t('copy error label')}</Tooltip.Content>
-              </Tooltip.Root>
-            )}
-            <div role='none' className='flex-grow' />
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button data-testid='resetDialog.reset' variant='ghost'>
-                  {t('reset client label')}
+                  {t('reset app label')}
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content side='top' classNames='z-[51]'>
+                <DropdownMenu.Content side='top'>
                   <DropdownMenu.Viewport>
                     <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={handleReset}>
-                      {t('reset client confirm label')}
+                      {t('reset app confirm label')}
                     </DropdownMenu.Item>
                   </DropdownMenu.Viewport>
                   <DropdownMenu.Arrow />
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
-            {needRefresh ? (
-              <Button variant='primary' onClick={() => updateServiceWorker(true)}>
-                {t('update and reload page label')}
-              </Button>
-            ) : (
-              <Button variant='primary' onClick={() => location.reload()}>
-                {t('reload page label')}
-              </Button>
+            <div role='none' className='flex-grow' />
+
+            {observabilityPromise && (
+              <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+                <Popover.Trigger asChild>
+                  <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback label')} />
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Content>
+                    <FeedbackForm onSave={handleSaveFeedback} />
+                  </Popover.Content>
+                </Popover.Portal>
+              </Popover.Root>
             )}
+            <IconButton
+              icon='ph--arrow-clockwise--regular'
+              label={t(needRefresh ? 'update and reload page label' : 'reload page label')}
+              onClick={handleReload}
+            />
           </div>
         </AlertDialog.Content>
       </AlertDialog.Overlay>

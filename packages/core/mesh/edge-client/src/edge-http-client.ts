@@ -19,6 +19,16 @@ import {
   type GetAgentStatusResponseBody,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
+  type UploadFunctionRequest,
+  type UploadFunctionResponseBody,
+  type ObjectId,
+  type ExecuteWorkflowResponseBody,
+  type QueueQuery,
+  type QueryResult,
+  type InitiateOAuthFlowRequest,
+  type InitiateOAuthFlowResponse,
+  type CreateSpaceRequest,
+  type CreateSpaceResponseBody,
 } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -32,6 +42,7 @@ export class EdgeHttpClient {
   private readonly _baseUrl: string;
 
   private _edgeIdentity: EdgeIdentity | undefined;
+
   /**
    * Auth header is cached until receiving the next 401 from EDGE, at which point it gets refreshed.
    */
@@ -40,6 +51,10 @@ export class EdgeHttpClient {
   constructor(baseUrl: string) {
     this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
     log('created', { url: this._baseUrl });
+  }
+
+  get baseUrl() {
+    return this._baseUrl;
   }
 
   setIdentity(identity: EdgeIdentity) {
@@ -87,12 +102,106 @@ export class EdgeHttpClient {
     return this._call('/identity/recover', { ...args, body, method: 'POST' });
   }
 
+  public async executeWorkflow(
+    spaceId: SpaceId,
+    graphId: ObjectId,
+    input: any,
+    args?: EdgeHttpGetArgs,
+  ): Promise<ExecuteWorkflowResponseBody> {
+    return this._call(`/workflows/${spaceId}/${graphId}`, { ...args, body: input, method: 'POST' });
+  }
+
+  public async uploadFunction(
+    pathParts: { spaceId: SpaceId; functionId?: string },
+    body: UploadFunctionRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<UploadFunctionResponseBody> {
+    const path = ['functions', pathParts.spaceId, ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
+    return this._call(path, { ...args, body, method: 'PUT' });
+  }
+
+  public async initiateOAuthFlow(
+    body: InitiateOAuthFlowRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<InitiateOAuthFlowResponse> {
+    return this._call('/oauth/initiate', { ...args, body, method: 'POST' });
+  }
+
+  public async queryQueue(
+    subspaceTag: string,
+    spaceId: SpaceId,
+    query: QueueQuery,
+    args?: EdgeHttpGetArgs,
+  ): Promise<QueryResult> {
+    const { queueId } = query;
+    const queryParams = new URLSearchParams();
+    if (query.after != null) {
+      queryParams.set('after', query.after);
+    }
+    if (query.before != null) {
+      queryParams.set('before', query.before);
+    }
+    if (query.limit != null) {
+      queryParams.set('limit', query.limit.toString());
+    }
+    if (query.reverse != null) {
+      queryParams.set('reverse', query.reverse.toString());
+    }
+    if (query.objectIds != null) {
+      queryParams.set('objectIds', query.objectIds.join(','));
+    }
+    return this._call(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}/query?${queryParams.toString()}`, {
+      ...args,
+      method: 'GET',
+    });
+  }
+
+  public async insertIntoQueue(
+    subspaceTag: string,
+    spaceId: SpaceId,
+    queueId: ObjectId,
+    objects: unknown[],
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, {
+      ...args,
+      body: { objects },
+      method: 'POST',
+    });
+  }
+
+  async deleteFromQueue(
+    subspaceTag: string,
+    spaceId: SpaceId,
+    queueId: ObjectId,
+    objectIds: ObjectId[],
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, {
+      ...args,
+      query: { ids: objectIds.join(',') },
+      method: 'DELETE',
+    });
+  }
+
+  async createSpace(body: CreateSpaceRequest, args?: EdgeHttpGetArgs): Promise<CreateSpaceResponseBody> {
+    return this._call('/spaces/create', { ...args, body, method: 'POST' });
+  }
+
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {
     const requestContext = args.context ?? new Context();
     const shouldRetry = createRetryHandler(args);
-    const url = `${this._baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
+    let url = `${this._baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
 
-    log.info('call', { method: args.method, path, request: args.body });
+    if (args.query) {
+      const queryParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(args.query)) {
+        queryParams.set(key, value.toString());
+      }
+      url += `?${queryParams.toString()}`;
+    }
+
+    log('call', { method: args.method, path, request: args.body });
 
     let handledAuth = false;
     let authHeader = this._authHeader;
@@ -111,7 +220,7 @@ export class EdgeHttpClient {
             return body.data;
           }
 
-          log.info('unsuccessful edge response', { path, body });
+          log('unsuccessful edge response', { path, body });
 
           if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
             processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
@@ -130,7 +239,7 @@ export class EdgeHttpClient {
       }
 
       if (processingError.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
-        log.info('retrying edge request', { path, processingError });
+        log('retrying edge request', { path, processingError });
       } else {
         throw processingError;
       }
@@ -197,6 +306,7 @@ type EdgeHttpCallArgs = {
   body?: any;
   context?: Context;
   retry?: RetryConfig;
+  query?: Record<string, string>;
 };
 
 const createRequest = (args: EdgeHttpCallArgs, authHeader: string | undefined): RequestInit => {

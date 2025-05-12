@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeckPlugin } from './DeckPlugin';
-
-export default DeckPlugin;
-
+export { DeckCapabilities } from './capabilities';
+export { DeckEvents } from './events';
 export * from './DeckPlugin';
+export * from './meta';
+export { useCompanions } from './util';

@@ -18,14 +18,17 @@ export const SpaceTable: FC<{ client: Client; interval?: number }> = ({ client, 
     return () => clearInterval(timer);
   }, [client, interval]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     const spaces = client.spaces.get();
-    const data = mapSpaces(spaces, { truncateKeys: true });
+    const data = await mapSpaces(spaces, { truncateKeys: true });
     setData(
-      data.map(({ key, open, objects }) => ({
+      data.map(({ key, state, name, members, objects, startup }) => ({
         key,
-        open,
+        state,
+        name,
+        members,
         objects,
+        startup,
       })),
     );
   };

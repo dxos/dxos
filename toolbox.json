@@ -1,10 +1,24 @@
 {
   "project": {
-    "ignored": ["@dxos/dxos"],
-    "fixedKeys": ["$schema", "name", "tags", "sourceRoot", "projectType", "targets"]
+    "ignored": [
+      "@dxos/dxos"
+    ],
+    "fixedKeys": [
+      "$schema",
+      "name",
+      "tags",
+      "sourceRoot",
+      "projectType",
+      "targets"
+    ]
   },
   "package": {
-    "commonKeys": ["license", "author", "homepage", "bugs"],
+    "commonKeys": [
+      "license",
+      "author",
+      "homepage",
+      "bugs"
+    ],
     "withCustomExports": [
       "@dxos/shell",
       "@dxos/node-std",
@@ -19,7 +33,6 @@
       "@dxos/timeframe",
       "@dxos/tracing",
       "@dxos/lit-grid",
-      "@dxos/plate",
       "@dxos/gem-spore",
       "@dxos/test-utils",
       "@dxos/react-ui-stack",
@@ -27,18 +40,30 @@
     ]
   },
   "tsconfig": {
-    "fixedKeys": ["extends", "compilerOptions"],
+    "fixedKeys": [
+      "extends",
+      "compilerOptions"
+    ],
     "pathMapping": {
+      "roots": [
+        "@dxos/composer-app"
+      ],
       "include": [
-        "packages/devtools/devtools",
         "packages/plugins/*",
         "packages/plugins/experimental/*",
+        "packages/ui/react-ui*",
+        "packages/devtools/devtools",
         "packages/sdk/app-graph",
         "packages/sdk/app-framework",
         "packages/sdk/migrations",
-        "packages/sdk/shell"
+        "packages/sdk/shell",
+        "packages/experimental/artifact-testing",
+        "packages/experimental/assistant",
+        "packages/core/conductor",
+        "packages/core/functions",
+        "packages/core/compute"
       ]
     },
-    "noProjectReferences": true
+    "noProjectReferences": false
   }
 }

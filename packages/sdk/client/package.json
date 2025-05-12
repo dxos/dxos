@@ -1,13 +1,14 @@
 {
   "name": "@dxos/client",
-  "version": "0.7.2",
-  "description": "Core DXOS Client API.",
+  "version": "0.8.1",
+  "description": "DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     "./devtools": {
       "types": "./dist/types/src/devtools/index.d.ts",
@@ -23,6 +24,11 @@
       "types": "./dist/types/src/halo/index.d.ts",
       "browser": "./dist/lib/browser/halo/index.mjs",
       "node": "./dist/lib/node-esm/halo/index.mjs"
+    },
+    "./edge": {
+      "types": "./dist/types/src/edge/index.d.ts",
+      "browser": "./dist/lib/browser/edge/index.mjs",
+      "node": "./dist/lib/node-esm/edge/index.mjs"
     },
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -62,6 +68,9 @@
       "halo": [
         "dist/types/src/halo/index.d.ts"
       ],
+      "edge": [
+        "dist/types/src/edge/index.d.ts"
+      ],
       "invitations": [
         "dist/types/src/invitations/index.d.ts"
       ],
@@ -80,6 +89,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
@@ -95,6 +107,7 @@
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -112,7 +125,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "base-x": "~3.0.9",
     "jwt-decode": "^4.0.0",
     "lodash.get": "^4.4.2",
@@ -122,14 +134,14 @@
   },
   "devDependencies": {
     "@dxos/automerge": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",
     "@types/ua-parser-js": "^0.7.39",
     "fast-check": "^3.19.0",
-    "source-map-support": "^0.5.12"
+    "source-map-support": "^0.5.12",
+    "typedoc": "0.28.1"
   },
   "engines": {
     "node": ">=12.0.0"

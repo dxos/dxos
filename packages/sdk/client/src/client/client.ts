@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Schema as S } from 'effect';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
@@ -15,12 +16,13 @@ import {
   type Halo,
   PropertiesType,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { inspectObject, raise } from '@dxos/debug';
-import { EchoClient } from '@dxos/echo-db';
-import { getTypename, type AbstractTypedObject } from '@dxos/echo-schema';
+import { raise } from '@dxos/debug';
+import { EchoClient, type QueuesService, QueueServiceImpl, QueueServiceStub } from '@dxos/echo-db';
+import { getTypename } from '@dxos/echo-schema';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -46,7 +48,7 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: AbstractTypedObject[];
+  types?: S.Schema.AnyNoContext[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -93,13 +95,16 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
-  private readonly _echoClient = new EchoClient({});
+  private readonly _echoClient = new EchoClient();
 
   /**
    * Unique id of the Client, local to the current peer.
    */
   @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
+
+  private _edgeClient?: EdgeHttpClient = undefined;
+  private _queuesService?: QueuesService = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -131,7 +136,11 @@ export class Client {
   }
 
   [inspect.custom]() {
-    return inspectObject(this);
+    return this.toString();
+  }
+
+  toString() {
+    return `Client(${this._instanceId})`;
   }
 
   @trace.info({ depth: null })
@@ -205,6 +214,16 @@ export class Client {
   }
 
   /**
+   * EDGE client.
+   *
+   * This API is experimental and subject to change.
+   */
+  get edge(): EdgeHttpClient {
+    invariant(this._edgeClient, 'Client not initialized.');
+    return this._edgeClient;
+  }
+
+  /**
    *
    */
   get shell(): Shell {
@@ -224,7 +243,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: AbstractTypedObject<any>[]) {
+  addTypes(types: S.Schema.AnyNoContext[]) {
     log('addTypes', { schema: types.map((type) => getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
@@ -332,7 +351,6 @@ export class Client {
     }
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
-
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
 
     this._ctx = new Context();
@@ -379,6 +397,14 @@ export class Client {
     });
     await this._services.open();
 
+    const edgeUrl = this._config!.get('runtime.services.edge.url');
+    if (edgeUrl) {
+      this._edgeClient = new EdgeHttpClient(edgeUrl);
+      this._queuesService = new QueueServiceImpl(this._edgeClient);
+    } else {
+      this._queuesService = new QueueServiceStub();
+    }
+
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
@@ -387,7 +413,14 @@ export class Client {
 
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, halo, this._instanceId);
+    const spaces = new SpaceList(
+      this._config,
+      this._services,
+      this._echoClient,
+      halo,
+      this._queuesService!,
+      this._instanceId,
+    );
 
     const shell = this._shellManager
       ? new Shell({
@@ -481,6 +514,7 @@ export class Client {
     await this._runtime?.close();
     await this._echoClient.close(this._ctx);
     await this._services?.close();
+    this._edgeClient = undefined;
     log('closed');
   }
 

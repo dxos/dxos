@@ -8,7 +8,10 @@ export const NAVTREE_PLUGIN = 'dxos.org/plugin/navtree';
 
 // TODO(wittjosiah): Factor out.
 export const KEY_BINDING = 'KeyBinding';
+// TODO(wittjosiah): Factor out.
+export const COMMANDS_DIALOG = `${NAVTREE_PLUGIN}/CommandsDialog`;
 
-export default {
+export const meta: PluginMeta = {
   id: NAVTREE_PLUGIN,
-} satisfies PluginMeta;
+  name: 'Navtree',
+};

@@ -39,6 +39,7 @@
       }
     },
     "serve": {
+      "dependsOn": ["^compile", "shell:bundle"],
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "tasks:bundle"

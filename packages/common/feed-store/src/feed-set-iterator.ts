@@ -4,12 +4,12 @@
 
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, Trigger } from '@dxos/async';
+import { Event, SubscriptionList, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
+import { ComplexMap, isNonNullable } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
 import { FeedQueue } from './feed-queue';
@@ -43,7 +43,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
 
   private readonly _trigger = new Trigger({ autoReset: true });
-  private readonly _subscriptions = new EventSubscriptions();
+  private readonly _subscriptions = new SubscriptionList();
 
   public readonly stalled = new Event<FeedSetIterator<T>>();
 
@@ -81,6 +81,10 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
       feedKey: feedQueue.feed.key,
       index: feedQueue.index,
     }));
+  }
+
+  reiterateBlock(block: FeedBlock<T>) {
+    this._trigger.wake();
   }
 
   async addFeed(feed: FeedWrapper<T>) {
@@ -132,7 +136,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     while (this._running) {
       // Get blocks from the head of each queue.
       const queues = Array.from(this._feedQueues.values());
-      const blocks = queues.map((queue) => queue.peek()).filter(isNotNullOrUndefined);
+      const blocks = queues.map((queue) => queue.peek()).filter(isNonNullable);
       if (blocks.length) {
         // Get the selected block from candidates.
         const idx = this._selector(blocks);
@@ -142,6 +146,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
           if (t === undefined) {
             t = setTimeout(() => {
               this.stalled.emit(this);
+              this._trigger.wake();
             }, this.options.stallTimeout);
           }
         } else {

@@ -3,14 +3,15 @@
 //
 
 import { Trigger, sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { Resource } from '@dxos/context';
-import { signPresentation } from '@dxos/credentials';
+import { createCredential, signPresentation } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import {
   type CreateIdentityRequest,
+  type CreateRecoveryCredentialRequest,
   type Identity as IdentityProto,
   type IdentityService,
   type QueryIdentityResponse,
@@ -76,6 +77,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     }
 
     return {
+      did: this._identityManager.identity.did,
       identityKey: this._identityManager.identity.identityKey,
       spaceKey: this._identityManager.identity.space.key,
       profile: this._identityManager.identity.profileDocument,
@@ -89,12 +91,25 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     return this._getIdentity()!;
   }
 
-  async createRecoveryPhrase() {
-    return this._recoveryManager.createRecoveryPhrase();
+  async createRecoveryCredential(request: CreateRecoveryCredentialRequest) {
+    return this._recoveryManager.createRecoveryCredential(request);
+  }
+
+  async requestRecoveryChallenge() {
+    return this._recoveryManager.requestRecoveryChallenge();
   }
 
   async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
-    await this._recoveryManager.recoverIdentity(request);
+    if (request.recoveryCode) {
+      await this._recoveryManager.recoverIdentity({ recoveryCode: request.recoveryCode });
+    } else if (request.external) {
+      await this._recoveryManager.recoverIdentityWithExternalSignature(request.external);
+    } else if (request.token) {
+      await this._recoveryManager.recoverIdentityWithToken({ token: request.token });
+    } else {
+      throw new Error('Invalid request.');
+    }
+
     return this._getIdentity()!;
   }
 
@@ -108,6 +123,21 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
       signerKey: this._identityManager.identity.deviceKey,
       chain: this._identityManager.identity.deviceCredentialChain,
       nonce,
+    });
+  }
+
+  async createAuthCredential() {
+    const identity = this._identityManager.identity;
+
+    invariant(identity, 'Identity not initialized.');
+
+    return await createCredential({
+      assertion: { '@type': 'dxos.halo.credentials.Auth' },
+      issuer: identity.identityKey,
+      subject: identity.identityKey,
+      chain: identity.deviceCredentialChain,
+      signingKey: identity.deviceKey,
+      signer: this._keyring,
     });
   }
 

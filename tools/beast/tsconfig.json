@@ -2,7 +2,6 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "composite": true,
     "emitDeclarationOnly": false,
     "module": "CommonJS",
     "moduleResolution": "Node",
@@ -20,5 +19,9 @@
   "include": [
     "src/**/*"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../packages/common/log"
+    }
+  ]
 }

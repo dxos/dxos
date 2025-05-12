@@ -4,63 +4,108 @@
 
 import {
   AST,
+  type EchoSchema,
   Format,
   FormatEnum,
   type JsonPath,
   type JsonProp,
-  type MutableSchema,
   S,
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-import { PublicKey } from '@dxos/react-client';
-import { create, type Space } from '@dxos/react-client/echo';
-import { createFieldId, createView, ViewProjection } from '@dxos/schema';
+import { type Client, PublicKey } from '@dxos/react-client';
+import { live, makeRef, type Space } from '@dxos/react-client/echo';
+import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
+// TODO(ZaymonFC): We don't need the client anymore.
 type InitialiseTableProps = {
+  client: Client;
   space: Space;
   table: TableType;
+  typename?: string;
   initialRow?: boolean;
 };
 
-// TODO(burdon): Pass in type.
-// TODO(burdon): User should determine typename.
-export const initializeTable = ({ space, table, initialRow = true }: InitialiseTableProps): MutableSchema => {
-  log.info('initializeTable', { table });
+export const initializeTable = async ({
+  client,
+  space,
+  table,
+  typename,
+  initialRow = true,
+}: InitialiseTableProps): Promise<S.Schema.AnyNoContext> => {
+  if (typename) {
+    const schema = await space.db.graph.getSchemaByTypename(typename, space.db);
+    if (!schema) {
+      throw new Error(`Schema not found: ${typename}`);
+    }
 
-  const ContactSchema = TypedObject({
-    typename: `example.com/type/${PublicKey.random().truncate()}`,
-    version: '0.1.0',
-  })({
-    name: S.optional(S.String).annotations({
-      [AST.TitleAnnotationId]: 'Name',
-    }),
-    email: S.optional(Format.Email),
-    salary: S.optional(Format.Currency()).annotations({
-      [AST.TitleAnnotationId]: 'Salary',
-    }), // TODO(burdon): Should default to prop name?
-  });
+    const fields = getSchemaProperties(schema.ast).map((prop) => prop.name);
 
-  const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
-  table.view = createView({
-    name: 'Test',
-    typename: contactSchema.typename,
-    jsonSchema: contactSchema.jsonSchema,
-    fields: ['name', 'email', 'salary'],
-  });
+    table.view = makeRef(
+      createView({
+        // TODO(ZaymonFC): Don't hardcode name?
+        name: 'View',
+        typename: schema.typename,
+        jsonSchema: schema.jsonSchema,
+        fields,
+      }),
+    );
 
-  const projection = new ViewProjection(contactSchema, table.view!);
+    return schema;
+  } else {
+    const [schema] = await space.db.schemaRegistry.register([ContactSchema]);
+    const fields = ContactFields;
+
+    table.view = makeRef(
+      createView({
+        name: 'View',
+        typename: schema.typename,
+        jsonSchema: schema.jsonSchema,
+        fields,
+      }),
+    );
+
+    createProjection(schema, table.view.target!);
+
+    if (initialRow) {
+      // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
+      space.db.add(live(schema, {}));
+    }
+
+    return schema;
+  }
+};
+
+const ContactSchema = TypedObject({
+  typename: `example.com/type/${PublicKey.random().truncate()}`,
+  version: '0.1.0',
+})({
+  name: S.optional(S.String).annotations({ [AST.TitleAnnotationId]: 'Name' }),
+  active: S.optional(S.Boolean),
+  email: S.optional(Format.Email),
+  salary: S.optional(Format.Currency()).annotations({ [AST.TitleAnnotationId]: 'Salary' }),
+});
+
+const ContactFields = ['name', 'email', 'salary', 'active'];
+
+const createProjection = (schema: EchoSchema, view: ViewType): ViewProjection => {
+  const projection = new ViewProjection(schema.jsonSchema, view);
   projection.setFieldProjection({
     field: {
-      id: table.view.fields[2].id,
+      id: view.fields.find((f) => f.path === 'salary')!.id,
       path: 'salary' as JsonPath,
       size: 150,
     },
   });
-
+  projection.setFieldProjection({
+    field: {
+      id: view.fields.find((f) => f.path === 'active')!.id,
+      path: 'active' as JsonPath,
+      size: 100,
+    },
+  });
   projection.setFieldProjection({
     field: {
       id: createFieldId(),
@@ -71,15 +116,10 @@ export const initializeTable = ({ space, table, initialRow = true }: InitialiseT
       property: 'manager' as JsonProp,
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
-      referenceSchema: contactSchema.typename,
+      referenceSchema: schema.typename,
       title: 'Manager',
     },
   });
 
-  if (initialRow) {
-    // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
-    space.db.add(create(contactSchema, {}));
-  }
-
-  return contactSchema;
+  return projection;
 };

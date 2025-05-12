@@ -2,15 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, createObjectId, Format, S, type StoredSchema, toJsonSchema, TypedObject } from '@dxos/echo-schema';
-import { createStoredSchema, type ReactiveObject } from '@dxos/live-object';
+import { AST, ObjectId, Format, S, type StoredSchema, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { createStoredSchema, type Live } from '@dxos/live-object';
 
 import { createView, type ViewType } from '../view';
 
-/**
- * @deprecated
- */
-// TODO(burdon): Use Contact/Org, etc.
 export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
   version: '0.1.0',
@@ -38,7 +34,7 @@ export class TestSchema extends TypedObject({
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 
-export const testSchema: ReactiveObject<StoredSchema> = createStoredSchema(
+export const testSchema: Live<StoredSchema> = createStoredSchema(
   {
     typename: 'example.com/type/Test',
     version: '0.1.0',
@@ -46,14 +42,14 @@ export const testSchema: ReactiveObject<StoredSchema> = createStoredSchema(
   toJsonSchema(TestSchema),
 );
 
-export const testView: ReactiveObject<ViewType> = createView({
+export const testView: Live<ViewType> = createView({
   name: 'Test',
   typename: testSchema.typename,
   jsonSchema: toJsonSchema(TestSchema),
 });
 
 export const testData: TestType = {
-  id: createObjectId(),
+  id: ObjectId.random(),
   name: 'Tester',
   email: 'test@example.com',
   // address: {

@@ -102,7 +102,7 @@ const GridRoot = ({
 GridRoot.displayName = GRID_NAME;
 
 type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
-  getCells?: NonNullable<NaturalDxGrid['getCells']>;
+  getCells?: NaturalDxGrid['getCells'];
   activeRefs?: string;
 };
 
@@ -146,12 +146,27 @@ const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>
 
 GridContent.displayName = GRID_CONTENT_NAME;
 
+//
+// Fragments
+//
+
+// NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
+// These are offset by 1px to avoid double borders in planks.
+const gridSeparatorInlineEnd =
+  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-separator';
+const gridSeparatorBlockEnd =
+  '[&>.dx-grid]:relative [&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
+
+//
+// Exports
+//
+
 export const Grid = {
   Root: GridRoot,
   Content: GridContent,
 };
 
-export { GridRoot, GridContent, useGridContext, createGridScope };
+export { GridRoot, GridContent, useGridContext, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 

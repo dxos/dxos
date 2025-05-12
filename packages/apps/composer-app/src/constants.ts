@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export const appKey = 'composer.dxos.org';
+export const APP_KEY = 'composer.dxos.org';
 
 export const INITIAL_DOC_TITLE = 'README';
 

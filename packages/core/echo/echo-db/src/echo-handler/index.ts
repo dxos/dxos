@@ -7,3 +7,5 @@ export { EchoReactiveHandler, getObjectCore } from './echo-handler';
 export { type ProxyTarget } from './echo-proxy-target';
 export * from './util';
 export * from './clone';
+export * from './edit-history';
+export * from './version';

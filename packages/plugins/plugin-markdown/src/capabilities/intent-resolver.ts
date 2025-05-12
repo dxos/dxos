@@ -1,0 +1,69 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import {
+  Capabilities,
+  CollaborationActions,
+  contributes,
+  createResolver,
+  type PluginsContext,
+} from '@dxos/app-framework';
+import { next as A } from '@dxos/automerge/automerge';
+import { isInstanceOf, ObjectId } from '@dxos/echo-schema';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { makeRef, live, refFromDXN } from '@dxos/live-object';
+import { log } from '@dxos/log';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { resolveRef } from '@dxos/react-client';
+import { createDocAccessor } from '@dxos/react-client/echo';
+import { TextType } from '@dxos/schema';
+
+import { MarkdownCapabilities } from './capabilities';
+import { DocumentType, MarkdownAction } from '../types';
+
+export default (context: PluginsContext) =>
+  contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: MarkdownAction.Create,
+      resolve: ({ name, spaceId, content }) => {
+        const doc = live(DocumentType, {
+          name,
+          content: makeRef(live(TextType, { content: content ?? '' })),
+          assistantChatQueue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+          threads: [],
+        });
+
+        return { data: { object: doc } };
+      },
+    }),
+    createResolver({
+      intent: MarkdownAction.SetViewMode,
+      resolve: ({ id, viewMode }) => {
+        const { state } = context.requestCapability(MarkdownCapabilities.State);
+        state.viewMode[id] = viewMode;
+      },
+    }),
+    // TODO(burdon): What is the error boundary for intents? Are errors reported back to caller?
+    createResolver({
+      intent: CollaborationActions.InsertContent,
+      resolve: async ({ spaceId, target: targetRef, object: objectRef, label }) => {
+        const client = context.requestCapability(ClientCapabilities.Client);
+        const space = client.spaces.get(spaceId);
+        const target = await resolveRef(client, targetRef.dxn, space);
+        if (target && isInstanceOf(DocumentType, target)) {
+          const accessor = createDocAccessor(target, ['content']);
+          // TODO(burdon): Should be a cursor that references a selected position.
+          const index = 0;
+          accessor.handle.change((doc) => {
+            // TODO(burdon): Throws error:
+            // intent-dispatcher.ts:270 Cannot read properties of undefined (reading 'annotations') (FiberFailure) TypeError: Cannot read properties of undefined (reading 'annotations')
+            const ref = `[${label ?? 'Generated content'}]](${objectRef.dxn.toString()})\n`;
+            A.splice(doc, accessor.path.slice(), index, 0, ref);
+          });
+        } else {
+          log.warn('target is not a document', { targetRef, objectRef });
+        }
+      },
+    }),
+  ]);

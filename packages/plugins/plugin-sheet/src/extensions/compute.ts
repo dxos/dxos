@@ -14,13 +14,16 @@ import {
 } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
-import { type UnsubscribeCallback, debounce } from '@dxos/async';
+import { type CleanupFn, debounce } from '@dxos/async';
+import {
+  createSheetName,
+  type CellAddress,
+  type CellScalarValue,
+  type ComputeGraph,
+  type ComputeNode,
+} from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { documentId, singleValueFacet } from '@dxos/react-ui-editor';
-
-import { type ComputeGraph, type ComputeNode, createSheetName } from '../compute-graph';
-import { type CellAddress } from '../defs';
-import { type CellScalarValue } from '../types';
 
 const LANGUAGE_TAG = 'dx';
 
@@ -89,7 +92,7 @@ export const compute = (options: ComputeOptions = {}): Extension => {
     ViewPlugin.fromClass(
       class {
         // Graph subscription.
-        private _subscription?: UnsubscribeCallback;
+        private _subscription?: CleanupFn;
         constructor(view: EditorView) {
           const id = view.state.facet(documentId);
           const computeGraph = view.state.facet(computeGraphFacet);

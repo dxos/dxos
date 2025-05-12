@@ -2,13 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { defineHiddenProperty, TYPENAME_SYMBOL } from '@dxos/echo-schema';
-import { type ObjectMeta } from '@dxos/echo-schema';
+import { defineHiddenProperty, DeletedSymbol, getTypename, TYPENAME_SYMBOL } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { getObjectMeta } from './object';
 import { createProxy, isValidProxyTarget, objectData, ReactiveArray, type ReactiveHandler } from './proxy';
+import { TypedReactiveHandler } from './typed-handler';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -47,6 +46,8 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
+    defineHiddenProperty(target, DeletedSymbol, false);
+
     for (const key of Object.getOwnPropertyNames(target)) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
       if (descriptor.get) {
@@ -83,8 +84,14 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const value = Reflect.get(target, prop);
 
     if (isValidProxyTarget(value)) {
-      // Note: Need to pass in `this` instance to createProxy to ensure that the same proxy is used for target.
-      return createProxy(value, this);
+      const isTyped = getTypename(value) !== undefined;
+      if (isTyped) {
+        return createProxy(value, TypedReactiveHandler.instance);
+      } else {
+        // Note: Need to pass in `this` instance to createProxy to ensure that the same proxy is used for target.
+        // TODO(dmaretskyi): Not sure this note is relevant anymore since proxy handlers are singletons.
+        return createProxy(value, this);
+      }
     }
 
     return value;
@@ -114,10 +121,6 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  isDeleted(): boolean {
-    return false;
-  }
-
   getSchema() {
     return undefined;
   }
@@ -125,12 +128,9 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   getTypeReference() {
     return undefined;
   }
-
-  getMeta(target: any): ObjectMeta {
-    return getObjectMeta(target);
-  }
 }
 
 const toJSON = (target: any): any => {
+  // TODO(dmaretskyi): Why '@type' is ReactiveObject?
   return { '@type': 'ReactiveObject', ...target };
 };

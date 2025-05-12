@@ -13,8 +13,36 @@
       "sharedworker"
     ]
   },
+  "exclude": [
+    "src/playwright/playwright.config.cts"
+  ],
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/test-utils"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../ui/primitives/react-hooks"
+    }
+  ]
 }

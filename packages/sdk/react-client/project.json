@@ -29,7 +29,9 @@
       ]
     },
     "lint": {},
-    "test": {}
+    "pack": {},
+    "test": {},
+    "typedoc": {}
   },
   "implicitDependencies": [
     "esbuild",

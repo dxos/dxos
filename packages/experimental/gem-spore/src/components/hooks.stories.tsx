@@ -4,12 +4,12 @@
 
 import '@dxos-theme';
 
-import * as d3 from 'd3';
+import { select } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { defaultStyles } from './styles';
 import {
@@ -25,14 +25,12 @@ import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '.
 
 import '../../styles/defaults.css';
 
-export default {
+const meta: Meta = {
   title: 'experimental/gem-spore/hooks',
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
-// TODO(burdon): Dynamic classname for nodes (e.g., based on selection).
-// TODO(burdon): Create links.
-// TODO(burdon): Delete nodes (alt-click).
+export default meta;
 
 interface ComponentProps {
   model: TestGraphModel;
@@ -175,7 +173,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   useEffect(() => {
-    d3.select(markersRef.current).call(createMarkers());
+    select(markersRef.current).call(createMarkers());
   }, [markersRef]);
 
   return (

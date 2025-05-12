@@ -8,16 +8,13 @@ import React, { useEffect } from 'react';
 import { type ThreadType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useTranslation, Trans } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
 import { CommentContainer } from './CommentContainer';
 import { type ThreadContainerProps } from './types';
 import { THREAD_PLUGIN } from '../meta';
 
-export type ThreadsContainerProps = Omit<
-  ThreadContainerProps,
-  'thread' | 'detached' | 'onAttend' | 'onThreadDelete' | 'onMessageDelete' | 'current' | 'autoFocus'
-> & {
+export type ThreadsContainerProps = Omit<ThreadContainerProps, 'thread' | 'detached' | 'current' | 'autoFocus'> & {
   threads: ThreadType[];
   /**
    * Threads that are no longer anchored to a position in the object.
@@ -25,11 +22,6 @@ export type ThreadsContainerProps = Omit<
   detached?: string[];
   currentId?: string;
   showResolvedThreads?: boolean;
-  onThreadAttend?: (thread: ThreadType) => void;
-  onThreadDelete?: (thread: ThreadType) => void;
-  onMessageDelete?: (thread: ThreadType, messageId: string) => void;
-  onThreadToggleResolved?: (thread: ThreadType) => void;
-  onComment?: (thread: ThreadType) => void;
 };
 
 /**
@@ -40,10 +32,6 @@ export const CommentsContainer = ({
   detached = [],
   currentId,
   showResolvedThreads,
-  onThreadAttend,
-  onThreadDelete,
-  onMessageDelete,
-  onThreadToggleResolved,
   ...props
 }: ThreadsContainerProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
@@ -66,22 +54,12 @@ export const CommentsContainer = ({
               thread={thread}
               current={currentId === threadId}
               detached={detached.includes(threadId)}
-              {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
-              {...(onThreadDelete && { onThreadDelete: () => onThreadDelete(thread) })}
-              {...(onMessageDelete && { onMessageDelete: (messageId: string) => onMessageDelete(thread, messageId) })}
-              {...(onThreadToggleResolved && { onResolve: () => onThreadToggleResolved(thread) })}
               {...props}
             />
           );
         })
       ) : (
-        <div
-          role='alert'
-          className={mx(
-            descriptionText,
-            'place-self-center border border-dashed border-unAccent rounded-lg text-center p-4 m-4',
-          )}
-        >
+        <div role='alert' className={mx(descriptionMessage, 'place-self-center rounded-lg text-center m-4')}>
           <h2 className='mbe-2 font-medium text-baseText'>{t('no comments title')}</h2>
           <p>
             <Trans

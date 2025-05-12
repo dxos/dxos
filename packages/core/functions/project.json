@@ -11,14 +11,17 @@
     "compile": {
       "options": {
         "entryPoints": [
+          "{projectRoot}/src/bundler/index.ts",
+          "{projectRoot}/src/edge/index.ts",
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/testing/index.ts",
-          "{projectRoot}/src/types.ts"
+          "{projectRoot}/src/types/index.ts"
         ],
         "injectGlobals": true
       }
     },
     "lint": {},
+    "pack": {},
     "postbuild": {
       "executor": "nx:run-script",
       "options": {

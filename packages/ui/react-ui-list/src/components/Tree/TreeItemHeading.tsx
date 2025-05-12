@@ -51,14 +51,13 @@ export const TreeItemHeading = memo(
           asChild
           ref={forwardedRef}
         >
-          {/* TODO(wittjosiah): Class precedence. See #8149. */}
           <Button
             data-testid='treeItem.heading'
             variant='ghost'
             density='fine'
             classNames={mx(
-              'grow gap-2 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent',
-              'disabled:!cursor-default disabled:!opacity-100',
+              'grow gap-2 pis-0.5 hover:bg-transparent dark:hover:bg-transparent',
+              'disabled:cursor-default disabled:opacity-100',
               className,
             )}
             disabled={disabled}
@@ -66,7 +65,7 @@ export const TreeItemHeading = memo(
             onKeyDown={handleButtonKeydown}
             {...(current && { 'aria-current': 'location' })}
           >
-            {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={4} classNames='is-[1em] bs-[1em] mlb-1' />}
+            {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={5} classNames='mlb-1' />}
             <span className='flex-1 is-0 truncate text-start text-sm font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>

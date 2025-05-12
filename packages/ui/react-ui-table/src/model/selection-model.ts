@@ -6,10 +6,12 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 
 import { Resource } from '@dxos/context';
 
-import { type BaseTableRow } from './table-model';
+import { type TableRow } from './table-model';
 import { touch } from '../util';
 
-export class SelectionModel<T extends BaseTableRow> extends Resource {
+export type SelectionMode = 'single' | 'multiple';
+
+export class SelectionModel<T extends TableRow> extends Resource {
   private readonly _selection = signal<Set<string>>(new Set());
 
   private readonly _validSelectedIds = computed<Set<string>>(() => {
@@ -17,6 +19,7 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
     if (!rows) {
       return new Set<string>();
     }
+
     const validIds = new Set(rows.map((row) => row.id));
     return new Set([...this._selection.value].filter((id) => validIds.has(id)));
   });
@@ -28,11 +31,13 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
     if (rows.length === 0) {
       return false;
     }
+
     return rows.every((row) => this._selection.value.has(row.id));
   });
 
   constructor(
     private readonly _rows: ReadonlySignal<T[]>,
+    private readonly _selectionMode: SelectionMode,
     private readonly _onSelectionChanged?: () => void,
   ) {
     super();
@@ -62,6 +67,10 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
     return this._allSelected;
   }
 
+  public get selectionMode(): SelectionMode {
+    return this._selectionMode;
+  }
+
   public getSelectedRows = (): T[] => {
     const selectedIds = this._validSelectedIds.value;
     return this._rows.value.filter((row) => selectedIds.has(row.id));
@@ -87,6 +96,9 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
     if (newSelection.has(row.id)) {
       newSelection.delete(row.id);
     } else {
+      if (this._selectionMode === 'single') {
+        newSelection.clear();
+      }
       newSelection.add(row.id);
     }
 
@@ -94,6 +106,15 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
   };
 
   public setSelection = (mode: 'all' | 'none'): void => {
-    this._selection.value = mode === 'all' ? new Set(this._rows.value.map((row) => row.id)) : new Set();
+    switch (mode) {
+      case 'all': {
+        this._selection.value = new Set(this._rows.value.map((row) => row.id));
+        break;
+      }
+      case 'none': {
+        this._selection.value = new Set();
+        break;
+      }
+    }
   };
 }

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import {
   type AuthenticationRequest,
   type AcceptInvitationRequest,

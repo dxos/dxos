@@ -7,6 +7,9 @@ import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
+import { live } from './object';
+import { getSnapshot } from './snapshot';
+
 describe('Object', () => {
   test.skip('ulid stress test', () => {
     const amountToGenerate = 10_000;
@@ -20,5 +23,29 @@ describe('Object', () => {
       const end = Date.now();
       log.info(`Generated ${amountToGenerate} ULIDs in ${end - start}ms`);
     }
+  });
+
+  test('getSnapshot', ({ expect }) => {
+    const data = {
+      str: 'foo',
+      number: 20,
+      arr: [
+        {
+          title: 'foo',
+        },
+        {
+          title: 'bar',
+        },
+        {
+          title: 'baz',
+        },
+      ],
+    };
+    // NOTE: create doesn't clone `data`!!!!
+    const obj = live(structuredClone(data));
+    const snapshot = getSnapshot(obj);
+    expect(snapshot).toEqual(data);
+    obj.arr = [];
+    expect(snapshot).toEqual(data);
   });
 });

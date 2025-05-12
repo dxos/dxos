@@ -14,12 +14,15 @@ export const MoveSchema = S.mutable(
   ),
 );
 
-export class GameType extends TypedObject({ typename: 'dxos.org/type/Chess', version: '0.1.0' })(
+export class ChessType extends TypedObject({ typename: 'dxos.org/type/Chess', version: '0.1.0' })(
   {
+    name: S.optional(S.String),
     playerWhite: S.String,
     playerBlack: S.String,
     moves: S.mutable(S.Array(S.String)),
+    // TODO(wittjosiah): Remove. Redundant with moves.
     pgn: S.String,
+    fen: S.String,
   },
   { partial: true },
 ) {}

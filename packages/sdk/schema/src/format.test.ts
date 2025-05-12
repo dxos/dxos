@@ -69,7 +69,7 @@ describe('format', () => {
   test('ref format', async ({ expect }) => {
     const validate = S.validateSync(PropertySchema);
     const prop: Partial<PropertyType> = {
-      property: 'org' as JsonProp,
+      property: 'organization' as JsonProp,
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
     };

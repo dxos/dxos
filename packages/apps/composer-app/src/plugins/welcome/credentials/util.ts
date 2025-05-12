@@ -26,30 +26,39 @@ export const matchServiceCredential =
 export const signup = async ({
   hubUrl,
   email,
+  redirectUrl,
   identity,
 }: {
   hubUrl: string;
   email: string;
+  redirectUrl?: string;
   identity: Identity | null;
-}): Promise<void> => {
+}): Promise<boolean> => {
   const response = await fetch(new URL('/account/signup', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, identityDid: identity ? `did:key:${identity.identityKey.toHex()}` : undefined }),
+    body: JSON.stringify({
+      email,
+      identityDid: identity ? `did:key:${identity.identityKey.toHex()}` : undefined,
+      redirectUrl,
+    }),
   });
 
   if (!response.ok) {
     throw new Error('signup failed', { cause: response.statusText });
   }
 
-  const { token } = await response.json();
+  const { token, type } = await response.json();
   if (token) {
     // Debugging link.
     const activationLink = new URL('/', window.location.href);
     activationLink.searchParams.set('token', token);
+    activationLink.searchParams.set('type', type);
     // eslint-disable-next-line
     console.log(activationLink.href);
   }
+
+  return type === 'login';
 };
 
 /**

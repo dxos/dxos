@@ -51,7 +51,7 @@ export class DocumentsSynchronizer extends Resource {
     }
 
     for (const documentId of documentIds) {
-      const doc = this._params.repo.find(documentId as DocumentId);
+      const doc = this._params.repo.find<SpaceDoc>(documentId as DocumentId);
       doc
         .whenReady()
         .then(() => {
@@ -88,7 +88,7 @@ export class DocumentsSynchronizer extends Resource {
   update(updates: DocumentUpdate[]) {
     for (const { documentId, mutation, isNew } of updates) {
       if (isNew) {
-        const doc = this._params.repo.find(documentId as DocumentId);
+        const doc = this._params.repo.find<SpaceDoc>(documentId as DocumentId);
         doc.update((doc) => A.loadIncremental(doc, mutation));
         this._startSync(doc);
       } else {

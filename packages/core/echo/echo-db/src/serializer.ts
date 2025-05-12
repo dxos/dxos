@@ -4,7 +4,7 @@
 
 import { decodeReference, type EncodedReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
+import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 
 import { ObjectCore } from './core-db';
 import { getObjectCore, type ReactiveEchoObject } from './echo-handler';
@@ -34,12 +34,12 @@ export class Serializer {
 
     const loadedObjects: Array<ReactiveEchoObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-      const { objects } = await database.query({ id: chunk }).run();
+      const { objects } = await database.query({ id: chunk }).run({ timeout: 60_000 });
       loadedObjects.push(...objects);
     }
 
     const data = {
-      objects: loadedObjects.filter(nonNullable).map((object) => {
+      objects: loadedObjects.filter(isNonNullable).map((object) => {
         return this.exportObject(object as any);
       }),
 
@@ -74,7 +74,7 @@ export class Serializer {
     const data = serializeEchoData(core.getDecoded(['data']));
     const meta = serializeEchoData(core.getDecoded(['meta']));
 
-    return stripUndefinedValues({
+    return stripUndefined({
       '@id': core.id,
       '@type': typeRef ? encodeReference(typeRef) : undefined,
       ...data,

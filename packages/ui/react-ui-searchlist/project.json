@@ -12,13 +12,11 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts"
-        ],
-        "platforms": [
-          "browser"
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild",

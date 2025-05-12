@@ -5,3 +5,4 @@
 export * from './parser';
 export * from './query-executor';
 export * from './schema';
+export * from './echo-data-source';

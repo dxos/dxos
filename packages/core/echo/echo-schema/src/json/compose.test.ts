@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import { describe, test } from 'vitest';
 
 import { composeSchema } from './compose';
-import { ECHO_REFINEMENT_KEY, toJsonSchema } from './json-schema';
-import { FieldPath } from '../ast';
-import { FormatAnnotationId, FormatEnum } from '../formats';
+import { toJsonSchema } from './json-schema';
+import { ECHO_ANNOTATIONS_NS_DEPRECATED_KEY, FieldPath } from '../ast';
+import { FormatAnnotation, FormatEnum } from '../formats';
 import { TypedObject } from '../object';
 
 describe('schema composition', () => {
@@ -19,9 +19,7 @@ describe('schema composition', () => {
     }) {}
 
     const OverlaySchema = S.Struct({
-      email: S.String.pipe(FieldPath('$.email')).annotations({
-        [FormatAnnotationId]: FormatEnum.Email,
-      }),
+      email: S.String.pipe(FieldPath('$.email'), FormatAnnotation.set(FormatEnum.Email)),
     });
 
     const baseSchema = toJsonSchema(BaseType);
@@ -31,8 +29,9 @@ describe('schema composition', () => {
       email: {
         type: 'string',
         format: FormatEnum.Email,
-        [ECHO_REFINEMENT_KEY]: {
-          annotations: {
+        // TODO(dmaretskyi): Should use the new field.
+        [ECHO_ANNOTATIONS_NS_DEPRECATED_KEY]: {
+          meta: {
             path: '$.email',
           },
         },

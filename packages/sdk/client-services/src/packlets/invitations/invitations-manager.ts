@@ -202,7 +202,7 @@ export class InvitationsManager {
       created = new Date(),
       guestKeypair = undefined,
       role = SpaceMember.Role.ADMIN,
-      lifetime = 86400, // 1 day,
+      lifetime = 86400 * 7, // 7 days,
       multiUse = false,
       ...options
     } = _options ?? {};

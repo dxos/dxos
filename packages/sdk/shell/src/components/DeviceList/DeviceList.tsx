@@ -21,7 +21,7 @@ export const DeviceList = ({
   onClickRecover,
   onClickJoinExisting,
   onAgentDestroy,
-}: DeviceListProps & Pick<AgentFormProps, 'onAgentDestroy'>) => {
+}: DeviceListProps & Partial<Pick<AgentFormProps, 'onAgentDestroy'>>) => {
   const { t } = useTranslation('os');
   return (
     <div role='none' className='p-1'>
@@ -42,7 +42,7 @@ export const DeviceList = ({
       )}
       <Button
         variant='ghost'
-        classNames='justify-start gap-2 !pis-0 !pie-3 is-full'
+        classNames='justify-start gap-2 pis-0 pie-3 is-full'
         data-testid='devices-panel.create-invitation'
         onClick={onClickAdd}
       >

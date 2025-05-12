@@ -33,6 +33,8 @@ import { log } from '@dxos/log';
  * @param deps
  *
  * NOTE: This effect does not cancel the async operation if the component is unmounted.
+ *
+ * @deprecated
  */
 export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,
@@ -46,7 +48,6 @@ export const useAsyncEffect = <T>(
     let mounted = true;
     let value: T | undefined;
     const asyncResult = callback(() => mounted);
-
     void Promise.resolve(asyncResult)
       .then((result) => {
         value = result;

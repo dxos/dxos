@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Decorator } from '@storybook/react';
 import React from 'react';
 
-import { modalSurface, groupSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import { modalSurface, groupSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type Density, type Elevation } from '@dxos/react-ui-types';
 
 import { DensityProvider, ElevationProvider } from '../../components';
@@ -20,8 +20,8 @@ type Config = {
 export const withVariants = ({
   elevations = [
     { elevation: 'base' },
-    { elevation: 'group', surface: groupSurface },
-    { elevation: 'chrome', surface: modalSurface },
+    { elevation: 'positioned', surface: groupSurface },
+    { elevation: 'dialog', surface: modalSurface },
   ],
   densities = ['coarse', 'fine'],
 }: Config = {}): Decorator => {
@@ -32,7 +32,7 @@ export const withVariants = ({
           <div className='flex flex-col gap-8'>
             {densities.map((density) => (
               <DensityProvider key={density} density={density}>
-                <div className={mx('p-4 rounded-lg', surface, surfaceElevation({ elevation }))}>
+                <div className={mx('p-4 rounded-lg', surface, surfaceShadow({ elevation }))}>
                   <Story />
                 </div>
               </DensityProvider>

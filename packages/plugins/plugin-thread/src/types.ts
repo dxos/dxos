@@ -2,56 +2,98 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  GraphBuilderProvides,
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-client';
-import { type PanelProvides } from '@dxos/plugin-deck/types';
-import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
-import { type ThreadType } from '@dxos/plugin-space/types';
+import { S } from '@dxos/echo-schema';
+import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
+import { EchoObjectSchema } from '@dxos/react-client/echo';
+import { ActorSchema, MessageType } from '@dxos/schema';
 
 import { THREAD_PLUGIN } from './meta';
 
-const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
-export enum ThreadAction {
-  CREATE = `${THREAD_ACTION}/create`,
-  SELECT = `${THREAD_ACTION}/select`,
-  DELETE = `${THREAD_ACTION}/delete`,
-  ON_MESSAGE_ADD = `${THREAD_ACTION}/on-message-add`,
-  DELETE_MESSAGE = `${THREAD_ACTION}/delete-message`,
-  TOGGLE_RESOLVED = `${THREAD_ACTION}/toggle-resolved`,
+export namespace ThreadAction {
+  const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
+
+  export class CreateChannel extends S.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
+    input: S.Struct({
+      // TODO(wittjosiah): Should be SpaceId.
+      spaceId: S.String,
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: ChannelType,
+    }),
+  }) {}
+
+  export class Create extends S.TaggedClass<Create>()(`${THREAD_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+      cursor: S.String,
+      subject: EchoObjectSchema,
+    }),
+    output: S.Struct({
+      object: ThreadType,
+    }),
+  }) {}
+
+  export class Select extends S.TaggedClass<Select>()(`${THREAD_ACTION}/select`, {
+    input: S.Struct({
+      current: S.String,
+    }),
+    output: S.Void,
+  }) {}
+
+  export class ToggleResolved extends S.TaggedClass<ToggleResolved>()(`${THREAD_ACTION}/toggle-resolved`, {
+    input: S.Struct({
+      thread: ThreadType,
+    }),
+    output: S.Void,
+  }) {}
+
+  export class Delete extends S.TaggedClass<Delete>()(`${THREAD_ACTION}/delete`, {
+    input: S.Struct({
+      thread: ThreadType,
+      subject: EchoObjectSchema,
+      cursor: S.optional(S.String),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class AddMessage extends S.TaggedClass<AddMessage>()(`${THREAD_ACTION}/add-message`, {
+    input: S.Struct({
+      subject: EchoObjectSchema,
+      thread: ThreadType,
+      sender: ActorSchema,
+      text: S.String,
+    }),
+    output: S.Void,
+  }) {}
+
+  export class DeleteMessage extends S.TaggedClass<DeleteMessage>()(`${THREAD_ACTION}/delete-message`, {
+    input: S.Struct({
+      thread: ThreadType,
+      subject: EchoObjectSchema,
+      messageId: S.String,
+      message: S.optional(MessageType),
+      messageIndex: S.optional(S.Number),
+    }),
+    output: S.Void,
+  }) {}
 }
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement threads in sheets.
-export type ThreadProvides<T> = {
-  thread: {
-    predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
-  };
-};
+export const ThreadSettingsSchema = S.mutable(S.Struct({}));
 
-export type ThreadPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  MetadataRecordsProvides &
-  SettingsProvides<ThreadSettingsProps> &
-  TranslationsProvides &
-  SchemaProvides &
-  PanelProvides &
-  MarkdownExtensionProvides;
-
-export type ThreadSettingsProps = { standalone?: boolean };
+export type ThreadSettingsProps = S.Schema.Type<typeof ThreadSettingsSchema>;
 
 export interface ThreadModel {
   root: ThreadType;
 }
 
+type SubjectId = string;
+export type ViewState = { showResolvedThreads: boolean };
+export type ViewStore = Record<SubjectId, ViewState>;
+
 export type ThreadState = {
+  /** Current channel activity. */
+  activities: Record<string, string | undefined>;
   /** In-memory draft threads. */
   drafts: Record<string, ThreadType[]>;
   current?: string | undefined;

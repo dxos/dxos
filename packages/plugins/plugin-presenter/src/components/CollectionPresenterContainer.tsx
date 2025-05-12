@@ -1,0 +1,43 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import React, { type FC, useContext, useState } from 'react';
+
+import { Surface } from '@dxos/app-framework';
+import { type CollectionType } from '@dxos/plugin-space/types';
+import { StackItem } from '@dxos/react-ui-stack';
+
+import { Layout, PageNumber, Pager } from './Presenter';
+import { PresenterContext } from '../types';
+import { useExitPresenter } from '../useExitPresenter';
+
+const CollectionPresenterContainer: FC<{ collection: CollectionType }> = ({ collection }) => {
+  const [slide, setSlide] = useState(0);
+
+  const { running } = useContext(PresenterContext);
+
+  const handleExit = useExitPresenter(collection);
+
+  return (
+    <StackItem.Content classNames='relative'>
+      <Layout
+        bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
+        bottomLeft={
+          <Pager
+            index={slide}
+            count={collection.objects.length}
+            keys={running}
+            onChange={setSlide}
+            onExit={handleExit}
+          />
+        }
+      >
+        {/* TODO(wittjosiah): Better slide placeholder. */}
+        <Surface role='slide' data={{ subject: collection.objects[slide] }} placeholder={<></>} />
+      </Layout>
+    </StackItem.Content>
+  );
+};
+
+export default CollectionPresenterContainer;

@@ -1,0 +1,63 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+import "dxos/keys.proto";
+import "dxos/edge/messenger.proto";
+
+package dxos.edge.signal;
+
+message JoinRequest {
+  dxos.keys.PublicKey topic = 1;
+  dxos.edge.messenger.Peer peer = 2;
+}
+
+message LeaveRequest {
+  dxos.keys.PublicKey topic = 1;
+  dxos.edge.messenger.Peer peer = 2;
+}
+
+message QueryRequest {
+  dxos.keys.PublicKey topic = 1;
+}
+
+message Message {
+  dxos.edge.messenger.Peer author = 1;
+  dxos.edge.messenger.Peer recipient = 2;
+  google.protobuf.Any payload = 3;
+}
+
+/// Goes on Pub/Sub swarm topic and as a Join stream in RPC.
+message SwarmEvent {
+  dxos.keys.PublicKey topic = 1;
+
+  // Announce peer available on swarm.
+  message PeerAvailable {
+    dxos.edge.messenger.Peer peer = 1;
+
+    google.protobuf.Timestamp since = 2;
+
+    // When, if at all (handle the default value as not), this availability would expires were it not re-announced, like
+    // periodically in Pub/Sub with some margin such that Pub/Sub network partitions lead to offline statuses.
+    optional google.protobuf.Timestamp until = 3;
+
+    /// Only relevant in Pub/Sub. Optional, the host topic to eagerly send PeerAvailable messages back to.
+    optional bytes announce_back_to_host = 4;
+  }
+
+  message PeerLeft {
+    dxos.edge.messenger.Peer peer = 1;
+  }
+
+  oneof event {
+    /// The peer was announced as available on the swarm.
+    PeerAvailable peer_available = 2;
+    /// The peer left, or their announcement timed out.
+    PeerLeft peer_left = 3;
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "artifact",
+  "tags": [
+    "scope:experimental",
+    "scope:sdk"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "pack": {},
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

@@ -9,15 +9,15 @@ import { createRoot } from 'react-dom/client';
 
 import { createApp } from '@dxos/app-framework';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
-import { ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { getObservabilityGroup, isObservabilityDisabled, initializeAppObservability } from '@dxos/observability';
+import { Tooltip, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { ResetDialog } from './components';
+import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
-import { appKey } from './constants';
-import { type PluginConfig, core, defaults, plugins, recommended } from './plugins';
+import { APP_KEY } from './constants';
+import { core, defaults, plugins, type PluginConfig } from './plugins';
 import translations from './translations';
 import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
 
@@ -26,13 +26,12 @@ const main = async () => {
 
   registerSignalsRuntime();
 
-  const { Trigger } = await import('@dxos/async');
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
   const { Migrations } = await import('@dxos/migrations');
   const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
 
-  Migrations.define(appKey, __COMPOSER_MIGRATIONS__);
+  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
 
   // Namespace for global Composer test & debug hooks.
   (window as any).composer = {};
@@ -50,17 +49,20 @@ const main = async () => {
     config = await setupConfig();
   }
 
-  // Intentionally do not await, don't block app startup for telemetry.
-  // namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
-  const observability = initializeAppObservability({ namespace: appKey, config, replayEnable: true });
+  // Intentionally do not await; i.e., don't block app startup for telemetry.
+  // The namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
+  const observability = initializeAppObservability({
+    namespace: APP_KEY,
+    config,
+    replayEnable: true,
+  });
+  const observabilityDisabled = await isObservabilityDisabled(APP_KEY);
+  const observabilityGroup = await getObservabilityGroup(APP_KEY);
 
-  // TODO(nf): refactor.
-  const observabilityDisabled = await isObservabilityDisabled(appKey);
-  const observabilityGroup = await getObservabilityGroup(appKey);
-
+  const disableSharedWorker = config.values.runtime?.app?.env?.DX_HOST;
   const services = await createClientServices(
     config,
-    config.values.runtime?.app?.env?.DX_HOST
+    disableSharedWorker
       ? undefined
       : () =>
           new SharedWorker(new URL('./shared-worker', import.meta.url), {
@@ -71,11 +73,8 @@ const main = async () => {
     !observabilityDisabled,
   );
 
-  const firstRun = new Trigger();
-
   const conf: PluginConfig = {
-    appKey,
-    firstRun,
+    appKey: APP_KEY,
     config,
     services,
     observability,
@@ -91,22 +90,15 @@ const main = async () => {
     fallback: ({ error }) => (
       <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
         <Tooltip.Provider>
-          <ResetDialog error={error} config={config} />
+          <ResetDialog error={error} observability={observability} />
         </Tooltip.Provider>
       </ThemeProvider>
     ),
-    // TODO(burdon): Create skeleton.
-    // placeholder: (
-    //   <ThemeProvider tx={defaultTx}>
-    //     <div className='flex flex-col justify-end bs-dvh'>
-    //        <Status variant='main-bottom' indeterminate aria-label='Initializing' />
-    //     </div>
-    //   </ThemeProvider>
-    // ),
+    placeholder: Placeholder,
     plugins: plugins(conf),
-    meta: [...core(conf), ...defaults(conf), ...recommended(conf)],
-    core: core(conf).map((meta) => meta.id),
-    defaults: defaults(conf).map((meta) => meta.id),
+    core: core(conf),
+    defaults: defaults(conf),
+    cacheEnabled: true,
   });
 
   const root = document.getElementById('root')!;

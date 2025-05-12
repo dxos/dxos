@@ -16,6 +16,8 @@ import { tokensTailwindConfig } from './tokens';
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
 
+const { extend: extendTokens, ...overrideTokens } = tokensTailwindConfig;
+
 export const tailwindConfig = ({
   env = 'production',
   content = [],
@@ -34,6 +36,11 @@ export const tailwindConfig = ({
     },
     extend: merge(
       {
+        spacing: {
+          prose: 'var(--dx-prose)',
+          containerMaxWidth: 'var(--dx-containerMaxWidth)',
+          popoverMaxWidth: 'var(--dx-popoverMaxWidth)',
+        },
         screens: {
           'pointer-fine': { raw: '(pointer: fine)' },
           'hover-hover': { raw: '(hover: hover)' },
@@ -54,9 +61,6 @@ export const tailwindConfig = ({
           '7xl': ['2.566rem', { lineHeight: '2.75rem' }],
           '8xl': ['2.887rem', { lineHeight: '3rem' }],
           '9xl': ['3.247rem', { lineHeight: '3.25rem' }],
-        },
-        outlineWidth: {
-          3: '3px',
         },
         boxShadow: {
           slider: '0 0 0 5px rgba(0, 0, 0, 0.3)',
@@ -84,6 +88,19 @@ export const tailwindConfig = ({
           slideRightAndFade: {
             from: { opacity: 0, transform: 'translateX(-2px)' },
             to: { opacity: 1, transform: 'translateX(0)' },
+          },
+          fadeIn: {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          },
+          // Accordion
+          slideDown: {
+            from: { height: '0px' },
+            to: { height: 'var(--radix-accordion-content-height)' },
+          },
+          slideUp: {
+            from: { height: 'var(--radix-accordion-content-height)' },
+            to: { height: '0px' },
           },
 
           // Toast
@@ -156,6 +173,8 @@ export const tailwindConfig = ({
           },
         },
         animation: {
+          'fade-in': 'fadeIn 100ms ease-in forwards',
+
           // Popper chrome
           slideDownAndFade: 'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
           slideLeftAndFade: 'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -168,6 +187,10 @@ export const tailwindConfig = ({
           'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
           'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
 
+          // Accordion
+          slideDown: 'slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)',
+          slideUp: 'slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)',
+
           spin: 'spin 1.5s linear infinite',
           'spin-slow': 'spin 3s linear infinite',
 
@@ -177,9 +200,18 @@ export const tailwindConfig = ({
           'progress-linear': 'progress-linear 2s ease-out infinite',
         },
       },
-      tokensTailwindConfig,
+      extendTokens,
       ...extensions,
     ),
+    ...overrideTokens,
+    colors: {
+      ...overrideTokens.colors,
+      inherit: 'inherit',
+      current: 'currentColor',
+      transparent: 'transparent',
+      black: 'black',
+      white: 'white',
+    },
   },
   plugins: [
     tailwindcssLogical,
