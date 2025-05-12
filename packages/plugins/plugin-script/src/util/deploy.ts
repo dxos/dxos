@@ -7,12 +7,11 @@ import {
   FunctionType,
   type ScriptType,
   getUserFunctionUrlInMetadata,
-  incrementSemverPatch,
   makeFunctionUrl,
   setUserFunctionUrlInMetadata,
-  uploadWorkerFunction,
 } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
+import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { log } from '@dxos/log';
 import { live, getMeta, makeRef, type Space } from '@dxos/react-client/echo';
 
