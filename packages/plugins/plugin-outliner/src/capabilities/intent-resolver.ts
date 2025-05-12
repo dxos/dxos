@@ -4,7 +4,7 @@
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
 import { live, makeRef } from '@dxos/live-object';
-import { Task } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { OutlinerAction, JournalType, OutlineType, createJournalEntry, createTree } from '../types';
 
@@ -35,7 +35,7 @@ export default () =>
     createResolver({
       intent: OutlinerAction.CreateTask,
       resolve: ({ node }) => {
-        const task = live(Task, {
+        const task = live(DataType.Task, {
           text: node.data.text,
         });
         return {

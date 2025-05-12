@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { type ReactiveEchoObject, Filter, hasType } from '@dxos/echo-db';
+import { type AnyLiveObject, Filter, hasType } from '@dxos/echo-db';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -41,7 +41,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context, respon
   const docs: ChainDocument[] = [];
   const addDocuments =
     (space: PublicKey | undefined = undefined) =>
-    async (objects: ReactiveEchoObject<any>[]) => {
+    async (objects: AnyLiveObject<any>[]) => {
       for (const object of objects) {
         let pageContent: string | undefined;
         log.info('processing', { object: { id: object.id, type: object.type } });

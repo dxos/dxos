@@ -11,7 +11,7 @@ import { live, Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses, ControlPage, ControlSection, Form } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { AccessTokenSchema, AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { NewTokenSelector } from './NewTokenSelector';
 import { TokenManager } from './TokenManager';
@@ -24,25 +24,25 @@ const initialValues = {
   token: '',
 };
 
-const FormSchema = AccessTokenSchema.pipe(S.omit('id'));
+const FormSchema = DataType.AccessToken.pipe(S.omit('id'));
 type TokenForm = S.Schema.Type<typeof FormSchema>;
 
 export const TokensContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [adding, setAdding] = useState(false);
-  const tokens = useQuery(space, Filter.schema(AccessTokenType));
+  const tokens = useQuery(space, Filter.schema(DataType.AccessToken));
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
 
   const handleAddAccessToken = useCallback(
-    async (token: AccessTokenType) => {
+    async (token: DataType.AccessToken) => {
       // TODO(ZaymonFC): Is there a more ergonomic way to do this intent chain?
       const result = await dispatch(
         createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true }),
       );
-      if (isInstanceOf(AccessTokenType, result.data?.object)) {
+      if (isInstanceOf(DataType.AccessToken, result.data?.object)) {
         void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
       }
     },
@@ -51,14 +51,14 @@ export const TokensContainer = ({ space }: { space: Space }) => {
 
   const handleAdd = useCallback(
     async (form: TokenForm) => {
-      const token = live(AccessTokenType, form);
+      const token = live(DataType.AccessToken, form);
       await handleAddAccessToken(token);
       setAdding(false);
     },
     [handleAddAccessToken],
   );
 
-  const handleDelete = useCallback((token: AccessTokenType) => space.db.remove(token), [space]);
+  const handleDelete = useCallback((token: DataType.AccessToken) => space.db.remove(token), [space]);
 
   return (
     <StackItem.Content classNames='block overflow-y-auto'>

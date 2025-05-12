@@ -5,7 +5,7 @@
 import { asyncTimeout } from '@dxos/async';
 import type { BaseEchoObject } from '@dxos/echo-schema';
 
-import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
+import { getObjectCore, type AnyLiveObject } from '../echo-handler';
 
 /**
  * @param obj
@@ -27,7 +27,7 @@ export const loadObject = <T extends BaseEchoObject>(obj: T): T => {
  */
 // TODO(burdon): Rename/review SDK.
 export const loadObjectReferences = async <
-  T extends ReactiveEchoObject<any>,
+  T extends AnyLiveObject<any>,
   RefType,
   DerefType = RefType extends Array<infer U> ? Array<NonNullable<U>> : NonNullable<RefType>,
 >(

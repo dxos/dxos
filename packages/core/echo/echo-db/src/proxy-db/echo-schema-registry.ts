@@ -283,7 +283,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     }
 
     const meta = getTypeAnnotation(schema);
-    invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
+    invariant(meta, 'use S.Struct({}).pipe(Type.def()) or class syntax to create a valid schema');
     const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
       [TypeAnnotationId]: meta,

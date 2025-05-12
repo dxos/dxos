@@ -3,7 +3,6 @@
 //
 
 import { SchemaAST as AST, JSONSchema, Option, Schema as S, type Types } from 'effect';
-import { JSONSchemaAnnotationId } from 'effect/SchemaAST';
 import type { Mutable } from 'effect/Types';
 
 import { raise } from '@dxos/debug';
@@ -480,4 +479,4 @@ const makeAnnotatedRefinement = (ast: AST.AST, annotations: AST.Annotations): AS
 };
 
 const addJsonSchemaFields = (ast: AST.AST, schema: JsonSchemaType): AST.AST =>
-  makeAnnotatedRefinement(ast, { [JSONSchemaAnnotationId]: schema });
+  makeAnnotatedRefinement(ast, { [AST.JSONSchemaAnnotationId]: schema });

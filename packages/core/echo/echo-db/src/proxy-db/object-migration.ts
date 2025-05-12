@@ -8,7 +8,7 @@ import { getSchemaDXN } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 
 import type { EchoDatabase } from './database';
-import type { ReactiveEchoObject } from '../echo-handler';
+import type { AnyLiveObject } from '../echo-handler';
 
 type DefineObjectMigrationOptions<From extends S.Schema.AnyNoContext, To extends S.Schema.AnyNoContext> = {
   from: From;
@@ -33,7 +33,7 @@ type ObjectMigrationContext = {};
 
 type OnMigrateParams<From extends S.Schema.AnyNoContext, To extends S.Schema.AnyNoContext> = {
   before: S.Schema.Type<From>;
-  object: ReactiveEchoObject<S.Schema.Type<To>>;
+  object: AnyLiveObject<S.Schema.Type<To>>;
   db: EchoDatabase;
 };
 

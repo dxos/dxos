@@ -16,7 +16,7 @@ export const ComputeNode = S.extend(
   BaseGraphNode,
 
   /**
-   * NOTE: We have a mixin of properties for different node types for simplicity,rather than a discriminated union.
+   * NOTE: We have a mixin of properties for different node types for simplicity, rather than a discriminated union.
    */
   // TODO(burdon): Split out into different types.
   S.Struct({
@@ -29,7 +29,7 @@ export const ComputeNode = S.extend(
     subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
 
     /** For composition of function nodes. */
-    function: S.optional(Ref(FunctionType)),
+    function: S.optional(Ref(FunctionType) as Ref$<FunctionType>),
 
     /**
      * For template nodes determines the type of the value.

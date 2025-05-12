@@ -35,7 +35,7 @@ import {
   type RenderCallback,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { type TextType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -45,7 +45,7 @@ import { setFallbackName } from './util';
 type ExtensionsOptions = {
   document?: DocumentType;
   id?: string;
-  text?: TextType;
+  text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
   query?: Query<DocumentType>;
   settings: MarkdownSettingsProps;

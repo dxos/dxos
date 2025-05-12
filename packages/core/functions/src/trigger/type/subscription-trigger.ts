@@ -61,7 +61,7 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
       // TODO(dmaretskyi): Removed to not have dependency on markdown-plugin.
       // for (const object of objects) {
       //   const content = object.content;
-      //   if (content instanceof TextType) {
+      //   if (content instanceof DataType.Text) {
       //     subscriptions.push(getObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)));
       //   }
       // }

@@ -8,8 +8,8 @@ import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import { type EmailMessage, SOURCE_ID } from './types';
 
@@ -39,7 +39,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   if (!space) {
     return;
   }
-  context.client.addTypes([ChannelType, MessageType, TextType]);
+  context.client.addTypes([ChannelType, DataType.Message, DataType.Text]);
 
   // Create mailbox if doesn't exist.
   const { objects: mailboxes } = await space.db.query(Filter.schema(ChannelType)).run();
@@ -64,13 +64,13 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
     );
   }
 
-  const { objects } = await space.db.query(Filter.schema(MessageType)).run();
+  const { objects } = await space.db.query(Filter.schema(DataType.Message)).run();
   for (const message of messages) {
     let object = findObjectWithForeignKey(objects, { source: SOURCE_ID, id: String(message.id) });
     if (!object) {
       object = space.db.add(
         live(
-          MessageType,
+          DataType.Message,
           {
             sender: { email: message.from },
             timestamp: new Date(message.created).toISOString(),

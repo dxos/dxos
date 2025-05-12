@@ -7,12 +7,12 @@ import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { Contact, MessageType, Project, Organization } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { AppGraphBuilder, ArtifactDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
-import { CalendarType, EventType, InboxAction, MailboxType } from './types';
+import { CalendarType, InboxAction, MailboxType } from './types';
 
 export const InboxPlugin = () =>
   definePlugin(meta, [
@@ -40,7 +40,7 @@ export const InboxPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: MessageType.typename,
+          id: DataType.Message.typename,
           metadata: {
             icon: 'ph--note--regular',
           },
@@ -52,10 +52,10 @@ export const InboxPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: EventType.typename,
+          id: DataType.Event.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (event: EventType) => await RefArray.loadAll(event.links ?? []),
+            loadReferences: async (event: DataType.Event) => await RefArray.loadAll(event.links ?? []),
           },
         }),
       ],
@@ -84,7 +84,8 @@ export const InboxPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [Contact, Organization, Project]),
+      activate: () =>
+        contributes(ClientCapabilities.Schema, [DataType.Person, DataType.Organization, DataType.Project]),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
@@ -109,6 +110,6 @@ export const InboxPlugin = () =>
     defineModule({
       id: `${meta.id}/module/whitelist-schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [Organization, Contact]),
+      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [DataType.Organization, DataType.Person]),
     }),
   ]);

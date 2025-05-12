@@ -9,7 +9,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import {
   AppGraphSerializer,
@@ -81,7 +81,7 @@ export const MarkdownPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TextType]),
+      activate: () => contributes(ClientCapabilities.Schema, [DataType.Text]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

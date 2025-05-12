@@ -7,7 +7,7 @@ import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dx
 
 import type { Filter$, FilterSource } from './filter';
 import { type Query } from './query';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type AnyLiveObject } from '../echo-handler';
 
 /**
  * `query` API function declaration.
@@ -15,8 +15,8 @@ import { type ReactiveEchoObject } from '../echo-handler';
 // TODO(dmaretskyi): Type based on the result format.
 export interface QueryFn {
   (): Query;
-  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): Query<ReactiveEchoObject<Filter$.Object<F>>>;
-  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): Query<ReactiveEchoObject<any>>;
+  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): Query<AnyLiveObject<Filter$.Object<F>>>;
+  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): Query<AnyLiveObject<any>>;
 }
 
 /**

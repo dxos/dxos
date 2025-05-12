@@ -3,7 +3,7 @@
 //
 
 import { S } from '@dxos/echo-schema';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { TOKEN_MANAGER_PLUGIN } from './meta';
 
@@ -13,7 +13,7 @@ export namespace TokenManagerAction {
   export class AccessTokenCreated extends S.TaggedClass<AccessTokenCreated>()(
     `${TOKEN_MANAGER_ACTION}/access-token-created`,
     {
-      input: S.Struct({ accessToken: AccessTokenType }),
+      input: S.Struct({ accessToken: DataType.AccessToken }),
       output: S.Void,
     },
   ) {}

@@ -6,14 +6,14 @@ import React from 'react';
 
 import { List, ListItem } from '@dxos/react-ui';
 import { ghostHover, groupBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
+import { type DataType } from '@dxos/schema';
 
-import { type EventType } from '../../types';
 import { styles } from '../styles';
 
 export type EventListProps = {
-  events?: EventType[];
+  events?: DataType.Event[];
   selected?: string;
-  onSelect?: (contact: EventType) => void;
+  onSelect?: (contact: DataType.Event) => void;
 };
 
 export const EventList = ({ events = [], selected, onSelect }: EventListProps) => {

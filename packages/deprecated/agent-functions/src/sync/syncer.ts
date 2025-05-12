@@ -4,14 +4,14 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { type Space, type Query } from '@dxos/client/echo';
-import { type ReactiveEchoObject, type Filter } from '@dxos/echo-db';
+import { type AnyLiveObject, type Filter } from '@dxos/echo-db';
 
-export type ObjectIndexer<T extends ReactiveEchoObject<any>> = (object: T) => string | undefined;
+export type ObjectIndexer<T extends AnyLiveObject<any>> = (object: T) => string | undefined;
 
 /**
  * Merge.
  */
-export class ObjectSyncer<T extends ReactiveEchoObject<any>> {
+export class ObjectSyncer<T extends AnyLiveObject<any>> {
   private readonly _mapById = new Map<string, { indexedValue: string; object: T }>();
   private readonly _mapByIndex = new Map<string, T>();
 

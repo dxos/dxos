@@ -23,7 +23,7 @@ import {
   type EchoDatabase,
   type EchoDatabaseImpl,
   type QueuesService,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   Filter,
   QueueFactory,
 } from '@dxos/echo-db';
@@ -113,7 +113,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: ReactiveEchoObject<any> = undefined;
+  private _properties?: AnyLiveObject<any> = undefined;
 
   constructor(
     private _clientServices: ClientServicesProvider,
@@ -188,7 +188,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): ReactiveEchoObject<any> {
+  get properties(): AnyLiveObject<any> {
     this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;
