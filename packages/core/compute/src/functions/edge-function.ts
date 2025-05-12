@@ -8,7 +8,7 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
 import { AST, toEffectSchema } from '@dxos/echo-schema';
-import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions/types';
+import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 

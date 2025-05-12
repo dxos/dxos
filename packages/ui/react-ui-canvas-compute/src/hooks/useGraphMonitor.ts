@@ -5,9 +5,9 @@
 import { useMemo } from 'react';
 
 import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
+import { Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 import { type GraphMonitor, type CanvasGraphModel, type Connection } from '@dxos/react-ui-canvas-editor';
 import { isNonNullable } from '@dxos/util';
@@ -114,9 +114,8 @@ export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
 const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode, triggerData: TriggerShape) => {
   const functionTrigger = triggerData.functionTrigger?.target;
   invariant(functionTrigger);
-  functionTrigger.function = DXN.fromLocalObjectId(graph.root.id).toString();
-  functionTrigger.meta ??= {};
-  functionTrigger.meta.computeNodeId = computeNode.id;
+  functionTrigger.function = Type.ref(graph.root);
+  functionTrigger.inputNodeId = computeNode.id;
 };
 
 const deleteTriggerObjects = (computeGraph: ComputeGraphModel, deleted: CanvasGraphModel) => {

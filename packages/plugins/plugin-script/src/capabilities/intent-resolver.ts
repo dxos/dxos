@@ -6,7 +6,7 @@ import { Octokit } from '@octokit/core';
 import { Predicate } from 'effect';
 
 import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions/types';
+import { ScriptType } from '@dxos/functions';
 import { live, makeRef } from '@dxos/live-object';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
 import { DataType } from '@dxos/schema';

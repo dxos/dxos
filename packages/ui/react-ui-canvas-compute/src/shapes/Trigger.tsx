@@ -4,14 +4,7 @@
 
 import React, { useEffect } from 'react';
 
-import {
-  EmailTriggerOutput,
-  QueueTriggerOutput,
-  SubscriptionTriggerOutput,
-  TimerTriggerOutput,
-  VoidInput,
-  WebhookTriggerOutput,
-} from '@dxos/conductor';
+import { VoidInput } from '@dxos/conductor';
 import { ObjectId, Ref, S } from '@dxos/echo-schema';
 import {
   type EmailTrigger,
@@ -22,7 +15,12 @@ import {
   TriggerKind,
   type TriggerType,
   type WebhookTrigger,
-} from '@dxos/functions/types';
+  EmailTriggerOutput,
+  QueueTriggerOutput,
+  SubscriptionTriggerOutput,
+  TimerTriggerOutput,
+  WebhookTriggerOutput,
+} from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
 import { live, makeRef, useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';

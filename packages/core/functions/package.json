@@ -23,16 +23,6 @@
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": "./dist/lib/node-esm/edge/index.mjs"
-    },
-    "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
-    },
-    "./types": {
-      "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -43,12 +33,6 @@
       ],
       "edge": [
         "dist/types/src/edge/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
       ]
     }
   },

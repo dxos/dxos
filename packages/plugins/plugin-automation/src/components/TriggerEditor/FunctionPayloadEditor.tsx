@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type JsonPath, toEffectSchema } from '@dxos/echo-schema';
-import { type FunctionType } from '@dxos/functions/types';
+import { type JsonPath, RefImpl, toEffectSchema } from '@dxos/echo-schema';
+import { type FunctionType } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
 import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
 
@@ -17,17 +17,18 @@ export type FunctionMetaEditorProps = {
 /**
  * Editor component for function meta parameters.
  */
-export const FunctionMetaEditor = ({
+export const FunctionPayloadEditor = ({
   functions,
   getValue,
   onValueChange,
   onQueryRefOptions,
 }: FunctionMetaEditorProps) => {
   const selectedFunctionValue = useFormValues(['function' as JsonPath]);
-  const selectedFunctionName = useMemo(
-    () => selectedFunctionValue?.split('dxn:worker:').at(1),
-    [selectedFunctionValue],
-  );
+  const selectedFunctionName = useMemo(() => {
+    if (selectedFunctionValue instanceof RefImpl) {
+      return selectedFunctionValue.dxn.toString().split('dxn:worker:').at(1);
+    }
+  }, [selectedFunctionValue]);
 
   const selectedFunction = useMemo(
     () => functions.find((f) => f.name === selectedFunctionName),
