@@ -4,18 +4,18 @@
 
 import type { Config as ImapConfig } from 'imap';
 
-import { getMeta, getSpace, makeRef, type Space } from '@dxos/client/echo';
+import { getMeta, getSpace, Ref, type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ChannelType, MessageType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { ChannelType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import { ImapProcessor } from './imap-processor';
 import { getKey } from '../../util';
 
-const types = [TextType, ChannelType, MessageType];
+const types = [DataType.Text, ChannelType, DataType.Message];
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client } = context;
@@ -70,8 +70,8 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 }, types);
 
 // TODO(burdon): Util.
-const processMailbox = async (space: Space, mailbox: ChannelType, messages: MessageType[]) => {
-  const { objects: current = [] } = (await space.db.query(Filter.schema(MessageType)).run()) ?? {};
+const processMailbox = async (space: Space, mailbox: ChannelType, messages: DataType.Message[]) => {
+  const { objects: current = [] } = (await space.db.query(Filter.schema(DataType.Message)).run()) ?? {};
 
   // Merge messages.
   // console.log(messages.map((message) => message[debug]));
@@ -79,7 +79,7 @@ const processMailbox = async (space: Space, mailbox: ChannelType, messages: Mess
   for (const message of messages) {
     const exists = current.find((m) => matchKeys(getMeta(m).keys, getMeta(message).keys));
     if (!exists) {
-      (mailbox.threads[0].target!.messages ??= []).push(makeRef(message));
+      (mailbox.threads[0].target!.messages ??= []).push(Ref.make(message));
       added++;
     }
   }

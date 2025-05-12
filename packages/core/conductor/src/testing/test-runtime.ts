@@ -20,7 +20,7 @@ export class TestRuntime {
 
   private readonly _workflowLoader = new WorkflowLoader({
     graphLoader: async (graphDxn: DXN) => this.getGraph(graphDxn).root,
-    nodeResolver: async (nodeType: string) => this._nodes.get(nodeType)!,
+    nodeResolver: async (node: ComputeNode) => this._nodes.get(node.type!)!,
   });
 
   get graphs() {

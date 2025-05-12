@@ -10,10 +10,10 @@ import { getMeta, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
-import { create, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
-import { MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { ThreadType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import { type ChainResources, ModelInvokerFactory } from '../../chain';
 import { StubModelInvoker } from '../../functions/gpt/testing';
@@ -117,7 +117,7 @@ describe.skip('GPT', () => {
     test('falls back to message as context if no explicit context provided', async () => {
       const { space, functions, trigger } = await setupTest(testBuilder);
       const input = { name: 'message', value: 'object.text' };
-      const thread = space.db.add(create(ThreadType, { messages: [] }));
+      const thread = space.db.add(live(ThreadType, { messages: [] }));
       const testChain = contextInput(input);
       trigger.meta = { prompt: createTestChain(space, testChain) };
       await functions.waitForActiveTriggers(space);
@@ -149,7 +149,7 @@ describe.skip('GPT', () => {
       const expectedResponse = 'hi from ai';
       modelStub.nextCallResult = expectedResponse;
       const { space, functions, trigger } = await setupTest(testBuilder);
-      const thread = space.db.add(create(ThreadType, { messages: [] }));
+      const thread = space.db.add(live(ThreadType, { messages: [] }));
       trigger.meta = { prompt: createTestChain(space) };
       await functions.waitForActiveTriggers(space);
 
@@ -197,7 +197,7 @@ const waitForCall = async (stub: StubModelInvoker) => {
   await waitForCondition({ condition: () => stub.lastCallArguments != null });
 };
 
-const waitForGptResponse = async (message: MessageType, thread?: ThreadType) => {
+const waitForGptResponse = async (message: DataType.Message, thread?: ThreadType) => {
   const hasAiMeta = (obj: any) => getMeta(obj).keys[0].source === 'dxos.org/service/ai';
   if (thread) {
     await waitForCondition({ condition: () => hasAiMeta(thread.messages[thread.messages.length - 1]) });
@@ -215,7 +215,7 @@ const setupTest = async (testBuilder: TestBuilder) => {
   });
   const [app] = await createInitializedClients(testBuilder);
   const space = await app.spaces.create();
-  app.addTypes([TemplateType, FunctionDef, FunctionTrigger, MessageType, TextType, ThreadType]);
+  app.addTypes([TemplateType, FunctionDef, FunctionTrigger, DataType.Message, DataType.Text, ThreadType]);
   await inviteMember(space, functions.client);
   const trigger = createTrigger(space);
   return { space, functions, trigger, app };
@@ -226,10 +226,10 @@ const createMessage = (
   content: string,
   options?: {
     thread?: ThreadType;
-    context?: MessageType['context'];
+    context?: DataType.Message['context'];
   },
 ) => {
-  const message = create(MessageType, {
+  const message = live(DataType.Message, {
     timestamp: new Date().toISOString(),
     sender: { name: 'unknown' },
     text: content,
@@ -237,7 +237,7 @@ const createMessage = (
   });
 
   if (options?.thread) {
-    options.thread.messages!.push(makeRef(message));
+    options.thread.messages!.push(Ref.make(message));
   } else {
     space.db.add(message);
   }
@@ -247,7 +247,7 @@ const createMessage = (
 
 const createTrigger = (space: Space, options?: { meta?: FunctionTrigger['meta'] }) => {
   const fn = space.db.add(
-    create(FunctionDef, {
+    live(FunctionDef, {
       uri: 'dxos.org/function/gpt',
       route: '/gpt',
       handler: 'gpt',
@@ -255,13 +255,13 @@ const createTrigger = (space: Space, options?: { meta?: FunctionTrigger['meta'] 
   );
 
   return space.db.add(
-    create(FunctionTrigger, {
+    live(FunctionTrigger, {
       function: fn.uri,
       enabled: true,
       meta: options?.meta,
       spec: {
         type: TriggerKind.Subscription,
-        filter: { type: MessageType.typename },
+        filter: { type: DataType.Message.typename },
       },
     }),
   );

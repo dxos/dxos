@@ -9,22 +9,23 @@ import {
   FQ_ID_LENGTH,
   getSpace,
   isEchoObject,
-  isSpace,
   OBJECT_ID_LENGTH,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   SPACE_ID_LENGTH,
   SpaceState,
   type Space,
+  parseId,
 } from '@dxos/client/echo';
 import { isDeleted } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, toSignal, type Node, type InvokeParams } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
 import { SPACE_PLUGIN } from '../meta';
-import { CollectionType, SpaceAction, type SpaceSettingsProps } from '../types';
+import { CollectionType, SPACE_TYPE, SpaceAction, type SpaceSettingsProps } from '../types';
 import {
   constructObjectActions,
   constructSpaceActions,
@@ -95,6 +96,45 @@ export default (context: PluginsContext) => {
             testId: 'spacePlugin.addSpace',
             disposition: 'item',
             position: 'fallback',
+          },
+        },
+        {
+          id: SpaceAction.OpenMembers._tag,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const layout = context.requestCapability(Capabilities.Layout);
+            const client = context.requestCapability(ClientCapabilities.Client);
+            const { spaceId } = parseId(layout.workspace);
+            const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
+            await dispatch(createIntent(SpaceAction.OpenMembers, { space }));
+          },
+          properties: {
+            label: ['share space label', { ns: SPACE_PLUGIN }],
+            icon: 'ph--users--regular',
+            testId: 'spacePlugin.shareSpace',
+            keyBinding: {
+              macos: 'meta+.',
+              windows: 'alt+.',
+            },
+          },
+        },
+        {
+          id: SpaceAction.OpenSettings._tag,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const layout = context.requestCapability(Capabilities.Layout);
+            const client = context.requestCapability(ClientCapabilities.Client);
+            const { spaceId } = parseId(layout.workspace);
+            const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
+            await dispatch(createIntent(SpaceAction.OpenSettings, { space }));
+          },
+          properties: {
+            label: ['open current space settings label', { ns: SPACE_PLUGIN }],
+            icon: 'ph--faders--regular',
+            keyBinding: {
+              macos: 'meta+shift+,',
+              windows: 'ctrl+shift+,',
+            },
           },
         },
       ],
@@ -202,7 +242,7 @@ export default (context: PluginsContext) => {
     // Create space actions.
     createExtension({
       id: `${SPACE_PLUGIN}/actions`,
-      filter: (node): node is Node<Space> => isSpace(node.data),
+      filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       actions: ({ node }) => {
         const space = node.data;
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
@@ -220,7 +260,7 @@ export default (context: PluginsContext) => {
     // Create nodes for objects in the root collection of a space.
     createExtension({
       id: `${SPACE_PLUGIN}/root-collection`,
-      filter: (node): node is Node<Space> => isSpace(node.data),
+      filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       connector: ({ node }) => {
         const space = node.data;
         const spaceState = toSignal(
@@ -308,12 +348,31 @@ export default (context: PluginsContext) => {
     // Create collection actions and action groups.
     createExtension({
       id: `${SPACE_PLUGIN}/object-actions`,
-      filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+      filter: (node): node is Node<AnyLiveObject<any>> => isEchoObject(node.data),
       actions: ({ node }) => {
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
         const state = context.requestCapability(SpaceCapabilities.State);
         return constructObjectActions({ node, dispatch, navigable: state.navigableCollections });
       },
+    }),
+
+    // Object settings plank companion.
+    createExtension({
+      id: `${SPACE_PLUGIN}/settings`,
+      filter: (node): node is Node<AnyLiveObject<any>> => isEchoObject(node.data),
+      connector: ({ node }) => [
+        {
+          id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),
+          type: PLANK_COMPANION_TYPE,
+          data: 'settings',
+          properties: {
+            label: ['object settings label', { ns: SPACE_PLUGIN }],
+            icon: 'ph--sliders--regular',
+            disposition: 'hidden',
+            position: 'fallback',
+          },
+        },
+      ],
     }),
   ]);
 };

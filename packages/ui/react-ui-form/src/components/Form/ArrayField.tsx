@@ -33,7 +33,9 @@ type ArrayFieldProps = {
 export const ArrayField = ({ property, readonly, path, inputProps, Custom, lookupComponent }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
   const { ast, name, type, title } = property;
-  const values = useFormValues(path ?? []) as any[];
+  // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
+  //  It doesn't become live until another field is touched, but that's better than the whole form crashing.
+  const values = (useFormValues(path ?? []) ?? []) as any[];
   invariant(Array.isArray(values), `Values at path ${path?.join('.')} must be an array.`);
   const label = title ?? pipe(name, capitalize);
 

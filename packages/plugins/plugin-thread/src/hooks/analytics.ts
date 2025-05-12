@@ -5,31 +5,36 @@
 import { useCallback } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { useOnTransition } from '@dxos/react-ui';
+import { type DataType } from '@dxos/schema';
 
-export const useAnalyticsCallback = (spaceId: string | undefined, name: string, meta?: any) => {
+export const useOnEditAnalytics = (
+  message: Live<any>,
+  textBlock: DataType.MessageBlock.Text | undefined,
+  editing: boolean,
+) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  return useCallback(
-    (dynamicMeta?: any) => {
-      void dispatch(
-        createIntent(ObservabilityAction.SendEvent, { name, properties: { ...meta, ...dynamicMeta, spaceId } }),
-      );
-    },
-    [dispatch, name, meta, spaceId],
-  );
-};
+  const onEdit = useCallback(() => {
+    const space = getSpace(message);
+    if (!space || !textBlock) {
+      return;
+    }
 
-export const useOnEditAnalytics = (message: ReactiveObject<any>, editing: boolean) => {
-  const space = getSpace(message);
+    void dispatch(
+      createIntent(ObservabilityAction.SendEvent, {
+        name: 'threads.message.update',
+        properties: {
+          spaceId: space.id,
+          messageId: message.id,
+          messageLength: textBlock?.text.length,
+        },
+      }),
+    );
+  }, [dispatch, message, textBlock]);
 
-  const onEditAnalytics = useAnalyticsCallback(space?.id, 'threads.comment-edited', {
-    messageId: message.id,
-    messageLength: message.text.length,
-  });
-
-  useOnTransition(editing, true, false, onEditAnalytics);
+  useOnTransition(editing, true, false, onEdit);
 };

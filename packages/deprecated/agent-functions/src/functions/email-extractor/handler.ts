@@ -2,25 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create, makeRef } from '@dxos/client/echo';
+import { live, Ref } from '@dxos/client/echo';
 import { Filter, hasType } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ContactType, MessageType, type ActorType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
-
-const types = [TextType, ContactType, MessageType];
+import { DataType } from '@dxos/schema';
 
 export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event.data;
   invariant(space);
 
-  const { objects: contacts } = await space.db.query(Filter.schema(ContactType)).run();
-  const objectsByEmail = new Map<string, ContactType>();
+  const { objects: contacts } = await space.db.query(Filter.schema(DataType.Person)).run();
+  const objectsByEmail = new Map<string, DataType.Person>();
 
   let i = 0;
-  const getOrCreateContact = (recipient: ActorType): ContactType => {
+  const getOrCreateContact = (recipient: DataType.Actor): DataType.Person => {
     invariant(recipient.email);
     let contact =
       objectsByEmail.get(recipient.email.toLowerCase()) ??
@@ -31,7 +28,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
       );
 
     if (!contact) {
-      contact = create(ContactType, {
+      contact = live(ContactType, {
         name: recipient.name,
         identifiers: [{ type: 'email', value: recipient.email }],
       });
@@ -43,22 +40,22 @@ export const handler = subscriptionHandler(async ({ event }) => {
     return contact;
   };
 
-  let messages: MessageType[] = [];
+  let messages: DataType.Message[] = [];
   if (objects === undefined) {
-    messages = (await space.db.query(Filter.schema(MessageType, { type: 'email' }))).objects;
+    messages = (await space.db.query(Filter.schema(DataType.Message, { type: 'email' }))).objects;
   } else if (objects.length) {
     // Only if undefined.
-    messages = objects.filter(hasType(MessageType));
+    messages = objects.filter(hasType(DataType.Message));
   }
 
   // Lookup contacts.
   for (const message of messages ?? []) {
-    message.sender.contact = makeRef(getOrCreateContact(message.sender));
+    message.sender.contact = Ref.make(getOrCreateContact(message.sender));
     message.properties?.to?.forEach((to: ActorType) => {
-      to.contact = makeRef(getOrCreateContact(to));
+      to.contact = Ref.make(getOrCreateContact(to));
     });
     message.properties?.cc?.forEach((cc: ActorType) => {
-      cc.contact = makeRef(getOrCreateContact(cc));
+      cc.contact = Ref.make(getOrCreateContact(cc));
     });
   }
 

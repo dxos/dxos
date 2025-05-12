@@ -27,6 +27,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -63,6 +66,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/artifact"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -73,6 +79,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/shell"
@@ -88,6 +97,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-pickers"

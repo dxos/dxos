@@ -7,11 +7,11 @@ import { describe, expect, test } from 'vitest';
 import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { loadObjectReferences } from './load-object';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type AnyLiveObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 // TODO(dmaretskyi): Refactor to test Ref.load() instead.
@@ -161,7 +161,7 @@ describe.skip('loadObjectReferences', () => {
     const kv = createTestLevel();
     const spaceKey = PublicKey.random();
     const testPeer = await testBuilder.createPeer(kv);
-    const object = create(TestSchema, { nested: [makeRef(create(Nested, { value: 42 }))] });
+    const object = live(TestSchema, { nested: [Ref.make(live(Nested, { value: 42 }))] });
     const db = await testPeer.createDatabase(spaceKey);
     db.graph.schemaRegistry.addSchema([TestSchema, Nested]);
     db.add(object);
@@ -177,6 +177,6 @@ describe.skip('loadObjectReferences', () => {
   });
 });
 
-const createExpando = (props: any = {}): ReactiveEchoObject<Expando> => {
-  return create(Expando, props);
+const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
+  return live(Expando, props);
 };

@@ -10,10 +10,9 @@ import { createArtifactElement } from '@dxos/assistant';
 import { isInstanceOf, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { create, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
+import { live, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
-import { schemaTools } from './schema-tool';
 import { meta } from '../meta';
 import { TableAction } from '../types';
 
@@ -33,7 +32,7 @@ const QualifiedId = S.String.annotations({
 
 export default () => {
   const definition = defineArtifact({
-    id: meta.id,
+    id: `artifact:${meta.id}`,
     name: meta.name,
     // TODO(ZaymonFC): See if we need instructions beyond what the tools define.
     instructions: `
@@ -44,7 +43,6 @@ export default () => {
     `,
     schema: TableType,
     tools: [
-      ...schemaTools,
       defineTool(meta.id, {
         name: 'create',
         description: `
@@ -73,7 +71,7 @@ export default () => {
           const intent = pipe(
             createIntent(TableAction.Create, {
               space: extensions.space,
-              initialSchema: typename,
+              typename,
               name: name ?? schema.typename,
             }),
             chain(SpaceAction.AddObject, { target: extensions.space }),
@@ -195,7 +193,7 @@ export default () => {
 
           // Validate all rows.
           // TODO(ZaymonFC): There should be a nicer way to do this!
-          const validationResults = data.map((row) => S.validateEither(schema)(create(schema, row)));
+          const validationResults = data.map((row) => S.validateEither(schema)(live(schema, row)));
           const validationError = validationResults.find((res) => res._tag === 'Left');
           if (validationError) {
             return ToolResult.Error(`Validation failed: ${validationError.left.message}`);

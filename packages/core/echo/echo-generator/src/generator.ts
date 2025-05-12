@@ -3,10 +3,11 @@
 //
 
 import { Filter, type Space } from '@dxos/client/echo';
-import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { getObjectAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
+import { type AnyLiveObject } from '@dxos/echo-db';
+import { getTypeAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, getSchema, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
+import { live, isLiveObject, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -30,27 +31,27 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     private readonly _provider?: TestObjectProvider<T>,
   ) {}
 
-  get schemas(): (EchoSchema | S.Schema<any>)[] {
+  get schemas(): (EchoSchema | S.Schema.AnyNoContext)[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T): EchoSchema | S.Schema<any> | undefined {
-    return this.schemas.find((schema) => getObjectAnnotation(schema)!.typename === type);
+  getSchema(type: T): EchoSchema | S.Schema.AnyNoContext | undefined {
+    return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
   }
 
-  protected setSchema(type: T, schema: EchoSchema | S.Schema<any>) {
+  protected setSchema(type: T, schema: EchoSchema | S.Schema.AnyNoContext) {
     this._schemas[type] = schema;
   }
 
-  async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveObject<any>> {
+  async createObject({ types }: { types?: T[] } = {}): Promise<Live<any>> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = await this._generators[type](this._provider);
-    if (isReactiveObject(data)) {
+    if (isLiveObject(data)) {
       return data;
     }
 
     const schema = this.getSchema(type);
-    return schema ? create(schema, data) : create(data);
+    return schema ? live(schema, data) : live(data);
   }
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
@@ -82,9 +83,9 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 
   async addSchemas() {
-    const result: (EchoSchema | S.Schema<any>)[] = [];
+    const result: (EchoSchema | S.Schema.AnyNoContext)[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
-      const echoSchema = await this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema<any>);
+      const echoSchema = await this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema.AnyNoContext);
       this.setSchema(typename as T, echoSchema);
       result.push(echoSchema);
     }
@@ -92,14 +93,14 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return result;
   }
 
-  override async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveEchoObject<any>> {
+  override async createObject({ types }: { types?: T[] } = {}): Promise<AnyLiveObject<any>> {
     return this._space.db.add(await super.createObject({ types }));
   }
 
   private async _maybeRegisterSchema(
     typename: string,
-    schema: EchoSchema | S.Schema<any>,
-  ): Promise<EchoSchema | S.Schema<any>> {
+    schema: EchoSchema | S.Schema.AnyNoContext,
+  ): Promise<EchoSchema | S.Schema.AnyNoContext> {
     if (schema instanceof EchoSchema) {
       const existingSchema = this._space.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
@@ -117,15 +118,15 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     }
   }
 
-  async mutateObject(object: ReactiveEchoObject<any>, params: MutationsProviderParams) {
+  async mutateObject(object: AnyLiveObject<any>, params: MutationsProviderParams) {
     invariant(this._mutations, 'Mutations not defined.');
-    const type = getObjectAnnotation(getSchema(object)!)!.typename as T;
+    const type = getTypeAnnotation(getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
 
     await this._mutations![type](object, params);
   }
 
-  async mutateObjects(objects: ReactiveEchoObject<any>[], params: MutationsProviderParams) {
+  async mutateObjects(objects: AnyLiveObject<any>[], params: MutationsProviderParams) {
     for (const object of objects) {
       await this.mutateObject(object, params);
     }

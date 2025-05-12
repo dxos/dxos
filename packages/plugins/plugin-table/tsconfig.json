@@ -27,6 +27,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -66,9 +69,6 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../experimental/plugin-search"
-    },
-    {
       "path": "../plugin-client"
     },
     {
@@ -76,6 +76,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"

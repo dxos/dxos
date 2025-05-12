@@ -108,9 +108,12 @@ export namespace LayoutAction {
   export class UpdatePopover extends S.TaggedClass<UpdatePopover>()(UPDATE_LAYOUT, {
     input: S.Struct({
       part: S.Literal('popover').annotations({ description: 'Updating the popover.' }),
-      subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the popover.' })),
+      subject: S.optional(
+        S.Any.annotations({
+          description: 'URI of the component to display in the popover or data to pass to the popover.',
+        }),
+      ),
       options: S.Struct({
-        anchorId: S.String.annotations({ description: 'The id of the element to anchor the popover to.' }),
         side: S.optional(
           S.Literal('top', 'right', 'bottom', 'left').annotations({ description: 'The side of the anchor.' }),
         ),
@@ -120,7 +123,22 @@ export namespace LayoutAction {
             description: 'Additional props for the popover.',
           }),
         ),
-      }),
+      }).pipe(
+        S.extend(
+          S.Union(
+            S.Struct({
+              variant: S.Literal('virtual'),
+              anchor: S.Any.annotations({ description: 'The DOM element to anchor the popover to.' }),
+            }),
+            S.Struct({
+              variant: S.optional(S.Literal('react')),
+              anchorId: S.String.annotations({
+                description: 'An id that can be used to determine whether to render the anchor subcomponent.',
+              }),
+            }),
+          ),
+        ),
+      ),
     }),
     output: S.Void,
   }) {}
@@ -176,9 +194,11 @@ export namespace LayoutAction {
       options: S.optional(
         S.Struct({
           state: S.optional(S.Literal(true).annotations({ description: 'The items are being added.' })),
+          variant: S.optional(S.String.annotations({ description: 'The variant of the item to open.' })),
           key: S.optional(
             S.String.annotations({ description: 'If provided, will replace item with a matching key (id prefix).' }),
           ),
+          workspace: S.optional(S.String.annotations({ description: 'The workspace to open the items in.' })),
           scrollIntoView: S.optional(S.Boolean.annotations({ description: 'Scroll the items into view.' })),
           pivotId: S.optional(S.String.annotations({ description: 'The id of the item to place new items next to.' })),
           positioning: S.optional(

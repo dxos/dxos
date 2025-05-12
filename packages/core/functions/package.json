@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Functions API and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -61,6 +61,7 @@
     "gen-schema": "ts-node ./tools/schema.ts"
   },
   "dependencies": {
+    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -79,7 +80,8 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "cron": "^3.1.6",
-    "effect": "^3.12.3",
+    "cron-schedule": "^5.0.4",
+    "effect": "3.14.21",
     "esbuild-wasm": "^0.16.14",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",

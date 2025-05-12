@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S, pipe } from 'effect';
-import { capitalize } from 'effect/String';
+import { Schema, SchemaAST, String, pipe } from 'effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { Format, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { Format, getTypename, toJsonSchema } from '@dxos/echo-schema';
-import { create, createStoredSchema, makeRef } from '@dxos/live-object';
+import { getTypename, toJsonSchema } from '@dxos/echo-schema';
+import { live, createStoredSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { getSchemaProperties } from './properties';
@@ -27,33 +27,39 @@ describe('View', () => {
   });
 
   test('create view from TypedObject', async ({ expect }) => {
-    const schema = Testing.ContactType;
+    const schema = Testing.Contact;
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(schema) });
     expect(view.query.typename).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq([
       'name',
+      'image',
       'email',
       // 'address',
-      'employer',
+      'organization',
     ]);
 
     const props = getSchemaProperties(schema.ast);
-    const labels = props.map((p) => pipe(p.name ?? p.title, capitalize));
+    const labels = props.map((p) => pipe(p.name ?? p.title, String.capitalize));
     expect(labels).to.deep.eq([
       'Name',
+      'Image',
       'Email',
       // 'Address',
-      'Employer',
+      'Organization',
     ]);
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const org = create(Testing.OrgType, { name: 'DXOS', website: 'https://dxos.org' });
-    const contact = create(Testing.ContactType, { name: 'Alice', email: 'alice@example.com', employer: makeRef(org) });
-    log('schema', { org: toJsonSchema(Testing.OrgType), person: toJsonSchema(Testing.ContactType) });
-    log('objects', { org, person: contact });
-    expect(getTypename(org)).to.eq(Testing.OrgType.typename);
-    expect(getTypename(contact)).to.eq(Testing.ContactType.typename);
+    const organization = live(Testing.Organization, { name: 'DXOS', website: 'https://dxos.org' });
+    const contact = live(Testing.Contact, {
+      name: 'Alice',
+      email: 'alice@example.com',
+      organization: Type.ref(organization),
+    });
+    log('schema', { organization: toJsonSchema(Testing.Organization), contact: toJsonSchema(Testing.Contact) });
+    log('objects', { organization, contact });
+    expect(getTypename(organization)).to.eq(Testing.Organization.typename);
+    expect(getTypename(contact)).to.eq(Testing.Contact.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
@@ -63,10 +69,10 @@ describe('View', () => {
         version: '0.1.0',
       },
       toJsonSchema(
-        S.Struct({
-          name: S.optional(S.String).annotations({ [AST.TitleAnnotationId]: 'Name' }),
-          email: S.optional(Format.Email),
-          salary: S.optional(Format.Currency({ code: 'usd', decimals: 2 })),
+        Schema.Struct({
+          name: Schema.optional(Schema.String).annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
+          email: Schema.optional(Format.Email),
+          salary: Schema.optional(Format.Currency({ code: 'usd', decimals: 2 })),
         }),
       ),
     );

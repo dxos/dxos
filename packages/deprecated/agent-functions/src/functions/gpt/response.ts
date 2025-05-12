@@ -4,11 +4,11 @@
 
 import { type Space } from '@dxos/client/echo';
 import { AST } from '@dxos/echo-schema';
-import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
+import { live, Ref, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { type RequestContext } from './context';
 import { type ParseResult } from './parser';
@@ -16,7 +16,7 @@ import { type ParseResult } from './parser';
 type BlockType = {
   timestamp: string;
   content?: string;
-  object?: ReactiveObject<any>;
+  object?: Live<any>;
 };
 
 // TODO(burdon): Create variant of StringOutputParser.
@@ -72,9 +72,9 @@ export class ResponseBuilder {
           : content;
 
       this._context.object.objects.push(
-        makeRef(
-          create(DocumentType, {
-            content: makeRef(create(TextType, { content: formattedContent })),
+        Ref.make(
+          live(DocumentType, {
+            content: Ref.make(live(DataType.Text, { content: formattedContent })),
             threads: [],
           }),
         ),
@@ -96,11 +96,11 @@ export class ResponseBuilder {
             for (const { name, type } of schema.getProperties()) {
               const value = obj[name];
               if (value !== undefined && value !== null && AST.isStringKeyword(type)) {
-                data[name.toString()] = create(TextType, { content: value });
+                data[name.toString()] = live(DataType.Text, { content: value });
               }
             }
 
-            const object = create(schema.schema, data);
+            const object = live(schema.schema, data);
             blocks.push({ timestamp, object });
           }
         }

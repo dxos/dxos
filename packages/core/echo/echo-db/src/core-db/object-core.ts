@@ -16,10 +16,10 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { createObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dxos/util';
 
@@ -59,7 +59,7 @@ export class ObjectCore {
   /**
    * Id of the ECHO object.
    */
-  public id = createObjectId();
+  public id = ObjectId.random();
 
   /**
    * Set if when the object is bound to a database.
@@ -251,7 +251,7 @@ export class ObjectCore {
    * Encode a value to be stored in the Automerge document.
    */
   encode(value: DecodedAutomergePrimaryValue) {
-    if (isReactiveObject(value) as boolean) {
+    if (isLiveObject(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
 

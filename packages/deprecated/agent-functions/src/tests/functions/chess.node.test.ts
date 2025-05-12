@@ -11,7 +11,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { getObjectCore } from '@dxos/echo-db';
 import { FunctionDef, type FunctionManifest, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { startFunctionsHost } from '@dxos/functions/testing';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { ChessType } from '@dxos/plugin-chess/types';
 
 import { initFunctionsPlugin } from '../setup';
@@ -48,7 +48,7 @@ describe('Chess', () => {
 
     const space = await functions.client.spaces.create();
     functions.client.addTypes([ChessType, FunctionDef, FunctionTrigger]);
-    const game = space.db.add(create(ChessType, {}));
+    const game = space.db.add(live(ChessType, {}));
     await space.db.flush();
 
     // Create trigger.

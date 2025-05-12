@@ -6,12 +6,12 @@ import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { S, foreignKey, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { create, getMeta, makeRef } from '@dxos/live-object';
+import { live, getMeta, Ref.make } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TemplateType } from '@dxos/plugin-automation/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { CollectionType, MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { CollectionType, DataType, ThreadType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { RequestProcessor } from './processor';
@@ -25,8 +25,8 @@ const types = [
   TemplateType,
   CollectionType,
   DocumentType,
-  MessageType,
-  TextType,
+  DataType.Message,
+  DataType.Text,
   ThreadType,
 ];
 
@@ -59,7 +59,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   // TODO(burdon): Generalize to other object types.
   const messages = objects
     .map((message) => {
-      if (!(message instanceof MessageType)) {
+      if (!(message instanceof DataType.Message)) {
         log.warn('unexpected object type', { type: getTypename(message) });
         return null;
       }
@@ -79,7 +79,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
         thread.messages.some((msg) => msg?.target?.id === message.id),
       );
       if (!thread) {
-        return [message, undefined] as [MessageType, ThreadType | undefined];
+        return [message, undefined] as [DataType.Message, ThreadType | undefined];
       }
 
       // Only react to the last message in the thread.
@@ -88,7 +88,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
         return null;
       }
 
-      return [message, thread] as [MessageType, ThreadType | undefined];
+      return [message, thread] as [DataType.Message, ThreadType | undefined];
     })
     .filter(isNonNullable);
 
@@ -119,8 +119,8 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
         if (text) {
           const metaKey = foreignKey(AI_SOURCE, Date.now().toString());
           if (thread) {
-            const response = create(
-              MessageType,
+            const response = live(
+              DataType.Message,
               {
                 sender: { identityKey: resources.identityKey },
                 timestamp: new Date().toISOString(),
@@ -132,7 +132,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
               },
             );
 
-            thread.messages.push(makeRef(response));
+            thread.messages.push(Ref.make(response));
           } else if (success) {
             // Check success to avoid modifying the message with an "Error generating response" block.
             // TODO(burdon): Mark the message as "processed".

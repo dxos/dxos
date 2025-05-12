@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger } from '@dxos/async';
 import { type CellScalarValue, addressFromA1Notation, isFormula } from '@dxos/compute';
 import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
-import { FunctionType } from '@dxos/functions';
+import { FunctionType } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 
 import { SheetModel } from './sheet-model';

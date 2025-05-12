@@ -10,7 +10,7 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, useThemeContext } from '@dxos/react-ui';
@@ -143,7 +143,7 @@ const StoryThread: FC<{
 
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
-      const message = create(Expando, {
+      const message = live(Expando, {
         timestamp: new Date().toISOString(),
         sender: { identityKey: authorId },
         text: messageRef.current,
@@ -233,7 +233,7 @@ type StoryProps = {
 };
 
 const Story = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createObject(create(Expando, { content: text ?? '' })));
+  const [item] = useState(createObject(live(Expando, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 

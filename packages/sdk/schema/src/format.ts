@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema, SchemaAST } from 'effect';
+
 import {
-  AST,
   DecimalPrecision,
   TypeEnum,
   FormatEnum,
-  S,
   JsonProp,
   SelectOptionSchema,
   type SelectOption,
@@ -16,40 +16,40 @@ import {
 /**
  * Base schema.
  */
-export const BasePropertySchema = S.Struct({
+export const BasePropertySchema = Schema.Struct({
   property: JsonProp.annotations({
-    [AST.TitleAnnotationId]: 'Property',
-    [AST.DescriptionAnnotationId]: 'Field name.',
+    [SchemaAST.TitleAnnotationId]: 'Property',
+    [SchemaAST.DescriptionAnnotationId]: 'Field name.',
   }),
 
-  title: S.optional(
-    S.String.annotations({
-      [AST.TitleAnnotationId]: 'Label',
-      [AST.DescriptionAnnotationId]: 'Property label.',
+  title: Schema.optional(
+    Schema.String.annotations({
+      [SchemaAST.TitleAnnotationId]: 'Label',
+      [SchemaAST.DescriptionAnnotationId]: 'Property label.',
     }),
   ),
 
-  description: S.optional(
-    S.String.annotations({
-      [AST.TitleAnnotationId]: 'Description',
-      [AST.DescriptionAnnotationId]: 'Property description.',
+  description: Schema.optional(
+    Schema.String.annotations({
+      [SchemaAST.TitleAnnotationId]: 'Description',
+      [SchemaAST.DescriptionAnnotationId]: 'Property description.',
     }),
   ),
 });
 
-export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
+export type BaseProperty = Schema.Schema.Type<typeof BasePropertySchema>;
 
-const extend = <Fields extends S.Struct.Fields>(format: FormatEnum, type: TypeEnum, fields?: Fields) =>
-  S.extend(
+const extend = <Fields extends Schema.Struct.Fields>(format: FormatEnum, type: TypeEnum, fields?: Fields) =>
+  Schema.extend(
     BasePropertySchema,
-    S.Struct({
-      type: S.Literal(type),
-      format: S.Literal(format).annotations({
-        [AST.TitleAnnotationId]: 'Type format',
+    Schema.Struct({
+      type: Schema.Literal(type),
+      format: Schema.Literal(format).annotations({
+        [SchemaAST.TitleAnnotationId]: 'Type format',
       }),
       ...fields,
     }),
-  ).pipe(S.mutable);
+  ).pipe(Schema.mutable);
 
 interface FormatSchemaCommon extends BaseProperty {
   type: TypeEnum;
@@ -65,14 +65,14 @@ interface FormatSchemaCommon extends BaseProperty {
  * Map of schema definitions.
  */
 // TODO(burdon): Translations?
-export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = {
-  [FormatEnum.None]: S.extend(
+export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon>> = {
+  [FormatEnum.None]: Schema.extend(
     BasePropertySchema,
-    S.Struct({
-      type: S.Enums(TypeEnum),
-      format: S.Literal(FormatEnum.None) as S.Schema<FormatEnum>,
+    Schema.Struct({
+      type: Schema.Enums(TypeEnum),
+      format: Schema.Literal(FormatEnum.None) as Schema.Schema<FormatEnum>,
     }),
-  ).pipe(S.mutable),
+  ).pipe(Schema.mutable),
 
   //
   // Scalars
@@ -82,14 +82,14 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.Number]: extend(FormatEnum.Number, TypeEnum.Number),
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
-    referenceSchema: S.NonEmptyString.annotations({
-      [AST.TitleAnnotationId]: 'Schema',
-      [AST.DescriptionAnnotationId]: 'Schema typename',
+    referenceSchema: Schema.NonEmptyString.annotations({
+      [SchemaAST.TitleAnnotationId]: 'Schema',
+      [SchemaAST.DescriptionAnnotationId]: 'Schema typename',
     }),
-    referencePath: S.optional(
+    referencePath: Schema.optional(
       JsonProp.annotations({
-        [AST.TitleAnnotationId]: 'Lookup property',
-        [AST.DescriptionAnnotationId]: 'Referenced property',
+        [SchemaAST.TitleAnnotationId]: 'Lookup property',
+        [SchemaAST.DescriptionAnnotationId]: 'Referenced property',
       }),
     ),
   }),
@@ -114,30 +114,35 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   //
 
   [FormatEnum.SingleSelect]: extend(FormatEnum.SingleSelect, TypeEnum.String, {
-    options: S.Array(SelectOptionSchema).annotations({
-      [AST.TitleAnnotationId]: 'Options',
-      [AST.DescriptionAnnotationId]: 'Available choices',
+    options: Schema.Array(SelectOptionSchema).annotations({
+      [SchemaAST.TitleAnnotationId]: 'Options',
+      [SchemaAST.DescriptionAnnotationId]: 'Available choices',
     }),
   }),
 
-  // TODO(ZaymonFC): Add multi-select.
+  [FormatEnum.MultiSelect]: extend(FormatEnum.MultiSelect, TypeEnum.Object, {
+    options: Schema.Array(SelectOptionSchema).annotations({
+      [SchemaAST.TitleAnnotationId]: 'Options',
+      [SchemaAST.DescriptionAnnotationId]: 'Available choices',
+    }),
+  }),
 
   //
   // Numbers
   //
 
   [FormatEnum.Currency]: extend(FormatEnum.Currency, TypeEnum.Number, {
-    multipleOf: S.optional(DecimalPrecision),
-    currency: S.optional(
-      S.String.annotations({
-        [AST.TitleAnnotationId]: 'Currency code',
-        [AST.DescriptionAnnotationId]: 'ISO 4217 currency code.',
+    multipleOf: Schema.optional(DecimalPrecision),
+    currency: Schema.optional(
+      Schema.String.annotations({
+        [SchemaAST.TitleAnnotationId]: 'Currency code',
+        [SchemaAST.DescriptionAnnotationId]: 'ISO 4217 currency code.',
       }),
     ),
   }),
   [FormatEnum.Integer]: extend(FormatEnum.Integer, TypeEnum.Number),
   [FormatEnum.Percent]: extend(FormatEnum.Percent, TypeEnum.Number, {
-    multipleOf: S.optional(DecimalPrecision),
+    multipleOf: Schema.optional(DecimalPrecision),
   }),
   [FormatEnum.Timestamp]: extend(FormatEnum.UUID, TypeEnum.Number),
 
@@ -162,7 +167,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
  * This is the schema used by the ViewEditor's Form.
  * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
-export const PropertySchema = S.Union(
+export const PropertySchema = Schema.Union(
   formatToSchema[FormatEnum.None],
   formatToSchema[FormatEnum.String],
   formatToSchema[FormatEnum.Number],
@@ -183,6 +188,7 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.URL],
   formatToSchema[FormatEnum.UUID],
   formatToSchema[FormatEnum.SingleSelect],
+  formatToSchema[FormatEnum.MultiSelect],
 
   //
   // Numbers
@@ -208,9 +214,9 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.GeoPoint],
 );
 
-export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}
+export interface PropertyType extends Schema.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 
-export const getFormatSchema = (format?: FormatEnum): S.Schema<any> => {
+export const getFormatSchema = (format?: FormatEnum): Schema.Schema.AnyNoContext => {
   if (format === undefined) {
     return formatToSchema[FormatEnum.None];
   }

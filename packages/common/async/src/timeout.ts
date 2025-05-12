@@ -37,6 +37,7 @@ export const asyncReturn = () => sleep(0);
  * Wait for promise or throw error.
  */
 export const asyncTimeout = async <T>(
+  // TODO(dmaretskyi): This callback API is unintuitive and leads to bugs.
   promise: Promise<T> | (() => Promise<T>),
   timeout: number,
   err?: Error | string,

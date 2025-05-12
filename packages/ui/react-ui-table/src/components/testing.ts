@@ -4,16 +4,15 @@
 
 import { useEffect } from 'react';
 
-import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum } from '@dxos/echo-schema';
+import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum, ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { create, makeRef } from '@dxos/react-client/echo';
+import { live, makeRef } from '@dxos/react-client/echo';
 import { createView, type ViewProjection } from '@dxos/schema';
-import {} from '@dxos/schema';
 
 import { TableType } from '../types';
 
 export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  id: S.String,
+  id: ObjectId,
   name: S.optional(S.String),
   age: S.optional(S.Number),
   active: S.optional(S.Boolean),
@@ -21,7 +20,7 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/Test', versi
 });
 
 export const createTable = (schema = TestSchema) => {
-  return create(TableType, {
+  return live(TableType, {
     view: makeRef(
       createView({
         name: 'Test',
@@ -33,7 +32,7 @@ export const createTable = (schema = TestSchema) => {
 };
 
 export const createItems = (n: number) => {
-  const { data } = create({
+  const { data } = live({
     data: Array.from({ length: n }, () => ({
       name: faker.person.fullName(),
       age: faker.number.int({ min: 20, max: 70 }),
@@ -75,6 +74,7 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
       const rowIdx = Math.floor(Math.random() * items.length);
       const fields = table.view?.target?.fields ?? [];
       const columnIdx = Math.floor(Math.random() * fields.length);
+      // TODO(ZaymonFC): ... This is borked.
       const projection: ViewProjection = (table as any)._projection;
       const field = fields[columnIdx];
       const item = items[rowIdx];

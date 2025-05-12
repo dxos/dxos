@@ -4,8 +4,8 @@
 
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
-import { create, getMeta } from '@dxos/client/echo';
-import { type ReactiveEchoObject } from '@dxos/echo-db';
+import { live, getMeta } from '@dxos/client/echo';
+import { type AnyLiveObject } from '@dxos/echo-db';
 import { type ForeignKey } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -39,7 +39,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
       // Try to query organization.
       if (!project.org && repoData.organization?.id) {
         const foreignKey: ForeignKey = { source: 'github.com', id: String(repoData.organization.id) };
-        project.org = space.db.query((object: ReactiveEchoObject<any>) =>
+        project.org = space.db.query((object: AnyLiveObject<any>) =>
           getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
         ).objects[0];
       }
@@ -48,7 +48,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
       if (!project.org && repoData.organization) {
         const orgSchema = space.db.schemaRegistry.getSchema(SchemaType.organization);
         invariant(orgSchema, 'Missing organization schema.');
-        project.org = create(orgSchema, { name: repoData.organization?.login });
+        project.org = live(orgSchema, { name: repoData.organization?.login });
         getMeta(project.org).keys.push({ source: 'github.com', id: String(repoData.organization?.id) });
       }
     }
@@ -78,7 +78,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
 
         const foreignKey: ForeignKey = { source: 'github.com', id: String(user.id) };
         const { objects: existing } = await space.db
-          .query((object: ReactiveEchoObject<any>) =>
+          .query((object: AnyLiveObject<any>) =>
             getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
           )
           .run();
@@ -86,7 +86,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
           return;
         }
 
-        const contact = create(
+        const contact = live(
           contactSchema,
           {
             name: user.name,

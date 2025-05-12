@@ -5,21 +5,19 @@
 import React, { useEffect, useState } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework';
-import { QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, useSpaceSyncState } from '@dxos/react-client/echo';
 import { Tooltip, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph, useAttended, useAttention } from '@dxos/react-ui-attention';
 
-import { useSpaceSyncState } from './sync-state';
 import { usePath } from '../../hooks';
 import { SPACE_PLUGIN } from '../../meta';
 
-const useEdgeStatus = (): QueryEdgeStatusResponse.EdgeStatus => {
-  const [status, setStatus] = useState(QueryEdgeStatusResponse.EdgeStatus.NOT_CONNECTED);
+const useEdgeStatus = (): EdgeStatus => {
+  const [status, setStatus] = useState(EdgeStatus.NOT_CONNECTED);
   const client = useClient();
-
   useEffect(() => {
     client.services.services.EdgeAgentService?.queryEdgeStatus().subscribe(({ status }) => {
       setStatus(status);
@@ -44,7 +42,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const path = usePath(graph, startOfAttention);
   const containsAttended = !open && !isAttended && id && path ? path.includes(id) : false;
 
-  const connectedToEdge = useEdgeStatus() === QueryEdgeStatusResponse.EdgeStatus.CONNECTED;
+  const connectedToEdge = useEdgeStatus() === EdgeStatus.CONNECTED;
   // TODO(wittjosiah): This is not reactive.
   const edgeSyncEnabled = space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED;
   const syncState = useSpaceSyncState(space);

@@ -5,19 +5,21 @@
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
-import { type ThemeContextValue, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
+import { live } from '@dxos/live-object';
+import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { THEME_PLUGIN } from './meta';
 import compositeEnUs from './translations/en-US';
 
-export type ThemePluginOptions = Partial<Pick<ThemeContextValue, 'tx' | 'noCache'>> & {
+export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
   appName?: string;
 };
 
-export default ({ appName, tx: propsTx = defaultTx, ...rest }: ThemePluginOptions = { appName: 'test' }) => {
-  const state = create<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+export default (
+  { appName, tx: propsTx = defaultTx, resourceExtensions = [], ...rest }: ThemePluginOptions = { appName: 'test' },
+) => {
+  const state = live<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
 
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
     document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
@@ -34,7 +36,10 @@ export default ({ appName, tx: propsTx = defaultTx, ...rest }: ThemePluginOption
       id: THEME_PLUGIN,
       context: ({ children }) => {
         const _resources = useCapabilities(Capabilities.Translations);
-        const resources = useMemo(() => [compositeEnUs(appName), ..._resources.flat()], [_resources]);
+        const resources = useMemo(
+          () => [compositeEnUs(appName), ...resourceExtensions, ..._resources.flat()],
+          [appName, resourceExtensions, _resources],
+        );
 
         return (
           <ThemeProvider {...{ tx: propsTx, themeMode: state.themeMode, resourceExtensions: resources, ...rest }}>

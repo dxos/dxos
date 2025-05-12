@@ -2,56 +2,55 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type IdentifyParams } from '@segment/analytics-node';
 import snippet from '@segment/snippet';
 
 import { log } from '@dxos/log';
 
-import type { EventOptions, SegmentTelemetryOptions, PageOptions } from './types';
+import { AbstractSegmentTelemetry } from './base';
+import type { TrackOptions, SegmentTelemetryOptions, PageOptions } from './types';
 import { captureException } from '../sentry';
 
-export class SegmentTelemetry {
-  private _getTags: () => { [key: string]: string };
-
+/**
+ * Browser telemetry.
+ */
+// https://segment.com/docs/connections/sources/catalog/libraries/website/javascript/#basic-tracking-methods
+export class SegmentTelemetry extends AbstractSegmentTelemetry {
   constructor({ apiKey, batchSize, getTags }: SegmentTelemetryOptions) {
-    this._getTags = getTags;
+    super(getTags);
     try {
-      const contents = snippet.min({
-        apiKey,
-        page: false,
-      });
-
+      const contents = snippet.min({ apiKey, page: false });
       const script = document.createElement('script');
       script.innerHTML = contents;
       document.body.append(script);
     } catch (err) {
-      log.catch('Failed to initialize telemetry', err);
+      log.catch('failed to initialize telemetry', err);
     }
   }
 
-  page({ did: userId, ...options }: PageOptions = {}) {
+  identify(options: IdentifyParams) {
     try {
-      (window as any).analytics?.page({
-        context: this._getTags(),
-        ...options,
-        userId,
-      });
+      (window as any).analytics?.identify(options.userId, options.traits);
     } catch (err) {
-      log.catch('Failed to track page', err);
+      log.catch('failed to identify', err);
     }
   }
 
-  event({ did: userId, name: event, ...options }: EventOptions) {
+  page(options: PageOptions) {
     try {
-      options.properties = {
-        ...options.properties,
-        ...this._getTags(),
-      };
-      (window as any).analytics?.track({
-        ...options,
-        event,
-      });
+      const props = this.createPageProps(options);
+      (window as any).analytics?.page(props.category, props.name, props.properties);
     } catch (err) {
-      log.catch('Failed to track event', err);
+      log.catch('failed to track page', err);
+    }
+  }
+
+  track(options: TrackOptions) {
+    try {
+      const props = this.createTrackProps(options);
+      (window as any).analytics?.track(props.event, props.properties);
+    } catch (err) {
+      log.catch('failed to track event', err);
     }
   }
 
@@ -61,7 +60,7 @@ export class SegmentTelemetry {
         captureException(err);
       });
     } catch (err) {
-      log.catch('Failed to flush telemetry', err);
+      log.catch('failed to flush telemetry', err);
     }
   }
 

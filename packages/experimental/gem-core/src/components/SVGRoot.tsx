@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { select } from 'd3';
 import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -27,13 +27,13 @@ export const SVGRoot = ({ context: provided, children }: SVGRootProps) => {
     if (width && height) {
       // TODO(burdon): Does not trigger resize.
       context.setSize({ width, height });
-      d3.select(context.svg)
+      select(context.svg)
         .attr('display', 'block')
         .attr('viewBox', context.viewBox)
         .attr('width', width)
         .attr('height', height);
     } else {
-      d3.select(context.svg).attr('display', 'none'); // Hide until mounted.
+      select(context.svg).attr('display', 'none'); // Hide until mounted.
     }
   }, [width, height]);
 

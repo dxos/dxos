@@ -5,6 +5,7 @@
 import { isNotNullable } from 'effect/Predicate';
 import React, { useEffect, useState } from 'react';
 
+import { useClient } from '@dxos/react-client';
 import { useQuery, getSpace, useSchema, Filter } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
 import { useSelectedItems } from '@dxos/react-ui-attention';
@@ -23,13 +24,16 @@ export type MapContainerProps = { role?: string; type?: MapControlType; map?: Ma
   'zoom' | 'center' | 'onChange'
 >;
 
+// TODO(burdon): Error: Map container is already initialized.
+
 export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(_type);
   const [markers, setMarkers] = useState<MapMarker[]>([]);
+  const client = useClient();
   const space = getSpace(map);
 
-  const schema = useSchema(space, map?.view?.target?.query.typename);
-  const rowsForType = useQuery(space, schema ? Filter.schema(schema) : undefined);
+  const schema = useSchema(client, space, map?.view?.target?.query.typename);
+  const objects = useQuery(space, schema ? Filter.schema(schema) : undefined);
 
   useEffect(() => {
     const locationProperty = getLocationProperty(map?.view?.target);
@@ -37,7 +41,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
       return;
     }
 
-    const newMarkers: MapMarker[] = (rowsForType ?? [])
+    const newMarkers: MapMarker[] = (objects ?? [])
       .map((row) => {
         const geopoint = row[locationProperty];
         if (!geopoint) {
@@ -58,13 +62,13 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
       .filter(isNotNullable);
 
     setMarkers(newMarkers);
-  }, [rowsForType, map?.view?.target]);
+  }, [objects, map?.view?.target]);
 
   // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
   const selected = useSelectedItems(map?.view?.target?.query.typename);
 
   return (
-    <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
+    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
       {type === 'map' && (
         <MapControl markers={markers} selected={Array.from(selected)} onToggle={() => setType('globe')} {...props} />
       )}

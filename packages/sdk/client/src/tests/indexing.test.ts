@@ -7,11 +7,11 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Filter, type Query, type ReactiveEchoObject } from '@dxos/echo-db';
-import { Expando } from '@dxos/echo-schema';
+import { Filter, type Query, type AnyLiveObject } from '@dxos/echo-db';
+import { Expando, Ref } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
@@ -21,41 +21,41 @@ import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
 describe('Index queries', () => {
   const createObjects = () => ({
     contacts: [
-      create(ContactType, {
+      live(ContactType, {
         name: 'Alice',
         identifiers: [],
       }),
-      create(ContactType, {
+      live(ContactType, {
         name: 'Bob',
         identifiers: [],
       }),
-      create(ContactType, {
+      live(ContactType, {
         name: 'Catherine',
         identifiers: [],
       }),
     ],
     documents: [
-      create(DocumentType, {
+      live(DocumentType, {
         title: 'DXOS Design Doc',
-        content: makeRef(
-          create(TextV0Type, {
+        content: Ref.make(
+          live(TextV0Type, {
             content: 'Very important design document',
           }),
         ),
       }),
-      create(DocumentType, {
+      live(DocumentType, {
         title: 'ECHO Architecture',
-        content: makeRef(
-          create(TextV0Type, {
+        content: Ref.make(
+          live(TextV0Type, {
             content: 'Very important architecture document',
           }),
         ),
       }),
     ],
     expandos: [
-      create(Expando, { org: 'DXOS' }), //
-      create(Expando, { name: 'Mykola' }),
-      create(Expando, { height: 185 }),
+      live(Expando, { org: 'DXOS' }), //
+      live(Expando, { name: 'Mykola' }),
+      live(Expando, { height: 185 }),
     ],
   });
 
@@ -67,7 +67,7 @@ describe('Index queries', () => {
     return client;
   };
 
-  const addObjects = async <T extends {}>(space: Space, objects: ReactiveEchoObject<T>[]) => {
+  const addObjects = async <T extends {}>(space: Space, objects: AnyLiveObject<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
       return space.db.add(object);
@@ -77,8 +77,8 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: Query, objects: ReactiveEchoObject<any>[]) => {
-    const receivedIndexedObject = new Trigger<ReactiveEchoObject<any>[]>();
+  const matchObjects = async (query: Query, objects: AnyLiveObject<any>[]) => {
+    const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.results.filter((result) => result.resolution?.source === 'index');

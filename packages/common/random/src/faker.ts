@@ -11,6 +11,7 @@ import {
   randFloat,
   randFullName,
   randHexaDecimal,
+  randImg,
   randNumber,
   randParagraph,
   randProductName,
@@ -36,6 +37,17 @@ export const faker = {
     multiple: <T>(f: () => T, { count }: { count: number | { min: number; max: number } }) =>
       multiple(f, typeof count === 'number' ? count : getCount(count)),
     uniqueArray: <T>(f: T[] | (() => T), n: number) => uniqueArray(f, n),
+    randomSubset: <T>(array: T[], count?: number | { min: number; max: number }) => {
+      const length =
+        count === undefined
+          ? Math.floor(Math.random() * (array.length + 1))
+          : Math.min(typeof count === 'number' ? count : getCount(count), array.length);
+
+      if (length === 0) {
+        return [];
+      }
+      return uniqueArray(() => rand(array), length);
+    },
   },
 
   //
@@ -50,6 +62,9 @@ export const faker = {
   },
   date: {
     recent: () => randRecentDate(),
+  },
+  image: {
+    url: () => randImg(),
   },
 
   //

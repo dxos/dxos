@@ -2,19 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  createResolver,
-  LayoutAction,
-  type PluginsContext,
-} from '@dxos/app-framework';
-import { Ref } from '@dxos/echo-schema';
+import { Capabilities, contributes, createIntent, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { ObjectId, Ref } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
-import { create, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
+import { live, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
 import { THREAD_PLUGIN } from '../meta';
@@ -23,56 +21,57 @@ import { ThreadAction } from '../types';
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
+      intent: ThreadAction.CreateChannel,
+      resolve: ({ spaceId, name }) => ({
+        data: {
+          object: live(ChannelType, {
+            name,
+            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+          }),
+        },
+      }),
+    }),
+    createResolver({
       intent: ThreadAction.Create,
       resolve: ({ name, cursor, subject }) => {
-        if (cursor && subject) {
-          // Seed the threads array if it does not exist.
-          if (subject?.threads === undefined) {
-            try {
-              // Static schema will throw an error if subject does not support threads array property.
-              subject.threads = [];
-            } catch (err) {
-              log.error('Subject does not support threads array', { typename: subject?.typename });
-              return;
-            }
+        // Seed the threads array if it does not exist.
+        if (subject?.threads === undefined) {
+          try {
+            // Static schema will throw an error if subject does not support threads array property.
+            subject.threads = [];
+          } catch (err) {
+            log.error('Subject does not support threads array', { typename: subject?.typename });
+            return;
           }
-
-          const { state } = context.requestCapability(ThreadCapabilities.MutableState);
-          const subjectId = fullyQualifiedId(subject);
-          const thread = create(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
-          const draft = state.drafts[subjectId];
-          if (draft) {
-            draft.push(thread);
-          } else {
-            state.drafts[subjectId] = [thread];
-          }
-
-          return {
-            data: { object: thread },
-            intents: [
-              createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
-              createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'comments' }),
-            ],
-          };
-        } else {
-          // TODO(wittjosiah): Create separate intent for channel creation.
-          return {
-            data: { object: create(ChannelType, { threads: [makeRef(create(ThreadType, { messages: [] }))] }) },
-          };
         }
+
+        const { state } = context.requestCapability(ThreadCapabilities.MutableState);
+        const subjectId = fullyQualifiedId(subject);
+        const thread = live(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
+        const draft = state.drafts[subjectId];
+        if (draft) {
+          draft.push(thread);
+        } else {
+          state.drafts[subjectId] = [thread];
+        }
+
+        return {
+          data: { object: thread },
+          intents: [
+            createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
+            createIntent(DeckAction.ChangeCompanion, {
+              primary: subjectId,
+              companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
+            }),
+          ],
+        };
       },
     }),
     createResolver({
       intent: ThreadAction.Select,
-      resolve: ({ current, skipOpen }) => {
+      resolve: ({ current }) => {
         const { state } = context.requestCapability(ThreadCapabilities.MutableState);
         state.current = current;
-
-        return {
-          intents: !skipOpen
-            ? [createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'comments' })]
-            : undefined,
-        };
       },
     }),
     createResolver({
@@ -85,13 +84,17 @@ export default (context: PluginsContext) =>
         }
 
         const space = getSpace(thread);
-        const spaceId = space?.id;
+        invariant(space, 'Space not found');
+        const spaceId = space.id;
 
         return {
           intents: [
             createIntent(ObservabilityAction.SendEvent, {
               name: 'threads.toggle-resolved',
-              properties: { threadId: thread.id, spaceId },
+              properties: {
+                spaceId,
+                threadId: thread.id,
+              },
             }),
           ],
         };
@@ -134,7 +137,10 @@ export default (context: PluginsContext) =>
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.delete',
-                properties: { threadId: thread.id, spaceId: space.id },
+                properties: {
+                  spaceId: space.id,
+                  threadId: thread.id,
+                },
               }),
             ],
           };
@@ -147,7 +153,10 @@ export default (context: PluginsContext) =>
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.undo-delete',
-                properties: { threadId: thread.id, spaceId: space.id },
+                properties: {
+                  spaceId: space.id,
+                  threadId: thread.id,
+                },
               }),
             ],
           };
@@ -155,13 +164,22 @@ export default (context: PluginsContext) =>
       },
     }),
     createResolver({
-      intent: ThreadAction.OnMessageAdd,
-      resolve: ({ thread, subject }) => {
+      intent: ThreadAction.AddMessage,
+      resolve: ({ thread, subject, sender, text }) => {
         const { state } = context.requestCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
+        invariant(space, 'Space not found');
         const intents = [];
-        const analyticsProperties = { threadId: thread.id, spaceId: space?.id };
+
+        const message = live(DataType.Message, {
+          sender,
+          created: new Date().toISOString(),
+          blocks: [{ type: 'text', text }],
+          // TODO(wittjosiah): Context based on attention.
+          // context: context ? makeRef(context) : undefined,
+        });
+        thread.messages.push(makeRef(message));
 
         if (state.drafts[subjectId]?.find((t) => t === thread)) {
           // Move draft to document.
@@ -170,16 +188,25 @@ export default (context: PluginsContext) =>
           state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
           intents.push(
             createIntent(ObservabilityAction.SendEvent, {
-              name: 'threads.thread-created',
-              properties: analyticsProperties,
+              name: 'threads.create',
+              properties: {
+                spaceId: space.id,
+                threadId: thread.id,
+              },
             }),
           );
         }
 
         intents.push(
           createIntent(ObservabilityAction.SendEvent, {
-            name: 'threads.message-added',
-            properties: { ...analyticsProperties, threadLength: thread.messages.length },
+            name: 'threads.message.add',
+            properties: {
+              spaceId: space.id,
+              threadId: thread.id,
+              threadLength: thread.messages.length,
+              messageId: message.id,
+              messageLength: text.length,
+            },
           }),
         );
 
@@ -190,6 +217,7 @@ export default (context: PluginsContext) =>
       intent: ThreadAction.DeleteMessage,
       resolve: ({ subject, thread, messageId, message, messageIndex }, undo) => {
         const space = getSpace(subject);
+        invariant(space, 'Space not found');
 
         if (!undo) {
           const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
@@ -215,12 +243,16 @@ export default (context: PluginsContext) =>
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.message.delete',
-                properties: { threadId: thread.id, spaceId: space?.id },
+                properties: {
+                  spaceId: space.id,
+                  threadId: thread.id,
+                  messageId: message.id,
+                },
               }),
             ],
           };
         } else {
-          if (!messageIndex || !message) {
+          if (messageIndex === undefined || !message) {
             return;
           }
 
@@ -229,7 +261,11 @@ export default (context: PluginsContext) =>
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.message.undo-delete',
-                properties: { threadId: thread.id, spaceId: space?.id },
+                properties: {
+                  spaceId: space.id,
+                  threadId: thread.id,
+                  messageId: message.id,
+                },
               }),
             ],
           };

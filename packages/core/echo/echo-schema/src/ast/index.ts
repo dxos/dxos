@@ -3,10 +3,9 @@
 //
 
 export * from './annotations';
-export * from './ref';
+export * from './entity-kind';
+export * from './json-schema-normalize';
+export * from './json-schema-type';
+export * from './schema';
 export * from './schema-validator';
 export * from './types';
-export * from './json-schema-type';
-export * from './entity-kind';
-export * from './schema';
-export * from './json-schema-normalize';

@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from 'd3';
-import type { ZoomTransform } from 'd3';
+import { type ZoomTransform, zoomIdentity } from 'd3';
 
 import { type Bounds, type Fraction, FractionUtil, type ScreenBounds, type Point, type Vertex } from '../util';
 
@@ -20,7 +19,7 @@ export class Scale {
   }
 
   get transform() {
-    return this._transform || d3.zoomIdentity;
+    return this._transform || zoomIdentity;
   }
 
   setTransform(transform: ZoomTransform) {

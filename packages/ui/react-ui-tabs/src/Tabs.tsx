@@ -72,11 +72,12 @@ const TabsRoot = ({
   );
 
   const { findFirstFocusable } = useFocusFinders();
-
   const tabsRoot = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    tabsRoot.current && findFirstFocusable(tabsRoot.current)?.focus();
+    if (tabsRoot.current) {
+      findFirstFocusable(tabsRoot.current)?.focus();
+    }
   }, [activePart]);
 
   return (
@@ -142,7 +143,8 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
       {...props}
       className={mx(
         'max-bs-full is-full',
-        orientation === 'vertical' ? 'overflow-y-auto' : 'flex items-stretch justify-start gap-2 overflow-x-auto p-2',
+        // NOTE: Padding should be common to Toolbar.
+        orientation === 'vertical' ? 'overflow-y-auto' : 'flex items-stretch justify-start overflow-x-auto p-1 gap-1',
         orientation === 'vertical' && verticalVariant === 'stateful' && 'place-self-start p-1',
         classNames,
       )}
@@ -181,7 +183,7 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
   const handleClick = useCallback(
-    // NOTE: this handler is only called if the tab is *already active*.
+    // NOTE: This handler is only called if the tab is *already active*.
     (event: MouseEvent<HTMLButtonElement>) => {
       setActivePart('panel');
       onClick?.(event);

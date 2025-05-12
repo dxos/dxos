@@ -3,16 +3,18 @@
 //
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { AST, S, type Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { S, type Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
+import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
 import { type ComplexMap } from '@dxos/util';
 
 import { CollectionType } from './collection';
 import { SPACE_PLUGIN } from '../meta';
 
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
+export const SPACE_TYPE = 'dxos.org/type/Space';
 
 export type ObjectViewerProps = {
   lastSeen: number;
@@ -87,15 +89,23 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
   deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
 }
 
+// TODO(burdon): Move to FormatEnum or SDK.
+export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
+export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
+
 export const SpaceForm = S.Struct({
-  name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
+  name: S.optional(S.String.annotations({ title: 'Name' })),
+  icon: S.optional(S.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
+  hue: S.optional(S.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
   // TODO(wittjosiah): Make optional with default value.
-  edgeReplication: S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enable EDGE Replication' }),
+  edgeReplication: S.Boolean.annotations({ title: 'Enable EDGE Replication' }),
 });
 
 export type ObjectForm<T extends BaseObject = BaseObject> = {
+  // TODO(dmaretskyi): Change to S.Schema.AnyNoContext
   objectSchema: TypedObject;
   formSchema?: S.Schema<T, any>;
+  hidden?: boolean;
   getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
 };
 
@@ -126,11 +136,31 @@ export namespace SpaceAction {
     output: S.Void,
   }) {}
 
-  export class Share extends S.TaggedClass<Share>()(`${SPACE_ACTION}/share`, {
+  export class OpenMembers extends S.TaggedClass<OpenMembers>()(`${SPACE_ACTION}/open-members`, {
     input: S.Struct({
       space: SpaceSchema,
     }),
     output: S.Void,
+  }) {}
+
+  export class Share extends S.TaggedClass<Share>()(`${SPACE_ACTION}/share`, {
+    input: S.Struct({
+      space: SpaceSchema,
+      type: S.Enums(Invitation.Type),
+      authMethod: S.Enums(Invitation.AuthMethod),
+      multiUse: S.Boolean,
+      target: S.optional(S.String),
+    }),
+    output: S.instanceOf(CancellableInvitationObservable),
+  }) {}
+
+  export class GetShareLink extends S.TaggedClass<GetShareLink>()(`${SPACE_ACTION}/get-share-link`, {
+    input: S.Struct({
+      space: SpaceSchema,
+      target: S.optional(S.String),
+      copyToClipboard: S.optional(S.Boolean),
+    }),
+    output: S.String,
   }) {}
 
   export class Lock extends S.TaggedClass<Lock>()(`${SPACE_ACTION}/lock`, {
@@ -165,10 +195,10 @@ export namespace SpaceAction {
     output: S.Void,
   }) {}
 
+  // TODO(wittjosiah): Handle scrolling to section.
+  //   This maybe motivates making the space settings its own deck?
   export class OpenSettings extends S.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {
-    input: S.Struct({
-      space: SpaceSchema,
-    }),
+    input: S.Struct({ space: SpaceSchema }),
     output: S.Void,
   }) {}
 
@@ -206,6 +236,7 @@ export namespace SpaceAction {
     input: S.Struct({
       object: ReactiveObjectSchema,
       target: S.Union(SpaceSchema, CollectionType),
+      hidden: S.optional(S.Boolean),
     }),
     output: S.Struct({
       id: S.String,

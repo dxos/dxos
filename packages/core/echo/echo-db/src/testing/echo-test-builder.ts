@@ -16,7 +16,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 
 type OpenDatabaseOptions = {
@@ -74,7 +74,7 @@ export class EchoTestPeer extends Resource {
   private _initEcho() {
     this._echoHost = new EchoHost({ kv: this._kv });
     this._clients.delete(this._echoClient);
-    this._echoClient = new EchoClient({});
+    this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
   }
 
@@ -117,7 +117,7 @@ export class EchoTestPeer extends Resource {
   }
 
   async createClient() {
-    const client = new EchoClient({});
+    const client = new EchoClient();
     this._clients.add(client);
     client.connectToService({
       dataService: this._echoHost.dataService,
@@ -171,7 +171,7 @@ export const createDataAssertion = ({
   onlyObject = true,
   numObjects = 1,
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
-  let seedObjects: ReactiveEchoObject<any>[];
+  let seedObjects: AnyLiveObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
     const { objects } = await db.query().run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));

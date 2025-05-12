@@ -4,14 +4,11 @@
 
 import { Schema as S } from 'effect';
 
-import { EntityKind, ObjectAnnotationId, Ref } from '@dxos/echo-schema';
+import { EntityKind, TypeAnnotationId, Ref, ObjectId } from '@dxos/echo-schema';
 
-// TODO(burdon): Reconcile with sdk/schema/testing.
-// TODO(burdon): Convert interface to type.
+// TODO(burdon): Remove (use @dxos/schema DataType).
 
-// TODO(dmaretskyi): Extract.
-export const ObjectId = S.String.annotations({ description: 'The unique object identifier.' });
-
+/** @deprecated */
 export const Contact = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the person.' }),
@@ -19,7 +16,7 @@ export const Contact = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
       kind: EntityKind.Object,
       typename: 'example.com/type/Contact',
       version: '0.1.0',
@@ -28,6 +25,7 @@ export const Contact = S.Struct({
   });
 export interface Contact extends S.Schema.Type<typeof Contact> {}
 
+/** @deprecated */
 export const Project = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the project.' }),
@@ -35,7 +33,7 @@ export const Project = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
       kind: EntityKind.Object,
       typename: 'example.com/type/Project',
       version: '0.1.0',
@@ -53,7 +51,7 @@ export const Task = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
       kind: EntityKind.Object,
       typename: 'example.com/type/Task',
       version: '0.1.0',
@@ -62,7 +60,8 @@ export const Task = S.Struct({
   });
 export interface Task extends S.Schema.Type<typeof Task> {}
 
-export const Org = S.Struct({
+/** @deprecated */
+export const Organization = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the organization.' }),
   projects: S.Array(Ref(Project)),
@@ -70,11 +69,11 @@ export const Org = S.Struct({
 })
   .pipe(S.mutable)
   .annotations({
-    [ObjectAnnotationId]: {
+    [TypeAnnotationId]: {
       kind: EntityKind.Object,
-      typename: 'example.com/type/Org',
+      typename: 'example.com/type/Organization',
       version: '0.1.0',
     },
     description: 'Contact information.',
   });
-export interface Org extends S.Schema.Type<typeof Org> {}
+export interface Organization extends S.Schema.Type<typeof Organization> {}

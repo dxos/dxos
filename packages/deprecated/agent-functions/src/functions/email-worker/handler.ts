@@ -6,10 +6,10 @@ import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
 import { foreignKey, S } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
-import { create, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { TextType } from '@dxos/schema';
+import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import { type EmailMessage, SOURCE_ID } from './types';
 
@@ -39,18 +39,18 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   if (!space) {
     return;
   }
-  context.client.addTypes([ChannelType, MessageType, TextType]);
+  context.client.addTypes([ChannelType, DataType.Message, DataType.Text]);
 
   // Create mailbox if doesn't exist.
   const { objects: mailboxes } = await space.db.query(Filter.schema(ChannelType)).run();
   let mailbox = findObjectWithForeignKey(mailboxes, { source: SOURCE_ID, id: account });
   if (!mailbox) {
     mailbox = space.db.add(
-      create(
+      live(
         ChannelType,
         {
           name: account,
-          threads: [makeRef(create(ThreadType, { name: 'Inbox', messages: [] }))],
+          threads: [Ref.make(live(ThreadType, { name: 'Inbox', messages: [] }))],
         },
         {
           keys: [
@@ -64,13 +64,13 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
     );
   }
 
-  const { objects } = await space.db.query(Filter.schema(MessageType)).run();
+  const { objects } = await space.db.query(Filter.schema(DataType.Message)).run();
   for (const message of messages) {
     let object = findObjectWithForeignKey(objects, { source: SOURCE_ID, id: String(message.id) });
     if (!object) {
       object = space.db.add(
-        create(
-          MessageType,
+        live(
+          DataType.Message,
           {
             sender: { email: message.from },
             timestamp: new Date(message.created).toISOString(),
@@ -86,7 +86,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
         ),
       );
 
-      mailbox.threads[0].target?.messages?.push(makeRef(object));
+      mailbox.threads[0].target?.messages?.push(Ref.make(object));
     }
   }
 

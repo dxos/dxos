@@ -31,7 +31,7 @@
       @apply is-[95vw] border rounded-lg border-separator;
     }
     @media (min-width: theme('screens.md')) {
-      @apply max-is-[24rem]
+      @apply max-is-[24rem];
     }
   }
   .dx-dialog__title {

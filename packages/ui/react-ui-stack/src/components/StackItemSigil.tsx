@@ -24,12 +24,17 @@ export type KeyBinding = {
 
 export type StackItemSigilAction = Pick<ActionLike, 'id' | 'properties' | 'data'>;
 
-export type StackItemSigilButtonProps = Omit<ButtonProps, 'variant'> & AttendableId & Related;
+export type StackItemSigilButtonProps = Omit<ButtonProps, 'variant'> &
+  AttendableId &
+  Related & {
+    isMenu?: boolean;
+  };
 
 export const StackItemSigilButton = forwardRef<HTMLButtonElement, StackItemSigilButtonProps>(
-  ({ attendableId, classNames, related, children, ...props }, forwardedRef) => {
+  ({ attendableId, classNames, related, isMenu = true, children, ...props }, forwardedRef) => {
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
+    // TODO(wittjosiah): Disable hover styles when isMenu is false.
     return (
       <Button
         {...props}
@@ -37,7 +42,7 @@ export const StackItemSigilButton = forwardRef<HTMLButtonElement, StackItemSigil
         classNames={['shrink-0 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] relative app-no-drag', classNames]}
         ref={forwardedRef}
       >
-        <MenuSignifierHorizontal />
+        {isMenu && <MenuSignifierHorizontal />}
         {children}
       </Button>
     );
@@ -67,6 +72,7 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
       <StackItemSigilButton
         attendableId={attendableId}
         related={related}
+        isMenu={hasActions}
         // TODO(wittjosiah): Better disabling of interactive styles when no action are available.
         //   Remove underscore icon when no actions are available?
         classNames={!hasActions && 'cursor-default'}

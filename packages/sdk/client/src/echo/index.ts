@@ -4,23 +4,37 @@
 
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
-export { getTypename, Expando, type TypedObject, type ObjectMeta } from '@dxos/echo-schema';
 export {
-  create,
-  getMeta,
+  getTypename,
+  Expando,
+  type TypedObject,
+  type ObjectMeta,
   getSchema,
-  getType,
-  isReactiveObject,
-  type ReactiveObject,
-  compareForeignKeys,
-  makeRef,
+  Ref,
   RefArray,
-} from '@dxos/live-object';
+  getMeta,
+  getType,
+  compareForeignKeys,
+} from '@dxos/echo-schema';
+export { type Live, live, isLiveObject, makeRef, refFromDXN } from '@dxos/live-object';
 export {
+  DocAccessor,
+  type EchoDatabase,
+  Filter,
+  type FilterSource,
+  type Hypergraph,
+  type IDocHandle,
+  type ObjectMigration,
+  type Queue,
+  type Query,
+  type AnyLiveObject,
+  ResultFormat,
+  type Selection,
+  type SubscriptionHandle,
   createDocAccessor,
-  updateText,
   createObject,
   createSubscription,
+  defineObjectMigration,
   fromCursor,
   getObjectCore,
   getRangeFromCursor,
@@ -30,20 +44,9 @@ export {
   loadObjectReferences,
   toCursor,
   toCursorRange,
-  DocAccessor,
-  type EchoDatabase,
-  type ReactiveEchoObject,
-  Filter,
-  type FilterSource,
-  type Hypergraph,
-  type IDocHandle,
-  type ObjectMigration,
-  defineObjectMigration,
-  Query,
-  ResultFormat,
-  type Selection,
-  type Subscription,
-  type SubscriptionHandle,
+  updateText,
+  getVersion,
+  ObjectVersion,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.
@@ -57,16 +60,22 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export {
-  getSpace,
-  isSpace,
+  createEmptyEdgeSyncState,
   fullyQualifiedId,
-  parseFullyQualifiedId,
-  parseId,
-  EchoObjectSchema,
-  ReactiveObjectSchema,
-  SpaceSchema,
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
+  EchoObjectSchema,
+  ReactiveObjectSchema,
+  SpaceSchema,
+  getSpace,
+  getSyncSummary,
+  isSpace,
+  parseFullyQualifiedId,
+  parseId,
+  createQueueDxn,
+  type Progress,
+  type PeerSyncState,
+  type SpaceSyncStateMap,
 } from './util';
 export { importSpace } from './import';

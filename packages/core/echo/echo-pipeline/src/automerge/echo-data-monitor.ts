@@ -26,7 +26,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   private readonly _localTimeSeries = createLocalTimeSeries();
   private readonly _storageAverages = createStorageAverages();
   private readonly _replicationAverages = createNetworkAverages();
-  private readonly _sizeByMessageType: { [type: string]: SlidingWindowSummary } = {};
+  private readonly _sizeByMessage: { [type: string]: SlidingWindowSummary } = {};
   private readonly _lastReceivedMessages = new CircularBuffer<StoredMessage>(100);
   private readonly _lastSentMessages = new CircularBuffer<StoredMessage>(100);
 
@@ -68,8 +68,8 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
           countPerSecond: this._replicationAverages.sentPerSecond.average(),
           failedPerSecond: this._replicationAverages.sendsFailedPerSecond.average(),
         },
-        countByMessageType: this._computeMessageHistogram('type'),
-        avgSizeByMessageType: mapValues(this._sizeByMessageType, (summary) => summary.average()),
+        countByMessage: this._computeMessageHistogram('type'),
+        avgSizeByMessage: mapValues(this._sizeByMessage, (summary) => summary.average()),
       },
     };
   }
@@ -225,7 +225,7 @@ export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMo
   }
 
   private _getStatsForType(message: Message) {
-    const messageSize = (this._sizeByMessageType[message.type] ??= createSlidingWindow());
+    const messageSize = (this._sizeByMessage[message.type] ??= createSlidingWindow());
     const messageCounts = (this._activeCounters.byType[message.type] ??= createMessageCounter());
     return { messageCounts, messageSize };
   }
@@ -269,7 +269,7 @@ type MessageCounts = {
 type MessageCountTimeSeries = TimeSeries<MessageCounts>;
 
 type MessageAttributeHistogram = {
-  [messageType: string]: {
+  [Message: string]: {
     received: number;
     sent: number;
   };
@@ -287,8 +287,8 @@ export type EchoDataStats = {
     connections: number;
     receivedMessages: BaseDataOpStats;
     sentMessages: TimedDataOpStats & { failedPerSecond: number };
-    avgSizeByMessageType: { [messageType: string]: number };
-    countByMessageType: MessageAttributeHistogram;
+    avgSizeByMessage: { [Message: string]: number };
+    countByMessage: MessageAttributeHistogram;
   };
 };
 

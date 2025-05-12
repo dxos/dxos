@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const KANBAN_PLUGIN = 'dxos.org/plugin/kanban';
 
-export const meta = {
+export const meta: PluginMeta = {
   id: KANBAN_PLUGIN,
   name: 'Kanban',
   description:
@@ -15,4 +15,4 @@ export const meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-kanban',
   tags: ['experimental'],
   screenshots: ['https://dxos.network/plugin-details-kanban-dark.png'],
-} satisfies PluginMeta;
+};

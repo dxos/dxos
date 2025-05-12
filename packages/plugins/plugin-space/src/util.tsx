@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, type PromiseIntentDispatcher, LayoutAction } from '@dxos/app-framework';
-import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
+import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
+import { isLiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
@@ -30,15 +31,15 @@ import {
   type FilterSource,
   type Query,
   type QueryOptions,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   type Space,
 } from '@dxos/react-client/echo';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { SPACE_PLUGIN } from './meta';
-import { CollectionType, SpaceAction } from './types';
+import { CollectionType, SpaceAction, SPACE_TYPE } from './types';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
-export const SPACE_TYPE = 'dxos.org/type/Space';
 export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
@@ -52,7 +53,7 @@ const EMPTY_ARRAY: never[] = [];
  * @param options
  * @returns
  */
-export const memoizeQuery = <T extends ReactiveEchoObject<any>>(
+export const memoizeQuery = <T extends BaseObject>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,
@@ -101,7 +102,6 @@ const getCollectionGraphNodePartials = ({
   resolve: (typename: string) => Record<string, any>;
 }) => {
   return {
-    disabled: !navigable,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
@@ -109,7 +109,7 @@ const getCollectionGraphNodePartials = ({
       // Change on disk.
       collection.objects = nextOrder.filter(isEchoObject).map(makeRef);
     },
-    onTransferStart: (child: Node<ReactiveEchoObject<any>>, index?: number) => {
+    onTransferStart: (child: Node<AnyLiveObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -138,7 +138,7 @@ const getCollectionGraphNodePartials = ({
 
       // }
     },
-    onTransferEnd: (child: Node<ReactiveEchoObject<any>>, destination: Node) => {
+    onTransferEnd: (child: Node<AnyLiveObject<any>>, destination: Node) => {
       // Remove child from origin collection.
       const index = collection.objects.findIndex((object) => object.target === child.data);
       if (index > -1) {
@@ -154,7 +154,7 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<ReactiveEchoObject<any>>, index?: number) => {
+    onCopy: async (child: Node<AnyLiveObject<any>>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, space);
       space.db.add(newObject);
@@ -213,6 +213,49 @@ export const constructSpaceNode = ({
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
+    nodes: [
+      {
+        id: `settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
+        type: `${SPACE_PLUGIN}/settings`,
+        data: null,
+        properties: {
+          label: ['settings panel label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--faders--regular',
+          disposition: 'alternate-tree',
+        },
+        nodes: [
+          {
+            id: `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
+            type: `${SPACE_PLUGIN}/properties`,
+            data: `${SPACE_PLUGIN}/properties`,
+            properties: {
+              label: ['space settings properties label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--sliders--regular',
+              position: 'hoist',
+            },
+          },
+          {
+            id: `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
+            type: `${SPACE_PLUGIN}/members`,
+            data: `${SPACE_PLUGIN}/members`,
+            properties: {
+              label: ['members panel label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--users--regular',
+              position: 'hoist',
+            },
+          },
+          {
+            id: `schema-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
+            type: `${SPACE_PLUGIN}/schema`,
+            data: `${SPACE_PLUGIN}/schema`,
+            properties: {
+              label: ['space settings schema label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--shapes--regular',
+            },
+          },
+        ],
+      },
+    ],
   };
 };
 
@@ -242,14 +285,13 @@ export const constructSpaceActions = ({
       properties: {
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
         icon: 'ph--database--regular',
-        disposition: 'toolbar',
+        disposition: 'list-item-primary',
         disabled: migrating || Migrations.running(space),
       },
     });
   }
 
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
-    const locked = space.properties[COMPOSER_SPACE_LOCK];
     actions.push(
       {
         id: getId(SpaceAction.OpenCreateObject._tag),
@@ -262,44 +304,6 @@ export const constructSpaceActions = ({
           icon: 'ph--plus--regular',
           disposition: 'item',
           testId: 'spacePlugin.createObject',
-        },
-      },
-      {
-        id: getId(SpaceAction.Share._tag),
-        type: ACTION_TYPE,
-        data: async () => {
-          if (locked) {
-            return;
-          }
-          await dispatch(createIntent(SpaceAction.Share, { space }));
-        },
-        properties: {
-          label: ['share space label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--users--regular',
-          disabled: locked,
-          disposition: 'toolbar',
-          iconOnly: false,
-          variant: 'default',
-          testId: 'spacePlugin.shareSpace',
-          keyBinding: {
-            macos: 'meta+.',
-            windows: 'alt+.',
-          },
-        },
-      },
-      {
-        id: locked ? getId(SpaceAction.Unlock._tag) : getId(SpaceAction.Lock._tag),
-        type: ACTION_TYPE,
-        data: async () => {
-          if (locked) {
-            await dispatch(createIntent(SpaceAction.Unlock, { space }));
-          } else {
-            await dispatch(createIntent(SpaceAction.Lock, { space }));
-          }
-        },
-        properties: {
-          label: [locked ? 'unlock space label' : 'lock space label', { ns: SPACE_PLUGIN }],
-          icon: locked ? 'ph--lock-simple-open--regular' : 'ph--lock-simple--regular',
         },
       },
       {
@@ -317,49 +321,7 @@ export const constructSpaceActions = ({
           },
         },
       },
-      {
-        id: getId(SpaceAction.OpenSettings._tag),
-        type: ACTION_TYPE,
-        data: async () => {
-          await dispatch(createIntent(SpaceAction.OpenSettings, { space }));
-        },
-        properties: {
-          label: ['open space settings label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--gear--regular',
-        },
-      },
     );
-  }
-
-  // TODO(wittjosiah): Consider moving close space into the space settings dialog.
-  if (state !== SpaceState.SPACE_INACTIVE && !hasPendingMigration) {
-    actions.push({
-      id: getId(SpaceAction.Close._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        await dispatch(createIntent(SpaceAction.Close, { space }));
-      },
-      properties: {
-        label: ['close space label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--x--regular',
-        disabled: personal,
-      },
-    });
-  }
-
-  if (state === SpaceState.SPACE_INACTIVE) {
-    actions.push({
-      id: getId(SpaceAction.Open._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        await dispatch(createIntent(SpaceAction.Open, { space }));
-      },
-      properties: {
-        label: ['open space label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--clock-counter-clockwise--regular',
-        disposition: 'toolbar',
-      },
-    });
   }
 
   return actions;
@@ -371,7 +333,7 @@ export const createObjectNode = ({
   navigable = false,
   resolve,
 }: {
-  object: ReactiveEchoObject<any>;
+  object: AnyLiveObject<any>;
   space: Space;
   navigable?: boolean;
   resolve: (typename: string) => Record<string, any>;
@@ -399,8 +361,7 @@ export const createObjectNode = ({
     properties: {
       ...partials,
       label: metadata.label?.(object) ||
-        object.name ||
-        metadata.placeholder || ['unnamed object label', { ns: SPACE_PLUGIN }],
+        object.name || ['object name placeholder', { ns: type, default: 'New object' }],
       icon: metadata.icon ?? 'ph--placeholder--regular',
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
@@ -414,7 +375,7 @@ export const constructObjectActions = ({
   dispatch,
   navigable = false,
 }: {
-  node: Node<ReactiveEchoObject<any>>;
+  node: Node<AnyLiveObject<any>>;
   dispatch: PromiseIntentDispatcher;
   navigable?: boolean;
 }) => {
@@ -434,7 +395,7 @@ export const constructObjectActions = ({
             properties: {
               label: ['create object in collection label', { ns: SPACE_PLUGIN }],
               icon: 'ph--plus--regular',
-              disposition: 'toolbar',
+              disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
             },
           },
@@ -521,7 +482,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   const node = graph.findNode(active);
-  if (!node || !isReactiveObject(node.data)) {
+  if (!node || !isLiveObject(node.data)) {
     return;
   }
 
@@ -532,9 +493,9 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: ReactiveEchoObject<any>,
+  object: AnyLiveObject<any>,
   resolve: (typename: string) => Record<string, any>,
-): Promise<ReactiveEchoObject<any>[]> => {
+): Promise<AnyLiveObject<any>[]> => {
   const type = getTypename(object);
   if (!type) {
     return [];
@@ -546,7 +507,7 @@ export const getNestedObjects = async (
     return [];
   }
 
-  const objects: ReactiveEchoObject<any>[] = await loadReferences(object);
+  const objects: AnyLiveObject<any>[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };
@@ -561,7 +522,7 @@ export const cloneObject = async (
   newSpace: Space,
 ): Promise<Expando> => {
   const schema = getSchema(object);
-  const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
+  const typename = schema ? getTypeAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

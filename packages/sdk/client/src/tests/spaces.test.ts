@@ -10,9 +10,9 @@ import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, type HasId } from '@dxos/echo-schema';
+import { Expando, type HasId, Ref } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
-import { create, type ReactiveObject, makeRef } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
@@ -20,13 +20,13 @@ import { Client } from '../client';
 import { getSpace, SpaceState } from '../echo';
 import { CreateEpochRequest } from '../halo';
 import {
-  type CreateInitializedClientsOptions,
   createInitializedClientsWithContext,
+  testSpaceAutomerge,
+  waitForSpace,
+  type CreateInitializedClientsOptions,
   DocumentType,
   TestBuilder,
-  testSpaceAutomerge,
   TextV0Type,
-  waitForSpace,
 } from '../testing';
 
 describe('Spaces', () => {
@@ -314,8 +314,8 @@ describe('Spaces', () => {
     await hostSpace.db.flush();
     await waitForObject(guestSpace, hostDocument);
 
-    const text = create(TextV0Type, { content: 'Hello, world!' });
-    hostDocument.content = makeRef(text);
+    const text = live(TextV0Type, { content: 'Hello, world!' });
+    hostDocument.content = Ref.make(text);
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
   });
@@ -406,8 +406,8 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = create(TextV0Type, { content: 'Hello, world!' });
-      hostDocument.content = makeRef(text);
+      const text = live(TextV0Type, { content: 'Hello, world!' });
+      hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
@@ -419,8 +419,8 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = create(TextV0Type, { content: 'Hello, world!' });
-      hostDocument.content = makeRef(text);
+      const text = live(TextV0Type, { content: 'Hello, world!' });
+      hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
@@ -468,7 +468,7 @@ describe('Spaces', () => {
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
-    const hostRoot = hostSpace.db.add(createObject({ entries: [makeRef(createObject({ name: 'first' }))] }));
+    const hostRoot = hostSpace.db.add(createObject({ entries: [Ref.make(createObject({ name: 'first' }))] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
@@ -487,7 +487,7 @@ describe('Spaces', () => {
 
       onTestFinished(() => unsub());
 
-      hostRoot.entries.push(makeRef(createObject({ name: 'second' })));
+      hostRoot.entries.push(Ref.make(createObject({ name: 'second' })));
       await done.wait({ timeout: 1_000 });
     }
   });
@@ -499,6 +499,32 @@ describe('Spaces', () => {
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
     const epochs = await space.internal.getEpochs();
     expect(epochs.length).to.eq(2);
+  });
+
+  test('export space archive', { timeout: 3_000 }, async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    registerTypes(client);
+
+    const space = await client.spaces.create();
+    space.db.add(createDocument());
+    await space.db.flush();
+    const archive = await space.internal.export();
+    expect(archive.contents.length).to.be.greaterThan(0);
+  });
+
+  test('import space archive', { timeout: 3_000, retry: 1 }, async () => {
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    [client1, client2].forEach(registerTypes);
+
+    const space = await client1.spaces.create();
+    const doc1 = space.db.add(createDocument());
+    await space.db.flush();
+    const archive = await space.internal.export();
+    expect(archive.contents.length).to.be.greaterThan(0);
+
+    const importedSpace = await client2.spaces.import(archive);
+    expect(importedSpace.id).not.toEqual(space.id);
+    expect((await importedSpace.db.query({ id: doc1.id }).first()).title).toEqual(doc1.title);
   });
 
   const createInitializedClients = async (
@@ -530,16 +556,16 @@ describe('Spaces', () => {
     client.addTypes([DocumentType, TextV0Type]);
   };
 
-  const createDocument = (): ReactiveObject<DocumentType> => {
-    const text = create(TextV0Type, { content: 'Hello, world!' });
-    return create(DocumentType, {
+  const createDocument = (): Live<DocumentType> => {
+    const text = live(TextV0Type, { content: 'Hello, world!' });
+    return live(DocumentType, {
       title: 'Test document',
-      content: makeRef(text),
+      content: Ref.make(text),
     });
   };
 
-  const createObject = <T extends {}>(props: T): ReactiveObject<Expando> => {
-    return create(Expando, props);
+  const createObject = <T extends {}>(props: T): Live<Expando> => {
+    return live(Expando, props);
   };
 
   const waitForObject = async (space: Space, object: HasId) => {

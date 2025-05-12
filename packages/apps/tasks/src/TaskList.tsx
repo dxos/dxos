@@ -6,15 +6,15 @@ import React, { useState } from 'react';
 
 import { isNonNullable } from '@dxos/util';
 
-import { type TaskType } from './types';
+import { type Task } from './types';
 
 export type TaskListProps = {
-  tasks?: TaskType[];
+  tasks?: Task[];
   onInviteClick?: () => any;
   onTaskCreate?: (text: string) => any;
-  onTaskRemove?: (task: TaskType) => any;
-  onTaskTitleChange?: (task: TaskType, newTitle: string) => any;
-  onTaskCheck?: (task: TaskType, checked: boolean) => any;
+  onTaskRemove?: (task: Task) => any;
+  onTaskTitleChange?: (task: Task, newTitle: string) => any;
+  onTaskCheck?: (task: Task, checked: boolean) => any;
 };
 
 export const TaskList = (props: TaskListProps) => {

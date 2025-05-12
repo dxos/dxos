@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as d3 from 'd3';
-import { type Selection } from 'd3';
+import { type Selection, easeLinear, interpolate, select } from 'd3';
 
 import type { BaseGraphEdge, GraphEdge } from '@dxos/graph';
 import { isNotFalsy } from '@dxos/util';
@@ -63,18 +62,18 @@ export const fireBullet = (
   propagate = false,
 ) => {
   const cb = (edge: BaseGraphEdge) => {
-    const num = d3.select(g).selectAll('circle').size();
+    const num = select(g).selectAll('circle').size();
     if (num < defaultBulletOptions.max) {
       const paths = getPaths(graph, root, { source: edge.target });
       for (const { edge, el } of paths) {
-        d3.select(g).call(createBullet(edge, el, defaultBulletOptions, cb));
+        select(g).call(createBullet(edge, el, defaultBulletOptions, cb));
       }
     }
   };
 
   const paths = getPaths(graph, root, edge);
   for (const { edge, el } of paths) {
-    d3.select(g).call(createBullet(edge, el, defaultBulletOptions), propagate ? cb : undefined);
+    select(g).call(createBullet(edge, el, defaultBulletOptions), propagate ? cb : undefined);
   }
 };
 
@@ -90,8 +89,7 @@ export const createBullet = (
   return (selection: Selection<any, any, any, any>) => {
     selection.each(function () {
       const p = path.getPointAtLength(0);
-      const bullet = d3
-        .select(this)
+      const bullet = select(this)
         .append('circle')
         .attr('class', 'fill-orange-500')
         .attr('cx', p.x)
@@ -113,18 +111,18 @@ export const createBullet = (
         .delay(options.delay)
         .duration(options.minDuration)
         // .duration(options.minDuration + Math.random() * options.maxDuration)
-        .ease(d3.easeLinear)
+        .ease(easeLinear)
         .tween('pathTween', function () {
           const length = path.getTotalLength();
-          const r = d3.interpolate(0, length);
+          const r = interpolate(0, length);
           return (t) => {
             const point = path.getPointAtLength(r(t));
-            d3.select(this).attr('cx', point.x).attr('cy', point.y);
+            select(this).attr('cx', point.x).attr('cy', point.y);
           };
         })
         // End animation.
         .on('end', function () {
-          d3.select(this).remove();
+          select(this).remove();
           cb?.(edge);
         });
     });

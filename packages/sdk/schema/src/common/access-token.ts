@@ -2,36 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Format, S, TypedObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-export const AccessTokenSchema = S.Struct({
-  /**
-   * User-provided note about the token.
-   */
-  note: S.String.annotations({
-    title: 'Note',
-    description: 'User-provided note about the token.',
-  }),
+import { Format, Type } from '@dxos/echo';
 
-  /**
-   * The domain name of the service that issued the token.
-   * @example `github.com`
-   */
+export const AccessToken = Schema.Struct({
+  id: Type.ObjectId,
+  note: Schema.optional(
+    Schema.String.annotations({
+      title: 'Note',
+      description: 'User-provided note about the token.',
+    }),
+  ),
   source: Format.Hostname.annotations({
     title: 'Source',
     description: 'The domain name of the service that issued the token.',
+    examples: ['github.com'],
   }),
-
-  /**
-   * The token provided by the service.
-   */
-  token: S.String.annotations({
+  token: Schema.String.annotations({
     title: 'Token',
     description: 'The token provided by the service.',
   }),
-});
+}).pipe(
+  Schema.annotations({
+    description: 'A credential or token for accessing a service.',
+  }),
+  Type.def({
+    typename: 'dxos.org/type/AccessToken',
+    version: '0.1.0',
+  }),
+);
 
-// TODO(wittjosiah): This is a temporary solution, long term these should be stored in HALO.
-export class AccessTokenType extends TypedObject({ typename: 'dxos.org/type/AccessToken', version: '0.1.0' })(
-  AccessTokenSchema.fields,
-) {}
+export interface AccessToken extends Schema.Schema.Type<typeof AccessToken> {}

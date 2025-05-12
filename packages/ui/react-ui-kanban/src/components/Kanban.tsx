@@ -4,6 +4,7 @@
 
 import React, { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { getSnapshot, type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -24,9 +25,9 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const { select, clear } = useSelectionActions([model.id, model.cardSchema.typename]);
+  const { select, clear } = useSelectionActions([model.id, model.schema.typename]);
   const selectedItems = useSelectedItems(model.id);
-  const [focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
+  const [_focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
 
   const handleAddCard = useCallback(
@@ -73,7 +74,9 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 orientation='vertical'
                 size='contain'
                 rail={false}
-                classNames='!plb-0 !pbe-0 drag-preview-p-0'
+                classNames={
+                  /* NOTE(thure): Do not eliminate spacing here without ensuring this element will have a significant size, otherwise dropping items into an empty stack will be made difficult or impossible. See #9035. */ 'pbe-1 drag-preview-p-0'
+                }
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >
@@ -85,8 +88,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
                   >
-                    <div role='none' className={mx('rounded bg-baseSurface dx-focus-ring-group-y-indicator')}>
-                      <div role='none' className='flex items-center'>
+                    <div
+                      role='none'
+                      className='rounded overflow-hidden bg-baseSurface dx-focus-ring-group-y-indicator relative min-bs-[--rail-item]'
+                    >
+                      <div role='none' className='flex items-center absolute block-start-0 inset-inline-0'>
                         <StackItem.DragHandle asChild>
                           <IconButton
                             iconOnly
@@ -109,7 +115,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <CardForm key={card.id} card={card} model={model} autoFocus={card.id === focusedCardId} />
+                      <Surface role='card--kanban' limit={1} data={{ subject: card }} />
                     </div>
                   </StackItem.Root>
                 ))}
@@ -201,7 +207,7 @@ type CardFormProps<T extends BaseKanbanItem> = {
   autoFocus: boolean;
 };
 
-const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFormProps<T>) => {
+const _CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFormProps<T>) => {
   const handleSave = useCallback(
     debounce((values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
       const id = values.id;
@@ -239,7 +245,7 @@ const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardForm
   return (
     <Form
       values={initialValue}
-      schema={model.cardSchema}
+      schema={model.schema}
       Custom={Custom}
       onSave={handleSave}
       autoFocus={autoFocus}

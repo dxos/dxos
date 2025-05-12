@@ -22,11 +22,13 @@ describe('Indexer', () => {
     const objects: Partial<ObjectStructure>[] = [
       {
         data: { name: 'John' },
-        system: { type: encodeReference(new Reference(schemaURI)) },
+        // TODO(dmaretskyi): Fix references
+        system: { type: encodeReference(Reference.localObjectReference(schemaURI)) },
       },
       {
         data: { title: 'first document' },
-        system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
+        // TODO(dmaretskyi): Fix references
+        system: { type: encodeReference(Reference.localObjectReference('@example.org/schema/Document')) },
       },
     ];
     const documents: ObjectSnapshot[] = objects.map((object, index) => ({
@@ -55,7 +57,7 @@ describe('Indexer', () => {
 
     {
       const doneIndexing = indexer.updated.waitForCount(1);
-      indexer.setConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
+      void indexer.setConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
       await indexer.open();
       await asyncTimeout(doneIndexing, 1000);
     }

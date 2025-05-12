@@ -4,14 +4,14 @@
 
 import { Schema as S } from 'effect';
 
-import { Tool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
+import { Tool, Message, type MessageContentBlock } from '@dxos/artifact';
+import { type ObjectId } from '@dxos/echo-schema';
 
-import { DEFAULT_LLM_MODELS } from './defs';
+import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
 
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
-export const LLMModel = S.Literal(...DEFAULT_LLM_MODELS);
+export const LLMModel = S.Literal(...DEFAULT_EDGE_MODELS, ...DEFAULT_OLLAMA_MODELS);
 
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 
@@ -25,9 +25,6 @@ export const ToolTypes = Object.freeze({
  * Client GPT request.
  */
 export const GenerateRequest = S.Struct({
-  spaceId: S.optional(SpaceIdSchema),
-  threadId: S.optional(ObjectId),
-
   /**
    * Preferred model or system default.
    */
@@ -54,8 +51,20 @@ export const GenerateRequest = S.Struct({
    */
   prompt: S.optional(Message),
 });
-
 export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;
+
+/**
+ * Non-streaming response.
+ */
+export const GenerateResponse = S.Struct({
+  messages: S.Array(Message),
+
+  /**
+   * Number of tokens used in the response.
+   */
+  tokenCount: S.optional(S.Number),
+});
+export type GenerateResponse = S.Schema.Type<typeof GenerateResponse>;
 
 /**
  * Server-Sent Events (SSE) stream from the AI service.

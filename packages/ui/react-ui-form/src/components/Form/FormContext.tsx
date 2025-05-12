@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, useContext, useEffect, useMemo, type FocusEvent, type PropsWithChildren } from 'react';
+import React, {
+  createContext,
+  type RefObject,
+  useContext,
+  useEffect,
+  useMemo,
+  type FocusEvent,
+  type PropsWithChildren,
+} from 'react';
 
 import { raise } from '@dxos/debug';
 import { type BaseObject, getValue } from '@dxos/echo-schema';
@@ -53,7 +61,7 @@ export const FormProvider = ({
   ...formOptions
 }: PropsWithChildren<
   FormOptions<any> & {
-    formRef?: React.RefObject<HTMLDivElement>;
+    formRef?: RefObject<HTMLDivElement>;
     autoSave?: boolean;
   }
 >) => {

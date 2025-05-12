@@ -6,25 +6,31 @@ import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
 import { Reference } from '@dxos/echo-protocol';
-import { RuntimeSchemaRegistry, type BaseObject } from '@dxos/echo-schema';
+import {
+  type BaseSchema,
+  RuntimeSchemaRegistry,
+  type BaseObject,
+  type ObjectId,
+  ImmutableSchema,
+  type RefResolver,
+} from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId, DXN } from '@dxos/keys';
-import type { RefResolver } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from './core-db';
-import { type ReactiveEchoObject, getObjectCore } from './echo-handler';
+import { type AnyLiveObject, getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
-  Filter,
   filterMatch,
-  type FilterSource,
   optionsToProto,
+  Filter,
+  type FilterSource,
   Query,
   type QueryContext,
   type QueryFn,
@@ -49,13 +55,23 @@ export class Hypergraph {
   private readonly _owningObjects = new Map<SpaceId, unknown>();
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<ReactiveEchoObject<any>>>>();
-
+  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<AnyLiveObject<any>>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   get schemaRegistry(): RuntimeSchemaRegistry {
     return this._schemaRegistry;
+  }
+
+  // TODO(burdon): Use DXN.
+  // TODO(burdon): Ensure static and dynamic schema do not have overlapping type names.
+  async getSchemaByTypename(typename: string, db: EchoDatabase): Promise<BaseSchema | undefined> {
+    const schema = this.schemaRegistry.getSchema(typename);
+    if (schema) {
+      return new ImmutableSchema(schema);
+    }
+
+    return await db.schemaRegistry.query({ typename }).firstOrUndefined();
   }
 
   /**
@@ -194,42 +210,55 @@ export class Hypergraph {
   _lookupRef(
     db: EchoDatabase,
     ref: Reference,
-    onResolve: (obj: ReactiveEchoObject<any>) => void,
-  ): ReactiveEchoObject<any> | undefined {
-    if (ref.host === undefined) {
-      const local = db.getObjectById(ref.objectId);
+    onResolve: (obj: AnyLiveObject<any>) => void,
+  ): AnyLiveObject<any> | undefined {
+    let spaceId: SpaceId | undefined, objectId: ObjectId | undefined;
+
+    if (ref.dxn && ref.dxn.asEchoDXN()) {
+      const dxnData = ref.dxn.asEchoDXN()!;
+      spaceId = dxnData.spaceId;
+      objectId = dxnData.echoId;
+    } else {
+      // TODO(dmaretskyi): Legacy resoltion -- remove.
+      objectId = ref.objectId;
+      const spaceKey = ref.host ? PublicKey.from(ref.host) : db?.spaceKey;
+      const mappedSpaceId = this._spaceKeyToId.get(spaceKey);
+      invariant(mappedSpaceId, 'No spaceId for spaceKey.');
+      spaceId = mappedSpaceId;
+    }
+
+    if (spaceId === undefined) {
+      const local = db.getObjectById(objectId);
       if (local) {
         return local;
       }
-    }
-
-    const spaceKey = ref.host ? PublicKey.from(ref.host) : db?.spaceKey;
-    const spaceId = this._spaceKeyToId.get(spaceKey);
-    invariant(spaceId, 'No spaceId for spaceKey.');
-    if (ref.host) {
+    } else {
       const remoteDb = this._databases.get(spaceId);
       if (remoteDb) {
         // Resolve remote reference.
-        const remote = remoteDb.getObjectById(ref.objectId);
+        const remote = remoteDb.getObjectById(objectId);
         if (remote) {
           return remote;
         }
       }
     }
 
-    if (!OBJECT_DIAGNOSTICS.has(ref.objectId)) {
-      OBJECT_DIAGNOSTICS.set(ref.objectId, {
-        objectId: ref.objectId,
-        spaceKey: spaceKey.toHex(),
+    // Assume local database.
+    spaceId ??= db.spaceId;
+
+    if (!OBJECT_DIAGNOSTICS.has(objectId)) {
+      OBJECT_DIAGNOSTICS.set(objectId, {
+        objectId,
+        spaceKey: spaceId!,
         loadReason: 'reference access',
         loadedStack: new StackTrace(),
       });
     }
 
-    log('trap', { spaceKey, objectId: ref.objectId });
+    log('trap', { spaceId, objectId });
     entry(this._resolveEvents, spaceId)
       .orInsert(new Map())
-      .deep(ref.objectId)
+      .deep(objectId)
       .orInsert(new Event())
       .value.on(new Context(), onResolve);
   }
@@ -437,7 +466,7 @@ class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _filter: Filter | undefined = undefined;
-  private _results?: QueryResult<ReactiveEchoObject<any>>[] = undefined;
+  private _results?: QueryResult<AnyLiveObject<any>>[] = undefined;
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
 
@@ -481,7 +510,7 @@ class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(filter: Filter): Promise<QueryResult<ReactiveEchoObject<any>>[]> {
+  async run(filter: Filter): Promise<QueryResult<AnyLiveObject<any>>[]> {
     if (!this._isValidSourceForFilter(filter)) {
       return [];
     }
@@ -493,14 +522,14 @@ class SpaceQuerySource implements QuerySource {
       return cores.map((core) => this._mapCoreToResult(core));
     }
 
-    let results: QueryResult<ReactiveEchoObject<any>>[] = [];
+    let results: QueryResult<AnyLiveObject<any>>[] = [];
     prohibitSignalActions(() => {
       results = this._query(filter);
     });
     return results;
   }
 
-  getResults(): QueryResult<ReactiveEchoObject<any>>[] {
+  getResults(): QueryResult<AnyLiveObject<any>>[] {
     if (!this._filter) {
       return [];
     }
@@ -514,7 +543,7 @@ class SpaceQuerySource implements QuerySource {
     return this._results!;
   }
 
-  update(filter: Filter<ReactiveEchoObject<any>>): void {
+  update(filter: Filter<AnyLiveObject<any>>): void {
     if (!this._isValidSourceForFilter(filter)) {
       this._filter = undefined;
       return;
@@ -530,7 +559,7 @@ class SpaceQuerySource implements QuerySource {
     this.changed.emit();
   }
 
-  private _query(filter: Filter): QueryResult<ReactiveEchoObject<any>>[] {
+  private _query(filter: Filter): QueryResult<AnyLiveObject<any>>[] {
     const filteredCores = filter.isObjectIdFilter()
       ? filter
           .objectIds!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -543,7 +572,7 @@ class SpaceQuerySource implements QuerySource {
     return filteredCores.map((core) => this._mapCoreToResult(core));
   }
 
-  private _isValidSourceForFilter(filter: Filter<ReactiveEchoObject<any>>): boolean {
+  private _isValidSourceForFilter(filter: Filter<AnyLiveObject<any>>): boolean {
     // Disabled by spaces filter.
     if (filter.spaceIds !== undefined && !filter.spaceIds.some((id) => id === this.spaceId)) {
       return false;
@@ -558,7 +587,7 @@ class SpaceQuerySource implements QuerySource {
     return true;
   }
 
-  private _mapCoreToResult(core: ObjectCore): QueryResult<ReactiveEchoObject<any>> {
+  private _mapCoreToResult(core: ObjectCore): QueryResult<AnyLiveObject<any>> {
     return {
       id: core.id,
       spaceId: this.spaceId,

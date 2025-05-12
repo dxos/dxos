@@ -29,10 +29,13 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
+  preview,
   selectionState,
   typewriter,
+  type RenderCallback,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -41,6 +44,8 @@ import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
   document?: DocumentType;
+  id?: string;
+  text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
   query?: Query<DocumentType>;
   settings: MarkdownSettingsProps;
@@ -49,10 +54,17 @@ type ExtensionsOptions = {
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
-export const useExtensions = ({ document, settings, viewMode, editorStateStore }: ExtensionsOptions): Extension[] => {
+export const useExtensions = ({
+  document,
+  id,
+  text,
+  settings,
+  viewMode,
+  editorStateStore,
+}: ExtensionsOptions): Extension[] => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
-  const space = getSpace(document);
+  const space = getSpace(document) ?? getSpace(text);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
@@ -62,6 +74,8 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
     () =>
       createBaseExtensions({
         document,
+        id,
+        text,
         settings,
         viewMode,
         dispatch,
@@ -69,6 +83,8 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
       }),
     [
       document,
+      id,
+      text,
       viewMode,
       dispatch,
       settings,
@@ -112,6 +128,14 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
             space,
             identity,
           }),
+        text &&
+          id &&
+          createDataExtensions({
+            id,
+            text: createDocAccessor(text, ['content']),
+            space,
+            identity,
+          }),
         selectionState(editorStateStore),
         document &&
           listener({
@@ -120,14 +144,21 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
         baseExtensions,
         pluginExtensions,
       ].filter(isNotFalsy),
-    [baseExtensions, pluginExtensions, document, document?.content?.target, space, identity],
+    [baseExtensions, pluginExtensions, document, document?.content?.target, text, id, space, identity],
   );
 };
 
 /**
  * Create extension instances for editor.
  */
-const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }: ExtensionsOptions): Extension[] => {
+const createBaseExtensions = ({
+  document,
+  id,
+  dispatch,
+  settings,
+  query,
+  viewMode,
+}: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
     settings.folding && folding(),
@@ -145,14 +176,14 @@ const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }:
           numberedHeadings: settings.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
           renderLinkButton:
-            dispatch && document
-              ? onRenderLink((id: string) => {
+            dispatch && (document || id)
+              ? createLinkRenderer((id: string) => {
                   void dispatch(
                     createIntent(LayoutAction.Open, {
                       part: 'main',
                       subject: [id],
                       options: {
-                        pivotId: fullyQualifiedId(document),
+                        pivotId: document ? fullyQualifiedId(document) : id,
                       },
                     }),
                   );
@@ -160,6 +191,7 @@ const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }:
               : undefined,
         }),
         linkTooltip(renderLinkTooltip),
+        preview(),
       ],
     );
   }
@@ -204,40 +236,42 @@ const style = {
   icon: 'inline-block leading-none mis-1 cursor-pointer',
 };
 
-const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url: string) => {
-  // TODO(burdon): Formalize/document internal link format.
-  const isInternal =
-    url.startsWith('/') ||
-    // TODO(wittjosiah): This should probably be parsed out on paste?
-    url.startsWith(window.location.origin);
+const createLinkRenderer =
+  (onSelectObject: (id: string) => void): RenderCallback<{ url: string }> =>
+  (el, { url }) => {
+    // TODO(burdon): Formalize/document internal link format.
+    const isInternal =
+      url.startsWith('/') ||
+      // TODO(wittjosiah): This should probably be parsed out on paste?
+      url.startsWith(window.location.origin);
 
-  const options: AnchorHTMLAttributes<any> = isInternal
-    ? {
-        onClick: () => {
-          const qualifiedId = url.split('/').at(-1);
-          invariant(qualifiedId, 'Invalid link format.');
-          onSelectObject(qualifiedId);
-        },
-      }
-    : {
-        href: url,
-        rel: 'noreferrer',
-        target: '_blank',
-      };
+    const options: AnchorHTMLAttributes<any> = isInternal
+      ? {
+          onClick: () => {
+            const qualifiedId = url.split('/').at(-1);
+            invariant(qualifiedId, 'Invalid link format.');
+            onSelectObject(qualifiedId);
+          },
+        }
+      : {
+          href: url,
+          rel: 'noreferrer',
+          target: '_blank',
+        };
 
-  renderRoot(
-    el,
-    <a {...options} className={style.hover}>
-      <Icon
-        icon={isInternal ? 'ph--arrow-square-down--bold' : 'ph--arrow-square-out--bold'}
-        size={4}
-        classNames={style.icon}
-      />
-    </a>,
-  );
-};
+    renderRoot(
+      el,
+      <a {...options} className={style.hover}>
+        <Icon
+          icon={isInternal ? 'ph--arrow-square-down--bold' : 'ph--arrow-square-out--bold'}
+          size={4}
+          classNames={style.icon}
+        />
+      </a>,
+    );
+  };
 
-const renderLinkTooltip = (el: Element, url: string) => {
+const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   const web = new URL(url);
   renderRoot(
     el,

@@ -9,10 +9,10 @@ import { simpleParser, type EmailAddress } from 'mailparser';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { MessageType, type ActorType } from '@dxos/plugin-space/types';
-import { create, getMeta } from '@dxos/live-object';
 import { invariant } from '@dxos/invariant';
+import { live, getMeta } from '@dxos/live-object';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
 
 import { toArray } from '../../util';
 
@@ -55,7 +55,7 @@ export class ImapProcessor {
    * Make IMAP request.
    */
   // TODO(burdon): Request since timestamp.
-  async requestMessages({ days }: { days: number } = { days: 28 }): Promise<MessageType[]> {
+  async requestMessages({ days }: { days: number } = { days: 28 }): Promise<DataType.Message[]> {
     log('requesting...', { days });
 
     // https://github.com/mscdex/node-imap
@@ -69,21 +69,21 @@ export class ImapProcessor {
     return parsedMessage;
   }
 
-  private async parseMessages(rawMessages: ImapMessage[]): Promise<MessageType[]> {
+  private async parseMessages(rawMessages: ImapMessage[]): Promise<DataType.Message[]> {
     log('parsing', { messages: rawMessages.length });
     return (
       await Promise.all(
-        rawMessages.map(async (raw): Promise<MessageType | undefined> => {
+        rawMessages.map(async (raw): Promise<DataType.Message | undefined> => {
           return this.parseMessage(raw);
         }),
       )
-    ).filter(Boolean) as MessageType[];
+    ).filter(Boolean) as DataType.Message[];
   }
 
   /**
    * Parse raw IMAP messages.
    */
-  private async parseMessage(rawMessage: ImapMessage): Promise<MessageType | undefined> {
+  private async parseMessage(rawMessage: ImapMessage): Promise<DataType.Message | undefined> {
     // https://nodemailer.com/extras/mailparser
     const input: string = rawMessage.parts[0].body;
     const { messageId, date, from, to, cc, subject, text, textAsHtml } = await simpleParser(input);
@@ -106,7 +106,7 @@ export class ImapProcessor {
       body = (await promisify(textract.fromBufferWithMime)('text/html', Buffer.from(textAsHtml))) as string;
     }
 
-    const message = create(MessageType, {
+    const message = live(DataType.Message, {
       timestamp: date.toISOString(),
       sender,
       text: body,
@@ -125,7 +125,7 @@ export class ImapProcessor {
 }
 
 // TODO(burdon): Move to utils.
-const toRecipient = ({ address: email, name }: EmailAddress): ActorType => ({
+const toRecipient = ({ address: email, name }: EmailAddress): DataType.Actor => ({
   email,
   name: name?.length ? name : undefined,
 });

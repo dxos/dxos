@@ -21,7 +21,6 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 
 export const DebugSettingsSchema = S.mutable(
   S.Struct({
-    debug: S.optional(S.Boolean),
     wireframe: S.optional(S.Boolean),
   }),
 );
@@ -55,6 +54,7 @@ export namespace Devtools {
     export const Space = `${Devtools.Echo.id}.space`;
     export const Feeds = `${Devtools.Echo.id}.feeds`;
     export const Objects = `${Devtools.Echo.id}.objects`;
+    export const Schema = `${Devtools.Echo.id}.schema`;
     export const Automerge = `${Devtools.Echo.id}.automerge`;
     export const Queues = `${Devtools.Echo.id}.queues`;
     export const Members = `${Devtools.Echo.id}.members`;
@@ -79,5 +79,6 @@ export namespace Devtools {
     export const Dashboard = `${Devtools.Edge.id}.dashboard`;
     export const Workflows = `${Devtools.Edge.id}.workflows`;
     export const Traces = `${Devtools.Edge.id}.traces`;
+    export const Testing = `${Devtools.Edge.id}.testing`;
   }
 }

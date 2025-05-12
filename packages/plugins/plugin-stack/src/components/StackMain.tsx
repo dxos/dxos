@@ -13,9 +13,8 @@ import {
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { create, getType, fullyQualifiedId, isReactiveObject, makeRef } from '@dxos/client/echo';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { type CollectionType } from '@dxos/plugin-space/types';
+import { fullyQualifiedId, getTypename, isLiveObject, live, makeRef } from '@dxos/client/echo';
+import { SpaceAction, type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
@@ -26,11 +25,11 @@ import { StackSection } from './StackSection';
 import { STACK_PLUGIN } from '../meta';
 import {
   StackViewType,
+  type AddSectionPosition,
   type CollapsedSections,
+  type StackSectionItem,
   type StackSectionMetadata,
   type StackSectionView,
-  type StackSectionItem,
-  type AddSectionPosition,
 } from '../types';
 
 type StackMainProps = {
@@ -43,7 +42,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const { graph } = useAppGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const allMetadata = useCapabilities(Capabilities.Metadata);
-  const defaultStack = useMemo(() => create(StackViewType, { sections: {} }), [collection]);
+  const defaultStack = useMemo(() => live(StackViewType, { sections: {} }), [collection]);
   const stack = (collection.views[StackViewType.typename]?.target as StackViewType | undefined) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
@@ -60,7 +59,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
       .map((object) => object.target)
       .filter(isNonNullable)
       .map((object) => {
-        const metadata = allMetadata.find((m) => m.id === (getType(object)?.objectId ?? 'never'))
+        const metadata = allMetadata.find((m) => m.id === (getTypename(object) ?? 'never'))
           ?.metadata as StackSectionMetadata;
         const view = {
           ...stack.sections[object.id],
@@ -78,7 +77,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
         .filter(isNonNullable)
         .findIndex((section) => fullyQualifiedId(section) === id);
       const object = collection.objects[index].target;
-      if (isReactiveObject(object)) {
+      if (isLiveObject(object)) {
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
 
         // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/artifact",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Artifacts and related utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,19 +32,20 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "effect": "3.14.21",
     "handlebars": "4.7.8",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "effect": "^3.12.3"
+    "@types/lodash.defaultsdeep": "^4.6.6"
   },
   "peerDependencies": {
-    "effect": "^3.12.3"
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"

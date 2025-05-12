@@ -2,22 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
-import { getPropertySignatures } from 'effect/SchemaAST';
+import { Schema, SchemaAST } from 'effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
+  EntityKind,
   Format,
   FormatEnum,
-  ObjectAnnotationId,
-  TypeEnum,
-  TypedObject,
-  Ref,
   type JsonPath,
   type JsonProp,
-  EntityKind,
+  TypeEnum,
+  TypedObject,
+  TypeAnnotationId,
+  Ref,
   getPropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -49,12 +48,12 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
+    const schema = Schema.Struct({
+      name: Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -63,14 +62,13 @@ describe('ViewProjection', () => {
     const [mutable] = await registry.register([schema]);
 
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
     expect(view.fields).to.have.length(3);
 
     {
       const { props } = projection.getFieldProjection(getFieldId(view, 'name'));
       expect(props).to.deep.eq({
         property: 'name',
-        description: 'a string',
         type: TypeEnum.String,
         format: FormatEnum.String,
         title: 'Name',
@@ -140,17 +138,17 @@ describe('ViewProjection', () => {
     const registry = new EchoSchemaRegistry(db);
 
     // TODO(burdon): Reconcile with createStoredSchema.
-    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
-      name: S.String,
+    class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
+      name: Schema.String,
     }) {}
 
-    const schema = S.Struct({
-      name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
+    const schema = Schema.Struct({
+      name: Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      org: Ref(Org),
+      organization: Ref(Organization),
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -159,38 +157,38 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     projection.setFieldProjection({
       field: {
-        id: getFieldId(view, 'org'),
-        path: 'org' as JsonPath,
+        id: getFieldId(view, 'organization'),
+        path: 'organization' as JsonPath,
         referencePath: 'name' as JsonPath,
       },
     });
 
-    const { field, props } = projection.getFieldProjection(getFieldId(view, 'org'));
+    const { field, props } = projection.getFieldProjection(getFieldId(view, 'organization'));
 
     expect(field).to.deep.eq({
-      id: getFieldId(view, 'org'),
-      path: 'org',
+      id: getFieldId(view, 'organization'),
+      path: 'organization',
       referencePath: 'name',
     });
 
     expect(props).to.deep.eq({
-      property: 'org',
+      property: 'organization',
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
-      referenceSchema: 'example.com/type/Org',
+      referenceSchema: 'example.com/type/Organization',
       referencePath: 'name',
     });
 
     // Note: `referencePath` is stripped from schema.
-    expect(mutable.jsonSchema.properties?.['org' as const]).to.deep.eq({
+    expect(mutable.jsonSchema.properties?.['organization' as const]).to.deep.eq({
       $id: '/schemas/echo/ref',
       reference: {
         schema: {
-          $ref: 'dxn:type:example.com/type/Org',
+          $ref: 'dxn:type:example.com/type/Organization',
         },
         schemaVersion: '0.1.0',
       },
@@ -201,11 +199,11 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
+    const schema = Schema.Struct({
+      name: Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         typename: 'example.com/type/Person',
         version: '0.1.0',
       },
@@ -213,7 +211,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Initial state.
     expect(view.fields).to.have.length(2);
@@ -231,12 +229,12 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.optional(S.Number),
-      email: S.optional(S.Number),
-      description: S.optional(S.String),
+    const schema = Schema.Struct({
+      name: Schema.optional(Schema.Number),
+      email: Schema.optional(Schema.Number),
+      description: Schema.optional(Schema.String),
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -245,7 +243,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Capture initial states.
     const initialFieldsOrder = view.fields.map((f) => f.path);
@@ -278,11 +276,11 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String,
+    const schema = Schema.Struct({
+      name: Schema.String,
       email: Format.Email,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -291,7 +289,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Capture initial state.
     const initialFieldsOrder = view.fields.map((f) => f.path);
@@ -325,10 +323,10 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      status: S.String,
+    const schema = Schema.Struct({
+      status: Schema.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -337,7 +335,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    const projection = new ViewProjection(mutable, view);
+    const projection = new ViewProjection(mutable.jsonSchema, view);
     const fieldId = projection.getFieldId('status');
     invariant(fieldId);
 
@@ -407,17 +405,144 @@ describe('ViewProjection', () => {
       },
     });
 
-    const effectSchema = mutable.getSchemaSnapshot();
+    const effectSchema = mutable.snapshot;
+    expect(() => Schema.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
 
-    expect(() => S.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
-    expect(() => S.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
-    expect(() => S.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
-    expect(() => S.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
-
-    const properties = getPropertySignatures(effectSchema.ast);
+    const properties = SchemaAST.getPropertySignatures(effectSchema.ast);
     const statusProperty = properties.find((p) => p.name === 'status');
     invariant(statusProperty);
     const statusPropertyMeta = getPropertyMetaAnnotation(statusProperty, 'singleSelect');
+
+    // Ensure that the materialized schema contains option annotations.
+    expect(statusPropertyMeta).to.deep.equal({
+      options: [
+        { id: 'draft', title: 'Draft', color: 'indigo' },
+        { id: 'published', title: 'Published', color: 'blue' },
+        { id: 'archived', title: 'Archived', color: 'amber' },
+      ],
+    });
+  });
+
+  test('multi select format', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    const schema = Schema.Struct({
+      tags: Schema.String,
+    }).annotations({
+      [TypeAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Task',
+        version: '0.1.0',
+      },
+    });
+
+    const [mutable] = await registry.register([schema]);
+    const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = new ViewProjection(mutable.jsonSchema, view);
+    const fieldId = projection.getFieldId('tags');
+    invariant(fieldId);
+
+    projection.setFieldProjection({
+      field: { id: fieldId, path: 'tags' as JsonPath },
+      props: {
+        property: 'tags' as JsonProp,
+        type: TypeEnum.Object,
+        format: FormatEnum.MultiSelect,
+        options: [
+          { id: 'feature', title: 'Feature', color: 'emerald' },
+          { id: 'bug', title: 'Bug', color: 'red' },
+          { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
+        ],
+      },
+    });
+
+    expect(mutable.jsonSchema.properties?.tags).to.deep.include({
+      type: 'object',
+      format: 'multi-select',
+      echo: {
+        annotations: {
+          multiSelect: {
+            options: [
+              { id: 'feature', title: 'Feature', color: 'emerald' },
+              { id: 'bug', title: 'Bug', color: 'red' },
+              { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
+            ],
+          },
+        },
+      },
+    });
+
+    const { props } = projection.getFieldProjection(fieldId);
+
+    expect(props.format).to.equal(FormatEnum.MultiSelect);
+    expect(props.options).to.deep.equal([
+      { id: 'feature', title: 'Feature', color: 'emerald' },
+      { id: 'bug', title: 'Bug', color: 'red' },
+      { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
+    ]);
+
+    projection.setFieldProjection({
+      field: { id: fieldId, path: 'tags' as JsonPath },
+      props: {
+        ...props,
+        property: 'tags' as JsonProp,
+        options: [
+          { id: 'draft', title: 'Draft', color: 'indigo' },
+          { id: 'published', title: 'Published', color: 'blue' },
+          { id: 'archived', title: 'Archived', color: 'amber' },
+        ],
+      },
+    });
+
+    const updatedProjection = projection.getFieldProjection(fieldId);
+    expect(updatedProjection.props.options).to.deep.equal([
+      { id: 'draft', title: 'Draft', color: 'indigo' },
+      { id: 'published', title: 'Published', color: 'blue' },
+      { id: 'archived', title: 'Archived', color: 'amber' },
+    ]);
+
+    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
+      annotations: {
+        multiSelect: {
+          options: [
+            { id: 'draft', title: 'Draft', color: 'indigo' },
+            { id: 'published', title: 'Published', color: 'blue' },
+            { id: 'archived', title: 'Archived', color: 'amber' },
+          ],
+        },
+      },
+    });
+
+    // Verify updated JSON Schema.
+    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
+      annotations: {
+        multiSelect: {
+          options: [
+            { id: 'draft', title: 'Draft', color: 'indigo' },
+            { id: 'published', title: 'Published', color: 'blue' },
+            { id: 'archived', title: 'Archived', color: 'amber' },
+          ],
+        },
+      },
+    });
+
+    const effectSchema = mutable.snapshot;
+    expect(effectSchema).not.toBeUndefined;
+    expect(() => Schema.validateSync(effectSchema)({ tags: ['draft'] })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ tags: ['published'] })).not.to.throw();
+
+    // TODO(ZaymonFC): Get validation working.
+    // expect(() => Schema.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
+    // expect(() => Schema.validateSync(effectSchema)({ tags: 'invalid-status' })).to.throw();
+
+    const properties = SchemaAST.getPropertySignatures(effectSchema.ast);
+    const statusProperty = properties.find((p) => p.name === 'tags');
+    invariant(statusProperty);
+    const statusPropertyMeta = getPropertyMetaAnnotation(statusProperty, 'multiSelect');
 
     // Ensure that the materialized schema contains option annotations.
     expect(statusPropertyMeta).to.deep.equal({
@@ -435,12 +560,12 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String,
+    const schema = Schema.Struct({
+      name: Schema.String,
       email: Format.Email,
-      createdAt: S.String,
+      createdAt: Schema.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -461,8 +586,8 @@ describe('ViewProjection', () => {
       ],
     });
 
-    const projection = new ViewProjection(mutable, view);
-    const initialSchema = mutable.getSchemaSnapshot();
+    const projection = new ViewProjection(mutable.jsonSchema, view);
+    const initialSchema = mutable.snapshot;
 
     // Verify only the included fields are in the view.
     expect(view.fields).to.have.length(2);
@@ -531,7 +656,7 @@ describe('ViewProjection', () => {
     expect(getFieldId(view, 'email')).to.equal(emailId);
 
     // Ensure schema still matches.
-    expect(mutable.getSchemaSnapshot()).to.deep.equal(initialSchema);
+    expect(mutable.snapshot).to.deep.equal(initialSchema);
   });
 
   test('schema fields are automatically added to hiddenFields', async ({ expect }) => {
@@ -539,12 +664,12 @@ describe('ViewProjection', () => {
     const registry = new EchoSchemaRegistry(db);
 
     // Create schema with three properties.
-    const schema = S.Struct({
-      title: S.String,
-      description: S.String,
-      status: S.String,
+    const schema = Schema.Struct({
+      title: Schema.String,
+      description: Schema.String,
+      status: Schema.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -562,7 +687,7 @@ describe('ViewProjection', () => {
     });
 
     // Create projection.
-    void new ViewProjection(mutable, view);
+    void new ViewProjection(mutable.jsonSchema, view);
 
     // Verify all schema fields were added to hiddenFields.
     expect(view.hiddenFields).to.exist;
@@ -577,10 +702,10 @@ describe('ViewProjection', () => {
     const registry = new EchoSchemaRegistry(db);
 
     // Create initial schema with a single field.
-    const initialSchema = S.Struct({
-      title: S.String,
+    const initialSchema = Schema.Struct({
+      title: Schema.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Task',
         version: '0.1.0',
@@ -598,7 +723,7 @@ describe('ViewProjection', () => {
     });
 
     // Initialize projection.
-    void new ViewProjection(mutable, view);
+    void new ViewProjection(mutable.jsonSchema, view);
 
     // Verify title is in hiddenFields.
     expect(view.hiddenFields).to.have.length(1);
@@ -608,7 +733,7 @@ describe('ViewProjection', () => {
     mutable.jsonSchema.properties!.status = { type: 'string' };
 
     // Create new projection to trigger normalization.
-    void new ViewProjection(mutable, view);
+    void new ViewProjection(mutable.jsonSchema, view);
 
     // Verify status was added to hiddenFields.
     expect(view.hiddenFields).to.have.length(2);
@@ -620,12 +745,12 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String,
+    const schema = Schema.Struct({
+      name: Schema.String,
       email: Format.Email,
-      phone: S.String,
+      phone: Schema.String,
     }).annotations({
-      [ObjectAnnotationId]: {
+      [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
@@ -634,7 +759,7 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
     const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
-    let projection = new ViewProjection(mutable, view);
+    let projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Initial state
     expect(view.fields).to.have.length(3);
@@ -653,7 +778,7 @@ describe('ViewProjection', () => {
     expect(hiddenProps).to.not.include('email');
 
     // Reinitialize projection to trigger normalization
-    projection = new ViewProjection(mutable, view);
+    projection = new ViewProjection(mutable.jsonSchema, view);
 
     // Verify field is still deleted and not in hidden properties
     expect(view.fields).to.have.length(2);

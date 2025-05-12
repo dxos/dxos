@@ -4,16 +4,16 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Expando } from '@dxos/echo-schema';
-import { Contact, Task } from '@dxos/echo-schema/testing';
+import { Expando, getSchema, Ref } from '@dxos/echo-schema';
+import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, getSchema, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
-import type { SerializedSpace } from './serialized-space';
+import { type SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
 import { EchoTestBuilder } from './testing';
 
@@ -30,15 +30,15 @@ describe('Serializer', () => {
     test('export typed object', async () => {
       const serializer = new Serializer();
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Task]);
+      graph.schemaRegistry.addSchema([Testing.Task]);
 
-      const task = db.add(create(Task, { title: 'Testing' }));
+      const task = db.add(live(Testing.Task, { title: 'Testing' }));
       const data = serializer.exportObject(task);
 
       expect(data).to.deep.include({
         '@id': task.id,
         '@meta': { keys: [] },
-        '@type': { '/': `dxn:type:${Task.typename}:${Task.version}` },
+        '@type': { '/': `dxn:type:${Testing.Task.typename}:${Testing.Task.version}` },
         title: 'Testing',
       });
     });
@@ -52,7 +52,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const obj = create({} as any);
+        const obj = live({} as any);
         obj.title = 'Test';
         db.add(obj);
         await db.flush();
@@ -89,8 +89,8 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const preserved = db.add(create(objValue));
-        const deleted = db.add(create({ value: objValue.value + 1 }));
+        const preserved = db.add(live(objValue));
+        const deleted = db.add(live({ value: objValue.value + 1 }));
         db.remove(deleted);
         await db.flush();
 
@@ -123,22 +123,22 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const obj = create({
+        const obj = live({
           title: 'Main task',
           subtasks: [
-            makeRef(
-              create(Expando, {
+            Ref.make(
+              live(Expando, {
                 title: 'Subtask 1',
               }),
             ),
-            makeRef(
-              create(Expando, {
+            Ref.make(
+              live(Expando, {
                 title: 'Subtask 2',
               }),
             ),
           ],
-          previous: makeRef(
-            create(Expando, {
+          previous: Ref.make(
+            live(Expando, {
               title: 'Previous task',
             }),
           ),
@@ -167,8 +167,8 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        graph.schemaRegistry.addSchema([Contact]);
-        const contact = create(Contact, { name });
+        graph.schemaRegistry.addSchema([Testing.Contact]);
+        const contact = live(Testing.Contact, { name });
         db.add(contact);
         await db.flush();
         data = await new Serializer().export(db);
@@ -179,17 +179,17 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        graph.schemaRegistry.addSchema([Contact]);
+        graph.schemaRegistry.addSchema([Testing.Contact]);
 
         await new Serializer().import(db, data);
         expect((await db.query().run()).objects).to.have.length(1);
 
         const {
           objects: [contact],
-        } = await db.query(Filter.schema(Contact)).run();
+        } = await db.query(Filter.schema(Testing.Contact)).run();
         expect(contact.name).to.eq(name);
-        expect(contact instanceof Contact).to.be.true;
-        expect(getSchema(contact)).to.eq(Contact);
+        expect(contact instanceof Testing.Contact).to.be.true;
+        expect(getSchema(contact)).to.eq(Testing.Contact);
       }
     });
 
@@ -211,7 +211,7 @@ describe('Serializer', () => {
       {
         const db = await peer.openDatabase(spaceKey, root.url);
         for (let i = 0; i < totalObjects; i++) {
-          db.add(create({ value: i }));
+          db.add(live({ value: i }));
         }
         await db.flush();
         await peer.close();
