@@ -2,27 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Ref, S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { Ref } from '@dxos/echo-schema';
 
 import { Person } from './person';
 
 // TOOD(burdon): Rename; this is very specific to AI.
 export const ActorRoles = ['user', 'assistant'] as const;
 
-export const ActorRole = S.Literal(...ActorRoles);
-export type ActorRole = S.Schema.Type<typeof ActorRole>; // TODO(burdon): Remove.
+export const ActorRole = Schema.Literal(...ActorRoles);
+export type ActorRole = Schema.Schema.Type<typeof ActorRole>; // TODO(burdon): Remove.
 
 /**
  * https://schema.org/actor
  */
-export const Actor = S.Struct({
-  contact: S.optional(Ref(Person)),
-  identityDid: S.optional(S.String),
+export const Actor = Schema.Struct({
+  contact: Schema.optional(Ref(Person)),
+  identityDid: Schema.optional(Schema.String),
   /** @deprecated */
-  identityKey: S.optional(S.String),
+  identityKey: Schema.optional(Schema.String),
   // TODO(burdon): Generalize to handle/identifier?
-  email: S.optional(S.String),
-  name: S.optional(S.String),
-  role: S.optional(ActorRole),
+  email: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
+  role: Schema.optional(ActorRole),
 });
-export interface Actor extends S.Schema.Type<typeof Actor> {}
+export interface Actor extends Schema.Schema.Type<typeof Actor> {}

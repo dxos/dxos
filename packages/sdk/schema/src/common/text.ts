@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-const TextSchema = S.Struct({
-  content: S.String,
+import { Type } from '@dxos/echo';
+
+const TextSchema = Schema.Struct({
+  content: Schema.String,
 });
 
 export const Text = TextSchema.pipe(
@@ -16,4 +17,4 @@ export const Text = TextSchema.pipe(
   }),
 );
 
-export interface Text extends S.Schema.Type<typeof Text> {}
+export interface Text extends Schema.Schema.Type<typeof Text> {}

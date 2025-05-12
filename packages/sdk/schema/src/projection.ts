@@ -3,13 +3,13 @@
 //
 
 import { computed, untracked } from '@preact/signals-core';
+import { Schema } from 'effect';
 
 import {
   formatToType,
   typeToFormat,
   FormatEnum,
   type JsonProp,
-  S,
   TypeEnum,
   type JsonSchemaType,
 } from '@dxos/echo-schema';
@@ -38,8 +38,8 @@ export type FieldProjection = {
  * Wrapper for View that manages Field and Format updates.
  */
 export class ViewProjection {
-  private readonly _encode = S.encodeSync(PropertySchema);
-  private readonly _decode = S.decodeSync(PropertySchema, {});
+  private readonly _encode = Schema.encodeSync(PropertySchema);
+  private readonly _decode = Schema.decodeSync(PropertySchema, {});
 
   private _fieldProjections = computed(() => this._view.fields.map((field) => this.getFieldProjection(field.id)));
   private _hiddenProperties = computed(() => this._view.hiddenFields?.map((field) => field.path as string) ?? []);

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S, pipe } from 'effect';
+import { Schema, SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -69,10 +69,10 @@ describe('View', () => {
         version: '0.1.0',
       },
       toJsonSchema(
-        S.Struct({
-          name: S.optional(S.String).annotations({ [AST.TitleAnnotationId]: 'Name' }),
-          email: S.optional(Format.Email),
-          salary: S.optional(Format.Currency({ code: 'usd', decimals: 2 })),
+        Schema.Struct({
+          name: Schema.optional(Schema.String).annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
+          email: Schema.optional(Format.Email),
+          salary: Schema.optional(Format.Currency({ code: 'usd', decimals: 2 })),
         }),
       ),
     );

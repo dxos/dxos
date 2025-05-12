@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Type } from '@dxos/echo';
 import { S, AST, Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
 
@@ -10,11 +12,11 @@ import { IconAnnotationId } from '../annotations';
 /**
  * Project schema.
  */
-export const ProjectSchema = S.Struct({
+export const ProjectSchema = Schema.Struct({
   id: Type.ObjectId,
-  name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
-  image: S.optional(Format.URL),
-  description: S.optional(S.String),
+  name: Schema.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
+  image: Schema.optional(Format.URL),
+  description: Schema.optional(S.String),
 }).annotations({
   [AST.TitleAnnotationId]: 'Project',
   [LabelAnnotationId]: 'name',
@@ -28,4 +30,4 @@ export const Project = ProjectSchema.pipe(
   }),
 );
 
-export interface Project extends S.Schema.Type<typeof Project> {}
+export interface Project extends Schema.Schema.Type<typeof Project> {}

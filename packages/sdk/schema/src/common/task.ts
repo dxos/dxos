@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Type } from '@dxos/echo';
 import { FormatAnnotation, FormatEnum, LabelAnnotationId, S } from '@dxos/echo-schema';
 
@@ -14,14 +16,14 @@ export enum TaskStatus {
 /**
  * Task schema.
  */
-const TaskSchema = S.Struct({
-  text: S.String,
+const TaskSchema = Schema.Struct({
+  text: Schema.String,
   // TODO(wittjosiah): Why closed and status?
-  closed: S.optional(S.Boolean),
-  status: S.optional(S.Enums(TaskStatus)),
-  priority: S.optional(S.Number),
-  estimate: S.optional(S.Number),
-  assigned: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.DID))),
+  closed: Schema.optional(S.Boolean),
+  status: Schema.optional(S.Enums(TaskStatus)),
+  priority: Schema.optional(S.Number),
+  estimate: Schema.optional(S.Number),
+  assigned: Schema.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.DID))),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.
@@ -35,4 +37,4 @@ export const Task = TaskSchema.pipe(
   }),
 );
 
-export interface Task extends S.Schema.Type<typeof Task> {}
+export interface Task extends Schema.Schema.Type<typeof Task> {}

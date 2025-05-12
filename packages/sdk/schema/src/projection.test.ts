@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 import { getPropertySignatures } from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -49,8 +49,8 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
+    const schema = Schema.Struct({
+      name: Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).annotations({
@@ -140,11 +140,11 @@ describe('ViewProjection', () => {
 
     // TODO(burdon): Reconcile with createStoredSchema.
     class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
-      name: S.String,
+      name: Schema.String,
     }) {}
 
-    const schema = S.Struct({
-      name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
+    const schema = Schema.Struct({
+      name: Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
       organization: Ref(Organization),
@@ -200,8 +200,8 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
+    const schema = Schema.Struct({
+      name: Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
     }).annotations({
       [TypeAnnotationId]: {
@@ -230,10 +230,10 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.optional(S.Number),
-      email: S.optional(S.Number),
-      description: S.optional(S.String),
+    const schema = Schema.Struct({
+      name: Schema.optional(Schema.Number),
+      email: Schema.optional(Schema.Number),
+      description: Schema.optional(Schema.String),
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -277,8 +277,8 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String,
+    const schema = Schema.Struct({
+      name: Schema.String,
       email: Format.Email,
     }).annotations({
       [TypeAnnotationId]: {
@@ -324,8 +324,8 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      status: S.String,
+    const schema = Schema.Struct({
+      status: Schema.String,
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -407,10 +407,10 @@ describe('ViewProjection', () => {
     });
 
     const effectSchema = mutable.snapshot;
-    expect(() => S.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
-    expect(() => S.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
-    expect(() => S.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
-    expect(() => S.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
 
     const properties = getPropertySignatures(effectSchema.ast);
     const statusProperty = properties.find((p) => p.name === 'status');
@@ -431,8 +431,8 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      tags: S.String,
+    const schema = Schema.Struct({
+      tags: Schema.String,
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -533,12 +533,12 @@ describe('ViewProjection', () => {
 
     const effectSchema = mutable.snapshot;
     expect(effectSchema).not.toBeUndefined;
-    expect(() => S.validateSync(effectSchema)({ tags: ['draft'] })).not.to.throw();
-    expect(() => S.validateSync(effectSchema)({ tags: ['published'] })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ tags: ['draft'] })).not.to.throw();
+    expect(() => Schema.validateSync(effectSchema)({ tags: ['published'] })).not.to.throw();
 
     // TODO(ZaymonFC): Get validation working.
-    // expect(() => S.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
-    // expect(() => S.validateSync(effectSchema)({ tags: 'invalid-status' })).to.throw();
+    // expect(() => Schema.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
+    // expect(() => Schema.validateSync(effectSchema)({ tags: 'invalid-status' })).to.throw();
 
     const properties = getPropertySignatures(effectSchema.ast);
     const statusProperty = properties.find((p) => p.name === 'tags');
@@ -561,10 +561,10 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String,
+    const schema = Schema.Struct({
+      name: Schema.String,
       email: Format.Email,
-      createdAt: S.String,
+      createdAt: Schema.String,
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -665,10 +665,10 @@ describe('ViewProjection', () => {
     const registry = new EchoSchemaRegistry(db);
 
     // Create schema with three properties.
-    const schema = S.Struct({
-      title: S.String,
-      description: S.String,
-      status: S.String,
+    const schema = Schema.Struct({
+      title: Schema.String,
+      description: Schema.String,
+      status: Schema.String,
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -703,8 +703,8 @@ describe('ViewProjection', () => {
     const registry = new EchoSchemaRegistry(db);
 
     // Create initial schema with a single field.
-    const initialSchema = S.Struct({
-      title: S.String,
+    const initialSchema = Schema.Struct({
+      title: Schema.String,
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -746,10 +746,10 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    const schema = S.Struct({
-      name: S.String,
+    const schema = Schema.Struct({
+      name: Schema.String,
       email: Format.Email,
-      phone: S.String,
+      phone: Schema.String,
     }).annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,

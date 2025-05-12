@@ -15,6 +15,7 @@ import {
   type JsonSchemaType,
   ObjectId as ObjectId$,
   SpaceIdSchema,
+  type StoredSchema,
   type TypeMeta,
   EchoObject,
   EntityKind,
@@ -74,6 +75,7 @@ export namespace Type {
   export type Abstract<T = any> = BaseSchema<T>;
   export type ImmutableType<T> = ImmutableSchema<T>;
   export type MutableType<T> = EchoSchema<T>;
+  export type StoredType = StoredSchema;
 
   export const create = create$;
 

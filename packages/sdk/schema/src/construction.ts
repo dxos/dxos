@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import {
   formatToType,
   type EchoSchema,
   FormatEnum,
-  S,
-  TypedObject,
-  TypeEnum,
   type SelectOptionSchema,
+  TypeEnum,
+  TypedObject,
 } from '@dxos/echo-schema';
 import { createEchoSchema } from '@dxos/live-object/testing';
 
@@ -30,12 +31,12 @@ export const getSchemaFromPropertyDefinitions = (
   properties: SchemaPropertyDefinition[],
 ): EchoSchema => {
   // TODO(burdon): Move to echo-schema.
-  const typeToSchema: Record<TypeEnum, S.Any> = {
-    [TypeEnum.String]: S.String.pipe(S.optional),
-    [TypeEnum.Number]: S.Number.pipe(S.optional),
-    [TypeEnum.Boolean]: S.Boolean.pipe(S.optional),
-    [TypeEnum.Object]: S.Object.pipe(S.optional),
-    [TypeEnum.Ref]: S.String.pipe(S.optional), // TODO(burdon): Is this correct for refs?
+  const typeToSchema: Record<TypeEnum, Schema.Any> = {
+    [TypeEnum.String]: Schema.String.pipe(Schema.optional),
+    [TypeEnum.Number]: Schema.Number.pipe(Schema.optional),
+    [TypeEnum.Boolean]: Schema.Boolean.pipe(Schema.optional),
+    [TypeEnum.Object]: Schema.Object.pipe(Schema.optional),
+    [TypeEnum.Ref]: Schema.String.pipe(Schema.optional), // TODO(burdon): Is this correct for refs?
   };
 
   const fields: any = Object.fromEntries(

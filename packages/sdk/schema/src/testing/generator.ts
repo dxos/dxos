@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Effect } from 'effect';
+import { type Schema, SchemaAST, Effect } from 'effect';
 
 import { type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
 import {
@@ -13,7 +13,6 @@ import {
   type BaseObject,
   type ExcludeId,
   type JsonSchemaType,
-  type S,
   type TypedObject,
   Ref,
 } from '@dxos/echo-schema';
@@ -62,7 +61,11 @@ export const createObjectFactory =
 /**
  * Set properties based on generator annotation.
  */
-export const createProps = <T extends BaseObject>(generator: ValueGenerator, schema: S.Schema<T>, optional = false) => {
+export const createProps = <T extends BaseObject>(
+  generator: ValueGenerator,
+  schema: Schema.Schema<T>,
+  optional = false,
+) => {
   return (data: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
     return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
       if (obj[property.name] === undefined) {
@@ -85,12 +88,12 @@ export const createProps = <T extends BaseObject>(generator: ValueGenerator, sch
 /**
  * Set references.
  */
-export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: EchoDatabase) => {
+export const createReferences = <T extends BaseObject>(schema: Schema.Schema<T>, db: EchoDatabase) => {
   return async (obj: T): Promise<T> => {
     for (const property of getSchemaProperties<T>(schema.ast)) {
       if (!property.optional || randomBoolean()) {
         if (property.format === FormatEnum.Ref) {
-          const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, AST.JSONSchemaAnnotationId);
+          const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, SchemaAST.JSONSchemaAnnotationId);
           if (jsonSchema) {
             const { typename } = getSchemaReference(jsonSchema) ?? {};
             invariant(typename);
@@ -109,7 +112,7 @@ export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: 
   };
 };
 
-export const createReactiveObject = <T extends BaseObject>(type: S.Schema<T>) => {
+export const createReactiveObject = <T extends BaseObject>(type: Schema.Schema<T>) => {
   return (data: ExcludeId<T>) => live<T>(type, data);
 };
 
@@ -143,7 +146,7 @@ export type CreateOptions = {
  */
 export const createObjectPipeline = <T extends BaseObject>(
   generator: ValueGenerator,
-  type: S.Schema<T>,
+  type: Schema.Schema<T>,
   { db, optional }: CreateOptions,
 ): ((obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>) => {
   if (!db) {
@@ -184,7 +187,7 @@ export type ObjectGenerator<T extends BaseObject> = {
 //   can't be invoked with `Effect.runSync`.
 export const createGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
-  type: S.Schema<T>,
+  type: Schema.Schema<T>,
   options: Omit<CreateOptions, 'db'> = {},
 ): ObjectGenerator<T> => {
   const pipeline = createObjectPipeline(generator, type, options);
@@ -202,7 +205,7 @@ export type AsyncObjectGenerator<T extends BaseObject> = {
 
 export const createAsyncGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
-  type: S.Schema<T>,
+  type: Schema.Schema<T>,
   options: CreateOptions = {},
 ): AsyncObjectGenerator<T> => {
   const pipeline = createObjectPipeline(generator, type, options);
