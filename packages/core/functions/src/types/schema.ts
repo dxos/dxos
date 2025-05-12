@@ -3,7 +3,7 @@
 //
 
 import { EchoObject, JsonSchemaType, LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 /**
  * Source script.
@@ -14,10 +14,15 @@ export const ScriptType = S.Struct({
   // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
   changed: S.optional(S.Boolean),
-  source: Ref(TextType),
+  source: Ref(DataType.Text),
 })
   .annotations({ [LabelAnnotationId]: 'name' })
-  .pipe(EchoObject({ typename: 'dxos.org/type/Script', version: '0.1.0' }));
+  .pipe(
+    EchoObject({
+      typename: 'dxos.org/type/Script',
+      version: '0.1.0',
+    }),
+  );
 
 export type ScriptType = S.Schema.Type<typeof ScriptType>;
 

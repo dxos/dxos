@@ -19,7 +19,8 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { S, AST, create, type Expando, EchoObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { S, AST, create, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
@@ -54,7 +55,12 @@ const TestItem = S.Struct({
     [AST.TitleAnnotationId]: 'Description',
     [AST.DescriptionAnnotationId]: 'Product description',
   }),
-}).pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/Test',
+    version: '0.1.0',
+  }),
+);
 
 const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();

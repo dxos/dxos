@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ObjectId, EchoObject, S, Ref, Expando } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { ObjectId, S, Ref, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 
@@ -20,7 +21,12 @@ export interface TreeNodeType extends S.Schema.Type<typeof TreeNodeType> {}
 export const TreeType = S.Struct({
   root: ObjectId,
   nodes: S.mutable(S.Record({ key: ObjectId, value: TreeNodeType })),
-}).pipe(EchoObject({ typename: 'dxos.org/type/Tree', version: '0.1.0' }));
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/Tree',
+    version: '0.1.0',
+  }),
+);
 
 export interface TreeType extends S.Schema.Type<typeof TreeType> {}
 

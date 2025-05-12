@@ -27,7 +27,7 @@ import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-a
 import {
   EchoReactiveHandler,
   type ProxyTarget,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   createObject,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
@@ -64,7 +64,7 @@ export interface EchoDatabase {
   get spaceKey(): PublicKey;
   get spaceId(): SpaceId;
 
-  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): ReactiveEchoObject<T> | undefined;
+  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): AnyLiveObject<T> | undefined;
 
   /**
    * Query objects.
@@ -86,7 +86,7 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): ReactiveEchoObject<T>;
+  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): AnyLiveObject<T>;
 
   /**
    * Removes object from the database.
@@ -149,7 +149,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<ObjectCore, ReactiveEchoObject<any>>();
+  readonly _rootProxies = new Map<ObjectCore, AnyLiveObject<any>>();
 
   constructor(params: EchoDatabaseParams) {
     super();
@@ -220,7 +220,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
   }
 
-  getObjectById(id: string, { deleted = false } = {}): ReactiveEchoObject<any> | undefined {
+  getObjectById(id: string, { deleted = false } = {}): AnyLiveObject<any> | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
@@ -262,7 +262,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends BaseObject>(obj: T, opts?: AddOptions): ReactiveEchoObject<T> {
+  add<T extends BaseObject>(obj: T, opts?: AddOptions): AnyLiveObject<T> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
@@ -327,7 +327,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   async _loadObjectById<T extends BaseObject>(
     objectId: string,
     options: LoadObjectOptions = {},
-  ): Promise<ReactiveEchoObject<T> | undefined> {
+  ): Promise<AnyLiveObject<T> | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
     if (!core || core?.isDeleted()) {
       return undefined;

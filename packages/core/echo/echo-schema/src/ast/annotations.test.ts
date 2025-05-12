@@ -21,7 +21,12 @@ console.log(a);
 
 type TestObject = S.Schema.Type<typeof TestObject>;
 
-const TestEchoSchema = TestObject.pipe(EchoObject({ typename: 'dxos.org/type/Test', version: '0.1.0' }));
+const TestEchoSchema = TestObject.pipe(
+  EchoObject({
+    typename: 'dxos.org/type/Test',
+    version: '0.1.0',
+  }),
+);
 type TestEchoSchema = S.Schema.Type<typeof TestEchoSchema>;
 
 describe('annotations', () => {

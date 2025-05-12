@@ -4,14 +4,11 @@
 
 import { Schema as S } from 'effect';
 
-import { EntityKind, TypeAnnotationId, Ref } from '@dxos/echo-schema';
+import { EntityKind, TypeAnnotationId, Ref, ObjectId } from '@dxos/echo-schema';
 
-// TODO(burdon): Reconcile with sdk/schema/testing.
-// TODO(burdon): Convert interface to type.
+// TODO(burdon): Remove (use @dxos/schema DataType).
 
-// TODO(dmaretskyi): Extract.
-export const ObjectId = S.String.annotations({ description: 'The unique object identifier.' });
-
+/** @deprecated */
 export const Contact = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the person.' }),
@@ -28,6 +25,7 @@ export const Contact = S.Struct({
   });
 export interface Contact extends S.Schema.Type<typeof Contact> {}
 
+/** @deprecated */
 export const Project = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the project.' }),
@@ -62,6 +60,7 @@ export const Task = S.Struct({
   });
 export interface Task extends S.Schema.Type<typeof Task> {}
 
+/** @deprecated */
 export const Organization = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the organization.' }),

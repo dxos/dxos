@@ -8,4 +8,4 @@
  * @category api namespace
  * @since 0.9.0
  */
-export declare namespace Database {}
+export namespace Database {}

@@ -10,7 +10,7 @@ import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
+import { getSpace, isEchoObject, isSpace, type AnyLiveObject, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
@@ -53,7 +53,7 @@ export default () =>
       filter: (
         data,
       ): data is {
-        companionTo: ReactiveEchoObject<{ view: Ref<ViewType> } | { cardView: Ref<ViewType> }>;
+        companionTo: AnyLiveObject<{ view: Ref<ViewType> } | { cardView: Ref<ViewType> }>;
       } => {
         if (data.subject !== 'selected-objects' || !data.companionTo || !isEchoObject(data.companionTo)) {
           return false;

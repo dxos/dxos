@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { type ForeignKey, ForeignKeySchema } from '@dxos/echo-schema';
-import { getMeta, type ReactiveEchoObject } from '@dxos/react-client/echo';
+import { getMeta, type AnyLiveObject } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -18,7 +18,7 @@ const initialValues = {
 };
 
 export type AdvancedObjectSettingsProps = {
-  object: ReactiveEchoObject<any>;
+  object: AnyLiveObject<any>;
 };
 
 export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) => {

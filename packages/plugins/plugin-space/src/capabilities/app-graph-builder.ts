@@ -10,7 +10,7 @@ import {
   getSpace,
   isEchoObject,
   OBJECT_ID_LENGTH,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   SPACE_ID_LENGTH,
   SpaceState,
   type Space,
@@ -348,7 +348,7 @@ export default (context: PluginsContext) => {
     // Create collection actions and action groups.
     createExtension({
       id: `${SPACE_PLUGIN}/object-actions`,
-      filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+      filter: (node): node is Node<AnyLiveObject<any>> => isEchoObject(node.data),
       actions: ({ node }) => {
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
         const state = context.requestCapability(SpaceCapabilities.State);
@@ -359,7 +359,7 @@ export default (context: PluginsContext) => {
     // Object settings plank companion.
     createExtension({
       id: `${SPACE_PLUGIN}/settings`,
-      filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+      filter: (node): node is Node<AnyLiveObject<any>> => isEchoObject(node.data),
       connector: ({ node }) => [
         {
           id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),

@@ -9,21 +9,21 @@ import { type OAuthFlowResult } from '@dxos/protocols';
 import { live, type Space } from '@dxos/react-client/echo';
 import { useEdgeClient } from '@dxos/react-edge-client';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
 import { TOKEN_MANAGER_PLUGIN } from '../meta';
 
 type NewTokenSelectorProps = {
   space: Space;
-  onAddAccessToken: (token: AccessTokenType) => void;
+  onAddAccessToken: (token: DataType.AccessToken) => void;
   onCustomToken?: () => void;
 };
 
 export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: NewTokenSelectorProps) => {
   const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
   const edgeClient = useEdgeClient();
-  const [tokenMap] = useState(new Map<string, AccessTokenType>());
+  const [tokenMap] = useState(new Map<string, DataType.AccessToken>());
 
   useEffect(() => {
     const edgeUrl = new URL(edgeClient.baseUrl);
@@ -57,7 +57,7 @@ export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: New
       return;
     }
 
-    const token = live(AccessTokenType, {
+    const token = live(DataType.AccessToken, {
       source: preset.source,
       note: preset.note,
       token: '',

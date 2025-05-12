@@ -24,7 +24,7 @@ export const ECHO_ATTR_META = '@meta';
 // TODO(dmaretskyi): Rename AnyProperties.
 export type BaseObject = Record<string, any>;
 
-// TODO(burdon): Reconcile with ReactiveEchoObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
+// TODO(burdon): Reconcile with AnyLiveObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
 export type WithId = BaseObject & HasId;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
@@ -194,4 +194,5 @@ export const getDXN = (object: any): DXN | undefined => {
   return DXN.fromLocalObjectId(object.id);
 };
 
+// TODO(burdon): Reconcile with Type.Any.
 export type BaseEchoObject = HasId & HasTypename;

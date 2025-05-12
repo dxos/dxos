@@ -178,7 +178,7 @@ export default defineConfig((env) => ({
         '@dxos/client-protocol',
         '@dxos/client-services',
         '@dxos/config',
-        '@dxos/echo-schema',
+        '@dxos/echo',
         '@dxos/echo-signals',
         '@dxos/live-object',
         '@dxos/react-client',

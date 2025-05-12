@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { type EchoDatabase, Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { stripUndefined } from '@dxos/util';
@@ -35,21 +35,21 @@ describe('Generator', () => {
   // TODO(burdon): Type error: https://github.com/dxos/dxos/issues/8324
   test('create object', async ({ expect }) => {
     {
-      const schema: S.Schema<Testing.Organization> = Testing.Organization;
+      const schema: Schema.Schema<Testing.Organization> = Testing.Organization;
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
 
     {
-      const schema: S.Schema<Testing.Project> = Testing.Project;
+      const schema: Schema.Schema<Testing.Project> = Testing.Project;
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
 
     {
-      const schema: S.Schema<Testing.Contact> = Testing.Contact as any; // TODO(burdon): Fix.
+      const schema: Schema.Schema<Testing.Contact> = Testing.Contact as any; // TODO(burdon): Fix.
       const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;

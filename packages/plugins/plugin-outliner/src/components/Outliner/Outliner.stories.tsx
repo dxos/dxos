@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { live, makeRef, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Task } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerController } from './Outliner';
@@ -51,7 +51,7 @@ const meta: Meta<typeof Outliner.Root> = {
           switch (action.action) {
             case 'task': {
               invariant(space);
-              const task = space.db.add(live(Task, { text: action.node.data.text }));
+              const task = space.db.add(live(DataType.Task, { text: action.node.data.text }));
               action.node.ref = makeRef(task);
               action.node.data.text = '';
               break;
@@ -62,7 +62,7 @@ const meta: Meta<typeof Outliner.Root> = {
     );
   },
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [Task, TreeType] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Task, TreeType] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],

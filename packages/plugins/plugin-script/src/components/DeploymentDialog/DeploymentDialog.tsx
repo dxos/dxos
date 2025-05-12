@@ -7,7 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
-import { type AccessTokenType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { useCreateAndDeployScriptTemplates } from '../../hooks/useCreateAndDeployScriptTemplates';
 import { SCRIPT_PLUGIN } from '../../meta';
@@ -21,7 +21,7 @@ export const DEPLOYMENT_DIALOG = `${SCRIPT_PLUGIN}/deployment/dialog`;
 //   - Pending / onError states.
 
 type DeploymentDialogProps = {
-  accessToken: AccessTokenType;
+  accessToken: DataType.AccessToken;
   scriptTemplates: Template[];
 };
 

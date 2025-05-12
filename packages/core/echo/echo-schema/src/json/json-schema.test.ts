@@ -3,7 +3,6 @@
 //
 
 import { Option, Schema as S, SchemaAST } from 'effect';
-import { TitleAnnotationId } from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
 import { findAnnotation, type JsonProp } from '@dxos/effect';
@@ -251,7 +250,7 @@ describe('effect-to-json', () => {
         S.pluck('contact'),
         S.typeSchema,
         (s) => s.ast,
-        SchemaAST.getAnnotation(TitleAnnotationId),
+        SchemaAST.getAnnotation(SchemaAST.TitleAnnotationId),
         Option.getOrUndefined,
       ),
     ).to.eq('Custom Title');

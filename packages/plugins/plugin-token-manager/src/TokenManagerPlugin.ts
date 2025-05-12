@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { ReactSurface, AppGraphBuilder } from './capabilities';
 import { meta } from './meta';
@@ -20,7 +20,7 @@ export const TokenManagerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [AccessTokenType]),
+      activate: () => contributes(ClientCapabilities.Schema, [DataType.AccessToken]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

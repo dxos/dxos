@@ -6,7 +6,8 @@ import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { live } from '@dxos/live-object';
 import { TemplateInputType, TemplateType } from '@dxos/plugin-automation/types';
-import { MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import { RequestProcessor } from './processor';
 import { TestProcessorBuilder, StubModelInvoker } from './testing';
@@ -56,7 +57,7 @@ describe('RequestProcessor', () => {
     const input = 'hello world';
     {
       const thread = live(ThreadType, { messages: [] });
-      const message = live(MessageType, {
+      const message = live(DataType.Message, {
         sender: {},
         timestamp: new Date().toISOString(),
         text: `/${command} ${input}`,
@@ -135,7 +136,7 @@ describe('RequestProcessor', () => {
       ].join('\n');
 
       const thread = live(ThreadType, { messages: [] });
-      const message = live(MessageType, {
+      const message = live(DataType.Message, {
         sender: {},
         timestamp: new Date().toISOString(),
         text: `/extract "${text}"`,

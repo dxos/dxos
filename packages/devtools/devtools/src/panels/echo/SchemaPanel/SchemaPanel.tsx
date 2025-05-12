@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Option, type Schema } from 'effect';
-import { getDescriptionAnnotation, getTitleAnnotation } from 'effect/SchemaAST';
+import { Option, type Schema, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -35,8 +34,8 @@ const textFilter = (text?: string) => {
   return (item: Schema.Schema.AnyNoContext) => {
     let match = false;
     match ||= !!getSchemaDXN(item)?.toString().match(matcher);
-    match ||= !!getTitleAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
-    match ||= !!getDescriptionAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
+    match ||= !!SchemaAST.getTitleAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
+    match ||= !!SchemaAST.getDescriptionAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
     return match;
   };
 };

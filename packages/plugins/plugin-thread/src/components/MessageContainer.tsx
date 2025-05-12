@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'rea
 import { Surface } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
-import { type ReactiveEchoObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
+import { type AnyLiveObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
@@ -21,7 +21,7 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { type TextContentBlock, type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
@@ -31,17 +31,14 @@ import { getMessageMetadata } from '../util';
 // TODO(thure): #8149
 const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverableControlItem];
 
-export const MessageContainer = ({
-  message,
-  members,
-  editable = false,
-  onDelete,
-}: {
-  message: MessageType;
+export type MessageContainerProps = {
+  message: DataType.Message;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;
-}) => {
+};
+
+export const MessageContainer = ({ message, members, editable = false, onDelete }: MessageContainerProps) => {
   const senderIdentity = members.find(
     (member) =>
       (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
@@ -124,7 +121,7 @@ const TextboxBlock = ({
   isAuthor,
   editing,
 }: {
-  block: TextContentBlock;
+  block: DataType.MessageBlock.Text;
   editing?: boolean;
   isAuthor?: boolean;
   identity?: Identity;
@@ -166,7 +163,7 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: ReactiveEchoObject<any> }>(
+const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: AnyLiveObject<any> }>(
   ({ subject }, forwardedRef) => {
     let title = subject.name ?? subject.title ?? subject.type ?? 'Object';
     if (typeof title !== 'string') {

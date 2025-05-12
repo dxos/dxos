@@ -20,7 +20,7 @@ import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Contact, MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { Mailbox } from './Mailbox';
@@ -69,7 +69,7 @@ export const WithCompanion = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [MailboxType, MessageType, Contact],
+          types: [MailboxType, DataType.Message, DataType.Person],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

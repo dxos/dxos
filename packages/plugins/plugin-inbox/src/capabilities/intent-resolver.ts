@@ -20,7 +20,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { TableAction } from '@dxos/plugin-table';
 import { Filter, makeRef } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
-import { MessageType, Contact, Organization } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
@@ -51,9 +51,9 @@ export default (context: PluginsContext) =>
         if (message) {
           // TODO(wittjosiah): Static to live object fails.
           //  Needs to be a live object because graph is live and the current message is included in the companion.
-          const { '@type': _, id, ...messageWithoutType } = { ...message } as any;
-          const liveMessage = live(MessageType, messageWithoutType);
-          liveMessage.id = id;
+          const { '@type': _, ...messageWithoutType } = { ...message } as any;
+          const liveMessage = live(DataType.Message, messageWithoutType);
+          // liveMessage.id = id;
           state[mailboxId] = liveMessage;
         } else {
           delete state[mailboxId];
@@ -72,7 +72,7 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const { objects: existingContacts } = await space.db.query(Filter.schema(Contact)).run();
+        const { objects: existingContacts } = await space.db.query(Filter.schema(DataType.Person)).run();
 
         // Check for existing contact
         const existingContact = existingContacts.find((contact) =>
@@ -84,7 +84,7 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const newContact = live(Contact, {
+        const newContact = live(DataType.Person, {
           emails: [{ value: email }],
         });
 
@@ -101,7 +101,7 @@ export default (context: PluginsContext) =>
 
         log.info('Extracted email domain', { emailDomain });
 
-        const { objects: existingOrganisations } = await space.db.query(Filter.schema(Organization)).run();
+        const { objects: existingOrganisations } = await space.db.query(Filter.schema(DataType.Organization)).run();
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {
@@ -134,7 +134,7 @@ export default (context: PluginsContext) =>
 
         const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
         const contactTable = tables.find((table) => {
-          return table.view?.target?.query?.typename === Contact.typename;
+          return table.view?.target?.query?.typename === DataType.Person.typename;
         });
 
         if (!contactTable) {
@@ -145,7 +145,7 @@ export default (context: PluginsContext) =>
                 createIntent(TableAction.Create, {
                   space,
                   name: 'Contacts',
-                  typename: Contact.typename,
+                  typename: DataType.Person.typename,
                 }),
                 chain(SpaceAction.AddObject, { target: space }),
               ),

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ReactiveEchoObject } from '@dxos/echo-db';
+import { type AnyLiveObject } from '@dxos/echo-db';
 import { type EchoSchema, type S } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
 
@@ -26,4 +26,4 @@ export type MutationsProviderParams = {
   maxContentLength: number;
 };
 
-export type TestObjectMutators = (object: ReactiveEchoObject<any>, params: MutationsProviderParams) => Promise<void>;
+export type TestObjectMutators = (object: AnyLiveObject<any>, params: MutationsProviderParams) => Promise<void>;

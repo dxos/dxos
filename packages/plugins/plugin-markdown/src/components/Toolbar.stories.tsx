@@ -31,14 +31,14 @@ import {
   useTextEditor,
   useEditorToolbarState,
 } from '@dxos/react-ui-editor';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 faker.seed(101);
 
 const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(createObject(live(TextType, { content })));
+  const [text] = useState(createObject(live(DataType.Text, { content })));
   const toolbarState = useEditorToolbarState({ viewMode: 'preview' });
   const formattingObserver = useFormattingState(toolbarState);
   const { parentRef, view } = useTextEditor(() => {

@@ -27,7 +27,7 @@ import { getMeta, live, getType, isDeleted } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
-import { type ReactiveEchoObject, createObject, isEchoObject } from './create';
+import { type AnyLiveObject, createObject, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 import { createDocAccessor, DocAccessor } from '../core-db';
@@ -54,7 +54,7 @@ test('id property name is reserved', () => {
 for (const schema of [undefined, Testing.TestType, Testing.TestSchemaType]) {
   const createTestObject = (
     props: Partial<Testing.TestSchemaWithClass> = {},
-  ): ReactiveEchoObject<Testing.TestSchemaWithClass> => {
+  ): AnyLiveObject<Testing.TestSchemaWithClass> => {
     if (schema) {
       return createObject(live(schema, props));
     } else {
@@ -110,7 +110,12 @@ describe('without database', () => {
       arr: S.optional(S.Array(S.String).pipe(S.mutable)),
       ref: S.optional(S.suspend((): Ref$<TestSchema> => Ref(TestSchema))),
     }).pipe(S.mutable),
-  }).pipe(EchoObject({ typename: 'example.com/type/Test', version: '0.1.0' }));
+  }).pipe(
+    EchoObject({
+      typename: 'example.com/type/Test',
+      version: '0.1.0',
+    }),
+  );
   interface TestSchema extends S.Schema.Type<typeof TestSchema> {}
 
   test('get schema on object', () => {
@@ -229,7 +234,7 @@ describe('Reactive Object with ECHO database', () => {
       peer.client.graph.schemaRegistry.addSchema([Testing.TestType]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query({ id }).first()) as ReactiveEchoObject<Testing.TestSchema>;
+      const obj = (await db.query({ id }).first()) as AnyLiveObject<Testing.TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -264,7 +269,7 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer(kv);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query({ id }).first()) as ReactiveEchoObject<Testing.TestSchema>;
+      const obj = (await db.query({ id }).first()) as AnyLiveObject<Testing.TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -363,13 +368,23 @@ describe('Reactive Object with ECHO database', () => {
   describe('references', () => {
     const Organization = S.Struct({
       name: S.String,
-    }).pipe(EchoObject({ typename: 'example.com/type/Organization', version: '0.1.0' }));
+    }).pipe(
+      EchoObject({
+        typename: 'example.com/type/Organization',
+        version: '0.1.0',
+      }),
+    );
 
     const Contact = S.Struct({
       name: S.String,
       organization: Ref(Organization),
       previousEmployment: S.optional(S.Array(Ref(Organization))),
-    }).pipe(EchoObject({ typename: 'example.com/type/Contact', version: '0.1.0' }));
+    }).pipe(
+      EchoObject({
+        typename: 'example.com/type/Contact',
+        version: '0.1.0',
+      }),
+    );
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();
@@ -624,7 +639,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const peer = await builder.createPeer(kv);
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = (await db.query({ id }).first()) as ReactiveEchoObject<Testing.TestSchema>;
+        const obj = (await db.query({ id }).first()) as AnyLiveObject<Testing.TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { S, SpaceIdSchema } from '@dxos/echo-schema';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
-import { ActorSchema, MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { THREAD_PLUGIN } from './meta';
 
@@ -14,8 +14,7 @@ export namespace ThreadAction {
 
   export class CreateChannel extends S.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
     input: S.Struct({
-      // TODO(wittjosiah): Should be SpaceId.
-      spaceId: S.String,
+      spaceId: SpaceIdSchema,
       name: S.optional(S.String),
     }),
     output: S.Struct({
@@ -34,6 +33,15 @@ export namespace ThreadAction {
     }),
   }) {}
 
+  export class Delete extends S.TaggedClass<Delete>()(`${THREAD_ACTION}/delete`, {
+    input: S.Struct({
+      thread: ThreadType,
+      subject: EchoObjectSchema,
+      cursor: S.optional(S.String),
+    }),
+    output: S.Void,
+  }) {}
+
   export class Select extends S.TaggedClass<Select>()(`${THREAD_ACTION}/select`, {
     input: S.Struct({
       current: S.String,
@@ -48,20 +56,11 @@ export namespace ThreadAction {
     output: S.Void,
   }) {}
 
-  export class Delete extends S.TaggedClass<Delete>()(`${THREAD_ACTION}/delete`, {
-    input: S.Struct({
-      thread: ThreadType,
-      subject: EchoObjectSchema,
-      cursor: S.optional(S.String),
-    }),
-    output: S.Void,
-  }) {}
-
   export class AddMessage extends S.TaggedClass<AddMessage>()(`${THREAD_ACTION}/add-message`, {
     input: S.Struct({
       subject: EchoObjectSchema,
       thread: ThreadType,
-      sender: ActorSchema,
+      sender: DataType.Actor,
       text: S.String,
     }),
     output: S.Void,
@@ -72,7 +71,7 @@ export namespace ThreadAction {
       thread: ThreadType,
       subject: EchoObjectSchema,
       messageId: S.String,
-      message: S.optional(MessageType),
+      message: S.optional(DataType.Message),
       messageIndex: S.optional(S.Number),
     }),
     output: S.Void,
@@ -80,7 +79,6 @@ export namespace ThreadAction {
 }
 
 export const ThreadSettingsSchema = S.mutable(S.Struct({}));
-
 export type ThreadSettingsProps = S.Schema.Type<typeof ThreadSettingsSchema>;
 
 export interface ThreadModel {

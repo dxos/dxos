@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DescriptionAnnotationId, TitleAnnotationId } from 'effect/SchemaAST';
+import { SchemaAST } from 'effect';
 
 import {
   GeneratorAnnotationId,
@@ -38,8 +38,8 @@ export const CustomAnnotations: Partial<Record<RootJsonSchemaProperty, symbol>> 
  * Includes default effect annotations.
  */
 export const DecodedAnnotations: Partial<Record<RootJsonSchemaProperty, symbol>> = {
-  title: TitleAnnotationId,
-  description: DescriptionAnnotationId,
+  title: SchemaAST.TitleAnnotationId,
+  description: SchemaAST.DescriptionAnnotationId,
 };
 
 /**
