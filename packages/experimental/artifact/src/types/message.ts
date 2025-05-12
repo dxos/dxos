@@ -6,12 +6,11 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 
-// TODO(dmaretskyi): Extract IDs to protocols.
-// TODO(dmaretskyi): Dedupe package with dxos/edge.
+// TODO(dmaretskyi): Extract IDs to protocols and dedupe package with dxos/edge.
 
 /** @deprecated */
 export const Space = Schema.Struct({
-  id: Type.SpaceIdSchema,
+  id: Type.SpaceId,
 });
 /** @deprecated */
 export interface Space extends Schema.Schema.Type<typeof Space> {}
@@ -19,7 +18,7 @@ export interface Space extends Schema.Schema.Type<typeof Space> {}
 /** @deprecated */
 export const Thread = Schema.Struct({
   id: Type.ObjectId,
-  spaceId: Type.SpaceIdSchema,
+  spaceId: Type.SpaceId,
 });
 /** @deprecated */
 export interface Thread extends Schema.Schema.Type<typeof Thread> {}
