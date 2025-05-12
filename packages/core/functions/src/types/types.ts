@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, OptionsAnnotationId, RawObject, S, TypedObject, DXN } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { AST, OptionsAnnotationId, RawObject, TypedObject, DXN } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -23,78 +25,78 @@ const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
 /**
  * Cron timer.
  */
-const TimerTriggerSchema = S.Struct({
-  type: S.Literal(TriggerKind.Timer).annotations(typeLiteralAnnotations),
-  cron: S.String.annotations({
+const TimerTriggerSchema = Schema.Struct({
+  type: Schema.Literal(TriggerKind.Timer).annotations(typeLiteralAnnotations),
+  cron: Schema.String.annotations({
     [AST.TitleAnnotationId]: 'Cron',
     [AST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
-}).pipe(S.mutable);
+}).pipe(Schema.mutable);
 
-export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
+export type TimerTrigger = Schema.Schema.Type<typeof TimerTriggerSchema>;
 
-const EmailTriggerSchema = S.Struct({
-  type: S.Literal(TriggerKind.Email).annotations(typeLiteralAnnotations),
-}).pipe(S.mutable);
+const EmailTriggerSchema = Schema.Struct({
+  type: Schema.Literal(TriggerKind.Email).annotations(typeLiteralAnnotations),
+}).pipe(Schema.mutable);
 
-export type EmailTrigger = S.Schema.Type<typeof EmailTriggerSchema>;
+export type EmailTrigger = Schema.Schema.Type<typeof EmailTriggerSchema>;
 
-const QueueTriggerSchema = S.Struct({
-  type: S.Literal(TriggerKind.Queue).annotations(typeLiteralAnnotations),
+const QueueTriggerSchema = Schema.Struct({
+  type: Schema.Literal(TriggerKind.Queue).annotations(typeLiteralAnnotations),
   queue: DXN,
-}).pipe(S.mutable);
+}).pipe(Schema.mutable);
 
-export type QueueTrigger = S.Schema.Type<typeof QueueTriggerSchema>;
+export type QueueTrigger = Schema.Schema.Type<typeof QueueTriggerSchema>;
 
 /**
  * Webhook.
  */
-const WebhookTriggerSchema = S.Struct({
-  type: S.Literal(TriggerKind.Webhook).annotations(typeLiteralAnnotations),
-  method: S.optional(
-    S.String.annotations({
+const WebhookTriggerSchema = Schema.Struct({
+  type: Schema.Literal(TriggerKind.Webhook).annotations(typeLiteralAnnotations),
+  method: Schema.optional(
+    Schema.String.annotations({
       [AST.TitleAnnotationId]: 'Method',
       [OptionsAnnotationId]: ['GET', 'POST'],
     }),
   ),
-  port: S.optional(
-    S.Number.annotations({
+  port: Schema.optional(
+    Schema.Number.annotations({
       [AST.TitleAnnotationId]: 'Port',
     }),
   ),
-}).pipe(S.mutable);
+}).pipe(Schema.mutable);
 
-export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
+export type WebhookTrigger = Schema.Schema.Type<typeof WebhookTriggerSchema>;
 
 // TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
-const QuerySchema = S.Struct({
-  type: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Type' })),
-  props: S.optional(S.Record({ key: S.String, value: S.Any })),
+const QuerySchema = Schema.Struct({
+  type: Schema.optional(Schema.String.annotations({ [AST.TitleAnnotationId]: 'Type' })),
+  props: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).annotations({ [AST.TitleAnnotationId]: 'Query' });
 
 /**
  * Subscription.
  */
-const SubscriptionTriggerSchema = S.Struct({
-  type: S.Literal(TriggerKind.Subscription).annotations(typeLiteralAnnotations),
+const SubscriptionTriggerSchema = Schema.Struct({
+  type: Schema.Literal(TriggerKind.Subscription).annotations(typeLiteralAnnotations),
   // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
   filter: QuerySchema,
-  options: S.optional(
-    S.Struct({
+  options: Schema.optional(
+    Schema.Struct({
       // Watch changes to object (not just creation).
-      deep: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Nested' })),
+      deep: Schema.optional(Schema.Boolean.annotations({ [AST.TitleAnnotationId]: 'Nested' })),
       // Debounce changes (delay in ms).
-      delay: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Delay' })),
+      delay: Schema.optional(Schema.Number.annotations({ [AST.TitleAnnotationId]: 'Delay' })),
     }).annotations({ [AST.TitleAnnotationId]: 'Options' }),
   ),
-}).pipe(S.mutable);
+}).pipe(Schema.mutable);
 
-export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
+export type SubscriptionTrigger = Schema.Schema.Type<typeof SubscriptionTriggerSchema>;
 
 /**
  * Trigger schema (discriminated union).
  */
-export const TriggerSchema = S.Union(
+export const TriggerSchema = Schema.Union(
   TimerTriggerSchema,
   WebhookTriggerSchema,
   SubscriptionTriggerSchema,
@@ -104,28 +106,28 @@ export const TriggerSchema = S.Union(
   [AST.TitleAnnotationId]: 'Trigger',
 });
 
-export type TriggerType = S.Schema.Type<typeof TriggerSchema>;
+export type TriggerType = Schema.Schema.Type<typeof TriggerSchema>;
 
 /**
  * Function trigger.
  */
-export const FunctionTriggerSchema = S.Struct({
+export const FunctionTriggerSchema = Schema.Struct({
   // TODO(burdon): What type does this reference.
   // TODO(wittjosiah): This should probably be a Ref?
-  function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
+  function: Schema.optional(Schema.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
 
-  enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
+  enabled: Schema.optional(Schema.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
 
   // TODO(burdon): Flatten entire schema.
-  spec: S.optional(TriggerSchema),
+  spec: Schema.optional(TriggerSchema),
 
   // TODO(burdon): Get schema as partial from function.
   // TODO(wittjosiah): Rename to payload.
   // The `meta` property is merged into the event data passed to the function.
-  meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
+  meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
 });
 
-export type FunctionTriggerType = S.Schema.Type<typeof FunctionTriggerSchema>;
+export type FunctionTriggerType = Schema.Schema.Type<typeof FunctionTriggerSchema>;
 
 /**
  * Function trigger.
@@ -144,20 +146,20 @@ export class FunctionDef extends TypedObject({
   typename: 'dxos.org/type/FunctionDef',
   version: '0.1.0',
 })({
-  uri: S.String,
-  description: S.optional(S.String),
-  route: S.String,
-  handler: S.String,
+  uri: Schema.String,
+  description: Schema.optional(Schema.String),
+  route: Schema.String,
+  handler: Schema.String,
 }) {}
 
 /**
  * Function manifest file.
  */
-export const FunctionManifestSchema = S.Struct({
-  functions: S.optional(S.mutable(S.Array(RawObject(FunctionDef)))),
-  triggers: S.optional(S.mutable(S.Array(RawObject(FunctionTrigger)))),
+export const FunctionManifestSchema = Schema.Struct({
+  functions: Schema.optional(Schema.mutable(Schema.Array(RawObject(FunctionDef)))),
+  triggers: Schema.optional(Schema.mutable(Schema.Array(RawObject(FunctionTrigger)))),
 });
 
-export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;
+export type FunctionManifest = Schema.Schema.Type<typeof FunctionManifestSchema>;
 
 export const FUNCTION_TYPES = [FunctionDef, FunctionTrigger];

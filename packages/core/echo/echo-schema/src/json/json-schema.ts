@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, JSONSchema, Option, Schema as S, type Types } from 'effect';
+import { SchemaAST as AST, JSONSchema, Option, Schema, type Types } from 'effect';
 import type { Mutable } from 'effect/Types';
 
 import { raise } from '@dxos/debug';
@@ -31,7 +31,7 @@ import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '..
 /**
  * Create object jsonSchema.
  */
-export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})): JsonSchemaType => {
+export const createJsonSchema = (schema: Schema.Struct<any> = Schema.Struct({})): JsonSchemaType => {
   const jsonSchema = toJsonSchema(schema);
 
   // TODO(dmaretskyi): Fix those in the serializer.
@@ -76,9 +76,9 @@ export const toPropType = (type?: PropType): string => {
  * Convert effect schema to JSON Schema.
  * @param schema
  */
-export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
+export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   invariant(schema);
-  const schemaWithRefinements = S.make(withEchoRefinements(schema.ast, '#'));
+  const schemaWithRefinements = Schema.make(withEchoRefinements(schema.ast, '#'));
   let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
@@ -199,13 +199,13 @@ const withEchoRefinements = (
  * @param root
  * @param definitions
  */
-export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): S.Schema.AnyNoContext => {
+export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Schema.AnyNoContext => {
   const defs = root.$defs ? { ..._defs, ...root.$defs } : _defs ?? {};
   if ('type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
   }
 
-  let result: S.Schema.AnyNoContext = S.Unknown;
+  let result: Schema.Schema.AnyNoContext = Schema.Unknown;
   if ('$id' in root) {
     switch (root.$id as string) {
       case '/schemas/any': {
@@ -213,12 +213,12 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
         break;
       }
       case '/schemas/unknown': {
-        result = S.Unknown;
+        result = Schema.Unknown;
         break;
       }
       case '/schemas/{}':
       case '/schemas/object': {
-        result = S.Object;
+        result = Schema.Object;
         break;
       }
       // Custom ECHO object reference.
@@ -227,43 +227,43 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       }
     }
   } else if ('enum' in root) {
-    result = S.Union(...root.enum!.map((e) => S.Literal(e)));
+    result = Schema.Union(...root.enum!.map((e) => Schema.Literal(e)));
   } else if ('oneOf' in root) {
-    result = S.Union(...root.oneOf!.map((v) => toEffectSchema(v, defs)));
+    result = Schema.Union(...root.oneOf!.map((v) => toEffectSchema(v, defs)));
   } else if ('anyOf' in root) {
-    result = S.Union(...root.anyOf!.map((v) => toEffectSchema(v, defs)));
+    result = Schema.Union(...root.anyOf!.map((v) => toEffectSchema(v, defs)));
   } else if ('type' in root) {
     switch (root.type) {
       case 'string': {
-        result = S.String;
+        result = Schema.String;
         break;
       }
       case 'number': {
-        result = S.Number;
+        result = Schema.Number;
         break;
       }
       case 'integer': {
-        result = S.Number.pipe(S.int());
+        result = Schema.Number.pipe(S.int());
         break;
       }
       case 'boolean': {
-        result = S.Boolean;
+        result = Schema.Boolean;
         break;
       }
       case 'array': {
         if (Array.isArray(root.items)) {
-          result = S.Tuple(...root.items.map((v) => toEffectSchema(v, defs)));
+          result = Schema.Tuple(...root.items.map((v) => toEffectSchema(v, defs)));
         } else {
           invariant(root.items);
           const items = root.items;
           result = Array.isArray(items)
-            ? S.Tuple(...items.map((v) => toEffectSchema(v, defs)))
-            : S.Array(toEffectSchema(items as JsonSchemaType, defs));
+            ? Schema.Tuple(...items.map((v) => toEffectSchema(v, defs)))
+            : Schema.Array(toEffectSchema(items as JsonSchemaType, defs));
         }
         break;
       }
       case 'null': {
-        result = S.Null;
+        result = Schema.Null;
         break;
       }
     }
@@ -282,16 +282,16 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   return result;
 };
 
-const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): S.Schema.AnyNoContext => {
+const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): Schema.Schema.AnyNoContext => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
 
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   const isEchoObject =
     echoRefinement != null || ('$id' in root && typeof root.$id === 'string' && root.$id.startsWith('dxn:'));
 
-  let fields: S.Struct.Fields = {};
+  let fields: Schema.Struct.Fields = {};
   const propertyList = Object.entries(root.properties ?? {});
-  let immutableIdField: S.Schema.AnyNoContext | undefined;
+  let immutableIdField: Schema.Schema.AnyNoContext | undefined;
   for (const [key, value] of propertyList) {
     if (isEchoObject && key === 'id') {
       immutableIdField = toEffectSchema(value, defs);
@@ -299,7 +299,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
       // TODO(burdon): Mutable cast.
       (fields as any)[key] = root.required?.includes(key)
         ? toEffectSchema(value, defs)
-        : S.optional(toEffectSchema(value, defs));
+        : Schema.optional(toEffectSchema(value, defs));
     }
   }
 
@@ -307,7 +307,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
     fields = orderKeys(fields, root.propertyOrder as any);
   }
 
-  let schema: S.Schema<any, any, unknown>;
+  let schema: Schema.Schema<any, any, unknown>;
   if (root.patternProperties) {
     invariant(propertyList.length === 0, 'pattern properties mixed with regular properties are not supported');
     invariant(
@@ -315,27 +315,27 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
       'only one pattern property is supported',
     );
 
-    schema = S.Record({ key: S.String, value: toEffectSchema(root.patternProperties[''], defs) });
+    schema = Schema.Record({ key: Schema.String, value: toEffectSchema(root.patternProperties[''], defs) });
   } else if (typeof root.additionalProperties !== 'object') {
-    schema = S.Struct(fields);
+    schema = Schema.Struct(fields);
   } else {
     const indexValue = toEffectSchema(root.additionalProperties, defs);
     if (propertyList.length > 0) {
-      schema = S.Struct(fields, { key: S.String, value: indexValue });
+      schema = Schema.Struct(fields, { key: Schema.String, value: indexValue });
     } else {
-      schema = S.Record({ key: S.String, value: indexValue });
+      schema = Schema.Record({ key: Schema.String, value: indexValue });
     }
   }
 
   if (immutableIdField) {
-    schema = S.extend(S.mutable(schema), S.Struct({ id: immutableIdField }));
+    schema = Schema.extend(S.mutable(schema), Schema.Struct({ id: immutableIdField }));
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
   return schema.annotations(annotations) as any;
 };
 
-const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema.AnyNoContext => {
+const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNoContext => {
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   // TODO(dmaretskyi): Is this branch still taken?
   if ((echoRefinement as any)?.reference != null) {
@@ -347,11 +347,11 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema.AnyNoConte
     );
   }
 
-  return S.Any;
+  return Schema.Any;
 };
 
 // TODO(dmaretskyi): Types.
-const refToEffectSchema = (root: any): S.Schema.AnyNoContext => {
+const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
   if (!('reference' in root)) {
     return Ref(Expando);
   }
@@ -422,7 +422,7 @@ const decodeTypeAnnotation = (schema: JsonSchemaType): TypeAnnotation | undefine
   if (schema.typename) {
     const annotation: Mutable<TypeAnnotation> = {
       // TODO(dmaretskyi): Decoding default.
-      kind: schema.entityKind ? S.decodeSync(EntityKindSchema)(schema.entityKind) : EntityKind.Object,
+      kind: schema.entityKind ? Schema.decodeSync(EntityKindSchema)(schema.entityKind) : EntityKind.Object,
       typename: schema.typename,
       version: schema.version ?? '0.1.0',
     };

@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { AST, Format, type BaseSchema, S, type JsonProp } from '@dxos/echo-schema';
+import { AST, Format, type BaseSchema, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -18,16 +19,16 @@ import { Form } from '../Form';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
-const ViewMetaSchema = S.Struct({
-  name: S.String.annotations({
+const ViewMetaSchema = Schema.Struct({
+  name: Schema.String.annotations({
     [AST.TitleAnnotationId]: 'View',
   }),
   typename: Format.URL.annotations({
     [AST.TitleAnnotationId]: 'Typename',
   }),
-}).pipe(S.mutable);
+}).pipe(Schema.mutable);
 
-type ViewMetaType = S.Schema.Type<typeof ViewMetaSchema>;
+type ViewMetaType = Schema.Schema.Type<typeof ViewMetaSchema>;
 
 export type ViewEditorProps = ThemedClassName<{
   schema: BaseSchema;
@@ -156,7 +157,7 @@ export const ViewEditor = ({
 
         <List.Root<FieldType>
           items={view.fields}
-          isItem={S.is(FieldSchema)}
+          isItem={Schema.is(FieldSchema)}
           getId={(field) => field.id}
           onMove={schema.readonly ? undefined : handleMove}
         >

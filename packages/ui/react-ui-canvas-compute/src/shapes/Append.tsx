@@ -2,23 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React from 'react';
 
 import { AppendInput } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
+
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';
 import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 
-export const AppendShape = S.extend(
+export const AppendShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('append'),
+  Schema.Struct({
+    type: Schema.Literal('append'),
   }),
 );
 
-export type AppendShape = S.Schema.Type<typeof AppendShape>;
+export type AppendShape = Schema.Schema.Type<typeof AppendShape>;
 
 export type CreateAppendProps = CreateShapeProps<AppendShape>;
 

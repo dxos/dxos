@@ -5,7 +5,7 @@
 /**
  * Peer dependencies re-exported symbols that are effectively part of the ECHO API.
  */
-export { SchemaAST as AST, JSONSchema, Schema as S } from 'effect';
+export { SchemaAST as AST, JSONSchema, Schema } from 'effect';
 
 export { JsonPath, splitJsonPath, JsonProp } from '@dxos/effect';
 

@@ -4,7 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Icon } from '@dxos/react-ui';
@@ -13,14 +14,14 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 import { createFunctionAnchors } from './common';
 import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 
-export const GptRealtimeShape = S.extend(
+export const GptRealtimeShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('gpt-realtime'),
+  Schema.Struct({
+    type: Schema.Literal('gpt-realtime'),
   }),
 );
 
-export type GptRealtimeShape = S.Schema.Type<typeof GptRealtimeShape>;
+export type GptRealtimeShape = Schema.Schema.Type<typeof GptRealtimeShape>;
 
 export type CreateGptRealtimeProps = CreateShapeProps<GptRealtimeShape>;
 
@@ -164,10 +165,10 @@ export const gptRealtimeShape: ShapeDef<GptRealtimeShape> = {
   getAnchors: (shape) =>
     createFunctionAnchors(
       shape,
-      S.Struct({
-        audio: S.Any,
+      Schema.Struct({
+        audio: Schema.Any,
       }),
-      S.Struct({}),
+      Schema.Struct({}),
     ),
   resizable: true,
 };

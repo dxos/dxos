@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
 import { log } from '@dxos/log';
 
 import { applyObjectTemplate, getObjectTemplateInputSchema } from './json';
@@ -28,13 +29,13 @@ export const computeTemplate = (node: ComputeNode, props: Record<string, any>): 
   }
 };
 
-export const getTemplateInputSchema = (node: ComputeNode): S.Schema.AnyNoContext => {
+export const getTemplateInputSchema = (node: ComputeNode): Schema.Schema.AnyNoContext => {
   switch (node.valueType) {
     case 'string':
       return getTextTemplateInputSchema(node.value ?? '');
     case 'object':
       return getObjectTemplateInputSchema(node.value ?? '');
     default:
-      return S.Struct({});
+      return Schema.Struct({});
   }
 };

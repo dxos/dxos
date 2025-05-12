@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S, SpaceIdSchema } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { SpaceIdSchema } from '@dxos/echo-schema';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
@@ -12,74 +14,74 @@ import { THREAD_PLUGIN } from './meta';
 export namespace ThreadAction {
   const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
 
-  export class CreateChannel extends S.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
-    input: S.Struct({
+  export class CreateChannel extends Schema.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
+    input: Schema.Struct({
       spaceId: SpaceIdSchema,
-      name: S.optional(S.String),
+      name: Schema.optional(Schema.String),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: ChannelType,
     }),
   }) {}
 
-  export class Create extends S.TaggedClass<Create>()(`${THREAD_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
-      cursor: S.String,
+  export class Create extends Schema.TaggedClass<Create>()(`${THREAD_ACTION}/create`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+      cursor: Schema.String,
       subject: EchoObjectSchema,
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: ThreadType,
     }),
   }) {}
 
-  export class Delete extends S.TaggedClass<Delete>()(`${THREAD_ACTION}/delete`, {
-    input: S.Struct({
+  export class Delete extends Schema.TaggedClass<Delete>()(`${THREAD_ACTION}/delete`, {
+    input: Schema.Struct({
       thread: ThreadType,
       subject: EchoObjectSchema,
-      cursor: S.optional(S.String),
+      cursor: Schema.optional(Schema.String),
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class Select extends S.TaggedClass<Select>()(`${THREAD_ACTION}/select`, {
-    input: S.Struct({
-      current: S.String,
+  export class Select extends Schema.TaggedClass<Select>()(`${THREAD_ACTION}/select`, {
+    input: Schema.Struct({
+      current: Schema.String,
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class ToggleResolved extends S.TaggedClass<ToggleResolved>()(`${THREAD_ACTION}/toggle-resolved`, {
-    input: S.Struct({
+  export class ToggleResolved extends Schema.TaggedClass<ToggleResolved>()(`${THREAD_ACTION}/toggle-resolved`, {
+    input: Schema.Struct({
       thread: ThreadType,
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class AddMessage extends S.TaggedClass<AddMessage>()(`${THREAD_ACTION}/add-message`, {
-    input: S.Struct({
+  export class AddMessage extends Schema.TaggedClass<AddMessage>()(`${THREAD_ACTION}/add-message`, {
+    input: Schema.Struct({
       subject: EchoObjectSchema,
       thread: ThreadType,
       sender: DataType.Actor,
-      text: S.String,
+      text: Schema.String,
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class DeleteMessage extends S.TaggedClass<DeleteMessage>()(`${THREAD_ACTION}/delete-message`, {
-    input: S.Struct({
+  export class DeleteMessage extends Schema.TaggedClass<DeleteMessage>()(`${THREAD_ACTION}/delete-message`, {
+    input: Schema.Struct({
       thread: ThreadType,
       subject: EchoObjectSchema,
-      messageId: S.String,
-      message: S.optional(DataType.Message),
-      messageIndex: S.optional(S.Number),
+      messageId: Schema.String,
+      message: Schema.optional(DataType.Message),
+      messageIndex: Schema.optional(Schema.Number),
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 }
 
-export const ThreadSettingsSchema = S.mutable(S.Struct({}));
-export type ThreadSettingsProps = S.Schema.Type<typeof ThreadSettingsSchema>;
+export const ThreadSettingsSchema = Schema.mutable(Schema.Struct({}));
+export type ThreadSettingsProps = Schema.Schema.Type<typeof ThreadSettingsSchema>;
 
 export interface ThreadModel {
   root: ThreadType;

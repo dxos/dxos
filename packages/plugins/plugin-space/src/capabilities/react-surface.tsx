@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface, Surface, useCapability, useLayout } from '@dxos/app-framework';
@@ -164,8 +164,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/create-initial-space-form-[hue]`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any> } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, HueAnnotationId);
+      filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
@@ -183,8 +183,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/create-initial-space-form-[icon]`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any> } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, IconAnnotationId);
+      filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {

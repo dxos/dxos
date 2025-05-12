@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import {
   allOf,
   Capabilities,
@@ -12,7 +14,6 @@ import {
   Events,
   oneOf,
 } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
 import { RefArray } from '@dxos/react-client/echo';
@@ -107,7 +108,7 @@ export const SpacePlugin = ({
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: CollectionType,
-            formSchema: S.Struct({ name: S.optional(S.String) }),
+            formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
             getIntent: (props) => createIntent(CollectionAction.Create, props),
           }),
         ),

@@ -63,10 +63,10 @@ describe('graph', () => {
  * Value or operation.
  */
 // Nodes: Prompt, Message, Resolver, Retriever
-// const Message = S.Struct({ text: S.String });
-// type Message = S.Schema.Type<typeof Message>;
+// const Message = Schema.Struct({ text: Schema.String });
+// type Message = Schema.Schema.Type<typeof Message>;
 // type Cell<Value> = {
-//   schema?: S.Schema<Value>;
+//   schema?: Schema.Schema<Value>;
 //   value?: Value;
 //   operation?: Operation;
 //   deps?: Cell<any>[];

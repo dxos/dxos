@@ -10,6 +10,7 @@ import {
   type Instruction,
   type ItemMode,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { Schema } from 'effect';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState, type FC, type KeyboardEvent } from 'react';
 
 import { S } from '@dxos/echo-schema';
@@ -33,15 +34,15 @@ type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
-export const TreeDataSchema = S.Struct({
-  id: S.String,
-  path: S.Array(S.String),
-  item: S.Any,
+export const TreeDataSchema = Schema.Struct({
+  id: Schema.String,
+  path: Schema.Array(Schema.String),
+  item: Schema.Any,
 });
 
-export type TreeData = S.Schema.Type<typeof TreeDataSchema>;
+export type TreeData = Schema.Schema.Type<typeof TreeDataSchema>;
 
-export const isTreeData = (data: unknown): data is TreeData => S.is(TreeDataSchema)(data);
+export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDataSchema)(data);
 
 export type TreeItemProps<T = any> = {
   item: T;

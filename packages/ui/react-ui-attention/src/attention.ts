@@ -4,22 +4,23 @@
 
 import { untracked } from '@preact/signals-core';
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
 import { live, type Live } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
 // NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 export const ATTENDABLE_PATH_SEPARATOR = '~';
 
-export const AttentionSchema = S.mutable(
-  S.Struct({
-    hasAttention: S.Boolean,
-    isAncestor: S.Boolean,
-    isRelated: S.Boolean,
+export const AttentionSchema = Schema.mutable(
+  Schema.Struct({
+    hasAttention: Schema.Boolean,
+    isAncestor: Schema.Boolean,
+    isRelated: Schema.Boolean,
   }),
 );
 
-export type Attention = S.Schema.Type<typeof AttentionSchema>;
+export type Attention = Schema.Schema.Type<typeof AttentionSchema>;
 
 // TODO(wittjosiah): Use mosaic path utility?
 const stringKey = (key: string[]) => key.join(',');

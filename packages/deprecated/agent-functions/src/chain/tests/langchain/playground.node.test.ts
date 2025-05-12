@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
 import { SerpAPI } from '@langchain/community/tools/serpapi';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
 import { type BaseFunctionCallOptions } from '@langchain/core/language_models/base';
@@ -18,6 +17,7 @@ import {
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { ChatOpenAI, formatToOpenAITool, OpenAIEmbeddings } from '@langchain/openai';
+import { SchemaAST, Schema } from 'effect';
 import { AgentExecutor } from 'langchain/agents';
 import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
 import { OpenAIToolsAgentOutputParser, type ToolsAgentStep } from 'langchain/agents/openai/output_parser';
@@ -230,21 +230,21 @@ describe.skip('LangChain', () => {
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
   test('functions', async () => {
-    const defs = S.Struct({
-      company: S.Array(
-        S.Struct({
-          name: S.String.annotations({ [AST.DescriptionAnnotationId]: 'The name of the company' }),
-          website: S.String.annotations({ [AST.DescriptionAnnotationId]: 'The URL of the company website' }),
-          public: S.Boolean.annotations({ [AST.DescriptionAnnotationId]: 'Public company' }),
+    const defs = Schema.Struct({
+      company: Schema.Array(
+        Schema.Struct({
+          name: Schema.String.annotations({ [SchemaAST.DescriptionAnnotationId]: 'The name of the company' }),
+          website: Schema.String.annotations({ [SchemaAST.DescriptionAnnotationId]: 'The URL of the company website' }),
+          public: Schema.Boolean.annotations({ [SchemaAST.DescriptionAnnotationId]: 'Public company' }),
         }),
-      ).annotations({ [AST.DescriptionAnnotationId]: 'An array of companies mentioned in the text' }),
+      ).annotations({ [SchemaAST.DescriptionAnnotationId]: 'An array of companies mentioned in the text' }),
 
-      person: S.Array(
-        S.Struct({
-          name: S.String.annotations({ [AST.DescriptionAnnotationId]: 'The name of the person' }),
-          wiki: S.String.annotations({ [AST.DescriptionAnnotationId]: 'The persons wikipedia article' }),
+      person: Schema.Array(
+        Schema.Struct({
+          name: Schema.String.annotations({ [SchemaAST.DescriptionAnnotationId]: 'The name of the person' }),
+          wiki: Schema.String.annotations({ [SchemaAST.DescriptionAnnotationId]: 'The persons wikipedia article' }),
         }),
-      ).annotations({ [AST.DescriptionAnnotationId]: 'An array of people mentioned in the text' }),
+      ).annotations({ [SchemaAST.DescriptionAnnotationId]: 'An array of people mentioned in the text' }),
     });
 
     const jsonSchema: Record<string, unknown> = toJsonSchema(defs) as any;

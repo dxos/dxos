@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema } from 'effect';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import textract from 'textract';
@@ -24,13 +24,13 @@ const types = [DocumentType, FileType];
 /**
  * Trigger configuration.
  */
-export const MetaSchema = S.mutable(
-  S.Struct({
-    model: S.optional(S.String),
+export const MetaSchema = Schema.mutable(
+  Schema.Struct({
+    model: Schema.optional(Schema.String),
   }),
 );
 
-export type Meta = S.Schema.Type<typeof MetaSchema>;
+export type Meta = Schema.Schema.Type<typeof MetaSchema>;
 
 export const handler = subscriptionHandler<Meta>(async ({ event, context, response }) => {
   const { client, dataDir } = context;

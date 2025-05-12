@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
-
 import { failedInvariant } from '@dxos/invariant';
 
 import { ObjectId } from './ids';
@@ -27,9 +25,9 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  *
  * @example
  * ```ts
- * const Contact = S.Struct({
- *   name: S.String,
- *   email: S.String,
+ * const Contact = Schema.Struct({
+ *   name: Schema.String,
+ *   email: Schema.String,
  * }).pipe(Type.def({
  *   typename: 'example.com/type/Contact',
  *   version: '0.1.0',
@@ -42,9 +40,9 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  * })
  * ```
  */
-// TODO(burdon): Handle defaults (see S.make).
+// TODO(burdon): Handle defaults (see Schema.make).
 // TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
-export const create = <Schema extends S.Schema.AnyNoContext>(
+export const create = <Schema extends Schema.Schema.AnyNoContext>(
   schema: Schema,
   data: CreateData<S.Schema.Type<Schema>>,
 ): CreateData<S.Schema.Type<Schema>> & { id: string } => {

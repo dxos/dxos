@@ -2,23 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useEffect, useState } from 'react';
 
-import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 
-export const AudioShape = S.extend(
+export const AudioShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('audio'),
+  Schema.Struct({
+    type: Schema.Literal('audio'),
   }),
 );
 
-export type AudioShape = S.Schema.Type<typeof AudioShape>;
+export type AudioShape = Schema.Schema.Type<typeof AudioShape>;
 
 export type CreateAudioProps = CreateShapeProps<AudioShape>;
 

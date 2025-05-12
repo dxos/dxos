@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { SchemaAST as AST, Schema } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
 import { splitJsonPath, type JsonPath } from '@dxos/effect';
@@ -36,10 +36,10 @@ export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 /**
  * The raw object should not include the ECHO id, but may include metadata.
  */
-export const RawObject = <S extends S.Schema.AnyNoContext>(
+export const RawObject = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
-): S.Schema<ExcludeId<S.Schema.Type<S>> & WithMeta, S.Schema.Encoded<S>> => {
-  return S.make(AST.omit(schema.ast, ['id']));
+): Schema.Schema<ExcludeId<Schema.Schema.Type<S>> & WithMeta, Schema.Schema.Encoded<S>> => {
+  return Schema.make(AST.omit(schema.ast, ['id']));
 };
 
 //
@@ -67,7 +67,7 @@ export interface AnyObjectData extends CommonObjectData {
  * `__typename` is the string DXN of the object type.
  * Meta is added under `__meta` key.
  */
-export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
+export type ObjectData<S> = Schema.Schema.Encoded<S> & CommonObjectData;
 
 //
 // Utils
@@ -100,12 +100,12 @@ export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): 
 /**
  * Returns a typename of a schema.
  */
-export const getTypenameOrThrow = (schema: S.Schema.AnyNoContext): string => requireTypeReference(schema).objectId;
+export const getTypenameOrThrow = (schema: Schema.Schema.AnyNoContext): string => requireTypeReference(schema).objectId;
 
 /**
  * Returns a reference that will be used to point to a schema.
  */
-export const getTypeReference = (schema: S.Schema.AnyNoContext | undefined): Reference | undefined => {
+export const getTypeReference = (schema: Schema.Schema.AnyNoContext | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
   }
@@ -127,7 +127,7 @@ export const getTypeReference = (schema: S.Schema.AnyNoContext | undefined): Ref
  * Returns a reference that will be used to point to a schema.
  * @throws If it is not possible to reference this schema.
  */
-export const requireTypeReference = (schema: S.Schema.AnyNoContext): Reference => {
+export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     // TODO(burdon): Catalog user-facing errors (this is too verbose).
@@ -137,11 +137,11 @@ export const requireTypeReference = (schema: S.Schema.AnyNoContext): Reference =
   return typeReference;
 };
 
-// TODO(burdon): Can we use `S.is`?
-export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
+// TODO(burdon): Can we use `Schema.is`?
+export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
   schema: Schema,
   object: any,
-): object is S.Schema.Type<Schema> => {
+): object is Schema.Schema.Type<Schema> => {
   if (object == null) {
     return false;
   }
@@ -179,7 +179,7 @@ export type HasTypename = {};
  * Returns a DXN for an object or schema.
  */
 export const getDXN = (object: any): DXN | undefined => {
-  if (S.isSchema(object)) {
+  if (Schema.isSchema(object)) {
     return getSchemaDXN(object as any);
   }
 

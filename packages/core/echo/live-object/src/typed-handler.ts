@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { SchemaAST as AST, Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
@@ -41,7 +41,7 @@ type ProxyTarget = {
   /**
    * Schema for the root.
    */
-  [symbolSchema]: S.Schema.AnyNoContext;
+  [symbolSchema]: Schema.Schema.AnyNoContext;
 
   /**
    * For get and set operations on value properties.
@@ -175,7 +175,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _validateValue(target: any, prop: string | symbol, value: any) {
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
-    const _ = S.asserts(schema)(value);
+    const _ = Schema.asserts(schema)(value);
     if (Array.isArray(value)) {
       value = new ReactiveArray(...value);
     }
@@ -207,7 +207,7 @@ const toJSON = (target: ProxyTarget): any => {
 /**
  * Recursively set AST on all potential proxy targets.
  */
-const setSchemaProperties = (obj: any, schema: S.Schema.AnyNoContext) => {
+const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext) => {
   defineHiddenProperty(obj, symbolSchema, schema);
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {
@@ -219,14 +219,14 @@ const setSchemaProperties = (obj: any, schema: S.Schema.AnyNoContext) => {
   }
 };
 
-export const prepareTypedTarget = <T>(target: T, schema: S.Schema<T>) => {
+export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>) => {
   // log.info('prepareTypedTarget', { target, schema });
   if (!AST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
 
   SchemaValidator.validateSchema(schema);
-  const _ = S.asserts(schema)(target);
+  const _ = Schema.asserts(schema)(target);
   makeArraysReactive(target);
   setSchemaProperties(target, schema);
 };

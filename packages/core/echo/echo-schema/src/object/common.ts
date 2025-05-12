@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { type Schema } from 'effect';
 
 import { getTypename } from './typename';
 import { schemaVariance } from '../ast';
@@ -22,11 +22,11 @@ export type TypedObjectOptions = {
 // TODO(burdon): Comment required.
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
 type SimplifiedSchemaFields<
-  SchemaFields extends S.Struct.Fields,
+  SchemaFields extends Schema.Struct.Fields,
   Options extends TypedObjectOptions,
 > = Options['partial'] extends boolean
-  ? S.SimplifyMutable<Partial<S.Struct.Type<SchemaFields>>>
-  : S.SimplifyMutable<S.Struct.Type<SchemaFields>>;
+  ? Schema.SimplifyMutable<Partial<Schema.Struct.Type<SchemaFields>>>
+  : Schema.SimplifyMutable<Schema.Struct.Type<SchemaFields>>;
 
 /**
  *
@@ -34,25 +34,25 @@ type SimplifiedSchemaFields<
 // TODO(burdon): Comment required.
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
 export type TypedObjectFields<
-  SchemaFields extends S.Struct.Fields,
+  SchemaFields extends Schema.Struct.Fields,
   Options extends TypedObjectOptions,
 > = SimplifiedSchemaFields<SchemaFields, Options> & { id: string } & (Options['record'] extends boolean
-    ? S.SimplifyMutable<S.IndexSignature.Type<S.IndexSignature.Records>>
+    ? Schema.SimplifyMutable<Schema.IndexSignature.Type<Schema.IndexSignature.Records>>
     : {});
 
 export const makeTypedEntityClass = (
   typename: string,
   version: string,
-  baseSchema: S.Schema.AnyNoContext,
-): S.SchemaClass<any> => {
+  baseSchema: Schema.Schema.AnyNoContext,
+): Schema.SchemaClass<any> => {
   return class {
     // Implement TypedObject properties.
     static readonly typename = typename;
     static readonly version = version;
 
-    // Implement S.Schema properties.
+    // Implement Schema.Schema properties.
     // TODO(burdon): Comment required.
-    static readonly [S.TypeId] = schemaVariance;
+    static readonly [Schema.TypeId] = schemaVariance;
     static readonly ast = baseSchema.ast;
     static readonly annotations = baseSchema.annotations.bind(baseSchema);
     static readonly pipe = baseSchema.pipe.bind(baseSchema);

@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from 'effect';
-import { type Effect } from 'effect';
+import { type Effect, Schema } from 'effect';
 
 import { type AIServiceClient } from '@dxos/assistant';
 import { type Client, PublicKey } from '@dxos/client';
@@ -116,21 +115,21 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
 
 export type FunctionDefinition = {
   description?: string;
-  inputSchema: S.Schema.AnyNoContext;
-  outputSchema?: S.Schema.AnyNoContext;
+  inputSchema: Schema.Schema.AnyNoContext;
+  outputSchema?: Schema.Schema.AnyNoContext;
   handler: FunctionHandler<any>;
 };
 
 export type DefineFunctionParams<T, O = any> = {
   description?: string;
-  inputSchema: S.Schema<T, any>;
-  outputSchema?: S.Schema<O, any>;
+  inputSchema: Schema.Schema<T, any>;
+  outputSchema?: Schema.Schema<O, any>;
   handler: FunctionHandler<T, any, O>;
 };
 
 // TODO(dmaretskyi): Bind input type to function handler.
 export const defineFunction = <T, O>(params: DefineFunctionParams<T, O>): FunctionDefinition => {
-  if (!S.isSchema(params.inputSchema)) {
+  if (!Schema.isSchema(params.inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
   if (typeof params.handler !== 'function') {
@@ -140,7 +139,7 @@ export const defineFunction = <T, O>(params: DefineFunctionParams<T, O>): Functi
   return {
     description: params.description,
     inputSchema: params.inputSchema,
-    outputSchema: params.outputSchema ?? S.Any,
+    outputSchema: params.outputSchema ?? Schema.Any,
     handler: params.handler,
   };
 };
@@ -172,7 +171,7 @@ export type SubscriptionData = {
 // TODO(burdon): Evolve into plugin definition like Composer.
 export const subscriptionHandler = <TMeta>(
   handler: FunctionHandler<SubscriptionData, TMeta>,
-  types?: S.Schema.AnyNoContext[],
+  types?: Schema.Schema.AnyNoContext[],
 ): FunctionHandler<RawSubscriptionData, TMeta> => {
   return async ({ event: { data }, context, response, ...rest }) => {
     const { client } = context;
@@ -198,7 +197,7 @@ export const subscriptionHandler = <TMeta>(
 };
 
 // TODO(burdon): Evolve types as part of function metadata.
-const registerTypes = (space: Space, types: S.Schema.AnyNoContext[] = []) => {
+const registerTypes = (space: Space, types: Schema.Schema.AnyNoContext[] = []) => {
   const registry = space.db.graph.schemaRegistry;
   for (const type of types) {
     if (!registry.hasSchema(type)) {

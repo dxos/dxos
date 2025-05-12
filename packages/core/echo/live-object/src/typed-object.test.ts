@@ -2,36 +2,36 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { EchoObject, getSchema, TypedObject } from '@dxos/echo-schema';
 
 import { live } from './object';
 
-const Organization = S.Struct({
-  name: S.String,
+const Organization = Schema.Struct({
+  name: Schema.String,
 }).pipe(
   EchoObject({
     typename: 'example.com/type/Organization',
     version: '0.1.0',
   }),
 );
-interface Organization extends S.Schema.Type<typeof Organization> {}
+interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
-const Contact = S.Struct(
+const Contact = Schema.Struct(
   {
-    name: S.String,
+    name: Schema.String,
   },
-  { key: S.String, value: S.Any },
+  { key: Schema.String, value: Schema.Any },
 ).pipe(
-  S.partial,
+  Schema.partial,
   EchoObject({
     typename: 'example.com/type/Contact',
     version: '0.1.0',
   }),
 );
-interface Contact extends S.Schema.Type<typeof Contact> {}
+interface Contact extends Schema.Schema.Type<typeof Contact> {}
 
 const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 
@@ -52,13 +52,13 @@ describe('EchoObject class DSL', () => {
   });
 
   test('record', () => {
-    const schema = S.mutable(
-      S.Struct({
-        meta: S.optional(S.mutable(S.Any)),
-        // NOTE: S.Record only supports shallow values.
+    const schema = Schema.mutable(
+      Schema.Struct({
+        meta: Schema.optional(Schema.mutable(Schema.Any)),
+        // NOTE: Schema.Record only supports shallow values.
         // https://www.npmjs.com/package/@effect/schema#mutable-records
-        // meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
-        // meta: S.optional(S.mutable(S.object)),
+        // meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
+        // meta: Schema.optional(Schema.mutable(Schema.object)),
       }),
     );
 
@@ -75,7 +75,7 @@ describe('EchoObject class DSL', () => {
     }
 
     {
-      type Test1 = S.Schema.Type<typeof schema>;
+      type Test1 = Schema.Schema.Type<typeof schema>;
 
       const object: Test1 = {};
       (object.meta ??= {}).test = 100;
@@ -87,7 +87,7 @@ describe('EchoObject class DSL', () => {
         typename: 'dxos.org/type/FunctionTrigger',
         version: '0.1.0',
       })({
-        meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
+        meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
       }) {}
 
       const object = live(Test2, {});

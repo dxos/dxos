@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { test } from 'vitest';
 
 import { getTypename, toJsonSchema, TypedObject, Ref } from '@dxos/echo-schema';
@@ -13,12 +13,12 @@ import { live } from './object';
 test('static schema definitions with references', async ({ expect }) => {
   // TODO(dmaretskyi): Extract test schema.
   class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
-    name: S.String,
+    name: Schema.String,
   }) {}
 
   class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
-    name: S.String,
-    email: S.String,
+    name: Schema.String,
+    email: Schema.String,
     organization: Ref(Organization),
   }) {}
 

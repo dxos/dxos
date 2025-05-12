@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Option, Schema as S, SchemaAST } from 'effect';
+import { Option, Schema, SchemaAST } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { findAnnotation, type JsonProp } from '@dxos/effect';
@@ -33,7 +33,7 @@ describe('effect-to-json', () => {
     class Schema extends TypedObject({
       typename: 'example.com/type/Test',
       version: '0.1.0',
-    })({ name: S.String }) {}
+    })({ name: Schema.String }) {}
     const jsonSchema = toJsonSchema(Schema);
     expect((jsonSchema as any).$id).toEqual('dxn:type:example.com/type/Test');
     expect((jsonSchema as any).version).toEqual('0.1.0');
@@ -45,7 +45,7 @@ describe('effect-to-json', () => {
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({
-      name: S.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
+      name: Schema.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
     expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)!.meta![EXAMPLE_NAMESPACE]).to.deep.eq(meta);
@@ -53,7 +53,7 @@ describe('effect-to-json', () => {
 
   test('reference annotation', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
-      name: S.String,
+      name: Schema.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       name: Ref(Nested),
@@ -69,7 +69,7 @@ describe('effect-to-json', () => {
   // TODO(dmaretskyi): Remove FieldLookupAnnotationId.
   test.skip('reference annotation with lookup property', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
-      name: S.String,
+      name: Schema.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
@@ -83,10 +83,10 @@ describe('effect-to-json', () => {
 
   test('array of references', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
-      name: S.String,
+      name: Schema.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      name: S.Array(Ref(Nested)),
+      name: Schema.Array(Ref(Nested)),
     }) {}
 
     const jsonSchema = toJsonSchema(Schema);
@@ -95,17 +95,17 @@ describe('effect-to-json', () => {
 
   test('optional references', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
-      name: S.String,
+      name: Schema.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      name: S.optional(Ref(Nested)),
+      name: Schema.optional(Ref(Nested)),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
     expectReferenceAnnotation(jsonSchema.properties!.name);
   });
 
   test('regular objects are not annotated', () => {
-    const object = S.Struct({ name: S.Struct({ name: S.String }) });
+    const object = Schema.Struct({ name: Schema.Struct({ name: Schema.String }) });
     const jsonSchema = toJsonSchema(object);
     expect(getNormalizedEchoAnnotations(jsonSchema)).to.be.undefined;
     expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)).to.be.undefined;
@@ -113,8 +113,8 @@ describe('effect-to-json', () => {
 
   test('annotations', () => {
     class Schema extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
-      name: S.String.annotations({ description: 'Person name', title: 'Name' }),
-      email: S.String.annotations({ description: 'Email address', [FormatAnnotationId]: 'email' }),
+      name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
+      email: Schema.String.annotations({ description: 'Email address', [FormatAnnotationId]: 'email' }),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
     expect(jsonSchema).to.deep.eq({
@@ -149,11 +149,11 @@ describe('effect-to-json', () => {
 
   test('reference property by ref', () => {
     class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
-      field: S.String,
+      field: Schema.String,
     }) {}
 
     class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
-      name: S.String,
+      name: Schema.String,
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }) {}
 
@@ -196,11 +196,11 @@ describe('effect-to-json', () => {
 
   test('add reference property', () => {
     class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
-      field: S.String,
+      field: Schema.String,
     }) {}
 
     class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
-      name: S.String,
+      name: Schema.String,
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }) {}
 
@@ -220,20 +220,20 @@ describe('effect-to-json', () => {
   });
 
   test('tuple schema with description', () => {
-    const schema = S.Struct({
-      args: S.Tuple(
-        S.String.annotations({ description: 'The source currency' }),
-        S.String.annotations({ description: 'The target currency' }),
+    const schema = Schema.Struct({
+      args: Schema.Tuple(
+        Schema.String.annotations({ description: 'The source currency' }),
+        Schema.String.annotations({ description: 'The target currency' }),
       ),
     });
     const jsonSchema = toJsonSchema(schema);
     log('schema', { jsonSchema });
 
-    (S.asserts(JsonSchemaType) as any)(jsonSchema);
+    (Schema.asserts(JsonSchemaType) as any)(jsonSchema);
   });
 
   test('reference with title annotation', () => {
-    const schema = S.Struct({
+    const schema = Schema.Struct({
       contact: Ref(Testing.Contact).annotations({ title: 'Custom Title' }),
     });
 
@@ -247,8 +247,8 @@ describe('effect-to-json', () => {
 
     expect(
       effectSchema.pipe(
-        S.pluck('contact'),
-        S.typeSchema,
+        Schema.pluck('contact'),
+        Schema.typeSchema,
         (s) => s.ast,
         SchemaAST.getAnnotation(SchemaAST.TitleAnnotationId),
         Option.getOrUndefined,
@@ -317,22 +317,22 @@ describe('json-to-effect', () => {
   for (const partial of [false, true]) {
     test(`deserialized equals original ${partial ? 'with partial' : ''}`, () => {
       class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
-        field: S.String,
+        field: Schema.String,
       }) {}
 
       class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })(
         {
-          string: S.String,
-          number: S.Number.pipe(PropertyMeta(EXAMPLE_NAMESPACE, { is_date: true })),
-          boolean: S.Boolean,
-          array: S.Array(S.String),
-          twoDArray: S.Array(S.Array(S.String)),
-          record: S.Record({ key: S.String, value: S.Number }),
-          object: S.Struct({ id: S.String, field: Ref(Organization) }),
+          string: Schema.String,
+          number: Schema.Number.pipe(PropertyMeta(EXAMPLE_NAMESPACE, { is_date: true })),
+          boolean: Schema.Boolean,
+          array: Schema.Array(Schema.String),
+          twoDArray: Schema.Array(Schema.Array(Schema.String)),
+          record: Schema.Record({ key: Schema.String, value: Schema.Number }),
+          object: Schema.Struct({ id: Schema.String, field: Ref(Organization) }),
           echoObject: Ref(Organization),
-          echoObjectArray: S.Array(Ref(Organization)),
-          email: S.String.annotations({ [FormatAnnotationId]: 'email' }),
-          null: S.Null,
+          echoObjectArray: Schema.Array(Ref(Organization)),
+          email: Schema.String.annotations({ [FormatAnnotationId]: 'email' }),
+          null: Schema.Null,
         },
         partial ? { partial } : {},
       ) {}
@@ -398,15 +398,15 @@ describe('json-to-effect', () => {
   });
 
   test('symbol annotations get compared', () => {
-    const schema1 = S.String.annotations({ [FormatAnnotationId]: 'email' });
-    const schema2 = S.String.annotations({ [FormatAnnotationId]: 'currency' });
+    const schema1 = Schema.String.annotations({ [FormatAnnotationId]: 'email' });
+    const schema2 = Schema.String.annotations({ [FormatAnnotationId]: 'currency' });
 
     expect(prepareAstForCompare(schema1.ast)).not.to.deep.eq(prepareAstForCompare(schema2.ast));
   });
 
   test('description gets preserved', () => {
-    const schema = S.Struct({
-      name: S.String.annotations({ description: 'Name' }),
+    const schema = Schema.Struct({
+      name: Schema.String.annotations({ description: 'Name' }),
     });
     const jsonSchema = toJsonSchema(schema);
     const effectSchema = toEffectSchema(jsonSchema);

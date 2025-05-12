@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST as AST, type Schema as S } from 'effect';
+import { SchemaAST as AST, type Schema } from 'effect';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
@@ -45,7 +45,7 @@ export interface FormOptions<T extends BaseObject> {
   /**
    * Effect schema (Type literal).
    */
-  schema: S.Schema<T>;
+  schema: Schema.Schema<T>;
 
   /**
    * Initial values (which may not pass validation).

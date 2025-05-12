@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
@@ -10,14 +10,14 @@ import { type DXN } from '@dxos/keys';
 import type { EchoDatabase } from './database';
 import type { AnyLiveObject } from '../echo-handler';
 
-type DefineObjectMigrationOptions<From extends S.Schema.AnyNoContext, To extends S.Schema.AnyNoContext> = {
+type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext> = {
   from: From;
   to: To;
   /**
    * Pure function that converts the old object data to the new object data.
    */
   // TODO(dmaretskyi): `id` should not be a part of the schema.
-  transform: (from: S.Schema.Type<From>, context: ObjectMigrationContext) => Promise<Omit<S.Schema.Type<To>, 'id'>>;
+  transform: (from: Schema.Schema.Type<From>, context: ObjectMigrationContext) => Promise<Omit<Schema.Schema.Type<To>, 'id'>>;
 
   /**
    * Callback that is called after the object is migrated. Called for every object that is migrated.
@@ -31,22 +31,22 @@ type DefineObjectMigrationOptions<From extends S.Schema.AnyNoContext, To extends
 // TODO(dmaretskyi): For future extensibility.
 type ObjectMigrationContext = {};
 
-type OnMigrateParams<From extends S.Schema.AnyNoContext, To extends S.Schema.AnyNoContext> = {
-  before: S.Schema.Type<From>;
-  object: AnyLiveObject<S.Schema.Type<To>>;
+type OnMigrateParams<From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext> = {
+  before: Schema.Schema.Type<From>;
+  object: AnyLiveObject<Schema.Schema.Type<To>>;
   db: EchoDatabase;
 };
 
 export type ObjectMigration = {
   fromType: DXN;
   toType: DXN;
-  fromSchema: S.Schema.AnyNoContext;
-  toSchema: S.Schema.AnyNoContext;
+  fromSchema: Schema.Schema.AnyNoContext;
+  toSchema: Schema.Schema.AnyNoContext;
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
   onMigration: (params: OnMigrateParams<any, any>) => Promise<void>;
 };
 
-export const defineObjectMigration = <From extends S.Schema.AnyNoContext, To extends S.Schema.AnyNoContext>(
+export const defineObjectMigration = <From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext>(
   options: DefineObjectMigrationOptions<From, To>,
 ): ObjectMigration => {
   const fromType = getSchemaDXN(options.from);

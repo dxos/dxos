@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { type ComputeGraphModel, EmailTriggerOutput, NODE_INPUT } from '@dxos/conductor';
-import { AST, ObjectId, S, toJsonSchema } from '@dxos/echo-schema';
+import { AST, ObjectId, toJsonSchema } from '@dxos/echo-schema';
 import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -304,7 +306,7 @@ export const presets = {
           const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
           invariant(templateComputeNode, 'Template compute node was not created.');
           templateComputeNode.value = templateContent.join('\n');
-          const extendedSchema = S.extend(EmailTriggerOutput, S.Struct({ text: S.String }));
+          const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
           templateComputeNode.inputSchema = toJsonSchema(extendedSchema);
 
           attachTrigger(functionTrigger, computeModel);
@@ -500,7 +502,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
   const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
-  templateComputeNode.inputSchema = toJsonSchema(S.Struct({ type: S.String, changeId: S.String }));
+  templateComputeNode.inputSchema = toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
 
   attachTrigger(functionTrigger, computeModel);
 

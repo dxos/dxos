@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { S, foreignKey, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
@@ -33,14 +35,14 @@ const types = [
 /**
  * Trigger configuration.
  */
-export const MetaSchema = S.mutable(
-  S.Struct({
-    model: S.optional(S.String),
+export const MetaSchema = Schema.mutable(
+  Schema.Struct({
+    model: Schema.optional(Schema.String),
     prompt: TemplateType,
   }),
 );
 
-export type Meta = S.Schema.Type<typeof MetaSchema>;
+export type Meta = Schema.Schema.Type<typeof MetaSchema>;
 
 export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   const { client, dataDir } = context;

@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { AST } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { ChessType } from '@dxos/plugin-chess/types';
 
@@ -11,13 +13,13 @@ import { Engine } from './engine';
 /**
  * Trigger configuration.
  */
-export const MetaSchema = S.mutable(
-  S.Struct({
-    level: S.optional(S.Number.annotations({ [AST.DescriptionAnnotationId]: 'Engine strength.' })),
+export const MetaSchema = Schema.mutable(
+  Schema.Struct({
+    level: Schema.optional(Schema.Number.annotations({ [AST.DescriptionAnnotationId]: 'Engine strength.' })),
   }),
 );
 
-export type Meta = S.Schema.Type<typeof MetaSchema>;
+export type Meta = Schema.Schema.Type<typeof MetaSchema>;
 
 /**
  * Runtime types.

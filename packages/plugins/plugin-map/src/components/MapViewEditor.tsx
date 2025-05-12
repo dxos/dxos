@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnum, S, AST, type EchoSchema } from '@dxos/echo-schema';
+import { FormatEnum, AST, type EchoSchema } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
@@ -12,9 +13,9 @@ import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type MapType } from '../types';
 import { getLocationProperty, setLocationProperty } from '../util';
 
-export const MapSettingsSchema = S.Struct({
-  coordinateSource: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Coordinate source type' })),
-  coordinateColumn: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Coordinate column' })),
+export const MapSettingsSchema = Schema.Struct({
+  coordinateSource: Schema.optional(Schema.String.annotations({ [AST.TitleAnnotationId]: 'Coordinate source type' })),
+  coordinateColumn: Schema.optional(Schema.String.annotations({ [AST.TitleAnnotationId]: 'Coordinate column' })),
 });
 
 type MapViewEditorProps = { map: MapType };

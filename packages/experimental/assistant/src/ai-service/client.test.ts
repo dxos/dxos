@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { test, describe } from 'vitest';
 
 import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
@@ -58,8 +58,8 @@ describe.skip('AI Service Client', () => {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       parameters: toJsonSchema(
-        S.Struct({
-          magicWord: S.String.annotations({ description: 'The magic word. Should be exactly "pretty please"' }),
+        Schema.Struct({
+          magicWord: Schema.String.annotations({ description: 'The magic word. Should be exactly "pretty please"' }),
         }),
       ),
     };
@@ -194,8 +194,8 @@ describe.skip('Ollama Client', () => {
         defineTool('test', {
           name: 'encrypt',
           description: 'Encrypt a message',
-          schema: S.Struct({
-            message: S.String.annotations({ description: 'The message to encrypt' }),
+          schema: Schema.Struct({
+            message: Schema.String.annotations({ description: 'The message to encrypt' }),
           }),
           execute: async ({ message }) => ToolResult.Success(message.split('').reverse().join('')),
         }),

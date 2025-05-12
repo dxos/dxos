@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, type Schema as S, Option, pipe } from 'effect';
+import { SchemaAST as AST, type Schema, Option, pipe } from 'effect';
 import React, { useState } from 'react';
 
 import { findProperty } from '@dxos/effect';
@@ -13,7 +13,7 @@ import { type ViewType, getFieldValue, setFieldValue } from '@dxos/schema';
 export type DeprecatedFormProps<T extends {} = {}> = ThemedClassName<{
   view: ViewType;
   object: T;
-  schema?: S.Schema<T>;
+  schema?: Schema.Schema<T>;
   readonly?: boolean;
 }>;
 

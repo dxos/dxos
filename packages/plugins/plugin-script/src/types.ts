@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SchemaAST } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { SpaceSchema } from '@dxos/client/echo';
-import { S } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 
@@ -17,27 +16,27 @@ export { SCRIPT_PLUGIN };
 export namespace ScriptAction {
   const SCRIPT_ACTION = `${SCRIPT_PLUGIN}/action`;
 
-  export const CreateScriptSchema = S.Struct({
-    name: S.optional(S.String),
+  export const CreateScriptSchema = Schema.Struct({
+    name: Schema.optional(Schema.String),
     // TODO(wittjosiah): Placeholder annotation?
-    gistUrl: S.optional(S.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Import from Gist (url)' })),
-    initialTemplateId: S.optional(S.String),
+    gistUrl: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Import from Gist (url)' })),
+    initialTemplateId: Schema.optional(Schema.String),
   });
 
-  export type CreateScriptProps = S.Schema.Type<typeof CreateScriptSchema>;
+  export type CreateScriptProps = Schema.Schema.Type<typeof CreateScriptSchema>;
 
-  export class Create extends S.TaggedClass<Create>()(`${SCRIPT_ACTION}/create`, {
-    input: S.extend(CreateScriptSchema, S.Struct({ space: SpaceSchema })),
-    output: S.Struct({
+  export class Create extends Schema.TaggedClass<Create>()(`${SCRIPT_ACTION}/create`, {
+    input: Schema.extend(CreateScriptSchema, Schema.Struct({ space: SpaceSchema })),
+    output: Schema.Struct({
       object: ScriptType,
     }),
   }) {}
 }
 
-export const ScriptSettingsSchema = S.mutable(
-  S.Struct({
+export const ScriptSettingsSchema = Schema.mutable(
+  Schema.Struct({
     editorInputMode: EditorInputMode,
   }),
 );
 
-export type ScriptSettingsProps = S.Schema.Type<typeof ScriptSettingsSchema>;
+export type ScriptSettingsProps = Schema.Schema.Type<typeof ScriptSettingsSchema>;

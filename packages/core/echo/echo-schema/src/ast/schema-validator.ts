@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { SchemaAST as AST, Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
@@ -15,8 +15,8 @@ export class SchemaValidator {
    * Recursively check that schema specifies constructions we can handle.
    * Validates there are no ambiguous discriminated union types.
    */
-  public static validateSchema(schema: S.Schema.AnyNoContext) {
-    const visitAll = (nodes: AST.AST[]) => nodes.forEach((node) => this.validateSchema(S.make(node)));
+  public static validateSchema(schema: Schema.Schema.AnyNoContext) {
+    const visitAll = (nodes: AST.AST[]) => nodes.forEach((node) => this.validateSchema(Schema.make(node)));
     if (AST.isUnion(schema.ast)) {
       const typeAstList = schema.ast.types.filter((type) => AST.isTypeLiteral(type)) as AST.TypeLiteral[];
       // Check we can handle a discriminated union.
@@ -34,7 +34,7 @@ export class SchemaValidator {
   }
 
   public static hasTypeAnnotation(
-    rootObjectSchema: S.Schema.AnyNoContext,
+    rootObjectSchema: Schema.Schema.AnyNoContext,
     property: string,
     annotation: symbol,
   ): boolean {
@@ -51,11 +51,11 @@ export class SchemaValidator {
   }
 
   public static getPropertySchema(
-    rootObjectSchema: S.Schema.AnyNoContext,
+    rootObjectSchema: Schema.Schema.AnyNoContext,
     propertyPath: KeyPath,
     getProperty: (path: KeyPath) => any = () => null,
-  ): S.Schema.AnyNoContext {
-    let schema: S.Schema.AnyNoContext = rootObjectSchema;
+  ): Schema.Schema.AnyNoContext {
+    let schema: Schema.Schema.AnyNoContext = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
       const propertyName = propertyPath[i];
       const tupleAst = unwrapArray(schema.ast);
@@ -69,15 +69,15 @@ export class SchemaValidator {
           throw new TypeError(`unknown property: ${String(propertyName)} on object. Path: ${propertyPath}`);
         }
 
-        schema = S.make(propertyType).annotations(propertyType.annotations);
+        schema = Schema.make(propertyType).annotations(propertyType.annotations);
       }
     }
 
     return schema;
   }
 
-  public static getTargetPropertySchema(target: any, prop: string | symbol): S.Schema.AnyNoContext {
-    const schema: S.Schema.AnyNoContext | undefined = (target as any)[symbolSchema];
+  public static getTargetPropertySchema(target: any, prop: string | symbol): Schema.Schema.AnyNoContext {
+    const schema: Schema.Schema.AnyNoContext | undefined = (target as any)[symbolSchema];
     invariant(schema, 'target has no schema');
     const arrayAst = unwrapArray(schema.ast);
     if (arrayAst != null) {
@@ -86,32 +86,32 @@ export class SchemaValidator {
 
     const propertyType = getPropertyType(schema.ast, prop.toString(), (prop) => target[prop]);
     if (propertyType == null) {
-      return S.Any; // TODO(burdon): HACK.
+      return Schema.Any; // TODO(burdon): HACK.
     }
 
     invariant(propertyType, `invalid property: ${prop.toString()}`);
-    return S.make(propertyType);
+    return Schema.make(propertyType);
   }
 }
 
 /**
  * Tuple AST is used both for:
- * fixed-length tuples ([string, number]) in which case AST will be { elements: [S.String, S.Number] }
- * variable-length arrays (Array<string | number>) in which case AST will be { rest: [S.Union(S.String, S.Number)] }
+ * fixed-length tuples ([string, number]) in which case AST will be { elements: [Schema.String, Schema.Number] }
+ * variable-length arrays (Array<string | number>) in which case AST will be { rest: [Schema.Union(Schema.String, Schema.Number)] }
  */
-const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbol | number): S.Schema.AnyNoContext => {
+const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbol | number): Schema.Schema.AnyNoContext => {
   const elementIndex = typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
   if (Number.isNaN(elementIndex)) {
     invariant(property === 'length', `invalid array property: ${String(property)}`);
-    return S.Number;
+    return Schema.Number;
   }
   if (elementIndex < tupleAst.elements.length) {
     const elementType = tupleAst.elements[elementIndex].type;
-    return S.make(elementType).annotations(elementType.annotations);
+    return Schema.make(elementType).annotations(elementType.annotations);
   }
 
   const restType = tupleAst.rest;
-  return S.make(restType[0].type).annotations(restType[0].annotations);
+  return Schema.make(restType[0].type).annotations(restType[0].annotations);
 };
 
 const flattenUnion = (typeAst: AST.AST): AST.AST[] =>
@@ -184,9 +184,9 @@ const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySign
 /**
  * Used to check that rootAst is for a type matching the provided predicate.
  * That's not always straightforward because types of optionality and recursive types.
- * const Task = S.Struct({
+ * const Task = Schema.Struct({
  *   ...,
- *   previous?: S.optional(S.suspend(() => Task)),
+ *   previous?: Schema.optional(Schema.suspend(() => Task)),
  * });
  * Here the AST for `previous` field is going to be Union(Suspend(Type), Undefined).
  * AST.isTypeLiteral(field) will return false, but unwrapAst(field, (ast) => AST.isTypeLiteral(ast))
@@ -219,7 +219,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
 
 const unwrapArray = (ast: AST.AST) => unwrapAst(ast, AST.isTupleType) as AST.TupleType | null;
 
-export const checkIdNotPresentOnSchema = (schema: S.Schema<any, any, any>) => {
+export const checkIdNotPresentOnSchema = (schema: Schema.Schema<any, any, any>) => {
   invariant(AST.isTypeLiteral(schema.ast));
   const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
   if (idProperty != null) {

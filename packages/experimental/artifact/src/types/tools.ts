@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JsonSchemaType, S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { JsonSchemaType } from '@dxos/echo-schema';
 
 import { type MessageContentBlock } from './message';
 
@@ -63,14 +65,14 @@ export const ToolResult = Object.freeze({
  * https://platform.openai.com/docs/guides/function-calling
  * https://docs.anthropic.com/en/docs/build-with-claude/tool-use
  */
-export const Tool = S.Struct({
+export const Tool = Schema.Struct({
   /**
    * Unique name.
    * ^[a-zA-Z0-9_-]{1,64}$
    */
-  name: S.String,
-  namespace: S.optional(S.String),
-  function: S.optional(S.String),
+  name: Schema.String,
+  namespace: Schema.optional(Schema.String),
+  function: Schema.optional(Schema.String),
 
   /**
    * If the tool is implemented by the service a type should be provided.
@@ -78,32 +80,32 @@ export const Tool = S.Struct({
    * Can be used to determine the environment in which the tool is implemented (e.g., client/server).
    * See {@link ToolTypes} for the list of supported types.
    */
-  type: S.optional(S.String),
+  type: Schema.optional(Schema.String),
 
   /**
    * Displayed to user when tool is called.
    */
-  caption: S.optional(S.String),
+  caption: Schema.optional(Schema.String),
 
   /**
    * Required for user-implemented tools.
    */
-  description: S.optional(S.String),
+  description: Schema.optional(Schema.String),
 
   /**
    * Input schema for the tool in the JSON Schema format.
    * Required for user-implemented tools.
    */
   // TODO(burdon): Rename inputSchema.
-  parameters: S.optional(JsonSchemaType),
+  parameters: Schema.optional(JsonSchemaType),
 
   /**
    * Tool-specific options passed to the tool during invocation.
    */
-  options: S.optional(S.Any),
+  options: Schema.optional(Schema.Any),
 });
 
-export type ToolType = S.Schema.Type<typeof Tool>;
+export type ToolType = Schema.Schema.Type<typeof Tool>;
 
 export interface Tool extends ToolType {
   /**

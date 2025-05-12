@@ -4,8 +4,9 @@
 
 import React from 'react';
 
+import { Schema } from 'effect';
+
 import { DEFAULT_INPUT, isTruthy } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -13,14 +14,14 @@ import { mx } from '@dxos/react-ui-theme';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 
-export const BeaconShape = S.extend(
+export const BeaconShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('beacon'),
+  Schema.Struct({
+    type: Schema.Literal('beacon'),
   }),
 );
 
-export type BeaconShape = S.Schema.Type<typeof BeaconShape>;
+export type BeaconShape = Schema.Schema.Type<typeof BeaconShape>;
 
 export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
 

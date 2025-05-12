@@ -4,10 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { S } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { live } from '@dxos/live-object';
-
+import { Schema } from 'effect';
 import { RootSettingsStore, SettingsStore } from './store';
 import { createLocalStorageMock } from './testing';
 
@@ -16,25 +15,25 @@ enum TestEnum {
   ACTIVE = 1,
 }
 
-const TestSchema = S.mutable(
-  S.Struct({
-    activePreset: S.optional(S.Boolean),
-    num: S.optional(S.Number),
-    nums: S.mutable(S.Array(S.Number)),
-    name: S.optional(S.String),
-    services: S.mutable(
-      S.Array(
-        S.Struct({
-          url: S.String,
+const TestSchema = Schema.mutable(
+  Schema.Struct({
+    activePreset: Schema.optional(Schema.Boolean),
+    num: Schema.optional(Schema.Number),
+    nums: Schema.mutable(Schema.Array(Schema.Number)),
+    name: Schema.optional(Schema.String),
+    services: Schema.mutable(
+      Schema.Array(
+        Schema.Struct({
+          url: Schema.String,
         }),
       ),
     ),
-    status: S.optional(S.Enums(TestEnum)),
-    literals: S.optional(S.Literal('inactive', 'active')),
+    status: Schema.optional(Schema.Enums(TestEnum)),
+    literals: Schema.optional(Schema.Literal('inactive', 'active')),
   }),
 );
 
-export interface TestType extends S.Schema.Type<typeof TestSchema> {}
+export interface TestType extends Schema.Schema.Type<typeof TestSchema> {}
 
 describe('ObjectStore', () => {
   registerSignalsRuntime();

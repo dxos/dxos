@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import React from 'react';
 
 import { DEFAULT_INPUT, DefaultOutput, JsonTransformInput } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
@@ -18,23 +19,23 @@ import { useComputeNodeState } from '../hooks';
 // Data
 //
 
-export const JsonShape = S.extend(
+export const JsonShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('json'),
+  Schema.Struct({
+    type: Schema.Literal('json'),
   }),
 );
 
-export type JsonShape = S.Schema.Type<typeof JsonShape>;
+export type JsonShape = Schema.Schema.Type<typeof JsonShape>;
 
-export const JsonTransformShape = S.extend(
+export const JsonTransformShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('json-transform'),
+  Schema.Struct({
+    type: Schema.Literal('json-transform'),
   }),
 );
 
-export type JsonTransformShape = S.Schema.Type<typeof JsonTransformShape>;
+export type JsonTransformShape = Schema.Schema.Type<typeof JsonTransformShape>;
 
 //
 // Component

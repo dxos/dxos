@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, pipe, SchemaAST as AST, Schema as S } from 'effect';
+import { Option, pipe, SchemaAST as AST, Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
@@ -231,7 +231,7 @@ export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.A
 /**
  * Get the AST node for the given property (dot-path).
  */
-export const findProperty = (schema: S.Schema.AnyNoContext, path: JsonPath | JsonProp): AST.AST | undefined => {
+export const findProperty = (schema: Schema.Schema.AnyNoContext, path: JsonPath | JsonProp): AST.AST | undefined => {
   const getProp = (node: AST.AST, path: JsonProp[]): AST.AST | undefined => {
     const [name, ...rest] = path;
     const typeNode = findNode(node, AST.isTypeLiteral);
@@ -308,7 +308,7 @@ export const findAnnotation = <T>(node: AST.AST, annotationId: symbol, noDefault
 //
 
 /**
- * Effect S.optional creates a union type with undefined as the second type.
+ * Effect Schema.optional creates a union type with undefined as the second type.
  */
 export const isOption = (node: AST.AST): boolean => {
   return AST.isUnion(node) && node.types.length === 2 && AST.isUndefinedKeyword(node.types[1]);
@@ -388,12 +388,12 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
           })
           .filter(isNonNullable);
 
-        return literals.length ? [prop, S.Literal(...literals)] : undefined;
+        return literals.length ? [prop, Schema.Literal(...literals)] : undefined;
       })
       .filter(isNonNullable),
   );
 
-  const schema = S.Struct(fields);
+  const schema = Schema.Struct(fields);
   return schema.ast;
 };
 

@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
-import { foreignKey, S } from '@dxos/echo-schema';
+import { foreignKey } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -16,13 +18,13 @@ import { type EmailMessage, SOURCE_ID } from './types';
 /**
  * Trigger configuration.
  */
-export const MetaSchema = S.mutable(
-  S.Struct({
-    account: S.optional(S.String),
+export const MetaSchema = Schema.mutable(
+  Schema.Struct({
+    account: Schema.optional(Schema.String),
   }),
 );
 
-export type Meta = S.Schema.Type<typeof MetaSchema>;
+export type Meta = Schema.Schema.Type<typeof MetaSchema>;
 
 export const handler: FunctionHandler<{ spaceKey: string; data: { messages: EmailMessage[] } }, Meta> = async ({
   event,

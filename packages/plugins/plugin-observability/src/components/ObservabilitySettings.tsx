@@ -4,17 +4,18 @@
 
 import React from 'react';
 
+import { Schema } from 'effect';
+
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { OBSERVABILITY_PLUGIN } from '../meta';
 import { ObservabilityAction } from '../types';
 
-export const ObservabilitySettingsSchema = S.mutable(
-  S.Struct({
-    enabled: S.Boolean,
+export const ObservabilitySettingsSchema = Schema.mutable(
+  Schema.Struct({
+    enabled: Schema.Boolean,
     // TODO(wittjosiah): Separate settings for each observability feature.
     // metrics?: boolean;
     // telemetry?: boolean;
@@ -22,7 +23,7 @@ export const ObservabilitySettingsSchema = S.mutable(
   }),
 );
 
-export type ObservabilitySettingsProps = S.Schema.Type<typeof ObservabilitySettingsSchema>;
+export type ObservabilitySettingsProps = Schema.Schema.Type<typeof ObservabilitySettingsSchema>;
 
 export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySettingsProps }) => {
   const { t } = useTranslation(OBSERVABILITY_PLUGIN);

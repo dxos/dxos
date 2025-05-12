@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import React from 'react';
 
 import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';
@@ -15,23 +16,23 @@ import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 // Data
 //
 
-export const IfShape = S.extend(
+export const IfShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('if'),
+  Schema.Struct({
+    type: Schema.Literal('if'),
   }),
 );
 
-export type IfShape = S.Schema.Type<typeof IfShape>;
+export type IfShape = Schema.Schema.Type<typeof IfShape>;
 
-export const IfElseShape = S.extend(
+export const IfElseShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('if-else'),
+  Schema.Struct({
+    type: Schema.Literal('if-else'),
   }),
 );
 
-export type IfElseShape = S.Schema.Type<typeof IfElseShape>;
+export type IfElseShape = Schema.Schema.Type<typeof IfElseShape>;
 
 //
 // Components

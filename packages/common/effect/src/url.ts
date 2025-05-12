@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, type Schema as S, Option, pipe } from 'effect';
+import { SchemaAST as AST, type Schema, Option, pipe } from 'effect';
 
 import { decamelize } from '@dxos/util';
 
@@ -15,7 +15,7 @@ export const getParamKeyAnnotation: (annotated: AST.Annotated) => Option.Option<
 
 export const ParamKeyAnnotation =
   (value: ParamKeyAnnotationValue) =>
-  <S extends S.Annotable.All>(self: S): S.Annotable.Self<S> =>
+  <S extends Schema.Annotable.All>(self: S): Schema.Annotable.Self<S> =>
     self.annotations({ [ParamKeyAnnotationId]: value });
 
 /**
@@ -23,7 +23,7 @@ export const ParamKeyAnnotation =
  * Supports custom key serialization.
  */
 export class UrlParser<T extends Record<string, any>> {
-  constructor(private readonly _schema: S.Struct<T>) {}
+  constructor(private readonly _schema: Schema.Struct<T>) {}
 
   /**
    * Parse URL params.
