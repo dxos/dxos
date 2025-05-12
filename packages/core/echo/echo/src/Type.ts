@@ -13,8 +13,9 @@ import {
   type TypeMeta,
   EchoObject,
   EntityKind,
-  ObjectId,
+  ObjectId as ObjectId$,
   Ref as Ref$,
+  type SpaceIdSchema as SpaceId$,
   getTypeAnnotation,
   getSchema,
   getSchemaDXN,
@@ -23,6 +24,7 @@ import {
   isInstanceOf,
   type BaseEchoObject,
 } from '@dxos/echo-schema';
+import { type SpaceId as SpaceId$ } from '@dxos/keys';
 import { live as create$ } from '@dxos/live-object';
 
 // NOTES:
@@ -33,10 +35,15 @@ import { live as create$ } from '@dxos/live-object';
 // - Test with @dxos/schema/testing types.
 // - Define user (Composer) types in namespace (e.g., of plugin) and drop Type suffix; remove all deprecated Braneframe types.
 
-export type { TypeMeta as Meta, JsonSchemaType as JsonSchema };
+export type {
+  // prettier-ignore
+  JsonSchemaType as JsonSchema,
+  TypeMeta as Meta,
+};
 export {
   EntityKind as Kind,
-  ObjectId,
+  ObjectId$ as ObjectId,
+  SpaceIdSchema as SpaceId,
   getTypeAnnotation as getMeta,
   getSchema,
   getSchemaDXN as getDXN,
@@ -53,6 +60,12 @@ export {
  */
 export declare namespace Type {
   export type Any = BaseEchoObject;
+
+  export const ObjectId = ObjectId$;
+  export type ObjectId = ObjectId$;
+
+  export const SpaceId = SpaceIdSchema;
+  export type SpaceId = SpaceId$;
 
   /**
    * A schema that can be extended with arbitrary properties.

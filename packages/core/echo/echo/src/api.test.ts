@@ -79,11 +79,11 @@ describe('Experimental API review', () => {
     const type: Schema.Schema<Testing.Person> = Type.getSchema(contact) ?? raise(new Error('No schema found'));
 
     expect(Type.getDXN(type)?.typename).to.eq(Testing.Person.typename);
-    expect(Type.getTypename(type)).to.eq('example.com/type/Contact');
+    expect(Type.getTypename(type)).to.eq('example.com/type/Person');
     expect(Type.getVersion(type)).to.eq('0.1.0');
     expect(Type.getMeta(type)).to.deep.eq({
       kind: Type.Kind.Object,
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
     });
   });
