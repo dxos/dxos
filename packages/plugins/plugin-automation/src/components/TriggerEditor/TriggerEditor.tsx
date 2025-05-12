@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
 import {
@@ -12,7 +12,8 @@ import {
   type FunctionTrigger,
   ScriptType,
 } from '@dxos/functions';
-import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
+import { DXN } from '@dxos/keys';
+import { Filter, Ref, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
@@ -42,12 +43,35 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
 
   const Custom = useMemo(
     (): CustomInputMap => ({
-      ['function' satisfies keyof FunctionTriggerType]: (props) => (
-        <SelectInput
-          {...props}
-          options={getWorkflowOptions(workflows).concat(getFunctionOptions(scripts, functions))}
-        />
-      ),
+      ['function' satisfies keyof FunctionTriggerType]: (props) => {
+        const getValue = useCallback(() => {
+          const formValue = props.getValue();
+          if (formValue instanceof DXN) {
+            return formValue.toString() as string;
+          }
+          return undefined;
+        }, [props]);
+
+        const handleOnValueChange = useCallback(
+          (_type: any, dxnString: string) => {
+            const dxn = DXN.parse(dxnString);
+            if (dxn) {
+              const ref = Ref.fromDXN(dxn);
+              props.onValueChange('object', ref);
+            }
+          },
+          [props.onValueChange],
+        );
+
+        return (
+          <SelectInput
+            {...props}
+            getValue={getValue as any}
+            onValueChange={handleOnValueChange}
+            options={getWorkflowOptions(workflows).concat(getFunctionOptions(scripts, functions))}
+          />
+        );
+      },
       ['spec.type' as const]: SpecSelector,
       ['spec.payload' as const]: (props) => (
         <FunctionPayloadEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
