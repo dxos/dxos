@@ -8,7 +8,7 @@ import { type Effect } from 'effect';
 import { type AIServiceClient } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
 import type { CoreDatabase, EchoDatabase } from '@dxos/echo-db';
-import { type HasId } from '@dxos/echo-schema';
+import { type HasId, DXN as dxnSchema } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
