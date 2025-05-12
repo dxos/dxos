@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type JsonPath, toEffectSchema } from '@dxos/echo-schema';
-import { type FunctionType } from '@dxos/functions/types';
+import { type FunctionType } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
 import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
 
@@ -17,7 +17,7 @@ export type FunctionMetaEditorProps = {
 /**
  * Editor component for function meta parameters.
  */
-export const FunctionMetaEditor = ({
+export const FunctionPayloadEditor = ({
   functions,
   getValue,
   onValueChange,

@@ -17,7 +17,7 @@ import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
-import { FunctionMetaEditor } from './FunctionMetaEditor';
+import { FunctionPayloadEditor } from './FunctionPayloadEditor';
 import { AUTOMATION_PLUGIN } from '../../meta';
 
 // TODO(ZaymonFC):
@@ -60,8 +60,8 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
           }))}
         />
       ),
-      ['meta' as const]: (props) => (
-        <FunctionMetaEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
+      ['spec.payload' as const]: (props) => (
+        <FunctionPayloadEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
       ),
     }),
     [workflows, scripts, functions, t],
