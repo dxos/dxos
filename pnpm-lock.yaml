@@ -11266,6 +11266,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 1.1.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      '@radix-ui/react-visually-hidden':
+        specifier: 1.1.2
+        version: 1.1.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       aria-hidden:
         specifier: ^1.2.4
         version: 1.2.4
