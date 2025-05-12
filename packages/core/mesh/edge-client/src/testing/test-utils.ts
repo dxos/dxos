@@ -6,11 +6,11 @@ import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
+import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { MessageSchema, TextMessageSchema, type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from '../defs';
-import { EDGE_WEBSOCKET_PROTOCOL_V1 } from '../edge-ws-connection';
 import { WebSocketMuxer } from '../edge-ws-muxer';
 import { toUint8Array } from '../protocol';
 
@@ -26,7 +26,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
   const wsServer = new WebSocket.Server({
     port,
     verifyClient: createConnectionDelayHandler(params),
-    handleProtocols: () => [EDGE_WEBSOCKET_PROTOCOL_V1],
+    handleProtocols: () => [EdgeWebsocketProtocol.V1],
   });
 
   let connection: { ws: WebSocket; muxer: WebSocketMuxer } | undefined;
