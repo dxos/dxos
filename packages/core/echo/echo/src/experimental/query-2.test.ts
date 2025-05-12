@@ -22,6 +22,7 @@ const WorksFor = Schema.Struct({
 
 const Task = Schema.Struct({
   title: Schema.String,
+  createdAt: Schema.String,
   assignee: Type.Ref(Person),
 }).pipe(Type.def({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
 
@@ -52,3 +53,6 @@ const allTasksForEmployeesOfCyberdyne = Query.type(Org, { name: 'Cyberdyne' })
 
 // Query<Person | Org>
 const allPeopleOrOrgs = Query.all(Query.type(Person), Query.type(Org));
+
+// Query<Person>
+const assigneesOfAllTasksCreatedAfter2020 = Query.type(Task, { createdAt: Query.gt('2020') }).references('assignee');
