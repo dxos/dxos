@@ -264,7 +264,7 @@ export class CallSwarmSynchronizer extends Resource {
           disconnected &&
           disconnected > Date.now() - DISCONNECTED_ABRUPT_TIMEOUT,
       ),
-    ];
+    ].sort((peer1, peer2) => peer1.peerKey.localeCompare(peer2.peerKey));
     log.info('reconciling swarm state', { peers });
     const users = peers
       .map((peer) => {
