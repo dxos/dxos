@@ -3,7 +3,7 @@
 //
 
 import { Octokit } from '@octokit/core';
-import { isNotNullable } from 'effect/Predicate';
+import { Predicate } from 'effect';
 
 import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions/types';
@@ -60,7 +60,7 @@ export default () =>
       resolve: async ({ accessToken }) => {
         const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
           .map((id) => templates.find((t) => t.id === id))
-          .filter(isNotNullable);
+          .filter(Predicate.isNotNullable);
 
         if (scriptTemplates.length > 0) {
           return {

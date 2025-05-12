@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TitleAnnotationId } from 'effect/SchemaAST';
+import { SchemaAST } from 'effect';
 
 import { SpaceSchema } from '@dxos/client/echo';
 import { S } from '@dxos/echo-schema';
@@ -20,7 +20,7 @@ export namespace ScriptAction {
   export const CreateScriptSchema = S.Struct({
     name: S.optional(S.String),
     // TODO(wittjosiah): Placeholder annotation?
-    gistUrl: S.optional(S.String.annotations({ [TitleAnnotationId]: 'Import from Gist (url)' })),
+    gistUrl: S.optional(S.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Import from Gist (url)' })),
     initialTemplateId: S.optional(S.String),
   });
 

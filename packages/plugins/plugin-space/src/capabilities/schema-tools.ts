@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DescriptionAnnotationId, ExamplesAnnotationId, TitleAnnotationId } from 'effect/SchemaAST';
+import { Schema, SchemaAST } from 'effect';
 
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineTool, ToolResult } from '@dxos/artifact';
@@ -24,10 +24,10 @@ declare global {
 export const TypeNameSchema = S.String.pipe(
   S.pattern(/^\w+\.\w{2,}\/[\w/]+$/i),
   S.annotations({
-    [TitleAnnotationId]: 'TypeName',
-    [DescriptionAnnotationId]:
+    [SchemaAST.TitleAnnotationId]: 'TypeName',
+    [SchemaAST.DescriptionAnnotationId]:
       'Domain-style type name path. Dashes are not allowed. Use camel case for the final component of the type name.',
-    [ExamplesAnnotationId]: ['example.com/type/Document', 'example.com/type/FlightList'],
+    [SchemaAST.ExamplesAnnotationId]: ['example.com/type/Document', 'example.com/type/FlightList'],
   }),
 );
 
@@ -36,10 +36,10 @@ const formatDescription = `The format of the property. Additional information:
   This tuple is GeoJSON. You must specify \`${FormatEnum.GeoPoint}\` as [Longitude, Latitude]`;
 
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
-const PropertyDefinitionSchema = S.Struct({
-  name: S.String.annotations({ [DescriptionAnnotationId]: 'The name of the property.' }),
-  format: S.Union(...FormatEnums.map((format) => S.Literal(format))).annotations({
-    [DescriptionAnnotationId]: formatDescription,
+const PropertyDefinitionSchema = Schema.Struct({
+  name: Schema.String.annotations({ [SchemaAST.DescriptionAnnotationId]: 'The name of the property.' }),
+  format: Schema.Union(...FormatEnums.map((format) => Schema.Literal(format))).annotations({
+    [SchemaAST.DescriptionAnnotationId]: formatDescription,
   }),
   config: S.optional(
     S.Struct({
