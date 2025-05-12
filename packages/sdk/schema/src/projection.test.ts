@@ -3,7 +3,6 @@
 //
 
 import { Schema, SchemaAST } from 'effect';
-import { getPropertySignatures } from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoSchemaRegistry } from '@dxos/echo-db';
@@ -412,7 +411,7 @@ describe('ViewProjection', () => {
     expect(() => Schema.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
     expect(() => Schema.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
 
-    const properties = getPropertySignatures(effectSchema.ast);
+    const properties = SchemaAST.getPropertySignatures(effectSchema.ast);
     const statusProperty = properties.find((p) => p.name === 'status');
     invariant(statusProperty);
     const statusPropertyMeta = getPropertyMetaAnnotation(statusProperty, 'singleSelect');

@@ -3,12 +3,6 @@
 //
 
 import { Effect, Option, ParseResult, Schema as S, Schema, SchemaAST } from 'effect';
-import {
-  getDescriptionAnnotation,
-  getIdentifierAnnotation,
-  getTitleAnnotation,
-  type Annotated,
-} from 'effect/SchemaAST';
 
 import { Reference, type EncodedReference } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -252,10 +246,10 @@ export const createEchoReferenceSchema = (
   return refSchema;
 };
 
-const getSchemaExpectedName = (ast: Annotated): string | undefined => {
-  return getIdentifierAnnotation(ast).pipe(
-    Option.orElse(() => getTitleAnnotation(ast)),
-    Option.orElse(() => getDescriptionAnnotation(ast)),
+const getSchemaExpectedName = (ast: SchemaAST.Annotated): string | undefined => {
+  return SchemaAST.getIdentifierAnnotation(ast).pipe(
+    Option.orElse(() => SchemaAST.getTitleAnnotation(ast)),
+    Option.orElse(() => SchemaAST.getDescriptionAnnotation(ast)),
     Option.getOrElse(() => undefined),
   );
 };

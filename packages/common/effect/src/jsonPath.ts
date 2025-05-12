@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
-import { isSome } from 'effect/Option';
+import { Schema as S, Option } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { invariant } from '@dxos/invariant';
@@ -24,7 +23,7 @@ export const JsonPath = S.String.pipe(S.pattern(PATH_REGEX)).annotations({
 export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
 
 export const isJsonPath = (value: unknown): value is JsonPath => {
-  return isSome(S.validateOption(JsonPath)(value));
+  return Option.isSome(S.validateOption(JsonPath)(value));
 };
 
 /**

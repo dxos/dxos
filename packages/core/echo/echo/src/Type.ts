@@ -11,15 +11,15 @@ import {
   type BaseSchema,
   type EchoSchema,
   Expando as Expando$,
-  type ImmutableSchema,
+  EchoObject,
+  EntityKind,
   type JsonSchemaType,
+  type ImmutableSchema,
   ObjectId as ObjectId$,
+  Ref as Ref$,
   SpaceIdSchema,
   type StoredSchema,
   type TypeMeta,
-  EchoObject,
-  EntityKind,
-  Ref as Ref$,
   getTypeAnnotation,
   getSchema as getSchema$,
   getSchemaDXN,
@@ -94,8 +94,8 @@ export namespace Type {
    * @example
    * ```ts
    * import { Type } from '@dxos/echo';
-   * const Contact = S.Struct({
-   *   name: S.String,
+   * const Contact = Schema.Struct({
+   *   name: Schema.String,
    *   organization: Type.Ref(Organization),
    * }).pipe(Type.def({ typename: 'example.com/type/Contact', version: '1.0.0' }));
    * ```

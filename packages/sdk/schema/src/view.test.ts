@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST, pipe } from 'effect';
-import { capitalize } from 'effect/String';
+import { Schema, SchemaAST, String, pipe } from 'effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { Format, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { Format, getTypename, toJsonSchema, Ref } from '@dxos/echo-schema';
+import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import { live, createStoredSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
@@ -39,7 +39,7 @@ describe('View', () => {
     ]);
 
     const props = getSchemaProperties(schema.ast);
-    const labels = props.map((p) => pipe(p.name ?? p.title, capitalize));
+    const labels = props.map((p) => pipe(p.name ?? p.title, String.capitalize));
     expect(labels).to.deep.eq([
       'Name',
       'Image',
@@ -54,7 +54,7 @@ describe('View', () => {
     const contact = live(Testing.Contact, {
       name: 'Alice',
       email: 'alice@example.com',
-      organization: Ref.make(organization),
+      organization: Type.ref(organization),
     });
     log('schema', { organization: toJsonSchema(Testing.Organization), contact: toJsonSchema(Testing.Contact) });
     log('objects', { organization, contact });
