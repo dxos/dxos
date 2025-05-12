@@ -6,7 +6,7 @@ import { formatDate } from 'date-fns/format';
 import React, { type FC, useEffect, useState, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
-import { type InvocationSpan, InvocationOutcome } from '@dxos/functions/types';
+import { type InvocationSpan, InvocationOutcome } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 

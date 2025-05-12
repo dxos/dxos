@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, OptionsAnnotationId, RawObject, S, TypedObject, DXN, Ref } from '@dxos/echo-schema';
-
-import { FunctionType } from './schema';
+import { AST, Expando, OptionsAnnotationId, RawObject, S, TypedObject, DXN, Ref } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -123,8 +121,8 @@ export const FunctionTriggerSchema = S.Struct({
   /**
    * Function or workflow to invoke.
    */
-  // TODO(dmaretskyi): Can also be a Ref(ComputeGraphType).
-  function: S.optional(Ref(FunctionType).annotations({ [AST.TitleAnnotationId]: 'Function' })),
+  // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
+  function: S.optional(Ref(Expando).annotations({ [AST.TitleAnnotationId]: 'Function' })),
 
   /**
    * Only used for workflows.

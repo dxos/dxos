@@ -3,7 +3,7 @@
 //
 
 import { Filter, getMeta, type Space } from '@dxos/client/echo';
-import { FunctionType, getUserFunctionUrlInMetadata, makeFunctionUrl } from '@dxos/functions/types';
+import { FunctionType, getUserFunctionUrlInMetadata, makeFunctionUrl } from '@dxos/functions';
 
 export const findFunctionByDeploymentId = async (space: Space, functionId?: string) => {
   if (!functionId) {
