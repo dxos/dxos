@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
 import {
@@ -11,14 +11,13 @@ import {
   type FunctionTriggerType,
   type FunctionTrigger,
   ScriptType,
-  TriggerKind,
-  type TriggerType,
 } from '@dxos/functions';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { type CustomInputMap, Form, SelectInput, useInputProps, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
 import { FunctionPayloadEditor } from './FunctionPayloadEditor';
+import { SpecSelector } from './SpecSelector';
 import { AUTOMATION_PLUGIN } from '../../meta';
 
 export type TriggerEditorProps = {
@@ -49,50 +48,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
           options={getWorkflowOptions(workflows).concat(getFunctionOptions(scripts, functions))}
         />
       ),
-      ['spec.type' as const]: (props) => {
-        const specProps = useInputProps(['spec' satisfies keyof FunctionTriggerType]);
-
-        const handleTypeChange = useCallback(
-          (_type: any, value: string): TriggerType | undefined => {
-            const getDefaultTriggerSpec = (kind: string) => {
-              switch (kind) {
-                case TriggerKind.Timer:
-                  return { type: TriggerKind.Timer, cron: '' };
-                case TriggerKind.Subscription:
-                  return { type: TriggerKind.Subscription, filter: {} };
-                case TriggerKind.Queue:
-                  return { type: TriggerKind.Queue, queue: '' };
-                case TriggerKind.Email:
-                  return { type: TriggerKind.Email };
-                case TriggerKind.Webhook:
-                  return { type: TriggerKind.Webhook };
-                default:
-                  return undefined;
-              }
-            };
-
-            const defaultSpec = getDefaultTriggerSpec(value);
-            if (!defaultSpec) {
-              return;
-            }
-
-            // Update the entire spec object, not just the `spec.type`.
-            specProps.onValueChange('object', defaultSpec);
-          },
-          [specProps],
-        );
-
-        const options = useMemo(
-          () =>
-            Object.values(TriggerKind).map((kind) => ({
-              value: kind,
-              label: t(`trigger type ${kind}`),
-            })),
-          [t],
-        );
-
-        return <SelectInput {...props} options={options} onValueChange={handleTypeChange} />;
-      },
+      ['spec.type' as const]: SpecSelector,
       ['spec.payload' as const]: (props) => (
         <FunctionPayloadEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
       ),
