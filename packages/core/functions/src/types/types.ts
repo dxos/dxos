@@ -3,6 +3,7 @@
 //
 
 import { AST, OptionsAnnotationId, RawObject, S, TypedObject, DXN, Ref } from '@dxos/echo-schema';
+
 import { FunctionType } from './schema';
 
 /**
@@ -30,6 +31,12 @@ const TimerTriggerSchema = S.Struct({
     [AST.TitleAnnotationId]: 'Cron',
     [AST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
+  /**
+   * Passed as the input data to the function.
+   * Must match the function's input schema.
+   * This does not get merged with the trigger event.
+   */
+  payload: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
 }).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
@@ -130,13 +137,6 @@ export const FunctionTriggerSchema = S.Struct({
 
   // TODO(burdon): Flatten entire schema.
   spec: S.optional(TriggerSchema),
-
-  /**
-   * Passed as the input data to the function.
-   * Must match the function's input schema.
-   * This does not get merged with the trigger event.
-   */
-  payload: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
 });
 
 export type FunctionTriggerType = S.Schema.Type<typeof FunctionTriggerSchema>;

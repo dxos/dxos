@@ -4,7 +4,7 @@
 
 import { Tool, Message } from '@dxos/artifact';
 import { type GenerationStreamEvent } from '@dxos/assistant';
-import { DXN, ObjectId, S } from '@dxos/echo-schema';
+import { ObjectId, S } from '@dxos/echo-schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';
 import { StreamSchema } from '../util';
@@ -79,42 +79,6 @@ export type ReducerInput = S.Schema.Type<typeof ReducerInput>;
 
 export const ReducerOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }));
 export type ReducerOutput = S.Schema.Type<typeof ReducerOutput>;
-
-//
-// Trigger
-//
-
-// TODO(burdon): Reuse trigger schema from @dxos/functions (TriggerType).
-export const EmailTriggerOutput = S.mutable(
-  S.Struct({
-    from: S.String,
-    to: S.String,
-    subject: S.String,
-    created: S.String,
-    body: S.String,
-  }),
-);
-
-export const WebhookTriggerOutput = S.mutable(
-  S.Struct({
-    url: S.String,
-    method: S.Literal('GET', 'POST'),
-    headers: S.Record({ key: S.String, value: S.String }),
-    bodyText: S.String,
-  }),
-);
-
-export const QueueTriggerOutput = S.mutable(
-  S.Struct({
-    queue: DXN,
-    item: S.Any,
-    cursor: S.String,
-  }),
-);
-
-export const SubscriptionTriggerOutput = S.mutable(S.Struct({ type: S.String, changedObjectId: S.String }));
-
-export const TimerTriggerOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }));
 
 //
 // GPT
