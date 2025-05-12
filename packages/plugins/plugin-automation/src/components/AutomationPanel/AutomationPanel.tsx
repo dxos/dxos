@@ -12,7 +12,7 @@ import {
   TriggerKind,
   type FunctionTriggerType,
   ScriptType,
-} from '@dxos/functions/types';
+} from '@dxos/functions';
 import { type Client, useClient } from '@dxos/react-client';
 import { live, Filter, useQuery, type Space, type Live, getSpace } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
@@ -158,8 +158,8 @@ const getWebhookUrl = (client: Client, trigger: FunctionTrigger) => {
 const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigger: FunctionTriggerType) => {
   // TODO(wittjosiah): Truncation should be done in the UI.
   //   Warning that the List component is currently a can of worms.
-  const shortId = trigger.function && `${trigger.function?.slice(0, 16)}…`;
-  const functionObject = functions.find((fn) => `dxn:worker:${fn.name}` === trigger.function);
+  const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
+  const functionObject = functions.find((fn) => fn === trigger.function?.target);
   if (!functionObject) {
     return shortId;
   }

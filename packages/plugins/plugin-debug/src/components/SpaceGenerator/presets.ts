@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComputeGraphModel, EmailTriggerOutput, NODE_INPUT } from '@dxos/conductor';
+import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
+import { Type } from '@dxos/echo';
 import { AST, ObjectId, S, toJsonSchema } from '@dxos/echo-schema';
-import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions/types';
+import { FunctionTrigger, TriggerKind, EmailTriggerOutput, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef } from '@dxos/live-object';
@@ -539,10 +540,9 @@ const setupQueue = (
 
 const attachTrigger = (functionTrigger: FunctionTrigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
-  functionTrigger.function = DXN.fromLocalObjectId(computeModel.root.id).toString();
-  functionTrigger.meta ??= {};
+  functionTrigger.function = Type.ref(computeModel.root);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  functionTrigger.meta.computeNodeId = inputNode.id;
+  functionTrigger.inputNodeId = inputNode.id;
 };
 
 type RawPositionInput = { centerX: number; centerY: number; width: number; height: number };

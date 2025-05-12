@@ -5,8 +5,8 @@
 import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { ObjectId, S } from '@dxos/echo-schema';
-import { ScriptType } from '@dxos/functions/types';
+import { S } from '@dxos/echo-schema';
+import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { live, makeRef, type Space } from '@dxos/react-client/echo';
@@ -177,7 +177,8 @@ export default () => {
         description: 'Inspect a script. Returns the artifact definition for the script',
         caption: 'Inspecting script...',
         schema: S.Struct({
-          id: ObjectId.annotations({ description: 'The ID of the script' }),
+          // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
+          id: S.String.annotations({ description: 'The ID of the script' }),
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -196,7 +197,8 @@ export default () => {
         description: 'Update a script. Returns the artifact definition for the script',
         caption: 'Updating script...',
         schema: S.Struct({
-          id: ObjectId.annotations({ description: 'The ID of the script to update' }),
+          // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
+          id: S.String.annotations({ description: 'The ID of the script to update' }),
           code: S.String.annotations({
             description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
           }),
