@@ -177,7 +177,7 @@ export default () => {
         description: 'Inspect a script. Returns the artifact definition for the script',
         caption: 'Inspecting script...',
         schema: S.Struct({
-          id: ObjectId,
+          id: ObjectId.annotations({ description: 'The ID of the script' }),
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -196,7 +196,7 @@ export default () => {
         description: 'Update a script. Returns the artifact definition for the script',
         caption: 'Updating script...',
         schema: S.Struct({
-          id: ObjectId,
+          id: ObjectId.annotations({ description: 'The ID of the script to update' }),
           code: S.String.annotations({
             description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
           }),
