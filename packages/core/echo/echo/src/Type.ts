@@ -5,26 +5,27 @@
 import { type Schema } from 'effect';
 
 import {
+  type BaseEchoObject,
   type BaseSchema,
   type EchoSchema,
   type Expando as Expando$,
   type ImmutableSchema,
   type JsonSchemaType,
+  ObjectId,
+  SpaceIdSchema,
   type TypeMeta,
   EchoObject,
   EntityKind,
-  ObjectId as ObjectId$,
   Ref as Ref$,
-  type SpaceIdSchema as SpaceId$,
   getTypeAnnotation,
   getSchema,
   getSchemaDXN,
   getSchemaTypename,
   getSchemaVersion,
   isInstanceOf,
-  type BaseEchoObject,
+  toJsonSchema,
 } from '@dxos/echo-schema';
-import { type SpaceId as SpaceId$ } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 import { live as create$ } from '@dxos/live-object';
 
 // NOTES:
@@ -37,19 +38,22 @@ import { live as create$ } from '@dxos/live-object';
 
 export type {
   // prettier-ignore
+  BaseEchoObject as Any,
   JsonSchemaType as JsonSchema,
+  SpaceId,
   TypeMeta as Meta,
 };
 export {
   EntityKind as Kind,
-  ObjectId$ as ObjectId,
-  SpaceIdSchema as SpaceId,
+  ObjectId,
+  SpaceIdSchema, // TODO(burdon): Rename SpaceId
   getTypeAnnotation as getMeta,
   getSchema,
   getSchemaDXN as getDXN,
   getSchemaTypename as getTypename,
   getSchemaVersion as getVersion,
   isInstanceOf as instanceOf,
+  toJsonSchema,
 };
 
 /**
@@ -58,23 +62,7 @@ export {
  * @category api namespace
  * @since 0.9.0
  */
-export declare namespace Type {
-  //
-  // Keys
-  //
-
-  export const ObjectId = ObjectId$;
-  export type ObjectId = ObjectId$;
-
-  export const SpaceId = SpaceIdSchema;
-  export type SpaceId = SpaceId$;
-
-  //
-  // Objects
-  //
-
-  export type Any = BaseEchoObject;
-
+export namespace Type {
   //
   // Schema
   //

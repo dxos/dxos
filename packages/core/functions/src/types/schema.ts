@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JsonSchemaType, LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
-import { DataType, EchoObject } from '@dxos/schema';
+import { EchoObject, JsonSchemaType, LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { DataType } from '@dxos/schema';
 
 /**
  * Source script.

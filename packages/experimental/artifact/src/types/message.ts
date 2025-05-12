@@ -11,7 +11,7 @@ import { Type } from '@dxos/echo';
 
 /** @deprecated */
 export const Space = Schema.Struct({
-  id: Type.SpaceId,
+  id: Type.SpaceIdSchema,
 });
 /** @deprecated */
 export interface Space extends Schema.Schema.Type<typeof Space> {}
@@ -19,7 +19,7 @@ export interface Space extends Schema.Schema.Type<typeof Space> {}
 /** @deprecated */
 export const Thread = Schema.Struct({
   id: Type.ObjectId,
-  spaceId: Type.SpaceId,
+  spaceId: Type.SpaceIdSchema,
 });
 /** @deprecated */
 export interface Thread extends Schema.Schema.Type<typeof Thread> {}
