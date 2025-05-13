@@ -10,3 +10,4 @@ export { DXN } from '@dxos/keys';
 // export type { Space } from './space';
 
 export { Type } from './type';
+export * as Relation from './Relation';
