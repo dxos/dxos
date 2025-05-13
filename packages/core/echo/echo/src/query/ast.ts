@@ -83,7 +83,7 @@ const ASTTextSearchClause: Schema.Schema<ASTTextSearchClause> = ASTTextSearchCla
  */
 const ASTReferenceTraversalClause_ = Schema.Struct({
   type: Schema.Literal('reference-traversal'),
-  anchor: Schema.suspend((): Schema.Schema<AST> => AST),
+  anchor: Schema.suspend(() => AST),
   property: Schema.String,
 });
 interface ASTReferenceTraversalClause extends Schema.Schema.Type<typeof ASTReferenceTraversalClause_> {}
@@ -94,7 +94,7 @@ const ASTReferenceTraversalClause: Schema.Schema<ASTReferenceTraversalClause> = 
  */
 const ASTIncomingReferencesClause_ = Schema.Struct({
   type: Schema.Literal('incoming-references'),
-  anchor: Schema.suspend((): Schema.Schema<AST> => AST),
+  anchor: Schema.suspend(() => AST),
   property: Schema.String,
   typename: TypenameSpecifier,
 });
@@ -106,7 +106,7 @@ const ASTIncomingReferencesClause: Schema.Schema<ASTIncomingReferencesClause> = 
  */
 const ASTRelationClause_ = Schema.Struct({
   type: Schema.Literal('relation'),
-  anchor: Schema.suspend((): Schema.Schema<AST> => AST),
+  anchor: Schema.suspend(() => AST),
   direction: Schema.Literal('outgoing', 'incoming', 'both'),
   typename: TypenameSpecifier,
   predicates: Schema.optional(PredicateSet),
@@ -119,7 +119,7 @@ const ASTRelationClause: Schema.Schema<ASTRelationClause> = ASTRelationClause_;
  */
 const ASTRelationTraversalClause_ = Schema.Struct({
   type: Schema.Literal('relation-traversal'),
-  anchor: Schema.suspend((): Schema.Schema<AST> => AST),
+  anchor: Schema.suspend(() => AST),
   direction: Schema.Literal('source', 'target', 'both'),
 });
 interface ASTRelationTraversalClause extends Schema.Schema.Type<typeof ASTRelationTraversalClause_> {}
@@ -130,7 +130,7 @@ const ASTRelationTraversalClause: Schema.Schema<ASTRelationTraversalClause> = AS
  */
 const ASTUnionClause_ = Schema.Struct({
   type: Schema.Literal('union'),
-  queries: Schema.Array(Schema.suspend((): Schema.Schema<AST> => AST)),
+  queries: Schema.Array(Schema.suspend(() => AST)),
 });
 interface ASTUnionClause extends Schema.Schema.Type<typeof ASTUnionClause_> {}
 const ASTUnionClause: Schema.Schema<ASTUnionClause> = ASTUnionClause_;

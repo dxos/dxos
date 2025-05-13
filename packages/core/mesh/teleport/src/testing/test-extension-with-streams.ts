@@ -132,7 +132,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
       { TestServiceWithStreams: TestServiceWithStreams }
     >({
       port: await context.createPort('rpc', {
-        contentType: 'application/x-protobuf; DataType.Message="dxos.rpc.Message"',
+        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       requested: {
         TestServiceWithStreams: schema.getService('example.testing.rpc.TestServiceWithStreams'),
