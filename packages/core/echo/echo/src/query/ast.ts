@@ -56,12 +56,21 @@ export type PredicateSet = Schema.Schema.Type<typeof PredicateSet>;
  */
 const ASTTypeClause_ = Schema.Struct({
   type: Schema.Literal('type'),
-  typename: Schema.optional(DXN),
+  typename: Schema.Union(DXN, Schema.Null),
   id: Schema.optional(Schema.String),
   predicates: Schema.optional(PredicateSet),
 });
 interface ASTTypeClause extends Schema.Schema.Type<typeof ASTTypeClause_> {}
 const ASTTypeClause: Schema.Schema<ASTTypeClause> = ASTTypeClause_;
+
+const ASTTextSearchClause_ = Schema.Struct({
+  type: Schema.Literal('text-search'),
+  typename: Schema.Union(DXN, Schema.Null),
+  text: Schema.String,
+  searchKind: Schema.optional(Schema.Literal('full-text', 'vector')),
+});
+interface ASTTextSearchClause extends Schema.Schema.Type<typeof ASTTextSearchClause_> {}
+const ASTTextSearchClause: Schema.Schema<ASTTextSearchClause> = ASTTextSearchClause_;
 
 /**
  * Traverse references from an anchor object.
@@ -81,7 +90,7 @@ const ASTIncomingReferencesClause_ = Schema.Struct({
   type: Schema.Literal('incoming-references'),
   anchor: Schema.suspend((): Schema.Schema<AST> => AST),
   property: Schema.String,
-  typename: Schema.optional(DXN),
+  typename: Schema.Union(DXN, Schema.Null),
 });
 interface ASTIncomingReferencesClause extends Schema.Schema.Type<typeof ASTIncomingReferencesClause_> {}
 const ASTIncomingReferencesClause: Schema.Schema<ASTIncomingReferencesClause> = ASTIncomingReferencesClause_;
@@ -93,7 +102,7 @@ const ASTRelationClause_ = Schema.Struct({
   type: Schema.Literal('relation'),
   anchor: Schema.suspend((): Schema.Schema<AST> => AST),
   direction: Schema.Literal('outgoing', 'incoming', 'both'),
-  typename: Schema.optional(DXN),
+  typename: Schema.Union(DXN, Schema.Null),
   predicates: Schema.optional(PredicateSet),
 });
 interface ASTRelationClause extends Schema.Schema.Type<typeof ASTRelationClause_> {}
@@ -122,6 +131,7 @@ const ASTUnionClause: Schema.Schema<ASTUnionClause> = ASTUnionClause_;
 
 const AST_ = Schema.Union(
   ASTTypeClause,
+  ASTTextSearchClause,
   ASTReferenceTraversalClause,
   ASTIncomingReferencesClause,
   ASTRelationClause,

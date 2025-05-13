@@ -98,3 +98,10 @@ test('get assignees of all tasks created after 2020', () => {
 
   log.info('query', { ast: assigneesOfAllTasksCreatedAfter2020.ast });
 });
+
+test('contact full-text search', () => {
+  // Query<Person>
+  const contactFullTextSearch = Query.text(Person, 'Bill');
+
+  log.info('query', { ast: contactFullTextSearch.ast });
+});

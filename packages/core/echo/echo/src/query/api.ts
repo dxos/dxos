@@ -12,6 +12,7 @@ import type { Relation } from '..';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
+
 export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };
@@ -85,6 +86,17 @@ interface QueryAPI {
   ): Query<Schema.Schema.Type<S>>;
 
   /**
+   * Full-text or vector search.
+   */
+  text<S extends Schema.Schema.All>(
+    // TODO(dmaretskyi): Allow passing an array of schema here.
+    schema: S,
+    // TODO(dmaretskyi): Consider passing a vector here, but really the embedding should be done on the query-executor side.
+    text: string,
+    options?: Query.TextSearchOptions,
+  ): Query<Schema.Schema.Type<S>>;
+
+  /**
    * Combine results of multiple queries.
    * @param queries - Queries to combine.
    * @returns Query for the combined results.
@@ -125,7 +137,12 @@ interface QueryAPI {
   range<T>(from: T, to: T): Predicate<T>;
 
   // TODO(dmaretskyi): Add `Query.match` to support pattern matching on string props.
-  // TODO(dmaretskyi): Add `Query.text(Type, 'needle', opts)` to support full-text and vector search.
+}
+
+export declare namespace Query {
+  export type TextSearchOptions = {
+    type?: 'full-text' | 'vector';
+  };
 }
 
 export interface Predicate<T> {
@@ -166,6 +183,16 @@ class QueryClass implements Query<any> {
       type: 'type',
       typename: dxn.toString(),
       predicates: predicates ? predicateSetToAst(predicates) : undefined,
+    });
+  }
+
+  static text(schema: Schema.Schema.All, text: string, options?: Query.TextSearchOptions): Query<any> {
+    const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
+    return new QueryClass({
+      type: 'text-search',
+      typename: dxn.toString(),
+      text,
+      searchKind: options?.type,
     });
   }
 
