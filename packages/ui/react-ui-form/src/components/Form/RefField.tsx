@@ -3,7 +3,7 @@
 //
 
 import { type SchemaAST } from 'effect';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import {
   Expando,
@@ -15,15 +15,16 @@ import {
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { Input } from '@dxos/react-ui';
-import { TagPicker, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
+import { TagPicker, type TagPickerMode, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
+import { isNonNullable } from '@dxos/util';
 
 import { TextInput } from './Defaults';
 import { InputHeader, type InputProps } from './Input';
 import { type QueryRefOptions, useQueryRefOptions } from './hooks';
 
-// Using InputProps and adding the necessary props for RefField
 type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;
+  array?: boolean;
   onQueryRefOptions?: QueryRefOptions;
 };
 
@@ -33,26 +34,20 @@ export const RefField = ({
   disabled,
   placeholder,
   inputOnly,
+  array,
   ast,
-  onQueryRefOptions,
   getValue,
+  onQueryRefOptions,
   onValueChange,
   ...restInputProps
 }: RefFieldProps) => {
-  // Using the ast that was passed in at call site
-  const astNode = ast;
-  if (!astNode) {
-    return null;
-  }
-
-  const refTypeInfo = findAnnotation<ReferenceAnnotationValue>(astNode, ReferenceAnnotationId);
+  const refTypeInfo = useMemo(
+    () => (ast ? findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId) : undefined),
+    [ast],
+  );
   const { options: availableOptions, loading: _loading } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
 
-  if (!refTypeInfo) {
-    return null;
-  }
-
-  if (refTypeInfo.typename === getTypeAnnotation(Expando)?.typename || !onQueryRefOptions) {
+  if ((refTypeInfo && refTypeInfo?.typename === getTypeAnnotation(Expando)?.typename) || !onQueryRefOptions) {
     // If ref type is expando, fall back to taking a DXN in string format.
     return (
       <RefFieldFallback
@@ -61,21 +56,31 @@ export const RefField = ({
     );
   }
 
-  const handleGetValue = (): TagPickerItemData[] => {
+  const handleGetValue = useCallback((): TagPickerItemData[] => {
     const formValue = getValue();
 
-    if (Ref.isRef(formValue)) {
-      const dxnString = formValue.dxn.toString();
-      const matchingOption = availableOptions.find((option) => option.id === dxnString);
-      if (matchingOption) {
-        return [matchingOption];
+    const unknownToRefOption = (val: unknown) => {
+      if (Ref.isRef(val)) {
+        const dxnString = val.dxn.toString();
+        const matchingOption = availableOptions.find((option) => option.id === dxnString);
+        if (matchingOption) {
+          return matchingOption;
+        }
       }
+      return undefined;
+    };
+
+    if (array && Array.isArray(formValue)) {
+      return formValue.map(unknownToRefOption).filter(isNonNullable) ?? [];
+    }
+
+    const option = unknownToRefOption(formValue);
+    if (option) {
+      return [option];
     }
 
     return [];
-  };
-
-  const { status, error } = restInputProps.getStatus();
+  }, [getValue, availableOptions, array]);
 
   const handleSearch = useCallback(
     (text: string, ids: string[]): TagPickerItemData[] =>
@@ -86,18 +91,40 @@ export const RefField = ({
     [availableOptions],
   );
 
-  const handleUpdate = (ids: string[]) => {
-    if (ids.length === 0) {
-      onValueChange('object', undefined);
-    }
-    const firstId = ids.at(0);
-    const item = availableOptions.find((option) => option.id === firstId);
-    if (item) {
-      const dxn = DXN.parse(item.id);
-      const ref = Ref.fromDXN(dxn);
-      onValueChange('object', ref);
-    }
-  };
+  const handleUpdate = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) {
+        onValueChange('object', undefined);
+        return;
+      }
+
+      const refs = ids
+        .map((id) => {
+          const item = availableOptions.find((option) => option.id === id);
+          if (item) {
+            const dxn = DXN.parse(item.id);
+            return Ref.fromDXN(dxn);
+          }
+          return null;
+        })
+        .filter(isNonNullable);
+
+      if (array) {
+        onValueChange('object', refs);
+      } else {
+        onValueChange('object', refs[0]);
+      }
+    },
+    [availableOptions, array, onValueChange],
+  );
+
+  const tagPickerMode: TagPickerMode = useMemo(() => (array ? 'multi-select' : 'single-select'), [array]);
+
+  if (!refTypeInfo) {
+    return null;
+  }
+
+  const { status, error } = restInputProps.getStatus();
 
   return (
     <Input.Root validationValence={status}>
@@ -109,10 +136,10 @@ export const RefField = ({
       <div data-no-submit>
         <TagPicker
           items={handleGetValue()}
-          mode='single-select'
+          mode={tagPickerMode}
           onUpdate={handleUpdate}
           onSearch={handleSearch}
-          classNames='rounded-sm bg-input p-1'
+          classNames='rounded-sm bg-input p-1.5'
         />
       </div>
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}

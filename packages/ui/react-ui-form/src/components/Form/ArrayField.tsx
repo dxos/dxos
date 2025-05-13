@@ -17,6 +17,7 @@ import { FormField } from './FormContent';
 import { useFormValues, type FormInputStateProps } from './FormContext';
 import { InputHeader, type InputComponent } from './Input';
 import { translationKey } from '../../translations';
+import { findArrayElementType } from '../../util';
 
 const padding = 'px-2';
 
@@ -38,8 +39,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   invariant(Array.isArray(values), `Values at path ${path?.join('.')} must be an array.`);
   const label = title ?? pipe(name, capitalize);
 
-  const tupleType = findNode(ast, SchemaAST.isTupleType);
-  const elementType = (tupleType as SchemaAST.TupleType | undefined)?.rest[0]?.type;
+  const elementType = findArrayElementType(ast);
 
   const getDefaultObjectValue = (typeNode: SchemaAST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);

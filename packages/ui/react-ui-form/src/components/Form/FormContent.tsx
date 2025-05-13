@@ -6,7 +6,8 @@ import { Schema, SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
-import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { FormatEnum, ReferenceAnnotationId } from '@dxos/echo-schema';
+import { createJsonPath, findAnnotation, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
@@ -16,8 +17,10 @@ import { SelectInput } from './Defaults';
 import { type ComponentLookup } from './Form';
 import { useInputProps, useFormValues } from './FormContext';
 import { type InputComponent } from './Input';
+import { RefField } from './RefField';
 import { getInputComponent } from './factory';
 import { type QueryRefOptions } from './hooks';
+import { findArrayElementType } from '../../util';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
@@ -47,6 +50,10 @@ export const FormField = ({
     () => (examples?.length ? `Example: "${examples[0]}"` : description),
     [examples, description],
   );
+
+  //
+  // Registry and Custom.
+  //
 
   const FoundComponent = lookupComponent?.({
     prop: name,
@@ -81,9 +88,58 @@ export const FormField = ({
     );
   }
 
+  //
+  // Refs.
+  //
+
+  if (format === FormatEnum.Ref) {
+    return (
+      <RefField
+        ast={ast}
+        type={type}
+        format={format}
+        label={label}
+        placeholder={placeholder}
+        disabled={readonly}
+        inputOnly={inline}
+        onQueryRefOptions={onQueryRefOptions}
+        {...inputProps}
+      />
+    );
+  }
+
+  //
+  // Arrays.
+  //
+
   if (array) {
+    const elementType = findArrayElementType(ast);
+    if (elementType) {
+      const annotation = findAnnotation(elementType, ReferenceAnnotationId);
+      if (annotation) {
+        return (
+          <RefField
+            ast={elementType}
+            array={true}
+            type={type}
+            format={format}
+            label={label}
+            inputOnly={inline}
+            placeholder={placeholder}
+            disabled={readonly}
+            onQueryRefOptions={onQueryRefOptions}
+            {...inputProps}
+          />
+        );
+      }
+    }
+
     return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
   }
+
+  //
+  // Standard Inputs.
+  //
 
   const InputComponent = getInputComponent(type, format);
   if (InputComponent) {
@@ -96,12 +152,15 @@ export const FormField = ({
           inputOnly={inline}
           placeholder={placeholder}
           disabled={readonly}
-          {...{ ast, onQueryRefOptions }}
           {...inputProps}
         />
       </div>
     );
   }
+
+  //
+  // Select.
+  //
 
   if (options) {
     return (
@@ -119,6 +178,10 @@ export const FormField = ({
       </div>
     );
   }
+
+  //
+  // Nested Objects.
+  //
 
   if (type === 'object') {
     const baseNode = findNode(ast, isDiscriminatedUnion);
