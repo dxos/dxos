@@ -57,15 +57,6 @@ namespace Testing {
   //   db.add(create(WorksFor, { source: contact, target: organization }));
   // }
 
-  export const Message = Schema.Struct({
-    // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
-    // TODO(burdon): Support defaults (update create and create).
-    timestamp: Schema.String.pipe(
-      Schema.propertySignature,
-      Schema.withConstructorDefault(() => new Date().toISOString()),
-    ),
-  });
-
   export const WorksFor = Schema.Struct({
     // id: Type.ObjectId,
     role: Schema.String,
@@ -81,13 +72,23 @@ namespace Testing {
 
   export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 
-  // TODO(burdon): Fix (Type.def currently removes TypeLiteral that implements the `make` function)..
-  // }).pipe(
-  //   Type.def({
-  //     typename: 'example.com/type/Message',
-  //     version: '0.1.0',
-  //   }),
-  // );
+  // TODO(burdon): Fix (Type.def currently removes TypeLiteral that implements the `make` function).
+  //  Property 'make' does not exist on type 'EchoObjectSchema<Struct<{ timestamp: PropertySignature<":", string, never, ":", string, true, never>; }>>'.ts(2339)
+  export const MessageStruct = Schema.Struct({
+    // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
+    // TODO(burdon): Support defaults (update create and create).
+    timestamp: Schema.String.pipe(
+      Schema.propertySignature,
+      Schema.withConstructorDefault(() => new Date().toISOString()),
+    ),
+  });
+
+  export const Message = MessageStruct.pipe(
+    Type.def({
+      typename: 'example.com/type/Message',
+      version: '0.1.0',
+    }),
+  );
 
   export interface Message extends Schema.Schema.Type<typeof Message> {}
 }
@@ -118,9 +119,7 @@ describe('Experimental API review', () => {
   });
 
   test('default props', ({ expect }) => {
-    // TODO(burdon): Doesn't work after pipe(Type.def).
-    // Property 'make' does not exist on type 'EchoObjectSchema<Struct<{ timestamp: PropertySignature<":", string, never, ":", string, true, never>; }>>'.ts(2339)
-    const message = Type.create(Testing.Message, Testing.Message.make({}));
+    const message = Type.create(Testing.Message, Testing.MessageStruct.make({}));
     expect(message.timestamp).to.exist;
   });
 });
