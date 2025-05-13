@@ -1,11 +1,9 @@
-import { Schema } from 'effect';
-import { Type } from '..';
-import { EchoRelation, getSchemaDXN, type Ref } from '@dxos/echo-schema';
-import { raise } from '@dxos/debug';
-import { Query, Predicate } from './api';
-import { describe, test } from 'vitest';
+import { create, EchoRelation } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { create } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+import { describe, test } from 'vitest';
+import { Type } from '..';
+import { Query } from './api';
 
 // TODO(dmaretskyi): Move out.
 const Relation = {

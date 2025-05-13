@@ -1,6 +1,7 @@
 import { raise } from '@dxos/debug';
 import { getSchemaDXN, type Ref } from '@dxos/echo-schema';
 import { Schema } from 'effect';
+import * as QueryAST from './ast';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -215,87 +216,3 @@ class QueryClass implements Query<any> {
 }
 
 export const Query: QueryAPI = QueryClass;
-
-//
-// Query AST
-//
-
-export namespace QueryAST {
-  export type Predicate =
-    | {
-        type: 'eq';
-        value: unknown;
-      }
-    | {
-        type: 'neq';
-        value: unknown;
-      }
-    | {
-        type: 'gt';
-        value: unknown;
-      }
-    | {
-        type: 'gte';
-        value: unknown;
-      }
-    | {
-        type: 'lt';
-        value: unknown;
-      }
-    | {
-        type: 'lte';
-        value: unknown;
-      }
-    | {
-        type: 'in';
-        values: unknown[];
-      }
-    | {
-        type: 'range';
-        from: unknown;
-        to: unknown;
-      };
-
-  export type PredicateSet = { [prop: string]: Predicate };
-
-  export type AST =
-    // Query objects by type, id, and/or predicates.
-    | {
-        type: 'type';
-        typename?: string;
-        id?: string;
-        predicates?: PredicateSet;
-      }
-    // Traverse references from an anchor object.
-    | {
-        type: 'reference-traversal';
-        anchor: AST;
-        property: string;
-      }
-    // Traverse incoming references to an anchor object.
-    | {
-        type: 'incoming-references';
-        anchor: AST;
-        property: string;
-        typename: string;
-      }
-    // Traverse relations connecting to an anchor object.
-    | {
-        type: 'relation';
-        anchor: AST;
-        direction: 'outgoing' | 'incoming' | 'both';
-        typename: string;
-        predicates?: PredicateSet;
-      }
-    // Traverse into the source or target of a relation.
-    | {
-        type: 'relation-traversal';
-        anchor: AST;
-        direction: 'source' | 'target' | 'both';
-      }
-    // Union of multiple queries.
-    | {
-        type: 'union';
-        queries: AST[];
-      };
-}
