@@ -25,15 +25,15 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
       <div className='flex flex-col gap-4'>
         {/* Large */}
         <div className='grid grid-cols-3 gap-4'>
-          <div>
+          <div className='flex justify-center'>
             <Button {...args} density='coarse'>
               {children}
             </Button>
           </div>
-          <div>
+          <div className='flex justify-center'>
             <IconButton {...args} label='Test' icon='ph--atom--regular' size={7} density='coarse' />
           </div>
-          <div>
+          <div className='flex justify-center'>
             <IconButton
               {...args}
               label='Test'
@@ -48,15 +48,15 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
 
         {/* Medium */}
         <div className='grid grid-cols-3 gap-4'>
-          <div>
+          <div className='flex justify-center'>
             <Button {...args} density='fine'>
               {children}
             </Button>
           </div>
-          <div>
-            <IconButton {...args} label='Test' icon='ph--atom--regular' size={5} density='fine' />
+          <div className='flex justify-center'>
+            <IconButton {...args} label='Test' icon='ph--atom--regular' size={5} density='fine' classNames='px-2' />
           </div>
-          <div>
+          <div className='flex justify-center'>
             <IconButton
               {...args}
               label='Test'
@@ -71,12 +71,12 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
 
         {/* Small */}
         <div className='grid grid-cols-3 gap-4'>
-          <div>
+          <div className='flex justify-center'>
             <Button {...args} density='fine' classNames={'!h-[24px] !text-[14px] p-0 px-1.5 min-bs-0'}>
               {children}
             </Button>
           </div>
-          <div>
+          <div className='flex justify-center'>
             <IconButton
               {...args}
               label='Test'
@@ -86,7 +86,7 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
               classNames={'!h-[24px] !text-[14px] p-1 min-bs-0 gap-0.5'}
             />
           </div>
-          <div>
+          <div className='flex justify-center'>
             <IconButton
               {...args}
               label='Test'
