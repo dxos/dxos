@@ -70,12 +70,12 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   }, [functionTrigger, functionTrigger?.spec]);
 
   useEffect(() => {
-    shape.size.height = getHeight(getOutputSchema(functionTrigger?.spec?.type ?? TriggerKind.Email));
-  }, [functionTrigger?.spec?.type]);
+    shape.size.height = getHeight(getOutputSchema(functionTrigger?.spec?.kind ?? TriggerKind.Email));
+  }, [functionTrigger?.spec?.kind]);
 
   const setKind = (kind: TriggerKind) => {
-    if (functionTrigger?.spec?.type !== kind) {
-      functionTrigger!.spec = createTriggerSpec({ triggerKind: TriggerKind.Email, spaceId: space?.id });
+    if (functionTrigger?.spec?.kind !== kind) {
+      functionTrigger!.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id });
     }
   };
 
@@ -87,10 +87,10 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
     <FunctionBody
       shape={shape}
       status={
-        <TriggerKindSelect value={functionTrigger.spec?.type} onValueChange={(kind) => setKind(kind as TriggerKind)} />
+        <TriggerKindSelect value={functionTrigger.spec?.kind} onValueChange={(kind) => setKind(kind as TriggerKind)} />
       }
       inputSchema={VoidInput}
-      outputSchema={getOutputSchema(functionTrigger.spec!.type!)}
+      outputSchema={getOutputSchema(functionTrigger.spec!.kind!)}
     />
   );
 };
@@ -104,9 +104,9 @@ const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'valu
         <Select.Content>
           <Select.ScrollUpButton />
           <Select.Viewport>
-            {Object.values(TriggerKind).map((type) => (
-              <Select.Option key={type} value={type}>
-                {type}
+            {Object.values(TriggerKind).map((kind) => (
+              <Select.Option key={kind} value={kind}>
+                {kind}
               </Select.Option>
             ))}
           </Select.Viewport>
@@ -122,16 +122,16 @@ const createTriggerSpec = (props: { triggerKind?: TriggerKind; spaceId?: SpaceId
   const kind = props.triggerKind ?? TriggerKind.Email;
   switch (kind) {
     case TriggerKind.Timer:
-      return { type: TriggerKind.Timer, cron: '*/10 * * * * *' } satisfies TimerTrigger;
+      return { kind: TriggerKind.Timer, cron: '*/10 * * * * *' } satisfies TimerTrigger;
     case TriggerKind.Webhook:
-      return { type: TriggerKind.Webhook, method: 'POST' } satisfies WebhookTrigger;
+      return { kind: TriggerKind.Webhook, method: 'POST' } satisfies WebhookTrigger;
     case TriggerKind.Subscription:
-      return { type: TriggerKind.Subscription, filter: {} } satisfies SubscriptionTrigger;
+      return { kind: TriggerKind.Subscription, filter: {} } satisfies SubscriptionTrigger;
     case TriggerKind.Email:
-      return { type: TriggerKind.Email } satisfies EmailTrigger;
+      return { kind: TriggerKind.Email } satisfies EmailTrigger;
     case TriggerKind.Queue: {
       const dxn = new DXN(DXN.kind.QUEUE, ['data', props.spaceId ?? SpaceId.random(), ObjectId.random()]).toString();
-      return { type: TriggerKind.Queue, queue: dxn } satisfies QueueTrigger;
+      return { kind: TriggerKind.Queue, queue: dxn } satisfies QueueTrigger;
     }
   }
 };
@@ -157,6 +157,6 @@ export const triggerShape: ShapeDef<TriggerShape> = {
     createFunctionAnchors(
       shape,
       VoidInput,
-      getOutputSchema(shape.functionTrigger?.target?.spec?.type ?? TriggerKind.Email),
+      getOutputSchema(shape.functionTrigger?.target?.spec?.kind ?? TriggerKind.Email),
     ),
 };
