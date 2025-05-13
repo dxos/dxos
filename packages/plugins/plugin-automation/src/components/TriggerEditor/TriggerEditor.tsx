@@ -72,7 +72,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
           />
         );
       },
-      ['spec.type' as const]: SpecSelector,
+      ['spec.kind' as const]: SpecSelector,
       ['input' as const]: (props) => (
         <FunctionInputEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
       ),
