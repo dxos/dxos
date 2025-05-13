@@ -28,7 +28,6 @@ import {
 import { type ChromaticPalette } from '@dxos/react-ui';
 
 import { type TagPickerItemProps } from './TagPickerItem';
-import { FocusEventHandler } from 'react';
 
 export type TagPickerItemData = { id: string; label: string; hue?: ChromaticPalette };
 
