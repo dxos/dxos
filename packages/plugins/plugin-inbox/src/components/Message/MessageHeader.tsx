@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { DxRefTagActivate, type DxRefTag } from '@dxos/lit-ui';
 import { Avatar, Button, Icon } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
 import { INBOX_PLUGIN } from '../../meta';
@@ -16,7 +16,7 @@ import { formatDate, hashString } from '../util';
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
 export type MessageHeaderProps = ThemedClassName<{
-  message: MessageType;
+  message: DataType.Message;
   viewMode?: ViewMode;
   contactDxn?: string;
 }>;

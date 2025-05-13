@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
-import { isInstanceOf, S } from '@dxos/echo-schema';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant, assertArgument } from '@dxos/invariant';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 
@@ -34,7 +36,7 @@ export default () => {
         name: 'list',
         description: 'List all markdown documents in the current space.',
         caption: 'Listing markdown documents...',
-        schema: S.Struct({}),
+        schema: Schema.Struct({}),
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
@@ -55,7 +57,7 @@ export default () => {
         name: 'inspect',
         description: 'Read the content of a markdown document.',
         caption: 'Inspecting markdown document...',
-        schema: S.Struct({
+        schema: Schema.Struct({
           id: ArtifactId,
         }),
         execute: async ({ id }, { extensions }) => {

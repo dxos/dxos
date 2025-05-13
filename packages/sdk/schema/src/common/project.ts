@@ -2,21 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema, SchemaAST } from 'effect';
+
 import { Type } from '@dxos/echo';
-import { S, AST, Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
+import { Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
 /**
  * Project schema.
  */
-export const ProjectSchema = S.Struct({
+export const ProjectSchema = Schema.Struct({
   id: Type.ObjectId,
-  name: S.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
-  image: S.optional(Format.URL),
-  description: S.optional(S.String),
+  name: Schema.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
+  image: Schema.optional(Format.URL),
+  description: Schema.optional(Schema.String),
 }).annotations({
-  [AST.TitleAnnotationId]: 'Project',
+  [SchemaAST.TitleAnnotationId]: 'Project',
   [LabelAnnotationId]: 'name',
   [IconAnnotationId]: 'ph--kanban--regular',
 });
@@ -28,4 +30,4 @@ export const Project = ProjectSchema.pipe(
   }),
 );
 
-export type Project = S.Schema.Type<typeof Project>;
+export interface Project extends Schema.Schema.Type<typeof Project> {}

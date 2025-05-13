@@ -19,7 +19,7 @@ import { live, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Thread } from '@dxos/react-ui-thread';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
@@ -81,7 +81,7 @@ const meta: Meta = {
     }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
-    withClientProvider({ createSpace: true, types: [ThreadType, MessageType] }),
+    withClientProvider({ createSpace: true, types: [ThreadType, DataType.Message] }),
   ],
   parameters: { translations },
 };

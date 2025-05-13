@@ -107,6 +107,9 @@ export const SelectInput = ({
 }: SelectInputOptions) => {
   const { status, error } = getStatus();
 
+  const value = getValue() as string | undefined;
+  const handleValueChange = useCallback((value: string | number) => onValueChange(type, value), [type, onValueChange]);
+
   return (
     <Input.Root validationValence={status}>
       {!inputOnly && (
@@ -114,7 +117,7 @@ export const SelectInput = ({
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Select.Root value={getValue()} onValueChange={(value) => onValueChange(type, value)}>
+      <Select.Root value={value} onValueChange={handleValueChange}>
         {/* TODO(burdon): Placeholder not working? */}
         <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
         <Select.Portal>

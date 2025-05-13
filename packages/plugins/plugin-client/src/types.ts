@@ -2,84 +2,88 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { type PluginsContext } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
 import { type Client, PublicKey, type ClientOptions } from '@dxos/react-client';
 import { type MaybePromise } from '@dxos/util';
 
 import { CLIENT_PLUGIN } from './meta';
 
 // TODO(wittjosiah): Factor out. Generate?
-const IdentitySchema = S.Struct({
-  identityKey: S.instanceOf(PublicKey),
-  spaceKey: S.optional(S.instanceOf(PublicKey)),
-  profile: S.optional(
-    S.Struct({
-      displayName: S.optional(S.String),
-      avatarCid: S.optional(S.String),
-      data: S.optional(S.Record({ key: S.String, value: S.Any })),
+const IdentitySchema = Schema.Struct({
+  identityKey: Schema.instanceOf(PublicKey),
+  spaceKey: Schema.optional(Schema.instanceOf(PublicKey)),
+  profile: Schema.optional(
+    Schema.Struct({
+      displayName: Schema.optional(Schema.String),
+      avatarCid: Schema.optional(Schema.String),
+      data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
     }),
   ),
 });
 
 const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export namespace ClientAction {
-  export class CreateIdentity extends S.TaggedClass<CreateIdentity>()(`${CLIENT_ACTION}/create-identity`, {
-    input: S.Struct({
-      displayName: S.optional(S.String),
+  export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(`${CLIENT_ACTION}/create-identity`, {
+    input: Schema.Struct({
+      displayName: Schema.optional(Schema.String),
     }),
     output: IdentitySchema,
   }) {}
 
-  export class JoinIdentity extends S.TaggedClass<JoinIdentity>()(`${CLIENT_ACTION}/join-identity`, {
-    input: S.Struct({
-      invitationCode: S.optional(S.String),
+  export class JoinIdentity extends Schema.TaggedClass<JoinIdentity>()(`${CLIENT_ACTION}/join-identity`, {
+    input: Schema.Struct({
+      invitationCode: Schema.optional(Schema.String),
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class ShareIdentity extends S.TaggedClass<ShareIdentity>()(`${CLIENT_ACTION}/share-identity`, {
-    input: S.Void,
-    output: S.Void,
+  export class ShareIdentity extends Schema.TaggedClass<ShareIdentity>()(`${CLIENT_ACTION}/share-identity`, {
+    input: Schema.Void,
+    output: Schema.Void,
   }) {}
 
-  export class RecoverIdentity extends S.TaggedClass<RecoverIdentity>()(`${CLIENT_ACTION}/recover-identity`, {
-    input: S.Void,
-    output: S.Void,
+  export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(`${CLIENT_ACTION}/recover-identity`, {
+    input: Schema.Void,
+    output: Schema.Void,
   }) {}
 
-  export class ResetStorage extends S.TaggedClass<ResetStorage>()(`${CLIENT_ACTION}/reset-storage`, {
-    input: S.Struct({
-      mode: S.optional(S.String),
+  export class ResetStorage extends Schema.TaggedClass<ResetStorage>()(`${CLIENT_ACTION}/reset-storage`, {
+    input: Schema.Struct({
+      mode: Schema.optional(Schema.String),
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class CreateAgent extends S.TaggedClass<CreateAgent>()(`${CLIENT_ACTION}/create-agent`, {
-    input: S.Void,
-    output: S.Void,
+  export class CreateAgent extends Schema.TaggedClass<CreateAgent>()(`${CLIENT_ACTION}/create-agent`, {
+    input: Schema.Void,
+    output: Schema.Void,
   }) {}
 
-  export class CreateRecoveryCode extends S.TaggedClass<CreateRecoveryCode>()(`${CLIENT_ACTION}/create-recovery-code`, {
-    input: S.Void,
-    output: S.Void,
+  export class CreateRecoveryCode extends Schema.TaggedClass<CreateRecoveryCode>()(
+    `${CLIENT_ACTION}/create-recovery-code`,
+    {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  ) {}
+
+  export class CreatePasskey extends Schema.TaggedClass<CreatePasskey>()(`${CLIENT_ACTION}/create-passkey`, {
+    input: Schema.Void,
+    output: Schema.Void,
   }) {}
 
-  export class CreatePasskey extends S.TaggedClass<CreatePasskey>()(`${CLIENT_ACTION}/create-passkey`, {
-    input: S.Void,
-    output: S.Void,
+  export class RedeemPasskey extends Schema.TaggedClass<RedeemPasskey>()(`${CLIENT_ACTION}/redeem-passkey`, {
+    input: Schema.Void,
+    output: Schema.Void,
   }) {}
 
-  export class RedeemPasskey extends S.TaggedClass<RedeemPasskey>()(`${CLIENT_ACTION}/redeem-passkey`, {
-    input: S.Void,
-    output: S.Void,
-  }) {}
-
-  export class RedeemToken extends S.TaggedClass<RedeemToken>()(`${CLIENT_ACTION}/redeem-token`, {
-    input: S.Struct({
-      token: S.String,
+  export class RedeemToken extends Schema.TaggedClass<RedeemToken>()(`${CLIENT_ACTION}/redeem-token`, {
+    input: Schema.Struct({
+      token: Schema.String,
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 }
 

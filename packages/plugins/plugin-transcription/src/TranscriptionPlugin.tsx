@@ -7,7 +7,7 @@ import { QueueImpl } from '@dxos/echo-db';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
@@ -50,7 +50,7 @@ export const TranscriptionPlugin = () =>
               const queue = new QueueImpl(client.edge, transcript.queue.dxn);
               await queue.refresh();
               const content = queue.items
-                .filter((message) => isInstanceOf(MessageType, message))
+                .filter((message) => isInstanceOf(DataType.Message, message))
                 .flatMap((message, index) => renderMarkdown(members)(message, index))
                 .join('\n\n');
               return content;

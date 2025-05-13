@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe, Schema as S } from 'effect';
+import { pipe, Schema } from 'effect';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
@@ -25,7 +25,9 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { SPACE_PLUGIN } from '../../meta';
 import { SpaceAction, SpaceForm } from '../../types';
 
-const FormSchema = SpaceForm.pipe(S.extend(S.Struct({ archived: S.Boolean.annotations({ title: 'Archive space' }) })));
+const FormSchema = SpaceForm.pipe(
+  Schema.extend(Schema.Struct({ archived: Schema.Boolean.annotations({ title: 'Archive space' }) })),
+);
 
 export type SpaceSettingsContainerProps = {
   space: Space;
@@ -54,7 +56,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   const handleSave = useCallback(
-    (properties: S.Schema.Type<typeof FormSchema>) => {
+    (properties: Schema.Schema.Type<typeof FormSchema>) => {
       void toggleEdgeReplication(properties.edgeReplication);
       if (properties.name !== space.properties.name) {
         space.properties.name = properties.name;

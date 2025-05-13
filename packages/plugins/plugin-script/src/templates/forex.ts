@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 // @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
+import { defineFunction } from 'dxos:functions';
 
 export default defineFunction({
   description: 'Returns the exchange rate between two currencies.',
 
-  inputSchema: S.Struct({
-    from: S.String.annotations({ description: 'The source currency' }),
-    to: S.String.annotations({ description: 'The target currency' }),
+  inputSchema: Schema.Struct({
+    from: Schema.String.annotations({ description: 'The source currency' }),
+    to: Schema.String.annotations({ description: 'The target currency' }),
   }),
 
   handler: async ({

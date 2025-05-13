@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
@@ -11,7 +12,6 @@ import { Context } from '@dxos/context';
 import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer, TestReplicator, TestReplicatorConnection } from '@dxos/echo-db/testing';
 import { live, type Live, TypedObject } from '@dxos/echo-schema';
-import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -22,7 +22,7 @@ import { type ReplicantEnv, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis';
 
 export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', version: '0.1.0' })({
-  content: S.String,
+  content: Schema.String,
 }) {}
 
 @trace.resource()

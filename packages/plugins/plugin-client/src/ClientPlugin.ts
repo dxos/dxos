@@ -11,7 +11,7 @@ import {
   Migrations,
   ReactContext,
   ReactSurface,
-  Schema,
+  SchemaDefs,
 } from './capabilities';
 import { ClientEvents } from './events';
 import { meta } from './meta';
@@ -41,7 +41,7 @@ export const ClientPlugin = ({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.ClientReady,
       activatesBefore: [ClientEvents.SetupSchema],
-      activate: Schema,
+      activate: SchemaDefs,
     }),
     defineModule({
       id: `${meta.id}/module/migration`,

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import type { State as AmState } from '@dxos/automerge/automerge';
-import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
+import { checkoutVersion, Filter, getEditHistory, type AnyLiveObject } from '@dxos/echo-db';
 import { FormatEnum, getDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { getType, isDeleted } from '@dxos/live-object';
@@ -26,7 +26,7 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: ReactiveEchoObject<any>) => {
+  return (item: AnyLiveObject<any>) => {
     let match = false;
     match ||= !!getType(item)?.toString().match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
@@ -56,7 +56,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   // TODO(burdon): Sort by type?
   const items = useQuery(space, Filter.all(), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
   const [filter, setFilter] = useState('');
-  const [selected, setSelected] = useState<ReactiveEchoObject<any>>();
+  const [selected, setSelected] = useState<AnyLiveObject<any>>();
   const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
@@ -71,7 +71,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }
   };
 
-  const objectSelect = (object: ReactiveEchoObject<any>) => {
+  const objectSelect = (object: AnyLiveObject<any>) => {
     setSelectedVersionObject(null);
     setSelected(object);
   };

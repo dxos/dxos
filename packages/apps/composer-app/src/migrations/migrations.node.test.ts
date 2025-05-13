@@ -11,7 +11,7 @@
 // import { DiagramType } from '@dxos/plugin-sketch/types';
 // import { CollectionType, ChannelType, ThreadType } from '@dxos/plugin-space/types';
 // import { TableType } from '@dxos/react-ui-table/types';
-// import { MessageType } from '@dxos/schema';
+// import { DataType } from '@dxos/schema';
 
 // const testBuilder = new TestBuilder();
 
@@ -22,7 +22,7 @@
 //   beforeEach(async () => {
 //     client = new Client({
 //       services: testBuilder.createLocalClientServices(),
-//       types: [ChannelType, CollectionType, DocumentType, MessageType, DiagramType, TableType, ThreadType],
+//       types: [ChannelType, CollectionType, DocumentType, DataType.Message, DiagramType, TableType, ThreadType],
 //     });
 
 //     await client.initialize();

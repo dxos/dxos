@@ -5,9 +5,10 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
+import { Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Format, type EchoSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { Format, type EchoSchema, toJsonSchema, TypedObject } from '@dxos/echo-schema';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -26,7 +27,7 @@ const DefaultStory = () => {
   useAsyncEffect(async () => {
     if (space) {
       class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-        name: S.String,
+        name: Schema.String,
         email: Format.Email,
         salary: Format.Currency(),
       }) {}

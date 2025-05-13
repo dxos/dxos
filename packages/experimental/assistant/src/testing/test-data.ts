@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
 import type { EchoDatabase } from '@dxos/echo-db';
@@ -254,7 +254,7 @@ export class MockDataSource implements DataSource {
   objects: Record<
     string,
     {
-      schema: S.Schema.All;
+      schema: Schema.Schema.All;
       typeDxn: string;
       id: string;
       data: unknown;
@@ -265,7 +265,7 @@ export class MockDataSource implements DataSource {
     string,
     {
       json: JsonSchemaType;
-      instance: S.Schema.All;
+      instance: Schema.Schema.All;
     }
   > = {};
 
@@ -280,7 +280,7 @@ export class MockDataSource implements DataSource {
     return this.relationships.filter((relationship) => !label || relationship.label === label);
   }
 
-  add<S extends S.Schema.All>(schema: S, data: S.Schema.Type<S>) {
+  add<S extends Schema.Schema.All>(schema: S, data: Schema.Schema.Type<S>) {
     invariant(typeof data.id === 'string', 'Data must have an id');
     const jsonSchema = toJsonSchema(schema);
     if (!this.schema[jsonSchema.$id!]) {

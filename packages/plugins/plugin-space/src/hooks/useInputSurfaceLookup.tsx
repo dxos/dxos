@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 import React, { useCallback } from 'react';
 
 import { usePluginManager, isSurfaceAvailable, Surface } from '@dxos/app-framework';
@@ -18,7 +18,7 @@ export const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
   const pluginManager = usePluginManager();
 
   return useCallback(
-    ({ prop, schema, inputProps }: { prop: string; schema: S.Schema<any>; inputProps: InputProps }) => {
+    ({ prop, schema, inputProps }: { prop: string; schema: Schema.Schema<any>; inputProps: InputProps }) => {
       const composedData = { prop, schema, ...baseData };
       if (!isSurfaceAvailable(pluginManager.context, { role: 'form-input', data: composedData })) {
         return undefined;

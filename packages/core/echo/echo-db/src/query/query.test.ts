@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { Expando, RelationSourceId, RelationTargetId, S, TypedObject, Ref } from '@dxos/echo-schema';
+import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -17,7 +18,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
-import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
+import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
@@ -325,12 +326,12 @@ describe('Queries', () => {
     const { peer, db, graph } = await builder.createDatabase();
 
     class ContactV1 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
-      firstName: S.String,
-      lastName: S.String,
+      firstName: Schema.String,
+      lastName: Schema.String,
     }) {}
 
     class ContactV2 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.2.0' })({
-      name: S.String,
+      name: Schema.String,
     }) {}
 
     graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
@@ -388,7 +389,7 @@ describe('Queries', () => {
 describe('Query reactivity', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
-  let objects: ReactiveEchoObject<any>[];
+  let objects: AnyLiveObject<any>[];
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();

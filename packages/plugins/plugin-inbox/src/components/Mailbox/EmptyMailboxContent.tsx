@@ -8,14 +8,14 @@ import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-frame
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation, Button } from '@dxos/react-ui';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { INBOX_PLUGIN } from '../../meta';
 import { type MailboxType } from '../../types';
 
 export const EmptyMailboxContent = ({ mailbox }: { mailbox: MailboxType }) => {
   const space = getSpace(mailbox);
-  const tokens = useQuery(space, Filter.schema(AccessTokenType));
+  const tokens = useQuery(space, Filter.schema(DataType.AccessToken));
   const { t } = useTranslation(INBOX_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 

@@ -2,10 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Stream } from 'effect';
+import { Effect, Stream, Schema } from 'effect';
 import { describe, test } from 'vitest';
-
-import { S } from '@dxos/echo-schema';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime, testServices } from '../testing';
@@ -68,8 +66,8 @@ describe('Streaming pipelines', () => {
 // TODO(dmaretskyi): Can we generalize this to work over arrays and streams?
 //                   Maybe nodes can have signature overloads.
 const sumAggregator = defineComputeNode({
-  input: S.Struct({ stream: StreamSchema(S.Number) }),
-  output: S.Struct({ result: S.Number }),
+  input: Schema.Struct({ stream: StreamSchema(Schema.Number) }),
+  output: Schema.Struct({ result: Schema.Number }),
   exec: synchronizedComputeFunction(({ stream }) =>
     Effect.gen(function* () {
       const result = yield* stream.pipe(Stream.runFold(0, (acc, x) => acc + x));

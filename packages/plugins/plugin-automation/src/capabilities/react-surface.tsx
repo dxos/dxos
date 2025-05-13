@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { ScriptType } from '@dxos/functions/types';
+import { ScriptType } from '@dxos/functions';
 import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 

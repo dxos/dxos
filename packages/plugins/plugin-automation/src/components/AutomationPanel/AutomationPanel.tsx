@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useState } from 'react';
 
-import { S } from '@dxos/echo-schema';
 import {
   FunctionType,
   FunctionTrigger,
@@ -12,7 +12,7 @@ import {
   TriggerKind,
   type FunctionTriggerType,
   ScriptType,
-} from '@dxos/functions/types';
+} from '@dxos/functions';
 import { type Client, useClient } from '@dxos/react-client';
 import { live, Filter, useQuery, type Space, type Live, getSpace } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
@@ -85,7 +85,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
         </ControlItem>
       ) : (
         <div role='none' className={controlItemClasses}>
-          <List.Root<FunctionTrigger> items={triggers} isItem={S.is(FunctionTrigger)} getId={(field) => field.id}>
+          <List.Root<FunctionTrigger> items={triggers} isItem={Schema.is(FunctionTrigger)} getId={(field) => field.id}>
             {({ items: triggers }) => (
               <div role='list' className='flex flex-col w-full'>
                 {triggers?.map((trigger) => {
@@ -158,10 +158,11 @@ const getWebhookUrl = (client: Client, trigger: FunctionTrigger) => {
 const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigger: FunctionTriggerType) => {
   // TODO(wittjosiah): Truncation should be done in the UI.
   //   Warning that the List component is currently a can of worms.
-  const shortId = trigger.function && `${trigger.function?.slice(0, 16)}…`;
-  const functionObject = functions.find((fn) => `dxn:worker:${fn.name}` === trigger.function);
+  const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
+  const functionObject = functions.find((fn) => fn === trigger.function?.target);
   if (!functionObject) {
     return shortId;
   }
+
   return scripts.find((s) => functionObject.source?.target?.id === s.id)?.name ?? shortId;
 };

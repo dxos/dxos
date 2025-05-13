@@ -3,13 +3,13 @@
 //
 
 import { Octokit } from '@octokit/core';
-import { isNotNullable } from 'effect/Predicate';
+import { Predicate } from 'effect';
 
 import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions/types';
+import { ScriptType } from '@dxos/functions';
 import { live, makeRef } from '@dxos/live-object';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { DEPLOYMENT_DIALOG } from '../components';
 import { defaultScriptsForIntegration } from '../meta';
@@ -49,7 +49,7 @@ export default () =>
           data: {
             object: live(ScriptType, {
               name,
-              source: makeRef(live(TextType, { content })),
+              source: makeRef(live(DataType.Text, { content })),
             }),
           },
         };
@@ -60,7 +60,7 @@ export default () =>
       resolve: async ({ accessToken }) => {
         const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
           .map((id) => templates.find((t) => t.id === id))
-          .filter(isNotNullable);
+          .filter(Predicate.isNotNullable);
 
         if (scriptTemplates.length > 0) {
           return {

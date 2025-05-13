@@ -128,7 +128,7 @@ export class ReplicatorExtension implements TeleportExtension {
         },
       },
       port: await context.createPort('rpc', {
-        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
+        contentType: 'application/x-protobuf; DataType.Message="dxos.rpc.Message"',
       }),
       timeout: 10_000,
     });

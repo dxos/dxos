@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import {
   contributes,
   createIntent,
@@ -10,7 +12,6 @@ import {
   type PromiseIntentDispatcher,
 } from '@dxos/app-framework';
 import { defineTool, ToolResult } from '@dxos/artifact';
-import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '../meta';
@@ -35,8 +36,8 @@ export default () =>
       `,
       caption: 'Showing item...',
       // TODO(wittjosiah): Refactor Layout/Navigation/Deck actions so that they can be used directly.
-      schema: S.Struct({
-        id: S.String.annotations({
+      schema: Schema.Struct({
+        id: Schema.String.annotations({
           description: 'The ID of the item to show.',
         }),
       }),

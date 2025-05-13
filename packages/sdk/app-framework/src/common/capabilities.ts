@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type GraphBuilder } from '@dxos/app-graph';
@@ -82,7 +82,7 @@ export namespace Capabilities {
   // export type Settings = Parameters<RootSettingsStore['createStore']>[0];
   // export type Settings<T extends SettingsValue = SettingsValue> = SettingsProps<T>;
   export type Settings = {
-    schema: S.Schema.All;
+    schema: Schema.Schema.All;
     prefix: string;
     value?: Record<string, any>;
   };

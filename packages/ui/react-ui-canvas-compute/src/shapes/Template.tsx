@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useRef } from 'react';
 
 import { ComputeValueType, getTemplateInputSchema, TemplateOutput, VoidInput } from '@dxos/conductor';
-import { S, toJsonSchema } from '@dxos/echo-schema';
+import { toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import {
   type ShapeComponentProps,
@@ -23,15 +24,15 @@ import { useComputeNodeState } from '../hooks';
 // Data
 //
 
-export const TemplateShape = S.extend(
+export const TemplateShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('template'),
-    valueType: S.optional(ComputeValueType),
+  Schema.Struct({
+    type: Schema.Literal('template'),
+    valueType: Schema.optional(ComputeValueType),
   }),
 );
 
-export type TemplateShape = S.Schema.Type<typeof TemplateShape>;
+export type TemplateShape = Schema.Schema.Type<typeof TemplateShape>;
 
 //
 // Component
@@ -54,7 +55,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
   };
 
   const handleTypeChange = (newType: string) => {
-    invariant(S.is(ComputeValueType)(newType), 'Invalid type');
+    invariant(Schema.is(ComputeValueType)(newType), 'Invalid type');
 
     node.valueType = newType;
     node.inputSchema = toJsonSchema(getTemplateInputSchema(node));

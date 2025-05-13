@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import { JsonPath, type JsonProp } from '@dxos/effect';
 
@@ -14,68 +14,68 @@ import { FormatAnnotationId } from '../formats';
 //
 
 // TODO(burdon): Reuse/reconcile with ScalarTypeEnum (handle arrays).
-const SimpleTypes = S.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
+const SimpleTypes = Schema.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
 
-const NonNegativeInteger = S.Number.pipe(S.greaterThanOrEqualTo(0));
-const StringArray = S.Array(S.String).pipe(S.mutable);
-const JsonSchemaOrBoolean = S.Union(
-  S.suspend(() => JsonSchemaType),
-  S.Boolean,
+const NonNegativeInteger = Schema.Number.pipe(Schema.greaterThanOrEqualTo(0));
+const StringArray = Schema.Array(Schema.String).pipe(Schema.mutable);
+const JsonSchemaOrBoolean = Schema.Union(
+  Schema.suspend(() => JsonSchemaType),
+  Schema.Boolean,
 );
 
-export const EntityKindSchema = S.Enums(EntityKind);
+export const EntityKindSchema = Schema.Enums(EntityKind);
 
 /**
  * Go under the `annotations` property.
  */
-export const JsonSchemaEchoAnnotations = S.Struct({
+export const JsonSchemaEchoAnnotations = Schema.Struct({
   /**
    * Label for this schema.
    * Mapped from {@link LabelAnnotationId}.
    */
-  labelProp: S.optional(S.Union(JsonPath, S.Array(JsonPath))),
+  labelProp: Schema.optional(Schema.Union(JsonPath, Schema.Array(JsonPath))),
 
   /**
    * Generator function for this schema.
    * Mapped from {@link GeneratorAnnotationId}.
    */
-  generator: S.optional(S.String),
+  generator: Schema.optional(Schema.String),
 
   /**
    * {@link PropertyMeta} annotations get serialized here.
    */
-  meta: S.optional(
-    S.Record({
-      key: S.String,
-      value: S.Any,
-    }).pipe(S.mutable),
+  meta: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.Any,
+    }).pipe(Schema.mutable),
   ),
 
   /**
    * @deprecated
    */
   // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe
-  type: S.optional(
-    S.Struct({
-      typename: S.String,
-      version: S.String,
+  type: Schema.optional(
+    Schema.Struct({
+      typename: Schema.String,
+      version: Schema.String,
 
       // Not used.
-      schemaId: S.optional(S.String),
-    }).pipe(S.mutable),
+      schemaId: Schema.optional(Schema.String),
+    }).pipe(Schema.mutable),
   ),
 
   /**
    * @deprecated Superseded by `meta`.
    */
-  annotations: S.optional(
-    S.Record({
-      key: S.String,
-      value: S.Any,
-    }).pipe(S.mutable),
+  annotations: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.Any,
+    }).pipe(Schema.mutable),
   ),
-}).pipe(S.mutable);
-export type JsonSchemaEchoAnnotations = S.Schema.Type<typeof JsonSchemaEchoAnnotations>;
+}).pipe(Schema.mutable);
+export type JsonSchemaEchoAnnotations = Schema.Schema.Type<typeof JsonSchemaEchoAnnotations>;
 
 /**
  * Describes a schema for the JSON-schema objects stored in ECHO.
@@ -84,35 +84,35 @@ export type JsonSchemaEchoAnnotations = S.Schema.Type<typeof JsonSchemaEchoAnnot
  */
 // TODO(burdon): Integrate with Effect Serializable?
 // TODO(dmaretskyi): Update to latest draft: https://json-schema.org/draft/2020-12
-const _JsonSchemaType = S.Struct({
+const _JsonSchemaType = Schema.Struct({
   /**
    * Identifier for this schema.
    * This schema might be referenced by $ref clause in other schemas.
    */
   // TODO(dmaretskyi): Specify how the ids are generated.
   // TODO(dmaretskyi): For type dxns, should this include the version?
-  $id: S.optional(S.String),
+  $id: Schema.optional(Schema.String),
 
   /**
    * Schema of this schema.
    * Set to "https://json-schema.org/draft-07/schema".
    */
-  $schema: S.optional(S.String),
+  $schema: Schema.optional(Schema.String),
 
   /**
    * Reference to another schema.
    */
-  $ref: S.optional(S.String),
+  $ref: Schema.optional(Schema.String),
 
   /**
    * Comments are ignored when interpreting the schema.
    */
-  $comment: S.optional(S.String),
+  $comment: Schema.optional(Schema.String),
 
   /**
    * Defines whether this schema is an object schema or a relation schema.
    */
-  entityKind: S.optional(EntityKindSchema),
+  entityKind: Schema.optional(EntityKindSchema),
 
   /**
    * Typename of this schema.
@@ -120,128 +120,128 @@ const _JsonSchemaType = S.Struct({
    *
    * @example 'example.com/type/MyType'
    */
-  typename: S.optional(S.String),
+  typename: Schema.optional(Schema.String),
 
   /**
    * Version of this schema.
    * Custom dialect for ECHO.
    */
-  version: S.optional(S.String),
+  version: Schema.optional(Schema.String),
 
   /**
    * Target of this relation.
    * Only for relation schemas.
    * The referenced schema must be an object schema.
    */
-  relationTarget: S.optional(S.suspend(() => JsonSchemaType)),
+  relationTarget: Schema.optional(Schema.suspend(() => JsonSchemaType)),
 
   /**
    * Source of this relation.
    * Only for relation schemas.
    * The referenced schema must be an object schema.
    */
-  relationSource: S.optional(S.suspend(() => JsonSchemaType)),
+  relationSource: Schema.optional(Schema.suspend(() => JsonSchemaType)),
 
   /**
    * Title of this schema.
    */
-  title: S.optional(S.String),
+  title: Schema.optional(Schema.String),
 
   /**
    * Description of this schema.
    */
-  description: S.optional(S.String),
+  description: Schema.optional(Schema.String),
 
   /**
    * Whether this schema is read-only.
    */
-  readOnly: S.optional(S.Boolean),
+  readOnly: Schema.optional(Schema.Boolean),
 
   /**
    * Whether this schema is write-only.
    */
-  writeOnly: S.optional(S.Boolean),
+  writeOnly: Schema.optional(Schema.Boolean),
 
   /**
    * Examples of instances of this schema.
    */
-  examples: S.optional(S.Array(S.Any)),
+  examples: Schema.optional(Schema.Array(Schema.Any)),
 
   /**
    * Default value for this schema.
    */
-  default: S.optional(S.Any),
+  default: Schema.optional(Schema.Any),
 
   /**
    * This schema only matches values that are equal to this value.
    */
-  const: S.optional(S.Any),
+  const: Schema.optional(Schema.Any),
 
   /**
    * This schema only matches one of the values in this array.
    */
-  enum: S.optional(S.Array(S.Any)),
+  enum: Schema.optional(Schema.Array(Schema.Any)),
 
   /**
    * Base type of the schema.
    */
-  type: S.optional(S.Union(SimpleTypes, S.Array(SimpleTypes))),
+  type: Schema.optional(Schema.Union(SimpleTypes, Schema.Array(SimpleTypes))),
 
   //
   // Numbers.
   //
 
-  multipleOf: S.optional(S.Number.pipe(S.greaterThan(0))),
-  maximum: S.optional(S.Number),
-  exclusiveMaximum: S.optional(S.Number),
-  minimum: S.optional(S.Number),
-  exclusiveMinimum: S.optional(S.Number),
+  multipleOf: Schema.optional(Schema.Number.pipe(Schema.greaterThan(0))),
+  maximum: Schema.optional(Schema.Number),
+  exclusiveMaximum: Schema.optional(Schema.Number),
+  minimum: Schema.optional(Schema.Number),
+  exclusiveMinimum: Schema.optional(Schema.Number),
 
   //
   // Strings.
   //
 
-  maxLength: S.optional(NonNegativeInteger),
+  maxLength: Schema.optional(NonNegativeInteger),
 
   /**
    * Regex pattern for strings.
    */
-  pattern: S.optional(S.String.annotations({ [FormatAnnotationId]: 'regex' })),
+  pattern: Schema.optional(Schema.String.annotations({ [FormatAnnotationId]: 'regex' })),
 
   /**
    * Serialized from {@link FormatAnnotationId}.
    */
-  format: S.optional(S.String),
+  format: Schema.optional(Schema.String),
 
   //
   // Arrays
   //
 
-  minLength: S.optional(NonNegativeInteger),
-  items: S.optional(
-    S.Union(
-      S.suspend(() => JsonSchemaType),
-      S.Array(S.suspend(() => JsonSchemaType)),
+  minLength: Schema.optional(NonNegativeInteger),
+  items: Schema.optional(
+    Schema.Union(
+      Schema.suspend(() => JsonSchemaType),
+      Schema.Array(Schema.suspend(() => JsonSchemaType)),
     ),
   ),
-  additionalItems: S.optional(
-    S.Union(
-      S.suspend(() => JsonSchemaType),
-      S.Boolean,
+  additionalItems: Schema.optional(
+    Schema.Union(
+      Schema.suspend(() => JsonSchemaType),
+      Schema.Boolean,
     ),
   ),
-  maxItems: S.optional(NonNegativeInteger),
-  minItems: S.optional(NonNegativeInteger),
-  uniqueItems: S.optional(S.Boolean),
-  contains: S.optional(S.suspend(() => JsonSchemaType)),
+  maxItems: Schema.optional(NonNegativeInteger),
+  minItems: Schema.optional(NonNegativeInteger),
+  uniqueItems: Schema.optional(Schema.Boolean),
+  contains: Schema.optional(Schema.suspend(() => JsonSchemaType)),
 
   //
   // Objects
   //
 
-  maxProperties: S.optional(NonNegativeInteger),
-  minProperties: S.optional(NonNegativeInteger),
-  required: S.optional(StringArray),
+  maxProperties: Schema.optional(NonNegativeInteger),
+  minProperties: Schema.optional(NonNegativeInteger),
+  required: Schema.optional(StringArray),
 
   /**
    * Non-standard JSON Schema extension.
@@ -250,56 +250,56 @@ const _JsonSchemaType = S.Struct({
    *
    * Related: https://github.com/json-schema/json-schema/issues/119
    */
-  propertyOrder: S.optional(StringArray),
+  propertyOrder: Schema.optional(StringArray),
 
-  additionalProperties: S.optional(JsonSchemaOrBoolean),
-  properties: S.optional(
-    S.Record({
-      key: S.String,
-      value: S.suspend(() => JsonSchemaType),
-    }).pipe(S.mutable),
+  additionalProperties: Schema.optional(JsonSchemaOrBoolean),
+  properties: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.suspend(() => JsonSchemaType),
+    }).pipe(Schema.mutable),
   ),
-  patternProperties: S.optional(
-    S.Record({
-      key: S.String,
-      value: S.suspend(() => JsonSchemaType),
-    }).pipe(S.mutable),
+  patternProperties: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.suspend(() => JsonSchemaType),
+    }).pipe(Schema.mutable),
   ),
-  propertyNames: S.optional(S.suspend(() => JsonSchemaType)),
+  propertyNames: Schema.optional(Schema.suspend(() => JsonSchemaType)),
 
-  definitions: S.optional(
-    S.mutable(
-      S.Record({
-        key: S.String,
-        value: S.suspend(() => JsonSchemaType),
+  definitions: Schema.optional(
+    Schema.mutable(
+      Schema.Record({
+        key: Schema.String,
+        value: Schema.suspend(() => JsonSchemaType),
       }),
     ),
   ),
-  dependencies: S.optional(
-    S.Record({
-      key: S.String,
-      value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)).annotations({
+  dependencies: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.suspend(() => Schema.Union(Schema.String, StringArray, JsonSchemaType)).annotations({
         identifier: 'dependency',
         description: 'Dependency',
       }),
     }),
   ),
 
-  contentMediaType: S.optional(S.String),
-  contentEncoding: S.optional(S.String),
+  contentMediaType: Schema.optional(Schema.String),
+  contentEncoding: Schema.optional(Schema.String),
 
-  if: S.optional(S.suspend(() => JsonSchemaType)),
-  then: S.optional(S.suspend(() => JsonSchemaType)),
-  else: S.optional(S.suspend(() => JsonSchemaType)),
-  allOf: S.optional(S.Array(S.suspend(() => JsonSchemaType))),
-  anyOf: S.optional(S.Array(S.suspend(() => JsonSchemaType))),
-  oneOf: S.optional(S.Array(S.suspend(() => JsonSchemaType))),
-  not: S.optional(S.suspend(() => JsonSchemaType)),
-  $defs: S.optional(
-    S.mutable(
-      S.Record({
-        key: S.String,
-        value: S.suspend(() => JsonSchemaType),
+  if: Schema.optional(Schema.suspend(() => JsonSchemaType)),
+  then: Schema.optional(Schema.suspend(() => JsonSchemaType)),
+  else: Schema.optional(Schema.suspend(() => JsonSchemaType)),
+  allOf: Schema.optional(Schema.Array(Schema.suspend(() => JsonSchemaType))),
+  anyOf: Schema.optional(Schema.Array(Schema.suspend(() => JsonSchemaType))),
+  oneOf: Schema.optional(Schema.Array(Schema.suspend(() => JsonSchemaType))),
+  not: Schema.optional(Schema.suspend(() => JsonSchemaType)),
+  $defs: Schema.optional(
+    Schema.mutable(
+      Schema.Record({
+        key: Schema.String,
+        value: Schema.suspend(() => JsonSchemaType),
       }),
     ),
   ),
@@ -308,14 +308,14 @@ const _JsonSchemaType = S.Struct({
   // ECHO extensions.
   //
 
-  currency: S.optional(S.String),
+  currency: Schema.optional(Schema.String),
 
-  reference: S.optional(
-    S.mutable(
-      S.Struct({
-        schema: S.suspend(() => JsonSchemaType),
-        schemaVersion: S.optional(S.String),
-        schemaObject: S.optional(S.String),
+  reference: Schema.optional(
+    Schema.mutable(
+      Schema.Struct({
+        schema: Schema.suspend(() => JsonSchemaType),
+        schemaVersion: Schema.optional(Schema.String),
+        schemaObject: Schema.optional(Schema.String),
       }),
     ),
   ),
@@ -324,12 +324,12 @@ const _JsonSchemaType = S.Struct({
    * ECHO-specific annotations.
    */
   // TODO(dmaretskyi): Since we are adding a lot of new extensions to the JSON Schema, it is safer to namespace them here.
-  annotations: S.optional(S.mutable(JsonSchemaEchoAnnotations)),
+  annotations: Schema.optional(Schema.mutable(JsonSchemaEchoAnnotations)),
 
   /**
    * @deprecated Use `annotations` instead.
    */
-  echo: S.optional(S.mutable(JsonSchemaEchoAnnotations)),
+  echo: Schema.optional(Schema.mutable(JsonSchemaEchoAnnotations)),
 }).annotations({ identifier: 'jsonSchema', description: 'JSON Schema' });
 
 export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
@@ -337,9 +337,9 @@ export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
 /**
  * https://json-schema.org/draft-07/schema
  */
-export interface JsonSchemaType extends S.Schema.Type<S.mutable<typeof _JsonSchemaType>> {}
+export interface JsonSchemaType extends Schema.Schema.Type<Schema.mutable<typeof _JsonSchemaType>> {}
 
-export const JsonSchemaType: S.Schema<JsonSchemaType> = _JsonSchemaType.pipe(S.mutable);
+export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType.pipe(Schema.mutable);
 
 // TODO(burdon): Factor out JSON schema utils.
 

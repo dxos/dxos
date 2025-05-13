@@ -28,8 +28,7 @@ import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';
 
-// NOTE(ZaymonFC): We rely on this seed being 0 in the smoke tests.
-faker.seed(0);
+faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
 /**
  * Custom hook to create and manage a test table model for storybook demonstrations.

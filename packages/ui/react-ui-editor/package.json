@@ -68,6 +68,7 @@
     "@replit/codemirror-vim": "^6.2.1",
     "@replit/codemirror-vscode-keymap": "^6.0.2",
     "codemirror": "^6.0.1",
+    "effect": "3.14.21",
     "lib0": "^0.2.65",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
@@ -112,6 +113,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
