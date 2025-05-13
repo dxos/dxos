@@ -6,8 +6,7 @@ import { Schema, SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
-import { FormatEnum, ReferenceAnnotationId } from '@dxos/echo-schema';
-import { createJsonPath, findAnnotation, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
@@ -20,7 +19,7 @@ import { type InputComponent } from './Input';
 import { RefField } from './RefField';
 import { getInputComponent } from './factory';
 import { type QueryRefOptions } from './hooks';
-import { findArrayElementType } from '../../util';
+import { getRefProps } from '../../util';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
@@ -92,10 +91,12 @@ export const FormField = ({
   // Refs.
   //
 
-  if (format === FormatEnum.Ref) {
+  const refProps = getRefProps(property);
+  if (refProps) {
     return (
       <RefField
-        ast={ast}
+        ast={refProps.ast}
+        array={refProps.isArray}
         type={type}
         format={format}
         label={label}
@@ -113,27 +114,6 @@ export const FormField = ({
   //
 
   if (array) {
-    const elementType = findArrayElementType(ast);
-    if (elementType) {
-      const annotation = findAnnotation(elementType, ReferenceAnnotationId);
-      if (annotation) {
-        return (
-          <RefField
-            ast={elementType}
-            array={true}
-            type={type}
-            format={format}
-            label={label}
-            inputOnly={inline}
-            placeholder={placeholder}
-            disabled={readonly}
-            onQueryRefOptions={onQueryRefOptions}
-            {...inputProps}
-          />
-        );
-      }
-    }
-
     return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
   }
 
