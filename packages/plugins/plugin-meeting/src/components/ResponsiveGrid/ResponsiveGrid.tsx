@@ -16,6 +16,8 @@ import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 const ASPECT_RATIO = 16 / 9;
 const MIN_GALLERY_HEIGHT = 250;
 
+const DEFAULT_GAP = 8;
+
 const maxImageSize = 'w-[2560px] h-[1440px]';
 
 /**
@@ -56,7 +58,7 @@ const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
 export const ResponsiveGrid = <T extends object = any>({
   classNames,
   Cell,
-  gap = 2,
+  gap = DEFAULT_GAP,
   getId = defaultGetId,
   items,
   pinned,
