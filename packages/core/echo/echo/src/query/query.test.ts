@@ -2,13 +2,8 @@ import { create, EchoRelation } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
-import { Type } from '..';
+import { Type, Relation } from '..';
 import { Query } from './api';
-
-// TODO(dmaretskyi): Move out.
-const Relation = {
-  def: EchoRelation,
-};
 
 //
 // Example schema
@@ -16,6 +11,7 @@ const Relation = {
 
 const Person = Schema.Struct({
   name: Schema.String,
+  email: Schema.optional(Schema.String),
 }).pipe(Type.def({ typename: 'dxos.org/type/Person', version: '0.1.0' }));
 interface Person extends Schema.Schema.Type<typeof Person> {}
 

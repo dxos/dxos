@@ -10,3 +10,4 @@ export * as Database from './Database';
 export * as Queue from './Queue';
 export * as Space from './Space';
 export * as Type from './Type';
+export * as Relation from './Relation';

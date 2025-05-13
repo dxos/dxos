@@ -2,6 +2,7 @@ import { raise } from '@dxos/debug';
 import { getSchemaDXN, type Ref } from '@dxos/echo-schema';
 import { Schema } from 'effect';
 import * as QueryAST from './ast';
+import type { Relation } from '..';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -55,13 +56,13 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  sources<S extends Schema.Schema.All>(): Query<Schema.Schema.Type<S>>;
+  sources(): Query<Relation.Source<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  targets<S extends Schema.Schema.All>(): Query<Schema.Schema.Type<S>>;
+  targets(): Query<Relation.Target<T>>;
 }
 
 interface QueryAPI {
@@ -87,7 +88,7 @@ export interface Predicate<T> {
   ast: QueryAST.Predicate;
 }
 
-export const Predicate = {
+const Predicate = {
   variance: {} as Predicate<any>['~Predicate'],
 
   make<T>(ast: QueryAST.Predicate): Predicate<T> {
