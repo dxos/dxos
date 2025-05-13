@@ -18,8 +18,7 @@ export const storybookGraphBuilders = [
           label: 'User Account',
           icon: 'ph--user--regular',
           disposition: 'user-account',
-          // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
-          userId: '0',
+          userId: '1234567890ABCDEF',
           hue: faker.properties.hue(),
           emoji: faker.properties.emoji(),
           status: 'active',
