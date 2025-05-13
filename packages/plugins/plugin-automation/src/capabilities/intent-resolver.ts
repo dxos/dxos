@@ -25,7 +25,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,
       resolve: async ({ space, template, enabled = false, scriptName, payload }) => {
-        const trigger = live(FunctionTrigger, { enabled });
+        const trigger = live(FunctionTrigger, { enabled, payload });
 
         // TODO(wittjosiah): Factor out function lookup by script name?
         if (scriptName) {
@@ -44,7 +44,7 @@ export default (context: PluginsContext) =>
 
         switch (template.type) {
           case 'timer': {
-            trigger.spec = { type: TriggerKind.Timer, cron: template.cron, payload };
+            trigger.spec = { type: TriggerKind.Timer, cron: template.cron };
             break;
           }
           case 'queue': {

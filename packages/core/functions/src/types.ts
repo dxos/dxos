@@ -4,7 +4,9 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { Expando, OptionsAnnotationId, RawObject, TypedObject, DXN, Ref } from '@dxos/echo-schema';
+import { Expando, OptionsAnnotationId, TypedObject, DXN, Ref, RawObject } from '@dxos/echo-schema';
+
+import { FunctionType } from './schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -31,12 +33,6 @@ const TimerTriggerSchema = Schema.Struct({
     [SchemaAST.TitleAnnotationId]: 'Cron',
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
-  /**
-   * Passed as the input data to the function.
-   * Must match the function's input schema.
-   * This does not get merged with the trigger event.
-   */
-  payload: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
 }).pipe(Schema.mutable);
 
 export type TimerTrigger = Schema.Schema.Type<typeof TimerTriggerSchema>;
@@ -137,6 +133,13 @@ export const FunctionTriggerSchema = Schema.Struct({
 
   // TODO(burdon): Flatten entire schema.
   spec: Schema.optional(TriggerSchema),
+
+  /**
+   * Passed as the input data to the function.
+   * Must match the function's input schema.
+   * This does not get merged with the trigger event.
+   */
+  payload: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
 });
 
 export type FunctionTriggerType = Schema.Schema.Type<typeof FunctionTriggerSchema>;
@@ -149,29 +152,15 @@ export class FunctionTrigger extends TypedObject({
   version: '0.1.0',
 })(FunctionTriggerSchema.fields) {}
 
-/**
- * Function definition.
- * @deprecated (Use dxos.org/type/Function)
- */
-// TODO(burdon): Reconcile with FunctionType.
-export class FunctionDef extends TypedObject({
-  typename: 'dxos.org/type/FunctionDef',
-  version: '0.1.0',
-})({
-  uri: Schema.String,
-  description: Schema.optional(Schema.String),
-  route: Schema.String,
-  handler: Schema.String,
-}) {}
+// TODO(wittjosiah): Remove?
 
 /**
  * Function manifest file.
  */
 export const FunctionManifestSchema = Schema.Struct({
-  functions: Schema.optional(Schema.mutable(Schema.Array(RawObject(FunctionDef)))),
+  functions: Schema.optional(Schema.mutable(Schema.Array(RawObject(FunctionType)))),
   triggers: Schema.optional(Schema.mutable(Schema.Array(RawObject(FunctionTrigger)))),
 });
-
 export type FunctionManifest = Schema.Schema.Type<typeof FunctionManifestSchema>;
 
-export const FUNCTION_TYPES = [FunctionDef, FunctionTrigger];
+export const FUNCTION_TYPES = [FunctionType, FunctionTrigger];

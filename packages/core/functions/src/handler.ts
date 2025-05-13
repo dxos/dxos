@@ -12,7 +12,7 @@ import { type HasId, DXN as dxnSchema } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
-import type { FunctionTrigger } from './types';
+// import type { FunctionTrigger } from './types';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -32,16 +32,19 @@ export type FunctionHandler<TEvent extends EventType = EventType, TData = {}, TO
    * Trigger that invoked the function.
    * In case the function is part of a workflow, this will be the trigger for the overall workflow.
    */
-  trigger: FunctionTrigger;
+  // TODO(wittjosiah): Remove?
+  // trigger: FunctionTrigger;
 
   /**
    * Event data from the trigger.
+   * In case the function is part of a workflow, this will be the event that triggered the overall workflow.
    */
   event: TEvent;
 
   /**
    * Data passed as the input to the function.
    * Must match the function's input schema.
+   * This will be the payload from the trigger or other data passed into the function in a workflow.
    */
   data: TData;
 }) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any>;
@@ -117,7 +120,7 @@ export type QueueTriggerOutput = S.Schema.Type<typeof QueueTriggerOutput>;
 export const SubscriptionTriggerOutput = S.mutable(S.Struct({ type: S.String, changedObjectId: S.String }));
 export type SubscriptionTriggerOutput = S.Schema.Type<typeof SubscriptionTriggerOutput>;
 
-export const TimerTriggerOutput = S.mutable(S.Record({ key: S.String, value: S.Any }));
+export const TimerTriggerOutput = S.mutable(S.Struct({ tick: S.Number }));
 export type TimerTriggerOutput = S.Schema.Type<typeof TimerTriggerOutput>;
 
 //

@@ -25,7 +25,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
     invariant(space);
 
     const syncTrigger = triggers.find(
-      (trigger) => trigger.spec?.type === TriggerKind.Timer && trigger.spec?.payload?.mailboxId === object.id,
+      (trigger) => trigger.spec?.type === TriggerKind.Timer && trigger.payload?.mailboxId === object.id,
     );
     if (syncTrigger) {
       void dispatch(
