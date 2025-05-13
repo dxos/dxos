@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, type JSONSchema } from 'effect';
-import { Option, pipe } from 'effect';
+import { Option, SchemaAST, type JSONSchema, pipe } from 'effect';
 
-import type { JsonSchemaType } from '../ast';
-import { createAnnotationHelper } from '../ast/annotation-helper';
+import { createAnnotationHelper, type JsonSchemaType } from '../ast';
 
 export enum TypeEnum {
   Object = 'object',
