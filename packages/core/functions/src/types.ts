@@ -21,40 +21,36 @@ export enum TriggerKind {
   Queue = 'queue',
 }
 
-// TODO(burdon): Rename prop kind.
-const typeLiteralAnnotations = { [SchemaAST.TitleAnnotationId]: 'Type' };
+const kindLiteralAnnotations = { [SchemaAST.TitleAnnotationId]: 'Kind' };
 
 /**
  * Cron timer.
  */
 const TimerTriggerSchema = Schema.Struct({
-  type: Schema.Literal(TriggerKind.Timer).annotations(typeLiteralAnnotations),
+  kind: Schema.Literal(TriggerKind.Timer).annotations(kindLiteralAnnotations),
   cron: Schema.String.annotations({
     [SchemaAST.TitleAnnotationId]: 'Cron',
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
 }).pipe(Schema.mutable);
-
 export type TimerTrigger = Schema.Schema.Type<typeof TimerTriggerSchema>;
 
 const EmailTriggerSchema = Schema.Struct({
-  type: Schema.Literal(TriggerKind.Email).annotations(typeLiteralAnnotations),
+  kind: Schema.Literal(TriggerKind.Email).annotations(kindLiteralAnnotations),
 }).pipe(Schema.mutable);
-
 export type EmailTrigger = Schema.Schema.Type<typeof EmailTriggerSchema>;
 
 const QueueTriggerSchema = Schema.Struct({
-  type: Schema.Literal(TriggerKind.Queue).annotations(typeLiteralAnnotations),
+  kind: Schema.Literal(TriggerKind.Queue).annotations(kindLiteralAnnotations),
   queue: DXN,
 }).pipe(Schema.mutable);
-
 export type QueueTrigger = Schema.Schema.Type<typeof QueueTriggerSchema>;
 
 /**
  * Webhook.
  */
 const WebhookTriggerSchema = Schema.Struct({
-  type: Schema.Literal(TriggerKind.Webhook).annotations(typeLiteralAnnotations),
+  kind: Schema.Literal(TriggerKind.Webhook).annotations(kindLiteralAnnotations),
   method: Schema.optional(
     Schema.String.annotations({
       [SchemaAST.TitleAnnotationId]: 'Method',
@@ -67,7 +63,6 @@ const WebhookTriggerSchema = Schema.Struct({
     }),
   ),
 }).pipe(Schema.mutable);
-
 export type WebhookTrigger = Schema.Schema.Type<typeof WebhookTriggerSchema>;
 
 // TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
@@ -80,7 +75,7 @@ const QuerySchema = Schema.Struct({
  * Subscription.
  */
 const SubscriptionTriggerSchema = Schema.Struct({
-  type: Schema.Literal(TriggerKind.Subscription).annotations(typeLiteralAnnotations),
+  kind: Schema.Literal(TriggerKind.Subscription).annotations(kindLiteralAnnotations),
   // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
   filter: QuerySchema,
   options: Schema.optional(
@@ -92,7 +87,6 @@ const SubscriptionTriggerSchema = Schema.Struct({
     }).annotations({ [SchemaAST.TitleAnnotationId]: 'Options' }),
   ),
 }).pipe(Schema.mutable);
-
 export type SubscriptionTrigger = Schema.Schema.Type<typeof SubscriptionTriggerSchema>;
 
 /**
