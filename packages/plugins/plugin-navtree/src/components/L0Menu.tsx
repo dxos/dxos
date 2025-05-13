@@ -312,9 +312,9 @@ export const L0Menu = ({ topLevelItems, pinnedItems, userAccountItem, parent, pa
       <div role='none' className='grid grid-rows'>
         {topLevelItems
           .filter((item) => l0ItemType(item) === 'action')
-          .map((item) => {
-            return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-          })}
+          .map((item) => (
+            <L0Item key={item.id} item={item} parent={parent} path={path} />
+          ))}
       </div>
 
       <ScrollArea.Root>

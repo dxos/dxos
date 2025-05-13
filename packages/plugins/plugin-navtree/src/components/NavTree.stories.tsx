@@ -59,8 +59,7 @@ export default meta;
 
 type Story = StoryObj<typeof StorybookNavTree>;
 
-// TODO(burdon): This story is currently broken; nothing is visible, and same key warning.
-//  Remove the complexity of global variables and create a real story component.
+// TODO(burdon): Remove the complexity of global variables and create a real story component.
 const tree = live<NodeArg<any>>(createTree());
 const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 

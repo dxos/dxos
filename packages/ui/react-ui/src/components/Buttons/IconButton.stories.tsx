@@ -18,10 +18,10 @@ const StorybookIconButton = (props: StorybookIconButtonProps) => {
   return (
     <Tooltip.Provider>
       <div className='mbe-4'>
-        <IconButton label='Bold' icon='ph--text-b--bold' {...props} />
+        <IconButton label='Bold' icon='ph--text-b--regular' {...props} />
       </div>
       <div className='mbe-4'>
-        <IconButton iconOnly label='Bold' icon='ph--text-b--bold' {...props} />
+        <IconButton iconOnly label='Bold' icon='ph--text-b--regular' {...props} />
       </div>
     </Tooltip.Provider>
   );
