@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { raise } from '@dxos/debug';
 import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
 
-import { Type } from './api';
+import { Type } from './Type';
 
 namespace Testing {
   export const Organization = Schema.Struct({
