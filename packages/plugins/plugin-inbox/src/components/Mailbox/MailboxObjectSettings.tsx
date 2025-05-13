@@ -25,7 +25,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
     invariant(space);
 
     const syncTrigger = triggers.find(
-      (trigger) => trigger.spec?.type === TriggerKind.Timer && trigger.spec?.payload?.mailboxId === object.id,
+      (trigger) => trigger.spec?.kind === TriggerKind.Timer && trigger.input?.mailboxId === object.id,
     );
     if (syncTrigger) {
       void dispatch(
@@ -43,7 +43,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
           space,
           template: { type: 'timer', cron: '*/30 * * * * *' },
           scriptName: 'Gmail',
-          payload: { mailboxId: object.id },
+          input: { mailboxId: object.id },
         }),
       );
     }
@@ -53,7 +53,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
     invariant(space);
 
     const subscriptionTrigger = triggers.find((trigger) => {
-      if (trigger.spec?.type === TriggerKind.Queue) {
+      if (trigger.spec?.kind === TriggerKind.Queue) {
         if (trigger.spec.queue === object.queue.dxn.toString()) {
           return true;
         }
