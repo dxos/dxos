@@ -192,8 +192,8 @@ export type FunctionTriggerType = Schema.Schema.Type<typeof FunctionTriggerSchem
  * Function trigger.
  */
 export class FunctionTrigger extends TypedObject({
-  typename: 'dxoSchema.org/type/FunctionTrigger',
-  version: '0.1.0',
+  typename: 'dxos.org/type/FunctionTrigger',
+  version: '0.2.0',
 })(FunctionTriggerSchema.fields) {}
 
 // TODO(wittjosiah): Remove?
