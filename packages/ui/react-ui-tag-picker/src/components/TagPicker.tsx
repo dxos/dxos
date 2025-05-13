@@ -75,7 +75,7 @@ const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
 };
 
 const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
-  ({ classNames, items, readonly, mode, onUpdate, ...props }, ref) => {
+  ({ classNames, items, readonly, mode, onUpdate, onSearch, onSelect }, ref) => {
     const { themeMode } = useThemeContext();
     const { ref: resizeRef, width } = useResizeDetector();
     const { t } = useTranslation(translationKey);
@@ -107,11 +107,12 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
             onUpdate: handleUpdate,
             removeLabel: t('remove label'),
             mode,
-            ...props,
+            onSearch,
+            onSelect,
           }),
         ],
       }),
-      [themeMode, mode],
+      [themeMode, mode, onSearch, onSelect],
     );
 
     const composedRef = useComposedRefs(resizeRef, parentRef);

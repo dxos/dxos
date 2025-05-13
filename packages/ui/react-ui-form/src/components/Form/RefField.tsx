@@ -3,7 +3,7 @@
 //
 
 import { type SchemaAST } from 'effect';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import {
   Expando,
@@ -17,12 +17,15 @@ import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
+import { Input } from '@dxos/react-ui';
+import { TagPicker, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
 import { type MaybePromise } from '@dxos/util';
 
-import { SelectInput, TextInput } from './Defaults';
-import { type InputProps } from './Input';
+import { TextInput } from './Defaults';
+import { InputHeader, type InputProps } from './Input';
 
-export type QueryRefOptions = (type: TypeAnnotation) => MaybePromise<{ dxn: DXN; label?: string }[]>;
+export type RefOption = { dxn: DXN; label?: string };
+export type QueryRefOptions = (type: TypeAnnotation) => MaybePromise<RefOption[]>;
 
 // Using InputProps and adding the necessary props for RefField
 type RefFieldProps = InputProps & {
@@ -47,8 +50,86 @@ export const RefField = ({
   if (!astNode) {
     return null;
   }
+
   const refTypeInfo = findAnnotation<ReferenceAnnotationValue>(astNode, ReferenceAnnotationId);
-  const [refOptions, setRefOptions] = useState<Array<{ value: string; label?: string }>>([]);
+  const { options: availableOptions, loading: _loading } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
+
+  if (!refTypeInfo) {
+    return null;
+  }
+
+  if (refTypeInfo.typename === getTypeAnnotation(Expando)?.typename || !onQueryRefOptions) {
+    // If ref type is expando, fall back to taking a DXN in string format.
+    return (
+      <RefFieldFallback
+        {...{ type, label, disabled, placeholder, inputOnly, getValue, onValueChange, ...restInputProps }}
+      />
+    );
+  }
+
+  const handleGetValue = (): TagPickerItemData[] => {
+    const formValue = getValue();
+
+    if (Ref.isRef(formValue)) {
+      const dxnString = formValue.dxn.toString();
+      const matchingOption = availableOptions.find((option) => option.id === dxnString);
+      if (matchingOption) {
+        return [matchingOption];
+      }
+    }
+
+    return [];
+  };
+
+  const { status, error } = restInputProps.getStatus();
+
+  const handleSearch = useCallback(
+    (text: string, ids: string[]): TagPickerItemData[] =>
+      availableOptions
+        .filter((option) => !ids.includes(option.id))
+        .filter((option) => option.label.toLowerCase().includes(text.toLowerCase()))
+        .map((option) => ({ id: option.id, label: option.label, hue: option.hue as any })),
+    [availableOptions],
+  );
+
+  const handleUpdate = (ids: string[]) => {
+    if (ids.length === 0) {
+      onValueChange('object', undefined);
+    }
+    const firstId = ids.at(0);
+    const item = availableOptions.find((option) => option.id === firstId);
+    if (item) {
+      const dxn = DXN.parse(item.id);
+      const ref = Ref.fromDXN(dxn);
+      onValueChange('object', ref);
+    }
+  };
+
+  return (
+    <Input.Root validationValence={status}>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
+      <div data-no-submit>
+        <TagPicker
+          items={handleGetValue()}
+          mode='single-select'
+          onUpdate={handleUpdate}
+          onSearch={handleSearch}
+          classNames='rounded-sm bg-input p-1'
+        />
+      </div>
+      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+    </Input.Root>
+  );
+};
+
+type UseQueryRefOptionsProps = { refTypeInfo: TypeAnnotation | undefined; onQueryRefOptions?: QueryRefOptions };
+
+export const useQueryRefOptions = ({ refTypeInfo, onQueryRefOptions }: UseQueryRefOptionsProps) => {
+  const [options, setOptions] = useState<TagPickerItemData[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -59,16 +140,16 @@ export const RefField = ({
     const fetchOptions = async () => {
       setLoading(true);
       try {
-        const options = await onQueryRefOptions(refTypeInfo);
-        setRefOptions(
-          options.map((option) => ({
-            label: option.label,
-            value: option.dxn.toString(),
-          })),
+        const fetchedOptions = await onQueryRefOptions(refTypeInfo);
+        setOptions(
+          fetchedOptions.map((option) => {
+            const dxn = option.dxn.toString() as string;
+            return { id: dxn, label: option.label ?? dxn, hue: 'neutral' as any };
+          }),
         );
       } catch (error) {
         log.error('Failed to fetch ref options:', error);
-        setRefOptions([]);
+        setOptions([]);
       } finally {
         setLoading(false);
       }
@@ -77,52 +158,35 @@ export const RefField = ({
     void fetchOptions();
   }, [refTypeInfo, onQueryRefOptions]);
 
-  if (!refTypeInfo) {
-    return null;
-  }
+  return { options, loading };
+};
 
-  // If ref type is expando, fall back to taking a DXN in string format.
-  if (refTypeInfo.typename === getTypeAnnotation(Expando)?.typename || !onQueryRefOptions) {
-    const handleOnValueChange = (_type: any, dxnString: string) => {
-      const dxn = DXN.tryParse(dxnString);
-      if (dxn) {
-        onValueChange?.('object', refFromDXN(dxn));
-      } else if (dxnString === '') {
-        onValueChange?.('object', undefined);
-      } else {
-        onValueChange?.('string', dxnString);
-      }
-    };
-
-    const handleGetValue = () => {
-      const formValue = getValue();
-      if (typeof formValue === 'string') {
-        return formValue;
-      }
-      if (Ref.isRef(formValue)) {
-        return formValue.dxn.toString();
-      }
-
-      return undefined;
-    };
-
-    return (
-      <TextInput
-        type={type}
-        label={label}
-        disabled={disabled}
-        placeholder={placeholder}
-        inputOnly={inputOnly}
-        getValue={handleGetValue as <V>() => V | undefined}
-        onValueChange={handleOnValueChange}
-        {...restInputProps}
-      />
-    );
-  }
+const RefFieldFallback = ({
+  type,
+  label,
+  disabled,
+  placeholder,
+  inputOnly,
+  getValue,
+  onValueChange,
+  ...restInputProps
+}: InputProps) => {
+  const handleOnValueChange = (_type: any, dxnString: string) => {
+    const dxn = DXN.tryParse(dxnString);
+    if (dxn) {
+      onValueChange?.('object', refFromDXN(dxn));
+    } else if (dxnString === '') {
+      onValueChange?.('object', undefined);
+    } else {
+      onValueChange?.('string', dxnString);
+    }
+  };
 
   const handleGetValue = () => {
     const formValue = getValue();
-
+    if (typeof formValue === 'string') {
+      return formValue;
+    }
     if (Ref.isRef(formValue)) {
       return formValue.dxn.toString();
     }
@@ -130,23 +194,15 @@ export const RefField = ({
     return undefined;
   };
 
-  const handleValueChanged = (_type: any, dxnString: string) => {
-    const dxn = DXN.parse(dxnString);
-    const ref = refFromDXN(dxn);
-
-    onValueChange('object', ref);
-  };
-
   return (
-    <SelectInput
+    <TextInput
       type={type}
       label={label}
-      disabled={disabled || loading}
-      placeholder={loading ? 'Loading options...' : placeholder}
+      disabled={disabled}
+      placeholder={placeholder}
       inputOnly={inputOnly}
       getValue={handleGetValue as <V>() => V | undefined}
-      onValueChange={handleValueChanged}
-      options={refOptions}
+      onValueChange={handleOnValueChange}
       {...restInputProps}
     />
   );
