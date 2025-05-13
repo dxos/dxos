@@ -61,7 +61,7 @@ test('get all orgs Fred worked for since 2020', () => {
   // Query<Org>
   const fred = create(Person, { name: 'Fred' });
   const getAllOrgsFredWorkedForSince2020 = Query.type(Person, { id: fred.id })
-    .outgoingRelations(WorksFor, { since: Query.gt('2020') })
+    .sourceOf(WorksFor, { since: Query.gt('2020') })
     .targets();
 
   log.info('query', { ast: getAllOrgsFredWorkedForSince2020.ast });
@@ -78,7 +78,7 @@ test('get all tasks for Fred', () => {
 test('get all tasks for employees of Cyberdyne', () => {
   // Query<Task>
   const allTasksForEmployeesOfCyberdyne = Query.type(Org, { name: 'Cyberdyne' })
-    .incomingRelations(WorksFor)
+    .targetOf(WorksFor)
     .sources()
     .referencedBy(Task, 'assignee');
 

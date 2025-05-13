@@ -37,23 +37,23 @@ export interface Query<T> {
   ): Query<Schema.Schema.Type<S>>;
 
   /**
-   * Relations outgoing from the object.
+   * Find relations where this object is the source.
    * @returns Query for the relation objects.
    * @param relation - Schema of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  outgoingRelations<S extends Schema.Schema.All>(
+  sourceOf<S extends Schema.Schema.All>(
     relation: S,
     predicates?: PredicateSet<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
 
   /**
-   * Relations incoming to the object.
+   * Find relations where this object is the target.
    * @returns Query for the relation objects.
    * @param relation - Schema of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  incomingRelations<S extends Schema.Schema.All>(
+  targetOf<S extends Schema.Schema.All>(
     relation: S,
     predicates?: PredicateSet<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
@@ -218,7 +218,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  outgoingRelations(relation: Schema.Schema.All, predicates?: PredicateSet<unknown> | undefined): Query<any> {
+  sourceOf(relation: Schema.Schema.All, predicates?: PredicateSet<unknown> | undefined): Query<any> {
     const dxn = getSchemaDXN(relation) ?? raise(new TypeError('Relation schema has no DXN'));
     return new QueryClass({
       type: 'relation',
@@ -229,7 +229,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  incomingRelations(relation: Schema.Schema.All, predicates?: PredicateSet<unknown> | undefined): Query<any> {
+  targetOf(relation: Schema.Schema.All, predicates?: PredicateSet<unknown> | undefined): Query<any> {
     const dxn = getSchemaDXN(relation) ?? raise(new TypeError('Relation schema has no DXN'));
     return new QueryClass({
       type: 'relation',
