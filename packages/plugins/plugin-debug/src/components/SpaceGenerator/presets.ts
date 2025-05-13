@@ -452,7 +452,7 @@ export const presets = {
 const createQueueSinkPreset = <SpecType extends TriggerKind>(
   space: Space,
   triggerKind: SpecType,
-  initSpec: (spec: Extract<TriggerType, { type: SpecType }>) => void,
+  initSpec: (spec: Extract<TriggerType, { kind: SpecType }>) => void,
   triggerOutputName: string,
 ) => {
   const canvasModel = CanvasGraphModel.create<ComputeShape>();
@@ -494,7 +494,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
 
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
-    invariant(triggerSpec && triggerSpec.type === triggerKind, 'No trigger spec.');
+    invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
     initSpec(triggerSpec as any);
   });
 

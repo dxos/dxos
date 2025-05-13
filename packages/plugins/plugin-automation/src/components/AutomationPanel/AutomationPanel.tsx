@@ -136,11 +136,11 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 };
 
 const getCopyAction = (client: Client, trigger: FunctionTrigger | undefined) => {
-  if (trigger?.spec?.type === TriggerKind.Email) {
+  if (trigger?.spec?.kind === TriggerKind.Email) {
     return { translationKey: 'trigger copy email', contentProvider: () => `${getSpace(trigger)!.id}@dxos.network` };
   }
 
-  if (trigger?.spec?.type === TriggerKind.Webhook) {
+  if (trigger?.spec?.kind === TriggerKind.Webhook) {
     return { translationKey: 'trigger copy url', contentProvider: () => getWebhookUrl(client, trigger) };
   }
 
