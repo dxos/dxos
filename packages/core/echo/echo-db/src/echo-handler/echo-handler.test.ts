@@ -3,6 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
+import { Schema } from 'effect';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -12,7 +13,6 @@ import {
   EchoObject,
   Expando,
   TypedObject,
-  S,
   foreignKey,
   getTypeReference,
   Ref,
@@ -46,7 +46,7 @@ const TEST_OBJECT: Testing.TestSchema = {
 };
 
 test('id property name is reserved', () => {
-  const invalidSchema = S.Struct({ id: S.Number });
+  const invalidSchema = Schema.Struct({ id: Schema.Number });
   expect(() => createObject(live(invalidSchema, { id: 42 }))).to.throw();
 });
 
@@ -103,20 +103,20 @@ for (const schema of [undefined, Testing.TestType, Testing.TestSchemaType]) {
 }
 
 describe('without database', () => {
-  const TestSchema = S.Struct({
-    text: S.optional(S.String),
-    nested: S.Struct({
-      name: S.optional(S.String),
-      arr: S.optional(S.Array(S.String).pipe(S.mutable)),
-      ref: S.optional(S.suspend((): Ref$<TestSchema> => Ref(TestSchema))),
-    }).pipe(S.mutable),
+  const TestSchema = Schema.Struct({
+    text: Schema.optional(Schema.String),
+    nested: Schema.Struct({
+      name: Schema.optional(Schema.String),
+      arr: Schema.optional(Schema.Array(Schema.String).pipe(Schema.mutable)),
+      ref: Schema.optional(Schema.suspend((): Ref$<TestSchema> => Ref(TestSchema))),
+    }).pipe(Schema.mutable),
   }).pipe(
     EchoObject({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     }),
   );
-  interface TestSchema extends S.Schema.Type<typeof TestSchema> {}
+  interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
 
   test('get schema on object', () => {
     const obj = createObject(live(TestSchema, { nested: { name: 'foo', arr: [] } }));
@@ -128,7 +128,7 @@ describe('without database', () => {
   // TODO(dmaretskyi): Fix -- right now we always return the root schema.
   test.skip('get schema on nested object', () => {
     const obj = createObject(live(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const NestedSchema = Testing.TestSchema.pipe(S.pluck('nested'), S.typeSchema);
+    const NestedSchema = Testing.TestSchema.pipe(Schema.pluck('nested'), Schema.typeSchema);
     expect(prepareAstForCompare(getSchema(obj.nested)!.ast)).to.deep.eq(prepareAstForCompare(NestedSchema.ast));
   });
 
@@ -188,7 +188,9 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('existing proxy objects can be passed to create', async () => {
-    class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({ field: S.Any }) {}
+    class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      field: Schema.Any,
+    }) {}
 
     const { db, graph } = await builder.createDatabase();
     graph.schemaRegistry.addSchema([TestSchema]);
@@ -366,8 +368,8 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   describe('references', () => {
-    const Organization = S.Struct({
-      name: S.String,
+    const Organization = Schema.Struct({
+      name: Schema.String,
     }).pipe(
       EchoObject({
         typename: 'example.com/type/Organization',
@@ -375,10 +377,10 @@ describe('Reactive Object with ECHO database', () => {
       }),
     );
 
-    const Contact = S.Struct({
-      name: S.String,
+    const Contact = Schema.Struct({
+      name: Schema.String,
       organization: Ref(Organization),
-      previousEmployment: S.optional(S.Array(Ref(Organization))),
+      previousEmployment: Schema.optional(Schema.Array(Ref(Organization))),
     }).pipe(
       EchoObject({
         typename: 'example.com/type/Contact',
@@ -581,10 +583,10 @@ describe('Reactive Object with ECHO database', () => {
 
     test('object with meta pushed to array', async () => {
       class NestedType extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
-        field: S.Number,
+        field: Schema.Number,
       }) {}
       class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-        objects: S.mutable(S.Array(Ref(NestedType))),
+        objects: Schema.mutable(Schema.Array(Ref(NestedType))),
       }) {}
 
       const key = foreignKey('example.com', '123');
@@ -598,7 +600,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('push key to object created with', async () => {
       class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-        field: S.Number,
+        field: Schema.Number,
       }) {}
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([TestType]);

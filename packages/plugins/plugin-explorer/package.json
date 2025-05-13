@@ -52,6 +52,7 @@
     "@observablehq/plot": "^0.6.11",
     "@preact/signals-core": "^1.6.0",
     "d3": "^7.9.0",
+    "effect": "^3.13.3",
     "force-graph": "^1.49.4",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
@@ -82,6 +83,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

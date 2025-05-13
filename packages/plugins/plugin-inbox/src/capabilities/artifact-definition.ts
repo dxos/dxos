@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
-import { S } from '@dxos/echo-schema';
 import { type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
@@ -27,13 +28,13 @@ export default () => {
       - When creating the schema for a travel itinerary you must include a geopoint property (i.e., as an array of [lng,lat]).
       - Suggest to view the itinerary on a map.
     `,
-    schema: S.Struct({}),
+    schema: Schema.Struct({}),
     tools: [
       defineTool(meta.id, {
         name: 'inspect',
         description: 'Retrieves events for the given calendar.',
         caption: 'Retrieving calendar events...',
-        schema: S.Struct({}),
+        schema: Schema.Struct({}),
         execute: async () => {
           // TODO(burdon): Mock data for demo.
           return ToolResult.Success({

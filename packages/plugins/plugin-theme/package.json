@@ -35,6 +35,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/util": "workspace:*",
+    "effect": "^3.13.3",
     "i18next": "^21.10.0"
   },
   "devDependencies": {
@@ -50,6 +51,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

@@ -46,7 +46,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-canvas-editor": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*"
+    "@dxos/react-ui-stack": "workspace:*",
+    "effect": "3.14.21"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
@@ -61,6 +62,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

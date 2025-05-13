@@ -2,13 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect';
+
 import { type Doc, next as am } from '@dxos/automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { ObjectCore, migrateDocument, type RepoProxy, type DocHandleProxy } from '@dxos/echo-db';
 import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc, Reference } from '@dxos/echo-protocol';
-import { requireTypeReference, type S } from '@dxos/echo-schema';
+import { requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
@@ -45,7 +47,7 @@ export class MigrationBuilder {
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: S.Schema.AnyNoContext; props: any }>,
+    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: Schema.Schema.AnyNoContext; props: any }>,
   ) {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
@@ -80,7 +82,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle);
   }
 
-  async addObject(schema: S.Schema.AnyNoContext, props: any) {
+  async addObject(schema: Schema.Schema.AnyNoContext, props: any) {
     const core = this._createObject({ schema, props });
     return core.id;
   }
@@ -156,7 +158,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(this._newRoot);
   }
 
-  private _createObject({ id, schema, props }: { id?: string; schema: S.Schema.AnyNoContext; props: any }) {
+  private _createObject({ id, schema, props }: { id?: string; schema: Schema.Schema.AnyNoContext; props: any }) {
     const core = new ObjectCore();
     if (id) {
       core.id = id;

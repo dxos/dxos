@@ -2,19 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { ulid } from 'ulidx';
 
 import { SpaceId } from '@dxos/keys';
 
 // TODO(dmaretskyi): Make brand.
 // export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
-// export const ObjectIdSchema = S.ULID.pipe(S.brand(ObjectIdBrand));
-const ObjectIdSchema = S.ULID;
+// export const ObjectIdSchema = Schema.ULID.pipe(S.brand(ObjectIdBrand));
+const ObjectIdSchema = Schema.ULID;
 
 export type ObjectId = typeof ObjectIdSchema.Type;
 
-export interface ObjectIdClass extends S.SchemaClass<ObjectId, string> {
+export interface ObjectIdClass extends Schema.SchemaClass<ObjectId, string> {
   isValid(id: string): id is ObjectId;
   random(): ObjectId;
 }
@@ -23,7 +23,7 @@ export interface ObjectIdClass extends S.SchemaClass<ObjectId, string> {
 export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
   static isValid(id: string): id is ObjectId {
     try {
-      S.decodeSync(ObjectId)(id);
+      Schema.decodeSync(ObjectId)(id);
       return true;
     } catch (err) {
       return false;
@@ -35,4 +35,4 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
   }
 };
 
-export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
+export const SpaceIdSchema: Schema.Schema<SpaceId, string> = Schema.String.pipe(Schema.filter(SpaceId.isValid));

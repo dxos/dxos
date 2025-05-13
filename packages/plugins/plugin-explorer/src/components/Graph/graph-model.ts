@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { SchemaAST } from 'effect';
+
 import { type CleanupFn } from '@dxos/async';
 import {
   getSchema,
   getSchemaDXN,
-  AST,
   type EchoSchema,
   ReferenceAnnotationId,
   SchemaValidator,
@@ -149,7 +150,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
 
                   // Link ot refs.
                   // TODO(burdon): This isn't working.
-                  AST.getPropertySignatures(schema.ast).forEach((prop) => {
+                  SchemaAST.getPropertySignatures(schema.ast).forEach((prop) => {
                     if (!SchemaValidator.hasTypeAnnotation(schema, prop.name.toString(), ReferenceAnnotationId)) {
                       return;
                     }

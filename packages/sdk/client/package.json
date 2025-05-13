@@ -103,6 +103,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
@@ -126,6 +127,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "base-x": "~3.0.9",
+    "effect": "3.14.21",
     "jwt-decode": "^4.0.0",
     "lodash.get": "^4.4.2",
     "lodash.isequal": "^4.5.0",
@@ -142,6 +144,9 @@
     "fast-check": "^3.19.0",
     "source-map-support": "^0.5.12",
     "typedoc": "0.28.1"
+  },
+  "peerDependencies": {
+    "effect": "^3.13.3"
   },
   "engines": {
     "node": ">=12.0.0"

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { Ref, TypedObject, create, foreignKey, getSchema, isInstanceOf, getMeta } from '@dxos/echo-schema';
@@ -16,26 +16,26 @@ describe('complex schema validations', () => {
   };
 
   test('any', () => {
-    const schema = S.Struct({ field: S.Any });
+    const schema = Schema.Struct({ field: Schema.Any });
     const object = live(schema, { field: { nested: { value: 100 } } });
     expect(() => setValue(object, 'field', { any: 'value' })).not.to.throw();
   });
 
   test('meta', () => {
     const source = 'test';
-    const schema = S.Struct({ field: S.Number });
+    const schema = Schema.Struct({ field: Schema.Number });
     const object = live(schema, { field: 42 }, { keys: [foreignKey(source, '123')] });
     expect(getMeta(object).keys).to.deep.eq([foreignKey(source, '123')]);
   });
 
   test('object', () => {
-    const schema = S.Struct({ field: S.optional(S.Object) });
+    const schema = Schema.Struct({ field: Schema.optional(Schema.Object) });
     const object = live(schema, { field: { nested: { value: 100 } } });
     expect(() => setValue(object, 'field', { any: 'value' })).not.to.throw();
   });
 
   test('references', () => {
-    class Foo extends TypedObject({ typename: 'example.com/type/Foo', version: '0.1.0' })({ field: S.String }) {}
+    class Foo extends TypedObject({ typename: 'example.com/type/Foo', version: '0.1.0' })({ field: Schema.String }) {}
     class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: Ref(Foo) }) {}
     const field = 'hello';
     expect(() => live(Bar, { fooRef: { id: '1', field } as any })).to.throw();
@@ -45,16 +45,16 @@ describe('complex schema validations', () => {
   });
 
   test('index signatures', () => {
-    const schema = S.Struct({}, { key: S.String, value: S.Number });
+    const schema = Schema.Struct({}, { key: Schema.String, value: Schema.Number });
     const object = live(schema, { unknownField: 1 });
     expect(() => setValue(object, 'field', '42')).to.throw();
     expect(() => setValue(object, 'unknown_field', 42)).not.to.throw();
   });
 
   test('suspend', () => {
-    const schema = S.Struct({
-      array: S.optional(S.suspend(() => S.Array(S.Union(S.Null, S.Number)))),
-      object: S.optional(S.suspend(() => S.Union(S.Null, S.Struct({ field: S.Number })))),
+    const schema = Schema.Struct({
+      array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union(Schema.Null, Schema.Number)))),
+      object: Schema.optional(Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number })))),
     });
 
     const object = live(schema, { array: [1, 2, null], object: { field: 3 } });

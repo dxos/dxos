@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
 import { AIChatType } from './chat';
 import { TemplateType } from './template';
@@ -11,21 +11,21 @@ import { ASSISTANT_PLUGIN } from '../meta';
 export namespace AssistantAction {
   const ASSISTANT_ACTION = `${ASSISTANT_PLUGIN}/action`;
 
-  export class CreateChat extends S.TaggedClass<CreateChat>()(`${ASSISTANT_ACTION}/create-chat`, {
-    input: S.Struct({
-      spaceId: S.optional(S.String),
-      name: S.optional(S.String),
+  export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${ASSISTANT_ACTION}/create-chat`, {
+    input: Schema.Struct({
+      spaceId: Schema.optional(Schema.String),
+      name: Schema.optional(Schema.String),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: AIChatType,
     }),
   }) {}
 
-  export class CreateTemplate extends S.TaggedClass<CreateTemplate>()(`${ASSISTANT_ACTION}/create-template`, {
-    input: S.Struct({
-      name: S.optional(S.String),
+  export class CreateTemplate extends Schema.TaggedClass<CreateTemplate>()(`${ASSISTANT_ACTION}/create-template`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: TemplateType,
     }),
   }) {}
@@ -33,14 +33,14 @@ export namespace AssistantAction {
 
 export const LLM_PROVIDERS = ['edge', 'ollama', 'lmstudio'] as const;
 
-export const AssistantSettingsSchema = S.mutable(
-  S.Struct({
-    llmProvider: S.optional(S.Literal(...LLM_PROVIDERS)),
-    edgeModel: S.optional(S.String),
-    ollamaModel: S.optional(S.String),
-    lmstudioModel: S.optional(S.String),
-    customPrompts: S.optional(S.Boolean),
+export const AssistantSettingsSchema = Schema.mutable(
+  Schema.Struct({
+    llmProvider: Schema.optional(Schema.Literal(...LLM_PROVIDERS)),
+    edgeModel: Schema.optional(Schema.String),
+    ollamaModel: Schema.optional(Schema.String),
+    lmstudioModel: Schema.optional(Schema.String),
+    customPrompts: Schema.optional(Schema.Boolean),
   }),
 );
 
-export type AssistantSettingsProps = S.Schema.Type<typeof AssistantSettingsSchema>;
+export type AssistantSettingsProps = Schema.Schema.Type<typeof AssistantSettingsSchema>;

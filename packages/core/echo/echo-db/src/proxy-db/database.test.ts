@@ -223,7 +223,7 @@ describe('Database', () => {
     }
   });
 
-  test('dxos.schema.Expando', async () => {
+  test('dxoSchema.Schema.Expando', async () => {
     const { db } = await createDbWithTypes();
 
     {
@@ -243,7 +243,7 @@ describe('Database', () => {
     }
   });
 
-  test('dxos.schema.TextObject', async () => {
+  test('dxoSchema.Schema.TextObject', async () => {
     const { db } = await createDbWithTypes();
 
     {

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema, SchemaAST } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
 import { AIServiceEdgeClient } from '@dxos/assistant';
@@ -10,7 +11,7 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { createQueueDxn, Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Type } from '@dxos/echo';
-import { AST, create, ObjectId, S } from '@dxos/echo-schema';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -22,14 +23,14 @@ import { processTranscriptMessage } from '../entity-extraction';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 
-export const TestItem = S.Struct({
-  title: S.String.annotations({
-    [AST.TitleAnnotationId]: 'Title',
-    [AST.DescriptionAnnotationId]: 'Product title',
+export const TestItem = Schema.Struct({
+  title: Schema.String.annotations({
+    [SchemaAST.TitleAnnotationId]: 'Title',
+    [SchemaAST.DescriptionAnnotationId]: 'Product title',
   }),
-  description: S.String.annotations({
-    [AST.TitleAnnotationId]: 'Description',
-    [AST.DescriptionAnnotationId]: 'Product description',
+  description: Schema.String.annotations({
+    [SchemaAST.TitleAnnotationId]: 'Description',
+    [SchemaAST.DescriptionAnnotationId]: 'Product description',
   }),
 }).pipe(
   Type.def({

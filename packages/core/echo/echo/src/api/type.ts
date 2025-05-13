@@ -17,7 +17,7 @@ import {
   type JsonSchemaType,
   ObjectId as ObjectId$,
   Ref as Ref$,
-  SpaceIdSchema,
+  SpaceIdSchema as SpaceIdSchema$,
   type StoredSchema,
   type TypeMeta,
   getTypeAnnotation,
@@ -29,7 +29,7 @@ import {
   toJsonSchema as toJsonSchema$,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId as SpaceId$ } from '@dxos/keys';
+import { SpaceId as SpaceId$ } from '@dxos/keys';
 import { live as live$ } from '@dxos/live-object';
 
 // TODO(burdon): Type vs. Relation vs. Object.
@@ -45,7 +45,8 @@ export namespace Type {
   // Keys
   //
 
-  export const SpaceId = SpaceIdSchema;
+  export const SpaceIdSchema = SpaceIdSchema$; // TODO(burdon): Reconcile with SpaceId as with ObjectId.
+  export const SpaceId = SpaceId$;
   export type SpaceId = SpaceId$;
 
   export const ObjectId = ObjectId$;
@@ -80,7 +81,18 @@ export namespace Type {
   export const create = live$;
 
   /**
-   * Type definition combinator.
+   * Defines an ECHO type.
+   *
+   * @example
+   * ```ts
+   * import { Type } from '@dxos/echo';
+   * const Organization = Schema.Struct({
+   *   name: Schema.String,
+   * }).pipe(Type.def({
+   *   typename: 'example.com/type/Organization',
+   *   version: '0.1.0',
+   * }));
+   * ```
    */
   export const def = (meta: TypeMeta) => EchoObject(meta);
 
@@ -94,10 +106,13 @@ export namespace Type {
    * @example
    * ```ts
    * import { Type } from '@dxos/echo';
-   * const Contact = Schema.Struct({
+   * const Person = Schema.Struct({
    *   name: Schema.String,
    *   organization: Type.Ref(Organization),
-   * }).pipe(Type.def({ typename: 'example.com/type/Contact', version: '1.0.0' }));
+   * }).pipe(Type.def({
+   *   typename: 'example.com/type/Person',
+   *   version: '0.1.0',
+   * }));
    * ```
    */
   export const Ref = <S extends Schema.Schema.AnyNoContext>(self: S) => Ref$<Schema.Schema.Type<S>>(self);

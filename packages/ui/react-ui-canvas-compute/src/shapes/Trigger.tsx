@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
-import { ObjectId, Ref, S } from '@dxos/echo-schema';
+import { ObjectId, Ref } from '@dxos/echo-schema';
 import {
   type EmailTrigger,
   FunctionTrigger,
@@ -29,14 +30,14 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';
 import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 
-export const TriggerShape = S.extend(
+export const TriggerShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('trigger'),
-    functionTrigger: S.optional(Ref(FunctionTrigger)),
+  Schema.Struct({
+    type: Schema.Literal('trigger'),
+    functionTrigger: Schema.optional(Ref(FunctionTrigger)),
   }),
 );
-export type TriggerShape = S.Schema.Type<typeof TriggerShape>;
+export type TriggerShape = Schema.Schema.Type<typeof TriggerShape>;
 
 export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
   spaceId?: SpaceId;
@@ -136,7 +137,7 @@ const createTriggerSpec = (props: { triggerKind?: TriggerKind; spaceId?: SpaceId
 };
 
 const getOutputSchema = (kind: TriggerKind) => {
-  const kindToSchema: Record<TriggerKind, S.Schema<any>> = {
+  const kindToSchema: Record<TriggerKind, Schema.Schema<any>> = {
     [TriggerKind.Email]: EmailTriggerOutput,
     [TriggerKind.Subscription]: SubscriptionTriggerOutput,
     [TriggerKind.Timer]: TimerTriggerOutput,

@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema, SchemaAST } from 'effect';
+
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { AST, ObjectId, S, toJsonSchema } from '@dxos/echo-schema';
+import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
 import { FunctionTrigger, TriggerKind, EmailTriggerOutput, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -162,7 +164,7 @@ export const presets = {
 
             const appendToTable = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
-            const properties = AST.getPropertySignatures(EmailTriggerOutput.ast);
+            const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
             for (let i = 0; i < properties.length; i++) {
               const propName = properties[i].name.toString();
               builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
@@ -281,7 +283,7 @@ export const presets = {
             templateContent.push('  "category": "{{text}}",');
             builder.createEdge({ source: gpt.id, target: template.id, input: 'text', output: 'text' });
 
-            const properties = AST.getPropertySignatures(EmailTriggerOutput.ast);
+            const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
             for (let i = 0; i < properties.length; i++) {
               const propName = properties[i].name.toString();
               builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
@@ -305,7 +307,7 @@ export const presets = {
           const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
           invariant(templateComputeNode, 'Template compute node was not created.');
           templateComputeNode.value = templateContent.join('\n');
-          const extendedSchema = S.extend(EmailTriggerOutput, S.Struct({ text: S.String }));
+          const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
           templateComputeNode.inputSchema = toJsonSchema(extendedSchema);
 
           attachTrigger(functionTrigger, computeModel);
@@ -501,7 +503,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
   const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
-  templateComputeNode.inputSchema = toJsonSchema(S.Struct({ type: S.String, changeId: S.String }));
+  templateComputeNode.inputSchema = toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
 
   attachTrigger(functionTrigger, computeModel);
 

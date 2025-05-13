@@ -3,12 +3,12 @@
 //
 
 import { intervalToDuration } from 'date-fns/intervalToDuration';
+import { Schema } from 'effect';
 import { yieldOrContinue } from 'main-thread-scheduling';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { Type } from '@dxos/echo';
-import { S } from '@dxos/echo-schema';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -26,22 +26,22 @@ import { TRANSCRIPTION_PLUGIN } from '../../../meta';
 /**
  * Transcription fragment.
  */
-const TranscriptSegment = S.Struct({
+const TranscriptSegment = Schema.Struct({
   // TODO(burdon): TS from service is not Unix TS (x1000).
-  started: S.String,
-  text: S.String,
+  started: Schema.String,
+  text: Schema.String,
 });
 
-type TranscriptSegment = S.Schema.Type<typeof TranscriptSegment>;
+type TranscriptSegment = Schema.Schema.Type<typeof TranscriptSegment>;
 
 /**
  * Transcription block (from single speaker).
  */
-const TranscriptBlock = S.Struct({
-  id: S.String,
-  authorName: S.optional(S.String), // TODO(burdon): Replace with identityDid.
-  authorHue: S.optional(S.String), // TOOD(burdon): Remove.
-  segments: S.Array(TranscriptSegment),
+const TranscriptBlock = Schema.Struct({
+  id: Schema.String,
+  authorName: Schema.optional(Schema.String), // TODO(burdon): Replace with identityDid.
+  authorHue: Schema.optional(Schema.String), // TOOD(burdon): Remove.
+  segments: Schema.Array(TranscriptSegment),
 }).pipe(
   Type.def({
     typename: 'dxos.org/type/TranscriptBlock',
@@ -49,7 +49,7 @@ const TranscriptBlock = S.Struct({
   }),
 );
 
-type TranscriptBlock = S.Schema.Type<typeof TranscriptBlock>;
+type TranscriptBlock = Schema.Schema.Type<typeof TranscriptBlock>;
 
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
 

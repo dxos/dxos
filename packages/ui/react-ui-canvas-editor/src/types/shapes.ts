@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
 import { Dimension, Point } from '@dxos/react-ui-canvas';
 
 import { Shape } from './schema';
@@ -11,18 +12,18 @@ import { Shape } from './schema';
 // Path
 //
 
-export const PathShape = S.extend(
+export const PathShape = Schema.extend(
   Shape,
-  S.Struct({
-    type: S.Literal('path'),
-    path: S.String,
-    start: S.optional(S.String),
-    end: S.optional(S.String),
+  Schema.Struct({
+    type: Schema.Literal('path'),
+    path: Schema.String,
+    start: Schema.optional(Schema.String),
+    end: Schema.optional(Schema.String),
   }),
 );
 
-export type PathShape = S.Schema.Type<typeof PathShape>;
-export const isPath = S.is(PathShape);
+export type PathShape = Schema.Schema.Type<typeof PathShape>;
+export const isPath = Schema.is(PathShape);
 
 //
 // Polygon
@@ -32,43 +33,43 @@ export const isPath = S.is(PathShape);
  * Closed shape.
  * Common handling via Frame.
  */
-export const Polygon = S.mutable(
-  S.extend(
+export const Polygon = Schema.mutable(
+  Schema.extend(
     Shape,
-    S.Struct({
+    Schema.Struct({
       center: Point,
-      size: S.mutable(Dimension),
+      size: Schema.mutable(Dimension),
     }),
   ),
 );
 
-export type Polygon = S.Schema.Type<typeof Polygon>;
-export const isPolygon = S.is(Polygon);
+export type Polygon = Schema.Schema.Type<typeof Polygon>;
+export const isPolygon = Schema.is(Polygon);
 
-export const EllipseShape = S.extend(
+export const EllipseShape = Schema.extend(
   Polygon,
-  S.Struct({
-    type: S.Literal('ellipse'),
+  Schema.Struct({
+    type: Schema.Literal('ellipse'),
   }),
 );
 
-export type EllipseShape = S.Schema.Type<typeof EllipseShape>;
+export type EllipseShape = Schema.Schema.Type<typeof EllipseShape>;
 
-export const NoteShape = S.extend(
+export const NoteShape = Schema.extend(
   Polygon,
-  S.Struct({
-    type: S.Literal('note'),
+  Schema.Struct({
+    type: Schema.Literal('note'),
   }),
 );
 
-export type NoteShape = S.Schema.Type<typeof NoteShape>;
+export type NoteShape = Schema.Schema.Type<typeof NoteShape>;
 
-export const RectangleShape = S.extend(
+export const RectangleShape = Schema.extend(
   Polygon,
-  S.Struct({
-    type: S.Literal('rectangle'),
-    rounded: S.optional(S.Number),
+  Schema.Struct({
+    type: Schema.Literal('rectangle'),
+    rounded: Schema.optional(Schema.Number),
   }),
 );
 
-export type RectangleShape = S.Schema.Type<typeof RectangleShape>;
+export type RectangleShape = Schema.Schema.Type<typeof RectangleShape>;

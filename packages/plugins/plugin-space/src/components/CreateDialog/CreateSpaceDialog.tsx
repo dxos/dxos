@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Effect, type Schema } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
-import { type S } from '@dxos/echo-schema';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -16,7 +15,7 @@ import { SpaceAction, SpaceForm } from '../../types';
 
 export const CREATE_SPACE_DIALOG = `${SPACE_PLUGIN}/CreateSpaceDialog`;
 
-type FormValues = S.Schema.Type<typeof SpaceForm>;
+type FormValues = Schema.Schema.Type<typeof SpaceForm>;
 const initialValues: FormValues = { edgeReplication: true };
 
 export const CreateSpaceDialog = () => {

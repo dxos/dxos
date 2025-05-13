@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, expect, it, beforeEach } from 'vitest';
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { live, makeRef } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView, ViewProjection } from '@dxos/schema';
@@ -89,8 +90,8 @@ describe('TablePresentation', () => {
 });
 
 class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  title: S.String,
-  completed: S.Boolean,
+  title: Schema.String,
+  completed: Schema.Boolean,
 }) {}
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {

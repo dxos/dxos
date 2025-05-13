@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
@@ -13,7 +13,7 @@ import { Format, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
-export const MapSchema = S.Struct({
+export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
 }).pipe(
   Type.def({
@@ -22,7 +22,7 @@ export const MapSchema = S.Struct({
   }),
 );
 
-export type MapSchema = S.Schema.Type<typeof MapSchema>;
+export type MapSchema = Schema.Schema.Type<typeof MapSchema>;
 
 // TODO(burdon): Move ot ECHO def.
 export type ArtifactsContext = {
@@ -41,7 +41,7 @@ export const genericTools = [
   defineTool('testing', {
     name: 'focus',
     description: 'Focus on the given artifact. Use this tool to bring the artifact to the front of the canvas.',
-    schema: S.Struct({ id: Type.ObjectId }),
+    schema: Schema.Struct({ id: Type.ObjectId }),
     execute: async ({ id }, { extensions }) => {
       invariant(extensions?.artifacts, 'No artifacts context');
       const artifactIndex = extensions.artifacts.items.findIndex((artifact) => artifact.id === id);
@@ -72,7 +72,7 @@ export const capabilities: AnyCapability[] = [
         - Image tags are always self-closing and must contain an id attribute.
           (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
       `,
-      schema: S.Struct({}), // TODO(burdon): Add schema.
+      schema: Schema.Struct({}), // TODO(burdon): Add schema.
       tools: [],
     }),
   ),

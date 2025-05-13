@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useState } from 'react';
 
-import { S } from '@dxos/echo-schema';
 import {
   FunctionType,
   FunctionTrigger,
@@ -85,7 +85,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
         </ControlItem>
       ) : (
         <div role='none' className={controlItemClasses}>
-          <List.Root<FunctionTrigger> items={triggers} isItem={S.is(FunctionTrigger)} getId={(field) => field.id}>
+          <List.Root<FunctionTrigger> items={triggers} isItem={Schema.is(FunctionTrigger)} getId={(field) => field.id}>
             {({ items: triggers }) => (
               <div role='list' className='flex flex-col w-full'>
                 {triggers?.map((trigger) => {
@@ -163,5 +163,6 @@ const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigg
   if (!functionObject) {
     return shortId;
   }
+
   return scripts.find((s) => functionObject.source?.target?.id === s.id)?.name ?? shortId;
 };

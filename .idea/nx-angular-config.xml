@@ -3,10 +3,10 @@
   <component name="NxAngularConfigService" workspaceLocation="file://$PROJECT_DIR$/nx.json">
     <projects>
       <project name="agent" file="file://$PROJECT_DIR$/packages/core/agent/project.json" />
-      <project name="agent-functions" file="file://$PROJECT_DIR$/packages/experimental/agent-functions/project.json" />
-      <project name="apidoc" file="file://$PROJECT_DIR$/tools/apidoc/project.json" />
       <project name="app-framework" file="file://$PROJECT_DIR$/packages/sdk/app-framework/project.json" />
       <project name="app-graph" file="file://$PROJECT_DIR$/packages/sdk/app-graph/project.json" />
+      <project name="artifact" file="file://$PROJECT_DIR$/packages/experimental/artifact/project.json" />
+      <project name="artifact-testing" file="file://$PROJECT_DIR$/packages/experimental/artifact-testing/project.json" />
       <project name="assistant" file="file://$PROJECT_DIR$/packages/experimental/assistant/project.json" />
       <project name="async" file="file://$PROJECT_DIR$/packages/common/async/project.json" />
       <project name="automerge" file="file://$PROJECT_DIR$/packages/core/echo/automerge/project.json" />
@@ -14,7 +14,6 @@
       <project name="blade-runner" file="file://$PROJECT_DIR$/packages/gravity/blade-runner/project.json" />
       <project name="brand" file="file://$PROJECT_DIR$/packages/ui/brand/project.json" />
       <project name="cf-labs" file="file://$PROJECT_DIR$/packages/experimental/cf-labs/project.json" />
-      <project name="chain" file="file://$PROJECT_DIR$/packages/core/chain/project.json" />
       <project name="cli" file="file://$PROJECT_DIR$/packages/devtools/cli/project.json" />
       <project name="cli-base" file="file://$PROJECT_DIR$/packages/devtools/cli-base/project.json" />
       <project name="cli-composer" file="file://$PROJECT_DIR$/packages/devtools/cli-composer/project.json" />
@@ -23,8 +22,11 @@
       <project name="client-services" file="file://$PROJECT_DIR$/packages/sdk/client-services/project.json" />
       <project name="codec-protobuf" file="file://$PROJECT_DIR$/packages/common/codec-protobuf/project.json" />
       <project name="codemods" file="file://$PROJECT_DIR$/tools/codemods/project.json" />
+      <project name="codemorph" file="file://$PROJECT_DIR$/tools/codemorph/project.json" />
       <project name="composer-app" file="file://$PROJECT_DIR$/packages/apps/composer-app/project.json" />
       <project name="composer-crx" file="file://$PROJECT_DIR$/packages/apps/composer-crx/project.json" />
+      <project name="compute" file="file://$PROJECT_DIR$/packages/core/compute/project.json" />
+      <project name="conductor" file="file://$PROJECT_DIR$/packages/core/conductor/project.json" />
       <project name="config" file="file://$PROJECT_DIR$/packages/sdk/config/project.json" />
       <project name="context" file="file://$PROJECT_DIR$/packages/common/context/project.json" />
       <project name="credentials" file="file://$PROJECT_DIR$/packages/core/halo/credentials/project.json" />
@@ -36,6 +38,7 @@
       <project name="discord-bot" file="file://$PROJECT_DIR$/packages/experimental/discord-bot/project.json" />
       <project name="display-name" file="file://$PROJECT_DIR$/packages/common/display-name/project.json" />
       <project name="docs" file="file://$PROJECT_DIR$/docs/project.json" />
+      <project name="echo" file="file://$PROJECT_DIR$/packages/core/echo/echo/project.json" />
       <project name="echo-db" file="file://$PROJECT_DIR$/packages/core/echo/echo-db/project.json" />
       <project name="echo-generator" file="file://$PROJECT_DIR$/packages/core/echo/echo-generator/project.json" />
       <project name="echo-pipeline" file="file://$PROJECT_DIR$/packages/core/echo/echo-pipeline/project.json" />
@@ -45,6 +48,8 @@
       <project name="echo-signals" file="file://$PROJECT_DIR$/packages/core/echo/echo-signals/project.json" />
       <project name="edge-client" file="file://$PROJECT_DIR$/packages/core/mesh/edge-client/project.json" />
       <project name="effect" file="file://$PROJECT_DIR$/packages/common/effect/project.json" />
+      <project name="env-tests" file="file://$PROJECT_DIR$/packages/experimental/env-tests/project.json" />
+      <project name="errors" file="file://$PROJECT_DIR$/packages/common/errors/project.json" />
       <project name="esbuild" file="file://$PROJECT_DIR$/tools/executors/esbuild/project.json" />
       <project name="esbuild-plugins" file="file://$PROJECT_DIR$/packages/common/esbuild-plugins/project.json" />
       <project name="eslint-plugin" file="file://$PROJECT_DIR$/packages/common/eslint-plugin/project.json" />
@@ -53,12 +58,8 @@
       <project name="feed-store" file="file://$PROJECT_DIR$/packages/common/feed-store/project.json" />
       <project name="functions" file="file://$PROJECT_DIR$/packages/core/functions/project.json" />
       <project name="gem-core" file="file://$PROJECT_DIR$/packages/experimental/gem-core/project.json" />
-      <project name="react-ui-geo" file="file://$PROJECT_DIR$/packages/experimental/react-ui-geo/project.json" />
       <project name="gem-spore" file="file://$PROJECT_DIR$/packages/experimental/gem-spore/project.json" />
-      <project name="go-credentials" file="file://$PROJECT_DIR$/packages/core/halo/go-credentials/project.json" />
-      <project name="go-keys" file="file://$PROJECT_DIR$/packages/common/go-keys/project.json" />
-      <project name="go-protocols" file="file://$PROJECT_DIR$/packages/core/go-protocols/project.json" />
-      <project name="go-rpc" file="file://$PROJECT_DIR$/packages/core/mesh/go-rpc/project.json" />
+      <project name="graph" file="file://$PROJECT_DIR$/packages/common/graph/project.json" />
       <project name="hypercore" file="file://$PROJECT_DIR$/packages/common/hypercore/project.json" />
       <project name="indexing" file="file://$PROJECT_DIR$/packages/core/echo/indexing/project.json" />
       <project name="invariant" file="file://$PROJECT_DIR$/packages/common/invariant/project.json" />
@@ -69,9 +70,11 @@
       <project name="kv-store" file="file://$PROJECT_DIR$/packages/common/kv-store/project.json" />
       <project name="lit-grid" file="file://$PROJECT_DIR$/packages/ui/lit-grid/project.json" />
       <project name="lit-stories" file="file://$PROJECT_DIR$/tools/lit-stories/project.json" />
+      <project name="lit-ui" file="file://$PROJECT_DIR$/packages/ui/lit-ui/project.json" />
       <project name="live-object" file="file://$PROJECT_DIR$/packages/core/echo/live-object/project.json" />
       <project name="local-storage" file="file://$PROJECT_DIR$/packages/common/local-storage/project.json" />
       <project name="lock-file" file="file://$PROJECT_DIR$/packages/common/lock-file/project.json" />
+      <project name="lockfile-explorer" file="file://$PROJECT_DIR$/tools/lockfile-explorer/project.json" />
       <project name="log" file="file://$PROJECT_DIR$/packages/common/log/project.json" />
       <project name="log-hook" file="file://$PROJECT_DIR$/tools/log-hook/project.json" />
       <project name="merkle-search-tree" file="file://$PROJECT_DIR$/packages/common/merkle-search-tree/project.json" />
@@ -83,58 +86,60 @@
       <project name="nx-protobuf-compiler" file="file://$PROJECT_DIR$/tools/executors/nx-protobuf-compiler/project.json" />
       <project name="observability" file="file://$PROJECT_DIR$/packages/sdk/observability/project.json" />
       <project name="phoenix" file="file://$PROJECT_DIR$/packages/common/phoenix/project.json" />
-      <project name="plate" file="file://$PROJECT_DIR$/packages/common/plate/project.json" />
       <project name="plexus" file="file://$PROJECT_DIR$/packages/experimental/plexus/project.json" />
+      <project name="plugin-assistant" file="file://$PROJECT_DIR$/packages/plugins/plugin-assistant/project.json" />
       <project name="plugin-attention" file="file://$PROJECT_DIR$/packages/plugins/plugin-attention/project.json" />
-      <project name="plugin-automation" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-automation/project.json" />
-      <project name="plugin-calls" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-calls/project.json" />
-      <project name="plugin-canvas" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-canvas/project.json" />
+      <project name="plugin-automation" file="file://$PROJECT_DIR$/packages/plugins/plugin-automation/project.json" />
       <project name="plugin-chess" file="file://$PROJECT_DIR$/packages/plugins/plugin-chess/project.json" />
       <project name="plugin-client" file="file://$PROJECT_DIR$/packages/plugins/plugin-client/project.json" />
+      <project name="plugin-conductor" file="file://$PROJECT_DIR$/packages/plugins/plugin-conductor/project.json" />
       <project name="plugin-debug" file="file://$PROJECT_DIR$/packages/plugins/plugin-debug/project.json" />
       <project name="plugin-deck" file="file://$PROJECT_DIR$/packages/plugins/plugin-deck/project.json" />
-      <project name="plugin-excalidraw" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-excalidraw/project.json" />
-      <project name="plugin-explorer" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-explorer/project.json" />
+      <project name="plugin-excalidraw" file="file://$PROJECT_DIR$/packages/plugins/plugin-excalidraw/project.json" />
+      <project name="plugin-explorer" file="file://$PROJECT_DIR$/packages/plugins/plugin-explorer/project.json" />
       <project name="plugin-files" file="file://$PROJECT_DIR$/packages/plugins/plugin-files/project.json" />
       <project name="plugin-graph" file="file://$PROJECT_DIR$/packages/plugins/plugin-graph/project.json" />
       <project name="plugin-help" file="file://$PROJECT_DIR$/packages/plugins/plugin-help/project.json" />
-      <project name="plugin-inbox" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-inbox/project.json" />
-      <project name="plugin-ipfs" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-ipfs/project.json" />
-      <project name="plugin-kanban" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-kanban/project.json" />
-      <project name="plugin-manager" file="file://$PROJECT_DIR$/packages/plugins/plugin-manager/project.json" />
-      <project name="plugin-map" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-map/project.json" />
+      <project name="plugin-inbox" file="file://$PROJECT_DIR$/packages/plugins/plugin-inbox/project.json" />
+      <project name="plugin-kanban" file="file://$PROJECT_DIR$/packages/plugins/plugin-kanban/project.json" />
+      <project name="plugin-map" file="file://$PROJECT_DIR$/packages/plugins/plugin-map/project.json" />
       <project name="plugin-markdown" file="file://$PROJECT_DIR$/packages/plugins/plugin-markdown/project.json" />
+      <project name="plugin-meeting" file="file://$PROJECT_DIR$/packages/plugins/plugin-meeting/project.json" />
       <project name="plugin-mermaid" file="file://$PROJECT_DIR$/packages/plugins/plugin-mermaid/project.json" />
-      <project name="plugin-metadata" file="file://$PROJECT_DIR$/packages/plugins/plugin-metadata/project.json" />
-      <project name="plugin-native" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-native/project.json" />
+      <project name="plugin-native" file="file://$PROJECT_DIR$/packages/plugins/plugin-native/project.json" />
       <project name="plugin-navtree" file="file://$PROJECT_DIR$/packages/plugins/plugin-navtree/project.json" />
       <project name="plugin-observability" file="file://$PROJECT_DIR$/packages/plugins/plugin-observability/project.json" />
-      <project name="plugin-outliner" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-outliner/project.json" />
+      <project name="plugin-outliner" file="file://$PROJECT_DIR$/packages/plugins/plugin-outliner/project.json" />
       <project name="plugin-presenter" file="file://$PROJECT_DIR$/packages/plugins/plugin-presenter/project.json" />
+      <project name="plugin-preview" file="file://$PROJECT_DIR$/packages/plugins/plugin-preview/project.json" />
       <project name="plugin-pwa" file="file://$PROJECT_DIR$/packages/plugins/plugin-pwa/project.json" />
       <project name="plugin-registry" file="file://$PROJECT_DIR$/packages/plugins/plugin-registry/project.json" />
-      <project name="plugin-script" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-script/project.json" />
-      <project name="plugin-search" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-search/project.json" />
+      <project name="plugin-script" file="file://$PROJECT_DIR$/packages/plugins/plugin-script/project.json" />
+      <project name="plugin-search" file="file://$PROJECT_DIR$/packages/plugins/plugin-search/project.json" />
       <project name="plugin-sheet" file="file://$PROJECT_DIR$/packages/plugins/plugin-sheet/project.json" />
       <project name="plugin-sketch" file="file://$PROJECT_DIR$/packages/plugins/plugin-sketch/project.json" />
       <project name="plugin-space" file="file://$PROJECT_DIR$/packages/plugins/plugin-space/project.json" />
       <project name="plugin-stack" file="file://$PROJECT_DIR$/packages/plugins/plugin-stack/project.json" />
       <project name="plugin-status-bar" file="file://$PROJECT_DIR$/packages/plugins/plugin-status-bar/project.json" />
+      <project name="plugin-storybook-layout" file="file://$PROJECT_DIR$/packages/plugins/plugin-storybook-layout/project.json" />
       <project name="plugin-table" file="file://$PROJECT_DIR$/packages/plugins/plugin-table/project.json" />
-      <project name="plugin-template" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-template/project.json" />
+      <project name="plugin-template" file="file://$PROJECT_DIR$/packages/plugins/plugin-template/project.json" />
       <project name="plugin-theme" file="file://$PROJECT_DIR$/packages/plugins/plugin-theme/project.json" />
+      <project name="plugin-theme-editor" file="file://$PROJECT_DIR$/packages/plugins/plugin-theme-editor/project.json" />
       <project name="plugin-thread" file="file://$PROJECT_DIR$/packages/plugins/plugin-thread/project.json" />
-      <project name="plugin-wildcard" file="file://$PROJECT_DIR$/packages/plugins/plugin-wildcard/project.json" />
-      <project name="plugin-wnfs" file="file://$PROJECT_DIR$/packages/plugins/experimental/plugin-wnfs/project.json" />
+      <project name="plugin-token-manager" file="file://$PROJECT_DIR$/packages/plugins/plugin-token-manager/project.json" />
+      <project name="plugin-transcription" file="file://$PROJECT_DIR$/packages/plugins/plugin-transcription/project.json" />
+      <project name="plugin-transformer" file="file://$PROJECT_DIR$/packages/plugins/plugin-transformer/project.json" />
+      <project name="plugin-wnfs" file="file://$PROJECT_DIR$/packages/plugins/plugin-wnfs/project.json" />
       <project name="process" file="file://$PROJECT_DIR$/packages/common/process/project.json" />
       <project name="proto-guard" file="file://$PROJECT_DIR$/packages/gravity/proto-guard/project.json" />
       <project name="protobuf-compiler" file="file://$PROJECT_DIR$/packages/common/protobuf-compiler/project.json" />
       <project name="protobuf-test" file="file://$PROJECT_DIR$/tools/protobuf-test/project.json" />
-      <project name="protoc-gen-go-dxrpc" file="file://$PROJECT_DIR$/tools/protoc-gen-go-dxrpc/project.json" />
       <project name="protocols" file="file://$PROJECT_DIR$/packages/core/protocols/project.json" />
       <project name="random" file="file://$PROJECT_DIR$/packages/common/random/project.json" />
       <project name="random-access-storage" file="file://$PROJECT_DIR$/packages/common/random-access-storage/project.json" />
       <project name="react-client" file="file://$PROJECT_DIR$/packages/sdk/react-client/project.json" />
+      <project name="react-edge-client" file="file://$PROJECT_DIR$/packages/sdk/react-edge-client/project.json" />
       <project name="react-hooks" file="file://$PROJECT_DIR$/packages/ui/primitives/react-hooks/project.json" />
       <project name="react-input" file="file://$PROJECT_DIR$/packages/ui/primitives/react-input/project.json" />
       <project name="react-list" file="file://$PROJECT_DIR$/packages/ui/primitives/react-list/project.json" />
@@ -142,18 +147,27 @@
       <project name="react-ui" file="file://$PROJECT_DIR$/packages/ui/react-ui/project.json" />
       <project name="react-ui-attention" file="file://$PROJECT_DIR$/packages/ui/react-ui-attention/project.json" />
       <project name="react-ui-canvas" file="file://$PROJECT_DIR$/packages/ui/react-ui-canvas/project.json" />
+      <project name="react-ui-canvas-compute" file="file://$PROJECT_DIR$/packages/ui/react-ui-canvas-compute/project.json" />
+      <project name="react-ui-canvas-editor" file="file://$PROJECT_DIR$/packages/ui/react-ui-canvas-editor/project.json" />
       <project name="react-ui-card" file="file://$PROJECT_DIR$/packages/ui/react-ui-card/project.json" />
+      <project name="react-ui-components" file="file://$PROJECT_DIR$/packages/ui/react-ui-components/project.json" />
+      <project name="react-ui-dnd" file="file://$PROJECT_DIR$/packages/ui/react-ui-dnd/project.json" />
       <project name="react-ui-editor" file="file://$PROJECT_DIR$/packages/ui/react-ui-editor/project.json" />
       <project name="react-ui-form" file="file://$PROJECT_DIR$/packages/ui/react-ui-form/project.json" />
+      <project name="react-ui-gameboard" file="file://$PROJECT_DIR$/packages/ui/react-ui-gameboard/project.json" />
+      <project name="react-ui-geo" file="file://$PROJECT_DIR$/packages/ui/react-ui-geo/project.json" />
       <project name="react-ui-grid" file="file://$PROJECT_DIR$/packages/ui/react-ui-grid/project.json" />
       <project name="react-ui-kanban" file="file://$PROJECT_DIR$/packages/ui/react-ui-kanban/project.json" />
       <project name="react-ui-list" file="file://$PROJECT_DIR$/packages/ui/react-ui-list/project.json" />
-      <project name="react-ui-mosaic" file="file://$PROJECT_DIR$/packages/ui/react-ui-mosaic/project.json" />
+      <project name="react-ui-menu" file="file://$PROJECT_DIR$/packages/ui/react-ui-menu/project.json" />
+      <project name="react-ui-pickers" file="file://$PROJECT_DIR$/packages/ui/react-ui-pickers/project.json" />
       <project name="react-ui-searchlist" file="file://$PROJECT_DIR$/packages/ui/react-ui-searchlist/project.json" />
+      <project name="react-ui-sfx" file="file://$PROJECT_DIR$/packages/ui/react-ui-sfx/project.json" />
       <project name="react-ui-stack" file="file://$PROJECT_DIR$/packages/ui/react-ui-stack/project.json" />
       <project name="react-ui-syntax-highlighter" file="file://$PROJECT_DIR$/packages/ui/react-ui-syntax-highlighter/project.json" />
       <project name="react-ui-table" file="file://$PROJECT_DIR$/packages/ui/react-ui-table/project.json" />
       <project name="react-ui-tabs" file="file://$PROJECT_DIR$/packages/ui/react-ui-tabs/project.json" />
+      <project name="react-ui-tag-picker" file="file://$PROJECT_DIR$/packages/ui/react-ui-tag-picker/project.json" />
       <project name="react-ui-text-tooltip" file="file://$PROJECT_DIR$/packages/ui/react-ui-text-tooltip/project.json" />
       <project name="react-ui-theme" file="file://$PROJECT_DIR$/packages/ui/react-ui-theme/project.json" />
       <project name="react-ui-thread" file="file://$PROJECT_DIR$/packages/ui/react-ui-thread/project.json" />

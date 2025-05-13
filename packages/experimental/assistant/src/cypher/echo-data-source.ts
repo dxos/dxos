@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
+
 import { raise } from '@dxos/debug';
 import { type EchoDatabase, Filter, type AnyLiveObject } from '@dxos/echo-db';
-import { getSchema, getSchemaTypename, type S, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
+import { getSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import type { DataSource, Node, Relationship } from './query-executor';
@@ -62,7 +64,7 @@ export class EchoDataSource implements DataSource {
     ).flat();
   }
 
-  private async _getAllSchema(): Promise<S.Schema.AnyNoContext[]> {
+  private async _getAllSchema(): Promise<Schema.Schema.AnyNoContext[]> {
     return [
       ...(await this._db.schemaRegistry.query().run()),
       // TODO(dmaretskyi): Remove once we can serialize recursive schema.

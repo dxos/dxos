@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Match, type Schema as S } from 'effect';
+import { Match, type Schema } from 'effect';
 import React, { type ChangeEvent, useCallback } from 'react';
 
 import { debounce } from '@dxos/async';
@@ -17,7 +17,7 @@ export const PromptSettings = ({ template }: { template: TemplateType }) => {
   const handleKindChange = useCallback(
     (value: string) => {
       const kind = Match.type<string>().pipe(
-        Match.withReturnType<S.Schema.Type<typeof TemplateKindSchema>>(),
+        Match.withReturnType<Schema.Schema.Type<typeof TemplateKindSchema>>(),
         Match.when('always', () => ({ include: 'always' })),
         Match.when('schema-matching', () => ({ include: 'schema-matching', typename: '' })),
         Match.when('automatically', () => ({ include: 'automatically', description: '' })),

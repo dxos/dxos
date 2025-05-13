@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { getTypenameOrThrow, toJsonSchema, type S } from '@dxos/echo-schema';
+import { getTypenameOrThrow, toJsonSchema } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
@@ -35,12 +36,14 @@ export default () =>
     createSurface({
       id: `${KANBAN_PLUGIN}/create-initial-schema-form`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
         if (data.prop !== 'typename') {
           return false;
         }
 
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, TypenameAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
@@ -74,8 +77,10 @@ export default () =>
     createSurface({
       id: `${KANBAN_PLUGIN}/create-initial-schema-form-[pivot-column]`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, PivotColumnAnnotationId);
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
