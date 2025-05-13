@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 
 import { FormatAnnotation, FormatEnum } from './types';
 
@@ -13,9 +13,9 @@ export const DXN = Schema.NonEmptyString.pipe(
   Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
   FormatAnnotation.set(FormatEnum.DXN),
   Schema.annotations({
-    [AST.TitleAnnotationId]: 'DXN',
-    [AST.DescriptionAnnotationId]: 'DXN URI',
-    [AST.ExamplesAnnotationId]: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
+    [SchemaAST.TitleAnnotationId]: 'DXN',
+    [SchemaAST.DescriptionAnnotationId]: 'DXN URI',
+    [SchemaAST.ExamplesAnnotationId]: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
   }),
 );
 
@@ -27,8 +27,8 @@ export const Email = Schema.String.pipe(
   Schema.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
   FormatAnnotation.set(FormatEnum.Email),
   Schema.annotations({
-    [AST.TitleAnnotationId]: 'Email',
-    [AST.DescriptionAnnotationId]: 'Email address',
+    [SchemaAST.TitleAnnotationId]: 'Email',
+    [SchemaAST.DescriptionAnnotationId]: 'Email address',
   }),
 );
 
@@ -71,8 +71,8 @@ export const URL = Schema.String.pipe(
   Schema.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i),
   FormatAnnotation.set(FormatEnum.URL),
   Schema.annotations({
-    [AST.TitleAnnotationId]: 'URL',
-    [AST.DescriptionAnnotationId]: 'URL',
+    [SchemaAST.TitleAnnotationId]: 'URL',
+    [SchemaAST.DescriptionAnnotationId]: 'URL',
   }),
 );
 
@@ -83,6 +83,6 @@ export const URL = Schema.String.pipe(
 export const UUID = Schema.UUID.pipe(
   FormatAnnotation.set(FormatEnum.UUID),
   Schema.annotations({
-    [AST.ExamplesAnnotationId]: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],
+    [SchemaAST.ExamplesAnnotationId]: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],
   }),
 );

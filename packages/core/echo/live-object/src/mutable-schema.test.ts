@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { PropertyMeta, getTypeAnnotation, getPropertyMetaAnnotation, TypedObject } from '@dxos/echo-schema';
@@ -27,8 +27,8 @@ describe('dynamic schema', () => {
 
     const registered = createEchoSchema(TestSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', AST.stringKeyword],
-      ['field2', AST.booleanKeyword],
+      ['field1', SchemaAST.stringKeyword],
+      ['field2', SchemaAST.booleanKeyword],
     ]);
   });
 
@@ -43,8 +43,8 @@ describe('dynamic schema', () => {
     const registered = createEchoSchema(TestSchema);
     registered.addFields({ field2: Schema.Boolean });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', AST.stringKeyword],
-      ['field2', AST.booleanKeyword],
+      ['field1', SchemaAST.stringKeyword],
+      ['field2', SchemaAST.booleanKeyword],
     ]);
   });
 
@@ -55,10 +55,10 @@ describe('dynamic schema', () => {
     registered.addFields({ field3: Schema.Number });
     registered.updateFields({ field4: Schema.Boolean, field2: Schema.String });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', AST.stringKeyword],
-      ['field2', AST.stringKeyword],
-      ['field3', AST.numberKeyword],
-      ['field4', AST.booleanKeyword],
+      ['field1', SchemaAST.stringKeyword],
+      ['field2', SchemaAST.stringKeyword],
+      ['field3', SchemaAST.numberKeyword],
+      ['field4', SchemaAST.booleanKeyword],
     ]);
   });
 
@@ -69,8 +69,8 @@ describe('dynamic schema', () => {
     registered.addFields({ field3: Schema.Number });
     registered.removeFields(['field2']);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', AST.stringKeyword],
-      ['field3', AST.numberKeyword],
+      ['field1', SchemaAST.stringKeyword],
+      ['field3', SchemaAST.numberKeyword],
     ]);
   });
 

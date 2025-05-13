@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
@@ -69,7 +69,7 @@ export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
     return this._schema.Context;
   }
 
-  public get ast(): AST.AST {
+  public get ast(): SchemaAST.AST {
     return this._schema.ast;
   }
 
@@ -275,9 +275,9 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
     return this._storedSchema;
   }
 
-  public getProperties(): AST.PropertySignature[] {
+  public getProperties(): SchemaAST.PropertySignature[] {
     const ast = this._getSchema().ast;
-    invariant(AST.isTypeLiteral(ast));
+    invariant(SchemaAST.isTypeLiteral(ast));
     return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
   }
 
@@ -356,13 +356,13 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
 }
 
 // TODO(burdon): Move to effect.
-const unwrapOptionality = (property: AST.PropertySignature): AST.PropertySignature => {
-  if (!AST.isUnion(property.type)) {
+const unwrapOptionality = (property: SchemaAST.PropertySignature): SchemaAST.PropertySignature => {
+  if (!SchemaAST.isUnion(property.type)) {
     return property;
   }
 
   return {
     ...property,
-    type: property.type.types.find((type) => !AST.isUndefinedKeyword(type))!,
+    type: property.type.types.find((type) => !SchemaAST.isUndefinedKeyword(type))!,
   } as any;
 };

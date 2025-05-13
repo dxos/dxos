@@ -3,7 +3,6 @@
 //
 
 import { Schema } from 'effect';
-import { S } from '@dxos/echo-schema';
 
 import { ViewType } from './schema';
 import { EXPLORER_PLUGIN } from '../meta';

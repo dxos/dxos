@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 
 import { FormatAnnotation, FormatEnum } from './types';
 
@@ -103,8 +103,8 @@ export const DateOnly = /* Schema.transformOrFail(Schema.String, SimpleDate, {
 }) */ Schema.String.pipe(
   FormatAnnotation.set(FormatEnum.Date),
   Schema.annotations({
-    [AST.TitleAnnotationId]: 'Date',
-    [AST.DescriptionAnnotationId]: 'Valid date in ISO format',
+    [SchemaAST.TitleAnnotationId]: 'Date',
+    [SchemaAST.DescriptionAnnotationId]: 'Valid date in ISO format',
   }),
 );
 
@@ -133,8 +133,8 @@ export const TimeOnly = /* Schema.transformOrFail(Schema.String, SimpleTime, {
 }) */ Schema.String.pipe(
   FormatAnnotation.set(FormatEnum.Time),
   Schema.annotations({
-    [AST.TitleAnnotationId]: 'Time',
-    [AST.DescriptionAnnotationId]: 'Valid time in ISO format',
+    [SchemaAST.TitleAnnotationId]: 'Time',
+    [SchemaAST.DescriptionAnnotationId]: 'Valid time in ISO format',
   }),
 );
 
@@ -178,8 +178,8 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
 }) */ Schema.String.pipe(
   FormatAnnotation.set(FormatEnum.DateTime),
   Schema.annotations({
-    [AST.TitleAnnotationId]: 'DateTime',
-    [AST.DescriptionAnnotationId]: 'Valid date and time in ISO format',
+    [SchemaAST.TitleAnnotationId]: 'DateTime',
+    [SchemaAST.DescriptionAnnotationId]: 'Valid date and time in ISO format',
   }),
 );
 
@@ -190,9 +190,9 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
 export const Duration = Schema.String.pipe(
   FormatAnnotation.set(FormatEnum.Duration),
   Schema.annotations({
-    [AST.TitleAnnotationId]: 'Duration',
-    [AST.DescriptionAnnotationId]: 'Duration in ISO 8601 format',
-    [AST.ExamplesAnnotationId]: ['1h', '3D'],
+    [SchemaAST.TitleAnnotationId]: 'Duration',
+    [SchemaAST.DescriptionAnnotationId]: 'Duration in ISO 8601 format',
+    [SchemaAST.ExamplesAnnotationId]: ['1h', '3D'],
   }),
 );
 

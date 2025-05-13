@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 export const ResourceKey = Schema.Union(Schema.String, Schema.Record({ key: Schema.String, value: Schema.Any }));
 export type ResourceKey = Schema.Schema.Type<typeof ResourceKey>;
 

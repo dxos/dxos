@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
@@ -221,7 +221,7 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext) => {
 
 export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>) => {
   // log.info('prepareTypedTarget', { target, schema });
-  if (!AST.isTypeLiteral(schema.ast)) {
+  if (!SchemaAST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
 

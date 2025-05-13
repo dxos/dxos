@@ -6,6 +6,7 @@ import { Schema } from 'effect';
 import React, { useRef } from 'react';
 
 import { ComputeValueType, getTemplateInputSchema, TemplateOutput, VoidInput } from '@dxos/conductor';
+import { toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import {
   type ShapeComponentProps,

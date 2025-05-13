@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { TypedObject } from '@dxos/echo-schema';
 
 export class TaskType extends TypedObject({ typename: 'dxos.docs.Task', version: '0.1.0' })({
-  title: S.String,
-  completed: S.Boolean,
+  title: Schema.String,
+  completed: Schema.Boolean,
 }) {}

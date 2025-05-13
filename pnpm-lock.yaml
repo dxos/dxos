@@ -2251,6 +2251,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       hyperformula:
         specifier: ^2.7.1
         version: 2.7.1
@@ -2551,6 +2554,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -5891,6 +5897,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -12045,6 +12054,9 @@ importers:
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       lib0:
         specifier: ^0.2.65
         version: 0.2.78

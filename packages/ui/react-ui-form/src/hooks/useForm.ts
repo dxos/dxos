@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST as AST, type Schema } from 'effect';
+import { SchemaAST, type Schema } from 'effect';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
@@ -90,7 +90,7 @@ export const useForm = <T extends BaseObject>({
   onValid,
   onSave,
 }: FormOptions<T>): FormHandler<T> => {
-  invariant(AST.isTypeLiteral(schema.ast));
+  invariant(SchemaAST.isTypeLiteral(schema.ast));
 
   const [values, setValues] = useState<Partial<T>>(initialValues);
   useEffect(() => {

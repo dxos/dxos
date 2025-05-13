@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { type ComputeGraphModel, EmailTriggerOutput, NODE_INPUT } from '@dxos/conductor';
-import { AST, ObjectId, toJsonSchema } from '@dxos/echo-schema';
+import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
 import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -163,7 +163,7 @@ export const presets = {
 
             const appendToTable = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
-            const properties = AST.getPropertySignatures(EmailTriggerOutput.ast);
+            const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
             for (let i = 0; i < properties.length; i++) {
               const propName = properties[i].name.toString();
               builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
@@ -282,7 +282,7 @@ export const presets = {
             templateContent.push('  "category": "{{text}}",');
             builder.createEdge({ source: gpt.id, target: template.id, input: 'text', output: 'text' });
 
-            const properties = AST.getPropertySignatures(EmailTriggerOutput.ast);
+            const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
             for (let i = 0; i < properties.length; i++) {
               const propName = properties[i].name.toString();
               builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });

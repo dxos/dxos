@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
 import { AIServiceEdgeClient } from '@dxos/assistant';
@@ -11,7 +11,7 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { createQueueDxn, Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Type } from '@dxos/echo';
-import { AST, create, ObjectId } from '@dxos/echo-schema';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -25,12 +25,12 @@ import { processTranscriptMessage } from '../entity-extraction';
 
 export const TestItem = Schema.Struct({
   title: Schema.String.annotations({
-    [AST.TitleAnnotationId]: 'Title',
-    [AST.DescriptionAnnotationId]: 'Product title',
+    [SchemaAST.TitleAnnotationId]: 'Title',
+    [SchemaAST.DescriptionAnnotationId]: 'Product title',
   }),
   description: Schema.String.annotations({
-    [AST.TitleAnnotationId]: 'Description',
-    [AST.DescriptionAnnotationId]: 'Product description',
+    [SchemaAST.TitleAnnotationId]: 'Description',
+    [SchemaAST.DescriptionAnnotationId]: 'Product description',
   }),
 }).pipe(
   Type.def({

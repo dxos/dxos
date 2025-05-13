@@ -3,11 +3,12 @@
 //
 
 import { effect } from '@preact/signals-core';
+import { SchemaAST } from 'effect';
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
-import { AST, toEffectSchema } from '@dxos/echo-schema';
+import { toEffectSchema } from '@dxos/echo-schema';
 import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
@@ -57,7 +58,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         const body: Record<string, any> = {};
         if (fn.inputSchema) {
           const schema = toEffectSchema(fn.inputSchema);
-          AST.getPropertySignatures(schema.ast).forEach(({ name }, index) => {
+          SchemaAST.getPropertySignatures(schema.ast).forEach(({ name }, index) => {
             body[name.toString()] = args[index];
           });
         } else {

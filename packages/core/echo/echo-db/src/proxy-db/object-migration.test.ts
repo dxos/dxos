@@ -2,20 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import {
-  AST,
-  FieldSortType,
+  getSchema,
   getSchemaDXN,
   getSchemaVersion,
   getTypename,
+  FieldSortType,
   JsonPath,
   JsonSchemaType,
   QueryType,
   TypedObject,
-  getSchema,
 } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -176,8 +175,8 @@ export class ViewTypeV1 extends TypedObject({
   version: '0.1.0',
 })({
   name: Schema.String.annotations({
-    [AST.TitleAnnotationId]: 'Name',
-    [AST.ExamplesAnnotationId]: ['Contact'],
+    [SchemaAST.TitleAnnotationId]: 'Name',
+    [SchemaAST.ExamplesAnnotationId]: ['Contact'],
   }),
   query: Schema.Struct({
     type: Schema.optional(Schema.String),
@@ -193,8 +192,8 @@ export class ViewTypeV2 extends TypedObject({
   version: '0.2.0',
 })({
   name: Schema.String.annotations({
-    [AST.TitleAnnotationId]: 'Name',
-    [AST.ExamplesAnnotationId]: ['Contact'],
+    [SchemaAST.TitleAnnotationId]: 'Name',
+    [SchemaAST.ExamplesAnnotationId]: ['Contact'],
   }),
   query: QueryType,
   schema: Schema.optional(JsonSchemaType),

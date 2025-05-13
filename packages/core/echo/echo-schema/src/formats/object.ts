@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST as AST, Schema } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 
 import { clamp } from '@dxos/util';
 
@@ -22,19 +22,19 @@ import { FormatAnnotation, FormatEnum } from './types';
  */
 export const GeoPoint = Schema.Tuple(
   Schema.Number.pipe(Schema.clamp(-180, 180), Schema.multipleOf(0.00001)).annotations({
-    [AST.TitleAnnotationId]: 'Longitude',
+    [SchemaAST.TitleAnnotationId]: 'Longitude',
   }),
   Schema.Number.pipe(Schema.clamp(-90, 90), Schema.multipleOf(0.00001)).annotations({
-    [AST.TitleAnnotationId]: 'Latitude',
+    [SchemaAST.TitleAnnotationId]: 'Latitude',
   }),
   Schema.optionalElement(Schema.Number).annotations({
-    [AST.TitleAnnotationId]: 'Height ASL (m)',
+    [SchemaAST.TitleAnnotationId]: 'Height ASL (m)',
   }),
 ).pipe(
   FormatAnnotation.set(FormatEnum.GeoPoint),
   Schema.annotations({
-    [AST.TitleAnnotationId]: 'GeoPoint',
-    [AST.DescriptionAnnotationId]: 'GeoJSON Position',
+    [SchemaAST.TitleAnnotationId]: 'GeoPoint',
+    [SchemaAST.DescriptionAnnotationId]: 'GeoJSON Position',
   }),
 );
 

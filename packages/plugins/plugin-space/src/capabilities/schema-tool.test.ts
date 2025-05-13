@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, it, expect } from 'vitest';
-
-import { S } from '@dxos/echo-schema';
 
 import { TypeNameSchema } from './schema-tools';
 
@@ -29,7 +28,7 @@ describe('TypeNameSchema format', () => {
     '.org/Type', // Must have domain
   ];
 
-  const validate = S.validateSync(TypeNameSchema);
+  const validate = Schema.validateSync(TypeNameSchema);
 
   valid.forEach((typename) => {
     it(`should accept valid typename: ${typename}`, () => {

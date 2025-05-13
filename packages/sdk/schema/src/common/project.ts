@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { AST, Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
+import { Format, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
@@ -18,7 +18,7 @@ export const ProjectSchema = Schema.Struct({
   image: Schema.optional(Format.URL),
   description: Schema.optional(Schema.String),
 }).annotations({
-  [AST.TitleAnnotationId]: 'Project',
+  [SchemaAST.TitleAnnotationId]: 'Project',
   [LabelAnnotationId]: 'name',
   [IconAnnotationId]: 'ph--kanban--regular',
 });

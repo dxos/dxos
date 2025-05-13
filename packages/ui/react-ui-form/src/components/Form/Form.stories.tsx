@@ -4,13 +4,13 @@
 
 import '@dxos-theme';
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
-import { AST, type BaseObject, Expando, Format, getDXN, Ref, S, type TypeAnnotation } from '@dxos/echo-schema';
+import { type BaseObject, Expando, Format, getDXN, Ref, type TypeAnnotation } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -21,18 +21,18 @@ import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
 const AddressSchema = Schema.Struct({
-  street: Schema.optional(Schema.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
-  city: Schema.optional(Schema.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
-  zip: Schema.optional(Schema.String.pipe(Schema.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
-  location: Schema.optional(Format.GeoPoint.annotations({ [AST.TitleAnnotationId]: 'Location' })),
-}).annotations({ [AST.TitleAnnotationId]: 'Address' });
+  street: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Street' })),
+  city: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'City' })),
+  zip: Schema.optional(Schema.String.pipe(Schema.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [SchemaAST.TitleAnnotationId]: 'ZIP' })),
+  location: Schema.optional(Format.GeoPoint.annotations({ [SchemaAST.TitleAnnotationId]: 'Location' })),
+}).annotations({ [SchemaAST.TitleAnnotationId]: 'Address' });
 
 // TODO(burdon): Translations?
 const TestSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
-  active: Schema.optional(Schema.Boolean.annotations({ [AST.TitleAnnotationId]: 'Active' })),
-  rank: Schema.optional(Schema.Number.annotations({ [AST.TitleAnnotationId]: 'Rank' })),
-  website: Schema.optional(Format.URL.annotations({ [AST.TitleAnnotationId]: 'Website' })),
+  name: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' })),
+  active: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Active' })),
+  rank: Schema.optional(Schema.Number.annotations({ [SchemaAST.TitleAnnotationId]: 'Rank' })),
+  website: Schema.optional(Format.URL.annotations({ [SchemaAST.TitleAnnotationId]: 'Website' })),
   address: Schema.optional(AddressSchema),
 }).pipe(Schema.mutable);
 
@@ -123,14 +123,14 @@ const ShapeSchema = Schema.Struct({
   shape: Schema.optional(
     Schema.Union(
       Schema.Struct({
-        type: Schema.Literal('circle').annotations({ [AST.TitleAnnotationId]: 'Type' }),
-        radius: Schema.optional(Schema.Number.annotations({ [AST.TitleAnnotationId]: 'Radius' })),
+        type: Schema.Literal('circle').annotations({ [SchemaAST.TitleAnnotationId]: 'Type' }),
+        radius: Schema.optional(Schema.Number.annotations({ [SchemaAST.TitleAnnotationId]: 'Radius' })),
       }),
       Schema.Struct({
-        type: Schema.Literal('square').annotations({ [AST.TitleAnnotationId]: 'Type' }),
-        size: Schema.optional(Schema.Number.pipe(Schema.nonNegative()).annotations({ [AST.TitleAnnotationId]: 'Size' })),
+        type: Schema.Literal('square').annotations({ [SchemaAST.TitleAnnotationId]: 'Type' }),
+        size: Schema.optional(Schema.Number.pipe(Schema.nonNegative()).annotations({ [SchemaAST.TitleAnnotationId]: 'Size' })),
       }),
-    ).annotations({ [AST.TitleAnnotationId]: 'Shape' }),
+    ).annotations({ [SchemaAST.TitleAnnotationId]: 'Shape' }),
   ),
 }).pipe(Schema.mutable);
 
@@ -214,7 +214,7 @@ export const Arrays: StoryObj<FormProps<ArraysType>> = {
 
 const ColorSchema = Schema.Struct({
   color: Schema.Union(Schema.Literal('red'), Schema.Literal('green'), Schema.Literal('blue')).annotations({
-    [AST.TitleAnnotationId]: 'Color',
+    [SchemaAST.TitleAnnotationId]: 'Color',
   }),
 }).pipe(Schema.mutable);
 

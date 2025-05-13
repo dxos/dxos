@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Label } from '../plugin-intent';
 
 export const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';

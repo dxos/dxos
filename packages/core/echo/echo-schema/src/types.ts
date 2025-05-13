@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
 import { splitJsonPath, type JsonPath } from '@dxos/effect';
@@ -39,7 +39,7 @@ export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 export const RawObject = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
 ): Schema.Schema<ExcludeId<Schema.Schema.Type<S>> & WithMeta, Schema.Schema.Encoded<S>> => {
-  return Schema.make(AST.omit(schema.ast, ['id']));
+  return Schema.make(SchemaAST.omit(schema.ast, ['id']));
 };
 
 //

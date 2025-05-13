@@ -107,6 +107,9 @@
     "fast-check": "^3.19.0",
     "ts-node": "10.9.1"
   },
+  "peerDependencies": {
+    "effect": "^3.13.3"
+  },
   "optionalDependencies": {
     "@dxos/random": "workspace:*",
     "date-fns": "^3.3.1"

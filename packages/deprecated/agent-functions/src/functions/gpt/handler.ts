@@ -5,10 +5,10 @@
 import { Schema } from 'effect';
 
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
-import { S, foreignKey, getTypename } from '@dxos/echo-schema';
+import { foreignKey, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { live, getMeta, Ref.make } from '@dxos/live-object';
+import { live, getMeta, Ref } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TemplateType } from '@dxos/plugin-automation/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';

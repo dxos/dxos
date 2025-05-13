@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { TypedObject } from './typed-object';
@@ -28,6 +28,6 @@ describe('EchoObject class DSL', () => {
   });
 
   test('expect schema', async () => {
-    expect(AST.isTypeLiteral(Organization.ast)).to.be.true;
+    expect(SchemaAST.isTypeLiteral(Organization.ast)).to.be.true;
   });
 });

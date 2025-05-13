@@ -64,7 +64,7 @@ const getTypeLiteralPropertySignature = (
         case 'TemplateLiteral': {
           // const regex = getTemplateLiteralRegExp(parameterBase)
           // if (regex.test(name)) {
-          //   return new AST.PropertySignature(name, is.type, false, true)
+          //   return new SchemaAST.PropertySignature(name, is.type, false, true)
           // }
           // break
           throw new Error('TODO');

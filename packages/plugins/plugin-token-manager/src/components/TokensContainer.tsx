@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { isInstanceOf, S } from '@dxos/echo-schema';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { live, Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
@@ -24,8 +25,8 @@ const initialValues = {
   token: '',
 };
 
-const FormSchema = DataType.AccessToken.pipe(S.omit('id'));
-type TokenForm = S.Schema.Type<typeof FormSchema>;
+const FormSchema = DataType.AccessToken.pipe(Schema.omit('id'));
+type TokenForm = Schema.Schema.Type<typeof FormSchema>;
 
 export const TokensContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);

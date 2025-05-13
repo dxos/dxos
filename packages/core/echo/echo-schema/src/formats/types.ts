@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, type JSONSchema } from 'effect';
+import { SchemaAST, type JSONSchema } from 'effect';
 import { Option, pipe } from 'effect';
 
 import type { JsonSchemaType } from '../ast';
@@ -45,8 +45,8 @@ export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
 export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotationId);
 
-export const getFormatAnnotation = (node: AST.AST): FormatEnum | undefined =>
-  pipe(AST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
+export const getFormatAnnotation = (node: SchemaAST.AST): FormatEnum | undefined =>
+  pipe(SchemaAST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
 
 // TODO(burdon): Rename Format.
 export enum FormatEnum {
@@ -159,7 +159,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
  */
 export const OptionsAnnotationId = Symbol.for('@dxos/schema/annotation/Options');
 
-export const getOptionsAnnotation = (node: AST.AST): OptionsAnnotationType[] | undefined =>
-  pipe(AST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
+export const getOptionsAnnotation = (node: SchemaAST.AST): OptionsAnnotationType[] | undefined =>
+  pipe(SchemaAST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
 
 export type OptionsAnnotationType = string | number;

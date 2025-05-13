@@ -7,7 +7,7 @@ import { Schema, pipe } from 'effect';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf, S } from '@dxos/echo-schema';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { live, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';

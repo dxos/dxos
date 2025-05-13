@@ -7,7 +7,7 @@ import { Schema, SchemaAST } from 'effect';
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineTool, ToolResult } from '@dxos/artifact';
 import { type Space } from '@dxos/client/echo';
-import { FormatEnum, FormatEnums, S, SelectOptionSchema, GeoPoint, toJsonSchema } from '@dxos/echo-schema';
+import { FormatEnum, FormatEnums, SelectOptionSchema, GeoPoint, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
 import { getSchemaFromPropertyDefinitions } from '@dxos/schema';

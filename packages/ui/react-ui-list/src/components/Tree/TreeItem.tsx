@@ -13,7 +13,6 @@ import {
 import { Schema } from 'effect';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState, type FC, type KeyboardEvent } from 'react';
 
-import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Treegrid, TreeItem as NaturalTreeItem } from '@dxos/react-ui';
 import {

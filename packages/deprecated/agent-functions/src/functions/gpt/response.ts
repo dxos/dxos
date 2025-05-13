@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { SchemaAST } from 'effect';
+
 import { type Space } from '@dxos/client/echo';
-import { AST } from '@dxos/echo-schema';
 import { live, Ref, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -95,7 +96,7 @@ export class ResponseBuilder {
             const data: Record<string, any> = {};
             for (const { name, type } of schema.getProperties()) {
               const value = obj[name];
-              if (value !== undefined && value !== null && AST.isStringKeyword(type)) {
+              if (value !== undefined && value !== null && SchemaAST.isStringKeyword(type)) {
                 data[name.toString()] = live(DataType.Text, { content: value });
               }
             }

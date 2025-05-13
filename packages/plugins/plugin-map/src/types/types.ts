@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
-import { GeoPoint, AST } from '@dxos/echo-schema';
+import { GeoPoint } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { MapType } from './map';
@@ -19,13 +19,13 @@ export const CreateMapSchema = Schema.Struct({
   initialSchema: Schema.optional(
     Schema.String.annotations({
       [TypenameAnnotationId]: true,
-      [AST.TitleAnnotationId]: 'Schema',
+      [SchemaAST.TitleAnnotationId]: 'Schema',
     }),
   ),
   locationProperty: Schema.optional(
     Schema.String.annotations({
       [LocationAnnotationId]: true,
-      [AST.TitleAnnotationId]: 'Location property',
+      [SchemaAST.TitleAnnotationId]: 'Location property',
     }),
   ),
 });
@@ -36,7 +36,10 @@ export namespace MapAction {
   const MAP_ACTION = `${MAP_PLUGIN}/action`;
 
   export class Create extends Schema.TaggedClass<Create>()(`${MAP_ACTION}/create`, {
-    input: Schema.extend(Schema.Struct({ space: SpaceSchema, coordinates: Schema.optional(GeoPoint) }), CreateMapSchema),
+    input: Schema.extend(
+      Schema.Struct({ space: SpaceSchema, coordinates: Schema.optional(GeoPoint) }),
+      CreateMapSchema,
+    ),
     output: Schema.Struct({ object: MapType }),
   }) {}
 

@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
-import { Ref, ObjectId, TypedObject, AST, Expando } from '@dxos/echo-schema';
+import { Ref, ObjectId, TypedObject, Expando } from '@dxos/echo-schema';
 // import { ThreadType } from '@dxos/plugin-space/types';
 import { ViewType } from '@dxos/schema';
 
@@ -27,7 +27,11 @@ export const KanbanSchema = Schema.Struct({
    */
   arrangement: Schema.optional(
     Schema.Array(
-      Schema.Struct({ columnValue: Schema.String, ids: Schema.Array(ObjectId), hidden: Schema.optional(Schema.Boolean) }).pipe(Schema.mutable),
+      Schema.Struct({
+        columnValue: Schema.String,
+        ids: Schema.Array(ObjectId),
+        hidden: Schema.optional(Schema.Boolean),
+      }).pipe(Schema.mutable),
     ).pipe(Schema.mutable),
   ),
   // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
@@ -36,7 +40,7 @@ export const KanbanSchema = Schema.Struct({
 
 export const KanbanSettingsSchema = Schema.Struct({
   columnFieldId: Schema.String.annotations({
-    [AST.TitleAnnotationId]: 'Column field identifier',
+    [SchemaAST.TitleAnnotationId]: 'Column field identifier',
   }),
 });
 

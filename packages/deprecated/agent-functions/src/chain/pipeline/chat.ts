@@ -35,7 +35,7 @@ export const chat = (model: BaseChatModel<BaseLanguageModelCallOptions>): Pipeli
 };
 
 export type JSONChatOptions = {
-  schema?: S.Schema.AnyNoContext;
+  schema?: Schema.Schema.AnyNoContext;
 };
 
 export const jsonChat = (
@@ -44,9 +44,9 @@ export const jsonChat = (
 ): PipelineFunction => {
   return async ({ request }: Context) => {
     invariant(request.messages);
-    invariant(options.schema);
+    invariant(optionSchema.Schema);
 
-    const jsonSchema = JSONSchema.make(options.schema);
+    const jsonSchema = JSONSchema.make(optionSchema.Schema);
 
     // TODO(burdon): OpenAI only?
     // https://js.langchain.com/docs/modules/model_io/output_parsers/types/json_functions

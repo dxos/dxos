@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
-import { AST, OptionsAnnotationId, RawObject, TypedObject, DXN } from '@dxos/echo-schema';
+import { OptionsAnnotationId, RawObject, TypedObject, DXN } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -20,7 +20,7 @@ export enum TriggerKind {
 }
 
 // TODO(burdon): Rename prop kind.
-const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
+const typeLiteralAnnotations = { [SchemaAST.TitleAnnotationId]: 'Type' };
 
 /**
  * Cron timer.
@@ -28,8 +28,8 @@ const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
 const TimerTriggerSchema = Schema.Struct({
   type: Schema.Literal(TriggerKind.Timer).annotations(typeLiteralAnnotations),
   cron: Schema.String.annotations({
-    [AST.TitleAnnotationId]: 'Cron',
-    [AST.ExamplesAnnotationId]: ['0 0 * * *'],
+    [SchemaAST.TitleAnnotationId]: 'Cron',
+    [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
 }).pipe(Schema.mutable);
 
@@ -55,13 +55,13 @@ const WebhookTriggerSchema = Schema.Struct({
   type: Schema.Literal(TriggerKind.Webhook).annotations(typeLiteralAnnotations),
   method: Schema.optional(
     Schema.String.annotations({
-      [AST.TitleAnnotationId]: 'Method',
+      [SchemaAST.TitleAnnotationId]: 'Method',
       [OptionsAnnotationId]: ['GET', 'POST'],
     }),
   ),
   port: Schema.optional(
     Schema.Number.annotations({
-      [AST.TitleAnnotationId]: 'Port',
+      [SchemaAST.TitleAnnotationId]: 'Port',
     }),
   ),
 }).pipe(Schema.mutable);
@@ -70,9 +70,9 @@ export type WebhookTrigger = Schema.Schema.Type<typeof WebhookTriggerSchema>;
 
 // TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
 const QuerySchema = Schema.Struct({
-  type: Schema.optional(Schema.String.annotations({ [AST.TitleAnnotationId]: 'Type' })),
+  type: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Type' })),
   props: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).annotations({ [AST.TitleAnnotationId]: 'Query' });
+}).annotations({ [SchemaAST.TitleAnnotationId]: 'Query' });
 
 /**
  * Subscription.
@@ -84,10 +84,10 @@ const SubscriptionTriggerSchema = Schema.Struct({
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
-      deep: Schema.optional(Schema.Boolean.annotations({ [AST.TitleAnnotationId]: 'Nested' })),
+      deep: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Nested' })),
       // Debounce changes (delay in ms).
-      delay: Schema.optional(Schema.Number.annotations({ [AST.TitleAnnotationId]: 'Delay' })),
-    }).annotations({ [AST.TitleAnnotationId]: 'Options' }),
+      delay: Schema.optional(Schema.Number.annotations({ [SchemaAST.TitleAnnotationId]: 'Delay' })),
+    }).annotations({ [SchemaAST.TitleAnnotationId]: 'Options' }),
   ),
 }).pipe(Schema.mutable);
 
@@ -103,7 +103,7 @@ export const TriggerSchema = Schema.Union(
   EmailTriggerSchema,
   QueueTriggerSchema,
 ).annotations({
-  [AST.TitleAnnotationId]: 'Trigger',
+  [SchemaAST.TitleAnnotationId]: 'Trigger',
 });
 
 export type TriggerType = Schema.Schema.Type<typeof TriggerSchema>;
@@ -114,9 +114,9 @@ export type TriggerType = Schema.Schema.Type<typeof TriggerSchema>;
 export const FunctionTriggerSchema = Schema.Struct({
   // TODO(burdon): What type does this reference.
   // TODO(wittjosiah): This should probably be a Ref?
-  function: Schema.optional(Schema.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
+  function: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Function' })),
 
-  enabled: Schema.optional(Schema.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
+  enabled: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Enabled' })),
 
   // TODO(burdon): Flatten entire schema.
   spec: Schema.optional(TriggerSchema),

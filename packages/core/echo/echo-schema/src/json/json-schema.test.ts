@@ -350,7 +350,7 @@ describe('json-to-effect', () => {
 
       // TODO(dmaretskyi): Fix.
       // expect(
-      //   AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'email')!.type.annotations[
+      //   SchemaAST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'email')!.type.annotations[
       //     FormatAnnotationId
       //   ],
       // ).toEqual('email');

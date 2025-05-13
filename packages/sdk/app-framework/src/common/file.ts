@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 // TODO(burdon): See Accept attribute (uses MIME types).
 // E.g., 'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
 export const defaultFileTypes = {
