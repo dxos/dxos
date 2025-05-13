@@ -5,10 +5,10 @@
 import { useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import type { Space } from '@dxos/client/echo';
-import { getDXN, getLabel, getSchema } from '@dxos/echo-schema';
+import { Filter, type Space } from '@dxos/client/echo';
+import { Type } from '@dxos/echo';
+import { getLabel } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { Filter } from '@dxos/react-client/echo';
 
 export type ContextProvider = {
   query: (params: { query: string }) => Promise<Array<{ uri: string; label: string }>>;
@@ -33,21 +33,21 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
           .run();
         return objects
           .map((object) => {
-            log.info('object', { object, label: getLabel(getSchema(object)!, object) });
+            log.info('object', { object, label: getLabel(Type.getSchema(object)!, object) });
             return object;
           })
-          .filter((object) => stringMatch(query, getLabel(getSchema(object)!, object) ?? ''))
-          .filter((object) => !!getDXN(object))
+          .filter((object) => stringMatch(query, getLabel(Type.getSchema(object)!, object) ?? ''))
+          .filter((object) => !!Type.getDXN(object))
           .map((object) => ({
-            uri: getDXN(object)!.toString(),
-            label: getLabel(getSchema(object)!, object) ?? '',
+            uri: Type.getDXN(object)!.toString(),
+            label: getLabel(Type.getSchema(object)!, object) ?? '',
           }));
       },
       resolveMetadata: async ({ uri }) => {
         const object = await space.db.query({ id: uri }).first();
         return {
           uri,
-          label: getLabel(getSchema(object)!, object) ?? '',
+          label: getLabel(Type.getSchema(object)!, object) ?? '',
         };
       },
     };

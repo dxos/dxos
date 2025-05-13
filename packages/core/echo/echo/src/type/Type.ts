@@ -32,7 +32,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId as SpaceId$ } from '@dxos/keys';
 import { live as live$ } from '@dxos/live-object';
 
-// TODO(burdon): Type vs. Relation vs. Object.
+// TODO(burdon): Type vs. Ref vs. Relation vs. Object.
 
 /**
  * Type System API.

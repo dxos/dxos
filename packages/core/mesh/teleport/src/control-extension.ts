@@ -79,7 +79,7 @@ export class ControlExtension implements TeleportExtension {
         },
       },
       port: await extensionContext.createPort('rpc', {
-        contentType: 'application/x-protobuf; DataType.Message="dxos.rpc.Message"',
+        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       timeout: this.opts.heartbeatTimeout,
     });

@@ -49,59 +49,87 @@ describe('query api', () => {
 
     log.info('query', { ast: getAllPeople.ast });
   });
-});
-test('get all people named Fred', () => {
-  // Query<Person>
-  const getAllPeopleNamedFred = Query.type(Person, { name: 'Fred' });
 
-  log.info('query', { ast: getAllPeopleNamedFred.ast });
-});
+  test('get all people named Fred', () => {
+    // Query<Person>
+    const getAllPeopleNamedFred = Query.type(Person, { name: 'Fred' });
 
-test('get all orgs Fred worked for since 2020', () => {
-  // Query<Org>
-  const fred = create(Person, { name: 'Fred' });
-  const getAllOrgsFredWorkedForSince2020 = Query.type(Person, { id: fred.id })
-    .sourceOf(WorksFor, { since: Query.gt('2020') })
-    .target();
+    log.info('query', { ast: getAllPeopleNamedFred.ast });
+  });
 
-  log.info('query', { ast: getAllOrgsFredWorkedForSince2020.ast });
-});
+  test('get all orgs Fred worked for since 2020', () => {
+    // Query<Org>
+    const fred = create(Person, { name: 'Fred' });
+    const getAllOrgsFredWorkedForSince2020 = Query.type(Person, { id: fred.id })
+      .sourceOf(WorksFor, { since: Query.gt('2020') })
+      .target();
 
-test('get all tasks for Fred', () => {
-  // Query<Task>
-  const fred = create(Person, { name: 'Fred' });
-  const getAllTasksForFred = Query.type(Person, { id: fred.id }).referencedBy(Task, 'assignee');
+    log.info('query', { ast: getAllOrgsFredWorkedForSince2020.ast });
+  });
 
-  log.info('query', { ast: getAllTasksForFred.ast });
-});
+  test('get all tasks for Fred', () => {
+    // Query<Task>
+    const fred = create(Person, { name: 'Fred' });
+    const getAllTasksForFred = Query.type(Person, { id: fred.id }).referencedBy(Task, 'assignee');
 
-test('get all tasks for employees of Cyberdyne', () => {
-  // Query<Task>
-  const allTasksForEmployeesOfCyberdyne = Query.type(Org, { name: 'Cyberdyne' })
-    .targetOf(WorksFor)
-    .source()
-    .referencedBy(Task, 'assignee');
+    log.info('query', { ast: getAllTasksForFred.ast });
+  });
 
-  log.info('query', { ast: allTasksForEmployeesOfCyberdyne.ast });
-});
+  test('get all tasks for employees of Cyberdyne', () => {
+    // Query<Task>
+    const allTasksForEmployeesOfCyberdyne = Query.type(Org, { name: 'Cyberdyne' })
+      .targetOf(WorksFor)
+      .source()
+      .referencedBy(Task, 'assignee');
 
-test('get all people or orgs', () => {
-  // Query<Person | Org>
-  const allPeopleOrOrgs = Query.all(Query.type(Person), Query.type(Org));
+    log.info('query', { ast: allTasksForEmployeesOfCyberdyne.ast });
+  });
 
-  log.info('query', { ast: allPeopleOrOrgs.ast });
-});
+  test('get all people or orgs', () => {
+    // Query<Person | Org>
+    const allPeopleOrOrgs = Query.all(Query.type(Person), Query.type(Org));
 
-test('get assignees of all tasks created after 2020', () => {
-  // Query<Person>
-  const assigneesOfAllTasksCreatedAfter2020 = Query.type(Task, { createdAt: Query.gt('2020') }).reference('assignee');
+    log.info('query', { ast: allPeopleOrOrgs.ast });
+  });
 
-  log.info('query', { ast: assigneesOfAllTasksCreatedAfter2020.ast });
-});
+  test('get assignees of all tasks created after 2020', () => {
+    // Query<Person>
+    const assigneesOfAllTasksCreatedAfter2020 = Query.type(Task, { createdAt: Query.gt('2020') }).reference('assignee');
 
-test('contact full-text search', () => {
-  // Query<Person>
-  const contactFullTextSearch = Query.text(Person, 'Bill');
+    log.info('query', { ast: assigneesOfAllTasksCreatedAfter2020.ast });
+  });
 
-  log.info('query', { ast: contactFullTextSearch.ast });
+  test('contact full-text search', () => {
+    // Query<Person>
+    const contactFullTextSearch = Query.text(Person, 'Bill');
+
+    log.info('query', { ast: contactFullTextSearch.ast });
+  });
+
+  // TODO(burdon): Experimental.
+  test.skip('chain', () => {
+    const db: any = null;
+    const Query: any = null;
+    const Filter: any = null;
+
+    const x = db.exec(Query.select({ id: '123' })).first();
+    const y = db.exec(Query.select(Filter.type(Person)).first());
+
+    const q = Query
+      //
+      .selectAll()
+      .select({ id: '123' })
+      // NOTE: Can't support functions since they can't be serialized (to server).
+      // .filter((object) => Math.random() > 0.5)
+      .select(Filter.type(Person))
+      .select(Filter.props({ name: 'Fred' }))
+      .select({ age: Filter.gt(40) })
+      .select({ date: Filter.between(Date.now(), Date.now() + 1000 * 60 * 60 * 24) })
+      .select({ id: Filter.in(['1', '2', '3']) })
+      .select(Filter.and(Filter.type(Person), Filter.props({ id: Filter.in(['1', '2', '3']) })))
+      .target()
+      .select();
+
+    log.info('stuff', { x, y, q });
+  });
 });
