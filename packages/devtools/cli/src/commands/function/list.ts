@@ -39,9 +39,8 @@ export default class List extends BaseCommand<typeof List> {
 export const printFunctions = (functions: FunctionManifest['functions'] = []) => {
   ux.stdout(
     table(functions, {
-      uri: { primary: true },
-      route: {},
-      handler: {},
+      name: { primary: true },
+      version: {},
       description: {},
     }),
   );
