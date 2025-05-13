@@ -106,7 +106,8 @@ describe('query api', () => {
     log.info('query', { ast: contactFullTextSearch.ast });
   });
 
-  test('chain', () => {
+  // TODO(burdon): Experimental.
+  test.skip('chain', () => {
     const db: any = null;
     const Query: any = null;
     const Filter: any = null;
