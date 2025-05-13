@@ -51,6 +51,6 @@ const QueryResult = Object.freeze({
   },
 });
 
-interface Resolver<T> {
+interface _Resolver<T> {
   query(query: Query): QueryResult<T>;
 }
