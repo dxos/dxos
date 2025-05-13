@@ -22,7 +22,7 @@ import { withTheme } from '../testing';
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (
     <Tooltip.Provider>
-      <div className='flex flex-col gap-4'>
+      <div className='flex flex-col gap-6'>
         {/* Large */}
         <div className='grid grid-cols-3 gap-4'>
           <div className='flex justify-center'>
@@ -97,6 +97,23 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
               classNames={'!h-[24px] !text-[14px] p-1 min-bs-0'}
             />
           </div>
+        </div>
+
+        {/* TODO(burdon): Full variant with max width. */}
+        <div className='flex justify-center'>
+          <Button classNames='w-full max-w-[15rem] rounded' variant='default'>
+            Test
+          </Button>
+        </div>
+        <div className='flex justify-center'>
+          {/* TODO(burdon): Option to have button on RHS. Default size for icon should be 5 for this (medium) density. */}
+          <IconButton
+            classNames='w-full max-w-[15rem] rounded'
+            variant='primary'
+            icon='ph--arrows-clockwise--regular'
+            label='Test'
+            size={5}
+          />
         </div>
       </div>
     </Tooltip.Provider>
