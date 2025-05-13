@@ -33,6 +33,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/conductor": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -43,12 +44,14 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0"
+    "@preact/signals-core": "^1.6.0",
+    "effect": "3.14.21"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
@@ -63,6 +66,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

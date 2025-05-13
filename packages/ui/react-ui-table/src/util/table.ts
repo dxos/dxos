@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema, SchemaAST } from 'effect';
+
 import {
-  AST,
   type EchoSchema,
   Format,
   FormatEnum,
   type JsonPath,
   type JsonProp,
-  S,
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
@@ -34,7 +34,7 @@ export const initializeTable = async ({
   table,
   typename,
   initialRow = true,
-}: InitialiseTableProps): Promise<S.Schema.AnyNoContext> => {
+}: InitialiseTableProps): Promise<Schema.Schema.AnyNoContext> => {
   if (typename) {
     const schema = await space.db.graph.getSchemaByTypename(typename, space.db);
     if (!schema) {
@@ -82,10 +82,10 @@ const ContactSchema = TypedObject({
   typename: `example.com/type/${PublicKey.random().truncate()}`,
   version: '0.1.0',
 })({
-  name: S.optional(S.String).annotations({ [AST.TitleAnnotationId]: 'Name' }),
-  active: S.optional(S.Boolean),
-  email: S.optional(Format.Email),
-  salary: S.optional(Format.Currency()).annotations({ [AST.TitleAnnotationId]: 'Salary' }),
+  name: Schema.optional(Schema.String).annotations({ [SchemaAST.TitleAnnotationId]: 'Name' }),
+  active: Schema.optional(Schema.Boolean),
+  email: Schema.optional(Format.Email),
+  salary: Schema.optional(Format.Currency()).annotations({ [SchemaAST.TitleAnnotationId]: 'Salary' }),
 });
 
 const ContactFields = ['name', 'email', 'salary', 'active'];

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type Organization } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { type PreviewProps, popoverCard, previewTitle, previewProse, previewChrome, defaultCard } from '../types';
 
@@ -15,7 +15,7 @@ export const OrganizationCard = ({
   classNames,
   subject: { name, image, description, website },
   role,
-}: PreviewProps<Organization>) => {
+}: PreviewProps<DataType.Organization>) => {
   return (
     <div role='none' className={mx(role === 'popover' ? popoverCard : defaultCard, classNames)}>
       {image ? (

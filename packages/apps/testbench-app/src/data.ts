@@ -2,20 +2,34 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { Type } from '@dxos/echo';
 
 // TODO(burdon): [API]: extends feels a bit Frankenstein (get review from effect discord).
 // TODO(burdon): FQ URIs for type names.
-export class ItemType extends TypedObject({ typename: 'example.com/type/Item', version: '0.1.0' })({
+export const Item = Schema.Struct({
   // TODO(burdon): [API]: Make props optional by default?
-  done: S.optional(S.Boolean),
-  content: S.optional(S.String),
+  done: Schema.optional(Schema.Boolean),
+  content: Schema.optional(Schema.String),
   // TODO(burdon): [API]: Are dates supported?
   //  TypeError: Method Date.prototype.toString called on incompatible receiver [object Object]
   // due: S.optional(S.Date),
-}) {}
+}).pipe(
+  Type.def({
+    typename: 'example.com/type/Item',
+    version: '0.1.0',
+  }),
+);
+export type Item = Schema.Schema.Type<typeof Item>;
 
-export class DocumentType extends TypedObject({ typename: 'example.com/type/Document', version: '0.1.0' })({
-  title: S.optional(S.String),
-  content: S.optional(S.String),
-}) {}
+export const Document = Schema.Struct({
+  title: Schema.optional(Schema.String),
+  content: Schema.optional(Schema.String),
+}).pipe(
+  Type.def({
+    typename: 'example.com/type/Document',
+    version: '0.1.0',
+  }),
+);
+export type Document = Schema.Schema.Type<typeof Document>;

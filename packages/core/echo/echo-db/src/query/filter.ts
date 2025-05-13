@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { type EncodedReference, type ForeignKey, isEncodedReference } from '@dxos/echo-protocol';
-import { type BaseObject, requireTypeReference, S } from '@dxos/echo-schema';
+import { type BaseObject, requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
 import { createBuf } from '@dxos/protocols/buf';
@@ -152,19 +154,19 @@ export class Filter<T extends BaseObject = any> {
   }
 
   // TODO(burdon): Tighten to TypedObject.
-  static schema<S extends S.Schema.All>(
+  static schema<S extends Schema.Schema.All>(
     schema: S,
-    filter?: Record<string, any> | OperatorFilter<S.Schema.Type<S>>,
-  ): Filter<S.Schema.Type<S>>;
+    filter?: Record<string, any> | OperatorFilter<Schema.Schema.Type<S>>,
+  ): Filter<Schema.Schema.Type<S>>;
 
   // TODO(burdon): Tighten to TypedObject.
-  static schema(schema: S.Schema.AnyNoContext, filter?: Record<string, any> | OperatorFilter): Filter {
+  static schema(schema: Schema.Schema.AnyNoContext, filter?: Record<string, any> | OperatorFilter): Filter {
     if (!schema) {
       throw new TypeError('`schema` parameter is required.');
     }
 
     // TODO(dmaretskyi): Make `getReferenceWithSpaceKey` work over abstract handlers to not depend on EchoHandler directly.
-    const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
+    const typeReference = Schema.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
     return Filter._fromTypeWithPredicate(typeReference.toDXN(), filter);
   }

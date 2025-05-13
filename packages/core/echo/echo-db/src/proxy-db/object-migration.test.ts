@@ -2,20 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema, SchemaAST } from 'effect';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import {
-  AST,
-  FieldSortType,
+  getSchema,
   getSchemaDXN,
   getSchemaVersion,
   getTypename,
+  FieldSortType,
   JsonPath,
   JsonSchemaType,
   QueryType,
-  S,
   TypedObject,
-  getSchema,
 } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -35,17 +34,17 @@ afterEach(async () => {
 });
 
 class ContactV1 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
-  firstName: S.String,
-  lastName: S.String,
+  firstName: Schema.String,
+  lastName: Schema.String,
 }) {}
 
 class ContactV2 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.2.0' })({
-  name: S.String,
+  name: Schema.String,
 }) {}
 
 class ContactV3 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.3.0' })({
-  name: S.String,
-  email: S.String,
+  name: Schema.String,
+  email: Schema.String,
 }) {}
 
 const migrationV2 = defineObjectMigration({
@@ -161,45 +160,45 @@ test('view migration', async () => {
   expect(objects).to.have.length(1);
 });
 
-export const FieldSchema = S.Struct({
-  id: S.String,
+export const FieldSchema = Schema.Struct({
+  id: Schema.String,
   path: JsonPath,
-  visible: S.optional(S.Boolean),
-  size: S.optional(S.Number),
-  referencePath: S.optional(JsonPath),
-}).pipe(S.mutable);
+  visible: Schema.optional(Schema.Boolean),
+  size: Schema.optional(Schema.Number),
+  referencePath: Schema.optional(JsonPath),
+}).pipe(Schema.mutable);
 
-export type FieldType = S.Schema.Type<typeof FieldSchema>;
+export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
 
 export class ViewTypeV1 extends TypedObject({
   typename: 'dxos.org/type/View',
   version: '0.1.0',
 })({
-  name: S.String.annotations({
-    [AST.TitleAnnotationId]: 'Name',
-    [AST.ExamplesAnnotationId]: ['Contact'],
+  name: Schema.String.annotations({
+    [SchemaAST.TitleAnnotationId]: 'Name',
+    [SchemaAST.ExamplesAnnotationId]: ['Contact'],
   }),
-  query: S.Struct({
-    type: S.optional(S.String),
-    sort: S.optional(S.Array(FieldSortType)),
-  }).pipe(S.mutable),
-  schema: S.optional(JsonSchemaType),
-  fields: S.mutable(S.Array(FieldSchema)),
-  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
+  query: Schema.Struct({
+    type: Schema.optional(Schema.String),
+    sort: Schema.optional(Schema.Array(FieldSortType)),
+  }).pipe(Schema.mutable),
+  schema: Schema.optional(JsonSchemaType),
+  fields: Schema.mutable(Schema.Array(FieldSchema)),
+  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
 }) {}
 
 export class ViewTypeV2 extends TypedObject({
   typename: 'dxos.org/type/View',
   version: '0.2.0',
 })({
-  name: S.String.annotations({
-    [AST.TitleAnnotationId]: 'Name',
-    [AST.ExamplesAnnotationId]: ['Contact'],
+  name: Schema.String.annotations({
+    [SchemaAST.TitleAnnotationId]: 'Name',
+    [SchemaAST.ExamplesAnnotationId]: ['Contact'],
   }),
   query: QueryType,
-  schema: S.optional(JsonSchemaType),
-  fields: S.mutable(S.Array(FieldSchema)),
-  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
+  schema: Schema.optional(JsonSchemaType),
+  fields: Schema.mutable(Schema.Array(FieldSchema)),
+  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
 }) {}
 
 export const ViewTypeV1ToV2 = defineObjectMigration({

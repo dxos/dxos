@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 
 import { EchoSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -18,7 +18,7 @@ registerSignalsRuntime();
  * Create a reactive mutable schema that updates when the JSON schema is updated.
  */
 // TODO(dmaretskyi): Should be replaced by registration of typed object.
-export const createEchoSchema = (schema: S.Schema.AnyNoContext): EchoSchema => {
+export const createEchoSchema = (schema: Schema.Schema.AnyNoContext): EchoSchema => {
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'Schema does not have a typename.');
 

@@ -18,7 +18,7 @@ import { range } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
 import { type DocHandleProxy, type RepoProxy } from '../client';
-import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
+import { getObjectCore, type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 
@@ -387,7 +387,7 @@ const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 
 const createClientDbInSpaceWithObject = async (
-  object: ReactiveEchoObject<any>,
+  object: AnyLiveObject<any>,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<EchoDatabaseImpl> => {
   const kv = createTestLevel();
@@ -406,12 +406,12 @@ const createClientDbInSpaceWithObject = async (
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
 
-const createExpando = (props: any = {}): ReactiveEchoObject<Expando> => {
+const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
   return live(Expando, props);
 };
 
-const createTextObject = (content: string = ''): ReactiveEchoObject<{ content: string }> => {
-  return live(Expando, { content }) as ReactiveEchoObject<{ content: string }>;
+const createTextObject = (content: string = ''): AnyLiveObject<{ content: string }> => {
+  return live(Expando, { content }) as AnyLiveObject<{ content: string }>;
 };
 
 interface DocumentHandles {

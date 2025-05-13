@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React from 'react';
 
 import { ReducerInput, ReducerOutput } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';
@@ -15,14 +15,14 @@ import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 // Data
 //
 
-export const ReducerShape = S.extend(
+export const ReducerShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('reducer'),
+  Schema.Struct({
+    type: Schema.Literal('reducer'),
   }),
 );
 
-export type ReducerShape = S.Schema.Type<typeof ReducerShape>;
+export type ReducerShape = Schema.Schema.Type<typeof ReducerShape>;
 
 //
 // Components

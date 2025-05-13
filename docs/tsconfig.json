@@ -10,7 +10,7 @@
   ],
   "references": [
     {
-      "path": "../packages/core/echo/echo-schema"
+      "path": "../packages/core/echo/echo"
     },
     {
       "path": "../packages/core/echo/echo-signals"

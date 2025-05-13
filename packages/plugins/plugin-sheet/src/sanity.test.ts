@@ -12,7 +12,7 @@ import { describe, test, expect } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { live } from '@dxos/client/echo';
-import { FunctionType } from '@dxos/functions/types';
+import { FunctionType } from '@dxos/functions';
 
 // TODO(burdon): Fix test infrastructure:
 //  - Need docs? esp. needed for config. need pristine example package?

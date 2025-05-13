@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
 import { DiagramType } from '@dxos/plugin-sketch/types';
 
 import { EXCALIDRAW_PLUGIN } from './meta';
@@ -12,13 +13,13 @@ export const EXCALIDRAW_SCHEMA = 'excalidraw.com/2';
 export namespace SketchAction {
   const SKETCH_ACTION = `${EXCALIDRAW_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
-      schema: S.optional(S.String),
-      content: S.optional(S.Record({ key: S.String, value: S.Any })),
+  export class Create extends Schema.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+      schema: Schema.optional(Schema.String),
+      content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: DiagramType,
     }),
   }) {}
@@ -26,14 +27,14 @@ export namespace SketchAction {
 
 export interface SketchModel {}
 
-export const SketchGridSchema = S.Literal('mesh', 'dotted');
-export type SketchGridType = S.Schema.Type<typeof SketchGridSchema>;
+export const SketchGridSchema = Schema.Literal('mesh', 'dotted');
+export type SketchGridType = Schema.Schema.Type<typeof SketchGridSchema>;
 
-export const SketchSettingsSchema = S.mutable(
-  S.Struct({
-    autoHideControls: S.optional(S.Boolean),
-    gridType: S.optional(SketchGridSchema),
+export const SketchSettingsSchema = Schema.mutable(
+  Schema.Struct({
+    autoHideControls: Schema.optional(Schema.Boolean),
+    gridType: Schema.optional(SketchGridSchema),
   }),
 );
 
-export type SketchSettingsProps = S.Schema.Type<typeof SketchSettingsSchema>;
+export type SketchSettingsProps = Schema.Schema.Type<typeof SketchSettingsSchema>;

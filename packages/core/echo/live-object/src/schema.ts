@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import {
   createJsonSchema,
@@ -10,15 +10,16 @@ import {
   toJsonSchema,
   EchoObject,
   EchoSchema,
+  type JsonSchemaType,
   StoredSchema,
   TypeAnnotationId,
-  type JsonSchemaType,
   type TypeMeta,
   type TypeAnnotation,
 } from '@dxos/echo-schema';
 
 import type { Live } from './live';
 import { live } from './object';
+
 /**
  * Create ECHO object representing schema.
  */
@@ -36,8 +37,8 @@ export const createStoredSchema = (
 /**
  * Create runtime representation of a schema.
  */
-export const createEchoSchema = ({ typename, version }: TypeMeta, fields: S.Struct.Fields): EchoSchema => {
-  const schema = S.partial(S.Struct(fields).omit('id')).pipe(EchoObject({ typename, version }));
+export const createEchoSchema = ({ typename, version }: TypeMeta, fields: Schema.Struct.Fields): EchoSchema => {
+  const schema = Schema.partial(Schema.Struct(fields).omit('id')).pipe(EchoObject({ typename, version }));
   const objectAnnotation = getTypeAnnotation(schema)!;
   const schemaObject = createStoredSchema({ typename, version });
   const updatedSchema = schema.annotations({

@@ -9,7 +9,7 @@ import { intervalToDuration } from 'date-fns/intervalToDuration';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type RenderCallback } from '@dxos/react-ui-editor';
-import { type MessageType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { DocumentAdapter, type SerializationModel } from '../../model';
 
@@ -17,7 +17,7 @@ import { DocumentAdapter, type SerializationModel } from '../../model';
  * Data structure that maps Chunks queue to lines with transcript state.
  */
 export type TranscriptOptions = {
-  model: SerializationModel<MessageType>;
+  model: SerializationModel<DataType.Message>;
   started?: Date;
   renderButton?: RenderCallback<{ onClick: () => void }>;
 };
@@ -213,7 +213,7 @@ class TimestampMarker extends GutterMarker {
   }
 }
 
-const getStartTime = (started?: Date, message?: MessageType): Date | undefined => {
+const getStartTime = (started?: Date, message?: DataType.Message): Date | undefined => {
   if (started) {
     return started;
   }

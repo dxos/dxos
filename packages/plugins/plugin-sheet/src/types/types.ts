@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
 import { type CellValue, RowColumnMeta, SheetType } from './schema';
 import { SHEET_PLUGIN } from '../meta';
@@ -21,47 +21,47 @@ export type CreateSheetOptions = {
 export namespace SheetAction {
   const SHEET_ACTION = `${SHEET_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${SHEET_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
+  export class Create extends Schema.TaggedClass<Create>()(`${SHEET_ACTION}/create`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: SheetType,
     }),
   }) {}
 
   // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
-  const Axis = S.Union(S.Literal('row'), S.Literal('col'));
+  const Axis = Schema.Union(Schema.Literal('row'), Schema.Literal('col'));
 
-  export class InsertAxis extends S.TaggedClass<InsertAxis>()(`${SHEET_ACTION}/axis-insert`, {
-    input: S.Struct({
-      // TODO(wittjosiah): S.instanceOf(SheetModel) throws when running tests.
-      model: S.Any.pipe(S.filter((model) => model instanceof SheetModel)) as S.Schema<SheetModel>,
+  export class InsertAxis extends Schema.TaggedClass<InsertAxis>()(`${SHEET_ACTION}/axis-insert`, {
+    input: Schema.Struct({
+      // TODO(wittjosiah): Schema.instanceOf(SheetModel) throws when running tests.
+      model: Schema.Any.pipe(Schema.filter((model) => model instanceof SheetModel)) as Schema.Schema<SheetModel>,
       axis: Axis,
-      index: S.Number,
-      count: S.optional(S.Number),
+      index: Schema.Number,
+      count: Schema.optional(Schema.Number),
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export const RestoreAxis = S.Struct({
+  export const RestoreAxis = Schema.Struct({
     axis: Axis,
-    axisIndex: S.String,
-    index: S.Number,
+    axisIndex: Schema.String,
+    index: Schema.Number,
     axisMeta: RowColumnMeta,
-    values: S.Array(S.Any),
+    values: Schema.Array(Schema.Any),
   });
 
-  export type RestoreAxis = S.Schema.Type<typeof RestoreAxis>;
+  export type RestoreAxis = Schema.Schema.Type<typeof RestoreAxis>;
 
-  export class DropAxis extends S.TaggedClass<DropAxis>()(`${SHEET_ACTION}/axis-drop`, {
-    input: S.Struct({
-      // TODO(wittjosiah): S.instanceOf(SheetModel) throws when running tests.
-      model: S.Any.pipe(S.filter((model) => model instanceof SheetModel)) as S.Schema<SheetModel>,
+  export class DropAxis extends Schema.TaggedClass<DropAxis>()(`${SHEET_ACTION}/axis-drop`, {
+    input: Schema.Struct({
+      // TODO(wittjosiah): Schema.instanceOf(SheetModel) throws when running tests.
+      model: Schema.Any.pipe(Schema.filter((model) => model instanceof SheetModel)) as Schema.Schema<SheetModel>,
       axis: Axis,
-      axisIndex: S.String,
-      deletionData: S.optional(RestoreAxis),
+      axisIndex: Schema.String,
+      deletionData: Schema.optional(RestoreAxis),
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 }

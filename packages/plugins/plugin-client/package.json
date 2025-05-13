@@ -50,6 +50,7 @@
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "effect": "3.14.21",
     "react-qr-rounded": "^1.0.0"
   },
   "devDependencies": {
@@ -69,7 +70,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "effect": "3.13.3",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

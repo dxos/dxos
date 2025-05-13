@@ -20,7 +20,7 @@ import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { Contact, Organization, type MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
 import { withLayout } from '@dxos/storybook-utils';
 
@@ -69,7 +69,7 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { messages?: MessageType[] } & Pick<TranscriptProps, 'ignoreAttention' | 'attendableId'>;
+type StoryProps = { messages?: DataType.Message[] } & Pick<TranscriptProps, 'ignoreAttention' | 'attendableId'>;
 
 /**
  * Basic story mutates array of messages.
@@ -78,11 +78,11 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
   const [reset, setReset] = useState({});
   const builder = useMemo(() => new MessageBuilder(), []);
   const model = useMemo(
-    () => new SerializationModel<MessageType>(renderMarkdown([]), initialMessages),
+    () => new SerializationModel<DataType.Message>(renderMarkdown([]), initialMessages),
     [initialMessages, reset],
   );
   const [running, setRunning] = useState(true);
-  const [currentMessage, setCurrentMessage] = useState<MessageType | null>(null);
+  const [currentMessage, setCurrentMessage] = useState<DataType.Message | null>(null);
   useEffect(() => {
     if (!running) {
       return;
@@ -186,7 +186,7 @@ const meta: Meta<typeof QueueStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [TestItem, Testing.DocumentType, Contact, Organization],
+          types: [TestItem, Testing.DocumentType, DataType.Person, DataType.Organization],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },

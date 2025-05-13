@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { FormatEnum, isInstanceOf, type S } from '@dxos/echo-schema';
+import { FormatEnum, isInstanceOf } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
@@ -65,8 +66,10 @@ export default () =>
     createSurface({
       id: `${MAP_PLUGIN}/create-initial-schema-form-[schema]`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, TypenameAnnotationId);
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
@@ -83,8 +86,10 @@ export default () =>
     createSurface({
       id: `${MAP_PLUGIN}/create-initial-schema-form-[property-of-interest]`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, LocationAnnotationId);
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {

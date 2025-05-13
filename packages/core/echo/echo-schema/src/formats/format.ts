@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import * as DateUtil from './date';
 import * as NumberUtil from './number';
@@ -29,7 +29,7 @@ export namespace Format {
   export const Markdown = StringUtil.Markdown;
   export const Regex = StringUtil.Regex;
   export const URL = StringUtil.URL;
-  export const UUID = S.UUID;
+  export const UUID = Schema.UUID;
 
   // Numbers
   // TODO(burdon): BigInt.

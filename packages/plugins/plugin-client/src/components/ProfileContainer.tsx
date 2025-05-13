@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
@@ -163,10 +163,10 @@ export const ProfileContainer = () => {
 };
 
 // TODO(wittjosiah): Integrate annotations with translations.
-const ProfileSchema = S.Struct({
-  displayName: S.String.annotations({ title: 'Display name' }),
-  emoji: S.String.annotations({ title: 'Avatar' }),
-  hue: S.String.annotations({ title: 'Color' }),
-  did: S.String.annotations({ title: 'DID' }),
+const ProfileSchema = Schema.Struct({
+  displayName: Schema.String.annotations({ title: 'Display name' }),
+  emoji: Schema.String.annotations({ title: 'Avatar' }),
+  hue: Schema.String.annotations({ title: 'Color' }),
+  did: Schema.String.annotations({ title: 'DID' }),
 });
-type Profile = S.Schema.Type<typeof ProfileSchema>;
+type Profile = Schema.Schema.Type<typeof ProfileSchema>;

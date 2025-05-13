@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type SchemaAST } from 'effect';
 import React, { useEffect, useState } from 'react';
 
 import {
-  type AST,
   Expando,
   getTypeAnnotation,
   Ref,
@@ -25,7 +25,7 @@ import { type FormInputStateProps } from './FormContext';
 export type QueryRefOptions = (type: TypeAnnotation) => MaybePromise<{ dxn: DXN; label?: string }[]>;
 
 type RefFieldProps = {
-  ast: AST.AST;
+  ast: SchemaAST.AST;
   type: SimpleType;
   label: string;
   readonly?: boolean;

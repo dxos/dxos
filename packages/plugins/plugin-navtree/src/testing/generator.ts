@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { type NodeArg } from '@dxos/app-graph';
-import { S, TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { live, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
@@ -15,12 +17,12 @@ import { range } from '@dxos/util';
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
 type ObjectDataGenerator = {
-  createSchema?: () => S.Schema.AnyNoContext;
+  createSchema?: () => Schema.Schema.AnyNoContext;
   createData: () => any;
 };
 
 type ObjectFactory<T extends Live<any>> = {
-  schema?: S.Schema.AnyNoContext; // TODO(burdon): Support both typed and expando schema.
+  schema?: Schema.Schema.AnyNoContext; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };
 
@@ -57,10 +59,10 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
   project: {
     createSchema: () =>
       class ProjectType extends TypedObject({ typename: 'example.com/type/Project', version: '0.1.0' })({
-        title: S.String,
-        repo: S.String,
-        status: S.String,
-        priority: S.Number,
+        title: Schema.String,
+        repo: Schema.String,
+        status: Schema.String,
+        priority: Schema.Number,
       }) {},
 
     createData: () => ({
@@ -87,7 +89,7 @@ export class TestObjectGenerator {
       }, {});
   }
 
-  get schema(): S.Schema.AnyNoContext[] {
+  get schema(): Schema.Schema.AnyNoContext[] {
     return Object.values(this.factories).map((f) => f.schema!);
   }
 

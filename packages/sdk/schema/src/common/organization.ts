@@ -2,20 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { Schema, SchemaAST } from 'effect';
+
+import { Format, Type } from '@dxos/echo';
 import {
-  S,
-  Format,
-  AST,
+  FormatAnnotationId,
   GeneratorAnnotationId,
   LabelAnnotationId,
   PropertyMetaAnnotationId,
-  FormatAnnotationId,
 } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
-export const organizationStatusOptions = [
+// TODO(burdon): Remove.
+export const OrganizationStatusOptions = [
   { id: 'prospect', title: 'Prospect', color: 'indigo' },
   { id: 'qualified', title: 'Qualified', color: 'purple' },
   { id: 'active', title: 'Active', color: 'amber' },
@@ -24,40 +24,40 @@ export const organizationStatusOptions = [
 ];
 
 /**
- * Organization schema.
+ * https://schema.org/Organization
  */
-export const OrganizationSchema = S.Struct({
+export const OrganizationSchema = Schema.Struct({
   id: Type.ObjectId,
-  name: S.optional(S.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' })),
-  description: S.optional(S.String.annotations({ title: 'Description' })),
-  // TODO(wittjosiah): Remove.
-  status: S.optional(
-    S.Union(
-      S.Literal('prospect'),
-      S.Literal('qualified'),
-      S.Literal('active'),
-      S.Literal('commit'),
-      S.Literal('reject'),
+  name: Schema.optional(Schema.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' })),
+  description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
+  // TODO(wittjosiah): Remove; change to relation.
+  status: Schema.optional(
+    Schema.Union(
+      Schema.Literal('prospect'),
+      Schema.Literal('qualified'),
+      Schema.Literal('active'),
+      Schema.Literal('commit'),
+      Schema.Literal('reject'),
     ).annotations({
       title: 'Status',
       [PropertyMetaAnnotationId]: {
         singleSelect: {
-          options: organizationStatusOptions,
+          options: OrganizationStatusOptions,
         },
       },
       [FormatAnnotationId]: 'single-select',
     }),
   ),
   // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
-  image: S.optional(S.String.annotations({ title: 'Image' })),
-  website: S.optional(
+  image: Schema.optional(Schema.String.annotations({ title: 'Image' })),
+  website: Schema.optional(
     Format.URL.annotations({
       title: 'Website',
       [GeneratorAnnotationId]: 'internet.url',
     }),
   ),
 }).annotations({
-  [AST.TitleAnnotationId]: 'Organization',
+  [SchemaAST.TitleAnnotationId]: 'Organization',
   [LabelAnnotationId]: 'name',
   [IconAnnotationId]: 'ph--building--regular',
 });
@@ -69,4 +69,4 @@ export const Organization = OrganizationSchema.pipe(
   }),
 );
 
-export type Organization = S.Schema.Type<typeof Organization>;
+export interface Organization extends Schema.Schema.Type<typeof Organization> {}

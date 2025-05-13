@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface, Surface, useCapability, useLayout } from '@dxos/app-framework';
@@ -17,7 +17,7 @@ import {
   parseId,
   SpaceState,
   useSpace,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   type Space,
 } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -93,7 +93,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/companion/object-settings`,
       role: 'article',
-      filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
+      filter: (data): data is { companionTo: AnyLiveObject<any> } =>
         isEchoObject(data.companionTo) && data.subject === 'settings',
       component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
     }),
@@ -164,8 +164,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/create-initial-space-form-[hue]`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any> } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, HueAnnotationId);
+      filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
@@ -183,8 +183,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/create-initial-space-form-[icon]`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any> } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, IconAnnotationId);
+      filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
@@ -208,7 +208,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: POPOVER_RENAME_OBJECT,
       role: 'popover',
-      filter: (data): data is { props: ReactiveEchoObject<any> } =>
+      filter: (data): data is { props: AnyLiveObject<any> } =>
         data.component === POPOVER_RENAME_OBJECT && isLiveObject(data.props),
       component: ({ data }) => <PopoverRenameObject object={data.props} />,
     }),
@@ -221,13 +221,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/menu-footer`,
       role: 'menu-footer',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+      filter: (data): data is { subject: AnyLiveObject<any> } => isEchoObject(data.subject),
       component: ({ data }) => <MenuFooter object={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-presence`,
       role: 'navtree-item-end',
-      filter: (data): data is { id: string; subject: ReactiveEchoObject<any>; open?: boolean } =>
+      filter: (data): data is { id: string; subject: AnyLiveObject<any>; open?: boolean } =>
         typeof data.id === 'string' && isEchoObject(data.subject),
       component: ({ data }) => {
         // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
@@ -254,7 +254,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${SPACE_PLUGIN}/navbar-presence`,
       role: 'navbar-end',
       position: 'hoist',
-      filter: (data): data is { subject: Space | ReactiveEchoObject<any> } =>
+      filter: (data): data is { subject: Space | AnyLiveObject<any> } =>
         isSpace(data.subject) || isEchoObject(data.subject),
       component: ({ data }) => {
         const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);

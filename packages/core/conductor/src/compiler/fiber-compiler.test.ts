@@ -3,10 +3,9 @@
 //
 
 import { it } from '@effect/vitest';
-import { Effect, Either } from 'effect';
+import { Effect, Either, Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { S } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
@@ -129,8 +128,8 @@ describe('Graph as a fiber runtime', () => {
 //
 
 const sum = defineComputeNode({
-  input: S.Struct({ a: S.Number, b: S.Number }),
-  output: S.Struct({ result: S.Number }),
+  input: Schema.Struct({ a: Schema.Number, b: Schema.Number }),
+  output: Schema.Struct({ result: Schema.Number }),
   exec: synchronizedComputeFunction(({ a, b }) =>
     Effect.gen(function* () {
       yield* logCustomEvent({
@@ -144,7 +143,7 @@ const sum = defineComputeNode({
 });
 
 const view = defineComputeNode({
-  input: S.Struct({ result: S.Number }),
+  input: Schema.Struct({ result: Schema.Number }),
   output: VoidOutput,
 });
 

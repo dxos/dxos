@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { getDeep } from '@dxos/util';
@@ -12,8 +12,8 @@ import { SchemaValidator } from './schema-validator';
 describe('schema-validator', () => {
   describe('validateSchema', () => {
     test('throws on ambiguous discriminated type union', () => {
-      const TestSchema = S.Struct({
-        union: S.Union(S.Struct({ a: S.Number }), S.Struct({ b: S.String })),
+      const TestSchema = Schema.Struct({
+        union: Schema.Union(Schema.Struct({ a: Schema.Number }), Schema.Struct({ b: Schema.String })),
       });
 
       expect(() => SchemaValidator.validateSchema(TestSchema)).to.throw();
@@ -24,10 +24,12 @@ describe('schema-validator', () => {
     test('has annotation', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const TestSchema: S.Schema.AnyNoContext = S.Struct({
-        name: S.String.annotations({ [annotationId]: annotationValue }),
-        parent: S.optional(S.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
-        friends: S.suspend(() => S.mutable(S.Array(TestSchema.annotations({ [annotationId]: annotationValue })))),
+      const TestSchema: Schema.Schema.AnyNoContext = Schema.Struct({
+        name: Schema.String.annotations({ [annotationId]: annotationValue }),
+        parent: Schema.optional(Schema.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
+        friends: Schema.suspend(() =>
+          Schema.mutable(Schema.Array(TestSchema.annotations({ [annotationId]: annotationValue }))),
+        ),
       });
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'name', annotationId)).to.be.true;
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'parent', annotationId)).to.be.true;
@@ -36,10 +38,10 @@ describe('schema-validator', () => {
 
     test('no annotation', () => {
       const annotationId = Symbol('foo');
-      const Person: S.Schema.AnyNoContext = S.Struct({
-        name: S.String,
-        parent: S.optional(S.suspend(() => Person)),
-        friends: S.suspend(() => S.mutable(S.Array(Person))),
+      const Person: Schema.Schema.AnyNoContext = Schema.Struct({
+        name: Schema.String,
+        parent: Schema.optional(Schema.suspend(() => Person)),
+        friends: Schema.suspend(() => Schema.mutable(Schema.Array(Person))),
       });
       expect(SchemaValidator.hasTypeAnnotation(Person, 'name', annotationId)).to.be.false;
       expect(SchemaValidator.hasTypeAnnotation(Person, 'parent', annotationId)).to.be.false;
@@ -49,7 +51,7 @@ describe('schema-validator', () => {
 
   describe('getPropertySchema', () => {
     const validateValueToAssign = (args: {
-      schema: S.Schema.AnyNoContext;
+      schema: Schema.Schema.AnyNoContext;
       target: any;
       path: string[];
       valueToAssign: any;
@@ -59,7 +61,7 @@ describe('schema-validator', () => {
         const nestedSchema = SchemaValidator.getPropertySchema(args.schema, args.path, (path) => {
           return getDeep(args.target, path);
         });
-        S.validateSync(nestedSchema)(args.valueToAssign);
+        Schema.validateSync(nestedSchema)(args.valueToAssign);
       });
       if (args.expectToThrow) {
         expectation.to.throw();
@@ -71,7 +73,7 @@ describe('schema-validator', () => {
     test('basic', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
-          schema: S.Struct({ object: S.Struct({ field: S.Number }) }),
+          schema: Schema.Struct({ object: Schema.Struct({ field: Schema.Number }) }),
           target: {},
           path: ['object', 'field'],
           valueToAssign: value,
@@ -83,9 +85,11 @@ describe('schema-validator', () => {
     test('preserves annotations', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
-      const Person: S.Schema.AnyNoContext = S.Struct({
-        parent: S.optional(S.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
-        friends: S.suspend(() => S.mutable(S.Array(Person.annotations({ [annotationId]: annotationValue })))),
+      const Person: Schema.Schema.AnyNoContext = Schema.Struct({
+        parent: Schema.optional(Schema.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
+        friends: Schema.suspend(() =>
+          Schema.mutable(Schema.Array(Person.annotations({ [annotationId]: annotationValue }))),
+        ),
       });
       expect(SchemaValidator.getPropertySchema(Person, ['parent']).ast.annotations[annotationId]).to.eq(
         annotationValue,
@@ -96,9 +100,9 @@ describe('schema-validator', () => {
     });
 
     test('discriminated union', () => {
-      const square = S.Struct({ type: S.Literal('square'), side: S.Number });
-      const circle = S.Struct({ type: S.Literal('circle'), radius: S.Number });
-      const shape = S.Union(square, circle);
+      const square = Schema.Struct({ type: Schema.Literal('square'), side: Schema.Number });
+      const circle = Schema.Struct({ type: Schema.Literal('circle'), radius: Schema.Number });
+      const shape = Schema.Union(square, circle);
       validateValueToAssign({
         schema: shape,
         target: { type: 'square' },
@@ -123,8 +127,8 @@ describe('schema-validator', () => {
 
     test('any', () => {
       validateValueToAssign({
-        schema: S.Any,
-        target: { field: { nested: { value: S.Number } } },
+        schema: Schema.Any,
+        target: { field: { nested: { value: Schema.Number } } },
         path: ['field', 'nested'],
         valueToAssign: { any: 'value' },
       });
@@ -132,7 +136,7 @@ describe('schema-validator', () => {
     test('index signatures', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
-          schema: S.Struct({ field: S.String }, { key: S.String, value: S.Number }),
+          schema: Schema.Struct({ field: Schema.String }, { key: Schema.String, value: Schema.Number }),
           target: {},
           path: ['unknownField'],
           valueToAssign: value,
@@ -144,7 +148,9 @@ describe('schema-validator', () => {
     test('index signature from optional record', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
-          schema: S.Struct({ field: S.optional(S.Record({ key: S.String, value: S.Number })) }),
+          schema: Schema.Struct({
+            field: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Number })),
+          }),
           target: {},
           path: ['field', 'unknownField'],
           valueToAssign: value,
@@ -154,9 +160,11 @@ describe('schema-validator', () => {
     });
 
     test('suspend', () => {
-      const schemaWithSuspend = S.Struct({
-        array: S.optional(S.suspend(() => S.Array(S.Union(S.Null, S.Number)))),
-        object: S.optional(S.suspend(() => S.Union(S.Null, S.Struct({ field: S.Number })))),
+      const schemaWithSuspend = Schema.Struct({
+        array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union(Schema.Null, Schema.Number)))),
+        object: Schema.optional(
+          Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number }))),
+        ),
       });
       const target: any = { array: [1, 2, null], object: { field: 3 } };
       for (const value of [42, '42']) {

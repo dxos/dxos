@@ -2,34 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { pickProperty } from './ast';
 
 describe('ast', () => {
-  const schema = S.Struct(
+  const schema = Schema.Struct(
     {
-      foo: S.Number,
+      foo: Schema.Number,
     },
     {
-      key: S.String,
-      value: S.Any,
+      key: Schema.String,
+      value: Schema.Any,
     },
   );
 
   test('field', ({ expect }) => {
     const field = pickProperty(schema, 'foo');
-    expect(field.ast).toEqual(S.Number.ast);
+    expect(field.ast).toEqual(Schema.Number.ast);
   });
 
   test('record', ({ expect }) => {
     const field = pickProperty(schema, 'key');
-    expect(field.ast).toEqual(S.Any.ast);
+    expect(field.ast).toEqual(Schema.Any.ast);
   });
 
   test('nothing', ({ expect }) => {
-    const field = pickProperty(S.Struct({ foo: S.Number }), 'bar' as any);
-    expect(field.ast).toEqual(S.Never.ast);
+    const field = pickProperty(Schema.Struct({ foo: Schema.Number }), 'bar' as any);
+    expect(field.ast).toEqual(Schema.Never.ast);
   });
 });

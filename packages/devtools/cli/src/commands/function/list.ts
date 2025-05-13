@@ -9,7 +9,7 @@ import { join } from 'node:path';
 
 import { table } from '@dxos/cli-base';
 import { Config } from '@dxos/config';
-import { type FunctionManifest } from '@dxos/functions/types';
+import { type FunctionManifest } from '@dxos/functions';
 
 import { BaseCommand } from '../../base';
 
