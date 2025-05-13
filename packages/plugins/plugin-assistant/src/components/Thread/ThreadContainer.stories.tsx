@@ -18,11 +18,12 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
+import { genericTools, localServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
-import { createStatic, ObjectId } from '@dxos/echo-schema';
+import { type Type } from '@dxos/echo';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -30,11 +31,10 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { useQueue, useSpace } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { createQueueDxn, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
 import { ChatProcessor } from '../../hooks';
@@ -44,7 +44,7 @@ import translations from '../../translations';
 const endpoints = localServiceEndpoints;
 
 type RenderProps = {
-  items?: IsObject[];
+  items?: Type.AnyObject[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 
@@ -77,13 +77,13 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => randomQueueDxn());
+  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn().toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   useEffect(() => {
     if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
       queue.append([
-        createStatic(Message, {
+        create(Message, {
           role: 'assistant',
           content: prompts.map(
             (prompt) =>
@@ -160,7 +160,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
               iconOnly
               label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => setQueueDxn(randomQueueDxn())}
+              onClick={() => setQueueDxn(createQueueDxn().toString())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
           </Input.Root>
@@ -201,18 +201,10 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   );
 };
 
-const randomQueueDxn = () =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
-
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-automation/ThreadContainer',
   render: DefaultStory,
   decorators: [
-    withSignals,
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-    }),
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -220,7 +212,7 @@ const meta: Meta<typeof DefaultStory> = {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin({ observability: false }),
+        SpacePlugin(),
         SettingsPlugin(),
         IntentPlugin(),
 
@@ -255,7 +247,7 @@ export const WithInitialItems: Story = {
   args: {
     debug: true,
     items: [
-      createStatic(ChessType, {
+      create(ChessType, {
         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       }),
     ],

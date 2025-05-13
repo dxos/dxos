@@ -144,6 +144,7 @@ message RecoverIdentityRequest {
   oneof request {
     string recovery_code = 1;
     ExternalSignature external = 2;
+    string token = 3;
   }
 }
 
@@ -595,12 +596,12 @@ service EdgeAgentService {
   rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
 }
 
-message QueryEdgeStatusResponse {
-  enum EdgeStatus {
-    NOT_CONNECTED = 0;
-    CONNECTED = 1;
-  }
+enum EdgeStatus {
+  NOT_CONNECTED = 0;
+  CONNECTED = 1;
+}
 
+message QueryEdgeStatusResponse {
   EdgeStatus status = 1;
 }
 

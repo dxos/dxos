@@ -2,25 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
 // @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
+import { defineFunction } from 'dxos:functions';
 // @ts-ignore
 import { Chess } from 'https://esm.sh/chess.js@0.13.1';
 
 export default defineFunction({
   description: 'Plays a random move in a chess game.',
 
-  inputSchema: S.Struct({
-    changedObjectId: S.String.annotations({
+  inputSchema: Schema.Struct({
+    changedObjectId: Schema.String.annotations({
       description: 'The objects to play the game on.',
     }),
-    player: S.optional(S.Literal('w', 'b')).annotations({
+    player: Schema.optional(Schema.Literal('w', 'b')).annotations({
       description: 'The player to play the game as.',
     }),
   }),
 
-  outputSchema: S.Struct({
-    state: S.String.annotations({
+  outputSchema: Schema.Struct({
+    state: Schema.String.annotations({
       description: 'The state of the game as an ASCII art board.',
     }),
   }),

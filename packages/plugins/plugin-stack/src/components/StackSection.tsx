@@ -16,7 +16,7 @@ import { useStack } from './StackContext';
 import { STACK_PLUGIN } from '../meta';
 import { type StackSectionItem } from '../types';
 
-const sectionActionDimensions = 'm-1 p-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
+const sectionActionDimensions = 'p-1 mlb-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
 
 export const StackSection = ({
   id,
@@ -34,7 +34,7 @@ export const StackSection = ({
       <StackItem.Root item={{ id }} role='section' {...attendableAttrs} classNames='border-be border-separator'>
         <StackItem.Heading classNames='attention-surface border-ie !border-separator'>
           <span className='sr-only'>{view.title}</span>
-          <div role='none' className='sticky -block-start-px bg-[--sticky-bg]'>
+          <div role='none' className='sticky -block-start-px bg-[--sticky-bg] p-1 is-full'>
             <DropdownMenu.Root
               {...{
                 open: optionsMenuOpen,
@@ -51,7 +51,7 @@ export const StackSection = ({
                   <DropdownMenu.Viewport>
                     {view.collapsed ? (
                       <DropdownMenu.Item onClick={() => onNavigate(id)} data-testid='section.navigate-to'>
-                        <Icon icon='ph--arrow-square-out--regular' size={5} />
+                        <Icon icon='ph--arrow-right--regular' size={5} />
                         <span className='mis-2 grow'>{t('navigate to section label')}</span>
                       </DropdownMenu.Item>
                     ) : (
@@ -95,7 +95,7 @@ export const StackSection = ({
                 variant='ghost'
                 onClick={() => onNavigate(id)}
                 label={t('navigate to section label')}
-                icon='ph--arrow-square-out--regular'
+                icon='ph--arrow-right--regular'
                 data-testid='section.navigate-to'
                 classNames={sectionActionDimensions}
               />

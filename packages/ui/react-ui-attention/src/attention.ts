@@ -3,20 +3,23 @@
 //
 
 import { untracked } from '@preact/signals-core';
+import { Schema } from 'effect';
 
-import { S } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
-export const AttentionSchema = S.mutable(
-  S.Struct({
-    hasAttention: S.Boolean,
-    isAncestor: S.Boolean,
-    isRelated: S.Boolean,
+// NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
+export const ATTENDABLE_PATH_SEPARATOR = '~';
+
+export const AttentionSchema = Schema.mutable(
+  Schema.Struct({
+    hasAttention: Schema.Boolean,
+    isAncestor: Schema.Boolean,
+    isRelated: Schema.Boolean,
   }),
 );
 
-export type Attention = S.Schema.Type<typeof AttentionSchema>;
+export type Attention = Schema.Schema.Type<typeof AttentionSchema>;
 
 // TODO(wittjosiah): Use mosaic path utility?
 const stringKey = (key: string[]) => key.join(',');
@@ -28,8 +31,8 @@ const stringKey = (key: string[]) => key.join(',');
 export class AttentionManager {
   // Each attention path is associated with an attention object.
   // The lookup is not a reactive object to ensure that attention for each path is subscribable independently.
-  private readonly _map = new ComplexMap<string[], ReactiveObject<Attention>>(stringKey);
-  private readonly _state = create<{ current: string[] }>({ current: [] });
+  private readonly _map = new ComplexMap<string[], Live<Attention>>(stringKey);
+  private readonly _state = live<{ current: string[] }>({ current: [] });
 
   constructor(initial: string[] = []) {
     if (initial.length > 0) {
@@ -42,7 +45,7 @@ export class AttentionManager {
    *
    * @reactive
    */
-  get current(): ReactiveObject<readonly string[]> {
+  get current(): Live<readonly string[]> {
     return this._state.current;
   }
 
@@ -56,13 +59,13 @@ export class AttentionManager {
   /**
    * Get the attention state for a given path.
    */
-  get(key: string[]): ReactiveObject<Attention> {
+  get(key: string[]): Live<Attention> {
     const object = this._map.get(key);
     if (object) {
       return object;
     }
 
-    const newObject = create(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
+    const newObject = live(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
     this._map.set(key, newObject);
     return newObject;
   }
@@ -119,7 +122,7 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
   if (closestAttendable) {
     const attendableId = closestAttendable.getAttribute('data-attendable-id');
     if (!attendableId) {
-      // this has an id of an aria-controls elsewhere on the page, move cursor to that trigger
+      // This has an id of an aria-controls elsewhere on the page, move cursor to that trigger.
       const trigger = document.querySelector(`[aria-controls="${closestAttendable.getAttribute('id')}"]`);
       if (!trigger) {
         return acc;
@@ -127,8 +130,8 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
         return getAttendables(selector, trigger, acc);
       }
     } else {
-      acc.push(attendableId);
-      // (attempt tail recursion)
+      acc.push(...attendableId.split(ATTENDABLE_PATH_SEPARATOR));
+      // TODO: Attempt tail recursion.
       return !closestAttendable.parentElement ? acc : getAttendables(selector, closestAttendable.parentElement, acc);
     }
   }

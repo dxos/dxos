@@ -4,9 +4,6 @@
   "compilerOptions": {},
   "references": [
     {
-      "path": "docs/tsconfig.json"
-    },
-    {
       "path": "packages/apps/composer-app/tsconfig.json"
     },
     {
@@ -86,9 +83,6 @@
     },
     {
       "path": "packages/common/phoenix/tsconfig.json"
-    },
-    {
-      "path": "packages/common/plate/tsconfig.json"
     },
     {
       "path": "packages/common/process/tsconfig.json"
@@ -268,9 +262,6 @@
       "path": "packages/experimental/spyglass/tsconfig.json"
     },
     {
-      "path": "packages/gravity/kube-publishing/tsconfig.json"
-    },
-    {
       "path": "packages/gravity/proto-guard/tsconfig.json"
     },
     {
@@ -346,6 +337,9 @@
       "path": "packages/plugins/plugin-presenter/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-preview/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {
@@ -371,6 +365,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-storybook-layout/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-table/tsconfig.json"
@@ -539,9 +536,6 @@
     },
     {
       "path": "packages/ui/react-ui-types/tsconfig.json"
-    },
-    {
-      "path": "tools/apidoc/tsconfig.json"
     },
     {
       "path": "tools/beast/tsconfig.json"

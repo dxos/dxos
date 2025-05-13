@@ -12,10 +12,11 @@ import {
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { type Space, Filter, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
+import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
+import { type Space, Filter, fullyQualifiedId, getSpace, isLiveObject } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
 import { AIChatType, AssistantAction, TemplateType } from '../types';
@@ -70,7 +71,7 @@ export default (context: PluginsContext) =>
           },
           properties: {
             label: ['open assistant label', { ns: ASSISTANT_PLUGIN }],
-            icon: 'ph--chat-centered-text--regular',
+            icon: 'ph--star-four--regular',
             disposition: 'pin-end',
             position: 'hoist',
             keyBinding: {
@@ -83,8 +84,26 @@ export default (context: PluginsContext) =>
     }),
 
     createExtension({
+      id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
+      filter: (node): node is Node<AIChatType> =>
+        isLiveObject(node.data) && node.data.assistantChatQueue && node.data.type !== AIChatType.typename,
+      connector: ({ node }) => [
+        {
+          id: [node.id, 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
+          type: PLANK_COMPANION_TYPE,
+          data: 'assistant-chat',
+          properties: {
+            label: ['assistant chat label', { ns: ASSISTANT_PLUGIN }],
+            icon: 'ph--star-four--regular',
+            position: 'hoist',
+          },
+        },
+      ],
+    }),
+
+    createExtension({
       id: `${ASSISTANT_PLUGIN}/root`,
-      filter: (node): node is Node<Space> => isSpace(node.data),
+      filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       connector: ({ node }) => {
         const templates = memoizeQuery(node.data, Filter.schema(TemplateType));
         return templates.length > 0
@@ -120,7 +139,7 @@ export default (context: PluginsContext) =>
             type: `${ASSISTANT_PLUGIN}/template`,
             data: template,
             properties: {
-              label: template.name ?? ['template title placeholder', { ns: ASSISTANT_PLUGIN }],
+              label: template.name ?? ['object placeholder', { ns: ASSISTANT_PLUGIN }],
               icon: 'ph--file-code--regular',
             },
           }));

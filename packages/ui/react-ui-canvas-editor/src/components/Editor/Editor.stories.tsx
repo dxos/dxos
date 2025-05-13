@@ -5,11 +5,12 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
+import { Schema } from 'effect';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
+import { getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { createGraph } from '@dxos/graph';
-import { type ReactiveObject } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -25,10 +26,10 @@ import { type CanvasGraphModel, RectangleShape } from '../../types';
 
 const generator: ValueGenerator = faker as any;
 
-const types = [Testing.Org, Testing.Project, Testing.Contact];
+const types = [Testing.Organization, Testing.Project, Testing.Contact];
 
 // TODO(burdon): Ref expando breaks the form.
-const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
+const RectangleShapeWithoutRef = Schema.omit<any, any, ['object']>('object')(RectangleShape);
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
@@ -51,7 +52,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     // Load objects.
     const t = setTimeout(async () => {
       const { objects } = await space.db
-        .query((object: ReactiveObject<any>) => types.some((type) => type.typename === getTypename(object)))
+        .query((object: Live<any>) => types.some((type) => type.typename === getTypename(object)))
         .run();
 
       const model = await doLayout(createGraph(objects));
@@ -113,7 +114,7 @@ const meta: Meta<EditorRootProps> = {
             // Replace all schema in the spec with the registered schema.
             const registeredSchema = await space.db.schemaRegistry.register([
               ...new Set(spec.map((schema: any) => schema.type)),
-            ] as S.Schema.AnyNoContext[]);
+            ] as Schema.Schema.AnyNoContext[]);
 
             spec = spec.map((schema: any) => ({
               ...schema,
@@ -142,7 +143,7 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolea
 export const Default: Story = {
   args: {
     init: true,
-    spec: [{ type: Testing.Org, count: 1 }],
+    spec: [{ type: Testing.Organization, count: 1 }],
   },
 };
 
@@ -160,7 +161,7 @@ export const Query: Story = {
     sidebar: 'selected',
     init: true,
     spec: [
-      { type: Testing.Org, count: 4 },
+      { type: Testing.Organization, count: 4 },
       { type: Testing.Project, count: 0 },
       { type: Testing.Contact, count: 16 },
     ],

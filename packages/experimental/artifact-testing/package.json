@@ -1,6 +1,6 @@
 {
   "name": "@dxos/artifact-testing",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Artifacts testing utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,16 +25,17 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "chess.js": "^1.0.0"
   },
   "devDependencies": {
-    "effect": "3.13.3",
+    "effect": "3.14.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

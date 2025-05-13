@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
-import { getTypename, isInstanceOf, ObjectId, S, toEffectSchema } from '@dxos/echo-schema';
+import { getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { KanbanType } from '@dxos/react-ui-kanban/types';
 import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
@@ -109,12 +109,12 @@ export const registry: Record<NodeType, Executable> = {
 
   ['audio' as const]: defineComputeNode({
     input: VoidInput,
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.String }),
   }),
 
   ['chat' as const]: defineComputeNode({
     input: VoidInput,
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.String }),
   }),
 
   ['constant' as const]: defineComputeNode({
@@ -125,7 +125,7 @@ export const registry: Record<NodeType, Executable> = {
 
   ['switch' as const]: defineComputeNode({
     input: VoidInput,
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
   }),
 
   ['template' as const]: defineComputeNode({
@@ -140,7 +140,7 @@ export const registry: Record<NodeType, Executable> = {
 
   ['rng' as const]: defineComputeNode({
     input: VoidInput,
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Number }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Number }),
     exec: () => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: Math.random() })),
   }),
 
@@ -149,12 +149,12 @@ export const registry: Record<NodeType, Executable> = {
   //
 
   ['beacon' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
+    input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Boolean }),
     output: VoidOutput,
   }),
 
   ['scope' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.String }),
+    input: Schema.Struct({ [DEFAULT_INPUT]: Schema.String }),
     output: VoidOutput,
   }),
 
@@ -164,14 +164,14 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['json' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.Any }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Any }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: input })),
   }),
 
   ['json-transform' as const]: defineComputeNode({
     input: JsonTransformInput,
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input, expression }) => {
       const json =
         typeof input === 'string' ? safeParseJson(input, {}) : typeof input !== 'object' ? { value: input } : input;
@@ -193,9 +193,9 @@ export const registry: Record<NodeType, Executable> = {
 
   ['thread' as const]: defineComputeNode({
     input: VoidInput,
-    output: S.Struct({
+    output: Schema.Struct({
       id: ObjectId,
-      messages: S.Array(Message),
+      messages: Schema.Array(Message),
     }),
   }),
 
@@ -207,7 +207,7 @@ export const registry: Record<NodeType, Executable> = {
         const edgeClientService = yield* QueueService;
         const { objects: messages } = yield* Effect.promise(() => edgeClientService.queryQueue(DXN.parse(id)));
 
-        const decoded = S.decodeUnknownSync(S.Any)(messages);
+        const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
         };
@@ -254,7 +254,7 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                spaceService.db.add(create(schema, rest));
+                spaceService.db.add(live(schema, rest));
               }
               yield* Effect.promise(() => spaceService.db.flush());
             } else if (isInstanceOf(KanbanType, container)) {
@@ -269,7 +269,7 @@ export const registry: Record<NodeType, Executable> = {
               for (const item of items) {
                 const { id: _id, '@type': _type, ...rest } = item as any;
                 // TODO(dmaretskyi): Forbid type on create.
-                spaceService.db.add(create(schema, rest));
+                spaceService.db.add(live(schema, rest));
               }
               yield* Effect.promise(() => spaceService.db.flush());
             } else {
@@ -291,20 +291,20 @@ export const registry: Record<NodeType, Executable> = {
   //
 
   ['and' as const]: defineComputeNode({
-    input: S.Struct({ a: S.Boolean, b: S.Boolean }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
+    input: Schema.Struct({ a: Schema.Boolean, b: Schema.Boolean }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(a) && isTruthy(b) })),
   }),
 
   ['or' as const]: defineComputeNode({
-    input: S.Struct({ a: S.Boolean, b: S.Boolean }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
+    input: Schema.Struct({ a: Schema.Boolean, b: Schema.Boolean }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(a) || isTruthy(b) })),
   }),
 
   ['not' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
+    input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Boolean }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) =>
       Effect.succeed({ [DEFAULT_OUTPUT]: !isTruthy(input) }),
     ),
@@ -315,8 +315,8 @@ export const registry: Record<NodeType, Executable> = {
   //
 
   ['if' as const]: defineComputeNode({
-    input: S.Struct({ condition: S.Boolean, value: S.Any }),
-    output: S.Struct({ true: S.optional(S.Any), false: S.optional(S.Any) }),
+    input: Schema.Struct({ condition: Schema.Boolean, value: Schema.Any }),
+    output: Schema.Struct({ true: Schema.optional(Schema.Any), false: Schema.optional(Schema.Any) }),
     exec: (input) =>
       Effect.gen(function* () {
         const { value, condition } = yield* unwrapValueBag(input);
@@ -337,8 +337,8 @@ export const registry: Record<NodeType, Executable> = {
 
   // Ternary operator.
   ['if-else' as const]: defineComputeNode({
-    input: S.Struct({ condition: S.Boolean, true: S.Any, false: S.Any }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    input: Schema.Struct({ condition: Schema.Boolean, true: Schema.Any, false: Schema.Any }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ condition, true: trueValue, false: falseValue }) =>
       Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(condition) ? trueValue : falseValue }),
     ),
@@ -379,8 +379,8 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['gpt-realtime' as const]: defineComputeNode({
-    input: S.Struct({
-      audio: S.Any,
+    input: Schema.Struct({
+      audio: Schema.Any,
     }),
     output: VoidOutput,
     exec: synchronizedComputeFunction(() => Effect.succeed({})),

@@ -24,14 +24,6 @@
         "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
-    "e2e": {
-      "dependsOn": [
-        "^compile"
-      ],
-      "options": {
-        "config": "{projectRoot}/src/testing/playwright/playwright.config.cts"
-      }
-    },
     "lint": {
       "options": {
         "lintFilePatterns": [

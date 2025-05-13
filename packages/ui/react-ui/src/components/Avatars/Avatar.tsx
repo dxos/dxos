@@ -41,19 +41,22 @@ const DxAvatar = createComponent({
 
 type AvatarContentProps = ThemedClassName<Omit<ComponentProps<typeof DxAvatar>, 'children'>>;
 
-const AvatarContent = ({ icon, classNames, ...props }: AvatarContentProps) => {
-  const href = useIconHref(icon);
-  const { labelId, descriptionId } = useAvatarContext('AvatarContent');
-  return (
-    <DxAvatar
-      {...props}
-      icon={href}
-      labelId={labelId}
-      aria-describedby={descriptionId}
-      rootClassName={mx(classNames)}
-    />
-  );
-};
+const AvatarContent = forwardRef<NaturalDxAvatar, AvatarContentProps>(
+  ({ icon, classNames, ...props }, forwardedRef) => {
+    const href = useIconHref(icon);
+    const { labelId, descriptionId } = useAvatarContext('AvatarContent');
+    return (
+      <DxAvatar
+        {...props}
+        icon={href}
+        aria-labelledby={labelId}
+        aria-describedby={descriptionId}
+        rootClassName={mx(classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
   asChild?: boolean;
@@ -113,4 +116,5 @@ export type {
   AvatarContentProps,
   AvatarLabelProps,
   AvatarDescriptionProps,
+  NaturalDxAvatar as DxAvatar,
 };

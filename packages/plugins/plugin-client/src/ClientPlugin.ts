@@ -11,7 +11,7 @@ import {
   Migrations,
   ReactContext,
   ReactSurface,
-  Schema,
+  SchemaDefs,
 } from './capabilities';
 import { ClientEvents } from './events';
 import { meta } from './meta';
@@ -41,7 +41,7 @@ export const ClientPlugin = ({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.ClientReady,
       activatesBefore: [ClientEvents.SetupSchema],
-      activate: Schema,
+      activate: SchemaDefs,
     }),
     defineModule({
       id: `${meta.id}/module/migration`,
@@ -57,7 +57,7 @@ export const ClientPlugin = ({
     defineModule({
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
-      activate: () => ReactSurface({ createInvitationUrl }),
+      activate: () => ReactSurface({ createInvitationUrl, onReset }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
@@ -67,7 +67,7 @@ export const ClientPlugin = ({
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
-      activate: (context) => IntentResolver({ context, onReset }),
+      activate: (context) => IntentResolver({ context }),
     }),
     defineModule({
       id: `${meta.id}/module/translations`,

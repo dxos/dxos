@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -13,19 +14,20 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import {
   Expando,
-  getObjectAnnotation,
+  getTypeAnnotation,
   getSchemaTypename,
   getTypeReference,
   RelationSourceId,
   RelationTargetId,
-  S,
   TypedObject,
   type ObjectId,
+  Ref,
 } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { create, getSchema, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
@@ -145,7 +147,7 @@ describe('Integration tests', () => {
     {
       await using db = await peer.createDatabase();
       const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner: makeRef(inner) });
+      const outer = db.add({ inner: Ref.make(inner) });
       outerId = outer.id;
       await db.flush();
     }
@@ -178,7 +180,7 @@ describe('Integration tests', () => {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
       const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner: makeRef(inner) });
+      const outer = db.add({ inner: Ref.make(inner) });
       outerId = outer.id;
       await db.flush();
     }
@@ -318,7 +320,7 @@ describe('Integration tests', () => {
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
-    db1.add(create(Expando, {}));
+    db1.add(live(Expando, {}));
     await teleportConnections[0].whenOpen(false);
   });
 
@@ -377,7 +379,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
     const obj1 = db1.add(
-      create({
+      live({
         content: 'test',
       }),
     );
@@ -397,17 +399,17 @@ describe('Integration tests', () => {
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          create(Testing.Contact, {
+          live(Testing.Contact, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          create(Testing.Contact, {
+          live(Testing.Contact, {
             name: 'Bob',
           }),
         );
         const hasManager = db.add(
-          create(Testing.HasManager, {
+          live(Testing.HasManager, {
             [RelationSourceId]: bob,
             [RelationTargetId]: alice,
             since: '2022',
@@ -441,12 +443,12 @@ describe('Integration tests', () => {
         rootUrl = db.rootUrl!;
 
         class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-          field: S.String,
+          field: Schema.String,
         }) {}
         const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
-        const object = db.add(create(stored, { field: 'test' }));
+        const object = db.add(live(stored, { field: 'test' }));
         expect(getSchema(object)).to.eq(stored);
 
         db.add({ text: 'Expando object' }); // Add Expando object to test filtering
@@ -467,7 +469,7 @@ describe('Integration tests', () => {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const { objects } = await db.query(Filter.typeDXN(schemaDxn)).run();
         expect(objects.length).to.eq(1);
-        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+        expect(getTypeAnnotation(getSchema(objects[0])!)).to.include({
           typename: 'example.com/type/Test',
           version: '0.1.0',
         });
@@ -481,7 +483,7 @@ describe('Integration tests', () => {
 
         const { objects } = await db.query(Filter.schema(schema!)).run();
         expect(objects.length).to.eq(1);
-        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+        expect(getTypeAnnotation(getSchema(objects[0])!)).to.include({
           typename: 'example.com/type/Test',
           version: '0.1.0',
         });
@@ -500,7 +502,7 @@ describe('Integration tests', () => {
       });
       const [schema] = await db.schemaRegistry.register([Testing.Contact]);
       typeDXN = getTypeReference(schema)!.toDXN();
-      db.add(create(schema, { name: 'Bob' }));
+      db.add(live(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
     }
 

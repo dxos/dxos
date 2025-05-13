@@ -2,23 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React from 'react';
 
-import { S } from '@dxos/echo-schema';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
 import { Box } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 
-export const DatabaseShape = S.extend(
+export const DatabaseShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('database'),
+  Schema.Struct({
+    type: Schema.Literal('database'),
   }),
 );
 
-export type DatabaseShape = S.Schema.Type<typeof DatabaseShape>;
+export type DatabaseShape = Schema.Schema.Type<typeof DatabaseShape>;
 
 export type CreateDatabaseProps = CreateShapeProps<DatabaseShape>;
 

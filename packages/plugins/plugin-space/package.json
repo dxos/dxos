@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-space",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,6 +42,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -59,6 +60,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
@@ -69,12 +71,13 @@
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "effect": "3.13.3",
+    "effect": "3.14.21",
     "jszip": "^3.10.1",
     "localforage": "^1.10.0",
     "lodash.get": "^4.4.2",
     "react-drag-drop-files": "^2.3.8",
-    "react-is": "~18.2.0"
+    "react-is": "~18.2.0",
+    "react-qr-rounded": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -94,6 +97,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

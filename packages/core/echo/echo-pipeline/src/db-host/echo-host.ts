@@ -84,7 +84,7 @@ export class EchoHost extends Resource {
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
       indexCooldownTime: process.env.NODE_ENV === 'test' ? 0 : undefined,
     });
-    this._indexer.setConfig(INDEXER_CONFIG);
+    void this._indexer.setConfig(INDEXER_CONFIG);
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,

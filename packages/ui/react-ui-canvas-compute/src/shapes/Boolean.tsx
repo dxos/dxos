@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { type FC } from 'react';
 
-import { S } from '@dxos/echo-schema';
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchors, getAnchorPoints } from '@dxos/react-ui-canvas-editor';
 
@@ -17,14 +17,14 @@ import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from
 
 type GateType = 'and' | 'or' | 'not';
 
-const GateShape = S.extend(
+const GateShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.String,
+  Schema.Struct({
+    type: Schema.String,
   }),
 );
 
-type GateShape = S.Schema.Type<typeof GateShape>;
+type GateShape = Schema.Schema.Type<typeof GateShape>;
 
 type CreateGateProps = CreateShapeProps<GateShape> & { type: GateType };
 

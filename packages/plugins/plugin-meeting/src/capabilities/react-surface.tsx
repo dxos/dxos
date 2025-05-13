@@ -4,11 +4,12 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, Surface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, Surface, useCapability } from '@dxos/app-framework';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 
-import { CallSidebar, MeetingContainer, MissingArtifact } from '../components';
+import { MeetingCapabilities } from './capabilities';
+import { CallSidebar, MeetingContainer, MeetingStatusDetail, MissingArtifact } from '../components';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingType } from '../types';
 
@@ -31,14 +32,14 @@ export default () =>
     createSurface({
       id: `${MEETING_PLUGIN}/meeting-summary`,
       role: 'article',
-      filter: (data): data is { subject: MeetingType; variant: 'summary' } =>
-        isInstanceOf(MeetingType, data.subject) &&
+      filter: (data): data is { companionTo: MeetingType; subject: 'summary' } =>
+        isInstanceOf(MeetingType, data.companionTo) &&
         data.variant === 'summary' &&
-        isInstanceOf(DocumentType, data.subject.artifacts[getSchemaTypename(DocumentType)!]?.target),
+        isInstanceOf(DocumentType, data.companionTo.artifacts[getSchemaTypename(DocumentType)!]?.target),
       component: ({ data }) => {
         return (
           <Surface
-            data={{ subject: data.subject.artifacts[getSchemaTypename(DocumentType)!].target }}
+            data={{ subject: data.companionTo.artifacts[getSchemaTypename(DocumentType)!].target }}
             role='article'
             limit={1}
           />
@@ -47,7 +48,15 @@ export default () =>
     }),
     createSurface({
       id: `${MEETING_PLUGIN}/assistant`,
-      role: 'complementary--meeting',
+      role: 'deck-companion--active-meeting',
       component: () => <CallSidebar />,
+    }),
+    createSurface({
+      id: `${MEETING_PLUGIN}/devtools-overview`,
+      role: 'devtools-overview',
+      component: () => {
+        const call = useCapability(MeetingCapabilities.CallManager);
+        return <MeetingStatusDetail state={call.state} />;
+      },
     }),
   ]);

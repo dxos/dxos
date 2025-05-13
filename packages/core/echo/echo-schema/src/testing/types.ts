@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
-import { EchoObject, Ref, type Ref$ } from '../ast';
-import { Expando, TypedObject, TypedRelation } from '../object';
+import { EchoObject, EchoRelation } from '../ast';
+import { Expando, TypedObject } from '../object';
+import { Ref, type Ref$ } from '../ref';
 
 // TODO(burdon): These are non-canonical test types, so we really shouldn't export and use in other classes (compare with @dxos/sdk/testing).
 export namespace Testing {
@@ -13,16 +14,16 @@ export namespace Testing {
   // Primitives
   //
 
-  const Circle = S.Struct({ type: S.Literal('circle'), radius: S.Number });
-  const Square = S.Struct({ type: S.Literal('square'), side: S.Number });
-  const Shape = S.Union(Circle, Square);
+  const Circle = Schema.Struct({ type: Schema.Literal('circle'), radius: Schema.Number });
+  const Square = Schema.Struct({ type: Schema.Literal('square'), side: Schema.Number });
+  const Shape = Schema.Union(Circle, Square);
 
   //
   // Simple types
   //
 
-  const TestNestedSchema = S.mutable(S.Struct({ field: S.String }));
-  export type TestNestedSchema = S.Schema.Type<typeof TestNestedSchema>;
+  const TestNestedSchema = Schema.mutable(Schema.Struct({ field: Schema.String }));
+  export type TestNestedSchema = Schema.Schema.Type<typeof TestNestedSchema>;
   export const TestNestedType = TestNestedSchema.pipe(
     EchoObject({ typename: 'example.com/type/TestNested', version: '0.1.0' }),
   );
@@ -38,22 +39,22 @@ export namespace Testing {
   })({}) {}
 
   const fields = {
-    string: S.String,
-    number: S.Number,
-    nullableShapeArray: S.mutable(S.Array(S.Union(Shape, S.Null))),
-    boolean: S.Boolean,
-    null: S.Null,
-    undefined: S.Undefined,
-    stringArray: S.mutable(S.Array(S.String)),
-    twoDimNumberArray: S.mutable(S.Array(S.mutable(S.Array(S.Number)))),
+    string: Schema.String,
+    number: Schema.Number,
+    nullableShapeArray: Schema.mutable(Schema.Array(Schema.Union(Shape, Schema.Null))),
+    boolean: Schema.Boolean,
+    null: Schema.Null,
+    undefined: Schema.Undefined,
+    stringArray: Schema.mutable(Schema.Array(Schema.String)),
+    twoDimNumberArray: Schema.mutable(Schema.Array(Schema.mutable(Schema.Array(Schema.Number)))),
     object: TestNestedSchema,
-    objectArray: S.mutable(S.Array(TestNestedSchema)),
-    nested: S.optional(Ref(TestNestedType)),
-    other: S.Any,
+    objectArray: Schema.mutable(Schema.Array(TestNestedSchema)),
+    nested: Schema.optional(Ref(TestNestedType)),
+    other: Schema.Any,
   };
 
-  export const TestSchema = S.mutable(S.partial(S.Struct(fields)));
-  export type TestSchema = S.Schema.Type<typeof TestSchema>;
+  export const TestSchema = Schema.mutable(Schema.partial(Schema.Struct(fields)));
+  export type TestSchema = Schema.Schema.Type<typeof TestSchema>;
 
   export class TestSchemaType extends TypedObject({
     typename: 'example.com/type/Test',
@@ -75,36 +76,36 @@ export namespace Testing {
     }
   }
 
-  // TODO(dmaretskyi): Another top-level S.mutable call as a workaround for the regression in the last minor.
-  export const TestSchemaWithClass = S.mutable(
-    S.extend(
+  // TODO(dmaretskyi): Another top-level Schema.mutable call as a workaround for the regression in the last minor.
+  export const TestSchemaWithClass = Schema.mutable(
+    Schema.extend(
       TestSchema,
-      S.mutable(
-        S.Struct({
-          classInstance: S.optional(S.instanceOf(TestClass)),
+      Schema.mutable(
+        Schema.Struct({
+          classInstance: Schema.optional(Schema.instanceOf(TestClass)),
         }),
       ),
     ),
   );
 
-  export type TestSchemaWithClass = S.Schema.Type<typeof TestSchemaWithClass>;
+  export type TestSchemaWithClass = Schema.Schema.Type<typeof TestSchemaWithClass>;
 
   export class Contact extends TypedObject({
     typename: 'example.com/type/Contact',
     version: '0.1.0',
   })(
     {
-      name: S.String,
-      username: S.String,
-      email: S.String,
-      tasks: S.suspend((): S.mutable<S.Array$<Ref$<Task>>> => S.mutable(S.Array(Ref(Task)))),
-      address: S.Struct({
-        city: S.optional(S.String),
-        state: S.optional(S.String),
-        zip: S.optional(S.String),
-        coordinates: S.Struct({
-          lat: S.optional(S.Number),
-          lng: S.optional(S.Number),
+      name: Schema.String,
+      username: Schema.String,
+      email: Schema.String,
+      tasks: Schema.suspend((): Schema.mutable<Schema.Array$<Ref$<Task>>> => Schema.mutable(Schema.Array(Ref(Task)))),
+      address: Schema.Struct({
+        city: Schema.optional(Schema.String),
+        state: Schema.optional(Schema.String),
+        zip: Schema.optional(Schema.String),
+        coordinates: Schema.Struct({
+          lat: Schema.optional(Schema.Number),
+          lng: Schema.optional(Schema.Number),
         }),
       }),
     },
@@ -116,25 +117,25 @@ export namespace Testing {
     version: '0.1.0',
   })(
     {
-      title: S.optional(S.String),
-      completed: S.optional(S.Boolean),
-      assignee: S.optional(Contact),
-      previous: S.optional(S.suspend((): Ref$<Task> => Ref(Task))),
-      subTasks: S.optional(S.mutable(S.Array(S.suspend((): Ref$<Task> => Ref(Task))))),
-      description: S.optional(S.String),
+      title: Schema.optional(Schema.String),
+      completed: Schema.optional(Schema.Boolean),
+      assignee: Schema.optional(Contact),
+      previous: Schema.optional(Schema.suspend((): Ref$<Task> => Ref(Task))),
+      subTasks: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend((): Ref$<Task> => Ref(Task))))),
+      description: Schema.optional(Schema.String),
     },
     { partial: true },
   ) {}
 
   // TOOD(burdon): Ref$ breaks if using new syntax (since ID is not declared).
 
-  // export const Task = S.Struct({
-  //   title: S.String,
-  //   completed: S.Boolean,
-  //   assignee: S.optional(Ref(S.suspend((): Ref$<Contact> => Ref(Contact)))),
-  //   previous: S.optional(Ref(S.suspend((): Ref$<Task> => Ref(Task)))),
-  //   subTasks: S.optional(S.Array(Ref(S.suspend((): Ref$<Task> => Ref(Task))))),
-  //   description: S.optional(S.String),
+  // export const Task = Schema.Struct({
+  //   title: Schema.String,
+  //   completed: Schema.Boolean,
+  //   assignee: Schema.optional(Ref(Schema.suspend((): Ref$<Contact> => Ref(Contact)))),
+  //   previous: Schema.optional(Ref(Schema.suspend((): Ref$<Task> => Ref(Task)))),
+  //   subTasks: Schema.optional(Schema.Array(Ref(Schema.suspend((): Ref$<Task> => Ref(Task))))),
+  //   description: Schema.optional(Schema.String),
   // }).pipe(
   //   EchoObject({
   //     typename: 'example.com/type/Task',
@@ -142,21 +143,21 @@ export namespace Testing {
   //   }),
   // );
 
-  // export type Task = S.Schema.Type<typeof Task>;
+  // export type Task = Schema.Schema.Type<typeof Task>;
 
-  // export const Contact = S.Struct({
-  //   name: S.String,
-  //   username: S.String,
-  //   email: S.String,
+  // export const Contact = Schema.Struct({
+  //   name: Schema.String,
+  //   username: Schema.String,
+  //   email: Schema.String,
   //   // TOOD(burdon): Should model via relations?
-  //   // tasks: S.mutable(S.Array(Ref(Task))),
-  //   address: S.Struct({
-  //     city: S.optional(S.String),
-  //     state: S.optional(S.String),
-  //     zip: S.optional(S.String),
-  //     coordinates: S.Struct({
-  //       lat: S.optional(S.Number),
-  //       lng: S.optional(S.Number),
+  //   // tasks: Schema.mutable(Schema.Array(Ref(Task))),
+  //   address: Schema.Struct({
+  //     city: Schema.optional(Schema.String),
+  //     state: Schema.optional(Schema.String),
+  //     zip: Schema.optional(Schema.String),
+  //     coordinates: Schema.Struct({
+  //       lat: Schema.optional(Schema.Number),
+  //       lng: Schema.optional(Schema.Number),
   //     }),
   //   }),
   // }).pipe(
@@ -166,7 +167,7 @@ export namespace Testing {
   //   }),
   // );
 
-  // export type Contact = S.Schema.Type<typeof Contact>;
+  // export type Contact = Schema.Schema.Type<typeof Contact>;
 
   export enum RecordType {
     UNDEFINED = 0,
@@ -179,15 +180,15 @@ export namespace Testing {
     version: '0.1.0',
   })(
     {
-      objects: S.mutable(S.Array(Ref(Expando))),
-      records: S.mutable(
-        S.Array(
-          S.partial(
-            S.Struct({
-              title: S.String,
-              description: S.String,
-              contacts: S.mutable(S.Array(Ref(Contact))),
-              type: S.Enums(RecordType),
+      objects: Schema.mutable(Schema.Array(Ref(Expando))),
+      records: Schema.mutable(
+        Schema.Array(
+          Schema.partial(
+            Schema.Struct({
+              title: Schema.String,
+              description: Schema.String,
+              contacts: Schema.mutable(Schema.Array(Ref(Contact))),
+              type: Schema.Enums(RecordType),
             }),
           ),
         ),
@@ -196,11 +197,14 @@ export namespace Testing {
     { partial: true },
   ) {}
 
-  // TODO(burdon): Convert to pipe?
-  export class HasManager extends TypedRelation({
-    typename: 'example.org/relation/HasManager',
-    version: '0.1.0',
-  })({
-    since: S.optional(S.String),
-  }) {}
+  export const HasManager = Schema.Struct({
+    since: Schema.optional(Schema.String),
+  }).pipe(
+    EchoRelation({
+      typename: 'example.com/type/HasManager',
+      version: '0.1.0',
+      source: Contact,
+      target: Contact,
+    }),
+  );
 }

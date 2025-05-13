@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isEncodedReference, type EncodedReference, type ForeignKey } from '@dxos/echo-protocol';
-import { type BaseObject, requireTypeReference, S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { type EncodedReference, type ForeignKey, isEncodedReference } from '@dxos/echo-protocol';
+import { type BaseObject, requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
 import { createBuf } from '@dxos/protocols/buf';
@@ -13,13 +15,18 @@ import {
   type QueryOptions_DataLocation,
   type QueryOptions_ShowDeletedOption,
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
-import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type Filter as FilterProto, type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type ReactiveEchoObject, getReferenceWithSpaceKey } from '../echo-handler';
+import { getReferenceWithSpaceKey } from '../echo-handler';
 
+// TODO(dmaretskyi): Rename `hasInstanceOf`.
+// TODO(dmaretskyi): Remove from echo api
+/**
+ * @deprecated Use `isInstanceOf` instead.
+ */
 export const hasType =
-  <T extends ReactiveEchoObject<T>>(type: { new (): T }) =>
-  (object: ReactiveEchoObject<any> | undefined): object is T =>
+  <T extends BaseObject>(type: { new (): T }) =>
+  (object: BaseObject | undefined): object is T =>
     object instanceof type;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
@@ -147,19 +154,19 @@ export class Filter<T extends BaseObject = any> {
   }
 
   // TODO(burdon): Tighten to TypedObject.
-  static schema<S extends S.Schema.All>(
+  static schema<S extends Schema.Schema.All>(
     schema: S,
-    filter?: Record<string, any> | OperatorFilter<S.Schema.Type<S>>,
-  ): Filter<S.Schema.Type<S>>;
+    filter?: Record<string, any> | OperatorFilter<Schema.Schema.Type<S>>,
+  ): Filter<Schema.Schema.Type<S>>;
 
   // TODO(burdon): Tighten to TypedObject.
-  static schema(schema: S.Schema.AnyNoContext, filter?: Record<string, any> | OperatorFilter): Filter {
+  static schema(schema: Schema.Schema.AnyNoContext, filter?: Record<string, any> | OperatorFilter): Filter {
     if (!schema) {
       throw new TypeError('`schema` parameter is required.');
     }
 
     // TODO(dmaretskyi): Make `getReferenceWithSpaceKey` work over abstract handlers to not depend on EchoHandler directly.
-    const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
+    const typeReference = Schema.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
     return Filter._fromTypeWithPredicate(typeReference.toDXN(), filter);
   }

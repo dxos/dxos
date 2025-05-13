@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { TitleAnnotationId } from 'effect/SchemaAST';
+import { Schema, SchemaAST } from 'effect';
 
-import { S } from '@dxos/echo-schema';
-import { type Space, SpaceSchema } from '@dxos/react-client/echo';
+import { SpaceSchema } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
-import { initializeKanban } from '@dxos/react-ui-kanban/testing';
 import { FieldSchema } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from './meta';
@@ -25,57 +23,57 @@ import { KANBAN_PLUGIN } from './meta';
 export const TypenameAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/Typename');
 export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/PivotColumn');
 
-export const CreateKanbanSchema = S.Struct({
-  name: S.optional(S.String),
-  typename: S.optional(
-    S.String.annotations({
+export const CreateKanbanSchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  typename: Schema.optional(
+    Schema.String.annotations({
       [TypenameAnnotationId]: true,
-      [TitleAnnotationId]: 'Select card schema (leave empty to start fresh)',
+      [SchemaAST.TitleAnnotationId]: 'Select card schema (leave empty to start fresh)',
     }),
   ),
-  initialPivotColumn: S.optional(
-    S.String.annotations({
+  initialPivotColumn: Schema.optional(
+    Schema.String.annotations({
       [PivotColumnAnnotationId]: true,
-      [TitleAnnotationId]: 'Pivot column',
+      [SchemaAST.TitleAnnotationId]: 'Pivot column',
     }),
   ),
 });
 
-export type CreateKanbanType = S.Schema.Type<typeof CreateKanbanSchema>;
+export type CreateKanbanType = Schema.Schema.Type<typeof CreateKanbanSchema>;
 
 export namespace KanbanAction {
   const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
-    input: S.extend(S.Struct({ space: SpaceSchema }), CreateKanbanSchema),
-    output: S.Struct({
+  export class Create extends Schema.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
+    input: Schema.extend(Schema.Struct({ space: SpaceSchema }), CreateKanbanSchema),
+    output: Schema.Struct({
       object: KanbanType,
     }),
   }) {}
 
-  export class DeleteCardField extends S.TaggedClass<DeleteCardField>()(`${KANBAN_ACTION}/delete-card-field`, {
-    input: S.Struct({
+  export class DeleteCardField extends Schema.TaggedClass<DeleteCardField>()(`${KANBAN_ACTION}/delete-card-field`, {
+    input: Schema.Struct({
       kanban: KanbanType,
-      fieldId: S.String,
+      fieldId: Schema.String,
       // TODO(wittjosiah): Separate fields for undo data?
-      deletionData: S.optional(
-        S.Struct({
+      deletionData: Schema.optional(
+        Schema.Struct({
           field: FieldSchema,
           // TODO(wittjosiah): This creates a type error.
           // props: PropertySchema,
-          props: S.Any,
-          index: S.Number,
+          props: Schema.Any,
+          index: Schema.Number,
         }),
       ),
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class DeleteCard extends S.TaggedClass<DeleteCard>()(`${KANBAN_ACTION}/delete-card`, {
-    input: S.Struct({
-      card: S.Any, // The card object to delete
+  export class DeleteCard extends Schema.TaggedClass<DeleteCard>()(`${KANBAN_ACTION}/delete-card`, {
+    input: Schema.Struct({
+      card: Schema.Any, // The card object to delete
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 }
 
@@ -96,8 +94,3 @@ export type Location = {
 };
 
 export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
-
-export const createKanban = async (props: { space: Space; typename?: string; initialPivotColumn?: string }) => {
-  const { kanban } = await initializeKanban(props);
-  return kanban;
-};

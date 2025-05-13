@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sketch",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -72,7 +72,7 @@
     "@tldraw/tldraw": "^3.0.0",
     "@tldraw/tlschema": "^3.0.0",
     "@tldraw/utils": "^3.0.0",
-    "effect": "3.13.3",
+    "effect": "3.14.21",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^11.0.1"
   },
@@ -93,6 +93,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

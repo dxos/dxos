@@ -20,7 +20,15 @@ export default [
         'meetings label': 'All Meetings',
         'open meeting companions label': 'Meeting tools',
 
+        'display name label': 'Display name',
+        'display name description': 'Set your display name before joining a meeting.',
+        'display name input placeholder': 'Enter your name',
+        'set display name label': 'Continue',
+
         'call tab label': 'Call',
+        'meeting status title': 'Meeting',
+        'share meeting link label': 'Share meeting',
+        'show webrtc stats title': 'Detailed WebRTC Stats',
 
         'meeting summary label': 'Summary',
         'summarize label': 'Summarize',
@@ -40,15 +48,15 @@ export default [
         'icon muted': 'Muted',
         'icon speaking': 'Speaking',
 
-        'mic on': 'Turn microphone on',
-        'mic off': 'Turn microphone off',
+        'mic on': 'Unmute',
+        'mic off': 'Mute',
         'camera on': 'Turn camera on',
         'camera off': 'Turn camera off',
 
         'raise hand': 'Raise hand',
         'lower hand': 'Lower hand',
-        'screenshare on': 'Start screen sharing',
-        'screenshare off': 'Stop screen sharing',
+        'screenshare on': 'Share screen',
+        'screenshare off': 'Stop streaming',
       },
     },
   },

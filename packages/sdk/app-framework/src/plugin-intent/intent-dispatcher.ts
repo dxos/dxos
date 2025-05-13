@@ -5,7 +5,7 @@
 import { Effect, Option, pipe, Ref } from 'effect';
 import { type Simplify } from 'effect/Types';
 
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { byPosition, type MaybePromise, type Position, type GuardedType } from '@dxos/util';
 
@@ -91,9 +91,25 @@ export type IntentEffectDefinition<Input, Output> = (
  * Intent resolver to match intents to their effects.
  */
 export type IntentResolver<Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>> = Readonly<{
+  /**
+   * The schema of the intent to be resolved.
+   */
   intent: IntentSchema<Tag, Fields>;
+
+  /**
+   * Hint to determine the order the resolvers are processed if multiple resolvers are defined for the same intent.
+   * Only one resolver will be used.
+   */
   position?: Position;
+
+  /**
+   * Optional filter to determine if the resolver should be used.
+   */
   filter?: (data: IntentData<Fields>) => data is Data;
+
+  /**
+   * The effect to be performed when the intent is resolved.
+   */
   resolve: IntentEffectDefinition<GuardedType<IntentResolver<Tag, Fields, Data>['filter']>, IntentResultData<Fields>>;
 }>;
 
@@ -287,7 +303,7 @@ const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
 const defaultPromise = () => Effect.runPromise(defaultEffect());
 
 export default (context: PluginsContext) => {
-  const state = create<IntentContext>({
+  const state = live<IntentContext>({
     dispatch: defaultEffect,
     dispatchPromise: defaultPromise,
     undo: defaultEffect,

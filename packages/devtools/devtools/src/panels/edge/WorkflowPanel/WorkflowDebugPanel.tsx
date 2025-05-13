@@ -5,23 +5,23 @@
 import { FetchHttpClient } from '@effect/platform';
 import { Effect, Layer, type Scope } from 'effect';
 // import { Ollama } from 'ollama';
+import { SchemaAST } from 'effect';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   type ComputeRequirements,
   type ComputeGraph,
-  type WorkflowLoader,
   EventLogger,
+  FunctionCallService,
   GptService,
   OllamaGpt,
   SpaceService,
+  QueueService,
+  type WorkflowLoader,
   createDxosEventLogger,
   makeValueBag,
   unwrapValueBag,
-  QueueService,
-  FunctionCallService,
 } from '@dxos/conductor';
-import { AST } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -246,8 +246,8 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeR
   return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer, functionCallService);
 };
 
-const inputTemplateFromAst = (ast: AST.AST): string => {
-  return `{ ${AST.getPropertySignatures(ast)
+const inputTemplateFromAst = (ast: SchemaAST.AST): string => {
+  return `{ ${SchemaAST.getPropertySignatures(ast)
     .map((property) => `"${property.name.toString()}": ""`)
     .join(', ')} }`;
 };

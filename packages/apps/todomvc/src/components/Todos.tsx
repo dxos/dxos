@@ -5,14 +5,15 @@
 import React, { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
-import { create, SpaceState, type Space, makeRef } from '@dxos/react-client/echo';
+import { Type } from '@dxos/echo';
+import { live, SpaceState, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
 import { FILTER } from '../constants';
-import { TodoListType, TodoType } from '../types';
+import { TodoList, Todo } from '../types';
 
 export const Todos = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -21,8 +22,8 @@ export const Todos = () => {
   const { state } = useParams();
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
-  const list: TodoListType | undefined =
-    space?.state.get() === SpaceState.SPACE_READY ? space?.properties[TodoListType.typename]?.target : undefined;
+  const list: TodoList | undefined =
+    space?.state.get() === SpaceState.SPACE_READY ? space?.properties[Type.getTypename(TodoList)]?.target : undefined;
   const allTodos = list?.todos.map((todo) => todo.target).filter(isNonNullable) ?? [];
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo?.completed : true));
 
@@ -35,7 +36,7 @@ export const Todos = () => {
 
     const title = inputRef.current?.value.trim();
     if (title && list) {
-      list.todos.push(makeRef(create(TodoType, { title, completed: false })));
+      list.todos.push(Type.ref(live(Todo, { title, completed: false })));
       inputRef.current!.value = '';
     }
   };

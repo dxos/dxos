@@ -5,7 +5,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
-import { ScriptType, FunctionType, createInvocationSpans, type InvocationTraceEvent } from '@dxos/functions/types';
+import { ScriptType, FunctionType, createInvocationSpans, type InvocationTraceEvent } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Filter, getSpace, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
 

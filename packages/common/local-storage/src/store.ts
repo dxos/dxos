@@ -3,11 +3,11 @@
 //
 
 import { effect, untracked } from '@preact/signals-core';
+import { type Schema, SchemaAST } from 'effect';
 
-import { AST, type S } from '@dxos/echo-schema';
 import { findNode, isLiteralUnion, isSimpleType, type Path } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { create, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
+import { live, isLiveObject, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep, hyphenize, setDeep } from '@dxos/util';
 
@@ -21,9 +21,9 @@ const cloneObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
 export type SettingsValue = Record<string, any>;
 
 export type SettingsProps<T extends SettingsValue> = {
-  schema: S.Schema<T>;
+  schema: Schema.Schema<T>;
   prefix: string;
-  value?: ReactiveObject<T> | T;
+  value?: Live<T> | T;
 };
 
 export interface SettingsStoreFactory {
@@ -34,7 +34,7 @@ export interface SettingsStoreFactory {
  * Root store.
  */
 export class RootSettingsStore implements SettingsStoreFactory {
-  private readonly _stores = create<Record<string, SettingsStore<any>>>({});
+  private readonly _stores = live<Record<string, SettingsStore<any>>>({});
 
   constructor(private readonly _storage: Storage = localStorage) {}
 
@@ -90,17 +90,17 @@ export class RootSettingsStore implements SettingsStoreFactory {
  * Reactive key-value property store.
  */
 export class SettingsStore<T extends SettingsValue> {
-  private readonly _value: ReactiveObject<T>;
+  private readonly _value: Live<T>;
   private readonly _defaults: T;
   private _unsubscribe?: () => void;
 
   constructor(
-    private readonly _schema: S.Schema<T>,
+    private readonly _schema: Schema.Schema<T>,
     private readonly _prefix: string,
-    value: ReactiveObject<T> | T = {} as T,
+    value: Live<T> | T = {} as T,
     private readonly _storage: Storage = localStorage,
   ) {
-    this._value = isReactiveObject(value) ? value : create(value);
+    this._value = isLiveObject(value) ? value : live(value);
     this._defaults = cloneObject(this._value);
     this.load();
   }
@@ -154,8 +154,11 @@ export class SettingsStore<T extends SettingsValue> {
   load() {
     this.close();
 
-    for (const prop of AST.getPropertySignatures(this._schema.ast)) {
-      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node) || isLiteralUnion(node));
+    for (const prop of SchemaAST.getPropertySignatures(this._schema.ast)) {
+      const node = findNode(
+        prop.type,
+        (node) => isSimpleType(node) || SchemaAST.isTupleType(node) || isLiteralUnion(node),
+      );
       invariant(node, `invalid prop: ${prop.name.toString()}`);
 
       const path = [prop.name.toString()];
@@ -163,22 +166,22 @@ export class SettingsStore<T extends SettingsValue> {
       const value = this._storage.getItem(key);
       if (value != null) {
         try {
-          if (AST.isStringKeyword(node)) {
+          if (SchemaAST.isStringKeyword(node)) {
             setDeep(this.value, path, value);
-          } else if (AST.isNumberKeyword(node)) {
+          } else if (SchemaAST.isNumberKeyword(node)) {
             setDeep(this.value, path, parseInt(value));
-          } else if (AST.isBooleanKeyword(node)) {
+          } else if (SchemaAST.isBooleanKeyword(node)) {
             setDeep(this.value, path, value === 'true');
-          } else if (AST.isEnums(node)) {
+          } else if (SchemaAST.isEnums(node)) {
             const v = node.enums.find(([_, b]) => String(b) === value);
             if (v !== undefined) {
               setDeep(this.value, path, v[1]);
             }
           } else if (isLiteralUnion(node)) {
             setDeep(this.value, path, value);
-          } else if (AST.isTupleType(node)) {
+          } else if (SchemaAST.isTupleType(node)) {
             setDeep(this.value, path, JSON.parse(value));
-          } else if (AST.isTypeLiteral(node)) {
+          } else if (SchemaAST.isTypeLiteral(node)) {
             setDeep(this.value, path, JSON.parse(value));
             return false;
           }
@@ -192,8 +195,11 @@ export class SettingsStore<T extends SettingsValue> {
   }
 
   save() {
-    for (const prop of AST.getPropertySignatures(this._schema.ast)) {
-      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node) || isLiteralUnion(node));
+    for (const prop of SchemaAST.getPropertySignatures(this._schema.ast)) {
+      const node = findNode(
+        prop.type,
+        (node) => isSimpleType(node) || SchemaAST.isTupleType(node) || isLiteralUnion(node),
+      );
       invariant(node, `invalid prop: ${prop.name.toString()}`);
 
       const path = [prop.name.toString()];
@@ -202,19 +208,19 @@ export class SettingsStore<T extends SettingsValue> {
       if (value == null) {
         this._storage.removeItem(key);
       } else {
-        if (AST.isStringKeyword(node)) {
+        if (SchemaAST.isStringKeyword(node)) {
           this._storage.setItem(key, String(value));
-        } else if (AST.isNumberKeyword(node)) {
+        } else if (SchemaAST.isNumberKeyword(node)) {
           this._storage.setItem(key, String(value));
-        } else if (AST.isBooleanKeyword(node)) {
+        } else if (SchemaAST.isBooleanKeyword(node)) {
           this._storage.setItem(key, String(value));
-        } else if (AST.isEnums(node)) {
+        } else if (SchemaAST.isEnums(node)) {
           this._storage.setItem(key, String(value));
         } else if (isLiteralUnion(node)) {
           this._storage.setItem(key, String(value));
-        } else if (AST.isTupleType(node)) {
+        } else if (SchemaAST.isTupleType(node)) {
           this._storage.setItem(key, JSON.stringify(value));
-        } else if (AST.isTypeLiteral(node)) {
+        } else if (SchemaAST.isTypeLiteral(node)) {
           this._storage.setItem(key, JSON.stringify(value));
           return false;
         }

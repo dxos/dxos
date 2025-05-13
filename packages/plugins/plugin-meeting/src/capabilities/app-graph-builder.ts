@@ -4,26 +4,54 @@
 
 import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { COMPANION_TYPE, SLUG_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { invariant } from '@dxos/invariant';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { memoizeQuery } from '@dxos/plugin-space';
-import { Filter, type Space, fullyQualifiedId, isSpace } from '@dxos/react-client/echo';
+import { COMPOSER_SPACE_LOCK, memoizeQuery } from '@dxos/plugin-space';
+import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
+import { Filter, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
+import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingAction, MeetingType } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
+      id: `${MEETING_PLUGIN}/active-meeting`,
+      filter: (node): node is Node<null> => node.id === 'root',
+      connector: ({ node }) => {
+        const call = context.requestCapability(MeetingCapabilities.CallManager);
+        if (!call.joined) {
+          return [];
+        }
+
+        return [
+          {
+            id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
+            type: DECK_COMPANION_TYPE,
+            data: null,
+            properties: {
+              label: ['meeting panel label', { ns: MEETING_PLUGIN }],
+              icon: 'ph--video-conference--regular',
+              position: 'hoist',
+              disposition: 'hidden',
+            },
+          },
+        ];
+      },
+    }),
+
+    createExtension({
       id: `${MEETING_PLUGIN}/root`,
-      filter: (node): node is Node<Space> => isSpace(node.data),
+      filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       connector: ({ node }) => {
         const meetings = memoizeQuery(node.data, Filter.schema(MeetingType));
         return meetings.length > 0
           ? [
               {
-                id: `${MEETING_PLUGIN}/meetings`,
+                id: `${node.id}-meetings`,
                 type: `${MEETING_PLUGIN}/meetings`,
                 data: null,
                 properties: {
@@ -43,7 +71,7 @@ export default (context: PluginsContext) =>
     //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
     createExtension({
       id: `${MEETING_PLUGIN}/meetings`,
-      filter: (node): node is Node<null, { space: Space }> => node.id === `${MEETING_PLUGIN}/meetings`,
+      filter: (node): node is Node<null, { space: Space }> => node.type === `${MEETING_PLUGIN}/meetings`,
       connector: ({ node }) => {
         const { metadata } = context.requestCapability(
           Capabilities.Metadata,
@@ -70,8 +98,36 @@ export default (context: PluginsContext) =>
     }),
 
     createExtension({
+      id: `${MEETING_PLUGIN}/share-meeting-link`,
+      filter: (node): node is Node<MeetingType> =>
+        isInstanceOf(MeetingType, node.data) && !getSpace(node.data)?.properties[COMPOSER_SPACE_LOCK],
+      actions: ({ node }) => [
+        {
+          id: `${fullyQualifiedId(node.data)}/action/share-meeting-link`,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const target = node.data;
+            const space = getSpace(target);
+            invariant(space);
+            await dispatch(
+              createIntent(SpaceAction.GetShareLink, {
+                space,
+                target: target && fullyQualifiedId(target),
+                copyToClipboard: true,
+              }),
+            );
+          },
+          properties: {
+            label: ['share meeting link label', { ns: MEETING_PLUGIN }],
+            icon: 'ph--share-network--regular',
+          },
+        },
+      ],
+    }),
+
+    createExtension({
       id: `${MEETING_PLUGIN}/meeting-summary`,
-      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data) && node.type !== COMPANION_TYPE,
+      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data),
       // TODO(wittjosiah): Only show the summarize action if the meeting plausibly completed.
       actions: ({ node }) => [
         {
@@ -89,13 +145,13 @@ export default (context: PluginsContext) =>
       // TODO(wittjosiah): Only show the summary companion if the meeting plausibly completed.
       connector: ({ node }) => [
         {
-          id: `${fullyQualifiedId(node.data)}${SLUG_PATH_SEPARATOR}summary`,
-          type: COMPANION_TYPE,
-          data: node.data,
+          id: `${fullyQualifiedId(node.data)}${ATTENDABLE_PATH_SEPARATOR}summary`,
+          type: PLANK_COMPANION_TYPE,
+          data: 'summary',
           properties: {
             label: ['meeting summary label', { ns: MEETING_PLUGIN }],
             icon: 'ph--book-open-text--regular',
-            position: 'fallback',
+            disposition: 'hidden',
             schema: DocumentType,
             getIntent: ({ meeting }: { meeting: MeetingType }) => createIntent(MeetingAction.Summarize, { meeting }),
           },

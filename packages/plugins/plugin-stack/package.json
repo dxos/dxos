@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-stack",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,6 +40,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -51,6 +52,7 @@
     "@fluentui/react-tabster": "^9.24.2",
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-collapsible": "1.1.3",
+    "effect": "3.14.21",
     "node-fetch": "^2.6.0",
     "react-is": "~18.2.0"
   },
@@ -70,6 +72,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

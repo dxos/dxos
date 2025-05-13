@@ -2,27 +2,35 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ObjectId, EchoObject, S, Ref, Expando } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { Type } from '@dxos/echo';
+import { ObjectId, Ref, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 // TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
 
-export const TreeNodeType = S.Struct({
+export const TreeNodeType = Schema.Struct({
   id: ObjectId,
-  children: S.mutable(S.Array(ObjectId)),
-  data: S.mutable(S.Record({ key: S.String, value: S.Any })),
-  ref: S.optional(Ref(Expando)), // TODO(burdon): Generic type?
-}).pipe(S.mutable);
+  children: Schema.mutable(Schema.Array(ObjectId)),
+  data: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  ref: Schema.optional(Ref(Expando)), // TODO(burdon): Generic type?
+}).pipe(Schema.mutable);
 
-export interface TreeNodeType extends S.Schema.Type<typeof TreeNodeType> {}
+export interface TreeNodeType extends Schema.Schema.Type<typeof TreeNodeType> {}
 
-export const TreeType = S.Struct({
+export const TreeType = Schema.Struct({
   root: ObjectId,
-  nodes: S.mutable(S.Record({ key: ObjectId, value: TreeNodeType })),
-}).pipe(EchoObject({ typename: 'dxos.org/type/Tree', version: '0.1.0' }));
+  nodes: Schema.mutable(Schema.Record({ key: ObjectId, value: TreeNodeType })),
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/Tree',
+    version: '0.1.0',
+  }),
+);
 
-export interface TreeType extends S.Schema.Type<typeof TreeType> {}
+export interface TreeType extends Schema.Schema.Type<typeof TreeType> {}
 
 /**
  * Wrapper object for tree.
@@ -30,7 +38,7 @@ export interface TreeType extends S.Schema.Type<typeof TreeType> {}
 export class Tree {
   static create = (): TreeType => {
     const id = ObjectId.random();
-    return create(TreeType, {
+    return live(TreeType, {
       root: id,
       nodes: {
         [id]: {

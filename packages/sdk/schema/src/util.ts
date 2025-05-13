@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, type Schema as S } from 'effect';
+import { type Schema, SchemaAST } from 'effect';
 // TODO(burdon): Move to jsonpath-plus.
 import jp from 'jsonpath';
 
@@ -40,7 +40,7 @@ export type SchemaFieldDescription = {
 /**
  * @deprecated
  */
-export const mapSchemaToFields = (schema: S.Schema<any, any>): SchemaFieldDescription[] => {
+export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldDescription[] => {
   const fields = [] as SchemaFieldDescription[];
   visit(schema.ast, (node, path) => {
     const { type, format } = toFieldValueType(node);
@@ -50,18 +50,18 @@ export const mapSchemaToFields = (schema: S.Schema<any, any>): SchemaFieldDescri
   return fields;
 };
 
-const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: TypeEnum } => {
-  if (AST.isTypeLiteral(type)) {
+const toFieldValueType = (type: SchemaAST.AST): { format?: FormatEnum; type: TypeEnum } => {
+  if (SchemaAST.isTypeLiteral(type)) {
     return { type: TypeEnum.Ref, format: FormatEnum.Ref };
-  } else if (AST.isNumberKeyword(type)) {
+  } else if (SchemaAST.isNumberKeyword(type)) {
     return { type: TypeEnum.Number };
-  } else if (AST.isBooleanKeyword(type)) {
+  } else if (SchemaAST.isBooleanKeyword(type)) {
     return { type: TypeEnum.Boolean };
-  } else if (AST.isStringKeyword(type)) {
+  } else if (SchemaAST.isStringKeyword(type)) {
     return { type: TypeEnum.String };
   }
 
-  if (AST.isRefinement(type)) {
+  if (SchemaAST.isRefinement(type)) {
     return toFieldValueType(type.from);
   }
 
@@ -69,8 +69,8 @@ const toFieldValueType = (type: AST.AST): { format?: FormatEnum; type: TypeEnum 
   //  See https://effect.website/docs/guides/schema/projections
   //  - Which of these are we storing in the database?
   //  - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
-  if (AST.isTransformation(type)) {
-    const identifier = AST.getIdentifierAnnotation(type);
+  if (SchemaAST.isTransformation(type)) {
+    const identifier = SchemaAST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {
       if (identifier.value === 'DateFromString') {
         return { type: TypeEnum.String, format: FormatEnum.Date };

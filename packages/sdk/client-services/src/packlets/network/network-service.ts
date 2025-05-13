@@ -3,6 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
@@ -23,10 +24,11 @@ export class NetworkServiceImpl implements NetworkService {
   constructor(
     private readonly networkManager: SwarmNetworkManager,
     private readonly signalManager: SignalManager,
+    private readonly edgeConnection?: EdgeConnection,
   ) {}
 
   queryStatus() {
-    return new Stream<NetworkStatus>(({ next }) => {
+    return new Stream<NetworkStatus>(({ ctx, next }) => {
       const update = () => {
         next({
           swarm: this.networkManager.connectionState,
@@ -35,14 +37,9 @@ export class NetworkServiceImpl implements NetworkService {
         });
       };
 
-      const unsubscribeSwarm = this.networkManager.connectionStateChanged.on(() => update());
-      const unsubscribeSignal = this.signalManager.statusChanged?.on(() => update());
+      this.networkManager.connectionStateChanged.on(ctx, () => update());
+      this.signalManager.statusChanged?.on(ctx, () => update());
       update();
-
-      return () => {
-        unsubscribeSwarm();
-        unsubscribeSignal?.();
-      };
     });
   }
 
@@ -63,13 +60,12 @@ export class NetworkServiceImpl implements NetworkService {
   }
 
   subscribeSwarmState(request: SubscribeSwarmStateRequest): Stream<SwarmResponse> {
-    return new Stream<SwarmResponse>(({ next }) => {
-      const unsubscribe = this.signalManager.swarmState?.on((state) => {
+    return new Stream<SwarmResponse>(({ ctx, next }) => {
+      this.signalManager.swarmState?.on(ctx, (state) => {
         if (request.topic.equals(state.swarmKey)) {
           next(state);
         }
       });
-      return unsubscribe;
     });
   }
 
@@ -78,14 +74,12 @@ export class NetworkServiceImpl implements NetworkService {
   }
 
   subscribeMessages(peer: Peer): Stream<Message> {
-    return new Stream<Message>(({ next }) => {
-      const unsubscribe = this.signalManager.onMessage.on((message) => {
+    return new Stream<Message>(({ ctx, next }) => {
+      this.signalManager.onMessage.on(ctx, (message) => {
         if (message.recipient.peerKey === peer.peerKey) {
           next(message);
         }
       });
-
-      return unsubscribe;
     });
   }
 }

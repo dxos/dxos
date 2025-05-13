@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger, scheduleMicroTask, TriggerState, PersistentLifecycle } from '@dxos/async';
+import { Trigger, scheduleMicroTask, TriggerState, PersistentLifecycle, Event } from '@dxos/async';
 import { Resource, type Lifecycle } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -20,11 +21,12 @@ export type MessageListener = (message: Message) => void;
 export type ReconnectListener = () => void;
 
 export interface EdgeConnection extends Required<Lifecycle> {
+  statusChanged: Event<EdgeStatus>;
   get info(): any;
   get identityKey(): string;
   get peerKey(): string;
   get isOpen(): boolean;
-  get isConnected(): boolean;
+  get status(): EdgeStatus;
   setIdentity(identity: EdgeIdentity): void;
   onMessage(listener: MessageListener): () => void;
   onReconnected(listener: ReconnectListener): () => void;
@@ -45,6 +47,8 @@ export type MessengerConfig = {
  *  - Dispatches connection state and message notifications.
  */
 export class EdgeClient extends Resource implements EdgeConnection {
+  public readonly statusChanged = new Event<EdgeStatus>();
+
   private readonly _persistentLifecycle = new PersistentLifecycle<EdgeWsConnection>({
     start: async () => this._connect(),
     stop: async (state: EdgeWsConnection) => this._disconnect(state),
@@ -52,10 +56,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
 
   private readonly _messageListeners = new Set<MessageListener>();
   private readonly _reconnectListeners = new Set<ReconnectListener>();
-
   private readonly _baseWsUrl: string;
   private readonly _baseHttpUrl: string;
-
   private _currentConnection?: EdgeWsConnection = undefined;
   private _ready = new Trigger();
 
@@ -72,13 +74,16 @@ export class EdgeClient extends Resource implements EdgeConnection {
   public get info() {
     return {
       open: this.isOpen,
+      status: this.status,
       identity: this._identity.identityKey,
       device: this._identity.peerKey,
     };
   }
 
-  get isConnected() {
-    return Boolean(this._currentConnection) && this._ready.state === TriggerState.RESOLVED;
+  get status(): EdgeStatus {
+    return Boolean(this._currentConnection) && this._ready.state === TriggerState.RESOLVED
+      ? EdgeStatus.CONNECTED
+      : EdgeStatus.NOT_CONNECTED;
   }
 
   get identityKey() {
@@ -94,7 +99,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       log('Edge identity changed', { identity, oldIdentity: this._identity });
       this._identity = identity;
       this._closeCurrentConnection(new EdgeIdentityChangedError());
-      this._persistentLifecycle.scheduleRestart();
+      void this._persistentLifecycle.scheduleRestart();
     }
   }
 
@@ -171,7 +176,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
         onRestartRequired: () => {
           if (this._isActive(connection)) {
             this._closeCurrentConnection();
-            this._persistentLifecycle.scheduleRestart();
+            void this._persistentLifecycle.scheduleRestart();
           } else {
             log.verbose('restart requested by inactive connection');
           }
@@ -201,15 +206,18 @@ export class EdgeClient extends Resource implements EdgeConnection {
 
   private async _disconnect(state: EdgeWsConnection) {
     await state.close();
+    this.statusChanged.emit(this.status);
   }
 
   private _closeCurrentConnection(error: Error = new EdgeConnectionClosedError()) {
     this._currentConnection = undefined;
     this._ready.throw(error);
     this._ready.reset();
+    this.statusChanged.emit(this.status);
   }
 
   private _notifyReconnected() {
+    this.statusChanged.emit(this.status);
     for (const listener of this._reconnectListeners) {
       try {
         listener();

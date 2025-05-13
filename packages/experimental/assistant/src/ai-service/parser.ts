@@ -4,7 +4,7 @@
 
 import { Message, type MessageContentBlock } from '@dxos/artifact';
 import { Event } from '@dxos/async';
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
@@ -94,7 +94,7 @@ export class MixedStreamParser {
             log.warn('unexpected message_start');
           }
 
-          this._message = createStatic(Message, { role: event.message.role, content: [...event.message.content] });
+          this._message = create(Message, { role: event.message.role, content: [...event.message.content] });
           this.message.emit(this._message);
           break;
         }
@@ -310,6 +310,17 @@ export const mergeMessageBlock = (
             return {
               type: 'json',
               disposition: 'suggest',
+              json: JSON.stringify({ text: streamBlock.content[0].content }),
+            };
+          }
+          break;
+        }
+
+        case 'proposal': {
+          if (streamBlock.content.length === 1 && streamBlock.content[0].type === 'text') {
+            return {
+              type: 'json',
+              disposition: 'proposal',
               json: JSON.stringify({ text: streamBlock.content[0].content }),
             };
           }

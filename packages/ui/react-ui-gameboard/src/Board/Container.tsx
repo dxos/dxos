@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren } from 'react';
+import React, { type CSSProperties, forwardRef, type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export type ContainerProps = ThemedClassName<
   PropsWithChildren<{
-    style?: React.CSSProperties;
+    style?: CSSProperties;
   }>
 >;
 

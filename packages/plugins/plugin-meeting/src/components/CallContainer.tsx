@@ -4,15 +4,19 @@
 
 import React, { useCallback, useEffect, type FC } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
-import { useCompanions } from '@dxos/plugin-deck';
+import { useAppGraph, useCapability } from '@dxos/app-framework';
+import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { useNode } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Call } from './Call';
 import { Lobby } from './Lobby';
 import { MeetingCapabilities } from '../capabilities';
-import { type MeetingType } from '../types';
+import { type MeetingType, type MeetingCallProperties } from '../types';
 
 export type CallContainerProps = {
   meeting?: MeetingType;
@@ -20,20 +24,87 @@ export type CallContainerProps = {
 };
 
 export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId }) => {
-  const call = useCapability(MeetingCapabilities.CallManager);
+  const callManager = useCapability(MeetingCapabilities.CallManager);
   const roomId = meeting ? fullyQualifiedId(meeting) : _roomId;
+  const { graph } = useAppGraph();
+  const node = useNode(graph, meeting && fullyQualifiedId(meeting));
+  const joinSound = useSoundEffect('JoinCall');
+  const leaveSound = useSoundEffect('LeaveCall');
 
   useEffect(() => {
-    if (!call.joined && roomId) {
-      call.setRoomId(roomId);
+    if (!callManager.joined && roomId) {
+      callManager.setRoomId(roomId);
     }
-  }, [roomId, call.joined, call.roomId]);
+  }, [roomId, callManager.joined, callManager.roomId]);
 
-  const companions = useCompanions(meeting && fullyQualifiedId(meeting));
-  const handleJoin = useCallback(() => {
-    companions.forEach((companion) => {
-      companion.properties.onJoin?.(roomId);
+  // TODO(thure): Should these be intents rather than callbacks?
+  const companions = node ? graph.nodes<any, MeetingCallProperties>(node, { type: PLANK_COMPANION_TYPE }) : [];
+  useEffect(() => {
+    const ctx = new Context();
+    callManager.left.on(ctx, (roomId) => {
+      companions.forEach((companion) => {
+        void companion.properties.onLeave?.(roomId);
+      });
     });
+
+    callManager.callStateUpdated.on(ctx, (state) => {
+      companions.forEach((companion) => {
+        void companion.properties.onCallStateUpdated?.(state);
+      });
+    });
+
+    callManager.mediaStateUpdated.on(ctx, (state) => {
+      companions.forEach((companion) => {
+        void companion.properties.onMediaStateUpdated?.(state);
+      });
+    });
+
+    return () => {
+      void ctx.dispose();
+    };
+  }, [callManager, companions]);
+
+  // TODO(burdon): Try/catch.
+
+  /**
+   * Join the call.
+   */
+  const handleJoin = useCallback(async () => {
+    if (!roomId) {
+      return;
+    }
+
+    if (callManager.joined) {
+      await callManager.leave();
+    }
+
+    try {
+      void joinSound.play();
+      callManager.setRoomId(roomId);
+      await callManager.join();
+      await Promise.all(companions.map((companion) => companion.properties.onJoin?.({ meeting, roomId })));
+    } catch (err) {
+      // TODO(burdon): Error sound.
+      log.catch(err);
+    }
+  }, [companions, roomId]);
+
+  /**
+   * Leave the call.
+   */
+  const handleLeave = useCallback(async () => {
+    try {
+      void leaveSound.play();
+      await Promise.all(companions.map((companion) => companion.properties.onLeave?.(roomId)));
+    } catch (err) {
+      // TODO(burdon): Error sound.
+      log.catch(err);
+    } finally {
+      void callManager.turnAudioOff();
+      void callManager.turnVideoOff();
+      void callManager.turnScreenshareOff();
+      void callManager.leave();
+    }
   }, [companions, roomId]);
 
   if (!roomId) {
@@ -41,14 +112,18 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
   }
 
   return (
-    <StackItem.Content>
-      {call.joined && call.roomId === roomId ? (
-        <>
-          <Call.Room />
-          <Call.Toolbar meeting={meeting} />
-        </>
+    // TODO(burdon): Modify StackItem to support top and bottom toolbars.
+    <StackItem.Content classNames='h-full'>
+      {callManager.joined && callManager.roomId === roomId ? (
+        <Call.Root>
+          <Call.Grid />
+          <Call.Toolbar meeting={meeting} onLeave={handleLeave} />
+        </Call.Root>
       ) : (
-        <Lobby roomId={roomId} onJoin={handleJoin} />
+        <Lobby.Root>
+          <Lobby.Preview />
+          <Lobby.Toolbar roomId={roomId} onJoin={handleJoin} />
+        </Lobby.Root>
       )}
     </StackItem.Content>
   );

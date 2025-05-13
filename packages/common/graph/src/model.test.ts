@@ -2,21 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
-
-import { S } from '@dxos/echo-schema';
 
 import { GraphModel } from './model';
 import { BaseGraphNode, type GraphNode } from './types';
 
-const TestNode = S.extend(
+const TestNode = Schema.extend(
   BaseGraphNode,
-  S.Struct({
-    value: S.String,
+  Schema.Struct({
+    value: Schema.String,
   }),
 );
 
-type TestNode = S.Schema.Type<typeof TestNode>;
+type TestNode = Schema.Schema.Type<typeof TestNode>;
 
 type TestData = { value: string };
 

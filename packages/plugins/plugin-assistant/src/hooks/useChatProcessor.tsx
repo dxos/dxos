@@ -5,9 +5,9 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
-import { createSystemPrompt, type Tool } from '@dxos/artifact';
+import { type AssociatedArtifact, createSystemPrompt, type Tool } from '@dxos/artifact';
 import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL } from '@dxos/assistant';
-import { FunctionType } from '@dxos/functions/types';
+import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Space, useQuery } from '@dxos/react-client/echo';
@@ -23,12 +23,20 @@ type UseChatProcessorProps = {
   space?: Space;
   settings?: AssistantSettingsProps;
   part?: 'deck' | 'dialog';
+  associatedArtifact?: AssociatedArtifact;
 };
 
 /**
  * Configure and create ChatProcessor.
  */
-export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseChatProcessorProps): ChatProcessor => {
+export const useChatProcessor = ({
+  chat,
+  space,
+  settings,
+  // part = 'deck',
+  part,
+  associatedArtifact,
+}: UseChatProcessorProps): ChatProcessor => {
   const aiClient = useCapability(AssistantCapabilities.AiClient);
   const globalTools = useCapabilities(Capabilities.Tools);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -67,8 +75,9 @@ export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseCh
     () =>
       createSystemPrompt({
         artifacts: artifactDefinitions.map((definition) => `${definition.name}\n${definition.instructions}`),
+        associatedArtifact,
       }),
-    [artifactDefinitions],
+    [artifactDefinitions, associatedArtifact],
   );
 
   // TODO(burdon): Remove default (let backend decide if not specified).
@@ -82,7 +91,7 @@ export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseCh
   const processor = useMemo(() => {
     log('creating processor...', { settings });
     return new ChatProcessor(aiClient.value, tools, artifactDefinitions, extensions, { model, systemPrompt });
-  }, [aiClient.value, tools, extensions, model, systemPrompt]);
+  }, [aiClient.value, tools, artifactDefinitions, extensions, model, systemPrompt]);
 
   return processor;
 };

@@ -6,10 +6,10 @@ import { Capabilities, contributes, createResolver, type PluginsContext } from '
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { getMeetingContent, summarizeTranscript } from '../summarize';
 import { MeetingAction, MeetingType } from '../types';
@@ -19,7 +19,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: MeetingAction.Create,
       resolve: ({ name }) => {
-        const meeting = create(MeetingType, {
+        const meeting = live(MeetingType, {
           name,
           created: new Date().toISOString(),
           participants: [],
@@ -44,8 +44,8 @@ export default (context: PluginsContext) =>
         let doc = (await meeting.artifacts[typename]?.load()) as DocumentType;
         let text = await doc?.content?.load();
         if (!isInstanceOf(DocumentType, doc)) {
-          text = create(TextType, { content: '' });
-          doc = create(DocumentType, { content: makeRef(text), threads: [] });
+          text = live(DataType.Text, { content: '' });
+          doc = live(DocumentType, { content: makeRef(text), threads: [] });
           meeting.artifacts[getSchemaTypename(DocumentType)!] = makeRef(doc);
         }
 

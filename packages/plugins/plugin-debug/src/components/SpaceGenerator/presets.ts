@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComputeGraphModel, EmailTriggerOutput, NODE_INPUT } from '@dxos/conductor';
-import { AST, ObjectId, S, toJsonSchema } from '@dxos/echo-schema';
-import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions/types';
+import { Schema, SchemaAST } from 'effect';
+
+import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
+import { Type } from '@dxos/echo';
+import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
+import { FunctionTrigger, TriggerKind, EmailTriggerOutput, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -161,7 +164,7 @@ export const presets = {
 
             const appendToTable = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
-            const properties = AST.getPropertySignatures(EmailTriggerOutput.ast);
+            const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
             for (let i = 0; i < properties.length; i++) {
               const propName = properties[i].name.toString();
               builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
@@ -280,7 +283,7 @@ export const presets = {
             templateContent.push('  "category": "{{text}}",');
             builder.createEdge({ source: gpt.id, target: template.id, input: 'text', output: 'text' });
 
-            const properties = AST.getPropertySignatures(EmailTriggerOutput.ast);
+            const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
             for (let i = 0; i < properties.length; i++) {
               const propName = properties[i].name.toString();
               builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
@@ -304,7 +307,7 @@ export const presets = {
           const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
           invariant(templateComputeNode, 'Template compute node was not created.');
           templateComputeNode.value = templateContent.join('\n');
-          const extendedSchema = S.extend(EmailTriggerOutput, S.Struct({ text: S.String }));
+          const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
           templateComputeNode.inputSchema = toJsonSchema(extendedSchema);
 
           attachTrigger(functionTrigger, computeModel);
@@ -500,7 +503,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
   const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
-  templateComputeNode.inputSchema = toJsonSchema(S.Struct({ type: S.String, changeId: S.String }));
+  templateComputeNode.inputSchema = toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
 
   attachTrigger(functionTrigger, computeModel);
 
@@ -509,7 +512,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
 
 const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
   return space.db.add(
-    create(CanvasBoardType, {
+    live(CanvasBoardType, {
       name,
       computeGraph: makeRef(compute.root),
       layout: canvas.graph,
@@ -539,10 +542,9 @@ const setupQueue = (
 
 const attachTrigger = (functionTrigger: FunctionTrigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
-  functionTrigger.function = DXN.fromLocalObjectId(computeModel.root.id).toString();
-  functionTrigger.meta ??= {};
+  functionTrigger.function = Type.ref(computeModel.root);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  functionTrigger.meta.computeNodeId = inputNode.id;
+  functionTrigger.inputNodeId = inputNode.id;
 };
 
 type RawPositionInput = { centerX: number; centerY: number; width: number; height: number };

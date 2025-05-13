@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { Filter, ResultFormat } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -236,13 +237,13 @@ describe('Plain object format', () => {
     const { db } = await testBuilder.createDatabase();
 
     class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      field: S.String,
+      field: Schema.String,
     }) {}
 
     const [stored] = await db.schemaRegistry.register([TestSchema]);
     const schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
-    const object = db.add(create(stored, { field: 'test' }));
+    const object = db.add(live(stored, { field: 'test' }));
     await db.flush({ indexes: true });
 
     const { objects } = await db.query({ __typename: schemaDxn }, { format: ResultFormat.Plain }).run();

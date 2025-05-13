@@ -2,17 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import { type Message, type MessageContentBlock } from '@dxos/artifact';
 import { toJsonSchema, JsonSchemaType, ObjectId } from '@dxos/echo-schema';
-import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
+export const createUserMessage = (text: string): Message => ({
   id: ObjectId.random(),
-  spaceId,
-  threadId,
   role: 'user',
   content: [{ type: 'text', text }],
 });
@@ -20,11 +17,11 @@ export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: st
 /**
  * @deprecated Use {@link LLMTool} instead.
  */
-export const ToolDefinition = S.Struct({
-  name: S.String,
-  description: S.String,
+export const ToolDefinition = Schema.Struct({
+  name: Schema.String,
+  description: Schema.String,
   parameters: JsonSchemaType,
-  execute: S.Any,
+  execute: Schema.Any,
 });
 
 /**
@@ -86,14 +83,14 @@ export const ToolResult = Object.freeze({
   Break: (result: unknown): ToolResult => ({ kind: 'break', result }),
 });
 
-export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
+export type DefineToolParams<Params extends Schema.Schema.AnyNoContext> = {
   name: string;
   description: string;
   schema: Params;
-  execute: (params: S.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
+  execute: (params: Schema.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
 };
 
-export const defineTool = <Params extends S.Schema.AnyNoContext>({
+export const defineTool = <Params extends Schema.Schema.AnyNoContext>({
   name,
   description,
   schema,
@@ -104,7 +101,7 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>({
     description,
     parameters: toFunctionParameterSchema(schema),
     execute: (params, context) => {
-      const sanitized = S.decodeSync(schema)(params);
+      const sanitized = Schema.decodeSync(schema)(params);
       return execute(sanitized, context);
     },
   };
@@ -113,7 +110,7 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>({
 /**
  * Adapts schems to be able to pass to AI providers.
  */
-const toFunctionParameterSchema = (schema: S.Schema.All) => {
+const toFunctionParameterSchema = (schema: Schema.Schema.All) => {
   const jsonSchema = toJsonSchema(schema);
   log('tool schema', { jsonSchema });
   delete jsonSchema.anyOf;

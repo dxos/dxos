@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import { SpaceId } from '@dxos/keys';
 
@@ -85,6 +85,7 @@ export type RecoverIdentityRequest = {
   controlFeedKey: string;
   lookupKey?: string;
   signature?: RecoverIdentitySignature;
+  token?: string;
 };
 
 export type RecoverIdentityResponseBody = {
@@ -159,13 +160,13 @@ export enum OAuthProvider {
   GOOGLE = 'google',
 }
 
-export const InitiateOAuthFlowRequestSchema = S.Struct({
-  provider: S.Enums(OAuthProvider),
-  spaceId: S.String.pipe(S.filter(SpaceId.isValid)),
-  accessTokenId: S.String,
-  scopes: S.mutable(S.Array(S.String)),
+export const InitiateOAuthFlowRequestSchema = Schema.Struct({
+  provider: Schema.Enums(OAuthProvider),
+  spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)),
+  accessTokenId: Schema.String,
+  scopes: Schema.mutable(Schema.Array(Schema.String)),
 });
-export type InitiateOAuthFlowRequest = S.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
+export type InitiateOAuthFlowRequest = Schema.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
 
 export type InitiateOAuthFlowResponse = {
   authUrl: string;
@@ -174,3 +175,11 @@ export type InitiateOAuthFlowResponse = {
 export type OAuthFlowResult =
   | { success: true; accessToken: string; accessTokenId: string }
   | { success: false; reason: string };
+
+export enum EdgeWebsocketProtocol {
+  V0 = 'edge-ws-v0',
+  /**
+   * Enables message framing and muxing by service-id.
+   */
+  V1 = 'edge-ws-v1',
+}

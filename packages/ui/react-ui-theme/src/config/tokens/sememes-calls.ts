@@ -4,9 +4,14 @@
 
 import { type ColorSememes } from './types';
 
-export const callsSememes = {
-  activeInCall: {
-    light: ['red', '500'],
-    dark: ['red', '500'],
+// TODO(burdon): This should be broader than just calls.
+export const callsSememes: ColorSememes = {
+  callActive: {
+    light: ['green', '500'],
+    dark: ['green', '500'],
   },
-} satisfies ColorSememes;
+  callAlert: {
+    light: ['rose', '500'],
+    dark: ['rose', '500'],
+  },
+};

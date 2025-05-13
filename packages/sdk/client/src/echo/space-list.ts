@@ -19,7 +19,7 @@ import { failUndefined, inspectObject } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query, type QueryOptions, type QueuesService } from '@dxos/echo-db';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import {
@@ -32,7 +32,7 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
-import { AgentQuerySourceProvider } from './agent-query-source-provider';
+import { AgentQuerySourceProvider } from './agent';
 import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
 import { type HaloProxy } from '../halo/halo-proxy';
@@ -306,7 +306,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(create(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
+    spaceProxy.db.add(live(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
+import { DataType } from '@dxos/schema';
 
-import { TaskType } from './task';
 import { type Tree } from './tree';
 import { createTree } from '../testing';
 
@@ -123,7 +123,7 @@ describe('tree', () => {
   });
 
   test('task', ({ expect }) => {
-    const task = create(TaskType, { text: 'Test task.' });
+    const task = live(DataType.Task, { text: 'Test task.' });
     expect(task.text).to.eq('Test task.');
 
     const tree = createTree();

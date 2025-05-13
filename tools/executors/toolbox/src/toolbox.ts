@@ -453,7 +453,12 @@ export class Toolbox {
     const tsconfigAll = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.all.json'));
     tsconfigAll.references = this.graph.projects
       // TODO(dmaretskyi): Blade runner doesn't build.
-      .filter((project) => !project.name.includes('blade-runner'))
+      .filter(
+        (project) =>
+          !project.name.includes('blade-runner') &&
+          !project.name.includes('docs') &&
+          !project.name.includes('kube-publishing'),
+      )
       .filter((project) => existsSync(join(project.path, 'tsconfig.json')))
       .map((project) => {
         return { path: relative(this.rootDir, join(project.path, 'tsconfig.json')) };

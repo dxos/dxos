@@ -3,7 +3,7 @@
 //
 
 import { batch } from '@preact/signals-core';
-import { pipe } from 'effect';
+import { Schema, Effect, pipe } from 'effect';
 
 import {
   Capabilities,
@@ -15,9 +15,9 @@ import {
   createIntent,
   chain,
 } from '@dxos/app-framework';
-import { getTypename, S } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { type Node } from '@dxos/plugin-graph';
@@ -25,7 +25,7 @@ import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
-import { closeEntry, incrementPlank, openEntry } from '../layout';
+import { closeEntry, createEntryId, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
 import {
   DeckAction,
@@ -34,7 +34,7 @@ import {
   isLayoutMode,
   getMode,
   defaultDeck,
-  COMPANION_TYPE,
+  PLANK_COMPANION_TYPE,
 } from '../types';
 import { setActive } from '../util';
 
@@ -67,10 +67,10 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdateSidebar.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateSidebar.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdateSidebar.fields.input> =>
-        S.is(LayoutAction.UpdateSidebar.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateSidebar.fields.input> =>
+        Schema.is(LayoutAction.UpdateSidebar.fields.input)(data),
       resolve: ({ options }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
         const next = options?.state ?? layout.sidebarState;
@@ -81,10 +81,10 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdateComplementary.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateComplementary.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdateComplementary.fields.input> =>
-        S.is(LayoutAction.UpdateComplementary.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateComplementary.fields.input> =>
+        Schema.is(LayoutAction.UpdateComplementary.fields.input)(data),
       resolve: ({ subject, options }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
 
@@ -100,10 +100,10 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdateDialog.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateDialog.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdateDialog.fields.input> =>
-        S.is(LayoutAction.UpdateDialog.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateDialog.fields.input> =>
+        Schema.is(LayoutAction.UpdateDialog.fields.input)(data),
       resolve: ({ subject, options }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
         layout.dialogOpen = options.state ?? Boolean(subject);
@@ -114,24 +114,29 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.UpdatePopover.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdatePopover.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
-        S.is(LayoutAction.UpdatePopover.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
+        Schema.is(LayoutAction.UpdatePopover.fields.input)(data),
       resolve: ({ subject, options }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
         layout.popoverOpen = options.state ?? Boolean(subject);
-        layout.popoverContent = subject ? { component: subject, props: options.props } : null;
-        layout.popoverAnchorId = options.anchorId;
+        layout.popoverContent =
+          typeof subject === 'string' ? { component: subject, props: options.props } : subject ? { subject } : null;
         layout.popoverSide = options.side;
+        if (options.variant === 'virtual') {
+          layout.popoverAnchor = options.anchor;
+        } else {
+          layout.popoverAnchorId = options.anchorId;
+        }
       },
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.AddToast.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.AddToast.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.AddToast.fields.input> =>
-        S.is(LayoutAction.AddToast.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.AddToast.fields.input> =>
+        Schema.is(LayoutAction.AddToast.fields.input)(data),
       resolve: ({ subject }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
         layout.toasts.push(subject);
@@ -139,10 +144,10 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      // TODO(wittjosiah): This should be able to just be `S.is(LayoutAction.SetLayoutMode.fields.input)`
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.SetLayoutMode.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.SetLayoutMode.fields.input> => {
-        if (!S.is(LayoutAction.SetLayoutMode.fields.input)(data)) {
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SetLayoutMode.fields.input> => {
+        if (!Schema.is(LayoutAction.SetLayoutMode.fields.input)(data)) {
           return false;
         }
 
@@ -174,10 +179,8 @@ export default (context: PluginsContext) =>
             deck.initialized = true;
           }
 
-          if (mode === 'fullscreen' && !deck.fullscreen) {
-            deck.fullscreen = true;
-          } else if (mode !== 'fullscreen' && deck.fullscreen) {
-            deck.fullscreen = false;
+          if (mode === 'solo--fullscreen') {
+            deck.fullscreen = !deck.fullscreen;
           }
         };
 
@@ -199,8 +202,8 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
-        S.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
+        Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
       resolve: ({ subject }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         batch(() => {
@@ -225,8 +228,8 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.RevertWorkspace.fields.input> =>
-        S.is(LayoutAction.RevertWorkspace.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.RevertWorkspace.fields.input> =>
+        Schema.is(LayoutAction.RevertWorkspace.fields.input)(data),
       resolve: () => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         return {
@@ -236,61 +239,70 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.Open.fields.input> =>
-        S.is(LayoutAction.Open.fields.input)(data),
-      resolve: ({ subject, options }) => {
-        const { graph } = context.requestCapability(Capabilities.AppGraph);
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const settings = context
-          .requestCapabilities(Capabilities.SettingsStore)[0]
-          ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Open.fields.input> =>
+        Schema.is(LayoutAction.Open.fields.input)(data),
+      resolve: ({ subject, options }) =>
+        Effect.gen(function* () {
+          const { graph } = context.requestCapability(Capabilities.AppGraph);
+          const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+          const attention = context.requestCapability(AttentionCapabilities.Attention);
+          const settings = context
+            .requestCapabilities(Capabilities.SettingsStore)[0]
+            ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
-        const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
-        batch(() => {
-          const next = state.deck.solo
-            ? (subject as string[])
-            : subject.reduce(
-                (acc, entryId) =>
-                  openEntry(acc, entryId, {
-                    key: options?.key,
-                    positioning: options?.positioning ?? settings?.newPlankPositioning,
-                    pivotId: options?.pivotId,
-                  }),
-                state.deck.active,
-              );
+          if (options?.workspace && state.activeDeck !== options?.workspace) {
+            const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            yield* dispatch(
+              createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: options.workspace }),
+            );
+          }
 
-          return setActive({ next, state, attention });
-        });
+          const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
+          batch(() => {
+            const next = state.deck.solo
+              ? (subject as string[]).map((id) => createEntryId(id, options?.variant))
+              : subject.reduce(
+                  (acc, entryId) =>
+                    openEntry(acc, entryId, {
+                      key: options?.key,
+                      positioning: options?.positioning ?? settings?.newPlankPositioning,
+                      pivotId: options?.pivotId,
+                      variant: options?.variant,
+                    }),
+                  state.deck.active,
+                );
 
-        const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
-        const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
+            return setActive({ next, state, attention });
+          });
 
-        return {
-          intents: [
-            ...(options?.scrollIntoView !== false
-              ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
-              : []),
-            createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
-            ...newlyOpen.map((subjectId) => {
-              const active = graph?.findNode(subjectId)?.data;
-              const typename = isReactiveObject(active) ? getTypename(active) : undefined;
-              return createIntent(ObservabilityAction.SendEvent, {
-                name: 'navigation.activate',
-                properties: {
-                  subjectId,
-                  typename,
-                },
-              });
-            }),
-          ],
-        };
-      },
+          const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
+          const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
+
+          return {
+            intents: [
+              ...(options?.scrollIntoView !== false
+                ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
+                : []),
+              createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
+              ...newlyOpen.map((subjectId) => {
+                const active = graph?.findNode(subjectId)?.data;
+                const typename = isLiveObject(active) ? getTypename(active) : undefined;
+                return createIntent(ObservabilityAction.SendEvent, {
+                  name: 'navigation.activate',
+                  properties: {
+                    subjectId,
+                    typename,
+                  },
+                });
+              }),
+            ],
+          };
+        }),
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.Close.fields.input> =>
-        S.is(LayoutAction.Close.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Close.fields.input> =>
+        Schema.is(LayoutAction.Close.fields.input)(data),
       resolve: ({ subject }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
@@ -312,8 +324,8 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.Set.fields.input> =>
-        S.is(LayoutAction.Set.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Set.fields.input> =>
+        Schema.is(LayoutAction.Set.fields.input)(data),
       resolve: ({ subject }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
@@ -325,8 +337,8 @@ export default (context: PluginsContext) =>
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,
-      filter: (data): data is S.Schema.Type<typeof LayoutAction.ScrollIntoView.fields.input> =>
-        S.is(LayoutAction.ScrollIntoView.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.ScrollIntoView.fields.input> =>
+        Schema.is(LayoutAction.ScrollIntoView.fields.input)(data),
       resolve: ({ subject }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
         layout.scrollIntoView = subject;
@@ -376,7 +388,7 @@ export default (context: PluginsContext) =>
             const node = graph.findNode(adjustment.id);
             const [companion] = node
               ? graph
-                  .nodes(node, { filter: (n): n is Node<any> => n.type === COMPANION_TYPE })
+                  .nodes(node, { filter: (n): n is Node<any> => n.type === PLANK_COMPANION_TYPE })
                   .toSorted((a, b) => byPosition(a.properties, b.properties))
               : [];
             if (companion) {
@@ -389,7 +401,7 @@ export default (context: PluginsContext) =>
             }
           }
 
-          if (adjustment.type === 'solo') {
+          if (adjustment.type.startsWith('solo')) {
             const entryId = adjustment.id;
             if (!state.deck.solo) {
               // Solo the entry.
@@ -398,21 +410,34 @@ export default (context: PluginsContext) =>
                   createIntent(LayoutAction.SetLayoutMode, {
                     part: 'mode',
                     subject: entryId,
-                    options: { mode: 'solo' },
+                    options: { mode: adjustment.type },
                   }),
                 ],
               };
             } else {
-              // Un-solo the current entry.
-              return {
-                intents: [
-                  // NOTE: The order of these is important.
-                  pipe(
-                    createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
-                    chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
-                  ),
-                ],
-              };
+              if (adjustment.type === 'solo--fullscreen') {
+                // Toggle fullscreen on the current entry.
+                return {
+                  intents: [
+                    createIntent(LayoutAction.SetLayoutMode, {
+                      part: 'mode',
+                      subject: entryId,
+                      options: { mode: 'solo--fullscreen' },
+                    }),
+                  ],
+                };
+              } else if (adjustment.type === 'solo') {
+                // Un-solo the current entry.
+                return {
+                  intents: [
+                    // NOTE: The order of these is important.
+                    pipe(
+                      createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
+                      chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
+                    ),
+                  ],
+                };
+              }
             }
           }
         });

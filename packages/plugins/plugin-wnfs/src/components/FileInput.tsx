@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
@@ -14,7 +14,7 @@ import { WNFS_PLUGIN } from '../meta';
 import { WnfsAction } from '../types';
 
 export type FileInputProps = {
-  schema: S.Schema.Any;
+  schema: Schema.Schema.Any;
   onChange: (file: File) => void;
 };
 

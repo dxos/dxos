@@ -7,10 +7,10 @@ import get from 'lodash.get';
 import { next as A } from '@dxos/automerge/automerge';
 import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 
 import { type KeyPath, type DocAccessor, isValidKeyPath, createDocAccessor } from './core-db';
-import { type ReactiveEchoObject } from './echo-handler';
+import { type AnyLiveObject } from './echo-handler';
 
 // TODO(burdon): Handle assoc to associate with a previous character.
 export const toCursor = (accessor: DocAccessor, pos: number, assoc = 0): A.Cursor => {
@@ -87,11 +87,11 @@ export const getRangeFromCursor = (accessor: DocAccessor, cursor: string) => {
  * @returns The updated object.
  */
 export const updateText = <T extends BaseObject>(
-  obj: ReactiveEchoObject<T>,
+  obj: AnyLiveObject<T>,
   path: KeyPath,
   newText: string,
-): ReactiveEchoObject<T> => {
-  invariant(isReactiveObject(obj));
+): AnyLiveObject<T> => {
+  invariant(isLiveObject(obj));
   invariant(path === undefined || isValidKeyPath(path));
   const accessor = createDocAccessor(obj, path);
   accessor.handle.change((doc) => {

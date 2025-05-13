@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type FC, useMemo } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
-import { type TraceEvent, type InvocationSpan } from '@dxos/functions/types';
+import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,7 +15,7 @@ type LogPanelProps = {
   span?: InvocationSpan;
 };
 
-export const LogPanel: React.FC<LogPanelProps> = ({ span }) => {
+export const LogPanel: FC<LogPanelProps> = ({ span }) => {
   // Get the trace queue for this invocation
   const traceQueueDxn = useMemo(() => {
     return span?.invocationTraceQueue ? decodeReference(span.invocationTraceQueue).dxn : undefined;

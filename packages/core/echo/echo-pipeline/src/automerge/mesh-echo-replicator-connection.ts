@@ -65,17 +65,11 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
       },
       {
         onStartReplication: async (info, remotePeerId /** Teleport ID */) => {
-          // Note: We store only one extension per peer.
+          // Note: We store only one enabled extension per peer.
           //       There can be a case where two connected peers have more than one teleport connection between them
           //       and each of them uses different teleport connections to send messages.
           //       It works because we receive messages from all teleport connections and Automerge Repo dedup them.
           // TODO(mykola): Use only one teleport connection per peer.
-
-          // TODO(dmaretskyi): Critical bug.
-          // - two peers get connected via swarm 1
-          // - they get connected via swarm 2
-          // - swarm 1 gets disconnected
-          // - automerge repo thinks that peer 2 got disconnected even though swarm 2 is still active
 
           this.remoteDeviceKey = remotePeerId;
 
@@ -110,6 +104,10 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
   get peerId(): string {
     invariant(this._remotePeerId != null, 'Remote peer has not connected yet.');
     return this._remotePeerId;
+  }
+
+  get isEnabled() {
+    return this._isEnabled;
   }
 
   async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {

@@ -4,17 +4,16 @@
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
 import { ChannelType, defineObjectForm, ThreadType } from '@dxos/plugin-space/types';
-import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
+import { type AnyLiveObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { MessageType, MessageTypeV1, MessageTypeV1ToV2 } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
-import { IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
+import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
 import { ThreadEvents as LocalThreadEvents } from './events';
-import { meta, THREAD_ITEM, THREAD_PLUGIN } from './meta';
+import { meta, THREAD_ITEM } from './meta';
 import translations from './translations';
 import { ThreadAction } from './types';
 
@@ -59,16 +58,16 @@ export const ThreadPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: MessageType.typename,
+          id: DataType.Message.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (message: MessageType) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
+            loadReferences: (message: DataType.Message) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
           },
         }),
         contributes(Capabilities.Metadata, {
           id: THREAD_ITEM,
           metadata: {
-            parse: (item: ReactiveEchoObject<any>, type: string) => {
+            parse: (item: AnyLiveObject<any>, type: string) => {
               switch (type) {
                 case 'node':
                   return { id: item.id, label: item.title, data: item };
@@ -97,31 +96,12 @@ export const ThreadPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, MessageType, MessageTypeV1]),
+      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, DataType.Message, DataType.MessageV1]),
     }),
     defineModule({
       id: `${meta.id}/module/migration`,
       activatesOn: ClientEvents.SetupMigration,
-      activate: () => contributes(ClientCapabilities.Migration, [MessageTypeV1ToV2]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panel`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'comments',
-          label: ['comments panel label', { ns: THREAD_PLUGIN }],
-          icon: 'ph--chat-text--regular',
-          position: 'hoist',
-          // TODO(wittjosiah): Support comments on any object.
-          // filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
-          filter: (node) =>
-            !!node.data &&
-            typeof node.data === 'object' &&
-            'threads' in node.data &&
-            Array.isArray(node.data.threads) &&
-            !(node.data instanceof ChannelType),
-        }),
+      activate: () => contributes(ClientCapabilities.Migration, [DataType.MessageV1ToV2]),
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,
@@ -139,5 +119,10 @@ export const ThreadPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
   ]);

@@ -27,6 +27,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -94,6 +97,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-pickers"

@@ -6,8 +6,8 @@ import { type CellValue } from 'hyperformula';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { create, fullyQualifiedId } from '@dxos/client/echo';
-import { FunctionType } from '@dxos/functions/types';
+import { live, fullyQualifiedId } from '@dxos/client/echo';
+import { FunctionType } from '@dxos/functions';
 
 import { DetailedCellError } from '#hyperformula';
 import { TestBuilder } from './testing';
@@ -30,7 +30,7 @@ describe('ComputeGraph', () => {
     // Create script.
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    const functionObject = space.db.add(create(FunctionType, { name: 'test', version: '0.0.1', binding: 'TEST' }));
+    const functionObject = space.db.add(live(FunctionType, { name: 'test', version: '0.0.1', binding: 'TEST' }));
     await trigger.wait();
     const functions = graph.getFunctions({ echo: true });
     expect(functions).to.toHaveLength(1);

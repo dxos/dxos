@@ -4,7 +4,7 @@
 
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { makeRef } from '@dxos/live-object';
 import { type Space, useMembers, useQueue } from '@dxos/react-client/echo';
@@ -14,7 +14,7 @@ import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/re
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -44,7 +44,7 @@ export const ChatContainer = ({ space, dxn, context, current, autoFocusTextbox }
   const id = dxn.toString();
   const identity = useIdentity()!;
   const members = useMembers(space?.key);
-  const queue = useQueue<MessageType>(dxn, { pollInterval: 1_000 });
+  const queue = useQueue<DataType.Message>(dxn, { pollInterval: 1_000 });
   const activity = useStatus(space, id);
   const { t } = useTranslation(THREAD_PLUGIN);
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
@@ -84,7 +84,7 @@ export const ChatContainer = ({ space, dxn, context, current, autoFocusTextbox }
     }
 
     queue.append([
-      createStatic(MessageType, {
+      create(DataType.Message, {
         sender: { identityDid: identity.did },
         created: new Date().toISOString(),
         blocks: [{ type: 'text', text: messageRef.current }],

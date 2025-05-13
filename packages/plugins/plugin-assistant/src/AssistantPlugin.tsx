@@ -12,12 +12,11 @@ import {
   Events,
 } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, AssistantSettings } from './capabilities';
-import { ASSISTANT_PLUGIN, meta } from './meta';
+import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
+import { meta } from './meta';
 import translations from './translations';
 import { AssistantAction, AIChatType, ServiceType, TemplateType } from './types';
 
@@ -31,7 +30,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/settings`,
       activatesOn: Events.SetupSettings,
-      activate: AssistantSettings,
+      activate: Settings,
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
@@ -93,16 +92,6 @@ export const AssistantPlugin = () =>
       // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
       activatesBefore: [Events.SetupArtifactDefinition],
       activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panels`,
-      activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'service-registry',
-          label: ['service registry label', { ns: ASSISTANT_PLUGIN }],
-          icon: 'ph--plugs--regular',
-        }),
     }),
     defineModule({
       id: `${meta.id}/module/ai-client`,

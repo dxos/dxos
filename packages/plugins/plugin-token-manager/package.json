@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-token-manager",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Composer plugin for managing access tokens to remote systems.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -12,6 +12,10 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
+    },
+    "./types": {
+      "types": "./dist/types/src/types.d.ts",
+      "browser": "./dist/lib/browser/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -28,13 +32,16 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "effect": "3.14.21"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
@@ -51,6 +58,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

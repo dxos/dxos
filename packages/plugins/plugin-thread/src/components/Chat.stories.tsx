@@ -15,11 +15,11 @@ import { refFromDXN } from '@dxos/live-object';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { create, type Space } from '@dxos/react-client/echo';
+import { live, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Thread } from '@dxos/react-ui-thread';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
@@ -38,7 +38,7 @@ const Story = () => {
       setTimeout(async () => {
         const space = await client.spaces.create();
         const channel = space.db.add(
-          create(ChannelType, {
+          live(ChannelType, {
             queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()])),
           }),
         );
@@ -81,7 +81,7 @@ const meta: Meta = {
     }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
-    withClientProvider({ createSpace: true, types: [ThreadType, MessageType] }),
+    withClientProvider({ createSpace: true, types: [ThreadType, DataType.Message] }),
   ],
   parameters: { translations },
 };

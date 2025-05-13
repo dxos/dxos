@@ -6,5 +6,6 @@ export * from './deploy';
 export * from './format';
 export * from './template';
 
+export * from './useCreateAndDeployScriptTemplates';
 export * from './useToolbarAction';
 export * from './useToolbarState';

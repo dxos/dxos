@@ -4,11 +4,26 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dxos/compute": [
+        "packages/core/compute/src/index.ts"
+      ],
+      "@dxos/compute/testing": [
+        "packages/core/compute/src/testing/index.ts"
+      ],
       "@dxos/conductor": [
         "packages/core/conductor/src/index.ts"
       ],
       "@dxos/conductor/testing": [
         "packages/core/conductor/src/testing/index.ts"
+      ],
+      "@dxos/functions/bundler": [
+        "packages/core/functions/src/bundler/index.ts"
+      ],
+      "@dxos/functions/edge": [
+        "packages/core/functions/src/edge/index.ts"
+      ],
+      "@dxos/functions": [
+        "packages/core/functions/src/index.ts"
       ],
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
@@ -33,6 +48,9 @@
       ],
       "@dxos/plugin-automation": [
         "packages/plugins/plugin-automation/src/index.ts"
+      ],
+      "@dxos/plugin-automation/types": [
+        "packages/plugins/plugin-automation/src/types.ts"
       ],
       "@dxos/plugin-chess": [
         "packages/plugins/plugin-chess/src/index.ts"
@@ -142,6 +160,9 @@
       "@dxos/plugin-presenter": [
         "packages/plugins/plugin-presenter/src/index.ts"
       ],
+      "@dxos/plugin-preview": [
+        "packages/plugins/plugin-preview/src/index.ts"
+      ],
       "@dxos/plugin-pwa": [
         "packages/plugins/plugin-pwa/src/index.ts"
       ],
@@ -187,6 +208,9 @@
       "@dxos/plugin-status-bar": [
         "packages/plugins/plugin-status-bar/src/index.ts"
       ],
+      "@dxos/plugin-storybook-layout": [
+        "packages/plugins/plugin-storybook-layout/src/index.ts"
+      ],
       "@dxos/plugin-table": [
         "packages/plugins/plugin-table/src/index.ts"
       ],
@@ -216,6 +240,9 @@
       ],
       "@dxos/plugin-token-manager": [
         "packages/plugins/plugin-token-manager/src/index.ts"
+      ],
+      "@dxos/plugin-token-manager/types": [
+        "packages/plugins/plugin-token-manager/src/types.ts"
       ],
       "@dxos/plugin-transcription": [
         "packages/plugins/plugin-transcription/src/index.ts"
@@ -289,6 +316,9 @@
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
       ],
+      "@dxos/react-ui-editor/testing": [
+        "packages/ui/react-ui-editor/src/testing/index.ts"
+      ],
       "@dxos/react-ui-form": [
         "packages/ui/react-ui-form/src/index.ts"
       ],
@@ -309,9 +339,6 @@
       ],
       "@dxos/react-ui-kanban": [
         "packages/ui/react-ui-kanban/src/index.ts"
-      ],
-      "@dxos/react-ui-kanban/testing": [
-        "packages/ui/react-ui-kanban/src/testing/index.ts"
       ],
       "@dxos/react-ui-list": [
         "packages/ui/react-ui-list/src/index.ts"

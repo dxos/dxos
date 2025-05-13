@@ -2,9 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-// TODO(wittjosiah): Using `EchoObject` here causes type errors.
-export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', version: '0.1.0' })({
-  content: S.String,
-}) {}
+import { Type } from '@dxos/echo';
+
+const TextSchema = Schema.Struct({
+  content: Schema.String,
+});
+
+export const Text = TextSchema.pipe(
+  Type.def({
+    typename: 'dxos.org/type/Text',
+    version: '0.1.0',
+  }),
+);
+
+export interface Text extends Schema.Schema.Type<typeof Text> {}

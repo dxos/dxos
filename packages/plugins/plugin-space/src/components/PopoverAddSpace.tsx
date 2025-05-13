@@ -16,7 +16,7 @@ export const PopoverAddSpace = () => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   return (
-    <div role='none' className='grid grid-cols-1 gap-1 [&>button]:justify-start'>
+    <div role='none' className='p-1 grid grid-cols-1 gap-1 [&>button]:justify-start'>
       <IconButton
         variant='ghost'
         label={t('create space label')}
@@ -24,7 +24,10 @@ export const PopoverAddSpace = () => {
         onClick={() => {
           void dispatch(createIntent(SpaceAction.OpenCreateSpace));
           void dispatch(
-            createIntent(LayoutAction.UpdatePopover, { part: 'popover', options: { anchorId: '', state: false } }),
+            createIntent(LayoutAction.UpdatePopover, {
+              part: 'popover',
+              options: { variant: 'react', anchorId: '', state: false },
+            }),
           );
         }}
         data-testid='spacePlugin.createSpace'
@@ -36,7 +39,10 @@ export const PopoverAddSpace = () => {
         onClick={() => {
           void dispatch(createIntent(SpaceAction.Join));
           void dispatch(
-            createIntent(LayoutAction.UpdatePopover, { part: 'popover', options: { anchorId: '', state: false } }),
+            createIntent(LayoutAction.UpdatePopover, {
+              part: 'popover',
+              options: { variant: 'react', anchorId: '', state: false },
+            }),
           );
         }}
         data-testid='spacePlugin.joinSpace'

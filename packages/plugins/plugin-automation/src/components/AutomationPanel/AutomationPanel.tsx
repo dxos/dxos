@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useState } from 'react';
 
-import { S } from '@dxos/echo-schema';
 import {
   FunctionType,
   FunctionTrigger,
@@ -12,10 +12,11 @@ import {
   TriggerKind,
   type FunctionTriggerType,
   ScriptType,
-} from '@dxos/functions/types';
+} from '@dxos/functions';
 import { type Client, useClient } from '@dxos/react-client';
-import { create, Filter, useQuery, type Space, type ReactiveObject, getSpace } from '@dxos/react-client/echo';
-import { Clipboard, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { live, Filter, useQuery, type Space, type Live, getSpace } from '@dxos/react-client/echo';
+import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
+import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
@@ -26,18 +27,20 @@ const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = {
   space: Space;
-  object?: ReactiveObject<any>;
+  object?: Live<any>;
+  initialTrigger?: FunctionTriggerType;
+  onDone?: () => void;
 };
 
 // TODO(burdon): Factor out common layout with ViewEditor.
-export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
+export const AutomationPanel = ({ space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const client = useClient();
   const triggers = useQuery(space, Filter.schema(FunctionTrigger));
   const functions = useQuery(space, Filter.schema(FunctionType));
   const scripts = useQuery(space, Filter.schema(ScriptType));
 
-  const [trigger, setTrigger] = useState<FunctionTriggerType>();
+  const [trigger, setTrigger] = useState<FunctionTriggerType | undefined>(initialTrigger);
   const [selected, setSelected] = useState<FunctionTrigger>();
 
   const handleSelect = (trigger: FunctionTrigger) => {
@@ -47,7 +50,7 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
   };
 
   const handleAdd = () => {
-    setTrigger(create(FunctionTriggerSchema, {}));
+    setTrigger(live(FunctionTriggerSchema, {}));
     setSelected(undefined);
   };
 
@@ -61,22 +64,28 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
     if (selected) {
       Object.assign(selected, trigger);
     } else {
-      space.db.add(create(FunctionTrigger, trigger));
+      space.db.add(live(FunctionTrigger, trigger));
     }
 
     setTrigger(undefined);
     setSelected(undefined);
+    onDone?.();
   };
 
   const handleCancel: TriggerEditorProps['onCancel'] = () => {
     setTrigger(undefined);
+    onDone?.();
   };
 
   return (
-    <Clipboard.Provider>
-      <div className='flex flex-col w-full'>
-        {!trigger && (
-          <List.Root<FunctionTrigger> items={triggers} isItem={S.is(FunctionTrigger)} getId={(field) => field.id}>
+    <div className='flex flex-col w-full'>
+      {trigger ? (
+        <ControlItem title={t('trigger editor title')}>
+          <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />
+        </ControlItem>
+      ) : (
+        <div role='none' className={controlItemClasses}>
+          <List.Root<FunctionTrigger> items={triggers} isItem={Schema.is(FunctionTrigger)} getId={(field) => field.id}>
             {({ items: triggers }) => (
               <div role='list' className='flex flex-col w-full'>
                 {triggers?.map((trigger) => {
@@ -118,17 +127,11 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
               </div>
             )}
           </List.Root>
-        )}
-
-        {trigger && <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />}
-
-        {!trigger && (
-          <div className='flex p-2 justify-center'>
-            <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
-          </div>
-        )}
-      </div>
-    </Clipboard.Provider>
+          {triggers.length > 0 && <Separator classNames='mlb-4' />}
+          <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -155,10 +158,11 @@ const getWebhookUrl = (client: Client, trigger: FunctionTrigger) => {
 const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigger: FunctionTriggerType) => {
   // TODO(wittjosiah): Truncation should be done in the UI.
   //   Warning that the List component is currently a can of worms.
-  const shortId = trigger.function && `${trigger.function?.slice(0, 16)}…`;
-  const functionObject = functions.find((fn) => `dxn:worker:${fn.name}` === trigger.function);
+  const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
+  const functionObject = functions.find((fn) => fn === trigger.function?.target);
   if (!functionObject) {
     return shortId;
   }
+
   return scripts.find((s) => functionObject.source?.target?.id === s.id)?.name ?? shortId;
 };

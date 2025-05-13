@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
+
 import {
   Capabilities,
+  chain,
   contributes,
   createIntent,
   createResolver,
@@ -16,16 +19,18 @@ import { PublicKey } from '@dxos/react-client';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { ClientCapabilities } from './capabilities';
-import { IDENTITY_DIALOG, JOIN_DIALOG, RECOVER_CODE_DIALOG } from '../components';
+import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../components';
 import { ClientEvents } from '../events';
-import { ClientAction, type ClientPluginOptions } from '../types';
+import { Account, ClientAction } from '../types';
 
-type IntentResolverOptions = Pick<ClientPluginOptions, 'onReset'> & {
+type IntentResolverOptions = {
   context: PluginsContext;
   appName?: string;
 };
 
-export default ({ context, appName = 'Composer', onReset }: IntentResolverOptions) =>
+const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
+
+export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ClientAction.CreateIdentity,
@@ -69,13 +74,16 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
       resolve: async () => {
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: IDENTITY_DIALOG,
-              options: {
-                blockAlign: 'start',
-              },
-            }),
+            pipe(
+              createIntent(LayoutAction.SwitchWorkspace, {
+                part: 'workspace',
+                subject: Account.id,
+              }),
+              chain(LayoutAction.Open, {
+                part: 'main',
+                subject: [Account.Profile],
+              }),
+            ),
             createIntent(ObservabilityAction.SendEvent, {
               name: 'identity.share',
             }),
@@ -105,7 +113,20 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
     createResolver({
       intent: ClientAction.ResetStorage,
       resolve: async (data) => {
-        await onReset?.({ target: data.target });
+        return {
+          intents: [
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              subject: RESET_DIALOG,
+              options: {
+                blockAlign: 'start',
+                props: {
+                  mode: data.mode ?? 'reset storage',
+                },
+              },
+            }),
+          ],
+        };
       },
     }),
     createResolver({
@@ -127,7 +148,7 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
           intents: [
             createIntent(LayoutAction.UpdateDialog, {
               part: 'dialog',
-              subject: RECOVER_CODE_DIALOG,
+              subject: RECOVERY_CODE_DIALOG,
               options: {
                 blockAlign: 'start',
                 type: 'alert',
@@ -199,16 +220,31 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
           },
         });
         const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
-        await client.services.services.IdentityService.recoverIdentity({
-          external: {
-            lookupKey,
-            deviceKey,
-            controlFeedKey,
-            signature: Buffer.from((credential as any).response.signature),
-            clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
-            authenticatorData: Buffer.from((credential as any).response.authenticatorData),
+        await client.services.services.IdentityService.recoverIdentity(
+          {
+            external: {
+              lookupKey,
+              deviceKey,
+              controlFeedKey,
+              signature: Buffer.from((credential as any).response.signature),
+              clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
+              authenticatorData: Buffer.from((credential as any).response.authenticatorData),
+            },
           },
-        });
+          { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
+        );
+      },
+    }),
+    createResolver({
+      intent: ClientAction.RedeemToken,
+      resolve: async (data) => {
+        const client = context.requestCapability(ClientCapabilities.Client);
+        // TODO(wittjosiah): This needs a proper api.
+        invariant(client.services.services.IdentityService, 'IdentityService not available');
+        await client.services.services.IdentityService.recoverIdentity(
+          { token: data.token },
+          { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
+        );
       },
     }),
   ]);

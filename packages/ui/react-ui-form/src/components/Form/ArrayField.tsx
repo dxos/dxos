@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useCallback, useMemo } from 'react';
 
-import { AST } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -33,16 +32,18 @@ type ArrayFieldProps = {
 export const ArrayField = ({ property, readonly, path, inputProps, Custom, lookupComponent }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
   const { ast, name, type, title } = property;
-  const values = useFormValues(path ?? []) as any[];
+  // TODO(wittjosiah): The fallback to an empty array stops the form from crashing but isn't immediately live.
+  //  It doesn't become live until another field is touched, but that's better than the whole form crashing.
+  const values = (useFormValues(path ?? []) ?? []) as any[];
   invariant(Array.isArray(values), `Values at path ${path?.join('.')} must be an array.`);
   const label = title ?? pipe(name, capitalize);
 
-  const tupleType = findNode(ast, AST.isTupleType);
-  const elementType = (tupleType as AST.TupleType | undefined)?.rest[0]?.type;
+  const tupleType = findNode(ast, SchemaAST.isTupleType);
+  const elementType = (tupleType as SchemaAST.TupleType | undefined)?.rest[0]?.type;
 
-  const getDefaultObjectValue = (typeNode: AST.AST): any => {
+  const getDefaultObjectValue = (typeNode: SchemaAST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);
-    const typeLiteral = baseNode ? getDiscriminatedType(baseNode, {}) : findNode(typeNode, AST.isTypeLiteral);
+    const typeLiteral = baseNode ? getDiscriminatedType(baseNode, {}) : findNode(typeNode, SchemaAST.isTypeLiteral);
     if (!typeLiteral) {
       return {};
     }

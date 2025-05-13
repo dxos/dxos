@@ -3,22 +3,26 @@
 //
 
 import { Octokit } from '@octokit/core';
+import { Predicate } from 'effect';
 
-import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions/types';
-import { create, makeRef } from '@dxos/live-object';
-import { TextType } from '@dxos/schema';
+import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
+import { ScriptType } from '@dxos/functions';
+import { live, makeRef } from '@dxos/live-object';
+import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
+import { DataType } from '@dxos/schema';
 
+import { DEPLOYMENT_DIALOG } from '../components';
+import { defaultScriptsForIntegration } from '../meta';
 import { templates } from '../templates';
 import { ScriptAction } from '../types';
 
 export default () =>
-  contributes(
-    Capabilities.IntentResolver,
+  contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ScriptAction.Create,
-      resolve: async ({ name, gistUrl }) => {
+      resolve: async ({ name, gistUrl, initialTemplateId }) => {
         let content = templates[0].source;
+
         const gistId = gistUrl?.split('/').at(-1);
         if (gistId) {
           // TODO(wittjosiah): Capability which contributes Octokit?
@@ -33,14 +37,44 @@ export default () =>
           }
         }
 
+        if (initialTemplateId) {
+          const template = templates.find((template) => template.id === initialTemplateId);
+          if (template) {
+            content = template.source;
+            name = template.name;
+          }
+        }
+
         return {
           data: {
-            object: create(ScriptType, {
+            object: live(ScriptType, {
               name,
-              source: makeRef(create(TextType, { content })),
+              source: makeRef(live(DataType.Text, { content })),
             }),
           },
         };
       },
     }),
-  );
+    createResolver({
+      intent: TokenManagerAction.AccessTokenCreated,
+      resolve: async ({ accessToken }) => {
+        const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
+          .map((id) => templates.find((t) => t.id === id))
+          .filter(Predicate.isNotNullable);
+
+        if (scriptTemplates.length > 0) {
+          return {
+            intents: [
+              createIntent(LayoutAction.UpdateDialog, {
+                part: 'dialog',
+                subject: DEPLOYMENT_DIALOG,
+                options: { blockAlign: 'start', state: true, props: { accessToken, scriptTemplates } },
+              }),
+            ],
+          };
+        }
+
+        return { data: undefined };
+      },
+    }),
+  ]);

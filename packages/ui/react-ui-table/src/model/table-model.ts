@@ -8,7 +8,7 @@ import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { type FieldSortType, FormatEnum, getValue, setValue, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isReactiveObject, makeRef } from '@dxos/live-object';
+import { isLiveObject, makeRef } from '@dxos/live-object';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -21,6 +21,7 @@ import { type ViewType, type ViewProjection } from '@dxos/schema';
 import { type SelectionMode, SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
 import { touch } from '../util';
+import { extractTagIds } from '../util/tag';
 
 // TODO(burdon): Use schema types.
 export type TableRow = Record<JsonProp, any> & { id: string };
@@ -342,8 +343,24 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       case FormatEnum.Ref: {
         // TODO(ZaymonFC): This get's called an additional time by the cell editor onBlur, but with the cell editors
         //   plain string value. Maybe onBlur should be called with the actual value?
-        if (isReactiveObject(value)) {
+        if (isLiveObject(value)) {
           setValue(this._rows.value[rowIdx], field.path, makeRef(value));
+        }
+        break;
+      }
+
+      case FormatEnum.SingleSelect: {
+        const ids = extractTagIds(value);
+        if (ids && ids.length > 0) {
+          setValue(this._rows.value[rowIdx], field.path, ids[0]);
+        }
+        break;
+      }
+
+      case FormatEnum.MultiSelect: {
+        const ids = extractTagIds(value);
+        if (ids) {
+          setValue(this._rows.value[rowIdx], field.path, ids);
         }
         break;
       }

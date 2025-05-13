@@ -2,26 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { createStatic } from './create';
+import { create } from './create';
 import { serializeStatic } from './json-serializer';
 import { getTypename } from './typename';
-import { getSchema } from '../ast';
+import { getSchema, getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
-import { getSchemaDXN, isInstanceOf } from '../types';
+import { isInstanceOf } from '../types';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {
-    const Contact = S.Struct({
-      name: S.String.pipe(
-        S.optional,
-        S.withConstructorDefault(() => 'Anonymous'),
+    const Contact = Schema.Struct({
+      name: Schema.String.pipe(
+        Schema.optional,
+        Schema.withConstructorDefault(() => 'Anonymous'),
       ),
-      email: S.String.pipe(S.optional),
+      email: Schema.String.pipe(Schema.optional),
     });
 
     const obj = Contact.make({});
@@ -29,7 +29,7 @@ describe('create (static version)', () => {
   });
 
   test('create static object', () => {
-    const contact = createStatic(Testing.Contact, {
+    const contact = create(Testing.Contact, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -43,7 +43,7 @@ describe('create (static version)', () => {
   });
 
   test('JSON encoding', () => {
-    const contact = createStatic(Testing.Contact, {
+    const contact = create(Testing.Contact, {
       name: 'Bot',
       email: 'bot@example.com',
     });
@@ -59,7 +59,7 @@ describe('create (static version)', () => {
   });
 
   test('getSchema', () => {
-    const contact = createStatic(Testing.Contact, {
+    const contact = create(Testing.Contact, {
       name: 'Bot',
       email: 'bot@example.com',
     });

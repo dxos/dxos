@@ -40,12 +40,6 @@
     "build-cache.json": "jsonc",
     "command-versions.json": "jsonc"
   },
-  "files.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
-    "**/build": true,
-    "**/coverage": true
-  },
   "typescript.preferences.importModuleSpecifier": "relative",
   "search.followSymlinks": false,
   "editor.tabSize": 2,
@@ -66,5 +60,7 @@
     "effect/Effect",
     "effect/Console"
   ],
-  "circleci.notifications.mine": true
+  "circleci.notifications.mine": true,
+  "search.useParentIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": false
 }

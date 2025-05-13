@@ -7,8 +7,8 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
-import { FunctionType, FunctionTrigger } from '@dxos/functions/types';
-import { create, useSpaces } from '@dxos/react-client/echo';
+import { FunctionType, FunctionTrigger } from '@dxos/functions';
+import { live, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -21,7 +21,7 @@ const DefaultStory = () => {
   const space = spaces[1];
 
   return (
-    <div role='none' className='flex w-[350px] border border-separator overflow-hidden'>
+    <div role='none' className='w-96'>
       <AutomationPanel space={space} />
     </div>
   );
@@ -38,11 +38,11 @@ const meta: Meta = {
       types: [FunctionType, FunctionTrigger],
       onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(create(FunctionType, fn));
+          space.db.add(live(FunctionType, fn));
         }
       },
     }),
-    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center m-2' }),
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex juastify-center m-2' }),
     withTheme,
   ],
   parameters: {

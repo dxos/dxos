@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { computed } from '@preact/signals-core';
+
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
@@ -32,10 +34,15 @@ export class CallManager extends Resource {
    * Live object state. Is changed on internal events.
    * CAUTION: Do not change directly.
    */
-  private readonly _state = create<GlobalState>({
+  private readonly _state = live<GlobalState>({
     call: {},
     media: { pulledAudioTracks: {}, pulledVideoStreams: {} },
   });
+
+  // TODO(wittjosiah): This shouldn't be necessary, live-object's signals should be granular.
+  private readonly _raisedHandSignal = computed(() => this._state.call.raisedHand ?? false);
+  private readonly _speakingSignal = computed(() => this._state.call.speaking ?? false);
+  private readonly _joinedSignal = computed(() => this._state.call.joined ?? false);
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
@@ -47,17 +54,17 @@ export class CallManager extends Resource {
 
   /** @reactive */
   get raisedHand(): boolean {
-    return this._state.call.raisedHand ?? false;
+    return this._raisedHandSignal.value;
   }
 
   /** @reactive */
   get speaking(): boolean {
-    return this._state.call.speaking ?? false;
+    return this._speakingSignal.value;
   }
 
   /** @reactive */
   get joined(): boolean {
-    return this._state.call.joined ?? false;
+    return this._joinedSignal.value;
   }
 
   /** @reactive */
@@ -83,6 +90,11 @@ export class CallManager extends Resource {
   /** @reactive */
   get pulledAudioTracks() {
     return Object.values(this._state.media.pulledAudioTracks).map((track) => track.track);
+  }
+
+  /** @reactive */
+  get state() {
+    return this._state;
   }
 
   /** @reactive */
@@ -135,13 +147,14 @@ export class CallManager extends Resource {
     return this._mediaManager.turnScreenshareOff();
   }
 
+  // TODO(burdon): Can this be mocked?
   constructor(private readonly _client: Client) {
     super();
-    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService: _client.services.services.NetworkService! });
+    this._client.config.getOrThrow('runtime.services.edge.url');
+    const networkService = this._client.services.services.NetworkService;
+    invariant(networkService, 'network service not found');
+    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService });
     this._mediaManager = new MediaManager();
-
-    const edgeUrl = this._client.config.get('runtime.services.edge.url');
-    invariant(edgeUrl);
   }
 
   protected override async _open() {
@@ -185,8 +198,8 @@ export class CallManager extends Resource {
 
   @synchronized
   async leave() {
-    await this._swarmSynchronizer.leave();
     this._swarmSynchronizer.setJoined(false);
+    await this._swarmSynchronizer.leave();
     await this._mediaManager.leave();
   }
 

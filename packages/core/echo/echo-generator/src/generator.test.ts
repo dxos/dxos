@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { next as A } from '@dxos/automerge/automerge';
 import { Client } from '@dxos/client';
 import { getObjectCore } from '@dxos/echo-db';
-import { S, TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { getType } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
@@ -59,14 +60,14 @@ describe('TestObjectGenerator', () => {
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(getType(organization)!.objectId);
+      schemaId.push(getType(organization)!.asEchoDXN()!.echoId!);
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(getType(organization)!.objectId);
+      schemaId.push(getType(organization)!.asEchoDXN()!.echoId!);
     }
 
     expect(schemaId[0]).not.to.be.undefined;
@@ -96,7 +97,7 @@ describe('TestObjectGenerator', () => {
       typename: 'example.org/type/Task',
       version: '0.1.0',
     })({
-      name: S.optional(S.String),
+      name: Schema.optional(Schema.String),
     }) {}
 
     enum Types {

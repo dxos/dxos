@@ -4,15 +4,15 @@
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { AppGraphBuilder, ArtifactDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
-import { CalendarType, ContactsType, EventType, InboxAction, MailboxType } from './types';
+import { CalendarType, InboxAction, MailboxType } from './types';
 
 export const InboxPlugin = () =>
   definePlugin(meta, [
@@ -40,13 +40,7 @@ export const InboxPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: ContactsType.typename,
-          metadata: {
-            icon: 'ph--address-book--regular',
-          },
-        }),
-        contributes(Capabilities.Metadata, {
-          id: MessageType.typename,
+          id: DataType.Message.typename,
           metadata: {
             icon: 'ph--note--regular',
           },
@@ -58,10 +52,10 @@ export const InboxPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: EventType.typename,
+          id: DataType.Event.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (event: EventType) => await RefArray.loadAll(event.links ?? []),
+            loadReferences: async (event: DataType.Event) => await RefArray.loadAll(event.links ?? []),
           },
         }),
       ],
@@ -80,18 +74,18 @@ export const InboxPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: ContactsType,
-            getIntent: () => createIntent(InboxAction.CreateContacts),
-          }),
-        ),
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
             objectSchema: CalendarType,
             getIntent: () => createIntent(InboxAction.CreateCalendar),
           }),
         ),
       ],
+    }),
+    // TODO(wittjosiah): Factor out.
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(ClientCapabilities.Schema, [DataType.Person, DataType.Organization, DataType.Project]),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
@@ -112,5 +106,10 @@ export const InboxPlugin = () =>
       id: `${meta.id}/module/artifact-definition`,
       activatesOn: Events.SetupArtifactDefinition,
       activate: ArtifactDefinition,
+    }),
+    defineModule({
+      id: `${meta.id}/module/whitelist-schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [DataType.Organization, DataType.Person]),
     }),
   ]);
