@@ -10,7 +10,7 @@ import { DataType } from '@dxos/schema';
 import { DocumentType, type MarkdownProperties } from './types';
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
-  isEchoObject(data)
+  (isEchoObject(data) as boolean)
     ? true
     : data && typeof data === 'object'
       ? 'title' in data && typeof data.title === 'string'
