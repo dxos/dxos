@@ -61,67 +61,12 @@ export interface FunctionContext {
   space: SpaceAPI | undefined;
 
   ai: AIServiceClient;
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Limit access to individual space.
-  client: Client;
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Replace with storage service abstraction.
-  dataDir?: string;
 }
 
 export interface FunctionContextAi {
   // TODO(dmaretskyi): Refer to cloudflare AI docs for more comprehensive typedefs.
   run(model: string, inputs: any, options?: any): Promise<any>;
 }
-
-type EventType =
-  | EmailTriggerOutput
-  | WebhookTriggerOutput
-  | QueueTriggerOutput
-  | SubscriptionTriggerOutput
-  | TimerTriggerOutput;
-
-// TODO(burdon): Reuse trigger schema from @dxos/functions (TriggerType).
-export const EmailTriggerOutput = S.mutable(
-  S.Struct({
-    from: S.String,
-    to: S.String,
-    subject: S.String,
-    created: S.String,
-    body: S.String,
-  }),
-);
-export type EmailTriggerOutput = S.Schema.Type<typeof EmailTriggerOutput>;
-
-export const WebhookTriggerOutput = S.mutable(
-  S.Struct({
-    url: S.String,
-    method: S.Literal('GET', 'POST'),
-    headers: S.Record({ key: S.String, value: S.String }),
-    bodyText: S.String,
-  }),
-);
-export type WebhookTriggerOutput = S.Schema.Type<typeof WebhookTriggerOutput>;
-
-export const QueueTriggerOutput = S.mutable(
-  S.Struct({
-    queue: dxnSchema,
-    item: S.Any,
-    cursor: S.String,
-  }),
-);
-export type QueueTriggerOutput = S.Schema.Type<typeof QueueTriggerOutput>;
-
-export const SubscriptionTriggerOutput = S.mutable(S.Struct({ type: S.String, changedObjectId: S.String }));
-export type SubscriptionTriggerOutput = S.Schema.Type<typeof SubscriptionTriggerOutput>;
-
-export const TimerTriggerOutput = S.mutable(S.Struct({ tick: S.Number }));
-export type TimerTriggerOutput = S.Schema.Type<typeof TimerTriggerOutput>;
 
 //
 // API.
@@ -148,9 +93,8 @@ export interface SpaceAPI {
   get queues(): QueuesAPI;
 }
 
-// TODO(wittjosiah): Fix this.
 const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
-  // const _: SpaceAPI = {} as Space;
+  const _: SpaceAPI = {} as SpaceAPI;
 };
 
 export type FunctionDefinition<E extends EventType = EventType, T = {}, O = any> = {
