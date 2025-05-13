@@ -122,6 +122,9 @@ interface QueryAPI {
    * @param to - End of the range (exclusive).
    */
   range<T>(from: T, to: T): Predicate<T>;
+
+  // TODO(dmaretskyi): Add `Query.match` to support pattern matching on string props.
+  // TODO(dmaretskyi): Add `Query.text(Type, 'needle', opts)` to support full-text and vector search.
 }
 
 export interface Predicate<T> {
