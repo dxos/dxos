@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { create, defineFunction, Filter, ObjectId } from 'dxos:functions';
+import { create, defineFunction, Filter, ObjectId, S } from 'dxos:functions';
 // @ts-ignore
 import {
   HttpClient,
@@ -14,24 +14,24 @@ import {
 // @ts-ignore
 import { format, subDays } from 'https://esm.sh/date-fns@3.3.1';
 // @ts-ignore
-import { pipe, Chunk, Effect, Ref, Schedule, Schema, Stream } from 'https://esm.sh/effect@3.13.3';
+import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
 
 import { Type } from '@dxos/echo';
 
 export default defineFunction({
-  inputSchema: Schema.Struct({
-    mailboxId: Schema.String,
-    userId: Schema.optional(Schema.String).pipe(Schema.withDecodingDefault(() => 'me')),
-    after: Schema.optional(Schema.Union(Schema.Number, Schema.String)).pipe(
-      Schema.withDecodingDefault(() => format(subDays(new Date(), 30), 'yyyy-MM-dd')),
+  inputSchema: S.Struct({
+    mailboxId: S.String,
+    userId: S.optional(S.String).pipe(S.withDecodingDefault(() => 'me')),
+    after: S.optional(S.Union(S.Number, S.String)).pipe(
+      S.withDecodingDefault(() => format(subDays(new Date(), 30), 'yyyy-MM-dd')),
     ),
-    pageSize: Schema.optional(Schema.Number).pipe(Schema.withDecodingDefault(() => 100)),
+    pageSize: S.optional(S.Number).pipe(S.withDecodingDefault(() => 100)),
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
-    tick: Schema.optional(Schema.String),
+    tick: S.optional(S.String),
   }),
 
-  outputSchema: Schema.Struct({
-    newMessages: Schema.Number,
+  outputSchema: S.Struct({
+    newMessages: S.Number,
   }),
 
   handler: ({
@@ -165,86 +165,86 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 
 //
 // Schemas
-// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
+// TODO(wittjosiah): These schemas should be imported from @dxos/S.
 //
 
 const ActorRoles = ['user', 'assistant'] as const;
-const ActorRole = Schema.Literal(...ActorRoles);
-type ActorRole = Schema.Schema.Type<typeof ActorRole>;
+const ActorRole = S.Literal(...ActorRoles);
+type ActorRole = S.S.Type<typeof ActorRole>;
 
-const ActorSchema = Schema.Struct({
-  identityKey: Schema.optional(Schema.String),
-  email: Schema.optional(Schema.String),
-  name: Schema.optional(Schema.String),
-  role: Schema.optional(ActorRole),
+const ActorSchema = S.Struct({
+  identityKey: S.optional(S.String),
+  email: S.optional(S.String),
+  name: S.optional(S.String),
+  role: S.optional(ActorRole),
 });
 
-const AbstractContentBlock = Schema.Struct({
-  pending: Schema.optional(Schema.Boolean),
+const AbstractContentBlock = S.Struct({
+  pending: S.optional(S.Boolean),
 });
-type AbstractContentBlock = Schema.Schema.Type<typeof AbstractContentBlock>;
-const TextContentBlock = Schema.extend(
+type AbstractContentBlock = S.S.Type<typeof AbstractContentBlock>;
+const TextContentBlock = S.extend(
   AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('text'),
-    disposition: Schema.optional(Schema.String),
-    text: Schema.String,
+  S.Struct({
+    type: S.Literal('text'),
+    disposition: S.optional(S.String),
+    text: S.String,
   }),
-).pipe(Schema.mutable);
-type TextContentBlock = Schema.Schema.Type<typeof TextContentBlock>;
-const JsonContentBlock = Schema.extend(
+).pipe(S.mutable);
+type TextContentBlock = S.S.Type<typeof TextContentBlock>;
+const JsonContentBlock = S.extend(
   AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('json'),
-    disposition: Schema.optional(Schema.String),
-    data: Schema.String,
+  S.Struct({
+    type: S.Literal('json'),
+    disposition: S.optional(S.String),
+    data: S.String,
   }),
-).pipe(Schema.mutable);
-type JsonContentBlock = Schema.Schema.Type<typeof JsonContentBlock>;
-const Base64ImageSource = Schema.Struct({
-  type: Schema.Literal('base64'),
-  mediaType: Schema.String,
-  data: Schema.String,
-}).pipe(Schema.mutable);
-const HttpImageSource = Schema.Struct({
-  type: Schema.Literal('http'),
-  url: Schema.String,
-}).pipe(Schema.mutable);
-const ImageSource = Schema.Union(Base64ImageSource, HttpImageSource);
-type ImageSource = Schema.Schema.Type<typeof ImageSource>;
-const ImageContentBlock = Schema.extend(
+).pipe(S.mutable);
+type JsonContentBlock = S.S.Type<typeof JsonContentBlock>;
+const Base64ImageSource = S.Struct({
+  type: S.Literal('base64'),
+  mediaType: S.String,
+  data: S.String,
+}).pipe(S.mutable);
+const HttpImageSource = S.Struct({
+  type: S.Literal('http'),
+  url: S.String,
+}).pipe(S.mutable);
+const ImageSource = S.Union(Base64ImageSource, HttpImageSource);
+type ImageSource = S.S.Type<typeof ImageSource>;
+const ImageContentBlock = S.extend(
   AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('image'),
-    id: Schema.optional(Schema.String),
-    source: Schema.optional(ImageSource),
+  S.Struct({
+    type: S.Literal('image'),
+    id: S.optional(S.String),
+    source: S.optional(ImageSource),
   }),
-).pipe(Schema.mutable);
-type ImageContentBlock = Schema.Schema.Type<typeof ImageContentBlock>;
-const ReferenceContentBlock = Schema.extend(
+).pipe(S.mutable);
+type ImageContentBlock = S.S.Type<typeof ImageContentBlock>;
+const ReferenceContentBlock = S.extend(
   AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('reference'),
-    reference: Schema.Any,
+  S.Struct({
+    type: S.Literal('reference'),
+    reference: S.Any,
   }),
-).pipe(Schema.mutable);
-type ReferenceContentBlock = Schema.Schema.Type<typeof ReferenceContentBlock>;
-const MessageContentBlock = Schema.Union(TextContentBlock, JsonContentBlock, ImageContentBlock, ReferenceContentBlock);
+).pipe(S.mutable);
+type ReferenceContentBlock = S.S.Type<typeof ReferenceContentBlock>;
+const MessageContentBlock = S.Union(TextContentBlock, JsonContentBlock, ImageContentBlock, ReferenceContentBlock);
 
-const MessageType = Schema.Struct({
+const MessageType = S.Struct({
   id: ObjectId,
-  created: Schema.String.annotations({
+  created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
   }),
   sender: ActorSchema.annotations({
     description: 'Identity of the message sender.',
   }),
-  blocks: Schema.Array(MessageContentBlock).annotations({
+  blocks: S.Array(MessageContentBlock).annotations({
     description: 'Contents of the message.',
   }),
-  properties: Schema.optional(
-    Schema.mutable(
-      Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+  properties: S.optional(
+    S.mutable(
+      S.Record({ key: S.String, value: S.Any }).annotations({
         description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
       }),
     ),
@@ -255,4 +255,4 @@ const MessageType = Schema.Struct({
     version: '0.1.0',
   }),
 );
-type MessageType = Schema.Schema.Type<typeof MessageType>;
+type MessageType = S.S.Type<typeof MessageType>;

@@ -9,34 +9,34 @@ import { type FunctionType } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
 import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
 
-export type FunctionMetaEditorProps = {
+export type FunctionInputEditorProps = {
   functions: FunctionType[];
   onQueryRefOptions: QueryRefOptions;
 } & FormInputStateProps;
 
 /**
- * Editor component for function meta parameters.
+ * Editor component for function input parameters.
  */
-export const FunctionPayloadEditor = ({
+export const FunctionInputEditor = ({
   functions,
   getValue,
   onValueChange,
   onQueryRefOptions,
-}: FunctionMetaEditorProps) => {
+}: FunctionInputEditorProps) => {
   const selectedFunctionValue = useFormValues(['function' as JsonPath]);
-  const selectedFunctionName = useMemo(() => {
+  const selectedFunctionId = useMemo(() => {
     if (selectedFunctionValue instanceof RefImpl) {
-      return selectedFunctionValue.dxn.toString().split('dxn:worker:').at(1);
+      return selectedFunctionValue.dxn.toString().split('dxn:echo:@:').at(1);
     }
   }, [selectedFunctionValue]);
 
   const selectedFunction = useMemo(
-    () => functions.find((f) => f.name === selectedFunctionName),
-    [functions, selectedFunctionName],
+    () => functions.find((f) => f.id === selectedFunctionId),
+    [functions, selectedFunctionId],
   );
 
   useOnTransition(
-    // Clear function parameter meta when the function changes.
+    // Clear function parameter input when the function changes.
     selectedFunctionValue,
     (prevValue) => prevValue !== undefined && prevValue !== selectedFunctionValue,
     (currValue) => currValue !== undefined,

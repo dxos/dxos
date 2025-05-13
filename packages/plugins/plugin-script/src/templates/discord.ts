@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
 // @ts-ignore
 import { create, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
 import {
@@ -16,12 +15,12 @@ import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.13.3';
 
 import { Type } from '@dxos/echo';
 
-const MessageSchema = Schema.Struct({
+const MessageSchema = S.Struct({
   id: ObjectId,
-  foreignId: Schema.Any, // bigint?
-  from: Schema.String,
-  created: Schema.String,
-  content: Schema.String,
+  foreignId: S.Any, // bigint?
+  from: S.String,
+  created: S.String,
+  content: S.String,
 }).pipe(
   Type.def({
     typename: 'example.com/type/Message',
@@ -37,17 +36,17 @@ const generateSnowflake = (unixTimestamp: number): bigint => {
 };
 
 export default defineFunction({
-  inputSchema: Schema.Struct({
+  inputSchema: S.Struct({
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
-    tick: Schema.optional(Schema.String),
-    channelId: Schema.String,
-    after: Schema.optional(Schema.Number),
-    pageSize: Schema.optional(Schema.Number),
-    queueId: Schema.String,
+    tick: S.optional(S.String),
+    channelId: S.String,
+    after: S.optional(S.Number),
+    pageSize: S.optional(S.Number),
+    queueId: S.String,
   }),
 
-  outputSchema: Schema.Struct({
-    newMessages: Schema.Number,
+  outputSchema: S.Struct({
+    newMessages: S.Number,
   }),
 
   handler: ({
