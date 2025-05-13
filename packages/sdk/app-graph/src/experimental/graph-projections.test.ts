@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 type Cb = () => void;
 
 interface Query {
@@ -23,15 +27,17 @@ const QueryResult = Object.freeze({
   fromPromise: <T>(run: (onDispose: (cb: Cb) => void) => Promise<T[]>): QueryResult<T> => {
     return {
       run: (onData, onError) => {
-        let cbs: Cb[] = [],
-          disposed = false;
+        const cbs: Cb[] = [];
+        let disposed = false;
         const dispose = () => {
           cbs.forEach((cb) => cb());
           disposed = true;
         };
         run((cb) => (disposed ? cb() : cbs.push(cb))).then(
           (data) => {
-            if (disposed) return;
+            if (disposed) {
+              return;
+            }
             onData(data);
           },
           (err) => {

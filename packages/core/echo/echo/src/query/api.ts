@@ -13,6 +13,7 @@ import type { Relation } from '..';
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
 export interface Query<T> {
+  // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };
 
   ast: QueryAST.AST;
