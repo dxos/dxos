@@ -7,6 +7,53 @@ import { createExtension, type Node } from '@dxos/plugin-graph';
 import { faker } from '@dxos/random';
 
 export const storybookGraphBuilders = [
+  createExtension({
+    id: 'user-account',
+    filter: (node): node is Node<null> => node.id === 'root',
+    connector: () => [
+      {
+        id: 'user-account',
+        type: 'user-account',
+        properties: {
+          label: 'User Account',
+          icon: 'ph--user--regular',
+          disposition: 'user-account',
+          // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
+          userId: '0',
+          hue: faker.properties.hue(),
+          emoji: faker.properties.emoji(),
+          status: 'active',
+        },
+        nodes: [
+          {
+            id: 'profile',
+            type: 'profile',
+            properties: {
+              label: 'Profile',
+              icon: 'ph--user--regular',
+            },
+          },
+          {
+            id: 'devices',
+            type: 'devices',
+            properties: {
+              label: 'Devices',
+              icon: 'ph--devices--regular',
+            },
+          },
+          {
+            id: 'security',
+            type: 'security',
+            properties: {
+              label: 'Security',
+              icon: 'ph--key--regular',
+            },
+          },
+        ],
+      },
+    ],
+  }),
+  // TODO(wittjosiah): This group node probably is unnecessary now with the flat L0 structure.
   // Create spaces group node.
   createExtension({
     id: 'spaces-root',

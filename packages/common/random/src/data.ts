@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { idHue } from '@dxos/util';
-
-const airports = [
+export const airports = [
   { name: 'Atlanta', code: 'ATL', location: [-84.4277, 33.6407] },
   { name: 'Dubai', code: 'DXB', location: [55.3644, 25.2532] },
   { name: 'Dallas', code: 'DFW', location: [-97.0403, 32.8998] },
@@ -55,9 +53,7 @@ const airports = [
   { name: 'Dubai', code: 'DXB', location: [55.3644, 25.2532] },
 ];
 
-export const randAirport = () => airports[Math.floor(Math.random() * airports.length)];
-
-const icons = [
+export const icons = [
   'ph--air-traffic-control--regular',
   'ph--asterisk--regular',
   'ph--atom--regular',
@@ -107,7 +103,3 @@ const icons = [
   'ph--users-three--regular',
   'ph--yin-yang--regular',
 ];
-
-export const randIcon = () => icons[Math.floor(Math.random() * icons.length)];
-
-export const randHue = () => idHue[Math.floor(Math.random() * idHue.length)];

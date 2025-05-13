@@ -15,6 +15,7 @@ import {
   createResolver,
   defineCapability,
   LayoutAction,
+  SettingsPlugin,
   useCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -31,7 +32,6 @@ import { NavTreeContainer } from './NavTreeContainer';
 import { NavTreePlugin } from '../NavTreePlugin';
 import { storybookGraphBuilders } from '../stories';
 
-// TODO(wittjosiah): This doesn't seem to be working.
 faker.seed(1234);
 
 const StoryState = defineCapability<{ tab: string }>('story-state');
@@ -57,6 +57,7 @@ const meta: Meta<typeof NavTreeContainer> = {
         StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
         GraphPlugin(),
         IntentPlugin(),
+        SettingsPlugin(),
         NavTreePlugin(),
       ],
       capabilities: (context) => [
