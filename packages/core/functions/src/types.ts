@@ -4,7 +4,9 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { Expando, OptionsAnnotationId, RawObject, TypedObject, DXN, Ref } from '@dxos/echo-schema';
+import { Expando, OptionsAnnotationId, TypedObject, DXN, Ref, RawObject } from '@dxos/echo-schema';
+
+import { FunctionType } from './schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -31,12 +33,6 @@ const TimerTriggerSchema = Schema.Struct({
     [SchemaAST.TitleAnnotationId]: 'Cron',
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
-  /**
-   * Passed as the input data to the function.
-   * Must match the function's input schema.
-   * This does not get merged with the trigger event.
-   */
-  payload: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
 }).pipe(Schema.mutable);
 
 export type TimerTrigger = Schema.Schema.Type<typeof TimerTriggerSchema>;
@@ -111,8 +107,53 @@ export const TriggerSchema = Schema.Union(
 ).annotations({
   [SchemaAST.TitleAnnotationId]: 'Trigger',
 });
-
 export type TriggerType = Schema.Schema.Type<typeof TriggerSchema>;
+
+export type EventType =
+  | EmailTriggerOutput
+  | WebhookTriggerOutput
+  | QueueTriggerOutput
+  | SubscriptionTriggerOutput
+  | TimerTriggerOutput;
+
+// TODO(burdon): Reuse trigger schema from @dxos/functions (TriggerType).
+export const EmailTriggerOutput = Schema.mutable(
+  Schema.Struct({
+    from: Schema.String,
+    to: Schema.String,
+    subject: Schema.String,
+    created: Schema.String,
+    body: Schema.String,
+  }),
+);
+export type EmailTriggerOutput = Schema.Schema.Type<typeof EmailTriggerOutput>;
+
+export const WebhookTriggerOutput = Schema.mutable(
+  Schema.Struct({
+    url: Schema.String,
+    method: Schema.Literal('GET', 'POST'),
+    headers: Schema.Record({ key: Schema.String, value: Schema.String }),
+    bodyText: Schema.String,
+  }),
+);
+export type WebhookTriggerOutput = Schema.Schema.Type<typeof WebhookTriggerOutput>;
+
+export const QueueTriggerOutput = Schema.mutable(
+  Schema.Struct({
+    queue: DXN,
+    item: Schema.Any,
+    cursor: Schema.String,
+  }),
+);
+export type QueueTriggerOutput = Schema.Schema.Type<typeof QueueTriggerOutput>;
+
+export const SubscriptionTriggerOutput = Schema.mutable(
+  Schema.Struct({ type: Schema.String, changedObjectId: Schema.String }),
+);
+export type SubscriptionTriggerOutput = Schema.Schema.Type<typeof SubscriptionTriggerOutput>;
+
+export const TimerTriggerOutput = Schema.mutable(Schema.Struct({ tick: Schema.Number }));
+export type TimerTriggerOutput = Schema.Schema.Type<typeof TimerTriggerOutput>;
 
 /**
  * Function trigger.
@@ -127,16 +168,28 @@ export const FunctionTriggerSchema = Schema.Struct({
   function: Schema.optional(Ref(Expando).annotations({ [SchemaAST.TitleAnnotationId]: 'Function' })),
 
   /**
-   * Only used for workflows.
+   * Only used for workflowSchema.
    * Specifies the input node in the circuit.
-   * @deprecated Remove and enforce a single input node in all compute graphs.
+   * @deprecated Remove and enforce a single input node in all compute graphSchema.
    */
   inputNodeId: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Input Node ID' })),
 
   enabled: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Enabled' })),
 
-  // TODO(burdon): Flatten entire schema.
   spec: Schema.optional(TriggerSchema),
+
+  /**
+   * Passed as the input data to the function.
+   * Must match the function's input schema.
+   *
+   * @example
+   * {
+   *   item: '{{$.trigger.event}}',
+   *   instructions: 'Summarize and perform entity-extraction'
+   *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
+   * }
+   */
+  input: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
 });
 
 export type FunctionTriggerType = Schema.Schema.Type<typeof FunctionTriggerSchema>;
@@ -145,33 +198,19 @@ export type FunctionTriggerType = Schema.Schema.Type<typeof FunctionTriggerSchem
  * Function trigger.
  */
 export class FunctionTrigger extends TypedObject({
-  typename: 'dxos.org/type/FunctionTrigger',
+  typename: 'dxoSchema.org/type/FunctionTrigger',
   version: '0.1.0',
 })(FunctionTriggerSchema.fields) {}
 
-/**
- * Function definition.
- * @deprecated (Use dxos.org/type/Function)
- */
-// TODO(burdon): Reconcile with FunctionType.
-export class FunctionDef extends TypedObject({
-  typename: 'dxos.org/type/FunctionDef',
-  version: '0.1.0',
-})({
-  uri: Schema.String,
-  description: Schema.optional(Schema.String),
-  route: Schema.String,
-  handler: Schema.String,
-}) {}
+// TODO(wittjosiah): Remove?
 
 /**
  * Function manifest file.
  */
 export const FunctionManifestSchema = Schema.Struct({
-  functions: Schema.optional(Schema.mutable(Schema.Array(RawObject(FunctionDef)))),
+  functions: Schema.optional(Schema.mutable(Schema.Array(RawObject(FunctionType)))),
   triggers: Schema.optional(Schema.mutable(Schema.Array(RawObject(FunctionTrigger)))),
 });
-
 export type FunctionManifest = Schema.Schema.Type<typeof FunctionManifestSchema>;
 
-export const FUNCTION_TYPES = [FunctionDef, FunctionTrigger];
+export const FUNCTION_TYPES = [FunctionType, FunctionTrigger];
