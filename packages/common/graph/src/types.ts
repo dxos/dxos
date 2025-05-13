@@ -3,6 +3,7 @@
 //
 
 import { Schema } from 'effect';
+
 import { type Specialize } from '@dxos/util';
 
 export const BaseGraphNode = Schema.Struct({
@@ -48,7 +49,10 @@ export declare namespace GraphEdge {
 /**
  * Allows any additional properties on graph nodes.
  */
-const ExtendableBaseGraphNode = Schema.extend(BaseGraphNode, Schema.Struct({}, { key: Schema.String, value: Schema.Any }));
+const ExtendableBaseGraphNode = Schema.extend(
+  BaseGraphNode,
+  Schema.Struct({}, { key: Schema.String, value: Schema.Any }),
+);
 
 /**
  * Generic graph.

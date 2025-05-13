@@ -6,7 +6,6 @@ import { Schema } from 'effect';
 import React from 'react';
 
 import { AppendInput } from '@dxos/conductor';
-
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';

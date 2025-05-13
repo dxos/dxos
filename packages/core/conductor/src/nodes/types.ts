@@ -3,6 +3,7 @@
 //
 
 import { Schema } from 'effect';
+
 import { Tool, Message } from '@dxos/artifact';
 import { type GenerationStreamEvent } from '@dxos/assistant';
 import { ObjectId } from '@dxos/echo-schema';
@@ -62,10 +63,14 @@ export type DatabaseOutput = Schema.Schema.Type<typeof DatabaseOutput>;
 export const IfInput = Schema.mutable(Schema.Struct({ condition: Schema.Boolean, value: Schema.Any }));
 export type IfInput = Schema.Schema.Type<typeof IfInput>;
 
-export const IfOutput = Schema.mutable(Schema.Struct({ true: Schema.optional(Schema.Any), false: Schema.optional(Schema.Any) }));
+export const IfOutput = Schema.mutable(
+  Schema.Struct({ true: Schema.optional(Schema.Any), false: Schema.optional(Schema.Any) }),
+);
 export type IfOutput = Schema.Schema.Type<typeof IfOutput>;
 
-export const IfElseInput = Schema.mutable(Schema.Struct({ condition: Schema.Boolean, true: Schema.Any, false: Schema.Any }));
+export const IfElseInput = Schema.mutable(
+  Schema.Struct({ condition: Schema.Boolean, true: Schema.Any, false: Schema.Any }),
+);
 export type IfElseInput = Schema.Schema.Type<typeof IfElseInput>;
 
 export const IfElseOutput = Schema.mutable(Schema.Struct({ [DEFAULT_OUTPUT]: Schema.optional(Schema.Any) }));

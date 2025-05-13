@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
-
 import { Schema } from 'effect';
+import React from 'react';
 
 import { DEFAULT_INPUT, isTruthy } from '@dxos/conductor';
 import { Icon } from '@dxos/react-ui';

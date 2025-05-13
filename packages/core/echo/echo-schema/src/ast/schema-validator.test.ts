@@ -27,7 +27,9 @@ describe('schema-validator', () => {
       const TestSchema: Schema.Schema.AnyNoContext = Schema.Struct({
         name: Schema.String.annotations({ [annotationId]: annotationValue }),
         parent: Schema.optional(Schema.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
-        friends: Schema.suspend(() => Schema.mutable(Schema.Array(TestSchema.annotations({ [annotationId]: annotationValue })))),
+        friends: Schema.suspend(() =>
+          Schema.mutable(Schema.Array(TestSchema.annotations({ [annotationId]: annotationValue }))),
+        ),
       });
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'name', annotationId)).to.be.true;
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'parent', annotationId)).to.be.true;
@@ -85,7 +87,9 @@ describe('schema-validator', () => {
       const annotationValue = 'bar';
       const Person: Schema.Schema.AnyNoContext = Schema.Struct({
         parent: Schema.optional(Schema.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
-        friends: Schema.suspend(() => Schema.mutable(Schema.Array(Person.annotations({ [annotationId]: annotationValue })))),
+        friends: Schema.suspend(() =>
+          Schema.mutable(Schema.Array(Person.annotations({ [annotationId]: annotationValue }))),
+        ),
       });
       expect(SchemaValidator.getPropertySchema(Person, ['parent']).ast.annotations[annotationId]).to.eq(
         annotationValue,
@@ -144,7 +148,9 @@ describe('schema-validator', () => {
     test('index signature from optional record', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
-          schema: Schema.Struct({ field: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Number })) }),
+          schema: Schema.Struct({
+            field: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Number })),
+          }),
           target: {},
           path: ['field', 'unknownField'],
           valueToAssign: value,
@@ -156,7 +162,9 @@ describe('schema-validator', () => {
     test('suspend', () => {
       const schemaWithSuspend = Schema.Struct({
         array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union(Schema.Null, Schema.Number)))),
-        object: Schema.optional(Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number })))),
+        object: Schema.optional(
+          Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number }))),
+        ),
       });
       const target: any = { array: [1, 2, null], object: { field: 3 } };
       for (const value of [42, '42']) {

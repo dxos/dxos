@@ -6,7 +6,6 @@ import { Schema } from 'effect';
 import React, { useCallback, useMemo } from 'react';
 
 import { live } from '@dxos/react-client/echo';
-
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';

@@ -4,9 +4,8 @@
 
 import '@dxos-theme';
 
-import { Schema } from 'effect';
-
 import { type Meta, type StoryObj } from '@storybook/react';
+import { Schema } from 'effect';
 import React, { useState } from 'react';
 
 import { SelectOptionSchema, type SelectOption } from '@dxos/echo-schema';

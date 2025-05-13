@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
-
 import { Schema } from 'effect';
+import React from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Input, Message, useTranslation } from '@dxos/react-ui';

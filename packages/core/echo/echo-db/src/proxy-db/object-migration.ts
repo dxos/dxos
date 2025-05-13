@@ -17,7 +17,10 @@ type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To ex
    * Pure function that converts the old object data to the new object data.
    */
   // TODO(dmaretskyi): `id` should not be a part of the schema.
-  transform: (from: Schema.Schema.Type<From>, context: ObjectMigrationContext) => Promise<Omit<Schema.Schema.Type<To>, 'id'>>;
+  transform: (
+    from: Schema.Schema.Type<From>,
+    context: ObjectMigrationContext,
+  ) => Promise<Omit<Schema.Schema.Type<To>, 'id'>>;
 
   /**
    * Callback that is called after the object is migrated. Called for every object that is migrated.

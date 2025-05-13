@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, test } from 'vitest';
-
 import { Schema } from 'effect';
+import { describe, test } from 'vitest';
 
 import { GraphModel } from './model';
 import { BaseGraphNode, type GraphNode } from './types';

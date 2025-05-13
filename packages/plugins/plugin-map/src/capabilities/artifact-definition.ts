@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema,pipe } from 'effect';
+import { Schema, pipe } from 'effect';
 
 import { Capabilities, chain, createIntent, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';

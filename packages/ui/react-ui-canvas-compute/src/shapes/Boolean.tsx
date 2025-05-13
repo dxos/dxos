@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
-  
 import { Schema } from 'effect';
+import React, { type FC } from 'react';
 
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchors, getAnchorPoints } from '@dxos/react-ui-canvas-editor';

@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
-
 import { Schema } from 'effect';
+import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';

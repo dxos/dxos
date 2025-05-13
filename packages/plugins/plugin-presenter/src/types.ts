@@ -3,7 +3,6 @@
 //
 
 import { Schema } from 'effect';
-
 import { type Context, createContext } from 'react';
 
 import { DocumentType } from '@dxos/plugin-markdown/types';

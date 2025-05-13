@@ -61,10 +61,13 @@ export namespace ClientAction {
     output: Schema.Void,
   }) {}
 
-  export class CreateRecoveryCode extends Schema.TaggedClass<CreateRecoveryCode>()(`${CLIENT_ACTION}/create-recovery-code`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
+  export class CreateRecoveryCode extends Schema.TaggedClass<CreateRecoveryCode>()(
+    `${CLIENT_ACTION}/create-recovery-code`,
+    {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  ) {}
 
   export class CreatePasskey extends Schema.TaggedClass<CreatePasskey>()(`${CLIENT_ACTION}/create-passkey`, {
     input: Schema.Void,

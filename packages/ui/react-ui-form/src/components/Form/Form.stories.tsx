@@ -4,9 +4,8 @@
 
 import '@dxos-theme';
 
-import { Schema, SchemaAST } from 'effect';
-
 import { type Meta, type StoryObj } from '@storybook/react';
+import { Schema, SchemaAST } from 'effect';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
@@ -23,7 +22,9 @@ import { TestLayout, TestPanel } from '../testing';
 const AddressSchema = Schema.Struct({
   street: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Street' })),
   city: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'City' })),
-  zip: Schema.optional(Schema.String.pipe(Schema.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [SchemaAST.TitleAnnotationId]: 'ZIP' })),
+  zip: Schema.optional(
+    Schema.String.pipe(Schema.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [SchemaAST.TitleAnnotationId]: 'ZIP' }),
+  ),
   location: Schema.optional(Format.GeoPoint.annotations({ [SchemaAST.TitleAnnotationId]: 'Location' })),
 }).annotations({ [SchemaAST.TitleAnnotationId]: 'Address' });
 
@@ -128,7 +129,9 @@ const ShapeSchema = Schema.Struct({
       }),
       Schema.Struct({
         type: Schema.Literal('square').annotations({ [SchemaAST.TitleAnnotationId]: 'Type' }),
-        size: Schema.optional(Schema.Number.pipe(Schema.nonNegative()).annotations({ [SchemaAST.TitleAnnotationId]: 'Size' })),
+        size: Schema.optional(
+          Schema.Number.pipe(Schema.nonNegative()).annotations({ [SchemaAST.TitleAnnotationId]: 'Size' }),
+        ),
       }),
     ).annotations({ [SchemaAST.TitleAnnotationId]: 'Shape' }),
   ),

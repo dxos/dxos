@@ -3,7 +3,6 @@
 //
 
 import { type TLStore } from '@tldraw/tlschema';
-
 import { Schema } from 'effect';
 
 import { DiagramType } from './diagram';
