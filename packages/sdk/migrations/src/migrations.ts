@@ -28,7 +28,7 @@ export class Migrations {
   }
 
   static get targetVersion() {
-    return this.migrations[this.migrations.length - 1].version;
+    return this.migrations[this.migrations.length - 1]?.version;
   }
 
   static running(space: Space) {

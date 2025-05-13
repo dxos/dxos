@@ -4,9 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Expando } from '@dxos/echo-schema';
+import { Expando, Ref } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { getObjectCore } from './echo-handler';
@@ -95,7 +95,7 @@ describe('HyperGraph', () => {
       }),
     );
 
-    obj1.link = makeRef(obj2);
+    obj1.link = Ref.make(obj2);
     expect(obj1.link.target?.title).to.eq('B');
 
     await Promise.all([db1.flush(), db2.flush()]);
@@ -128,7 +128,7 @@ describe('HyperGraph', () => {
         title: 'B',
       }),
     );
-    obj1.link = makeRef(obj2);
+    obj1.link = Ref.make(obj2);
     await Promise.all([db1.flush(), db2.flush()]);
     expect(obj1.link.target?.title).to.eq('B');
 

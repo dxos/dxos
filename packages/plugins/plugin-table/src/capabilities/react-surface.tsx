@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { getTypenameOrThrow, isInstanceOf, type Ref, type S } from '@dxos/echo-schema';
+import { getTypenameOrThrow, isInstanceOf, type Ref } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
+import { getSpace, isEchoObject, isSpace, type AnyLiveObject, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TableType } from '@dxos/react-ui-table';
@@ -31,12 +32,12 @@ export default () =>
     createSurface({
       id: `${meta.id}/companion/schema`,
       role: 'article',
-      filter: (data): data is { subject: TableType } =>
-        isInstanceOf(TableType, data.subject) && data.variant === 'schema',
+      filter: (data): data is { companionTo: TableType; subject: 'schema' } =>
+        isInstanceOf(TableType, data.companionTo) && data.subject === 'schema',
       component: ({ data, role }) => {
         return (
           <StackItem.Content role={role}>
-            <TableViewEditor table={data.subject} />
+            <TableViewEditor table={data.companionTo} />
           </StackItem.Content>
         );
       },
@@ -53,7 +54,7 @@ export default () =>
       filter: (
         data,
       ): data is {
-        companionTo: ReactiveEchoObject<{ view: Ref<ViewType> } | { cardView: Ref<ViewType> }>;
+        companionTo: AnyLiveObject<{ view: Ref<ViewType> } | { cardView: Ref<ViewType> }>;
       } => {
         if (data.subject !== 'selected-objects' || !data.companionTo || !isEchoObject(data.companionTo)) {
           return false;
@@ -79,12 +80,14 @@ export default () =>
     createSurface({
       id: `${meta.id}/create-initial-schema-form`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
         if (data.prop !== 'typename') {
           return false;
         }
 
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, TypenameAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {

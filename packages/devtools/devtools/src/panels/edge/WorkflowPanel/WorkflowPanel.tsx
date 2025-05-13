@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+import { SchemaAST } from 'effect';
 import React, { useMemo, useState } from 'react';
 
 import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
 import { Filter } from '@dxos/echo-db';
-import { AST, FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { useQuery, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -102,8 +103,8 @@ export const WorkflowPanel = (props: { space?: Space }) => {
 const toWorkflow = async (loader: WorkflowLoader, graph: ComputeGraph) => {
   try {
     const loaded = await loader.load(DXN.fromLocalObjectId(graph.id));
-    const mapProps = (ast: AST.AST) =>
-      Object.fromEntries(AST.getPropertySignatures(ast).map((prop) => [prop.name, prop.type]));
+    const mapProps = (ast: SchemaAST.AST) =>
+      Object.fromEntries(SchemaAST.getPropertySignatures(ast).map((prop) => [prop.name, prop.type]));
     const workflowMeta = loaded.resolveMeta();
     return {
       compiled: true,

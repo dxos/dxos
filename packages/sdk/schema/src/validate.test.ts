@@ -2,22 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, ParseResult, Either, Option } from 'effect';
+import { Schema, SchemaAST, ParseResult, Either, Option } from 'effect';
 import { describe, test } from 'vitest';
 
-import { type PropertyKey, S } from '@dxos/echo-schema';
+import { type PropertyKey } from '@dxos/echo-schema';
 
 describe('validate', () => {
   test('clamp', ({ expect }) => {
-    const TestSchema = S.Number.pipe(S.clamp(-180, 180));
-    const decoder = S.decodeUnknownOption(TestSchema);
+    const TestSchema = Schema.Number.pipe(Schema.clamp(-180, 180));
+    const decoder = Schema.decodeUnknownOption(TestSchema);
     expect(decoder(200).pipe(Option.getOrUndefined)).to.eq(180);
     expect(decoder(-300).pipe(Option.getOrUndefined)).to.eq(-180);
   });
 
   test('error', ({ expect }) => {
-    const TestSchema = S.Number.pipe(S.multipleOf(0.01));
-    const decoder = S.validateEither(TestSchema, { errors: 'first' });
+    const TestSchema = Schema.Number.pipe(Schema.multipleOf(0.01));
+    const decoder = Schema.validateEither(TestSchema, { errors: 'first' });
 
     {
       const value = decoder(0.01);
@@ -36,16 +36,16 @@ describe('validate', () => {
   });
 
   test('Schema to/from AST', ({ expect }) => {
-    const TestSchema = S.Struct({
-      name: S.String.pipe(S.pattern(/^\w+$/)),
-    }).pipe(S.mutable);
+    const TestSchema = Schema.Struct({
+      name: Schema.String.pipe(Schema.pattern(/^\w+$/)),
+    }).pipe(Schema.mutable);
 
-    type TestType = S.Schema.Type<typeof TestSchema>;
+    type TestType = Schema.Schema.Type<typeof TestSchema>;
 
     // Convert to/from AST.
-    const s1: S.Schema<TestType> = TestSchema;
-    expect(AST.isTypeLiteral(s1.ast)).to.be.true;
-    const s2 = S.make(s1.ast);
+    const s1: Schema.Schema<TestType> = TestSchema;
+    expect(SchemaAST.isTypeLiteral(s1.ast)).to.be.true;
+    const s2 = Schema.make(s1.ast);
     expect(s1.ast.toJSON()).to.deep.eq(s2.ast.toJSON());
 
     const obj: TestType = {
@@ -53,10 +53,10 @@ describe('validate', () => {
     };
 
     // Validate each field.
-    for (const prop of AST.getPropertySignatures(TestSchema.ast)) {
+    for (const prop of SchemaAST.getPropertySignatures(TestSchema.ast)) {
       const name = prop.name.toString() as PropertyKey<TestType>;
-      const schema = S.make(prop.type);
-      const decoder = S.validateEither(schema, { errors: 'first' });
+      const schema = Schema.make(prop.type);
+      const decoder = Schema.validateEither(schema, { errors: 'first' });
       const value = obj[name];
       const result = decoder(value);
       expect(Either.isLeft(result)).to.be.false;

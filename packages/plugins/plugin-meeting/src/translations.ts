@@ -26,6 +26,9 @@ export default [
         'set display name label': 'Continue',
 
         'call tab label': 'Call',
+        'meeting status title': 'Meeting',
+        'share meeting link label': 'Share meeting',
+        'show webrtc stats title': 'Detailed WebRTC Stats',
 
         'meeting summary label': 'Summary',
         'summarize label': 'Summarize',

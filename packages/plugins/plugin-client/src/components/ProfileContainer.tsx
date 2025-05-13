@@ -2,14 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
-import { Form, type InputComponent, ControlItem, ControlItemInput, ControlSection } from '@dxos/react-ui-form';
+import {
+  Form,
+  type InputComponent,
+  ControlItem,
+  ControlItemInput,
+  ControlSection,
+  ControlPage,
+} from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 import { hexToHue, hexToEmoji } from '@dxos/util';
@@ -136,28 +143,30 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <StackItem.Content classNames='p-2 block overflow-y-auto'>
-      <Clipboard.Provider>
-        <ControlSection title={t('profile label')} description={t('profile description')}>
-          <Form
-            schema={ProfileSchema}
-            values={values}
-            autoSave
-            onSave={handleSave}
-            Custom={customElements}
-            classNames='p-0 container-max-width [&_[role="form"]]:grid [&_[role="form"]]:grid-cols-1 md:[&_[role="form"]]:grid-cols-[1fr_min-content] [&_[role="form"]]:gap-4'
-          />
-        </ControlSection>
-      </Clipboard.Provider>
+    <StackItem.Content classNames='block overflow-y-auto'>
+      <ControlPage>
+        <Clipboard.Provider>
+          <ControlSection title={t('profile label')} description={t('profile description')}>
+            <Form
+              schema={ProfileSchema}
+              values={values}
+              autoSave
+              onSave={handleSave}
+              Custom={customElements}
+              classNames='p-0 container-max-width [&_[role="form"]]:grid [&_[role="form"]]:grid-cols-1 md:[&_[role="form"]]:grid-cols-[1fr_min-content] [&_[role="form"]]:gap-4'
+            />
+          </ControlSection>
+        </Clipboard.Provider>
+      </ControlPage>
     </StackItem.Content>
   );
 };
 
 // TODO(wittjosiah): Integrate annotations with translations.
-const ProfileSchema = S.Struct({
-  displayName: S.String.annotations({ title: 'Display name' }),
-  emoji: S.String.annotations({ title: 'Avatar' }),
-  hue: S.String.annotations({ title: 'Color' }),
-  did: S.String.annotations({ title: 'DID' }),
+const ProfileSchema = Schema.Struct({
+  displayName: Schema.String.annotations({ title: 'Display name' }),
+  emoji: Schema.String.annotations({ title: 'Avatar' }),
+  hue: Schema.String.annotations({ title: 'Color' }),
+  did: Schema.String.annotations({ title: 'DID' }),
 });
-type Profile = S.Schema.Type<typeof ProfileSchema>;
+type Profile = Schema.Schema.Type<typeof ProfileSchema>;

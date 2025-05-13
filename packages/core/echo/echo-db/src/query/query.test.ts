@@ -2,22 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { Expando, RelationSourceId, RelationTargetId, S, TypedObject, type Ref } from '@dxos/echo-schema';
+import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, getMeta, makeRef } from '@dxos/live-object';
+import { live, getMeta } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
-import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
+import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
@@ -111,7 +112,7 @@ describe('Queries', () => {
 
     test('filter by reference', async () => {
       const objA = db.add(live(Expando, { label: 'obj a' }));
-      const objB = db.add(live(Expando, { label: 'obj b', ref: makeRef(objA) }));
+      const objB = db.add(live(Expando, { label: 'obj b', ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
       const { objects } = await db.query(Filter.schema(Expando, { ref: objA })).run();
@@ -325,12 +326,12 @@ describe('Queries', () => {
     const { peer, db, graph } = await builder.createDatabase();
 
     class ContactV1 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
-      firstName: S.String,
-      lastName: S.String,
+      firstName: Schema.String,
+      lastName: Schema.String,
     }) {}
 
     class ContactV2 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.2.0' })({
-      name: S.String,
+      name: Schema.String,
     }) {}
 
     graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
@@ -388,7 +389,7 @@ describe('Queries', () => {
 describe('Query reactivity', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
-  let objects: ReactiveEchoObject<any>[];
+  let objects: AnyLiveObject<any>[];
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
@@ -566,7 +567,7 @@ test('map over refs in query result', async () => {
   const folder = db.add(live(Expando, { name: 'folder', objects: [] as any[] }));
   const objects = range(3).map((idx) => createTestObject(idx));
   for (const object of objects) {
-    folder.objects.push(makeRef(object));
+    folder.objects.push(Ref.make(object));
   }
 
   const queryResult = await db.query({ name: 'folder' }).run();

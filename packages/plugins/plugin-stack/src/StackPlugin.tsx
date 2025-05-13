@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { type ReactiveEchoObject, fullyQualifiedId } from '@dxos/client/echo';
+import { type AnyLiveObject, fullyQualifiedId } from '@dxos/client/echo';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -29,7 +29,7 @@ export const StackPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: SECTION_IDENTIFIER,
           metadata: {
-            parse: (section: { object: ReactiveEchoObject<any> }, type: string) => {
+            parse: (section: { object: AnyLiveObject<any> }, type: string) => {
               switch (type) {
                 case 'node':
                   // TODO(wittjosiah): Remove cast.

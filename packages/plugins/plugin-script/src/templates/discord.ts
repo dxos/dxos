@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { createStatic, EchoObject, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
+import { create, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
 import {
   FetchHttpClient,
   // @ts-ignore
@@ -13,13 +13,20 @@ import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'https://esm.s
 // @ts-ignore
 import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.13.3';
 
+import { Type } from '@dxos/echo';
+
 const MessageSchema = S.Struct({
-  id: S.String,
+  id: ObjectId,
   foreignId: S.Any, // bigint?
   from: S.String,
   created: S.String,
   content: S.String,
-}).pipe(EchoObject({ typename: 'example.com/type/Message', version: '0.1.0' }));
+}).pipe(
+  Type.def({
+    typename: 'example.com/type/Message',
+    version: '0.1.0',
+  }),
+);
 
 const DEFAULT_AFTER = 1704067200; // 2024-01-01
 
@@ -73,7 +80,7 @@ export default defineFunction({
           const messages = yield* rest.getChannelMessages(channelId, options).pipe((res: any) => res.json);
           const queueMessages = messages
             .map((message: any) =>
-              createStatic(MessageSchema, {
+              create(MessageSchema, {
                 id: ObjectId.random(),
                 foreignId: message.id,
                 from: message.author.username,

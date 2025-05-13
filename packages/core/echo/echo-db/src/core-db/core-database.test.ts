@@ -7,18 +7,18 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { Expando } from '@dxos/echo-schema';
+import { Expando, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, getType, makeRef } from '@dxos/live-object';
+import { live, getType } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
 import { type DocHandleProxy, type RepoProxy } from '../client';
-import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
+import { getObjectCore, type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 
@@ -70,7 +70,7 @@ describe('CoreDatabase', () => {
     test('effect nested reference access triggers document loading', async () => {
       registerSignalsRuntime();
 
-      const document = createExpando({ text: makeRef(createTextObject('Hello, world!')) });
+      const document = createExpando({ text: Ref.make(createTextObject('Hello, world!')) });
       const db = await createClientDbInSpaceWithObject(document);
       const loadedDocument = (await db.query({ id: document.id }).first()!) as Expando;
       expect(loadedDocument).not.to.be.undefined;
@@ -158,9 +158,9 @@ describe('CoreDatabase', () => {
 
     test('linked objects are loaded on update only if they were loaded before', async () => {
       const stack = createExpando({
-        notLoadedDocument: makeRef(createTextObject('text1')),
-        loadedDocument: makeRef(createTextObject('text2')),
-        partiallyLoadedDocument: makeRef(createTextObject('text3')),
+        notLoadedDocument: Ref.make(createTextObject('text1')),
+        loadedDocument: Ref.make(createTextObject('text2')),
+        partiallyLoadedDocument: Ref.make(createTextObject('text3')),
       });
       const db = await createClientDbInSpaceWithObject(stack);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
@@ -182,9 +182,9 @@ describe('CoreDatabase', () => {
 
     test('linked objects can be remapped', async () => {
       const stack = createExpando({
-        text1: makeRef(createTextObject('text1')),
-        text2: makeRef(createTextObject('text2')),
-        text3: makeRef(createTextObject('text3')),
+        text1: Ref.make(createTextObject('text1')),
+        text2: Ref.make(createTextObject('text2')),
+        text3: Ref.make(createTextObject('text3')),
       });
       const db = await createClientDbInSpaceWithObject(stack);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
@@ -263,7 +263,7 @@ describe('CoreDatabase', () => {
       const rootObject = [linksToRemove, loadedLinks, partiallyLoadedLinks]
         .flatMap((v: any[]) => v)
         .reduce((acc: Expando, obj: any) => {
-          acc[obj.id] = makeRef(obj);
+          acc[obj.id] = Ref.make(obj);
           return acc;
         }, createExpando());
 
@@ -374,7 +374,7 @@ describe('CoreDatabase', () => {
       });
 
       expect(contact.name).to.eq('Bar');
-      expect(getType(contact)?.toDXN().toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
+      expect(getType(contact)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
     });
   });
 });
@@ -387,7 +387,7 @@ const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 
 const createClientDbInSpaceWithObject = async (
-  object: ReactiveEchoObject<any>,
+  object: AnyLiveObject<any>,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<EchoDatabaseImpl> => {
   const kv = createTestLevel();
@@ -406,12 +406,12 @@ const createClientDbInSpaceWithObject = async (
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
 
-const createExpando = (props: any = {}): ReactiveEchoObject<Expando> => {
+const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
   return live(Expando, props);
 };
 
-const createTextObject = (content: string = ''): ReactiveEchoObject<{ content: string }> => {
-  return live(Expando, { content }) as ReactiveEchoObject<{ content: string }>;
+const createTextObject = (content: string = ''): AnyLiveObject<{ content: string }> => {
+  return live(Expando, { content }) as AnyLiveObject<{ content: string }>;
 };
 
 interface DocumentHandles {

@@ -2,20 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 export type IntentParams = {
-  readonly input: S.Schema.All;
-  readonly output: S.Schema.All;
+  readonly input: Schema.Schema.All;
+  readonly output: Schema.Schema.All;
 };
 
 export type IntentData<Fields extends IntentParams> =
-  S.Schema.Type<S.Struct<Fields>> extends { readonly input: any } ? S.Schema.Type<S.Struct<Fields>>['input'] : any;
+  Schema.Schema.Type<Schema.Struct<Fields>> extends { readonly input: any }
+    ? Schema.Schema.Type<Schema.Struct<Fields>>['input']
+    : any;
 
 export type IntentResultData<Fields extends IntentParams> =
-  S.Schema.Type<S.Struct<Fields>> extends { readonly output: any } ? S.Schema.Type<S.Struct<Fields>>['output'] : any;
+  Schema.Schema.Type<Schema.Struct<Fields>> extends { readonly output: any }
+    ? Schema.Schema.Type<Schema.Struct<Fields>>['output']
+    : any;
 
-export type IntentSchema<Tag extends string, Fields extends IntentParams> = S.TaggedClass<any, Tag, Fields>;
+export type IntentSchema<Tag extends string, Fields extends IntentParams> = Schema.TaggedClass<any, Tag, Fields>;
 
 /**
  * An intent is an abstract description of an operation to be performed.
@@ -80,7 +84,7 @@ export const createIntent = <Tag extends string, Fields extends IntentParams>(
 ): IntentChain<Tag, Tag, Fields, Fields> => {
   // The output of validateSync breaks proxy objects so this is just used for validation.
   // TODO(wittjosiah): Is there a better way to make theses types align?
-  const _ = S.validateSync(schema.fields.input as S.Schema<any, any, unknown>)(data);
+  const _ = Schema.validateSync(schema.fields.input as Schema.Schema<any, any, unknown>)(data);
   const intent = {
     ...params,
     _schema: schema,
@@ -139,8 +143,13 @@ export const chain =
 
 // NOTE: Should maintain compatibility with `i18next` (and @dxos/react-ui).
 // TODO(wittjosiah): Making this immutable breaks type compatibility.
-export const Label = S.Union(
-  S.String,
-  S.mutable(S.Tuple(S.String, S.mutable(S.Struct({ ns: S.String, count: S.optional(S.Number) })))),
+export const Label = Schema.Union(
+  Schema.String,
+  Schema.mutable(
+    Schema.Tuple(
+      Schema.String,
+      Schema.mutable(Schema.Struct({ ns: Schema.String, count: Schema.optional(Schema.Number) })),
+    ),
+  ),
 );
-export type Label = S.Schema.Type<typeof Label>;
+export type Label = Schema.Schema.Type<typeof Label>;

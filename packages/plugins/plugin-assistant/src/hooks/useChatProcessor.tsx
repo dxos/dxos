@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { type AssociatedArtifact, createSystemPrompt, type Tool } from '@dxos/artifact';
 import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL } from '@dxos/assistant';
-import { FunctionType } from '@dxos/functions/types';
+import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Space, useQuery } from '@dxos/react-client/echo';
@@ -33,7 +33,8 @@ export const useChatProcessor = ({
   chat,
   space,
   settings,
-  part = 'deck',
+  // part = 'deck',
+  part,
   associatedArtifact,
 }: UseChatProcessorProps): ChatProcessor => {
   const aiClient = useCapability(AssistantCapabilities.AiClient);

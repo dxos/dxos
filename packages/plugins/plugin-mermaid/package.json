@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-mermaid",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Mermaid markdown plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,6 +30,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "effect": "^3.13.3",
     "mermaid": "^10.6.1"
   },
   "devDependencies": {
@@ -49,6 +50,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

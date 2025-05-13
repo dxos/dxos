@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Brand, type Schema as S } from 'effect';
+import { type Brand, type Schema } from 'effect';
 
 import type { CleanupFn } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
@@ -10,7 +10,7 @@ import type { symbolSchema } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { ComplexMap } from '@dxos/util';
 
-import { type ReactiveEchoObject } from './create';
+import { type AnyLiveObject } from './create';
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { ObjectCore, KeyPath } from '../core-db';
@@ -74,7 +74,7 @@ export class ObjectInternals {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
-  linkCache: Map<string, ReactiveEchoObject<any>> | undefined = new Map<string, ReactiveEchoObject<any>>();
+  linkCache: Map<string, AnyLiveObject<any>> | undefined = new Map<string, AnyLiveObject<any>>();
 
   subscriptions: CleanupFn[] = [];
 
@@ -82,7 +82,7 @@ export class ObjectInternals {
    * Schema of the root object.
    * Only used if this is not bound to a database.
    */
-  rootSchema?: S.Schema.AnyNoContext = undefined;
+  rootSchema?: Schema.Schema.AnyNoContext = undefined;
 
   constructor(core: ObjectCore, database?: EchoDatabase) {
     this.core = core;
@@ -122,5 +122,5 @@ export type ProxyTarget = {
   /**
    * Used for objects created by `createObject`.
    */
-  [symbolSchema]?: S.Schema.AnyNoContext;
+  [symbolSchema]?: Schema.Schema.AnyNoContext;
 } & ({ [key: keyof any]: any } | EchoArray<any>);

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-protocol",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,6 +29,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -36,7 +37,11 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "base-x": "~3.0.9"
+    "base-x": "~3.0.9",
+    "effect": "3.14.21"
+  },
+  "peerDependencies": {
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"

@@ -53,7 +53,7 @@ export const Toolbar = ({
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
   // TODO(burdon): Create large toolbar/button sizes.
-  // TODO(wittjosiah): Use toolbar. In order to use toolbar, it needs to be updated to actually use the graph action callbacks directly.
+  // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('flex justify-center m-4', call.joined && autoHideControls && hoverableHidden)}>
       <div className='bg-modalSurface p-2 rounded-lg shadow-lg'>
@@ -117,11 +117,11 @@ export const Toolbar = ({
                 }}
               />
 
-              {/* TODO(burdon): Companion actions. */}
+              {/* Companion actions. */}
               {actions.map((action) => (
                 <IconButton
                   key={action.id}
-                  iconOnly
+                  {...defaultButtonProps}
                   icon={action.properties.icon}
                   label={toLocalizedString(action.properties.label, t)}
                   classNames={action.properties.classNames}
@@ -168,11 +168,14 @@ type ToolbarButtonProps = Pick<IconButtonProps, 'disabled'> & {
   };
 };
 
-// TODO(burdon): Move to react-ui.
+const defaultButtonProps: Partial<IconButtonProps> = {
+  size: 5,
+  iconOnly: true,
+};
+
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
   <IconButton
-    iconOnly
-    size={5}
+    {...defaultButtonProps}
     classNames={[active ? state.on.classNames ?? 'bg-callActive' : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}
     label={active ? state.on.label : state.off.label}

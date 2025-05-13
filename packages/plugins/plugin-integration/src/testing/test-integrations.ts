@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createStatic } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { type BaseIntegrationRegistry, type IntegrationQuery, IntegrationDefinition } from '../types';
@@ -16,7 +16,7 @@ export class MockIntegrationRegistry implements BaseIntegrationRegistry {
 }
 
 export const TEST_INTEGRATIONS: IntegrationDefinition[] = [
-  createStatic(IntegrationDefinition, {
+  create(IntegrationDefinition, {
     serviceId: 'google.com/service/mail',
     name: 'Gmail',
     description: 'Connect to your Gmail account.',
@@ -30,7 +30,7 @@ export const TEST_INTEGRATIONS: IntegrationDefinition[] = [
     },
   }),
 
-  createStatic(IntegrationDefinition, {
+  create(IntegrationDefinition, {
     serviceId: 'google.com/service/calendar',
     name: 'Google Calendar',
     description: 'Connect to your Google Calendar.',
@@ -44,7 +44,7 @@ export const TEST_INTEGRATIONS: IntegrationDefinition[] = [
     },
   }),
 
-  createStatic(IntegrationDefinition, {
+  create(IntegrationDefinition, {
     serviceId: 'discord.com/service/guild',
     name: 'Discord',
     description: 'Connect to your Discord server.',
@@ -56,7 +56,7 @@ export const TEST_INTEGRATIONS: IntegrationDefinition[] = [
     },
   }),
 
-  createStatic(IntegrationDefinition, {
+  create(IntegrationDefinition, {
     serviceId: 'github.com/service/account',
     name: 'GitHub',
     description: 'Connect to your GitHub account.',
@@ -68,35 +68,35 @@ export const TEST_INTEGRATIONS: IntegrationDefinition[] = [
     },
   }),
 
-  createStatic(IntegrationDefinition, {
+  create(IntegrationDefinition, {
     serviceId: 'amadeus.com/service/FlightSearch',
     name: 'Amadeus Flights',
     description: 'Search for local and international flights via Amadeus.',
     icon: 'ph--airplane-takeoff--regular',
   }),
 
-  createStatic(IntegrationDefinition, {
+  create(IntegrationDefinition, {
     serviceId: 'amadeus.com/service/HotelSearch',
     name: 'Amadeus Hotels',
     description: 'Search for local and international hotels via Amadeus.',
     icon: 'ph--bed--regular',
   }),
 
-  createStatic(IntegrationDefinition, {
+  create(IntegrationDefinition, {
     serviceId: 'bsky.app/service/account',
     name: 'Bluesky',
     description: 'Connect to your Bluesky account.',
     icon: 'ph--butterfly--regular',
   }),
 
-  createStatic(IntegrationDefinition, {
+  create(IntegrationDefinition, {
     serviceId: 'visualcrossing.com/service/Weather',
     name: 'Weather',
     description: 'Search for global weather forecasts via Visual Crossing.',
     icon: 'ph--cloud-sun--regular',
   }),
 
-  createStatic(IntegrationDefinition, {
+  create(IntegrationDefinition, {
     serviceId: 'abstractapi.com/service/GeoLocation',
     name: 'GeoLocation',
     description: 'Get the location of any IP address via AbstractAPI.',

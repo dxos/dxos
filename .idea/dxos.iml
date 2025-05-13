@@ -10,6 +10,8 @@
       <excludeFolder url="file://$MODULE_DIR$/.nx" />
       <excludeFolder url="file://$MODULE_DIR$/.swc" />
       <excludeFolder url="file://$MODULE_DIR$/packages/apps/testbench-app/.partykit" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/swc-log-plugin/.cargo" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/swc-log-plugin/target" />
       <excludePattern pattern="dist" />
       <excludePattern pattern="gen" />
       <excludePattern pattern="out" />

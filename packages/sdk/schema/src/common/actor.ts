@@ -2,35 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EchoObject, Ref, S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-// TODO(wittjosiah): Factor out to halo?
-export const ContactType = S.Struct({
-  name: S.optional(S.String),
-  identifiers: S.mutable(
-    S.Array(
-      S.Struct({
-        type: S.String,
-        value: S.String,
-      }),
-    ),
-  ),
-}).pipe(EchoObject({ typename: 'dxos.org/type/Contact', version: '0.1.0' }));
-export type ContactType = S.Schema.Type<typeof ContactType>;
+import { Type } from '@dxos/echo';
 
+import { Person } from './person';
+
+// TOOD(burdon): Rename; this is very specific to AI.
 export const ActorRoles = ['user', 'assistant'] as const;
-export const ActorRole = S.Literal(...ActorRoles);
-export type ActorRole = S.Schema.Type<typeof ActorRole>;
 
-export const ActorSchema = S.Struct({
-  contact: S.optional(Ref(ContactType)),
-  // TODO(wittjosiah): Should the below fields just be the contact schema?
-  //  i.e. it should either be a reference to an existing contact or an inline contact schema.
-  identityDid: S.optional(S.String),
+export const ActorRole = Schema.Literal(...ActorRoles);
+export type ActorRole = Schema.Schema.Type<typeof ActorRole>; // TODO(burdon): Remove.
+
+/**
+ * https://schema.org/actor
+ */
+export const Actor = Schema.Struct({
+  contact: Schema.optional(Type.Ref(Person)),
+  identityDid: Schema.optional(Schema.String),
   /** @deprecated */
-  identityKey: S.optional(S.String),
+  identityKey: Schema.optional(Schema.String),
   // TODO(burdon): Generalize to handle/identifier?
-  email: S.optional(S.String),
-  name: S.optional(S.String),
-  role: S.optional(ActorRole),
+  email: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
+  role: Schema.optional(ActorRole),
 });
+export interface Actor extends Schema.Schema.Type<typeof Actor> {}

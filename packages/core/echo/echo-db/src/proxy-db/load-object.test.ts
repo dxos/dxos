@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { loadObjectReferences } from './load-object';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type AnyLiveObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 // TODO(dmaretskyi): Refactor to test Ref.load() instead.
@@ -150,10 +151,10 @@ describe.skip('loadObjectReferences', () => {
   });
 
   test('loads as array of non-nullable items', async () => {
-    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '0.1.0' })({ value: S.Number }) {}
+    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '0.1.0' })({ value: Schema.Number }) {}
 
     class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '0.1.0' })({
-      nested: S.mutable(S.Array(Ref(Nested))),
+      nested: Schema.mutable(Schema.Array(Ref(Nested))),
     }) {}
 
     const testBuilder = new EchoTestBuilder();
@@ -161,7 +162,7 @@ describe.skip('loadObjectReferences', () => {
     const kv = createTestLevel();
     const spaceKey = PublicKey.random();
     const testPeer = await testBuilder.createPeer(kv);
-    const object = live(TestSchema, { nested: [makeRef(live(Nested, { value: 42 }))] });
+    const object = live(TestSchema, { nested: [Ref.make(live(Nested, { value: 42 }))] });
     const db = await testPeer.createDatabase(spaceKey);
     db.graph.schemaRegistry.addSchema([TestSchema, Nested]);
     db.add(object);
@@ -177,6 +178,6 @@ describe.skip('loadObjectReferences', () => {
   });
 });
 
-const createExpando = (props: any = {}): ReactiveEchoObject<Expando> => {
+const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
   return live(Expando, props);
 };

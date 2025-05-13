@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-integration",
-  "version": "0.8.0",
+  "version": "0.8.10",
   "description": "Composer plugin for managing integrations with external systems.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,7 +40,8 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "effect": "3.14.21"
   },
   "devDependencies": {
     "@dxos/artifact-testing": "workspace:*",
@@ -51,7 +52,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.13.3",
+    "effect": "3.14.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"
@@ -59,7 +60,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "effect": "3.13.3",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

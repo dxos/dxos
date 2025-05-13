@@ -5,14 +5,14 @@
 import { Planet } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type ReactiveEchoObject, getSpace } from '@dxos/client/echo';
+import { type AnyLiveObject, getSpace } from '@dxos/client/echo';
 import { useClient } from '@dxos/react-client';
 import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 import { getSpaceDisplayName } from '../util';
 
-export const MenuFooter = ({ object }: { object: ReactiveEchoObject<any> }) => {
+export const MenuFooter = ({ object }: { object: AnyLiveObject<any> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
   const space = getSpace(object);

@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Effect, pipe } from 'effect';
+import { type Schema, SchemaAST, Effect } from 'effect';
 
-import { type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
+import { type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
 import {
   FormatEnum,
   GeneratorAnnotationId,
@@ -13,12 +13,12 @@ import {
   type BaseObject,
   type ExcludeId,
   type JsonSchemaType,
-  type S,
   type TypedObject,
+  Ref,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { live, makeRef, type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
@@ -61,7 +61,11 @@ export const createObjectFactory =
 /**
  * Set properties based on generator annotation.
  */
-export const createProps = <T extends BaseObject>(generator: ValueGenerator, schema: S.Schema<T>, optional = false) => {
+export const createProps = <T extends BaseObject>(
+  generator: ValueGenerator,
+  schema: Schema.Schema<T>,
+  optional = false,
+) => {
   return (data: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
     return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
       if (obj[property.name] === undefined) {
@@ -84,12 +88,12 @@ export const createProps = <T extends BaseObject>(generator: ValueGenerator, sch
 /**
  * Set references.
  */
-export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: EchoDatabase) => {
+export const createReferences = <T extends BaseObject>(schema: Schema.Schema<T>, db: EchoDatabase) => {
   return async (obj: T): Promise<T> => {
     for (const property of getSchemaProperties<T>(schema.ast)) {
       if (!property.optional || randomBoolean()) {
         if (property.format === FormatEnum.Ref) {
-          const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, AST.JSONSchemaAnnotationId);
+          const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, SchemaAST.JSONSchemaAnnotationId);
           if (jsonSchema) {
             const { typename } = getSchemaReference(jsonSchema) ?? {};
             invariant(typename);
@@ -97,7 +101,7 @@ export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: 
             const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
             if (objects.length) {
               const object = randomElement(objects);
-              (obj as any)[property.name] = makeRef(object);
+              (obj as any)[property.name] = Ref.make(object);
             }
           }
         }
@@ -108,12 +112,12 @@ export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: 
   };
 };
 
-export const createReactiveObject = <T extends BaseObject>(type: S.Schema<T>) => {
+export const createReactiveObject = <T extends BaseObject>(type: Schema.Schema<T>) => {
   return (data: ExcludeId<T>) => live<T>(type, data);
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
-  return <T extends BaseObject>(obj: Live<T>): ReactiveEchoObject<T> => db.add(obj);
+  return <T extends BaseObject>(obj: Live<T>): AnyLiveObject<T> => db.add(obj);
 };
 
 export const noop = (obj: any) => obj;
@@ -139,37 +143,35 @@ export type CreateOptions = {
 
 /**
  * Create an object creation pipeline.
- * - Allows for mix of sync and async transformations.
- * - Consistent error processing.
  */
 export const createObjectPipeline = <T extends BaseObject>(
   generator: ValueGenerator,
-  type: S.Schema<T>,
+  type: Schema.Schema<T>,
   { db, optional }: CreateOptions,
 ): ((obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>) => {
   if (!db) {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<Live<T>> = pipe(
-        Effect.succeed(obj),
-        // Effect.tap(logObject('before')),
-        Effect.map((obj) => createProps(generator, type, optional)(obj)),
-        Effect.map((obj) => createReactiveObject(type)(obj)),
-        // Effect.tap(logObject('after')),
-      );
+      const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* (_) {
+        // logObject('before')(obj);
+        const withProps = createProps(generator, type, optional)(obj);
+        const liveObj = createReactiveObject(type)(withProps);
+        // logObject('after')(liveObj);
+        return liveObj;
+      });
 
       return pipeline;
     };
   } else {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<ReactiveEchoObject<any>, never, never> = pipe(
-        Effect.succeed(obj),
-        // Effect.tap(logObject('before')),
-        Effect.map((obj) => createProps(generator, type, optional)(obj)),
-        Effect.map((obj) => createReactiveObject(type)(obj)),
-        Effect.flatMap((obj) => Effect.promise(() => createReferences(type, db)(obj))),
-        Effect.map((obj) => addToDatabase(db)(obj)),
-        // Effect.tap(logObject('after')),
-      );
+      const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* (_) {
+        // logObject('before')(obj);
+        const withProps = createProps(generator, type, optional)(obj);
+        const liveObj = createReactiveObject(type)(withProps);
+        const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));
+        const dbObj = addToDatabase(db)(withRefs);
+        // logObject('after')(dbObj);
+        return dbObj;
+      });
 
       return pipeline;
     };
@@ -181,10 +183,12 @@ export type ObjectGenerator<T extends BaseObject> = {
   createObjects: (n: number) => Live<T>[];
 };
 
+// TODO(ZaymonFC): Sync generator doesn't work with db -- createReferences is async and
+//   can't be invoked with `Effect.runSync`.
 export const createGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
-  type: S.Schema<T>,
-  options: CreateOptions = {},
+  type: Schema.Schema<T>,
+  options: Omit<CreateOptions, 'db'> = {},
 ): ObjectGenerator<T> => {
   const pipeline = createObjectPipeline(generator, type, options);
 
@@ -201,7 +205,7 @@ export type AsyncObjectGenerator<T extends BaseObject> = {
 
 export const createAsyncGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
-  type: S.Schema<T>,
+  type: Schema.Schema<T>,
   options: CreateOptions = {},
 ): AsyncObjectGenerator<T> => {
   const pipeline = createObjectPipeline(generator, type, options);

@@ -39,6 +39,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/local-storage"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -55,6 +58,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -99,6 +105,12 @@
       "path": "../../ui/react-ui-components"
     },
     {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-grid"
     },
     {
@@ -106,6 +118,9 @@
     },
     {
       "path": "../../ui/react-ui-stack"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-theme"
@@ -120,10 +135,22 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-markdown"
+    },
+    {
       "path": "../plugin-meeting"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-storybook-layout"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

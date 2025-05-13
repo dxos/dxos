@@ -13,12 +13,13 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { live, makeRef, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerController } from './Outliner';
 import { createTree } from '../../testing';
 import translations from '../../translations';
-import { TaskType, TreeType } from '../../types';
+import { TreeType } from '../../types';
 
 const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
@@ -50,7 +51,7 @@ const meta: Meta<typeof Outliner.Root> = {
           switch (action.action) {
             case 'task': {
               invariant(space);
-              const task = space.db.add(live(TaskType, { text: action.node.data.text }));
+              const task = space.db.add(live(DataType.Task, { text: action.node.data.text }));
               action.node.ref = makeRef(task);
               action.node.data.text = '';
               break;
@@ -61,7 +62,7 @@ const meta: Meta<typeof Outliner.Root> = {
     );
   },
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [TaskType, TreeType] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Task, TreeType] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],

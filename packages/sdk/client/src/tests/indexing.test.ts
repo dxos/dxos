@@ -7,11 +7,11 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Filter, type Query, type ReactiveEchoObject } from '@dxos/echo-db';
-import { Expando } from '@dxos/echo-schema';
+import { Filter, type Query, type AnyLiveObject } from '@dxos/echo-db';
+import { Expando, Ref } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
@@ -37,7 +37,7 @@ describe('Index queries', () => {
     documents: [
       live(DocumentType, {
         title: 'DXOS Design Doc',
-        content: makeRef(
+        content: Ref.make(
           live(TextV0Type, {
             content: 'Very important design document',
           }),
@@ -45,7 +45,7 @@ describe('Index queries', () => {
       }),
       live(DocumentType, {
         title: 'ECHO Architecture',
-        content: makeRef(
+        content: Ref.make(
           live(TextV0Type, {
             content: 'Very important architecture document',
           }),
@@ -67,7 +67,7 @@ describe('Index queries', () => {
     return client;
   };
 
-  const addObjects = async <T extends {}>(space: Space, objects: ReactiveEchoObject<T>[]) => {
+  const addObjects = async <T extends {}>(space: Space, objects: AnyLiveObject<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
       return space.db.add(object);
@@ -77,8 +77,8 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: Query, objects: ReactiveEchoObject<any>[]) => {
-    const receivedIndexedObject = new Trigger<ReactiveEchoObject<any>[]>();
+  const matchObjects = async (query: Query, objects: AnyLiveObject<any>[]) => {
+    const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.results.filter((result) => result.resolution?.source === 'index');

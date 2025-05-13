@@ -2,50 +2,64 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
 import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
 
-// Deliberately testing top-level import as if external consumer for @dxos/echo.
-import { Type } from '.';
+import { Type } from './api';
 
 namespace Testing {
-  export const Org = S.Struct({
+  export const Organization = Schema.Struct({
     id: Type.ObjectId,
-    name: S.String,
+    name: Schema.String,
   }).pipe(
     Type.def({
-      typename: 'example.com/type/Org',
+      typename: 'example.com/type/Organization',
       version: '0.1.0',
     }),
   );
 
-  export interface Org extends S.Schema.Type<typeof Org> {}
+  export interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
-  export const Contact = S.Struct({
-    name: S.String,
-    dob: S.optional(S.String),
-    email: S.optional(S.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
-    org: S.optional(Type.Ref(Org)),
+  export const Person = Schema.Struct({
+    name: Schema.String,
+    dob: Schema.optional(Schema.String),
+    email: Schema.optional(Schema.String.pipe(FormatAnnotation.set(FormatEnum.Email))),
+    organization: Schema.optional(Type.Ref(Organization)),
   }).pipe(
     Type.def({
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
     }),
   );
 
-  export interface Contact extends S.Schema.Type<typeof Contact> {}
+  export interface Person extends Schema.Schema.Type<typeof Person> {}
 
-  export const Message = S.Struct({
+  export const Message = Schema.Struct({
     // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
-    // TODO(burdon): Support defaults (update create and createStatic).
-    timestamp: S.String.pipe(
-      S.propertySignature,
-      S.withConstructorDefault(() => new Date().toISOString()),
+    // TODO(burdon): Support defaults (update create and create).
+    timestamp: Schema.String.pipe(
+      Schema.propertySignature,
+      Schema.withConstructorDefault(() => new Date().toISOString()),
     ),
   });
+
+  export const WorksFor = Schema.Struct({
+    // id: Type.ObjectId,
+    role: Schema.String,
+  }).pipe(
+    // Relation.def
+    Type.def({
+      typename: 'example.com/type/WorksFor',
+      version: '0.1.0',
+      // source: Person,
+      // target: Organization,
+    }),
+  );
+
+  export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 
   // TODO(burdon): Fix (Type.def currently removes TypeLiteral that implements the `make` function)..
   // }).pipe(
@@ -55,34 +69,32 @@ namespace Testing {
   //   }),
   // );
 
-  export interface Message extends S.Schema.Type<typeof Message> {}
+  export interface Message extends Schema.Schema.Type<typeof Message> {}
 }
 
 describe('Experimental API review', () => {
   test('type checks', ({ expect }) => {
-    const contact = Type.create(Testing.Contact, { name: 'Test' });
-    const type: S.Schema<Testing.Contact> = Type.getSchema(contact) ?? raise(new Error('No schema found'));
+    const contact = Type.create(Testing.Person, { name: 'Test' });
+    const type: Schema.Schema<Testing.Person> = Type.getSchema(contact) ?? raise(new Error('No schema found'));
 
-    expect(Type.getDXN(type)?.typename).to.eq(Testing.Contact.typename);
-    expect(Type.getTypename(type)).to.eq('example.com/type/Contact');
+    expect(Type.getDXN(type)?.typename).to.eq(Testing.Person.typename);
+    expect(Type.getTypename(type)).to.eq('example.com/type/Person');
     expect(Type.getVersion(type)).to.eq('0.1.0');
     expect(Type.getMeta(type)).to.deep.eq({
       kind: Type.Kind.Object,
-      typename: 'example.com/type/Contact',
+      typename: 'example.com/type/Person',
       version: '0.1.0',
     });
   });
 
   test('instance checks', ({ expect }) => {
-    // TODO(burdon): Implement.
-    // const org = Org.create({ name: 'DXOS' });
-    const org = Type.create(Testing.Org, { name: 'DXOS' });
-    const contact = Type.create(Testing.Contact, { name: 'Test', org: Type.ref(org) });
+    const organization = Type.create(Testing.Organization, { name: 'DXOS' });
+    const contact = Type.create(Testing.Person, { name: 'Test', organization: Type.ref(organization) });
 
-    expect(S.is(Testing.Contact)(contact)).to.be.true;
-    expect(Testing.Contact.instanceOf(contact)).to.be.true;
-    expect(Type.instanceOf(Testing.Contact, contact)).to.be.true;
-    expect(Type.instanceOf(Testing.Org, contact.org?.target)).to.be.true;
+    expect(Schema.is(Testing.Person)(contact)).to.be.true;
+    expect(Testing.Person.instanceOf(contact)).to.be.true;
+    expect(Type.instanceOf(Testing.Person, contact)).to.be.true;
+    expect(Type.instanceOf(Testing.Organization, organization)).to.be.true;
   });
 
   test('default props', ({ expect }) => {

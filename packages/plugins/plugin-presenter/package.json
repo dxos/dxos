@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-presenter",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Braneframe presenter plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,6 +30,7 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
@@ -38,6 +39,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "effect": "^3.13.3",
     "hastscript": "^7.1.0",
     "highlight.js": "^11.9.0",
     "marked": "^12.0.2",
@@ -59,6 +61,7 @@
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "@types/reveal.js": "^5.0.3",
+    "effect": "3.14.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"
@@ -67,6 +70,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

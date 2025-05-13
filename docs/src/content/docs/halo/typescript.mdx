@@ -1,0 +1,45 @@
+---
+title: Using HALO in Typescript
+sidebar:
+  label: Typescript
+  order: 1
+---
+
+import { Aside, Code } from '@astrojs/starlight/components';
+
+import getIdentity from './snippets-typescript/get-identity.ts?raw';
+import createIdentity from './snippets-typescript/create-identity.ts?raw';
+import createIdentityDisplayName from './snippets-typescript/create-identity-displayname.ts?raw';
+import deviceJoin from './snippets-typescript/device-join.ts?raw';
+
+To create or join a [space](/echo/typescript/api) in ECHO, the user must first establish a [HALO identity](/halo/introduction). This can be done by creating a **new identity** or accepting a **device join invitation**.
+
+## Obtaining identity
+
+<Code lang="ts" code={getIdentity.slice(34)} mark={[7]} />
+
+The object returned is of type `Identity`.
+
+## Creating an identity
+
+Create a new identity:
+
+<Code code={createIdentity.slice(34)} lang="ts" mark={[7]} />
+
+<Aside type="note" title="Creating an identity with a display name">
+  Pass `displayName` to `createProfile`:
+  <Code code={createIdentityDisplayName.slice(34)} lang="ts" mark={[8]} />
+</Aside>
+
+Before data can be manipulated, a [`space`](/echo/typescript/api) must be obtained.
+
+## Receiving a device join invitation
+
+We often want to add a device to the same [HALO identity](/halo/introduction).
+You can accept a device join invitation by providing the invitation code and the auth code to the DXOS client.
+
+<Code code={deviceJoin.slice(34)} lang="ts" />
+
+<Aside type="tip" title="Device join invitation">
+  Your client instance needs to be [configured](/echo/typescript/config) correctly to talk to a [signaling service](/additional-resources/glossary#signaling-service).
+</Aside>

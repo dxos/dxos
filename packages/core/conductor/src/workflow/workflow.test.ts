@@ -6,11 +6,11 @@ import { FetchHttpClient } from '@effect/platform';
 import { type Context, Effect, Layer, type Scope } from 'effect';
 import { describe, test, expect } from 'vitest';
 
-import { ObjectId, type Ref } from '@dxos/echo-schema';
-import { FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions/types';
+import { ObjectId, type Ref, type RefResolver, setRefResolver } from '@dxos/echo-schema';
+import { FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live, getMeta, refFromDXN, type RefResolver, setRefResolver } from '@dxos/live-object';
+import { live, getMeta, refFromDXN } from '@dxos/live-object';
 import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';

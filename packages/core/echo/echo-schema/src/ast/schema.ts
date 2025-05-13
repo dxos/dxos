@@ -2,7 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
+
+import { DXN } from '@dxos/keys';
+
+import { getTypeAnnotation } from './annotations';
 
 /**
  * For attaching schema to objects.
@@ -14,7 +18,7 @@ export const symbolSchema = Symbol.for('@dxos/schema/Schema');
  */
 // TODO(burdon): Reconcile with `getTypename`.
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
-export const getSchema = (obj: unknown | undefined): S.Schema.AnyNoContext | undefined => {
+export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
   if (!obj) {
     return undefined;
   }
@@ -25,11 +29,22 @@ export const getSchema = (obj: unknown | undefined): S.Schema.AnyNoContext | und
 /**
  * Internal use only.
  */
-export const setSchema = (obj: any, schema: S.Schema.AnyNoContext) => {
+export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext) => {
   Object.defineProperty(obj, symbolSchema, {
     value: schema,
     writable: false,
     enumerable: false,
     configurable: false,
   });
+};
+
+// TODO(dmaretskyi): Unify with `getTypeReference`.
+export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getTypeAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };

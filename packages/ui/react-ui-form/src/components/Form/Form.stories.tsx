@@ -5,9 +5,12 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
+import { Schema, SchemaAST } from 'effect';
 import React, { useCallback, useState } from 'react';
 
-import { AST, type BaseObject, Format, S } from '@dxos/echo-schema';
+import { ContactType } from '@dxos/client/testing';
+import { type BaseObject, Expando, Format, getDXN, Ref, type TypeAnnotation } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -16,25 +19,27 @@ import { Form, type FormProps } from './Form';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
-const AddressSchema = S.Struct({
-  street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
-  city: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
-  zip: S.optional(S.String.pipe(S.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
-  location: S.optional(Format.GeoPoint.annotations({ [AST.TitleAnnotationId]: 'Location' })),
-}).annotations({ [AST.TitleAnnotationId]: 'Address' });
+const AddressSchema = Schema.Struct({
+  street: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Street' })),
+  city: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'City' })),
+  zip: Schema.optional(
+    Schema.String.pipe(Schema.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [SchemaAST.TitleAnnotationId]: 'ZIP' }),
+  ),
+  location: Schema.optional(Format.GeoPoint.annotations({ [SchemaAST.TitleAnnotationId]: 'Location' })),
+}).annotations({ [SchemaAST.TitleAnnotationId]: 'Address' });
 
 // TODO(burdon): Translations?
-const TestSchema = S.Struct({
-  name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
-  active: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Active' })),
-  rank: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Rank' })),
-  website: S.optional(Format.URL.annotations({ [AST.TitleAnnotationId]: 'Website' })),
-  address: S.optional(AddressSchema),
-}).pipe(S.mutable);
+const TestSchema = Schema.Struct({
+  name: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Name' })),
+  active: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Active' })),
+  rank: Schema.optional(Schema.Number.annotations({ [SchemaAST.TitleAnnotationId]: 'Rank' })),
+  website: Schema.optional(Format.URL.annotations({ [SchemaAST.TitleAnnotationId]: 'Website' })),
+  address: Schema.optional(AddressSchema),
+}).pipe(Schema.mutable);
 
-type TestType = S.Schema.Type<typeof TestSchema>;
+type TestType = Schema.Schema.Type<typeof TestSchema>;
 
-type StoryProps<T extends BaseObject> = { schema: S.Schema<T> } & FormProps<T>;
+type StoryProps<T extends BaseObject> = { schema: Schema.Schema<T> } & FormProps<T>;
 
 const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...props }: StoryProps<T>) => {
   const [values, setValues] = useState(initialValues);
@@ -78,9 +83,9 @@ export const Default: Story<TestType> = {
   },
 };
 
-export const Org: Story<Testing.Org> = {
+export const Organization: Story<Testing.Organization> = {
   args: {
-    schema: Testing.OrgSchema,
+    schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
       // website: 'https://dxos.org',
@@ -88,9 +93,9 @@ export const Org: Story<Testing.Org> = {
   },
 };
 
-export const OrgAutoSave: Story<Testing.Org> = {
+export const OrganizationAutoSave: Story<Testing.Organization> = {
   args: {
-    schema: Testing.OrgSchema,
+    schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
       // website: 'https://dxos.org',
@@ -115,22 +120,24 @@ export const OrgAutoSave: Story<Testing.Org> = {
 // TODO(burdon): Move into separate storybook and use test types.
 //
 
-const ShapeSchema = S.Struct({
-  shape: S.optional(
-    S.Union(
-      S.Struct({
-        type: S.Literal('circle').annotations({ [AST.TitleAnnotationId]: 'Type' }),
-        radius: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Radius' })),
+const ShapeSchema = Schema.Struct({
+  shape: Schema.optional(
+    Schema.Union(
+      Schema.Struct({
+        type: Schema.Literal('circle').annotations({ [SchemaAST.TitleAnnotationId]: 'Type' }),
+        radius: Schema.optional(Schema.Number.annotations({ [SchemaAST.TitleAnnotationId]: 'Radius' })),
       }),
-      S.Struct({
-        type: S.Literal('square').annotations({ [AST.TitleAnnotationId]: 'Type' }),
-        size: S.optional(S.Number.pipe(S.nonNegative()).annotations({ [AST.TitleAnnotationId]: 'Size' })),
+      Schema.Struct({
+        type: Schema.Literal('square').annotations({ [SchemaAST.TitleAnnotationId]: 'Type' }),
+        size: Schema.optional(
+          Schema.Number.pipe(Schema.nonNegative()).annotations({ [SchemaAST.TitleAnnotationId]: 'Size' }),
+        ),
       }),
-    ).annotations({ [AST.TitleAnnotationId]: 'Shape' }),
+    ).annotations({ [SchemaAST.TitleAnnotationId]: 'Shape' }),
   ),
-}).pipe(S.mutable);
+}).pipe(Schema.mutable);
 
-type ShapeType = S.Schema.Type<typeof ShapeSchema>;
+type ShapeType = Schema.Schema.Type<typeof ShapeSchema>;
 
 type DiscriminatedUnionStoryProps = FormProps<ShapeType>;
 
@@ -176,12 +183,12 @@ export const DiscriminatedShape: StoryObj<DiscriminatedUnionStoryProps> = {
   },
 };
 
-const ArraysSchema = S.Struct({
-  names: S.Array(S.String.pipe(S.nonEmptyString())),
-  addresses: S.Array(AddressSchema),
-}).pipe(S.mutable);
+const ArraysSchema = Schema.Struct({
+  names: Schema.Array(Schema.String.pipe(Schema.nonEmptyString())),
+  addresses: Schema.Array(AddressSchema),
+}).pipe(Schema.mutable);
 
-type ArraysType = S.Schema.Type<typeof ArraysSchema>;
+type ArraysType = Schema.Schema.Type<typeof ArraysSchema>;
 
 const ArraysStory = ({ values: initialValues }: FormProps<ArraysType>) => {
   const [values, setValues] = useState(initialValues);
@@ -208,13 +215,13 @@ export const Arrays: StoryObj<FormProps<ArraysType>> = {
   },
 };
 
-const ColorSchema = S.Struct({
-  color: S.Union(S.Literal('red'), S.Literal('green'), S.Literal('blue')).annotations({
-    [AST.TitleAnnotationId]: 'Color',
+const ColorSchema = Schema.Struct({
+  color: Schema.Union(Schema.Literal('red'), Schema.Literal('green'), Schema.Literal('blue')).annotations({
+    [SchemaAST.TitleAnnotationId]: 'Color',
   }),
-}).pipe(S.mutable);
+}).pipe(Schema.mutable);
 
-type ColorType = S.Schema.Type<typeof ColorSchema>;
+type ColorType = Schema.Schema.Type<typeof ColorSchema>;
 
 const EnumStory = ({ values: initialValues }: FormProps<ColorType>) => {
   const [values, setValues] = useState(initialValues);
@@ -238,4 +245,45 @@ export const Enum: StoryObj<FormProps<ColorType>> = {
       color: 'red',
     },
   },
+};
+
+const RefSchema = Schema.Struct({
+  contact: Ref(ContactType).annotations({ title: 'Contact Reference' }),
+  optionalContact: Schema.optional(Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
+  unknownExpando: Schema.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
+});
+
+const RefStory = ({ values: initialValues }: FormProps<any>) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSave = useCallback<NonNullable<FormProps<any>['onSave']>>((values) => {
+    setValues(values);
+  }, []);
+
+  const contact1 = live(ContactType, { identifiers: [] });
+  const contact2 = live(ContactType, { identifiers: [] });
+
+  const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
+    switch (typeInfo.typename) {
+      case ContactType.typename:
+        return [
+          { dxn: getDXN(contact1)!, label: 'John Coltraine' },
+          { dxn: getDXN(contact2)!, label: 'Erykah Badu' },
+        ];
+      default:
+        return [];
+    }
+  }, []);
+
+  return (
+    <TestLayout json={{ values, schema: RefSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form schema={RefSchema} values={values} onSave={handleSave} onQueryRefOptions={onQueryRefOptions} />
+      </TestPanel>
+    </TestLayout>
+  );
+};
+
+export const Refs: StoryObj<FormProps<ContactType>> = {
+  render: RefStory,
+  args: { values: {} },
 };

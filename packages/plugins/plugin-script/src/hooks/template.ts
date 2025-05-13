@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { FUNCTIONS_PRESET_META_KEY, type ScriptType } from '@dxos/functions/types';
+import { FUNCTIONS_PRESET_META_KEY, type ScriptType } from '@dxos/functions';
 import { getMeta } from '@dxos/live-object';
 import { createMenuItemGroup, createMenuAction } from '@dxos/react-ui-menu';
 

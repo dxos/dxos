@@ -2,22 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
-import { EntityKind, TypeAnnotationId, Ref } from '@dxos/echo-schema';
+import { EntityKind, TypeAnnotationId, Ref, ObjectId } from '@dxos/echo-schema';
 
-// TODO(burdon): Reconcile with sdk/schema/testing.
-// TODO(burdon): Convert interface to type.
+// TODO(burdon): Remove (use @dxos/schema DataType).
 
-// TODO(dmaretskyi): Extract.
-export const ObjectId = S.String.annotations({ description: 'The unique object identifier.' });
-
-export const Contact = S.Struct({
+/** @deprecated */
+export const Contact = Schema.Struct({
   id: ObjectId,
-  name: S.String.annotations({ description: 'The name of the person.' }),
-  email: S.optional(S.String).annotations({ description: 'Email address.' }),
+  name: Schema.String.annotations({ description: 'The name of the person.' }),
+  email: Schema.optional(Schema.String).annotations({ description: 'Email address.' }),
 })
-  .pipe(S.mutable)
+  .pipe(Schema.mutable)
   .annotations({
     [TypeAnnotationId]: {
       kind: EntityKind.Object,
@@ -26,14 +23,15 @@ export const Contact = S.Struct({
     },
     description: 'Contact information.',
   });
-export interface Contact extends S.Schema.Type<typeof Contact> {}
+export interface Contact extends Schema.Schema.Type<typeof Contact> {}
 
-export const Project = S.Struct({
+/** @deprecated */
+export const Project = Schema.Struct({
   id: ObjectId,
-  name: S.String.annotations({ description: 'The name of the project.' }),
-  description: S.optional(S.String).annotations({ description: 'The description of the project.' }),
+  name: Schema.String.annotations({ description: 'The name of the project.' }),
+  description: Schema.optional(Schema.String).annotations({ description: 'The description of the project.' }),
 })
-  .pipe(S.mutable)
+  .pipe(Schema.mutable)
   .annotations({
     [TypeAnnotationId]: {
       kind: EntityKind.Object,
@@ -42,16 +40,16 @@ export const Project = S.Struct({
     },
     description: 'Contact information.',
   });
-export interface Project extends S.Schema.Type<typeof Project> {}
+export interface Project extends Schema.Schema.Type<typeof Project> {}
 
-export const Task = S.Struct({
+export const Task = Schema.Struct({
   id: ObjectId,
-  name: S.String.annotations({ description: 'The name of the task.' }),
-  description: S.optional(S.String).annotations({ description: 'The description of the task.' }),
+  name: Schema.String.annotations({ description: 'The name of the task.' }),
+  description: Schema.optional(Schema.String).annotations({ description: 'The description of the task.' }),
   project: Ref(Project),
   assignee: Ref(Contact),
 })
-  .pipe(S.mutable)
+  .pipe(Schema.mutable)
   .annotations({
     [TypeAnnotationId]: {
       kind: EntityKind.Object,
@@ -60,21 +58,22 @@ export const Task = S.Struct({
     },
     description: 'Contact information.',
   });
-export interface Task extends S.Schema.Type<typeof Task> {}
+export interface Task extends Schema.Schema.Type<typeof Task> {}
 
-export const Org = S.Struct({
+/** @deprecated */
+export const Organization = Schema.Struct({
   id: ObjectId,
-  name: S.String.annotations({ description: 'The name of the organization.' }),
-  projects: S.Array(Ref(Project)),
-  employees: S.Array(Ref(Contact)),
+  name: Schema.String.annotations({ description: 'The name of the organization.' }),
+  projects: Schema.Array(Ref(Project)),
+  employees: Schema.Array(Ref(Contact)),
 })
-  .pipe(S.mutable)
+  .pipe(Schema.mutable)
   .annotations({
     [TypeAnnotationId]: {
       kind: EntityKind.Object,
-      typename: 'example.com/type/Org',
+      typename: 'example.com/type/Organization',
       version: '0.1.0',
     },
     description: 'Contact information.',
   });
-export interface Org extends S.Schema.Type<typeof Org> {}
+export interface Organization extends Schema.Schema.Type<typeof Organization> {}

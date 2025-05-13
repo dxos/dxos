@@ -9,7 +9,7 @@ import { type ArtifactDefinition, type Message, type MessageContentBlock, type T
 import { type AIServiceClient, AISession, DEFAULT_EDGE_MODEL, type GenerateRequest } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { getVersion, type Space } from '@dxos/react-client/echo';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -99,7 +99,7 @@ export class ChatProcessor {
    * Make GPT request.
    */
   async request(message: string, options: RequestOptions = {}): Promise<Message[]> {
-    this._session = new AISession({ operationModel: 'immediate' });
+    this._session = new AISession({ operationModel: 'configured' });
 
     // Message complete.
     this._session.message.on((message) => {
@@ -125,10 +125,33 @@ export class ChatProcessor {
         client: this._ai,
         history: options.history ?? [],
         artifacts: this._artifacts ?? [],
+        requiredArtifactIds: this._artifacts?.map((artifact) => artifact.id) ?? [],
         tools: this._tools ?? [],
         prompt: message,
         systemPrompt: this._options.systemPrompt,
         extensions: this._extensions,
+        artifactDiffResolver: async (artifacts) => {
+          const space = this._extensions?.space;
+          if (!space) {
+            return new Map();
+          }
+          const versions = new Map();
+          await Promise.all(
+            artifacts.map(async (artifact) => {
+              const {
+                objects: [object],
+              } = await space.db.query({ id: artifact.id }).run();
+              if (!object) {
+                return;
+              }
+              versions.set(artifact.id, {
+                version: getVersion(object),
+                diff: `Current state: ${JSON.stringify(object)}`,
+              });
+            }),
+          );
+          return versions;
+        },
         generationOptions: {
           model: this._options.model,
         },

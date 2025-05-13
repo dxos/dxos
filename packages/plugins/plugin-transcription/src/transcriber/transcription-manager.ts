@@ -5,15 +5,14 @@
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { QueueImpl, type Queue } from '@dxos/echo-db';
-import { createStatic } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { create } from '@dxos/echo-schema';
+import { type DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { type HuePalette } from '@dxos/react-ui-theme';
+import { DataType } from '@dxos/schema';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
-import { TranscriptBlock, type TranscriptSegment } from '../types';
 
 /**
  * Length of the chunk in ms.
@@ -31,23 +30,34 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
+export type TranscriptMessageEnricher = (message: DataType.Message) => Promise<DataType.Message>;
+
+export type TranscriptionManagerOptions = {
+  edgeClient: EdgeHttpClient;
+
+  /**
+   * Enrich the message before it is written to the transcription queue.
+   */
+  messageEnricher?: TranscriptMessageEnricher;
+};
+
 /**
  * Manages transcription state for a meeting.
  */
-// TODO(mykola): Reconcile with transcriber capability.
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
+  private readonly _messageEnricher?: TranscriptMessageEnricher;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
-  private _name?: string = undefined;
-  private _hue?: HuePalette = undefined;
+  private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
+  private _queue?: Queue<DataType.Message> = undefined;
   private _enabled = false;
-  private _queue?: Queue<TranscriptBlock> = undefined;
 
-  constructor(edgeClient: EdgeHttpClient) {
+  constructor(options: TranscriptionManagerOptions) {
     super();
-    this._edgeClient = edgeClient;
+    this._edgeClient = options.edgeClient;
+    this._messageEnricher = options.messageEnricher;
   }
 
   protected override async _open() {
@@ -58,10 +68,24 @@ export class TranscriptionManager extends Resource {
     void this._transcriber?.close();
   }
 
-  @synchronized
-  setRecording(recording?: boolean) {
+  setQueue(queueDxn: DXN): TranscriptionManager {
+    if (this._queue?.dxn.toString() !== queueDxn.toString()) {
+      log.info('setQueue', { queueDxn: queueDxn.toString() });
+      this._queue = new QueueImpl<DataType.Message>(this._edgeClient, queueDxn);
+    }
+    return this;
+  }
+
+  setIdentityDid(did: string): TranscriptionManager {
+    if (this._identityDid !== did) {
+      this._identityDid = did;
+    }
+    return this;
+  }
+
+  setRecording(recording?: boolean): TranscriptionManager {
     if (!this.isOpen || !this._enabled) {
-      return;
+      return this;
     }
 
     if (recording) {
@@ -69,6 +93,7 @@ export class TranscriptionManager extends Resource {
     } else {
       this._transcriber?.stopChunksRecording();
     }
+    return this;
   }
 
   /**
@@ -80,7 +105,9 @@ export class TranscriptionManager extends Resource {
     if (this._enabled === enabled) {
       return;
     }
+
     this._enabled = enabled ?? false;
+    // TODO(burdon): Why is toggle called here?
     this.isOpen && (await this._toggleTranscriber());
   }
 
@@ -89,60 +116,33 @@ export class TranscriptionManager extends Resource {
     if (this._audioStreamTrack === track) {
       return;
     }
+
     this._audioStreamTrack = track;
     this.isOpen && (await this._toggleTranscriber());
   }
 
-  /**
-   * Set the queue to save the transcription to.
-   * @param queue - The queue to save the transcription to or the DXN of the queue.
-   */
-  @synchronized
-  setQueue(queue?: Queue<TranscriptBlock> | string) {
-    switch (typeof queue) {
-      case 'string':
-        if (this._queue?.dxn.toString() === queue) {
-          return;
-        }
-        this._queue = new QueueImpl<TranscriptBlock>(this._edgeClient, DXN.parse(queue));
-        break;
-      case 'object':
-        if (this._queue === queue) {
-          return;
-        }
-        invariant(queue instanceof QueueImpl);
-        this._queue = queue;
-        break;
-      case 'undefined':
-        this._queue = undefined;
-        break;
-    }
-  }
-
-  @synchronized
-  setName(name: string) {
-    if (this._name === name) {
-      return;
-    }
-    this._name = name;
-  }
-
-  @synchronized
-  setHue(hue: HuePalette) {
-    if (this._hue === hue) {
-      return;
-    }
-    this._hue = hue;
-  }
-
+  // TODO(burdon): Change this to setEnables (explicit), not toggle.
   private async _toggleTranscriber() {
     await this._maybeReinitTranscriber();
 
     // Open or close transcriber if transcription is enabled or disabled.
     if (this._enabled) {
       await this._transcriber?.open();
+      // TODO(burdon): Started and stopped blocks appear twice.
+      const block = create(DataType.Message, {
+        created: new Date().toISOString(),
+        blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
+        sender: { role: 'assistant' },
+      });
+      this._queue?.append([block]);
     } else {
       await this._transcriber?.close();
+      const block = create(DataType.Message, {
+        created: new Date().toISOString(),
+        blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
+        sender: { role: 'assistant' },
+      });
+      this._queue?.append([block]);
     }
   }
 
@@ -173,12 +173,21 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _onSegments(segments: TranscriptSegment[]) {
+  private async _onSegments(segments: DataType.MessageBlock.Transcription[]) {
     if (!this.isOpen || !this._queue) {
       return;
     }
 
-    const block = createStatic(TranscriptBlock, { authorName: this._name, authorHue: this._hue, segments });
+    let block = create(DataType.Message, {
+      created: new Date().toISOString(),
+      blocks: segments,
+      sender: { identityDid: this._identityDid },
+    });
+
+    if (this._messageEnricher) {
+      block = await this._messageEnricher(block);
+    }
+
     this._queue.append([block]);
   }
 }

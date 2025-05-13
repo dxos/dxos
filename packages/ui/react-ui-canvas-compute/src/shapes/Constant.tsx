@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 import {
   type ShapeComponentProps,
@@ -25,15 +25,15 @@ import { useComputeNodeState } from '../hooks';
 // Data
 //
 
-export const ConstantShape = S.extend(
+export const ConstantShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('constant'),
-    value: S.optional(S.Any),
+  Schema.Struct({
+    type: Schema.Literal('constant'),
+    value: Schema.optional(Schema.Any),
   }),
 );
 
-export type ConstantShape = S.Schema.Type<typeof ConstantShape>;
+export type ConstantShape = Schema.Schema.Type<typeof ConstantShape>;
 
 //
 // Component

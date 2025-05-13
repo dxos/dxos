@@ -3,19 +3,19 @@
 // Copyright 2021 Observable, Inc.
 //
 
-import * as d3 from 'd3';
+import { curveBumpX, hierarchy, link, select, tree } from 'd3';
 
 import { type TreeOptions } from '../Tree';
 
 // Released under the ISC license.
 // https://observablehq.com/@d3/tree
 const TidyTree = (s: SVGSVGElement, data: any, options: TreeOptions) => {
-  const svg = d3.select(s);
+  const svg = select(s);
   svg.selectAll('*').remove();
 
   const { label, width, height, r = 4, padding = 4, margin = 60, slots } = options;
 
-  const root = d3.hierarchy(data);
+  const root = hierarchy(data);
 
   // Compute labels and titles.
   const descendants = root.descendants();
@@ -24,7 +24,7 @@ const TidyTree = (s: SVGSVGElement, data: any, options: TreeOptions) => {
   // Compute the layout.
   const dx = 16;
   const dy = width / (root.height + padding);
-  const layout = d3.tree().nodeSize([dx, dy]);
+  const layout = tree().nodeSize([dx, dy]);
   layout(root);
 
   // Center the tree.
@@ -61,8 +61,7 @@ const TidyTree = (s: SVGSVGElement, data: any, options: TreeOptions) => {
     .attr('class', slots?.path ?? '')
     .attr(
       'd',
-      d3
-        .link(d3.curveBumpX)
+      link(curveBumpX)
         .x((d: any) => d.y + oy)
         .y((d: any) => d.x * sx) as any,
     );

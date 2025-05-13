@@ -7,11 +7,11 @@ import {
   FunctionType,
   type ScriptType,
   getUserFunctionUrlInMetadata,
-  incrementSemverPatch,
+  makeFunctionUrl,
   setUserFunctionUrlInMetadata,
-  uploadWorkerFunction,
 } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
+import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { log } from '@dxos/log';
 import { live, getMeta, makeRef, type Space } from '@dxos/react-client/echo';
 
@@ -71,7 +71,7 @@ export const deployScript = async ({
     script.changed = false;
     updateFunctionMetadata(script, storedFunction, meta, functionId);
 
-    const functionUrl = makeFunctionUrl(space.id, functionId);
+    const functionUrl = makeFunctionUrl(space.id, { functionId });
     setUserFunctionUrlInMetadata(getMeta(storedFunction), functionUrl);
 
     return { success: true, functionUrl };
@@ -119,8 +119,4 @@ const createOrUpdateFunctionInSpace = (
   } else {
     return space.db.add(live(FunctionType, { name: functionId, version, source: makeRef(script) }));
   }
-};
-
-const makeFunctionUrl = (spaceId: string, functionId: string): string => {
-  return `/${spaceId}/${functionId}`;
 };

@@ -10,9 +10,9 @@ import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, type HasId } from '@dxos/echo-schema';
+import { Expando, type HasId, Ref } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
-import { live, type Live, makeRef } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
@@ -20,13 +20,13 @@ import { Client } from '../client';
 import { getSpace, SpaceState } from '../echo';
 import { CreateEpochRequest } from '../halo';
 import {
-  type CreateInitializedClientsOptions,
   createInitializedClientsWithContext,
+  testSpaceAutomerge,
+  waitForSpace,
+  type CreateInitializedClientsOptions,
   DocumentType,
   TestBuilder,
-  testSpaceAutomerge,
   TextV0Type,
-  waitForSpace,
 } from '../testing';
 
 describe('Spaces', () => {
@@ -315,7 +315,7 @@ describe('Spaces', () => {
     await waitForObject(guestSpace, hostDocument);
 
     const text = live(TextV0Type, { content: 'Hello, world!' });
-    hostDocument.content = makeRef(text);
+    hostDocument.content = Ref.make(text);
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
   });
@@ -407,7 +407,7 @@ describe('Spaces', () => {
       await waitForObject(guestSpace, hostDocument);
 
       const text = live(TextV0Type, { content: 'Hello, world!' });
-      hostDocument.content = makeRef(text);
+      hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
@@ -420,7 +420,7 @@ describe('Spaces', () => {
       await waitForObject(guestSpace, hostDocument);
 
       const text = live(TextV0Type, { content: 'Hello, world!' });
-      hostDocument.content = makeRef(text);
+      hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
@@ -468,7 +468,7 @@ describe('Spaces', () => {
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
-    const hostRoot = hostSpace.db.add(createObject({ entries: [makeRef(createObject({ name: 'first' }))] }));
+    const hostRoot = hostSpace.db.add(createObject({ entries: [Ref.make(createObject({ name: 'first' }))] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
@@ -487,7 +487,7 @@ describe('Spaces', () => {
 
       onTestFinished(() => unsub());
 
-      hostRoot.entries.push(makeRef(createObject({ name: 'second' })));
+      hostRoot.entries.push(Ref.make(createObject({ name: 'second' })));
       await done.wait({ timeout: 1_000 });
     }
   });
@@ -560,7 +560,7 @@ describe('Spaces', () => {
     const text = live(TextV0Type, { content: 'Hello, world!' });
     return live(DocumentType, {
       title: 'Test document',
-      content: makeRef(text),
+      content: Ref.make(text),
     });
   };
 

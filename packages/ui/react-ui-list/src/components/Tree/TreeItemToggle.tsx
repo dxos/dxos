@@ -26,11 +26,7 @@ export const TreeItemToggle = memo(
         classNames={mx('is-6 pli-0 dx-focus-ring-inset', hidden ? 'hidden' : !isBranch && 'invisible')}
         onClick={onToggle}
       >
-        <Icon
-          icon='ph--caret-right--regular'
-          size={3}
-          classNames={mx('transition duration-200', open && 'rotate-90')}
-        />
+        <Icon icon='ph--caret-right--bold' size={3} classNames={mx('transition duration-200', open && 'rotate-90')} />
       </Button>
     );
   }),

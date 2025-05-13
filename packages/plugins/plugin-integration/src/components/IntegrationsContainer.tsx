@@ -15,7 +15,7 @@ import { live, Filter, type Space, useQuery, makeRef } from '@dxos/react-client/
 import { List, useTranslation } from '@dxos/react-ui';
 import { ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { ADD_TOKEN_DIALOG } from './AddTokenDialog';
 import { IntegrationItem } from './IntegrationItem';
@@ -63,7 +63,7 @@ export const IntegrationsContainer = ({ space }: { space: Space }) => {
   const handleConfigure = useCallback(
     async (definition: IntegrationDefinition) => {
       if (definition.auth?.kind === 'oauth') {
-        const token = live(AccessTokenType, {
+        const token = live(DataType.AccessToken, {
           source: definition.auth.source,
           note: definition.auth.note,
           token: '',

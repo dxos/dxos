@@ -16,30 +16,31 @@ import {
   type PluginsContext,
 } from '@dxos/app-framework';
 import {
+  AutomergePanel,
   ConfigPanel,
   CredentialsPanel,
   DeviceListPanel,
   DiagnosticsPanel,
+  EdgeDashboardPanel,
   FeedsPanel,
   IdentityPanel,
+  InvocationTracePanel,
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
   MetadataPanel,
   NetworkPanel,
   ObjectsPanel,
+  QueuesPanel,
+  SchemaPanel,
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
   StoragePanel,
   SwarmPanel,
-  TracingPanel,
-  EdgeDashboardPanel,
-  AutomergePanel,
-  WorkflowPanel,
-  QueuesPanel,
-  InvocationTracePanel,
   TestingPanel,
+  TracingPanel,
+  WorkflowPanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
@@ -51,13 +52,21 @@ import {
   SpaceState,
   isSpace,
   isEchoObject,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   type Live,
   type Space,
   parseId,
 } from '@dxos/react-client/echo';
 
-import { DebugApp, DebugObjectPanel, DebugSettings, DebugStatus, SpaceGenerator, Wireframe } from '../components';
+import {
+  DebugApp,
+  DebugObjectPanel,
+  DebugSettings,
+  DebugStatus,
+  DevtoolsOverviewContainer,
+  SpaceGenerator,
+  Wireframe,
+} from '../components';
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps, Devtools } from '../types';
 
@@ -130,7 +139,7 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/wireframe`,
       role: ['article', 'section'],
       position: 'hoist',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => {
+      filter: (data): data is { subject: AnyLiveObject<any> } => {
         const settings = context
           .requestCapability(Capabilities.SettingsStore)
           .getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
@@ -143,9 +152,14 @@ export default (context: PluginsContext) =>
     createSurface({
       id: `${DEBUG_PLUGIN}/object-debug`,
       role: 'article',
-      filter: (data): data is { companionTo: ReactiveEchoObject<any> } =>
+      filter: (data): data is { companionTo: AnyLiveObject<any> } =>
         data.subject === 'debug' && isEchoObject(data.companionTo),
       component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/devtools-overview`,
+      role: 'deck-companion--devtools',
+      component: () => <DevtoolsOverviewContainer />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,
@@ -257,6 +271,15 @@ export default (context: PluginsContext) =>
       component: () => {
         const space = useCurrentSpace();
         return <ObjectsPanel space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/echo/schema`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Echo.Schema,
+      component: () => {
+        const space = useCurrentSpace();
+        return <SchemaPanel space={space} />;
       },
     }),
     createSurface({

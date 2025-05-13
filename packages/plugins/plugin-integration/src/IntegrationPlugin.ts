@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { ReactSurface, AppGraphBuilder } from './capabilities';
 import { meta } from './meta';
@@ -21,7 +21,7 @@ export const IntegrationPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [AccessTokenType, IntegrationType]),
+      activate: () => contributes(ClientCapabilities.Schema, [DataType.AccessToken, IntegrationType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

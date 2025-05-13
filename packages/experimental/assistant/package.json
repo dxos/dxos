@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,6 +44,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -58,7 +59,7 @@
   },
   "devDependencies": {
     "@types/parsimmon": "^1.10.9",
-    "effect": "3.13.3",
+    "effect": "3.14.21",
     "inquirer": "^12.0.0"
   },
   "peerDependencies": {

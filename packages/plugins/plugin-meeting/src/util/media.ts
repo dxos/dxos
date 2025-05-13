@@ -31,8 +31,17 @@ const acquireTrack = async (device: MediaDeviceInfo, constraints: MediaTrackCons
 // TODO(mykola): Handle devicechange event.
 export const getDeviceList = () => navigator.mediaDevices.enumerateDevices();
 
+const SCREENSHARE_CONSTRAINTS = {
+  video: {
+    width: { max: 1920 },
+    height: { max: 1080 },
+    frameRate: { max: 10 },
+  },
+};
+
 export const getScreenshare = async ({ contentHint }: { contentHint: string }) => {
-  const ms = await navigator.mediaDevices.getDisplayMedia();
+  // Get 1080p equivalent screenshare with 10fps, but save natural sharing content aspect ratio.
+  const ms = await navigator.mediaDevices.getDisplayMedia(SCREENSHARE_CONSTRAINTS);
   ms.getVideoTracks().forEach((track) => {
     if (contentHint && 'contentHint' in track) {
       track.contentHint = contentHint;

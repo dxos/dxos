@@ -4,10 +4,10 @@
 
 import { contributes, Capabilities, type PluginsContext } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { SPACE_PLUGIN } from '@dxos/plugin-space';
-import { isEchoObject, type ReactiveEchoObject, parseId } from '@dxos/react-client/echo';
+import { isEchoObject, type AnyLiveObject, parseId } from '@dxos/react-client/echo';
 
 import { DEBUG_PLUGIN } from '../meta';
 import { Devtools } from '../types';
@@ -196,6 +196,15 @@ export default (context: PluginsContext) =>
                     type: DEVTOOLS_TYPE,
                     properties: {
                       label: ['objects label', { ns: DEBUG_PLUGIN }],
+                      icon: 'ph--cube--regular',
+                    },
+                  },
+                  {
+                    id: `${Devtools.Echo.Schema}-${node.id}`,
+                    data: Devtools.Echo.Schema,
+                    type: DEVTOOLS_TYPE,
+                    properties: {
+                      label: ['schema label', { ns: DEBUG_PLUGIN }],
                       icon: 'ph--database--regular',
                     },
                   },
@@ -384,7 +393,7 @@ export default (context: PluginsContext) =>
     // Debug object companion.
     createExtension({
       id: `${DEBUG_PLUGIN}/debug-object`,
-      filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+      filter: (node): node is Node<AnyLiveObject<any>> => isEchoObject(node.data),
       connector: ({ node }) => [
         {
           id: [node.id, 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
@@ -393,6 +402,25 @@ export default (context: PluginsContext) =>
           properties: {
             label: ['debug label', { ns: DEBUG_PLUGIN }],
             icon: 'ph--bug--regular',
+            disposition: 'hidden',
+            position: 'fallback',
+          },
+        },
+      ],
+    }),
+
+    // Devtools deck companion.
+    createExtension({
+      id: `${DEBUG_PLUGIN}/devtools-overview`,
+      filter: (node): node is Node<null> => node.id === 'root',
+      connector: ({ node }) => [
+        {
+          id: [node.id, 'devtools'].join(ATTENDABLE_PATH_SEPARATOR),
+          type: DECK_COMPANION_TYPE,
+          data: null,
+          properties: {
+            label: ['devtools overview label', { ns: DEBUG_PLUGIN }],
+            icon: 'ph--hammer--regular',
             disposition: 'hidden',
             position: 'fallback',
           },

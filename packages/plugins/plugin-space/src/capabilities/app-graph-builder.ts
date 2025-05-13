@@ -10,7 +10,7 @@ import {
   getSpace,
   isEchoObject,
   OBJECT_ID_LENGTH,
-  type ReactiveEchoObject,
+  type AnyLiveObject,
   SPACE_ID_LENGTH,
   SpaceState,
   type Space,
@@ -99,14 +99,14 @@ export default (context: PluginsContext) => {
           },
         },
         {
-          id: SpaceAction.Share._tag,
+          id: SpaceAction.OpenMembers._tag,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
             const layout = context.requestCapability(Capabilities.Layout);
             const client = context.requestCapability(ClientCapabilities.Client);
             const { spaceId } = parseId(layout.workspace);
             const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
-            await dispatch(createIntent(SpaceAction.Share, { space }));
+            await dispatch(createIntent(SpaceAction.OpenMembers, { space }));
           },
           properties: {
             label: ['share space label', { ns: SPACE_PLUGIN }],
@@ -130,7 +130,7 @@ export default (context: PluginsContext) => {
           },
           properties: {
             label: ['open current space settings label', { ns: SPACE_PLUGIN }],
-            icon: 'ph--gear--regular',
+            icon: 'ph--faders--regular',
             keyBinding: {
               macos: 'meta+shift+,',
               windows: 'ctrl+shift+,',
@@ -348,7 +348,7 @@ export default (context: PluginsContext) => {
     // Create collection actions and action groups.
     createExtension({
       id: `${SPACE_PLUGIN}/object-actions`,
-      filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+      filter: (node): node is Node<AnyLiveObject<any>> => isEchoObject(node.data),
       actions: ({ node }) => {
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
         const state = context.requestCapability(SpaceCapabilities.State);
@@ -359,7 +359,7 @@ export default (context: PluginsContext) => {
     // Object settings plank companion.
     createExtension({
       id: `${SPACE_PLUGIN}/settings`,
-      filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+      filter: (node): node is Node<AnyLiveObject<any>> => isEchoObject(node.data),
       connector: ({ node }) => [
         {
           id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),
@@ -369,7 +369,7 @@ export default (context: PluginsContext) => {
             label: ['object settings label', { ns: SPACE_PLUGIN }],
             icon: 'ph--sliders--regular',
             disposition: 'hidden',
-            position: 'hoist',
+            position: 'fallback',
           },
         },
       ],

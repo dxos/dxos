@@ -50,7 +50,7 @@ export class DXN {
      * dxn:echo:<space id>:<echo id>
      * dxn:echo:@:<echo id>
      */
-    // TODO(burdon): Rename to OBJECT?
+    // TODO(burdon): Rename to OBJECT? (BREAKING CHANGE).
     // TODO(burdon): Add separate Kind for space.
     ECHO: 'echo',
 

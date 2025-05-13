@@ -47,7 +47,12 @@ describe('Echo reactive proxy', () => {
       createObjectFn: async (props = {}) => {
         const testSchema =
           schema === Testing.TestSchema
-            ? schema.pipe(EchoObject({ typename: 'example.com/test/TestSchema', version: '0.1.0' }))
+            ? schema.pipe(
+                EchoObject({
+                  typename: 'example.com/test/TestSchema',
+                  version: '0.1.0',
+                }),
+              )
             : schema;
         const object = (schema == null ? live(props) : live(testSchema as any, props)) as Testing.TestSchema;
         if (testSchema && !db.graph.schemaRegistry.hasSchema(testSchema)) {

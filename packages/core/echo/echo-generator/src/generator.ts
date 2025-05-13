@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Schema } from 'effect';
+
 import { Filter, type Space } from '@dxos/client/echo';
-import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { getTypeAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
+import { type AnyLiveObject } from '@dxos/echo-db';
+import { getTypeAnnotation, EchoSchema, getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { live, getSchema, isLiveObject, type Live } from '@dxos/live-object';
+import { live, isLiveObject, type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -30,15 +32,15 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     private readonly _provider?: TestObjectProvider<T>,
   ) {}
 
-  get schemas(): (EchoSchema | S.Schema.AnyNoContext)[] {
+  get schemas(): (EchoSchema | Schema.Schema.AnyNoContext)[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T): EchoSchema | S.Schema.AnyNoContext | undefined {
+  getSchema(type: T): EchoSchema | Schema.Schema.AnyNoContext | undefined {
     return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
   }
 
-  protected setSchema(type: T, schema: EchoSchema | S.Schema.AnyNoContext) {
+  protected setSchema(type: T, schema: EchoSchema | Schema.Schema.AnyNoContext) {
     this._schemas[type] = schema;
   }
 
@@ -82,9 +84,9 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 
   async addSchemas() {
-    const result: (EchoSchema | S.Schema.AnyNoContext)[] = [];
+    const result: (EchoSchema | Schema.Schema.AnyNoContext)[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
-      const echoSchema = await this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema.AnyNoContext);
+      const echoSchema = await this._maybeRegisterSchema(typename, schema as EchoSchema | Schema.Schema.AnyNoContext);
       this.setSchema(typename as T, echoSchema);
       result.push(echoSchema);
     }
@@ -92,14 +94,14 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return result;
   }
 
-  override async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveEchoObject<any>> {
+  override async createObject({ types }: { types?: T[] } = {}): Promise<AnyLiveObject<any>> {
     return this._space.db.add(await super.createObject({ types }));
   }
 
   private async _maybeRegisterSchema(
     typename: string,
-    schema: EchoSchema | S.Schema.AnyNoContext,
-  ): Promise<EchoSchema | S.Schema.AnyNoContext> {
+    schema: EchoSchema | Schema.Schema.AnyNoContext,
+  ): Promise<EchoSchema | Schema.Schema.AnyNoContext> {
     if (schema instanceof EchoSchema) {
       const existingSchema = this._space.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
@@ -117,7 +119,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     }
   }
 
-  async mutateObject(object: ReactiveEchoObject<any>, params: MutationsProviderParams) {
+  async mutateObject(object: AnyLiveObject<any>, params: MutationsProviderParams) {
     invariant(this._mutations, 'Mutations not defined.');
     const type = getTypeAnnotation(getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
@@ -125,7 +127,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     await this._mutations![type](object, params);
   }
 
-  async mutateObjects(objects: ReactiveEchoObject<any>[], params: MutationsProviderParams) {
+  async mutateObjects(objects: AnyLiveObject<any>[], params: MutationsProviderParams) {
     for (const object of objects) {
       await this.mutateObject(object, params);
     }

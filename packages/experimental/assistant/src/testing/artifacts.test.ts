@@ -3,7 +3,7 @@
 //
 
 /*
-import { Schema as S } from '@effect/schema';
+import { Schema } from '@effect/schema';
 import { describe, test } from 'vitest';
 
 import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
@@ -15,26 +15,26 @@ import { AIServiceEdgeClient, Tool } from '../ai-service';
 import { defineTool, ToolResult } from '../conversation';
 
 // TODO(dmaretskyi): Effect schema.
-const ArtifactDef = S.Struct({
-  typename: S.String,
-  description: S.String,
-  schema: S.Any,
-  actions: S.Array(Tool),
-}).pipe(S.mutable);
+const ArtifactDef = Schema.Struct({
+  typename: Schema.String,
+  description: Schema.String,
+  schema: Schema.Any,
+  actions: Schema.Array(Tool),
+}).pipe(Schema.mutable);
 
-type ArtifactDef = S.Schema.Type<typeof ArtifactDef>;
+type ArtifactDef = Schema.Schema.Type<typeof ArtifactDef>;
 
-const ListItem = S.Struct({
-  name: S.String,
+const ListItem = Schema.Struct({
+  name: Schema.String,
 });
 
-const ListSchema = S.Struct({
+const ListSchema = Schema.Struct({
   id: ObjectId,
-  title: S.String,
-  items: S.Array(ListItem).pipe(S.mutable),
-}).pipe(S.mutable);
+  title: Schema.String,
+  items: Schema.Array(ListItem).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
 
-type ListSchema = S.Schema.Type<typeof ListSchema>;
+type ListSchema = Schema.Schema.Type<typeof ListSchema>;
 
 const list: ArtifactDef = {
   typename: 'example.com/type/List',
@@ -44,7 +44,7 @@ const list: ArtifactDef = {
     defineTool('list', {
       name: 'query',
       description: 'Query all lists',
-      schema: S.Struct({}),
+      schema: Schema.Struct({}),
       execute: async ({}, context) => {
         return ToolResult.Success(LISTS[id]);
       },
@@ -52,7 +52,7 @@ const list: ArtifactDef = {
     defineTool('list', {
       name: 'inspect',
       description: 'Get contents of the list',
-      schema: S.Struct({
+      schema: Schema.Struct({
         id: ObjectId.annotations({ description: 'The list to inspect' }),
       }),
       execute: async ({ id }, context) => {
@@ -62,9 +62,9 @@ const list: ArtifactDef = {
     defineTool('list', {
       name: 'create',
       description: 'Add one or more items to an existing list',
-      schema: S.Struct({
+      schema: Schema.Struct({
         id: ObjectId.annotations({ description: 'The list to add items to' }),
-        items: S.Array(ListItem).annotations({ description: 'The items to add to the list' }),
+        items: Schema.Array(ListItem).annotations({ description: 'The items to add to the list' }),
       }),
       execute: async ({ id, items }, context) => {
         LISTS[id].items.push(...items);
@@ -81,7 +81,7 @@ const artifacts = [list];
 const getArtifactDefinitions = defineTool('system', {
   name: 'getArtifactDefinitions',
   description: 'Queries the definitions and metadata of artifacts defined in the system',
-  schema: S.Any,
+  schema: Schema.Any,
   execute: async (_, context) => {
     return ToolResult.Success(
       artifacts.map((artifact) => ({
@@ -116,8 +116,8 @@ describe('Artifacts', () => {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       parameters: toJsonSchema(
-        S.Struct({
-          magicWord: S.String.annotations({ description: 'The magic word. Should be exactly "pretty please"' }),
+        Schema.Struct({
+          magicWord: Schema.String.annotations({ description: 'The magic word. Should be exactly "pretty please"' }),
         }),
       ),
     };

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "ECHO API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -34,7 +34,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "effect": "3.13.3"
+    "effect": "3.14.21"
   },
   "publishConfig": {
     "access": "public"

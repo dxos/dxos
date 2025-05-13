@@ -14,7 +14,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { faker } from '@dxos/random';
 import { Config } from '@dxos/react-client';
 import { makeRef, live, useSpace } from '@dxos/react-client/echo';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { IntegrationsContainer } from './IntegrationsContainer';
@@ -46,7 +46,7 @@ const meta: Meta = {
               },
             },
           }),
-          types: [IntegrationType, AccessTokenType],
+          types: [IntegrationType, DataType.AccessToken],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -58,7 +58,7 @@ const meta: Meta = {
                 live(IntegrationType, {
                   serviceId: integration.serviceId,
                   accessToken: makeRef(
-                    live(AccessTokenType, {
+                    live(DataType.AccessToken, {
                       token: faker.string.uuid(),
                       source: integration.auth!.source,
                       note: integration.auth!.note,

@@ -5,7 +5,7 @@
 import '@fontsource/poiret-one';
 
 import { CaretRight, Key, Planet, QrCode, Receipt, User } from '@phosphor-icons/react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { type ChangeEvent, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, Input, useTranslation, Dialog } from '@dxos/react-ui';
@@ -48,7 +48,7 @@ export const Welcome = ({
   }, [email, onSignup]);
 
   const handleEmailKeyDown = useCallback(
-    (ev: React.KeyboardEvent<HTMLInputElement>) => {
+    (ev: KeyboardEvent<HTMLInputElement>) => {
       if (ev.key === 'Enter') {
         void handleSignup();
       }
@@ -56,7 +56,7 @@ export const Welcome = ({
     [handleSignup],
   );
 
-  const handleEmailChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEmailChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
     setEmail(ev.target.value.trim());
   }, []);
 

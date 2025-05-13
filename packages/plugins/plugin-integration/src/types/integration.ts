@@ -6,14 +6,14 @@ import { Schema as S } from 'effect';
 
 import { EchoObject, ObjectId, Ref } from '@dxos/echo-schema';
 import { OAuthProvider } from '@dxos/protocols';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 /**
  * Configured integrations stored in a space.
  */
 export const IntegrationType = S.Struct({
   id: ObjectId,
-  accessToken: S.optional(Ref(AccessTokenType)),
+  accessToken: S.optional(Ref(DataType.AccessToken)),
   serviceId: S.String,
   config: S.optional(S.Record({ key: S.String, value: S.String })),
 }).pipe(EchoObject({ typename: 'dxos.org/type/Integration', version: '0.1.0' }));

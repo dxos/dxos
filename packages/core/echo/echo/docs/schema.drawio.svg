@@ -107,13 +107,13 @@
                         <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 740px; margin-left: 621px;">
                             <div style="box-sizing: border-box; font-size: 0; text-align: center; color: #333333; ">
                                 <div style="display: inline-block; font-size: 12px; font-family: &quot;Helvetica&quot;; color: light-dark(#333333, #c1c1c1); line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
-                                    S.Schema
+                                    Schema.Schema
                                 </div>
                             </div>
                         </div>
                     </foreignObject>
                     <text x="660" y="744" fill="#333333" font-family="&quot;Helvetica&quot;" font-size="12px" text-anchor="middle">
-                        S.Schema
+                        Schema.Schema
                     </text>
                 </switch>
             </g>
@@ -772,13 +772,13 @@
                         <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 20px; margin-left: 621px;">
                             <div style="box-sizing: border-box; font-size: 0; text-align: center; color: #333333; ">
                                 <div style="display: inline-block; font-size: 12px; font-family: &quot;Helvetica&quot;; color: light-dark(#333333, #c1c1c1); line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
-                                    S.Schema
+                                    Schema.Schema
                                 </div>
                             </div>
                         </div>
                     </foreignObject>
                     <text x="660" y="24" fill="#333333" font-family="&quot;Helvetica&quot;" font-size="12px" text-anchor="middle">
-                        S.Schema
+                        Schema.Schema
                     </text>
                 </switch>
             </g>
@@ -1171,13 +1171,13 @@
                         <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 610px; margin-left: 261px;">
                             <div style="box-sizing: border-box; font-size: 0; text-align: center; color: #000000; ">
                                 <div style="display: inline-block; font-size: 10px; font-family: &quot;Helvetica&quot;; color: light-dark(#000000, #ffffff); line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
-                                    makeRef
+                                    Ref.make
                                 </div>
                             </div>
                         </div>
                     </foreignObject>
                     <text x="300" y="613" fill="light-dark(#000000, #ffffff)" font-family="&quot;Helvetica&quot;" font-size="10px" text-anchor="middle">
-                        makeRef
+                        Ref.make
                     </text>
                 </switch>
             </g>
@@ -1267,13 +1267,13 @@
                         <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 460px; margin-left: 461px;">
                             <div style="box-sizing: border-box; font-size: 0; text-align: center; color: #333333; ">
                                 <div style="display: inline-block; font-size: 12px; font-family: &quot;Helvetica&quot;; color: light-dark(#333333, #c1c1c1); line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
-                                    S.Schema
+                                    Schema.Schema
                                 </div>
                             </div>
                         </div>
                     </foreignObject>
                     <text x="500" y="464" fill="#333333" font-family="&quot;Helvetica&quot;" font-size="12px" text-anchor="middle">
-                        S.Schema
+                        Schema.Schema
                     </text>
                 </switch>
             </g>

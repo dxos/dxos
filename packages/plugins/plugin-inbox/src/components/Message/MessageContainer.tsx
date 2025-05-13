@@ -2,23 +2,101 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import { useComputed, useSignal } from '@preact/signals-react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { getDXN } from '@dxos/echo-schema';
+import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-client/echo';
+import { ElevationProvider, useTranslation } from '@dxos/react-ui';
+import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
+import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { type MenuActionHandler } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type MessageType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
+
+import { Message } from './Message';
+import { type ViewMode } from './MessageHeader';
+import { useMessageToolbarActions, type MessageToolbarAction } from './toolbar';
+import { INBOX_PLUGIN } from '../../meta';
+import { type MailboxType, InboxAction } from '../../types';
 
 export type MessageContainerProps = {
-  message: MessageType;
+  space?: Space;
+  message?: DataType.Message;
+  inMailbox: MailboxType;
 };
 
-export const MessageContainer = ({ message }: MessageContainerProps) => {
+export const MessageContainer = ({ space, message, inMailbox }: MessageContainerProps) => {
+  const { t } = useTranslation(INBOX_PLUGIN);
+
+  const hasEnrichedContent = useMemo(() => {
+    const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
+    return textBlocks.length > 1 && !!textBlocks[1]?.text;
+  }, [message]);
+
+  const initialViewMode = useMemo<ViewMode>(() => {
+    return hasEnrichedContent ? 'enriched' : 'plain-only';
+  }, [hasEnrichedContent]);
+
+  const viewMode = useSignal<ViewMode>(initialViewMode);
+
+  const hasEmail = useComputed(() => !!message?.sender.email);
+  const contacts = useQuery(space, Filter.schema(DataType.Person));
+  const existingContact = useSignal<DataType.Person | undefined>(undefined);
+  const contactDxn = useComputed(() => (existingContact.value ? getDXN(existingContact.value)?.toString() : undefined));
+
+  useEffect(() => {
+    existingContact.value = contacts.find((contact) =>
+      contact.emails?.find((email) => email.value === message?.sender.email),
+    );
+  }, [contacts, message?.sender.email, hasEmail, existingContact]);
+
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+
+  const menu = useMessageToolbarActions(viewMode, existingContact);
+
+  const handleToolbarAction = useCallback<MenuActionHandler<MessageToolbarAction>>(
+    (action: MessageToolbarAction) => {
+      switch (action.properties.type) {
+        case 'viewMode': {
+          viewMode.value = viewMode.value === 'plain' ? 'enriched' : 'plain';
+          break;
+        }
+        case 'extractContact': {
+          if (!space || !message) {
+            return;
+          }
+          void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
+          break;
+        }
+      }
+    },
+    [viewMode, message, space, dispatch],
+  );
+
+  if (!message) {
+    return <p className='p-8 text-center text-description'>{t('no message message')}</p>;
+  }
+
   return (
-    <StackItem.Content classNames='overflow-y-auto p-2'>
-      {message.blocks
-        .filter((block) => 'text' in block)
-        .map((block, b) => {
-          return <p key={`block--${b}`}>{block.text}</p>;
-        })}
+    <StackItem.Content classNames='relative'>
+      <div role='none' className='grid grid-rows-[min-content_1fr]'>
+        <div role='none' className={stackItemContentToolbarClassNames('section')}>
+          <ElevationProvider elevation='positioned'>
+            <MenuProvider {...menu} attendableId={fullyQualifiedId(inMailbox)} onAction={handleToolbarAction}>
+              <ToolbarMenu />
+            </MenuProvider>
+          </ElevationProvider>
+        </div>
+        <Message
+          space={space}
+          message={message}
+          viewMode={viewMode.value}
+          hasEnrichedContent={hasEnrichedContent}
+          contactDxn={contactDxn.value}
+        />
+      </div>
     </StackItem.Content>
   );
 };

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 
 import { clamp } from '@dxos/util';
 
@@ -20,25 +20,25 @@ import { FormatAnnotation, FormatEnum } from './types';
  * }
  * Note: optional third element for altitude.
  */
-export const GeoPoint = S.Tuple(
-  S.Number.pipe(S.clamp(-180, 180), S.multipleOf(0.00001)).annotations({
-    [AST.TitleAnnotationId]: 'Longitude',
+export const GeoPoint = Schema.Tuple(
+  Schema.Number.pipe(Schema.clamp(-180, 180), Schema.multipleOf(0.00001)).annotations({
+    [SchemaAST.TitleAnnotationId]: 'Longitude',
   }),
-  S.Number.pipe(S.clamp(-90, 90), S.multipleOf(0.00001)).annotations({
-    [AST.TitleAnnotationId]: 'Latitude',
+  Schema.Number.pipe(Schema.clamp(-90, 90), Schema.multipleOf(0.00001)).annotations({
+    [SchemaAST.TitleAnnotationId]: 'Latitude',
   }),
-  S.optionalElement(S.Number).annotations({
-    [AST.TitleAnnotationId]: 'Height ASL (m)',
+  Schema.optionalElement(Schema.Number).annotations({
+    [SchemaAST.TitleAnnotationId]: 'Height ASL (m)',
   }),
 ).pipe(
   FormatAnnotation.set(FormatEnum.GeoPoint),
-  S.annotations({
-    [AST.TitleAnnotationId]: 'GeoPoint',
-    [AST.DescriptionAnnotationId]: 'GeoJSON Position',
+  Schema.annotations({
+    [SchemaAST.TitleAnnotationId]: 'GeoPoint',
+    [SchemaAST.DescriptionAnnotationId]: 'GeoJSON Position',
   }),
 );
 
-export type GeoPoint = S.Schema.Type<typeof GeoPoint>;
+export type GeoPoint = Schema.Schema.Type<typeof GeoPoint>;
 
 export type GeoLocation = {
   longitude: number;

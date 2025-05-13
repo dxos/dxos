@@ -10,7 +10,7 @@ import React from 'react';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
 import { List } from '@dxos/react-ui';
-import { AccessTokenType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { IntegrationItem } from './IntegrationItem';
@@ -35,7 +35,7 @@ const meta: Meta<typeof IntegrationItem> = {
     integration: live(IntegrationType, {
       serviceId: TEST_INTEGRATIONS[0].serviceId,
       accessToken: makeRef(
-        live(AccessTokenType, {
+        live(DataType.AccessToken, {
           token: faker.string.uuid(),
           source: TEST_INTEGRATIONS[0].auth!.source,
           note: TEST_INTEGRATIONS[0].auth!.note,

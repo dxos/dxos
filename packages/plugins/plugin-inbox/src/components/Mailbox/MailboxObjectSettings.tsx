@@ -4,11 +4,11 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { AutomationAction } from '@dxos/plugin-automation/types';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 
@@ -24,16 +24,26 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
   const handleConfigureSync = useCallback(() => {
     invariant(space);
 
-    const syncTrigger = triggers.find((trigger) => trigger.meta?.mailboxId === object.id);
+    const syncTrigger = triggers.find(
+      (trigger) => trigger.spec?.type === TriggerKind.Timer && trigger.input?.mailboxId === object.id,
+    );
     if (syncTrigger) {
-      void dispatch(createIntent(SpaceAction.OpenSettings, { space }));
+      void dispatch(
+        createIntent(LayoutAction.Open, {
+          part: 'main',
+          subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+          options: {
+            workspace: space.id,
+          },
+        }),
+      );
     } else {
       void dispatch(
         createIntent(AutomationAction.CreateTriggerFromTemplate, {
           space,
           template: { type: 'timer', cron: '*/30 * * * * *' },
           scriptName: 'Gmail',
-          payload: { mailboxId: object.id },
+          input: { mailboxId: object.id },
         }),
       );
     }
@@ -51,7 +61,15 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
       return false;
     });
     if (subscriptionTrigger) {
-      void dispatch(createIntent(SpaceAction.OpenSettings, { space }));
+      void dispatch(
+        createIntent(LayoutAction.Open, {
+          part: 'main',
+          subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
+          options: {
+            workspace: space.id,
+          },
+        }),
+      );
     } else {
       void dispatch(
         createIntent(AutomationAction.CreateTriggerFromTemplate, {

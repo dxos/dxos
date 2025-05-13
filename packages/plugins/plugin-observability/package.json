@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-observability",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -49,6 +49,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "effect": "^3.13.3",
     "localforage": "^1.10.0"
   },
   "devDependencies": {
@@ -64,7 +65,9 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "react": "~18.2.0"
+    "effect": "^3.13.3",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

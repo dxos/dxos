@@ -4,11 +4,11 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Expando } from '@dxos/echo-schema';
+import { Expando, getSchema, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, getSchema, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
@@ -126,18 +126,18 @@ describe('Serializer', () => {
         const obj = live({
           title: 'Main task',
           subtasks: [
-            makeRef(
+            Ref.make(
               live(Expando, {
                 title: 'Subtask 1',
               }),
             ),
-            makeRef(
+            Ref.make(
               live(Expando, {
                 title: 'Subtask 2',
               }),
             ),
           ],
-          previous: makeRef(
+          previous: Ref.make(
             live(Expando, {
               title: 'Previous task',
             }),

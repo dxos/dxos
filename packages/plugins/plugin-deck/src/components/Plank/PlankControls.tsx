@@ -73,7 +73,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
         <PlankControl
           label={t('close companion label')}
           variant='ghost'
-          icon='ph--caret-left--regular'
+          icon='ph--x--regular'
           onClick={handleCloseCompanion}
           classNames={plankControlSpacing}
         />
@@ -106,7 +106,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                   <PlankControl
                     label={t('show fullscreen plank label')}
                     classNames={buttonClassNames}
-                    icon='ph--frame-corners--regular'
+                    icon='ph--corners-out--regular'
                     onClick={() => onClick?.('solo--fullscreen')}
                   />
                 )}
@@ -114,12 +114,18 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                   label={t(
                     layoutMode === 'solo--fullscreen'
                       ? 'exit fullscreen label'
-                      : !layoutIsAnySolo
-                        ? 'show solo plank label'
-                        : 'show deck plank label',
+                      : layoutIsAnySolo
+                        ? 'show deck plank label'
+                        : 'show solo plank label',
                   )}
                   classNames={buttonClassNames}
-                  icon={layoutIsAnySolo ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
+                  icon={
+                    layoutMode === 'solo--fullscreen'
+                      ? 'ph--corners-in--regular'
+                      : layoutIsAnySolo
+                        ? 'ph--arrows-in-line-horizontal--regular'
+                        : 'ph--arrows-out-line-horizontal--regular'
+                  }
                   onClick={() => onClick?.(layoutMode === 'solo--fullscreen' ? 'solo--fullscreen' : 'solo')}
                 />
               </>
