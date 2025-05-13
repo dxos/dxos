@@ -85,7 +85,7 @@ export const FormField = ({
     return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
   }
 
-  const InputComponent = getInputComponent(type, format, ast);
+  const InputComponent = getInputComponent(type, format);
   if (InputComponent) {
     return (
       <div role='none'>
