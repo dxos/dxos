@@ -16,8 +16,8 @@ import { SelectInput } from './Defaults';
 import { type ComponentLookup } from './Form';
 import { useInputProps, useFormValues } from './FormContext';
 import { type InputComponent } from './Input';
-import { type QueryRefOptions } from './RefField';
 import { getInputComponent } from './factory';
+import { type QueryRefOptions } from './hooks';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;

@@ -3,7 +3,7 @@
 //
 
 import { type SchemaAST } from 'effect';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import {
   Expando,
@@ -11,21 +11,15 @@ import {
   Ref,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
-  type TypeAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
-import { log } from '@dxos/log';
 import { Input } from '@dxos/react-ui';
 import { TagPicker, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
-import { type MaybePromise } from '@dxos/util';
 
 import { TextInput } from './Defaults';
 import { InputHeader, type InputProps } from './Input';
-
-export type RefOption = { dxn: DXN; label?: string };
-export type QueryRefOptions = (type: TypeAnnotation) => MaybePromise<RefOption[]>;
+import { type QueryRefOptions, useQueryRefOptions } from './hooks';
 
 // Using InputProps and adding the necessary props for RefField
 type RefFieldProps = InputProps & {
@@ -126,41 +120,6 @@ export const RefField = ({
   );
 };
 
-type UseQueryRefOptionsProps = { refTypeInfo: TypeAnnotation | undefined; onQueryRefOptions?: QueryRefOptions };
-
-export const useQueryRefOptions = ({ refTypeInfo, onQueryRefOptions }: UseQueryRefOptionsProps) => {
-  const [options, setOptions] = useState<TagPickerItemData[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!refTypeInfo || !onQueryRefOptions) {
-      return;
-    }
-
-    const fetchOptions = async () => {
-      setLoading(true);
-      try {
-        const fetchedOptions = await onQueryRefOptions(refTypeInfo);
-        setOptions(
-          fetchedOptions.map((option) => {
-            const dxn = option.dxn.toString() as string;
-            return { id: dxn, label: option.label ?? dxn, hue: 'neutral' as any };
-          }),
-        );
-      } catch (error) {
-        log.error('Failed to fetch ref options:', error);
-        setOptions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void fetchOptions();
-  }, [refTypeInfo, onQueryRefOptions]);
-
-  return { options, loading };
-};
-
 const RefFieldFallback = ({
   type,
   label,
@@ -174,7 +133,7 @@ const RefFieldFallback = ({
   const handleOnValueChange = (_type: any, dxnString: string) => {
     const dxn = DXN.tryParse(dxnString);
     if (dxn) {
-      onValueChange?.('object', refFromDXN(dxn));
+      onValueChange?.('object', Ref.fromDXN(dxn));
     } else if (dxnString === '') {
       onValueChange?.('object', undefined);
     } else {
