@@ -1,5 +1,10 @@
-import type { DXN } from '@dxos/keys';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { SchemaAST as AST, Schema } from 'effect';
+
+import type { DXN } from '@dxos/keys';
 
 /*
 
@@ -30,10 +35,10 @@ type Id = string & { __Id: never };
 //
 type Simplify<T> = { [K in keyof T]: T[K] } & {};
 
-type Flatten<T extends readonly any[]> = T extends [infer Head, ...infer Tail]
+type _Flatten<T extends readonly any[]> = T extends [infer Head, ...infer Tail]
   ? Head extends readonly any[]
-    ? [...Head, ...Flatten<Tail>]
-    : [Head, ...Flatten<Tail>]
+    ? [...Head, ..._Flatten<Tail>]
+    : [Head, ..._Flatten<Tail>]
   : [];
 
 type Last<T extends any[]> = T extends [...infer _, infer L] ? L : never;
@@ -145,7 +150,7 @@ declare namespace Ref {
 /**
  * Reference that has been resolved.
  */
-interface ResolvedRef<N extends NodeDef.Any> extends Ref<N> {
+interface _ResolvedRef<N extends NodeDef.Any> extends Ref<N> {
   readonly target: Node<NodeDef.Properties<N>>;
 }
 
@@ -465,7 +470,7 @@ const ActionForNodeSchema = Schema.Struct({
 const ActionForNodeRelation = RelationDef('ActionForNode', ActionForNodeSchema);
 
 // TODO(dmaretskyi): Example for testing, actual impl will have subscriptions.
-const runQuery = <Q extends CompleteQuery.Any>(query: Q): Simplify<CompleteQuery.Result<Q>> => {
+const _runQuery = <Q extends CompleteQuery.Any>(query: Q): Simplify<CompleteQuery.Result<Q>> => {
   return null as any;
 };
 
@@ -478,15 +483,15 @@ const runQuery = <Q extends CompleteQuery.Any>(query: Q): Simplify<CompleteQuery
 declare const QB: QueryBuilder;
 
 // MATCH (d:Document { kind: 'text' }) RETURN d
-const getAllTextDocuments = QB.Match(QB.Node(DocumentNode).where({ kind: 'text' })).return();
+const _getAllTextDocuments = QB.Match(QB.Node(DocumentNode).where({ kind: 'text' })).return();
 
 // MATCH (Document)-[ACTION_FOR_NODE]->(Action)
-const getAllActionsForAllDocuments = QB.Match(
+const _getAllActionsForAllDocuments = QB.Match(
   QB.Node(DocumentNode).related(QB.Relation(ActionForNodeRelation)).to(QB.Node(ActionNode)),
 ).return();
 
 // MATCH (d:Document) RETURN d.name AS name, d.kind AS kind
-const getAllDocumentsMetadata = QB.build(() => {
+const _getAllDocumentsMetadata = QB.build(() => {
   const document = QB.Node(DocumentNode);
 
   return QB.Match(document).return({
@@ -496,7 +501,7 @@ const getAllDocumentsMetadata = QB.build(() => {
 });
 
 // MATCH (d:Document)-[ACTION_FOR_NODE]->(a:Action) RETURN d.name AS name, d.content AS content, d.author.name AS authorName, a AS action ORDER BY authorName DESC, name ASC LIMIT 100
-const getAllDocumentNamesAndTheirAuthorsAndTheirActions = QB.build(() => {
+const _getAllDocumentNamesAndTheirAuthorsAndTheirActions = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const action = QB.Node(ActionNode);
 
@@ -507,14 +512,14 @@ const getAllDocumentNamesAndTheirAuthorsAndTheirActions = QB.build(() => {
       name: document.prop('name'),
       content: document.prop('content'),
       authorName,
-      action: action,
+      action,
     })
     .orderBy([authorName, 'DESC'], [document.prop('name'), 'ASC'])
     .limit(100);
 });
 
 // MATCH (d:Document) RETURN DISTINCT document.author AS author
-const allContactsThatHaveAuthoredDocuments = QB.build(() => {
+const _allContactsThatHaveAuthoredDocuments = QB.build(() => {
   const document = QB.Node(DocumentNode);
 
   return QB.Match(document)
@@ -525,7 +530,7 @@ const allContactsThatHaveAuthoredDocuments = QB.build(() => {
 });
 
 // MATCH (d:Document) WHERE d.author.id == $authorId RETURN DISTINCT document.author AS author
-const allDocumentsByThisAuthorWhere = (authorId: Id) =>
+const _allDocumentsByThisAuthorWhere = (authorId: Id) =>
   QB.build(() => {
     const document = QB.Node(DocumentNode);
     const author = document.prop('author').target;
@@ -540,7 +545,7 @@ const allDocumentsByThisAuthorWhere = (authorId: Id) =>
 
 // Note: this is a variation of the above query with WHERE clause, but this one might be easier for the Query Planner to optimize to use the Reverse Reference Index since the author constraint is in the pattern.
 // MATCH (d:Document { author: $authorId }) RETURN DISTINCT document.name AS name
-const allDocumentsByThisAuthorPattern = (authorId: Id) =>
+const _allDocumentsByThisAuthorPattern = (authorId: Id) =>
   QB.build(() => {
     const document = QB.Node(DocumentNode).where({ author: authorId });
 
@@ -555,7 +560,7 @@ const allDocumentsByThisAuthorPattern = (authorId: Id) =>
 // Get all documents authored by Rick
 
 // MATCH (d:Document) WHERE d.author.name == 'Rick' RETURN document.name AS name
-const allDocumentsByRicks = QB.build(() => {
+const _allDocumentsByRicks = QB.build(() => {
   const document = QB.Node(DocumentNode);
 
   return QB.Match(document)
@@ -567,7 +572,7 @@ const allDocumentsByRicks = QB.build(() => {
 
 // TODO(dmaretskyi): Drop support for this since its difficult to express in the serialized query.
 // MATCH (d:Document { author: (Contact { name: 'Rick' }) }) RETURN document.name AS name
-const allDocumentByRicks2 = QB.build(() => {
+const _allDocumentByRicks2 = QB.build(() => {
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
   const document = QB.Node(DocumentNode).where({ author: contact });
 
@@ -577,7 +582,7 @@ const allDocumentByRicks2 = QB.build(() => {
 });
 
 // MATCH (d:Document)-[.author]->(c:Contact { name: 'Rick }) RETURN document.name AS name
-const allDocumentByRicks3 = QB.build(() => {
+const _allDocumentByRicks3 = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
 
@@ -587,7 +592,7 @@ const allDocumentByRicks3 = QB.build(() => {
 });
 
 // MATCH (c:Contact { name: 'Rick })<-[.author]-(d:Document) RETURN document.name AS name
-const allDocumentByRicks4 = QB.build(() => {
+const _allDocumentByRicks4 = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
 

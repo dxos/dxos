@@ -1,7 +1,13 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Schema } from 'effect';
+
 import { raise } from '@dxos/debug';
 import { getSchemaDXN, type Ref } from '@dxos/echo-schema';
-import { Schema } from 'effect';
-import * as QueryAST from './ast';
+
+import type * as QueryAST from './ast';
 import type { Relation } from '..';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
@@ -91,9 +97,7 @@ export interface Predicate<T> {
 const Predicate = {
   variance: {} as Predicate<any>['~Predicate'],
 
-  make<T>(ast: QueryAST.Predicate): Predicate<T> {
-    return { ast, '~Predicate': Predicate.variance } as Predicate<T>;
-  },
+  make: <T>(ast: QueryAST.Predicate): Predicate<T> => ({ ast, '~Predicate': Predicate.variance }) as Predicate<T>,
 };
 
 type PredicateSet<T> = {
@@ -104,7 +108,7 @@ type PredicateSet<T> = {
 /**
  * All property paths inside T that are references.
  */
-type RefPropKey<T> = { [K in keyof T]: T[K] extends Ref<infer U> ? K : never }[keyof T] & string;
+type RefPropKey<T> = { [K in keyof T]: T[K] extends Ref<infer _U> ? K : never }[keyof T] & string;
 
 const predicateSetToAst = (predicates: PredicateSet<any>): QueryAST.PredicateSet => {
   return Object.fromEntries(

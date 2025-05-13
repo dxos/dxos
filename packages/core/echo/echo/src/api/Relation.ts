@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { EchoRelation, type RelationSourceTargetRefs } from '@dxos/echo-schema';
 
 export const def = EchoRelation;

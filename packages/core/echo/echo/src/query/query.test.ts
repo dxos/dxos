@@ -1,9 +1,15 @@
-import { create, EchoRelation } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
-import { Type, Relation } from '..';
+
+import { create } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
+
 import { Query } from './api';
+import { Type, Relation } from '..';
 
 //
 // Example schema

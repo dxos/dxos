@@ -1,5 +1,10 @@
-import { DXN } from '@dxos/echo-schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema } from 'effect';
+
+import { DXN } from '@dxos/echo-schema';
 
 export const Predicate = Schema.Union(
   Schema.Struct({
