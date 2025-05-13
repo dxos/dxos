@@ -1,15 +1,10 @@
-import { Schema } from 'effect';
-import { Type } from '..';
-import { EchoRelation, getSchemaDXN, type Ref } from '@dxos/echo-schema';
 import { raise } from '@dxos/debug';
-
-const Relation = {
-  def: EchoRelation,
-};
+import { getSchemaDXN, type Ref } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
-interface Query<T> {
+export interface Query<T> {
   '~Query': { value: T };
 
   ast: QueryAST.AST;
@@ -84,14 +79,14 @@ interface QueryAPI {
   range<T>(from: T, to: T): Predicate<T>;
 }
 
-interface Predicate<T> {
+export interface Predicate<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Predicate': { value: T };
 
   ast: QueryAST.Predicate;
 }
 
-const Predicate = {
+export const Predicate = {
   variance: {} as Predicate<any>['~Predicate'],
 
   make<T>(ast: QueryAST.Predicate): Predicate<T> {
@@ -118,12 +113,12 @@ const predicateSetToAst = (predicates: PredicateSet<any>): QueryAST.PredicateSet
 class QueryClass implements Query<any> {
   private static variance: Query<any>['~Query'] = {} as Query<any>['~Query'];
 
-  static type(schema: Schema.Schema.All, predicates?: PredicateSet<any>): Query<any> {
+  static type(schema: Schema.Schema.All, predicates?: PredicateSet<unknown>): Query<any> {
     const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
     return new QueryClass({
       type: 'type',
       typename: dxn.toString(),
-      predicates,
+      predicates: predicates ? predicateSetToAst(predicates) : undefined,
     });
   }
 
@@ -180,25 +175,25 @@ class QueryClass implements Query<any> {
     });
   }
 
-  outgoingRelations(relation: Schema.Schema.All, predicates?: PredicateSet<any> | undefined): Query<any> {
+  outgoingRelations(relation: Schema.Schema.All, predicates?: PredicateSet<unknown> | undefined): Query<any> {
     const dxn = getSchemaDXN(relation) ?? raise(new TypeError('Relation schema has no DXN'));
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
       typename: dxn.toString(),
-      predicates,
+      predicates: predicates ? predicateSetToAst(predicates) : undefined,
     });
   }
 
-  incomingRelations(relation: Schema.Schema.All, predicates?: PredicateSet<any> | undefined): Query<any> {
+  incomingRelations(relation: Schema.Schema.All, predicates?: PredicateSet<unknown> | undefined): Query<any> {
     const dxn = getSchemaDXN(relation) ?? raise(new TypeError('Relation schema has no DXN'));
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
       typename: dxn.toString(),
-      predicates,
+      predicates: predicates ? predicateSetToAst(predicates) : undefined,
     });
   }
 
@@ -219,7 +214,7 @@ class QueryClass implements Query<any> {
   }
 }
 
-const Query: QueryAPI = QueryClass;
+export const Query: QueryAPI = QueryClass;
 
 //
 // Query AST
@@ -304,60 +299,3 @@ export namespace QueryAST {
         queries: AST[];
       };
 }
-
-//
-// Example schema
-//
-
-const Person = Schema.Struct({
-  name: Schema.String,
-}).pipe(Type.def({ typename: 'dxos.org/type/Person', version: '0.1.0' }));
-interface Person extends Schema.Schema.Type<typeof Person> {}
-
-const Org = Schema.Struct({
-  name: Schema.String,
-}).pipe(Type.def({ typename: 'dxos.org/type/Org', version: '0.1.0' }));
-interface Org extends Schema.Schema.Type<typeof Org> {}
-
-const WorksFor = Schema.Struct({
-  since: Schema.String,
-}).pipe(Relation.def({ typename: 'dxos.org/type/WorksFor', version: '0.1.0', source: Person, target: Org }));
-interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
-
-const Task = Schema.Struct({
-  title: Schema.String,
-  createdAt: Schema.String,
-  assignee: Type.Ref(Person),
-}).pipe(Type.def({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
-interface Task extends Schema.Schema.Type<typeof Task> {}
-
-//
-// Example queries
-//
-
-// Query<Person>
-const getAllPeople = Query.type(Person);
-
-// Query<Person>
-const getAllPeopleNamedFred = Query.type(Person, { name: 'Fred' });
-
-// Query<Org>
-declare const fred: any;
-const getAllOrgsFredWorkedForSince2020 = Query.type(Person, { id: fred.id })
-  .outgoingRelations(WorksFor, { since: Query.gt('2020') })
-  .targets();
-
-// Query<Task>
-const getAllTasksForFred = Query.type(Person, { id: fred.id }).referencedBy(Task, 'assignee');
-
-// Query<Task>
-const allTasksForEmployeesOfCyberdyne = Query.type(Org, { name: 'Cyberdyne' })
-  .incomingRelations(WorksFor)
-  .sources()
-  .referencedBy(Task, 'assignee');
-
-// Query<Person | Org>
-const allPeopleOrOrgs = Query.all(Query.type(Person), Query.type(Org));
-
-// Query<Person>
-const assigneesOfAllTasksCreatedAfter2020 = Query.type(Task, { createdAt: Query.gt('2020') }).references('assignee');
