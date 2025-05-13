@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
 // @ts-ignore
-import { create, defineFunction, Filter, ObjectId, S } from 'dxos:functions';
+import { create, defineFunction, Filter, ObjectId } from 'dxos:functions';
+// @ts-ignore
 import {
   HttpClient,
   HttpClientRequest,
@@ -14,21 +14,18 @@ import {
 // @ts-ignore
 import { format, subDays } from 'https://esm.sh/date-fns@3.3.1';
 // @ts-ignore
-import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
+import { pipe, Chunk, Effect, Ref, Schedule, Schema, Stream } from 'https://esm.sh/effect@3.13.3';
 
 import { Type } from '@dxos/echo';
-
-// TODO(ZaymonFC): Calculate this dynamically and expose a parameter.
-const DEFAULT_AFTER = '2025-01-01';
 
 export default defineFunction({
   inputSchema: Schema.Struct({
     mailboxId: Schema.String,
     userId: Schema.optional(Schema.String).pipe(Schema.withDecodingDefault(() => 'me')),
     after: Schema.optional(Schema.Union(Schema.Number, Schema.String)).pipe(
-      S.withDecodingDefault(() => format(subDays(new Date(), 30), 'yyyy-MM-dd')),
+      Schema.withDecodingDefault(() => format(subDays(new Date(), 30), 'yyyy-MM-dd')),
     ),
-    pageSize: Schema.optional(Schema.Number),
+    pageSize: Schema.optional(Schema.Number).pipe(Schema.withDecodingDefault(() => 100)),
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
     tick: Schema.optional(Schema.String),
   }),
@@ -40,7 +37,7 @@ export default defineFunction({
   handler: ({
     context: { space },
     event: {
-      data: { mailboxId, userId, after, pageSize = 100 },
+      data: { mailboxId, userId, after, pageSize },
     },
   }: any) =>
     Effect.gen(function* () {
@@ -49,7 +46,7 @@ export default defineFunction({
         catch: (e: any) => e,
       });
 
-      // TODO(burdon): Use `googleapis`.
+      // NOTE: Google API bundles size is v. large and caused runtime issues.
       const makeRequest = (url: string) =>
         pipe(
           url,
