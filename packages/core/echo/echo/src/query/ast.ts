@@ -51,6 +51,10 @@ export const PredicateSet = Schema.Record({
 
 export type PredicateSet = Schema.Schema.Type<typeof PredicateSet>;
 
+const TypenameSpecifier = Schema.Union(DXN, Schema.Null).annotations({
+  description: 'DXN or null. Null means any type will match',
+});
+
 // NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
 
 /**
@@ -58,7 +62,7 @@ export type PredicateSet = Schema.Schema.Type<typeof PredicateSet>;
  */
 const ASTTypeClause_ = Schema.Struct({
   type: Schema.Literal('type'),
-  typename: Schema.Union(DXN, Schema.Null),
+  typename: TypenameSpecifier,
   id: Schema.optional(Schema.String),
   predicates: Schema.optional(PredicateSet),
 });
@@ -67,7 +71,7 @@ const ASTTypeClause: Schema.Schema<ASTTypeClause> = ASTTypeClause_;
 
 const ASTTextSearchClause_ = Schema.Struct({
   type: Schema.Literal('text-search'),
-  typename: Schema.Union(DXN, Schema.Null),
+  typename: TypenameSpecifier,
   text: Schema.String,
   searchKind: Schema.optional(Schema.Literal('full-text', 'vector')),
 });
@@ -92,7 +96,7 @@ const ASTIncomingReferencesClause_ = Schema.Struct({
   type: Schema.Literal('incoming-references'),
   anchor: Schema.suspend((): Schema.Schema<AST> => AST),
   property: Schema.String,
-  typename: Schema.Union(DXN, Schema.Null),
+  typename: TypenameSpecifier,
 });
 interface ASTIncomingReferencesClause extends Schema.Schema.Type<typeof ASTIncomingReferencesClause_> {}
 const ASTIncomingReferencesClause: Schema.Schema<ASTIncomingReferencesClause> = ASTIncomingReferencesClause_;
@@ -104,7 +108,7 @@ const ASTRelationClause_ = Schema.Struct({
   type: Schema.Literal('relation'),
   anchor: Schema.suspend((): Schema.Schema<AST> => AST),
   direction: Schema.Literal('outgoing', 'incoming', 'both'),
-  typename: Schema.Union(DXN, Schema.Null),
+  typename: TypenameSpecifier,
   predicates: Schema.optional(PredicateSet),
 });
 interface ASTRelationClause extends Schema.Schema.Type<typeof ASTRelationClause_> {}
