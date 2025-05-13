@@ -1529,6 +1529,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1719,6 +1722,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.1.0
+        version: 3.14.21
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -2245,6 +2251,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       hyperformula:
         specifier: ^2.7.1
         version: 2.7.1
@@ -2545,6 +2554,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -5563,6 +5575,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@types/react':
         specifier: ~18.2.0
@@ -5639,6 +5654,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -5800,6 +5818,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react-qr-rounded:
         specifier: ^1.0.0
         version: 1.0.0(react@18.2.0)
@@ -5825,9 +5846,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -5882,6 +5900,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -6284,6 +6305,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6384,6 +6408,9 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       force-graph:
         specifier: ^1.49.4
         version: 1.49.5
@@ -6570,6 +6597,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6618,6 +6648,9 @@ importers:
       '@fluentui/react-tabster':
         specifier: ^9.24.2
         version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -6769,6 +6802,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -6806,9 +6842,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6878,6 +6911,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/plugin-preview':
         specifier: workspace:*
@@ -6981,6 +7017,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7000,9 +7039,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7265,9 +7301,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       extendable-media-recorder:
         specifier: ^9.2.19
         version: 9.2.20
@@ -7296,6 +7329,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7345,6 +7381,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       mermaid:
         specifier: ^10.6.1
         version: 10.6.1
@@ -7400,6 +7439,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
     devDependencies:
       vite:
         specifier: 5.4.7
@@ -7494,6 +7536,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
     devDependencies:
       '@dxos/echo-signals':
         specifier: workspace:*
@@ -7579,6 +7624,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -7598,9 +7646,6 @@ importers:
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7679,6 +7724,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -7767,6 +7815,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
@@ -7825,9 +7876,6 @@ importers:
       '@types/reveal.js':
         specifier: ^5.0.3
         version: 5.0.3
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7888,13 +7936,13 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7916,6 +7964,9 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -7980,6 +8031,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -8182,6 +8236,9 @@ importers:
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -8222,9 +8279,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8484,6 +8538,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8542,9 +8599,6 @@ importers:
       '@types/react-window':
         specifier: ^1.8.8
         version: 1.8.8
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8916,6 +8970,9 @@ importers:
       '@radix-ui/react-collapsible':
         specifier: 1.1.3
         version: 1.1.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       node-fetch:
         specifier: ^2.6.0
         version: 2.7.0(encoding@0.1.13)
@@ -9032,6 +9089,9 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -9045,9 +9105,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9123,9 +9180,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.75.5
-        version: 0.75.5(effect@3.14.21)
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -9142,9 +9199,6 @@ importers:
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9184,6 +9238,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -9227,6 +9284,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       i18next:
         specifier: ^21.10.0
         version: 21.10.0
@@ -9285,6 +9345,9 @@ importers:
       '@types/lodash.debounce':
         specifier: ^4.0.9
         version: 4.0.9
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       lodash.debounce:
         specifier: ^4.0.8
         version: 4.0.8
@@ -9409,6 +9472,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -9491,6 +9557,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -9645,9 +9714,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       extendable-media-recorder:
         specifier: ^9.2.19
         version: 9.2.20
@@ -9676,6 +9742,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9764,6 +9833,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -10101,6 +10173,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -10170,6 +10245,9 @@ importers:
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
@@ -10225,6 +10303,9 @@ importers:
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -10249,6 +10330,9 @@ importers:
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
 
   packages/sdk/client-services:
     dependencies:
@@ -11360,6 +11444,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 1.1.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/app-graph':
         specifier: workspace:*
@@ -11976,6 +12063,9 @@ importers:
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       lib0:
         specifier: ^0.2.65
         version: 0.2.78
@@ -12479,6 +12569,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       '@dxos/plugin-search':
         specifier: workspace:*

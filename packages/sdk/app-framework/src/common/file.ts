@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 // TODO(burdon): See Accept attribute (uses MIME types).
 // E.g., 'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
@@ -12,11 +12,11 @@ export const defaultFileTypes = {
   text: ['pdf', 'txt', 'md'],
 };
 
-export const FileInfoSchema = S.Struct({
-  name: S.String,
-  type: S.String,
-  url: S.optional(S.String),
-  cid: S.optional(S.String), // TODO(burdon): Meta key? Or other common properties with other file management system? (e.g., WNFS).
+export const FileInfoSchema = Schema.Struct({
+  name: Schema.String,
+  type: Schema.String,
+  url: Schema.optional(Schema.String),
+  cid: Schema.optional(Schema.String), // TODO(burdon): Meta key? Or other common properties with other file management system? (e.g., WNFS).
 });
 
-export type FileInfo = S.Schema.Type<typeof FileInfoSchema>;
+export type FileInfo = Schema.Schema.Type<typeof FileInfoSchema>;

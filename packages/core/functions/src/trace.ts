@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EchoObject, Expando, ObjectId, Ref, S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { EchoObject, Expando, ObjectId, Ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { FunctionTrigger, type FunctionTriggerType } from './types';
@@ -19,20 +21,20 @@ export enum InvocationTraceEventType {
   END = 'end',
 }
 
-export const TraceEventException = S.Struct({
-  timestampMs: S.Number,
-  message: S.String,
-  name: S.String,
-  stack: S.optional(S.String),
+export const TraceEventException = Schema.Struct({
+  timestampMs: Schema.Number,
+  message: Schema.String,
+  name: Schema.String,
+  stack: Schema.optional(Schema.String),
 });
-export type TraceEventException = S.Schema.Type<typeof TraceEventException>;
+export type TraceEventException = Schema.Schema.Type<typeof TraceEventException>;
 
-export const InvocationTraceStartEvent = S.Struct({
+export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Queue message id.
    */
   id: ObjectId,
-  type: S.Literal(InvocationTraceEventType.START),
+  type: Schema.Literal(InvocationTraceEventType.START),
   /**
    * Invocation id, the same for invocation start and end events.
    */
@@ -40,12 +42,12 @@ export const InvocationTraceStartEvent = S.Struct({
   /**
    * Event generation time.
    */
-  timestampMs: S.Number,
+  timestampMs: Schema.Number,
   /**
    * Data passed to function / workflow as an argument.
    */
   // TODO(burdon): Input schema?
-  input: S.Object,
+  input: Schema.Object,
   /**
    * Queue DXN for function/workflow invocation events.
    */
@@ -58,17 +60,17 @@ export const InvocationTraceStartEvent = S.Struct({
   /**
    * Present for automatic invocations.
    */
-  trigger: S.optional(Ref(FunctionTrigger)),
+  trigger: Schema.optional(Ref(FunctionTrigger)),
 }).pipe(EchoObject({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
 
-export type InvocationTraceStartEvent = S.Schema.Type<typeof InvocationTraceStartEvent>;
+export type InvocationTraceStartEvent = Schema.Schema.Type<typeof InvocationTraceStartEvent>;
 
-export const InvocationTraceEndEvent = S.Struct({
+export const InvocationTraceEndEvent = Schema.Struct({
   /**
    * Trace event id.
    */
   id: ObjectId,
-  type: S.Literal(InvocationTraceEventType.END),
+  type: Schema.Literal(InvocationTraceEventType.END),
   /**
    * Invocation id, will be the same for invocation start and end.
    */
@@ -77,36 +79,36 @@ export const InvocationTraceEndEvent = S.Struct({
    * Event generation time.
    */
   // TODO(burdon): Remove ms suffix.
-  timestampMs: S.Number,
-  outcome: S.Enums(InvocationOutcome),
-  exception: S.optional(TraceEventException),
+  timestampMs: Schema.Number,
+  outcome: Schema.Enums(InvocationOutcome),
+  exception: Schema.optional(TraceEventException),
 }).pipe(EchoObject({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
 
-export type InvocationTraceEndEvent = S.Schema.Type<typeof InvocationTraceEndEvent>;
+export type InvocationTraceEndEvent = Schema.Schema.Type<typeof InvocationTraceEndEvent>;
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 
-export const TraceEventLog = S.Struct({
-  timestampMs: S.Number,
-  level: S.String,
-  message: S.String,
-  context: S.optional(S.Object),
+export const TraceEventLog = Schema.Struct({
+  timestampMs: Schema.Number,
+  level: Schema.String,
+  message: Schema.String,
+  context: Schema.optional(Schema.Object),
 });
 
-export const TraceEvent = S.Struct({
+export const TraceEvent = Schema.Struct({
   id: ObjectId,
   // TODO(burdon): Need enum/numeric result (not string).
-  outcome: S.String,
-  truncated: S.Boolean,
+  outcome: Schema.String,
+  truncated: Schema.Boolean,
   /**
    * Time when the event was persisted.
    */
-  ingestionTimestampMs: S.Number,
-  logs: S.Array(TraceEventLog),
-  exceptions: S.Array(TraceEventException),
+  ingestionTimestampMs: Schema.Number,
+  logs: Schema.Array(TraceEventLog),
+  exceptions: Schema.Array(TraceEventException),
 }).pipe(EchoObject({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
 
-export type TraceEvent = S.Schema.Type<typeof TraceEvent>;
+export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
 
 /**
  * Deprecated InvocationTrace event format.

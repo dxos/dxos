@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
@@ -9,7 +10,6 @@ import {
   EchoSchema,
   EntityKind,
   TypeAnnotationId,
-  S,
   StoredSchema,
   toJsonSchema,
   type TypeAnnotation,
@@ -20,9 +20,9 @@ import { log } from '@dxos/log';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-const Organization = S.Struct({
-  name: S.String,
-  address: S.String,
+const Organization = Schema.Struct({
+  name: Schema.String,
+  address: Schema.String,
 }).annotations({
   [TypeAnnotationId]: {
     kind: EntityKind.Object,
@@ -31,8 +31,8 @@ const Organization = S.Struct({
   } satisfies TypeAnnotation,
 });
 
-const Contact = S.Struct({
-  name: S.String,
+const Contact = Schema.Struct({
+  name: Schema.String,
 }).annotations({
   [TypeAnnotationId]: {
     kind: EntityKind.Object,
@@ -124,7 +124,7 @@ describe('schema registry', () => {
     const schemaToStore = live(StoredSchema, {
       typename: 'example.com/type/Test',
       version: '0.1.0',
-      jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
+      jsonSchema: toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
     expect(registry.hasSchema(new EchoSchema(schemaToStore))).to.be.false;
     const storedSchema = db.add(schemaToStore);
@@ -135,7 +135,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     expect(echoSchema.getProperties().length).to.eq(1);
-    echoSchema.addFields({ newField: S.Number });
+    echoSchema.addFields({ newField: Schema.Number });
     expect(echoSchema.getProperties().length).to.eq(2);
   });
 });

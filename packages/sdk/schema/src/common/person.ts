@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Format, GeneratorAnnotationId, Ref, S } from '@dxos/echo-schema';
+import { Format, GeneratorAnnotationId } from '@dxos/echo-schema';
 
 import { Organization } from './organization';
 import { PostalAddress } from './postal-address';
@@ -19,22 +19,24 @@ import { PostalAddress } from './postal-address';
  * Based on fields from Apple Contacts.
  */
 export const PersonSchema = Schema.Struct({
-  fullName: Schema.optional(S.String.annotations({ [GeneratorAnnotationId]: 'person.fullName', title: 'Full Name' })),
-  preferredName: Schema.optional(S.String.annotations({ title: 'Preferred Name' })),
-  nickname: Schema.optional(S.String.annotations({ title: 'Nickname' })),
+  fullName: Schema.optional(
+    Schema.String.annotations({ [GeneratorAnnotationId]: 'person.fullName', title: 'Full Name' }),
+  ),
+  preferredName: Schema.optional(Schema.String.annotations({ title: 'Preferred Name' })),
+  nickname: Schema.optional(Schema.String.annotations({ title: 'Nickname' })),
   // TODO(wittjosiah): Format.URL. Support ref?
-  image: Schema.optional(S.String.annotations({ title: 'Image' })),
+  image: Schema.optional(Schema.String.annotations({ title: 'Image' })),
   // TODO(burdon): Use reference links.
-  organization: Schema.optional(Ref(Organization).annotations({ title: 'Organization' })),
-  jobTitle: Schema.optional(S.String.annotations({ title: 'Job Title' })),
-  department: Schema.optional(S.String.annotations({ title: 'Department' })),
-  notes: Schema.optional(S.String.annotations({ title: 'Notes' })),
+  organization: Schema.optional(Type.Ref(Organization).annotations({ title: 'Organization' })),
+  jobTitle: Schema.optional(Schema.String.annotations({ title: 'Job Title' })),
+  department: Schema.optional(Schema.String.annotations({ title: 'Department' })),
+  notes: Schema.optional(Schema.String.annotations({ title: 'Notes' })),
   // TODO(burdon): Change to array of `handles`.
   emails: Schema.optional(
     Schema.mutable(
       Schema.Array(
         Schema.Struct({
-          label: Schema.optional(S.String),
+          label: Schema.optional(Schema.String),
           value: Format.Email.annotations({ [GeneratorAnnotationId]: 'internet.email' }),
         }),
       ),
@@ -47,7 +49,7 @@ export const PersonSchema = Schema.Struct({
     Schema.mutable(
       Schema.Array(
         Schema.Struct({
-          label: Schema.optional(S.String),
+          label: Schema.optional(Schema.String),
           value: Schema.String,
         }),
       ),
@@ -57,7 +59,7 @@ export const PersonSchema = Schema.Struct({
     Schema.mutable(
       Schema.Array(
         Schema.Struct({
-          label: Schema.optional(S.String),
+          label: Schema.optional(Schema.String),
           // TODO(wittjosiah): Format.Phone.
           value: Schema.String,
         }),
@@ -68,7 +70,7 @@ export const PersonSchema = Schema.Struct({
     Schema.mutable(
       Schema.Array(
         Schema.Struct({
-          label: Schema.optional(S.String),
+          label: Schema.optional(Schema.String),
           value: PostalAddress,
         }),
       ),
@@ -78,19 +80,19 @@ export const PersonSchema = Schema.Struct({
     Schema.mutable(
       Schema.Array(
         Schema.Struct({
-          label: Schema.optional(S.String),
+          label: Schema.optional(Schema.String),
           value: Format.URL.annotations({ [GeneratorAnnotationId]: 'internet.url' }),
         }),
       ),
     ),
   ),
-  birthday: Schema.optional(S.mutable(S.Date.annotations({ title: 'Birthday' }))),
+  birthday: Schema.optional(Schema.mutable(Schema.Date.annotations({ title: 'Birthday' }))),
   // TODO(burdon): Move to base object?
   fields: Schema.optional(
     Schema.mutable(
       Schema.Array(
         Schema.Struct({
-          category: Schema.optional(S.String),
+          category: Schema.optional(Schema.String),
           label: Schema.String,
           value: Schema.String,
         }),

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { composeSchema } from './compose';
@@ -14,12 +14,12 @@ import { TypedObject } from '../object';
 describe('schema composition', () => {
   test('schema composition', ({ expect }) => {
     class BaseType extends TypedObject({ typename: 'example.com/Person', version: '0.1.0' })({
-      name: S.String,
-      email: S.String,
+      name: Schema.String,
+      email: Schema.String,
     }) {}
 
-    const OverlaySchema = S.Struct({
-      email: S.String.pipe(FieldPath('$.email'), FormatAnnotation.set(FormatEnum.Email)),
+    const OverlaySchema = Schema.Struct({
+      email: Schema.String.pipe(FieldPath('$.email'), FormatAnnotation.set(FormatEnum.Email)),
     });
 
     const baseSchema = toJsonSchema(BaseType);

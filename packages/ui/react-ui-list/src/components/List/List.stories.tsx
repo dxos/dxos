@@ -5,9 +5,9 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
+import { Schema } from 'effect';
 import React from 'react';
 
-import { S } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -102,7 +102,7 @@ export const Default: StoryObj<ListRootProps<TestItemType>> = {
   render: DefaultStory,
   args: {
     items: list.items,
-    isItem: S.is(TestItemSchema),
+    isItem: Schema.is(TestItemSchema),
   },
 };
 
@@ -110,6 +110,6 @@ export const Simple: StoryObj<ListRootProps<TestItemType>> = {
   render: SimpleStory,
   args: {
     items: list.items,
-    isItem: S.is(TestItemSchema),
+    isItem: Schema.is(TestItemSchema),
   },
 };

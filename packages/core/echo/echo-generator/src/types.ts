@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Schema } from 'effect';
+
 import { type AnyLiveObject } from '@dxos/echo-db';
-import { type EchoSchema, type S } from '@dxos/echo-schema';
+import { type EchoSchema } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
 
 // TODO(burdon): Use echo-schema types.
 export type TestObject = { id: string } & Record<string, any>;
 
-export type TestSchemaMap<T extends string = string> = Record<T, EchoSchema | S.Schema.AnyNoContext>;
+export type TestSchemaMap<T extends string = string> = Record<T, EchoSchema | Schema.Schema.AnyNoContext>;
 
 export type TestObjectProvider<T extends string = string> = (type: T) => Promise<Live<any>[]>;
 

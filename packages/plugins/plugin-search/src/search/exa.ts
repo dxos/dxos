@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, SchemaAST as AST } from 'effect';
+import { Option, Schema, SchemaAST } from 'effect';
 import Exa from 'exa-js';
 
 import { defineTool, Message, type TextContentBlock } from '@dxos/artifact';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest } from '@dxos/assistant';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { create, getTypeAnnotation, ObjectId, ReferenceAnnotationId, S } from '@dxos/echo-schema';
+import { create, getTypeAnnotation, ObjectId, ReferenceAnnotationId } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 
-export type SearchOptions<Schema extends S.Schema.AnyNoContext> = {
+export type SearchOptions<Schema extends Schema.Schema.AnyNoContext> = {
   query?: string;
 
   // TODO(dmaretskyi): How can we pass this through.
@@ -36,9 +36,9 @@ export type SearchResult<T = unknown> = {
   };
 };
 
-export const search = async <Schema extends S.Schema.AnyNoContext>(
+export const search = async <Schema extends Schema.Schema.AnyNoContext>(
   options: SearchOptions<Schema>,
-): Promise<SearchResult<S.Schema.Type<Schema>>> => {
+): Promise<SearchResult<Schema.Schema.Type<Schema>>> => {
   assertArgument(options.query || options.context, 'query or context is required');
 
   let contextSearchTerms: readonly string[] = [];
@@ -90,12 +90,12 @@ export const search = async <Schema extends S.Schema.AnyNoContext>(
       }),
     ],
 
-    schema: S.Struct({
+    schema: Schema.Struct({
       ...Object.fromEntries(
         mappedSchema.map((schema, index) => [
           `objects_${index}`,
-          S.Array(schema).annotations({
-            description: `The objects to answer the query of type ${getTypeAnnotation(schema)?.typename ?? AST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
+          Schema.Array(schema).annotations({
+            description: `The objects to answer the query of type ${getTypeAnnotation(schema)?.typename ?? SchemaAST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
           }),
         ]),
       ),
@@ -149,10 +149,10 @@ const DATA_EXTRACTION_INSTRUCTIONS = `
 /**
  * Runs the LLM to produce a structured output matching a schema
  */
-const getStructuredOutput = async <S extends S.Schema.AnyNoContext>(
+const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
   aiService: AIServiceClient,
   request: Omit<GenerateRequest, 'tools'> & { schema: S },
-): Promise<S.Schema.Type<S>> => {
+): Promise<Schema.Schema.Type<S>> => {
   const result = await new MixedStreamParser().parse(
     await aiService.execStream({
       ...request,
@@ -192,8 +192,8 @@ const getSearchTerms = async (aiService: AIServiceClient, context: string) => {
         ],
       }),
     ],
-    schema: S.Struct({
-      terms: S.Array(S.String).annotations({
+    schema: Schema.Struct({
+      terms: Schema.Array(Schema.String).annotations({
         description: 'The search terms to use to find the objects. 0-10 terms.',
       }),
     }),
@@ -202,7 +202,7 @@ const getSearchTerms = async (aiService: AIServiceClient, context: string) => {
   return terms;
 };
 
-const sanitizeObjects = (entries: { data: any; schema: S.Schema.AnyNoContext }[]) => {
+const sanitizeObjects = (entries: { data: any; schema: Schema.Schema.AnyNoContext }[]) => {
   const idMap = new Map<string, string>();
 
   return entries
@@ -231,20 +231,20 @@ const sanitizeObjects = (entries: { data: any; schema: S.Schema.AnyNoContext }[]
     });
 };
 
-const SoftRef = S.Struct({
-  '/': S.String,
+const SoftRef = Schema.Struct({
+  '/': Schema.String,
 }).annotations({
   description: 'Reference to another object.',
 });
 
-const mapSchemaRefs = (schema: S.Schema.AnyNoContext) => {
-  const go = (ast: AST.AST): AST.AST => {
-    if (AST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
+const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext) => {
+  const go = (ast: SchemaAST.AST): SchemaAST.AST => {
+    if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
       return SoftRef.ast;
     }
 
     return mapAst(ast, go);
   };
 
-  return S.make(mapAst(schema.ast, go));
+  return Schema.make(mapAst(schema.ast, go));
 };

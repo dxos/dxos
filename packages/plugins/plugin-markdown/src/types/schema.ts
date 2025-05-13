@@ -2,20 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Type } from '@dxos/echo';
-import { Expando, LabelAnnotationId, Ref, S } from '@dxos/echo-schema';
+import { Expando, LabelAnnotationId, Ref } from '@dxos/echo-schema';
 import { makeRef, live } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 
-export const DocumentSchema = S.Struct({
-  name: S.optional(S.String),
-  fallbackName: S.optional(S.String),
+export const DocumentSchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  fallbackName: Schema.optional(Schema.String),
   content: Ref(DataType.Text),
-  threads: S.mutable(S.Array(Ref(ThreadType))),
-  assistantChatQueue: S.optional(Ref(Expando)),
+  threads: Schema.mutable(Schema.Array(Ref(ThreadType))),
+  assistantChatQueue: Schema.optional(Ref(Expando)),
 }).annotations({
-  // TODO(dmaretskyi): `S.Struct(...).pipe(defaultLabel(['name', 'fallbackName']))` for type-safe annotations.
+  // TODO(dmaretskyi): `Schema.Struct(...).pipe(defaultLabel(['name', 'fallbackName']))` for type-safe annotations.
   [LabelAnnotationId]: ['name', 'fallbackName'],
 });
 
@@ -25,7 +27,7 @@ export const DocumentType = DocumentSchema.pipe(
     version: '0.1.0',
   }),
 );
-export type DocumentType = S.Schema.Type<typeof DocumentType>;
+export type DocumentType = Schema.Schema.Type<typeof DocumentType>;
 
 // TODO(burdon): Replace when defaults are supported.
 export const createDocument = ({ name, content }: { name: string; content: string }) =>

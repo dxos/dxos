@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
-export const getTextTemplateInputSchema = (text: string): S.Schema.AnyNoContext => {
+export const getTextTemplateInputSchema = (text: string): Schema.Schema.AnyNoContext => {
   const variables = findHandlebarVariables(text);
-  return S.Struct(Object.fromEntries(variables.map((property) => [property, S.Any])));
+  return Schema.Struct(Object.fromEntries(variables.map((property) => [property, Schema.Any])));
 };
 
 // TODO(dmaretskyi): Remove and use the json template with a single string as input.

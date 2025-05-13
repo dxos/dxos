@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S, Option } from 'effect';
+import { Schema, Option } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { invariant } from '@dxos/invariant';
@@ -16,14 +16,14 @@ const PROP_REGEX = /\w+/;
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
  */
-export const JsonPath = S.String.pipe(S.pattern(PATH_REGEX)).annotations({
+export const JsonPath = Schema.String.pipe(Schema.pattern(PATH_REGEX)).annotations({
   title: 'JSON path',
   description: 'JSON path to a property',
-}) as any as S.Schema<JsonPath>;
-export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
+}) as any as Schema.Schema<JsonPath>;
+export const JsonProp = Schema.NonEmptyString.pipe(Schema.pattern(PROP_REGEX)) as any as Schema.Schema<JsonProp>;
 
 export const isJsonPath = (value: unknown): value is JsonPath => {
-  return Option.isSome(S.validateOption(JsonPath)(value));
+  return Option.isSome(Schema.validateOption(JsonPath)(value));
 };
 
 /**

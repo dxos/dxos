@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { type Context, createContext } from 'react';
 import { type Step as BaseStep } from 'react-joyride';
 
 import { type PluginsContext } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
 
 import { HELP_PLUGIN } from './meta';
 
@@ -34,8 +34,8 @@ export const HelpContext: Context<HelpContextType> = createContext<HelpContextTy
 
 export const HELP_ACTION = `${HELP_PLUGIN}/action`;
 export namespace HelpAction {
-  export class Start extends S.TaggedClass<Start>()(`${HELP_ACTION}/start`, {
-    input: S.Void,
-    output: S.Void,
+  export class Start extends Schema.TaggedClass<Start>()(`${HELP_ACTION}/start`, {
+    input: Schema.Void,
+    output: Schema.Void,
   }) {}
 }

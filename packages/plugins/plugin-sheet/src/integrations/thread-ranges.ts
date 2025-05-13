@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Schema, pipe } from 'effect';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import {
@@ -15,7 +15,6 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
-import { S } from '@dxos/echo-schema';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
@@ -55,7 +54,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
           subject: string;
           options: { cursor: string; ref: GridContentProps['activeRefs'] };
         } => {
-          if (!S.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
+          if (!Schema.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
             return false;
           }
 

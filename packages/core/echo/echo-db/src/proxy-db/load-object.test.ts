@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live } from '@dxos/live-object';
@@ -150,10 +151,10 @@ describe.skip('loadObjectReferences', () => {
   });
 
   test('loads as array of non-nullable items', async () => {
-    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '0.1.0' })({ value: S.Number }) {}
+    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '0.1.0' })({ value: Schema.Number }) {}
 
     class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '0.1.0' })({
-      nested: S.mutable(S.Array(Ref(Nested))),
+      nested: Schema.mutable(Schema.Array(Ref(Nested))),
     }) {}
 
     const testBuilder = new EchoTestBuilder();

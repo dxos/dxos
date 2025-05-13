@@ -2,65 +2,65 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
 import { FILES_PLUGIN } from './meta';
 
 export namespace LocalFilesAction {
   const FILES_ACTION = `${FILES_PLUGIN}/action`;
 
-  export class SelectRoot extends S.TaggedClass<SelectRoot>()(`${FILES_ACTION}/select-root`, {
-    input: S.Void,
-    output: S.Void,
+  export class SelectRoot extends Schema.TaggedClass<SelectRoot>()(`${FILES_ACTION}/select-root`, {
+    input: Schema.Void,
+    output: Schema.Void,
   }) {}
 
-  export class Export extends S.TaggedClass<Export>()(`${FILES_ACTION}/export`, {
-    input: S.Void,
-    output: S.Void,
+  export class Export extends Schema.TaggedClass<Export>()(`${FILES_ACTION}/export`, {
+    input: Schema.Void,
+    output: Schema.Void,
   }) {}
 
-  export class Import extends S.TaggedClass<Import>()(`${FILES_ACTION}/import`, {
-    input: S.Struct({
-      rootDir: S.optional(S.String),
+  export class Import extends Schema.TaggedClass<Import>()(`${FILES_ACTION}/import`, {
+    input: Schema.Struct({
+      rootDir: Schema.optional(Schema.String),
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class OpenFile extends S.TaggedClass<OpenFile>()(`${FILES_ACTION}/open-file`, {
-    input: S.Void,
-    output: S.Struct({
-      id: S.String,
-      subject: S.Array(S.String),
-    }),
-  }) {}
-
-  export class OpenDirectory extends S.TaggedClass<OpenDirectory>()(`${FILES_ACTION}/open-directory`, {
-    input: S.Void,
-    output: S.Struct({
-      id: S.String,
-      subject: S.Array(S.String),
+  export class OpenFile extends Schema.TaggedClass<OpenFile>()(`${FILES_ACTION}/open-file`, {
+    input: Schema.Void,
+    output: Schema.Struct({
+      id: Schema.String,
+      subject: Schema.Array(Schema.String),
     }),
   }) {}
 
-  export class Reconnect extends S.TaggedClass<Reconnect>()(`${FILES_ACTION}/reconnect`, {
-    input: S.Struct({
-      id: S.String,
+  export class OpenDirectory extends Schema.TaggedClass<OpenDirectory>()(`${FILES_ACTION}/open-directory`, {
+    input: Schema.Void,
+    output: Schema.Struct({
+      id: Schema.String,
+      subject: Schema.Array(Schema.String),
     }),
-    output: S.Void,
   }) {}
 
-  export class Close extends S.TaggedClass<Close>()(`${FILES_ACTION}/close`, {
-    input: S.Struct({
-      id: S.String,
+  export class Reconnect extends Schema.TaggedClass<Reconnect>()(`${FILES_ACTION}/reconnect`, {
+    input: Schema.Struct({
+      id: Schema.String,
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class Save extends S.TaggedClass<Save>()(`${FILES_ACTION}/save`, {
-    input: S.Struct({
-      id: S.String,
+  export class Close extends Schema.TaggedClass<Close>()(`${FILES_ACTION}/close`, {
+    input: Schema.Struct({
+      id: Schema.String,
     }),
-    output: S.Void,
+    output: Schema.Void,
+  }) {}
+
+  export class Save extends Schema.TaggedClass<Save>()(`${FILES_ACTION}/save`, {
+    input: Schema.Struct({
+      id: Schema.String,
+    }),
+    output: Schema.Void,
   }) {}
 }
 
@@ -87,15 +87,15 @@ export type LocalDirectory = {
   children: LocalEntity[];
 };
 
-export const FilesSettingsSchema = S.mutable(
-  S.Struct({
-    autoExport: S.Boolean,
-    autoExportInterval: S.Number,
-    openLocalFiles: S.optional(S.Boolean),
+export const FilesSettingsSchema = Schema.mutable(
+  Schema.Struct({
+    autoExport: Schema.Boolean,
+    autoExportInterval: Schema.Number,
+    openLocalFiles: Schema.optional(Schema.Boolean),
   }),
 );
 
-export type FilesSettingsProps = S.Schema.Type<typeof FilesSettingsSchema>;
+export type FilesSettingsProps = Schema.Schema.Type<typeof FilesSettingsSchema>;
 
 export type FilesState = {
   exportRunning: boolean;

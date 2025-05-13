@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -18,7 +19,6 @@ import {
   getTypeReference,
   RelationSourceId,
   RelationTargetId,
-  S,
   TypedObject,
   type ObjectId,
   Ref,
@@ -443,7 +443,7 @@ describe('Integration tests', () => {
         rootUrl = db.rootUrl!;
 
         class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-          field: S.String,
+          field: Schema.String,
         }) {}
         const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();

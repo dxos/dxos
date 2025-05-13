@@ -39,6 +39,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "effect": "^3.13.3",
     "hastscript": "^7.1.0",
     "highlight.js": "^11.9.0",
     "marked": "^12.0.2",
@@ -69,7 +70,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "effect": "3.13.3",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

@@ -89,6 +89,7 @@
     "@valtown/codemirror-continue": "^2.3.1",
     "@valtown/codemirror-ts": "^2.2.0",
     "codemirror": "^6.0.1",
+    "effect": "^3.13.3",
     "esbuild-wasm": "^0.16.14",
     "lodash.get": "^4.4.2",
     "prettier": "^3.2.4",
@@ -104,7 +105,6 @@
     "@types/lodash.get": "^4.4.7",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.14.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"
@@ -113,7 +113,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "effect": "3.13.3",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

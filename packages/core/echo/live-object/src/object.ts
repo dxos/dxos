@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 
 import {
   ObjectId,
@@ -30,15 +30,15 @@ import { UntypedReactiveHandler } from './untyped-handler';
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 export const live: {
   <T extends BaseObject>(obj: T): Live<T>;
-  <T extends BaseObject>(schema: S.Schema<T, any, never>, obj: NoInfer<ExcludeId<T>>, meta?: ObjectMeta): Live<T>;
+  <T extends BaseObject>(schema: Schema.Schema<T, any, never>, obj: NoInfer<ExcludeId<T>>, meta?: ObjectMeta): Live<T>;
 } = <T extends BaseObject>(
-  objOrSchema: S.Schema<T, any> | T,
+  objOrSchema: Schema.Schema<T, any> | T,
   // TODO(burdon): Handle defaults.
   obj?: ExcludeId<T>,
   meta?: ObjectMeta,
 ): Live<T> => {
   if (obj && (objOrSchema as any) !== Expando) {
-    return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
+    return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as Schema.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
     return createReactiveObject<T>({ ...obj } as T, meta, undefined, { expando: true });
   } else {
@@ -49,7 +49,7 @@ export const live: {
 const createReactiveObject = <T extends BaseObject>(
   obj: T,
   meta?: ObjectMeta,
-  schema?: S.Schema<T>,
+  schema?: Schema.Schema<T>,
   options?: { expando?: boolean },
 ): Live<T> => {
   if (!isValidProxyTarget(obj)) {

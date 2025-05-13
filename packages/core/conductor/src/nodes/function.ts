@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 
-import { type Ref, S } from '@dxos/echo-schema';
+import { type Ref } from '@dxos/echo-schema';
 import { getUserFunctionUrlInMetadata, type FunctionType } from '@dxos/functions';
 import { getMeta } from '@dxos/live-object';
 
@@ -28,7 +28,7 @@ export const resolveFunctionPath = async (fnRef?: Ref<FunctionType>): Promise<{ 
 export const executeFunction = (
   path: string,
   input: any,
-  outputSchema: S.Schema.AnyNoContext,
+  outputSchema: Schema.Schema.AnyNoContext,
 ): Effect.Effect<any, any, ComputeRequirements> => {
   return Effect.gen(function* () {
     const functionCallService = yield* FunctionCallService;
@@ -38,6 +38,6 @@ export const executeFunction = (
       catch: (e) => e,
     });
 
-    return yield* S.decodeUnknown(outputSchema)(result);
+    return yield* Schema.decodeUnknown(outputSchema)(result);
   });
 };

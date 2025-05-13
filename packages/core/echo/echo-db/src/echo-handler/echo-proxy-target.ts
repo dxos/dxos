@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Brand, type Schema as S } from 'effect';
+import { type Brand, type Schema } from 'effect';
 
 import type { CleanupFn } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
@@ -82,7 +82,7 @@ export class ObjectInternals {
    * Schema of the root object.
    * Only used if this is not bound to a database.
    */
-  rootSchema?: S.Schema.AnyNoContext = undefined;
+  rootSchema?: Schema.Schema.AnyNoContext = undefined;
 
   constructor(core: ObjectCore, database?: EchoDatabase) {
     this.core = core;
@@ -122,5 +122,5 @@ export type ProxyTarget = {
   /**
    * Used for objects created by `createObject`.
    */
-  [symbolSchema]?: S.Schema.AnyNoContext;
+  [symbolSchema]?: Schema.Schema.AnyNoContext;
 } & ({ [key: keyof any]: any } | EchoArray<any>);

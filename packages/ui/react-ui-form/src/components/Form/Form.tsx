@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
-import { type BaseObject, type S, type PropertyKey } from '@dxos/echo-schema';
+import { type BaseObject, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty } from '@dxos/schema';
@@ -20,7 +21,7 @@ export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => 
 
 export type ComponentLookup = (args: {
   prop: string;
-  schema: S.Schema<any>;
+  schema: Schema.Schema<any>;
   inputProps: InputProps;
 }) => ReactElement | undefined;
 
