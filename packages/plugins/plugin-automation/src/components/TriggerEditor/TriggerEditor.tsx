@@ -17,7 +17,7 @@ import { Filter, Ref, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
-import { FunctionPayloadEditor } from './FunctionPayloadEditor';
+import { FunctionInputEditor } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
 import { AUTOMATION_PLUGIN } from '../../meta';
 
@@ -46,8 +46,8 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
       ['function' satisfies keyof FunctionTriggerType]: (props) => {
         const getValue = useCallback(() => {
           const formValue = props.getValue();
-          if (formValue instanceof DXN) {
-            return formValue.toString() as string;
+          if (Ref.isRef(formValue)) {
+            return formValue.dxn.toString() as string;
           }
           return undefined;
         }, [props]);
@@ -73,8 +73,8 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         );
       },
       ['spec.type' as const]: SpecSelector,
-      ['payload' as const]: (props) => (
-        <FunctionPayloadEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
+      ['input' as const]: (props) => (
+        <FunctionInputEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
       ),
     }),
     [workflows, scripts, functions, t],
@@ -100,5 +100,5 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
 
 const getFunctionOptions = (scripts: ScriptType[], functions: FunctionType[]) => {
   const getLabel = (fn: FunctionType) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
-  return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:worker:${fn.name}` }));
+  return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
 };
