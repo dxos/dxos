@@ -24,7 +24,7 @@ export interface Query<T> {
    * @param key - Property path inside T that is a reference.
    * @returns Query for the target of the reference.
    */
-  references<K extends RefPropKey<T>>(key: K): Query<Ref.Target<T[K]>>;
+  reference<K extends RefPropKey<T>>(key: K): Query<Ref.Target<T[K]>>;
 
   /**
    * Find objects referencing this object.
@@ -64,13 +64,13 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  sources(): Query<Relation.Source<T>>;
+  source(): Query<Relation.Source<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  targets(): Query<Relation.Target<T>>;
+  target(): Query<Relation.Target<T>>;
 }
 
 interface QueryAPI {
@@ -231,7 +231,7 @@ class QueryClass implements Query<any> {
 
   '~Query' = QueryClass.variance;
 
-  references(key: string): Query<any> {
+  reference(key: string): Query<any> {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -271,7 +271,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  sources(): Query<any> {
+  source(): Query<any> {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -279,7 +279,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  targets(): Query<any> {
+  target(): Query<any> {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,

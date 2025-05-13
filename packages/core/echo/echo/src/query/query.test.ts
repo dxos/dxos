@@ -62,7 +62,7 @@ test('get all orgs Fred worked for since 2020', () => {
   const fred = create(Person, { name: 'Fred' });
   const getAllOrgsFredWorkedForSince2020 = Query.type(Person, { id: fred.id })
     .sourceOf(WorksFor, { since: Query.gt('2020') })
-    .targets();
+    .target();
 
   log.info('query', { ast: getAllOrgsFredWorkedForSince2020.ast });
 });
@@ -79,7 +79,7 @@ test('get all tasks for employees of Cyberdyne', () => {
   // Query<Task>
   const allTasksForEmployeesOfCyberdyne = Query.type(Org, { name: 'Cyberdyne' })
     .targetOf(WorksFor)
-    .sources()
+    .source()
     .referencedBy(Task, 'assignee');
 
   log.info('query', { ast: allTasksForEmployeesOfCyberdyne.ast });
@@ -94,7 +94,7 @@ test('get all people or orgs', () => {
 
 test('get assignees of all tasks created after 2020', () => {
   // Query<Person>
-  const assigneesOfAllTasksCreatedAfter2020 = Query.type(Task, { createdAt: Query.gt('2020') }).references('assignee');
+  const assigneesOfAllTasksCreatedAfter2020 = Query.type(Task, { createdAt: Query.gt('2020') }).reference('assignee');
 
   log.info('query', { ast: assigneesOfAllTasksCreatedAfter2020.ast });
 });
