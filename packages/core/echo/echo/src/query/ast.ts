@@ -51,6 +51,8 @@ export const PredicateSet = Schema.Record({
 
 export type PredicateSet = Schema.Schema.Type<typeof PredicateSet>;
 
+// NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
+
 /**
  * Query objects by type, id, and/or predicates.
  */
