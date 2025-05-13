@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { type Effect } from 'effect';
 
 import { type AIServiceClient } from '@dxos/assistant';
+// import { type Space } from '@dxos/client/echo';
 import type { CoreDatabase, EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
@@ -77,20 +78,21 @@ export interface SpaceAPI {
   get queues(): QueuesAPI;
 }
 
+// TODO(wittjosiah): Queues are incompatible.
 const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
-  const _: SpaceAPI = {} as SpaceAPI;
+  // const _: SpaceAPI = {} as Space;
 };
 
 export type FunctionDefinition<T = {}, O = any> = {
   description?: string;
-  inputSchema: S.Schema<T, any>;
-  outputSchema?: S.Schema<O, any>;
+  inputSchema: Schema.Schema<T, any>;
+  outputSchema?: Schema.Schema<O, any>;
   handler: FunctionHandler<T, O>;
 };
 
 // TODO(dmaretskyi): Bind input type to function handler.
 export const defineFunction = <T, O>(params: FunctionDefinition<T, O>): FunctionDefinition<T, O> => {
-  if (!S.isSchema(params.inputSchema)) {
+  if (!Schema.isSchema(params.inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
   if (typeof params.handler !== 'function') {
@@ -100,7 +102,7 @@ export const defineFunction = <T, O>(params: FunctionDefinition<T, O>): Function
   return {
     description: params.description,
     inputSchema: params.inputSchema,
-    outputSchema: params.outputSchema ?? S.Any,
+    outputSchema: params.outputSchema ?? Schema.Any,
     handler: params.handler,
   };
 };
