@@ -73,7 +73,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         );
       },
       ['spec.type' as const]: SpecSelector,
-      ['spec.payload' as const]: (props) => (
+      ['payload' as const]: (props) => (
         <FunctionPayloadEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
       ),
     }),
