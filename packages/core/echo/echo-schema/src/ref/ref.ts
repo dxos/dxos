@@ -146,6 +146,13 @@ export interface Ref<T> {
   };
 }
 
+export declare namespace Ref {
+  /**
+   * Target of the reference.
+   */
+  export type Target<R> = R extends Ref<infer U> ? U : never;
+}
+
 Ref.isRef = (obj: any): obj is Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
