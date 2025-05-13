@@ -5,9 +5,9 @@
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { isInstanceOf, getTypename } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
-import { fullyQualifiedId, getSpace, isLiveObject, type SpaceId } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, getTypename, isLiveObject, type SpaceId } from '@dxos/react-client/echo';
 
 import { AssistantDialog, AssistantSettings, ChatContainer, PromptSettings, TemplateContainer } from '../components';
 import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
@@ -32,7 +32,7 @@ export default () =>
       id: `${ASSISTANT_PLUGIN}/chat`,
       role: 'article',
       filter: (data): data is { subject: AIChatType; variant: undefined } =>
-        isInstanceOf(AIChatType, data.subject) && data.variant !== 'assistant-chat',
+        Type.instanceOf(AIChatType, data.subject) && data.variant !== 'assistant-chat',
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
@@ -57,13 +57,13 @@ export default () =>
     createSurface({
       id: `${ASSISTANT_PLUGIN}/template`,
       role: 'article',
-      filter: (data): data is { subject: TemplateType } => isInstanceOf(TemplateType, data.subject),
+      filter: (data): data is { subject: TemplateType } => Type.instanceOf(TemplateType, data.subject),
       component: ({ data, role }) => <TemplateContainer role={role} template={data.subject} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/prompt-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: TemplateType } => isInstanceOf(TemplateType, data.subject),
+      filter: (data): data is { subject: TemplateType } => Type.instanceOf(TemplateType, data.subject),
       component: ({ data }) => <PromptSettings template={data.subject} />,
     }),
   ]);

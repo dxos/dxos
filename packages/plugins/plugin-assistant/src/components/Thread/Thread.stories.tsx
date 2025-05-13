@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Message } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
@@ -29,9 +29,9 @@ const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
 
   const handleSubmit = useCallback(
     (text: string) => {
-      const request: Message = { id: ObjectId.random(), role: 'user', content: [{ type: 'text', text }] };
+      const request: Message = { id: Type.ObjectId.random(), role: 'user', content: [{ type: 'text', text }] };
       const response: Message = {
-        id: ObjectId.random(),
+        id: Type.ObjectId.random(),
         role: 'assistant',
         content: [{ type: 'text', disposition: 'cot', pending: true, text: faker.lorem.paragraphs(1) }],
       };
@@ -44,7 +44,7 @@ const DefaultStory = ({ messages: _messages, ...props }: ThreadProps) => {
           request,
           response,
           {
-            id: ObjectId.random(),
+            id: Type.ObjectId.random(),
             role: 'assistant',
             content: [{ type: 'text', text: faker.lorem.paragraphs(1) }],
           },
@@ -93,7 +93,7 @@ type Story = StoryObj<ThreadProps>;
 
 const TEST_MESSAGES: Message[] = [
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'user',
     content: [
       {
@@ -103,7 +103,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'assistant',
     content: [
       {
@@ -128,7 +128,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'user',
     content: [
       {
@@ -139,7 +139,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'assistant',
     content: [
       {
@@ -151,7 +151,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'user',
     content: [
       {
@@ -162,7 +162,7 @@ const TEST_MESSAGES: Message[] = [
     ],
   },
   {
-    id: ObjectId.random(),
+    id: Type.ObjectId.random(),
     role: 'assistant',
     content: [
       {
