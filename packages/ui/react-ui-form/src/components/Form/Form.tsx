@@ -14,8 +14,7 @@ import { FormActions } from './FormActions';
 import { FormFields } from './FormContent';
 import { FormProvider } from './FormContext';
 import { type InputProps, type InputComponent } from './Input';
-import { type QueryRefOptions } from './RefField';
-import { type FormOptions } from '../../hooks';
+import { type FormOptions, type QueryRefOptions } from '../../hooks';
 
 export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 

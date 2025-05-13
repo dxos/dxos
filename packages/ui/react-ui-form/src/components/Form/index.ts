@@ -7,4 +7,3 @@ export * from './Defaults';
 export * from './Form';
 export * from './FormContext';
 export * from './Input';
-export { type QueryRefOptions } from './RefField';

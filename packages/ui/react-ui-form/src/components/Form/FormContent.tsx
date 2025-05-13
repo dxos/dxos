@@ -18,7 +18,7 @@ import { useInputProps, useFormValues } from './FormContext';
 import { type InputComponent } from './Input';
 import { RefField } from './RefField';
 import { getInputComponent } from './factory';
-import { type QueryRefOptions } from './hooks';
+import { type QueryRefOptions } from '../../hooks';
 import { getRefProps } from '../../util';
 
 export type FormFieldProps = {

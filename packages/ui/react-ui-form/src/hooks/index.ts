@@ -4,3 +4,4 @@
 
 export * from './useForm';
 export * from './useRefQueryLookupHandler';
+export * from './useQueryRefOptions';

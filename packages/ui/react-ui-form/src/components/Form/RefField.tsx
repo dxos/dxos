@@ -20,7 +20,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { TextInput } from './Defaults';
 import { InputHeader, type InputProps } from './Input';
-import { type QueryRefOptions, useQueryRefOptions } from './hooks';
+import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
 
 type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;
