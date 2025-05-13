@@ -11,8 +11,6 @@ import { type HasId } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
-// import type { FunctionTrigger } from './types';
-
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 // https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
