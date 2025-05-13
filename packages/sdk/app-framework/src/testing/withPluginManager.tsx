@@ -16,6 +16,7 @@ import {
   defineModule,
   definePlugin,
   PluginManager,
+  type PluginsContext,
 } from '../core';
 
 /**
@@ -26,7 +27,7 @@ export const setupPluginManager = ({
   plugins = [],
   core = plugins.map(({ meta }) => meta.id),
   ...options
-}: CreateAppOptions & { capabilities?: AnyCapability[] } = {}) => {
+}: CreateAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
   const pluginManager = new PluginManager({
     pluginLoader: () => raise(new Error('Not implemented')),
     plugins: [StoryPlugin(), ...plugins],
@@ -35,7 +36,7 @@ export const setupPluginManager = ({
   });
 
   if (capabilities) {
-    capabilities.forEach((capability) => {
+    capabilities(pluginManager.context).forEach((capability) => {
       pluginManager.context.contributeCapability({
         interface: capability.interface,
         implementation: capability.implementation,
@@ -48,7 +49,7 @@ export const setupPluginManager = ({
 };
 
 export type WithPluginManagerOptions = CreateAppOptions & {
-  capabilities?: AnyCapability[];
+  capabilities?: (context: PluginsContext) => AnyCapability[];
   fireEvents?: (ActivationEvent | string)[];
 };
 

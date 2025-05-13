@@ -12,6 +12,34 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: LayoutAction.UpdateLayout,
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateSidebar.fields.input)`
+      //  but the filter is not being applied correctly.
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateSidebar.fields.input> =>
+        Schema.is(LayoutAction.UpdateSidebar.fields.input)(data),
+      resolve: ({ options }) => {
+        const layout = context.requestCapability(LayoutState);
+        const next = options?.state ?? layout.sidebarState;
+        if (next !== layout.sidebarState) {
+          layout.sidebarState = next;
+        }
+      },
+    }),
+    createResolver({
+      intent: LayoutAction.UpdateLayout,
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateComplementary.fields.input)`
+      //  but the filter is not being applied correctly.
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateComplementary.fields.input> =>
+        Schema.is(LayoutAction.UpdateComplementary.fields.input)(data),
+      resolve: ({ options }) => {
+        const layout = context.requestCapability(LayoutState);
+        const next = options?.state ?? layout.complementarySidebarState;
+        if (next !== layout.complementarySidebarState) {
+          layout.complementarySidebarState = next;
+        }
+      },
+    }),
+    createResolver({
+      intent: LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdatePopover.fields.input)`
       //  but the filter is not being applied correctly.
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>

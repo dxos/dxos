@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework';
-import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
+import { Main, Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
 
 import { LayoutState } from '../capabilities';
 
@@ -59,6 +59,14 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 
   return (
     <Popover.Root open={open}>
+      <Main.Root
+        navigationSidebarState={layout.sidebarState}
+        complementarySidebarState={layout.complementarySidebarState}
+        onNavigationSidebarStateChange={(next) => (layout.sidebarState = next)}
+        onComplementarySidebarStateChange={(next) => (layout.complementarySidebarState = next)}
+      >
+        {children}
+      </Main.Root>
       <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
       <Popover.Portal>
         <Popover.Content
@@ -75,7 +83,6 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
-      {children}
     </Popover.Root>
   );
 };

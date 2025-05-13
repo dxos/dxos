@@ -4,119 +4,83 @@
 
 import '@dxos-theme';
 
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect } from 'react';
+import { Schema } from 'effect';
+import React from 'react';
 
-import { isAction, isActionLike, type NodeArg } from '@dxos/app-graph';
-import { live, type Live } from '@dxos/live-object';
+import {
+  contributes,
+  Capabilities,
+  IntentPlugin,
+  createResolver,
+  defineCapability,
+  LayoutAction,
+  useCapability,
+} from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { live } from '@dxos/live-object';
+import { GraphPlugin } from '@dxos/plugin-graph';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { isTreeData, type TreeData } from '@dxos/react-ui-list';
-import { Path } from '@dxos/react-ui-list';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { Main } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
+import { withLayout } from '@dxos/storybook-utils';
 
-import { StorybookNavTree, type StorybookNavTreeProps } from '../stories';
-import { createTree, updateState } from '../testing';
+import { NavTreeContainer } from './NavTreeContainer';
+import { NavTreePlugin } from '../NavTreePlugin';
+import { storybookGraphBuilders } from '../stories';
 
+// TODO(wittjosiah): This doesn't seem to be working.
 faker.seed(1234);
 
-const DefaultStory = (args: StorybookNavTreeProps) => {
-  useEffect(() => {
-    return monitorForElements({
-      canMonitor: ({ source }) => isTreeData(source),
-      onDrop: ({ location, source }) => {
-        // Didn't drop on anything.
-        if (!location.current.dropTargets.length) {
-          return;
-        }
+const StoryState = defineCapability<{ tab: string }>('story-state');
 
-        const target = location.current.dropTargets[0];
-        const instruction: Instruction | null = extractInstruction(target.data);
-        if (instruction !== null) {
-          updateState({
-            state: tree,
-            instruction,
-            source: source.data as TreeData,
-            target: target.data as TreeData,
-          });
-        }
-      },
-    });
-  }, []);
+const DefaultStory = () => {
+  const state = useCapability(StoryState);
 
-  return <StorybookNavTree {...args} />;
+  return (
+    <Main.NavigationSidebar label='Navigation' classNames='grid'>
+      <NavTreeContainer tab={state.tab} />
+    </Main.NavigationSidebar>
+  );
 };
 
-const meta: Meta<typeof StorybookNavTree> = {
+const meta: Meta<typeof NavTreeContainer> = {
   title: 'plugins/plugin-navtree/NavTree',
-  component: StorybookNavTree,
+  component: NavTreeContainer,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [
+    withPluginManager({
+      plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
+        GraphPlugin(),
+        IntentPlugin(),
+        NavTreePlugin(),
+      ],
+      capabilities: (context) => [
+        contributes(StoryState, live({ tab: 'default' })),
+        contributes(Capabilities.IntentResolver, [
+          createResolver({
+            intent: LayoutAction.UpdateLayout,
+            filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
+              Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+            resolve: ({ subject }) => {
+              const state = context.requestCapability(StoryState);
+              state.tab = subject;
+            },
+          }),
+        ]),
+        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
+      ],
+    }),
+    withLayout({ fullscreen: true, tooltips: true }),
+  ],
 };
 
 export default meta;
 
-type Story = StoryObj<typeof StorybookNavTree>;
+type Story = StoryObj<typeof NavTreeContainer>;
 
-// TODO(burdon): This story is currently broken; nothing is visible, and same key warning.
-//  Remove the complexity of global variables and create a real story component.
-const tree = live<NodeArg<any>>(createTree());
-const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
-
-export const Default: Story = {
-  args: {
-    id: tree.id,
-    getActions: (arg: NodeArg<any>) => ({
-      actions: arg.nodes?.filter((node) => isActionLike(node)) ?? [],
-      groupedActions: {},
-    }),
-    // TODO(burdon): Why cast?
-    getItems: (testItem?: any, disposition?: string) => {
-      return (testItem?.nodes ?? tree.nodes ?? []).filter((node: NodeArg<any>) => {
-        if (!disposition) {
-          const action = isAction(node);
-          return !action;
-        } else {
-          return node.properties?.disposition === disposition;
-        }
-      });
-    },
-    getProps: (testItem: NodeArg<any>) => ({
-      id: testItem.id,
-      label: testItem.properties?.label ?? testItem.id,
-      icon: testItem.properties?.icon,
-      ...((testItem.nodes?.length ?? 0) > 0 && {
-        parentOf: testItem.nodes!.map(({ id }) => id),
-      }),
-    }),
-    isOpen: (_path: string[]) => {
-      const path = Path.create(..._path);
-      const value = state.get(path) ?? live({ open: false, current: false });
-      if (!state.has(path)) {
-        state.set(path, value);
-      }
-
-      return value.open;
-    },
-    isCurrent: (_path: string[]) => {
-      const path = Path.create(..._path);
-      const value = state.get(path) ?? live({ open: false, current: false });
-      if (!state.has(path)) {
-        state.set(path, value);
-      }
-
-      return value.current;
-    },
-    onOpenChange: ({ path: _path, open }) => {
-      const path = Path.create(..._path);
-      const object = state.get(path);
-      object!.open = open;
-    },
-    onSelect: ({ path: _path, current }) => {
-      const path = Path.create(..._path);
-      const object = state.get(path);
-      object!.current = current;
-    },
-  },
-};
+export const Default: Story = {};

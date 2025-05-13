@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './StorybookNavTree';
+export * from './app-graph-builder';

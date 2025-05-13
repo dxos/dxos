@@ -163,7 +163,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
         }
       }
     },
-    [dispatch, layout],
+    [dispatch, layout.active, tab, navigationSidebarState, isLg],
   );
 
   const canDrop = useCallback((source: TreeData, target: TreeData) => {
