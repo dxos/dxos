@@ -6,6 +6,7 @@ import { Schema as S } from 'effect';
 import { type Effect } from 'effect';
 
 import { type AIServiceClient } from '@dxos/assistant';
+// import { type Space } from '@dxos/client/echo';
 import type { CoreDatabase, EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
@@ -77,8 +78,9 @@ export interface SpaceAPI {
   get queues(): QueuesAPI;
 }
 
+// TODO(wittjosiah): Queues are incompatible.
 const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
-  const _: SpaceAPI = {} as SpaceAPI;
+  // const _: SpaceAPI = {} as Space;
 };
 
 export type FunctionDefinition<T = {}, O = any> = {
