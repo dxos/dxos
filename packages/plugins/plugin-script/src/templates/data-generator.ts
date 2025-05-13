@@ -2,20 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
 // @ts-ignore
 import { defineFunction, S, create, Expando } from 'dxos:functions';
 // @ts-ignore
 import { randText } from 'https://esm.sh/@ngneat/falso@7.1.1';
 
 export default defineFunction({
-  inputSchema: Schema.Struct({
-    documentAmount: Schema.optional(Schema.Number),
-    textSize: Schema.optional(Schema.Number),
-    mutationAmount: Schema.optional(Schema.Number),
+  inputSchema: S.Struct({
+    documentAmount: S.optional(S.Number),
+    textSize: S.optional(S.Number),
+    mutationAmount: S.optional(S.Number),
   }),
 
-  outputSchema: Schema.Struct({}),
+  outputSchema: S.Struct({}),
 
   handler: async ({
     event: {
