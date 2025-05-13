@@ -3,7 +3,7 @@
 //
 
 import { type SchemaAST } from 'effect';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, type FocusEvent } from 'react';
 
 import {
   Expando,
@@ -37,6 +37,7 @@ export const RefField = ({
   array,
   ast,
   getValue,
+  onBlur,
   onQueryRefOptions,
   onValueChange,
   ...restInputProps
@@ -51,7 +52,7 @@ export const RefField = ({
     // If ref type is expando, fall back to taking a DXN in string format.
     return (
       <RefFieldFallback
-        {...{ type, label, disabled, placeholder, inputOnly, getValue, onValueChange, ...restInputProps }}
+        {...{ type, label, placeholder, disabled, inputOnly, getValue, onBlur, onValueChange, ...restInputProps }}
       />
     );
   }
@@ -137,6 +138,7 @@ export const RefField = ({
         <TagPicker
           items={handleGetValue()}
           mode={tagPickerMode}
+          onBlur={(event) => onBlur(event as unknown as FocusEvent<HTMLElement>)}
           onUpdate={handleUpdate}
           onSearch={handleSearch}
           classNames='rounded-sm bg-input p-1.5'

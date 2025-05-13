@@ -28,6 +28,7 @@ import {
 import { type ChromaticPalette } from '@dxos/react-ui';
 
 import { type TagPickerItemProps } from './TagPickerItem';
+import { FocusEventHandler } from 'react';
 
 export type TagPickerItemData = { id: string; label: string; hue?: ChromaticPalette };
 
@@ -83,6 +84,7 @@ export type TagPickerOptions = {
   // TODO(ZaymonFC): Think of a better name for this?
   inGrid?: boolean;
   mode?: TagPickerMode;
+  onBlur?: (event: FocusEvent) => void;
   onSelect?: (id: string) => void;
   onSearch?: (text: string, ids: string[]) => TagPickerItemData[];
   onUpdate?: (ids: string[]) => void;

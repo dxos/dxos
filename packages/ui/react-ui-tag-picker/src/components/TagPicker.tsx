@@ -13,6 +13,7 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  EditorView,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -32,7 +33,7 @@ export type TagPickerProps = ThemedClassName<
     items: TagPickerItemData[];
     readonly?: boolean;
     mode?: TagPickerMode;
-  } & Pick<TagPickerOptions, 'onSelect' | 'onSearch' | 'onUpdate'>
+  } & Pick<TagPickerOptions, 'onBlur' | 'onSelect' | 'onSearch' | 'onUpdate'>
 >;
 
 export interface TagPickerHandle {
@@ -75,7 +76,7 @@ const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
 };
 
 const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
-  ({ classNames, items, readonly, mode, onUpdate, onSearch, onSelect }, ref) => {
+  ({ classNames, items, mode, onBlur, onUpdate, onSearch, onSelect }, ref) => {
     const { themeMode } = useThemeContext();
     const { ref: resizeRef, width } = useResizeDetector();
     const { t } = useTranslation(translationKey);
@@ -110,9 +111,12 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
             onSearch,
             onSelect,
           }),
+          EditorView.domEventHandlers({
+            blur: (event) => onBlur?.(event),
+          }),
         ],
       }),
-      [themeMode, mode, onSearch, onSelect],
+      [themeMode, mode, onSearch, onSelect, onBlur],
     );
 
     const composedRef = useComposedRefs(resizeRef, parentRef);
