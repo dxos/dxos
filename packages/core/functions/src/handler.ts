@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Effect, Schema } from 'effect';
+import { Schema as S } from 'effect';
+import { type Effect } from 'effect';
 
 import { type AIServiceClient } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
@@ -149,17 +150,10 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
   // const _: SpaceAPI = {} as Space;
 };
 
-export type FunctionDefinition = {
+export type FunctionDefinition<E extends EventType = EventType, T = {}, O = any> = {
   description?: string;
-  inputSchema: Schema.Schema.AnyNoContext;
-  outputSchema?: Schema.Schema.AnyNoContext;
-  handler: FunctionHandler<any>;
-};
-
-export type DefineFunctionParams<T, O = any> = {
-  description?: string;
-  inputSchema: Schema.Schema<T, any>;
-  outputSchema?: Schema.Schema<O, any>;
+  inputSchema: S.Schema<T, any>;
+  outputSchema?: S.Schema<O, any>;
   handler: FunctionHandler<E, T, O>;
 };
 
@@ -167,7 +161,7 @@ export type DefineFunctionParams<T, O = any> = {
 export const defineFunction = <E extends EventType, T, O>(
   params: FunctionDefinition<E, T, O>,
 ): FunctionDefinition<E, T, O> => {
-  if (!Schema.isSchema(params.inputSchema)) {
+  if (!S.isSchema(params.inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
   if (typeof params.handler !== 'function') {
@@ -177,69 +171,7 @@ export const defineFunction = <E extends EventType, T, O>(
   return {
     description: params.description,
     inputSchema: params.inputSchema,
-    outputSchema: params.outputSchema ?? Schema.Any,
+    outputSchema: params.outputSchema ?? S.Any,
     handler: params.handler,
   };
-};
-
-//
-// Subscription utils.
-//
-
-export type RawSubscriptionData = {
-  spaceKey?: string;
-  objects?: string[];
-};
-
-export type SubscriptionData = {
-  space?: Space;
-  objects?: AnyLiveObject<any>[];
-};
-
-/**
- * Handler wrapper for subscription events; extracts space and objects.
- *
- * To test:
- * ```
- * curl -s -X POST -H "Content-Type: application/json" --data '{"space": "0446...1cbb"}' http://localhost:7100/dev/email-extractor
- * ```
- *
- * NOTE: Get space key from devtools or `dx space list --json`
- */
-// TODO(burdon): Evolve into plugin definition like Composer.
-export const subscriptionHandler = <TMeta>(
-  handler: FunctionHandler<SubscriptionData, TMeta>,
-  types?: Schema.Schema.AnyNoContext[],
-): FunctionHandler<RawSubscriptionData, TMeta> => {
-  return async ({ event: { data }, context, response, ...rest }) => {
-    const { client } = context;
-    const space = data.spaceKey ? client.spaces.get(PublicKey.from(data.spaceKey)) : undefined;
-    if (!space) {
-      log.error('Invalid space');
-      return response.status(500);
-    }
-
-    registerTypes(space, types);
-    const objects = space
-      ? data.objects?.map<AnyLiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(isNonNullable)
-      : [];
-
-    if (!!data.spaceKey && !space) {
-      log.warn('invalid space', { data });
-    } else {
-      log.info('handler', { space: space?.key.truncate(), objects: objects?.length });
-    }
-
-    return handler({ event: { data: { ...data, space, objects } }, context, response, ...rest });
-  };
-};
-
-// TODO(burdon): Evolve types as part of function metadata.
-const registerTypes = (space: Space, types: Schema.Schema.AnyNoContext[] = []) => {
-  const registry = space.db.graph.schemaRegistry;
-  for (const type of types) {
-    if (!registry.hasSchema(type)) {
-      registry.addSchema([type]);
-    }
-  }
 };

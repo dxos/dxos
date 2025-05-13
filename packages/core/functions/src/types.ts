@@ -36,7 +36,7 @@ const TimerTriggerSchema = Schema.Struct({
    * Must match the function's input schema.
    * This does not get merged with the trigger event.
    */
-  payload: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
+  payload: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
 }).pipe(Schema.mutable);
 
 export type TimerTrigger = Schema.Schema.Type<typeof TimerTriggerSchema>;
@@ -119,19 +119,19 @@ export type TriggerType = Schema.Schema.Type<typeof TriggerSchema>;
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
  */
-export const FunctionTriggerSchema = S.Struct({
+export const FunctionTriggerSchema = Schema.Struct({
   /**
    * Function or workflow to invoke.
    */
   // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: S.optional(Ref(Expando).annotations({ [AST.TitleAnnotationId]: 'Function' })),
+  function: Schema.optional(Ref(Expando).annotations({ [SchemaAST.TitleAnnotationId]: 'Function' })),
 
   /**
    * Only used for workflows.
    * Specifies the input node in the circuit.
    * @deprecated Remove and enforce a single input node in all compute graphs.
    */
-  inputNodeId: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Input Node ID' })),
+  inputNodeId: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Input Node ID' })),
 
   enabled: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Enabled' })),
 

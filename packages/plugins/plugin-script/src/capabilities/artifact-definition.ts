@@ -7,7 +7,6 @@ import { Schema } from 'effect';
 import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { S } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -80,7 +79,7 @@ export default () => {
         /**
          * Effect Schema
          */
-        export const S; 
+        export const Schema; 
 
         // Examples: 
 
@@ -180,7 +179,7 @@ export default () => {
         caption: 'Inspecting script...',
         schema: Schema.Struct({
           // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
-          id: S.String.annotations({ description: 'The ID of the script' }),
+          id: Schema.String.annotations({ description: 'The ID of the script' }),
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -200,7 +199,7 @@ export default () => {
         caption: 'Updating script...',
         schema: Schema.Struct({
           // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
-          id: S.String.annotations({ description: 'The ID of the script to update' }),
+          id: Schema.String.annotations({ description: 'The ID of the script to update' }),
           code: Schema.String.annotations({
             description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
           }),
