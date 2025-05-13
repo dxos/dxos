@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { Ref, TypedObject, type Ref$ } from '@dxos/echo-schema';
-import { FunctionType } from '@dxos/functions/types';
+import { FunctionType } from '@dxos/functions';
 
 const ApiAuthorizationKey = Schema.Struct({
   type: Schema.Literal('api-key'),

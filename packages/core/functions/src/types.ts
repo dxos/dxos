@@ -4,7 +4,7 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { OptionsAnnotationId, RawObject, TypedObject, DXN } from '@dxos/echo-schema';
+import { Expando, OptionsAnnotationId, RawObject, TypedObject, DXN, Ref } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -31,6 +31,12 @@ const TimerTriggerSchema = Schema.Struct({
     [SchemaAST.TitleAnnotationId]: 'Cron',
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
+  /**
+   * Passed as the input data to the function.
+   * Must match the function's input schema.
+   * This does not get merged with the trigger event.
+   */
+  payload: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
 }).pipe(Schema.mutable);
 
 export type TimerTrigger = Schema.Schema.Type<typeof TimerTriggerSchema>;
@@ -110,21 +116,27 @@ export type TriggerType = Schema.Schema.Type<typeof TriggerSchema>;
 
 /**
  * Function trigger.
+ * Function is invoked with the `payload` passed as input data.
+ * The event that triggers the function is available in the function context.
  */
-export const FunctionTriggerSchema = Schema.Struct({
-  // TODO(burdon): What type does this reference.
-  // TODO(wittjosiah): This should probably be a Ref?
-  function: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Function' })),
+export const FunctionTriggerSchema = S.Struct({
+  /**
+   * Function or workflow to invoke.
+   */
+  // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
+  function: S.optional(Ref(Expando).annotations({ [AST.TitleAnnotationId]: 'Function' })),
+
+  /**
+   * Only used for workflows.
+   * Specifies the input node in the circuit.
+   * @deprecated Remove and enforce a single input node in all compute graphs.
+   */
+  inputNodeId: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Input Node ID' })),
 
   enabled: Schema.optional(Schema.Boolean.annotations({ [SchemaAST.TitleAnnotationId]: 'Enabled' })),
 
   // TODO(burdon): Flatten entire schema.
   spec: Schema.optional(TriggerSchema),
-
-  // TODO(burdon): Get schema as partial from function.
-  // TODO(wittjosiah): Rename to payload.
-  // The `meta` property is merged into the event data passed to the function.
-  meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
 });
 
 export type FunctionTriggerType = Schema.Schema.Type<typeof FunctionTriggerSchema>;

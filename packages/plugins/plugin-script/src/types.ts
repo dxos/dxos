@@ -5,7 +5,7 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { SpaceSchema } from '@dxos/client/echo';
-import { ScriptType } from '@dxos/functions/types';
+import { ScriptType } from '@dxos/functions';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 
 import { SCRIPT_PLUGIN } from './meta';

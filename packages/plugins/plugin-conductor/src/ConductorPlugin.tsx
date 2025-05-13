@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { FunctionTrigger } from '@dxos/functions/types';
+import { FunctionTrigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';

@@ -24,7 +24,9 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
   const handleConfigureSync = useCallback(() => {
     invariant(space);
 
-    const syncTrigger = triggers.find((trigger) => trigger.meta?.mailboxId === object.id);
+    const syncTrigger = triggers.find(
+      (trigger) => trigger.spec?.type === TriggerKind.Timer && trigger.spec?.payload?.mailboxId === object.id,
+    );
     if (syncTrigger) {
       void dispatch(
         createIntent(LayoutAction.Open, {

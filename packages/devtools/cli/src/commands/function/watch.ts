@@ -7,7 +7,7 @@ import fs from 'fs';
 
 import { debounce, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { FunctionType, ScriptType } from '@dxos/functions/types';
+import { FunctionType, ScriptType } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
