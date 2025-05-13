@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
 // @ts-ignore
-import { create, defineFunction, Filter, ObjectId, S } from 'dxos:functions';
+import { create, defineFunction, Filter, ObjectId } from 'dxos:functions';
+// @ts-ignore
 import {
   HttpClient,
   HttpClientRequest,
@@ -12,21 +12,22 @@ import {
   // @ts-ignore
 } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
 // @ts-ignore
-import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
+import { format, subDays } from 'https://esm.sh/date-fns@3.3.1';
+// @ts-ignore
+import { pipe, Chunk, Effect, Ref, Schedule, Schema, Stream } from 'https://esm.sh/effect@3.13.3';
 
 import { Type } from '@dxos/echo';
 
-// TODO(ZaymonFC): Calculate this dynamically and expose a parameter.
-const DEFAULT_AFTER = '2025-01-01';
-
 export default defineFunction({
   inputSchema: Schema.Struct({
+    mailboxId: Schema.String,
+    userId: Schema.optional(Schema.String).pipe(Schema.withDecodingDefault(() => 'me')),
+    after: Schema.optional(Schema.Union(Schema.Number, Schema.String)).pipe(
+      Schema.withDecodingDefault(() => format(subDays(new Date(), 30), 'yyyy-MM-dd')),
+    ),
+    pageSize: Schema.optional(Schema.Number).pipe(Schema.withDecodingDefault(() => 100)),
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
     tick: Schema.optional(Schema.String),
-    userId: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.Union(Schema.Number, Schema.String)),
-    pageSize: Schema.optional(Schema.Number),
-    mailboxId: Schema.String,
   }),
 
   outputSchema: Schema.Struct({
@@ -34,10 +35,10 @@ export default defineFunction({
   }),
 
   handler: ({
-    event: {
-      data: { mailboxId, userId = 'me', after = DEFAULT_AFTER, pageSize = 100 },
-    },
     context: { space },
+    event: {
+      data: { mailboxId, userId, after, pageSize },
+    },
   }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
@@ -45,9 +46,10 @@ export default defineFunction({
         catch: (e: any) => e,
       });
 
-      const makeRequest = (path: string) =>
+      // NOTE: Google API bundles size is v. large and caused runtime issues.
+      const makeRequest = (url: string) =>
         pipe(
-          path,
+          url,
           HttpClientRequest.get,
           HttpClientRequest.setHeaders({ Authorization: `Bearer ${token}`, Accept: 'application/json' }),
           HttpClient.execute,
@@ -57,13 +59,10 @@ export default defineFunction({
           Effect.scoped,
         );
 
-      const listMessages = (userId: string, q: string, pageSize: number, pageToken: string | null) => {
-        const url = `https://gmail.googleapis.com/gmail/v1/users/${userId}/messages?maxResults=${pageSize}&q=${q}`;
-        return makeRequest(pageToken ? `${url}&pageToken=${pageToken}` : url);
-      };
+      const listMessages = (userId: string, q: string, pageSize: number, pageToken: string | null) =>
+        makeRequest(getUrl(userId, undefined, { q, pageSize, pageToken }));
 
-      const getMessage = (userId: string, id: string) =>
-        makeRequest(`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages/${id}`);
+      const getMessage = (userId: string, messageId: string) => makeRequest(getUrl(userId, messageId));
 
       const mailbox = yield* Effect.tryPromise({
         try: () => space.db.query({ id: mailboxId }).first(),
@@ -139,6 +138,14 @@ export default defineFunction({
       return { newMessages: queueMessages.length };
     }).pipe(Effect.provide(FetchHttpClient.layer)),
 });
+
+const getUrl = (userId: string, messageId?: string, params?: Record<string, any>) => {
+  const api = new URL(
+    [`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages`, messageId].filter(Boolean).join('/'),
+  );
+  Object.entries(params ?? {}).forEach(([key, value]) => api.searchParams.set(key, value));
+  return api.toString();
+};
 
 /**
  * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
