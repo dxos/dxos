@@ -72,18 +72,55 @@ export interface Query<T> {
 }
 
 interface QueryAPI {
+  /**
+   * Query for objects of a given schema.
+   * @param schema - Schema of the objects.
+   * @param predicates - Predicates to filter the objects.
+   * @returns Query for the objects.
+   */
   type<S extends Schema.Schema.All>(
     schema: S,
     predicates?: PredicateSet<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
 
+  /**
+   * Combine results of multiple queries.
+   * @param queries - Queries to combine.
+   * @returns Query for the combined results.
+   */
   all<T>(...queries: Query<T>[]): Query<T>;
 
+  /**
+   * Predicate for property to be greater than the provided value.
+   */
   gt<T>(value: T): Predicate<T>;
+
+  /**
+   * Predicate for property to be greater than or equal to the provided value.
+   */
   gte<T>(value: T): Predicate<T>;
+
+  /**
+   * Predicate for property to be less than the provided value.
+   */
   lt<T>(value: T): Predicate<T>;
+
+  /**
+   * Predicate for property to be less than or equal to the provided value.
+   */
   lte<T>(value: T): Predicate<T>;
+
+  /**
+   * Predicate for property to be in the provided array.
+   * @param values - Values to check against.
+   */
   in<T>(...values: T[]): Predicate<T>;
+
+  /**
+   * Predicate for property to be in the provided range.
+   * @param from - Start of the range (inclusive).
+   * @param to - End of the range (exclusive).
+   */
   range<T>(from: T, to: T): Predicate<T>;
 }
 
