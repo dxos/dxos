@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S, Schema } from 'effect';
+import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { failedInvariant } from '@dxos/invariant';
@@ -10,7 +10,7 @@ import { failedInvariant } from '@dxos/invariant';
 import type { Message } from './message';
 import { type Tool, type ToolExecutionContext, type ToolResult } from './tools';
 
-export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
+export type DefineToolParams<Params extends Schema.Schema.AnyNoContext> = {
   /**
    * The name of the tool (may include hyphens but not underscores).
    */
@@ -18,14 +18,14 @@ export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
   caption?: string;
   description: string;
   schema: Params;
-  execute: (params: S.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
+  execute: (params: Schema.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
 };
 
 export const parseToolName = (name: string) => {
   return name.split('_').pop();
 };
 
-export const defineTool = <Params extends S.Schema.AnyNoContext>(
+export const defineTool = <Params extends Schema.Schema.AnyNoContext>(
   namespace: string,
   { name, caption, description, schema, execute }: DefineToolParams<Params>,
 ): Tool => {
@@ -37,7 +37,7 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>(
     description,
     parameters: toFunctionParameterSchema(Type.toJsonSchema(schema)),
     execute: (params: any, context?: any) => {
-      const sanitized = S.decodeSync(schema)(params);
+      const sanitized = Schema.decodeSync(schema)(params);
       return execute(sanitized, context ?? {});
     },
   };
@@ -66,7 +66,7 @@ export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema) => {
  * Usage:
  *
  * ```ts
- * const outputParser = structuredOutputParser(S.Struct({ ... }))
+ * const outputParser = structuredOutputParser(Schema.Struct({ ... }))
  * const messages = await aiService.exec({
  *   ...
  *   tools: [outputParser.tool],
@@ -74,7 +74,7 @@ export const toFunctionParameterSchema = (jsonSchema: Type.JsonSchema) => {
  * const result = outputParser.getResult(messages)
  * ```
  */
-export const structuredOutputParser = <TSchema extends S.Schema.AnyNoContext>(schema: TSchema) => {
+export const structuredOutputParser = <TSchema extends Schema.Schema.AnyNoContext>(schema: TSchema) => {
   const tool = defineTool('system', {
     name: 'submit_result',
     description: 'You must call this tool with the result of your work.',
@@ -84,7 +84,7 @@ export const structuredOutputParser = <TSchema extends S.Schema.AnyNoContext>(sc
 
   return {
     tool,
-    getResult: (messages: Message[]): S.Schema.Type<TSchema> => {
+    getResult: (messages: Message[]): Schema.Schema.Type<TSchema> => {
       const result = messages
         .findLast((message) => message.role === 'assistant')
         ?.content.filter((content) => content.type === 'tool_use')

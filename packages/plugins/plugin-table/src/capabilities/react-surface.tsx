@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { getTypenameOrThrow, isInstanceOf, type Ref, type S } from '@dxos/echo-schema';
+import { getTypenameOrThrow, isInstanceOf, type Ref } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
@@ -79,12 +80,14 @@ export default () =>
     createSurface({
       id: `${meta.id}/create-initial-schema-form`,
       role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
+      filter: (
+        data,
+      ): data is { prop: string; schema: Schema.Schema<any>; target: Space | CollectionType | undefined } => {
         if (data.prop !== 'typename') {
           return false;
         }
 
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, TypenameAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {

@@ -5,9 +5,10 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
+import { SchemaAST } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { AST, type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
+import { type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
@@ -33,9 +34,9 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
   const { space } = useClientProvider();
 
   const table = useMemo(() => {
-    // const { typename } = pipe(schema.ast, AST.getAnnotation<TypeAnnotation>(TypeAnnotationId), Option.getOrThrow);
+    // const { typename } = pipe(schema.ast, SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId), Option.getOrThrow);
     const typename = schema.typename;
-    const name = getAnnotation<string>(AST.TitleAnnotationId)(schema.ast) ?? typename;
+    const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema: schema.jsonSchema });
     return live(TableType, { view: makeRef(view) });
   }, [schema]);

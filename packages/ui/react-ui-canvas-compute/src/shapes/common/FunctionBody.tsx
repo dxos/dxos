@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema, SchemaAST } from 'effect';
 import React, { type JSX, useRef, useState } from 'react';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
-import { AST, type S } from '@dxos/echo-schema';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
 import { type Polygon, type Shape } from '@dxos/react-ui-canvas-editor';
 import { getParentShapeElement, createAnchors, rowHeight } from '@dxos/react-ui-canvas-editor';
@@ -20,8 +20,8 @@ export type FunctionBodyProps = {
   shape: Shape;
   name?: string;
   content?: JSX.Element;
-  inputSchema?: S.Schema.Any;
-  outputSchema?: S.Schema.Any;
+  inputSchema?: Schema.Schema.Any;
+  outputSchema?: Schema.Schema.Any;
 } & Pick<BoxProps, 'status'>;
 
 // TODO(wittjosiah): Rename, not used for functions.
@@ -106,18 +106,20 @@ export const FunctionBody = ({
   );
 };
 
-export const getHeight = (input: S.Schema<any>) => {
-  const properties = AST.getPropertySignatures(input.ast);
+export const getHeight = (input: Schema.Schema<any>) => {
+  const properties = SchemaAST.getPropertySignatures(input.ast);
   return headerHeight + footerHeight + bodyPadding * 2 + properties.length * rowHeight + 2; // Incl. borders.
 };
 
 export const createFunctionAnchors = (
   shape: Polygon,
-  input: S.Schema<any> = VoidInput,
-  output: S.Schema<any> = VoidOutput,
+  input: Schema.Schema<any> = VoidInput,
+  output: Schema.Schema<any> = VoidOutput,
 ) => {
   // TODO(burdon): Set type.
-  const inputs = AST.getPropertySignatures(input.ast).map(({ name }) => createAnchorId('input', name.toString()));
-  const outputs = AST.getPropertySignatures(output.ast).map(({ name }) => createAnchorId('output', name.toString()));
+  const inputs = SchemaAST.getPropertySignatures(input.ast).map(({ name }) => createAnchorId('input', name.toString()));
+  const outputs = SchemaAST.getPropertySignatures(output.ast).map(({ name }) =>
+    createAnchorId('output', name.toString()),
+  );
   return createAnchors({ shape, inputs, outputs, center: { x: 0, y: (headerHeight - footerHeight) / 2 + 1 } });
 };

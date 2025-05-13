@@ -60,6 +60,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "effect": "3.14.21",
     "hyperformula": "^2.7.1",
     "lodash.defaultsdeep": "^4.6.1"
   },
@@ -69,6 +70,9 @@
     "@dxos/random": "workspace:*",
     "@tldraw/indices": "^2.0.0-alpha.14",
     "@types/lodash.defaultsdeep": "^4.6.6"
+  },
+  "peerDependencies": {
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"

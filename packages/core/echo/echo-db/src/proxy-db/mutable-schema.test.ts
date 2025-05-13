@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
@@ -10,7 +11,6 @@ import {
   getTypeReference,
   Ref,
   TypedObject,
-  S,
   getTypename,
   TypeIdentifierAnnotationId,
   type TypeAnnotation,
@@ -24,8 +24,8 @@ import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  schema: S.optional(Ref(EchoSchema)),
-  schemaArray: S.optional(S.mutable(S.Array(Ref(EchoSchema)))),
+  schema: Schema.optional(Ref(EchoSchema)),
+  schemaArray: Schema.optional(Schema.mutable(Schema.Array(Ref(EchoSchema)))),
 }) {}
 
 describe('EchoSchema', () => {
@@ -43,7 +43,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(live(TestSchema, {}));
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      field: S.String,
+      field: Schema.String,
     }) {}
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
@@ -58,7 +58,7 @@ describe('EchoSchema', () => {
     });
     expect(instanceWithSchemaRef.schema?.target?.ast).to.deep.eq(schemaWithId.ast);
 
-    const validator = S.validateSync(instanceWithSchemaRef.schema!.target!);
+    const validator = Schema.validateSync(instanceWithSchemaRef.schema!.target!);
     expect(() => validator({ id: instanceWithSchemaRef.id, field: '1' })).not.to.throw();
     expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
   });
@@ -66,7 +66,7 @@ describe('EchoSchema', () => {
   test('create echo object with EchoSchema', async () => {
     const { db } = await setupTest();
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      field: S.String,
+      field: Schema.String,
     }) {}
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
@@ -78,7 +78,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(live(TestSchema, { schemaArray: [] }));
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      field: S.String,
+      field: Schema.String,
     }) {}
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
@@ -89,7 +89,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
     const object = live(schema, {});
-    schema.addFields({ field1: S.String });
+    schema.addFields({ field1: Schema.String });
     object.field1 = 'works';
     object.field1 = undefined;
     expect(() => {
@@ -131,15 +131,15 @@ describe('EchoSchema', () => {
       typename: 'example.com/type/org',
       version: '0.1.0',
     })({
-      name: S.optional(S.String),
+      name: Schema.optional(Schema.String),
     });
 
     const ContactSchema = TypedObject({
       typename: 'example.com/type/contact',
       version: '0.1.0',
     })({
-      name: S.optional(S.String),
-      org: S.optional(Ref(OrgSchema)),
+      name: Schema.optional(Schema.String),
+      org: Schema.optional(Ref(OrgSchema)),
     });
 
     const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);

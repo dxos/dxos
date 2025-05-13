@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { rmSync } from 'node:fs';
 import path, { join } from 'node:path';
 import yargs from 'yargs';
@@ -117,7 +117,7 @@ const main = async () => {
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
     client.addTypes([TestType]);
     const object = space.db.add(live(dynamicSchema, {}));
-    dynamicSchema.addFields({ name: S.String, todo: Ref(Todo) });
+    dynamicSchema.addFields({ name: Schema.String, todo: Ref(Todo) });
     object.name = 'Test';
     object.todo = live(Todo, { name: 'Test todo' });
     await space.db.flush();

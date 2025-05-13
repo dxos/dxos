@@ -136,7 +136,7 @@ const processProperty = <T extends BaseObject>(
   let array: SchemaProperty<T>['array'] | undefined;
   let format: SchemaProperty<T>['format'] | undefined;
 
-  // Parse AST.
+  // Parse SchemaAST.
   // NOTE: findNode traverses the AST until the condition is met.
   let baseType = findNode(prop.type, isSimpleType);
 

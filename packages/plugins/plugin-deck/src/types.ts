@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { LayoutAction } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
 import { type DeepReadonly } from '@dxos/util';
 
 import { DECK_PLUGIN } from './meta';
@@ -23,33 +24,33 @@ export type Overscroll = (typeof OverscrollOptions)[number];
 export type Part = 'solo' | 'deck' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
 
-export const DeckSettingsSchema = S.Struct({
-  showHints: S.optional(S.Boolean),
-  enableDeck: S.optional(S.Boolean),
-  enableNativeRedirect: S.optional(S.Boolean),
-  enableStatusbar: S.optional(S.Boolean),
-  newPlankPositioning: S.optional(S.Literal(...NewPlankPositions)),
-  overscroll: S.optional(S.Literal(...OverscrollOptions)),
-}).pipe(S.mutable);
-export type DeckSettingsProps = S.Schema.Type<typeof DeckSettingsSchema>;
+export const DeckSettingsSchema = Schema.Struct({
+  showHints: Schema.optional(Schema.Boolean),
+  enableDeck: Schema.optional(Schema.Boolean),
+  enableNativeRedirect: Schema.optional(Schema.Boolean),
+  enableStatusbar: Schema.optional(Schema.Boolean),
+  newPlankPositioning: Schema.optional(Schema.Literal(...NewPlankPositions)),
+  overscroll: Schema.optional(Schema.Literal(...OverscrollOptions)),
+}).pipe(Schema.mutable);
+export type DeckSettingsProps = Schema.Schema.Type<typeof DeckSettingsSchema>;
 
-export const PlankSizing = S.Record({ key: S.String, value: S.Number });
-export type PlankSizing = S.Schema.Type<typeof PlankSizing>;
+export const PlankSizing = Schema.Record({ key: Schema.String, value: Schema.Number });
+export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
 // State of an individual deck.
-export const DeckState = S.Struct({
+export const DeckState = Schema.Struct({
   /** If false, the deck has not yet left solo mode and new planks should be soloed. */
-  initialized: S.Boolean,
-  active: S.mutable(S.Array(S.String)),
+  initialized: Schema.Boolean,
+  active: Schema.mutable(Schema.Array(Schema.String)),
   // TODO(wittjosiah): Piping into both mutable and optional caused invalid typescript output.
-  activeCompanions: S.optional(S.mutable(S.Record({ key: S.String, value: S.String }))),
-  inactive: S.mutable(S.Array(S.String)),
-  solo: S.optional(S.String),
-  fullscreen: S.Boolean,
-  plankSizing: S.mutable(PlankSizing),
-  companionFrameSizing: S.mutable(PlankSizing),
+  activeCompanions: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.String }))),
+  inactive: Schema.mutable(Schema.Array(Schema.String)),
+  solo: Schema.optional(Schema.String),
+  fullscreen: Schema.Boolean,
+  plankSizing: Schema.mutable(PlankSizing),
+  companionFrameSizing: Schema.mutable(PlankSizing),
 });
-export type DeckState = S.Schema.Type<typeof DeckState>;
+export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
 export const defaultDeck: DeckState = {
   initialized: false,
@@ -62,9 +63,9 @@ export const defaultDeck: DeckState = {
   companionFrameSizing: {},
 };
 
-const LayoutMode = S.Literal('deck', 'solo', 'solo--fullscreen');
-export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
-export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
+const LayoutMode = Schema.Literal('deck', 'solo', 'solo--fullscreen');
+export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
+export const isLayoutMode = (value: any): value is LayoutMode => Schema.is(LayoutMode)(value);
 
 export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode => {
   if (deck.solo) {
@@ -75,73 +76,73 @@ export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode =
 };
 
 // State of the deck plugin.
-export const DeckPluginState = S.Struct({
-  sidebarState: S.Literal('closed', 'collapsed', 'expanded'),
-  complementarySidebarState: S.Literal('closed', 'collapsed', 'expanded'),
-  complementarySidebarPanel: S.optional(S.String),
+export const DeckPluginState = Schema.Struct({
+  sidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
+  complementarySidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
+  complementarySidebarPanel: Schema.optional(Schema.String),
 
-  dialogOpen: S.Boolean,
-  dialogBlockAlign: S.optional(S.Literal('start', 'center', 'end')),
-  dialogType: S.optional(S.Literal('default', 'alert')),
+  dialogOpen: Schema.Boolean,
+  dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
+  dialogType: Schema.optional(Schema.Literal('default', 'alert')),
   /** Data to be passed to the dialog Surface. */
-  dialogContent: S.optional(S.Any),
+  dialogContent: Schema.optional(Schema.Any),
 
-  popoverOpen: S.Boolean,
-  popoverSide: S.optional(S.Literal('top', 'right', 'bottom', 'left')),
-  popoverAnchor: S.optional(S.Any),
-  popoverAnchorId: S.optional(S.String),
+  popoverOpen: Schema.Boolean,
+  popoverSide: Schema.optional(Schema.Literal('top', 'right', 'bottom', 'left')),
+  popoverAnchor: Schema.optional(Schema.Any),
+  popoverAnchorId: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
-  popoverContent: S.optional(S.Any),
+  popoverContent: Schema.optional(Schema.Any),
 
-  toasts: S.mutable(S.Array(LayoutAction.Toast)),
-  currentUndoId: S.optional(S.String),
+  toasts: Schema.mutable(Schema.Array(LayoutAction.Toast)),
+  currentUndoId: Schema.optional(Schema.String),
 
-  activeDeck: S.String,
-  previousDeck: S.String,
-  decks: S.mutable(S.Record({ key: S.String, value: S.mutable(DeckState) })),
-  previousMode: S.mutable(S.Record({ key: S.String, value: LayoutMode })),
-  deck: S.mutable(DeckState),
+  activeDeck: Schema.String,
+  previousDeck: Schema.String,
+  decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
+  previousMode: Schema.mutable(Schema.Record({ key: Schema.String, value: LayoutMode })),
+  deck: Schema.mutable(DeckState),
 
   /** The identifier of a component to scroll into view when it is mounted. */
-  scrollIntoView: S.optional(S.String),
-}).pipe(S.mutable);
+  scrollIntoView: Schema.optional(Schema.String),
+}).pipe(Schema.mutable);
 
-export type DeckPluginState = S.Schema.Type<typeof DeckPluginState>;
+export type DeckPluginState = Schema.Schema.Type<typeof DeckPluginState>;
 
 export const DECK_ACTION = `${DECK_PLUGIN}/action`;
 
 export namespace DeckAction {
-  const PartAdjustmentSchema = S.Union(
-    S.Literal('close').annotations({ description: 'Close the plank.' }),
-    S.Literal('companion').annotations({ description: 'Open the companion plank.' }),
-    S.Literal('solo').annotations({ description: 'Solo the plank.' }),
-    S.Literal('solo--fullscreen').annotations({ description: 'Fullscreen the plank.' }),
-    S.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
-    S.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
+  const PartAdjustmentSchema = Schema.Union(
+    Schema.Literal('close').annotations({ description: 'Close the plank.' }),
+    Schema.Literal('companion').annotations({ description: 'Open the companion plank.' }),
+    Schema.Literal('solo').annotations({ description: 'Solo the plank.' }),
+    Schema.Literal('solo--fullscreen').annotations({ description: 'Fullscreen the plank.' }),
+    Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
+    Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
   );
-  export type PartAdjustment = S.Schema.Type<typeof PartAdjustmentSchema>;
-  export const Adjustment = S.mutable(S.Struct({ id: S.String, type: PartAdjustmentSchema }));
-  export type Adjustment = S.Schema.Type<typeof Adjustment>;
+  export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
+  export const Adjustment = Schema.mutable(Schema.Struct({ id: Schema.String, type: PartAdjustmentSchema }));
+  export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends S.TaggedClass<Adjust>()(`${DECK_ACTION}/adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${DECK_ACTION}/adjust`, {
     input: Adjustment,
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends S.TaggedClass<UpdatePlankSize>()(`${DECK_ACTION}/update-plank-size`, {
-    input: S.Struct({
-      id: S.String,
-      size: S.Number,
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${DECK_ACTION}/update-plank-size`, {
+    input: Schema.Struct({
+      id: Schema.String,
+      size: Schema.Number,
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 
-  export class ChangeCompanion extends S.TaggedClass<ChangeCompanion>()(`${DECK_ACTION}/change-companion`, {
-    input: S.Struct({
-      primary: S.String,
-      companion: S.Union(S.String, S.Null),
+  export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${DECK_ACTION}/change-companion`, {
+    input: Schema.Struct({
+      primary: Schema.String,
+      companion: Schema.Union(Schema.String, Schema.Null),
     }),
-    output: S.Void,
+    output: Schema.Void,
   }) {}
 }

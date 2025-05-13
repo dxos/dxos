@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
+import { Schema, SchemaAST } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -20,7 +21,7 @@ import {
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
 import { Type } from '@dxos/echo';
-import { S, AST, create, type Expando } from '@dxos/echo-schema';
+import { create, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';
@@ -46,14 +47,14 @@ import { createDocument, DocumentType, type MarkdownSettingsProps } from '../typ
 
 faker.seed(1);
 
-const TestItem = S.Struct({
-  title: S.String.annotations({
-    [AST.TitleAnnotationId]: 'Title',
-    [AST.DescriptionAnnotationId]: 'Product title',
+const TestItem = Schema.Struct({
+  title: Schema.String.annotations({
+    [SchemaAST.TitleAnnotationId]: 'Title',
+    [SchemaAST.DescriptionAnnotationId]: 'Product title',
   }),
-  description: S.String.annotations({
-    [AST.TitleAnnotationId]: 'Description',
-    [AST.DescriptionAnnotationId]: 'Product description',
+  description: Schema.String.annotations({
+    [SchemaAST.TitleAnnotationId]: 'Description',
+    [SchemaAST.DescriptionAnnotationId]: 'Product description',
   }),
 }).pipe(
   Type.def({

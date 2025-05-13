@@ -99,14 +99,14 @@ export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined 
  */
 // TODO(burdon): Rename EchoType.
 export const EchoObject: {
-  // TODO(burdon): Tighten Self type to S.TypeLiteral or S.Struct to facilitate definition of `make` method.
-  // (meta: TypeMeta): <Self extends S.Struct<Fields>, Fields extends S.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
+  // TODO(burdon): Tighten Self type to Schema.TypeLiteral or Schema.Struct to facilitate definition of `make` method.
+  // (meta: TypeMeta): <Self extends Schema.Struct<Fields>, Fields extends Schema.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
   (meta: TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => EchoTypeSchema<Self>;
 } = ({ typename, version }) => {
   return <Self extends Schema.Schema.Any>(self: Self): EchoTypeSchema<Self> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
-    // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
+    // TODO(dmaretskyi): Does `Schema.mutable` work for deep mutability here?
     // TODO(dmaretskyi): Do not do mutable here.
     const schemaWithId = Schema.extend(Schema.mutable(self), Schema.Struct({ id: Schema.String }));
     const ast = SchemaAST.annotations(schemaWithId.ast, {
@@ -158,7 +158,7 @@ export const EchoRelation = <TSource extends Schema.Schema.AnyNoContext, TTarget
   ): EchoTypeSchema<Self, RelationSourceTargetRefs<Schema.Schema.Type<TSource>, Schema.Schema.Type<TTarget>>> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
-    // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
+    // TODO(dmaretskyi): Does `Schema.mutable` work for deep mutability here?
     // TODO(dmaretskyi): Do not do mutable here.
     const schemaWithId = Schema.extend(Schema.mutable(self), Schema.Struct({ id: Schema.String }));
     const ast = SchemaAST.annotations(schemaWithId.ast, {
@@ -220,11 +220,11 @@ export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}
       Schema.Schema.Context<Self>
     > {
   // make(
-  //   props: RequiredKeys<S.TypeLiteral.Constructor<Fields, []>> extends never
-  //     ? void | Simplify<S.TypeLiteral.Constructor<Fields, []>>
-  //     : Simplify<S.TypeLiteral.Constructor<Fields, []>>,
+  //   props: RequiredKeys<Schema.TypeLiteral.Constructor<Fields, []>> extends never
+  //     ? void | Simplify<Schema.TypeLiteral.Constructor<Fields, []>>
+  //     : Simplify<Schema.TypeLiteral.Constructor<Fields, []>>,
   //   options?: MakeOptions,
-  // ): Simplify<S.TypeLiteral.Type<Fields, []>>;
+  // ): Simplify<Schema.TypeLiteral.Type<Fields, []>>;
 
   instanceOf(value: unknown): boolean;
 }
@@ -251,11 +251,11 @@ const makeEchoObjectSchema = <Self extends Schema.Schema.Any>(
     }
 
     // static make(
-    //   props: RequiredKeys<S.TypeLiteral.Constructor<Fields, []>> extends never
-    //     ? void | Simplify<S.TypeLiteral.Constructor<Fields, []>>
-    //     : Simplify<S.TypeLiteral.Constructor<Fields, []>>,
+    //   props: RequiredKeys<Schema.TypeLiteral.Constructor<Fields, []>> extends never
+    //     ? void | Simplify<Schema.TypeLiteral.Constructor<Fields, []>>
+    //     : Simplify<Schema.TypeLiteral.Constructor<Fields, []>>,
     //   options?: MakeOptions,
-    // ): Simplify<S.TypeLiteral.Type<Fields, []>> {
+    // ): Simplify<Schema.TypeLiteral.Type<Fields, []>> {
     //   const propsWithDefaults: any = _lazilyMergeDefaults(fields, { ...(props as any) });
     //   return _getDisableValidationMakeOption(options)
     //     ? propsWithDefaults

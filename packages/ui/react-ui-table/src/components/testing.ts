@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { useEffect } from 'react';
 
-import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum, ObjectId } from '@dxos/echo-schema';
+import { setValue, toJsonSchema, TypeEnum, TypedObject, FormatEnum, ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
 import { createView, type ViewProjection } from '@dxos/schema';
@@ -13,10 +14,10 @@ import { TableType } from '../types';
 
 export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
   id: ObjectId,
-  name: S.optional(S.String),
-  age: S.optional(S.Number),
-  active: S.optional(S.Boolean),
-  netWorth: S.optional(S.Number),
+  name: Schema.optional(Schema.String),
+  age: Schema.optional(Schema.Number),
+  active: Schema.optional(Schema.Boolean),
+  netWorth: Schema.optional(Schema.Number),
 });
 
 export const createTable = (schema = TestSchema) => {

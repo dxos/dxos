@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { getSnapshot, isInstanceOf, S } from '@dxos/echo-schema';
+import { getSnapshot, isInstanceOf } from '@dxos/echo-schema';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { Filter, makeRef, parseId } from '@dxos/react-client/echo';
@@ -21,14 +22,14 @@ import { Box, createFunctionAnchors } from './common';
 import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 
-export const FunctionShape = S.extend(
+export const FunctionShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('function'),
+  Schema.Struct({
+    type: Schema.Literal('function'),
   }),
 );
 
-export type FunctionShape = S.Schema.Type<typeof FunctionShape>;
+export type FunctionShape = Schema.Schema.Type<typeof FunctionShape>;
 
 export type CreateFunctionProps = CreateShapeProps<FunctionShape>;
 

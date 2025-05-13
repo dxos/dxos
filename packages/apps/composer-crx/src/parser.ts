@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 // Types:
 // Bookmark
@@ -14,11 +14,11 @@ import { Schema as S } from 'effect';
 // Email/Calendar
 // Youtube
 
-export const PageContent = S.Struct({
-  url: S.String,
+export const PageContent = Schema.Struct({
+  url: Schema.String,
 });
 
-export type PageContent = S.Schema.Type<typeof PageContent>;
+export type PageContent = Schema.Schema.Type<typeof PageContent>;
 
 /**
  * Parse current page and create context object.

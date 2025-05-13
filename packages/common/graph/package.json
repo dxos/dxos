@@ -41,6 +41,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "effect": "3.14.21",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
@@ -50,6 +51,9 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/random": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6"
+  },
+  "peerDependencies": {
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"

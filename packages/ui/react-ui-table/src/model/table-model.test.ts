@@ -3,9 +3,10 @@
 //
 
 import { computed } from '@preact/signals-core';
+import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { createEchoSchema } from '@dxos/live-object/testing';
@@ -99,8 +100,8 @@ describe('TableModel', () => {
 });
 
 class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  title: S.String,
-  completed: S.Boolean,
+  title: Schema.String,
+  completed: Schema.Boolean,
 }) {}
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {

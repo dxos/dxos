@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { TypedObject } from '@dxos/echo-schema';
 import { isEchoObject, ReactiveObjectSchema, type AnyLiveObject } from '@dxos/react-client/echo';
 
 import { TEMPLATE_PLUGIN } from './meta';
@@ -10,11 +12,11 @@ import { TEMPLATE_PLUGIN } from './meta';
 export namespace TemplateAction {
   const TEMPLATE_ACTION = `${TEMPLATE_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${TEMPLATE_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
+  export class Create extends Schema.TaggedClass<Create>()(`${TEMPLATE_ACTION}/create`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
     }),
-    output: S.Struct({
+    output: Schema.Struct({
       object: ReactiveObjectSchema,
     }),
   }) {}
@@ -27,5 +29,5 @@ export const isObject = (object: unknown): object is AnyLiveObject<any> => {
 };
 
 export class TemplateType extends TypedObject({ typename: 'dxos.org/type/Template', version: '0.1.0' })({
-  name: S.optional(S.String),
+  name: Schema.optional(Schema.String),
 }) {}
