@@ -6,9 +6,8 @@ import { Schema as S } from 'effect';
 import { type Effect } from 'effect';
 
 import { type AIServiceClient } from '@dxos/assistant';
-import { type Client } from '@dxos/client';
 import type { CoreDatabase, EchoDatabase } from '@dxos/echo-db';
-import { type HasId, DXN as dxnSchema } from '@dxos/echo-schema';
+import { type HasId } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
@@ -22,24 +21,11 @@ import { type QueryResult } from '@dxos/protocols';
 /**
  * Function handler.
  */
-export type FunctionHandler<TEvent extends EventType = EventType, TData = {}, TOutput = any> = (params: {
+export type FunctionHandler<TData = {}, TOutput = any> = (params: {
   /**
    * Services and context available to the function.
    */
   context: FunctionContext;
-
-  /**
-   * Trigger that invoked the function.
-   * In case the function is part of a workflow, this will be the trigger for the overall workflow.
-   */
-  // TODO(wittjosiah): Remove?
-  // trigger: FunctionTrigger;
-
-  /**
-   * Event data from the trigger.
-   * In case the function is part of a workflow, this will be the event that triggered the overall workflow.
-   */
-  event: TEvent;
 
   /**
    * Data passed as the input to the function.
@@ -97,17 +83,15 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
   const _: SpaceAPI = {} as SpaceAPI;
 };
 
-export type FunctionDefinition<E extends EventType = EventType, T = {}, O = any> = {
+export type FunctionDefinition<T = {}, O = any> = {
   description?: string;
   inputSchema: S.Schema<T, any>;
   outputSchema?: S.Schema<O, any>;
-  handler: FunctionHandler<E, T, O>;
+  handler: FunctionHandler<T, O>;
 };
 
 // TODO(dmaretskyi): Bind input type to function handler.
-export const defineFunction = <E extends EventType, T, O>(
-  params: FunctionDefinition<E, T, O>,
-): FunctionDefinition<E, T, O> => {
+export const defineFunction = <T, O>(params: FunctionDefinition<T, O>): FunctionDefinition<T, O> => {
   if (!S.isSchema(params.inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }

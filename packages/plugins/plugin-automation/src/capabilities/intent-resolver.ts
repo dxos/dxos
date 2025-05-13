@@ -24,8 +24,8 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,
-      resolve: async ({ space, template, enabled = false, scriptName, payload }) => {
-        const trigger = live(FunctionTrigger, { enabled, payload });
+      resolve: async ({ space, template, enabled = false, scriptName, input }) => {
+        const trigger = live(FunctionTrigger, { enabled, input });
 
         // TODO(wittjosiah): Factor out function lookup by script name?
         if (scriptName) {
