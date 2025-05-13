@@ -16,7 +16,7 @@ import { SelectInput } from './Defaults';
 import { type ComponentLookup } from './Form';
 import { useInputProps, useFormValues } from './FormContext';
 import { type InputComponent } from './Input';
-import { RefField, type QueryRefOptions } from './RefField';
+import { type QueryRefOptions } from './RefField';
 import { getInputComponent } from './factory';
 
 export type FormFieldProps = {
@@ -85,7 +85,7 @@ export const FormField = ({
     return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
   }
 
-  const InputComponent = getInputComponent(type, format);
+  const InputComponent = getInputComponent(type, format, ast);
   if (InputComponent) {
     return (
       <div role='none'>
@@ -96,6 +96,7 @@ export const FormField = ({
           inputOnly={inline}
           placeholder={placeholder}
           disabled={readonly}
+          {...{ ast, onQueryRefOptions }}
           {...inputProps}
         />
       </div>
@@ -116,22 +117,6 @@ export const FormField = ({
           {...inputProps}
         />
       </div>
-    );
-  }
-
-  // TODO(ZaymonFC): Extract this to it's own component.
-  if (format === 'ref') {
-    return (
-      <RefField
-        ast={ast}
-        type={type}
-        label={label}
-        readonly={readonly}
-        placeholder={placeholder}
-        inline={inline}
-        onQueryRefOptions={onQueryRefOptions}
-        inputProps={inputProps}
-      />
     );
   }
 

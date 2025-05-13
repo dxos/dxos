@@ -13,40 +13,41 @@ import {
   type ReferenceAnnotationValue,
   type TypeAnnotation,
 } from '@dxos/echo-schema';
-import { findAnnotation, type SimpleType } from '@dxos/effect';
+import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 import { SelectInput, TextInput } from './Defaults';
-import { type FormInputStateProps } from './FormContext';
+import { type InputProps } from './Input';
 
 export type QueryRefOptions = (type: TypeAnnotation) => MaybePromise<{ dxn: DXN; label?: string }[]>;
 
-type RefFieldProps = {
-  ast: SchemaAST.AST;
-  type: SimpleType;
-  label: string;
-  readonly?: boolean;
-  placeholder?: string;
-  inline?: boolean;
+// Using InputProps and adding the necessary props for RefField
+type RefFieldProps = InputProps & {
+  ast?: SchemaAST.AST;
   onQueryRefOptions?: QueryRefOptions;
-  inputProps: FormInputStateProps;
 };
 
 export const RefField = ({
-  ast,
   type,
   label,
-  readonly,
+  disabled,
   placeholder,
-  inline,
+  inputOnly,
+  ast,
   onQueryRefOptions,
-  inputProps,
+  getValue,
+  onValueChange,
+  ...restInputProps
 }: RefFieldProps) => {
-  const { getValue, onValueChange, ...restInputProps } = inputProps;
-  const refTypeInfo = findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId);
+  // Using the ast that was passed in at call site
+  const astNode = ast;
+  if (!astNode) {
+    return null;
+  }
+  const refTypeInfo = findAnnotation<ReferenceAnnotationValue>(astNode, ReferenceAnnotationId);
   const [refOptions, setRefOptions] = useState<Array<{ value: string; label?: string }>>([]);
   const [loading, setLoading] = useState(false);
 
@@ -109,9 +110,9 @@ export const RefField = ({
       <TextInput
         type={type}
         label={label}
-        disabled={readonly}
+        disabled={disabled}
         placeholder={placeholder}
-        inputOnly={inline}
+        inputOnly={inputOnly}
         getValue={handleGetValue as <V>() => V | undefined}
         onValueChange={handleOnValueChange}
         {...restInputProps}
@@ -140,9 +141,9 @@ export const RefField = ({
     <SelectInput
       type={type}
       label={label}
-      disabled={readonly || loading}
+      disabled={disabled || loading}
       placeholder={loading ? 'Loading options...' : placeholder}
-      inputOnly={inline}
+      inputOnly={inputOnly}
       getValue={handleGetValue as <V>() => V | undefined}
       onValueChange={handleValueChanged}
       options={refOptions}
