@@ -9,8 +9,8 @@ import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
 
-import { type MenuAction, type MenuItemGroup, type MenuItem } from '../types';
 import { type ActionGraphProps } from '../hooks/useMenuActions';
+import { type MenuAction, type MenuItemGroup, type MenuItem } from '../types';
 
 export type CreateActionsParams = Partial<{
   type?: typeof ACTION_TYPE | typeof ACTION_GROUP_TYPE;
