@@ -69,7 +69,7 @@ const meta: Meta<typeof AmbientDialog> = {
       plugins: [IntentPlugin()],
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
   ],
   parameters: {
     translations,

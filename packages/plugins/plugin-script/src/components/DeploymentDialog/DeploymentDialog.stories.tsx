@@ -33,7 +33,7 @@ const meta: Meta = {
   title: 'plugins/plugin-script/DeploymentDialog',
   component: DeploymentDialog,
   parameters: { translations },
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
 };
 
 export default meta;

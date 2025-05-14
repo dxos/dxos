@@ -34,5 +34,5 @@ export const Playground = {};
 export default {
   title: 'sdk/app-framework/playground',
   render: Story,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
 };

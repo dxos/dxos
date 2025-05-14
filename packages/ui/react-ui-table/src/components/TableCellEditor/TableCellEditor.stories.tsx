@@ -107,7 +107,7 @@ const meta: Meta<StoryProps> = {
       },
     }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
 };
 

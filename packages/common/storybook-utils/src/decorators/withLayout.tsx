@@ -7,13 +7,11 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type PropsWithChildren, type JSX, type FC } from 'react';
 
 import { type Density, DensityProvider, type ThemedClassName } from '@dxos/react-ui';
-import { Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 type ProviderOptions = {
   fullscreen?: boolean;
   density?: Density;
-  tooltips?: boolean;
 };
 
 const defaultOptions: ProviderOptions = {
@@ -23,9 +21,6 @@ const defaultOptions: ProviderOptions = {
 type Provider = (children: JSX.Element, options: ProviderOptions) => JSX.Element;
 
 const providers: Provider[] = [
-  (children, options) => {
-    return options.tooltips ? <Tooltip.Provider>{children}</Tooltip.Provider> : children;
-  },
   (children, options) => {
     return options?.density ? <DensityProvider density={options.density}>{children}</DensityProvider> : children;
   },

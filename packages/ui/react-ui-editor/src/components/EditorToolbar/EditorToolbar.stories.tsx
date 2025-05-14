@@ -85,6 +85,6 @@ export const Default = {
 export default {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations, layout: 'fullscreen' },
 };
