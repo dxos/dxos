@@ -168,7 +168,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
       if (isAction(node)) {
         const [parent] = graph.nodes(node, { relation: 'inbound' });
-        void (parent && node.data({ node: parent, caller: NAV_TREE_ITEM }));
+        void (parent && node.data({ parent, caller: NAV_TREE_ITEM }));
         return;
       }
 

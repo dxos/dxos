@@ -309,8 +309,8 @@ export const constructSpaceActions = ({
       {
         id: getId(SpaceAction.Rename._tag),
         type: ACTION_TYPE,
-        data: async (params: InvokeParams) => {
-          await dispatch(createIntent(SpaceAction.Rename, { space, caller: params.caller }));
+        data: async (params?: InvokeParams) => {
+          await dispatch(createIntent(SpaceAction.Rename, { space, caller: params?.caller }));
         },
         properties: {
           label: ['rename space label', { ns: SPACE_PLUGIN }],
@@ -404,8 +404,8 @@ export const constructObjectActions = ({
     {
       id: getId(SpaceAction.RenameObject._tag),
       type: ACTION_TYPE,
-      data: async (params: InvokeParams) => {
-        await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params.caller }));
+      data: async (params?: InvokeParams) => {
+        await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
       },
       properties: {
         label: [

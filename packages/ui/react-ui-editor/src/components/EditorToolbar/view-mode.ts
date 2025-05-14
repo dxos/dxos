@@ -6,6 +6,7 @@ import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
+import { type EditorViewMode } from '../../extensions';
 import { translationKey } from '../../translations';
 
 const createViewModeGroupAction = (value: string) =>
@@ -20,24 +21,24 @@ const createViewModeGroupAction = (value: string) =>
     'ph--eye--regular',
   );
 
-const createViewModeActions = (value: string) =>
+const createViewModeActions = (value: string, onViewModeChange: (mode: EditorViewMode) => void) =>
   Object.entries({
     preview: 'ph--eye--regular',
     source: 'ph--pencil-simple--regular',
     readonly: 'ph--pencil-slash--regular',
   }).map(([viewMode, icon]) => {
-    return createEditorAction(
-      { type: 'view-mode', data: viewMode, checked: viewMode === value },
+    const checked = viewMode === value;
+    return createEditorAction(`view-mode--${viewMode}`, () => onViewModeChange(viewMode as EditorViewMode), {
+      label: [`${viewMode} mode label`, { ns: translationKey }],
+      checked,
       icon,
-      [`${viewMode} mode label`, { ns: translationKey }],
-      `view-mode--${viewMode}`,
-    );
+    });
   });
 
-export const createViewMode = (state: EditorToolbarState) => {
+export const createViewMode = (state: EditorToolbarState, onViewModeChange: (mode: EditorViewMode) => void) => {
   const value = state.viewMode ?? 'source';
   const viewModeGroupAction = createViewModeGroupAction(value);
-  const viewModeActions = createViewModeActions(value);
+  const viewModeActions = createViewModeActions(value, onViewModeChange);
   return {
     nodes: [viewModeGroupAction as NodeArg<any>, ...viewModeActions],
     edges: [

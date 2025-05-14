@@ -46,9 +46,6 @@ export default {
     parent,
     menuActions,
     label: 'Select action',
-    onAction: (action) => {
-      console.log(action);
-    },
   } satisfies Partial<NavTreeItemActionMenuProps>,
 };
 

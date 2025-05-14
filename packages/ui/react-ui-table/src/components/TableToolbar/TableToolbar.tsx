@@ -10,7 +10,6 @@ import {
   createGapSeparator,
   createMenuAction,
   type MenuAction,
-  type MenuActionHandler,
   MenuProvider,
   ToolbarMenu,
   useMenuActions,
@@ -27,18 +26,18 @@ export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view';
 type TableToolbarState = Partial<{ viewDirty: boolean }>;
 
 export type TableToolbarProps = ThemedClassName<
-  TableToolbarState & { onAction?: MenuActionHandler<TableToolbarAction>; attendableId?: string }
+  TableToolbarState & { onAction: (action: TableToolbarAction) => void; attendableId?: string }
 >;
 
-const createTableToolbarActions = (state: TableToolbarState) => {
-  const add = createMenuAction<TableToolbarActionProperties>('add-row', {
-    type: 'add-row',
+const createTableToolbarActions = (state: TableToolbarState, onAction: (action: TableToolbarAction) => void) => {
+  const add = createMenuAction<TableToolbarActionProperties>('add-row', () => onAction(add), {
+    type: 'add-row' as const,
     icon: 'ph--plus--regular',
     label: ['add row', { ns: translationKey }],
     testId: 'table.toolbar.add-row',
   });
-  const save = createMenuAction<TableToolbarActionProperties>('save-view', {
-    type: 'save-view',
+  const save = createMenuAction<TableToolbarActionProperties>('save-view', () => onAction(save), {
+    type: 'save-view' as const,
     icon: 'ph--floppy-disk--regular',
     label: ['save view label', { ns: translationKey }],
     testId: 'table.toolbar.save-view',
@@ -46,8 +45,8 @@ const createTableToolbarActions = (state: TableToolbarState) => {
     hidden: !state.viewDirty,
   });
   const gap = createGapSeparator();
-  const comment = createMenuAction('comment', {
-    type: 'comment',
+  const comment = createMenuAction('comment', () => onAction(comment), {
+    type: 'comment' as const,
     icon: 'ph--chat-text--regular',
     label: ['create comment', { ns: translationKey }],
     testId: 'table.toolbar.comment',
@@ -61,11 +60,11 @@ const createTableToolbarActions = (state: TableToolbarState) => {
 
 export const TableToolbar = ({ classNames, viewDirty, attendableId, onAction }: TableToolbarProps) => {
   const state = useMemo(() => live<TableToolbarState>({ viewDirty }), []);
-  const actionsCreator = useCallback(() => createTableToolbarActions(state), [state]);
+  const actionsCreator = useCallback(() => createTableToolbarActions(state, onAction), [state, onAction]);
   const menu = useMenuActions(actionsCreator);
 
   return (
-    <MenuProvider {...menu} attendableId={attendableId} onAction={onAction as MenuActionHandler}>
+    <MenuProvider {...menu} attendableId={attendableId}>
       <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );
