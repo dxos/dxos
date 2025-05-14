@@ -17,6 +17,7 @@ import INSTRUCTIONS from './instructions.tpl?raw';
 import { AIServiceEdgeClient, OllamaClient } from '../../ai-service';
 import { AISession } from '../../session';
 import { AI_SERVICE_ENDPOINT, ConsolePrinter } from '../../testing';
+import { structuredOutputParser } from '@dxos/artifact';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const REMOTE_AI = true;
@@ -67,6 +68,12 @@ describe.skip('misc', () => {
   test('createExtractionSchema', () => {
     const schema = createExtractionSchema(TYPES);
     log.info('schema', { schema });
+  });
+
+  test('extract schema json schema', () => {
+    const schema = createExtractionSchema(TYPES);
+    const parser = structuredOutputParser(schema);
+    log.info('schema', { json: parser.tool.parameters });
   });
 
   test('getSanitizedSchemaName', () => {
