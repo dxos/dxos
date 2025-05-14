@@ -19,6 +19,13 @@ import {
   type PluginsContext,
 } from '../core';
 
+// TODO(burdon): Factor out (use consistently in plugin framework?)
+export type Provider<C, R> = (context: C) => R;
+export type ProviderOrValue<C, R> = Provider<C, R> | R;
+export const getValue = <C, R>(providerOrValue: ProviderOrValue<C, R>, context: C): R => {
+  return typeof providerOrValue === 'function' ? (providerOrValue as Provider<C, R>)(context) : providerOrValue;
+};
+
 /**
  * @internal
  */
@@ -36,7 +43,7 @@ export const setupPluginManager = ({
   });
 
   if (capabilities) {
-    capabilities(pluginManager.context).forEach((capability) => {
+    getValue(capabilities, pluginManager.context).forEach((capability) => {
       pluginManager.context.contributeCapability({
         interface: capability.interface,
         implementation: capability.implementation,
@@ -49,7 +56,7 @@ export const setupPluginManager = ({
 };
 
 export type WithPluginManagerOptions = CreateAppOptions & {
-  capabilities?: (context: PluginsContext) => AnyCapability[];
+  capabilities?: ProviderOrValue<PluginsContext, AnyCapability[]>;
   fireEvents?: (ActivationEvent | string)[];
 };
 
