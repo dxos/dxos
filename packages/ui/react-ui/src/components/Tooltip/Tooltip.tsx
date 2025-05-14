@@ -260,6 +260,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
     const {
       __scopeTooltip,
       onInteract,
+      // TODO(thure): Pass `delayDuration` into the context.
       delayDuration: _delayDuration,
       suppressNextTooltip,
       side,
