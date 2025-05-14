@@ -76,7 +76,9 @@ export const FormProvider = ({
       const keyIsEnter = event.key === 'Enter';
       const modifierUsed = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
       const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
-      const inputOptOut = (event.target as HTMLElement).hasAttribute('data-no-submit');
+      const inputOptOut =
+        (event.target as HTMLElement).hasAttribute('data-no-submit') ||
+        (event.target as HTMLElement).closest('[data-no-submit]') !== null;
 
       // Regular inputs: Submit on Enter (no modifiers).
       const shouldSubmitRegularInput = !inputIsTextarea && keyIsEnter && !modifierUsed;
