@@ -16,6 +16,7 @@ import { Portal as PortalPrimitive } from '@radix-ui/react-portal';
 import { Presence } from '@radix-ui/react-presence';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slottable } from '@radix-ui/react-slot';
+import { type TooltipProps } from '@radix-ui/react-tooltip';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import * as VisuallyHiddenPrimitive from '@radix-ui/react-visually-hidden';
 import React, {
@@ -34,7 +35,7 @@ import React, {
 
 import { useElevationContext, useThemeContext } from '../../hooks';
 
-type ScopedProps<P = {}> = P & { __scopeTooltip?: Scope };
+type TooltipScopedProps<P = {}> = P & { __scopeTooltip?: Scope };
 const [createTooltipContext, createTooltipScope] = createContextScope('Tooltip', [createPopperScope]);
 const usePopperScope = createPopperScope();
 
@@ -86,7 +87,7 @@ interface TooltipProviderProps {
   skipDelayDuration?: number;
 }
 
-const TooltipProvider: FC<TooltipProviderProps> = (props: ScopedProps<TooltipProviderProps>) => {
+const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<TooltipProviderProps>) => {
   const {
     __scopeTooltip,
     children,
@@ -109,13 +110,13 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: ScopedProps<TooltipPro
   const popperScope = usePopperScope(__scopeTooltip);
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
   const [content, setContent] = useState<string>('');
-  const [side, setSide] = useState<Side | undefined>(undefined);
+  const [side, setSide] = useState<TooltipSide | undefined>(undefined);
   const triggerRef = useRef<HTMLButtonElement | null>(trigger);
   const handleTriggerChange = useCallback((nextTrigger: HTMLButtonElement | null) => {
     setTrigger(nextTrigger);
     triggerRef.current = nextTrigger;
     setContent(nextTrigger?.getAttribute('data-tooltip-content') ?? '');
-    setSide((nextTrigger?.getAttribute('data-tooltip-side') as Side | null) ?? undefined);
+    setSide((nextTrigger?.getAttribute('data-tooltip-side') as TooltipSide | null) ?? undefined);
   }, []);
   const contentId = useId();
   const openTimerRef = useRef(0);
@@ -229,7 +230,10 @@ TooltipProvider.displayName = TOOLTIP_NAME;
  * TooltipVirtualTrigger
  * ----------------------------------------------------------------------------------------------- */
 
-const TooltipVirtualTrigger = ({ virtualRef, __scopeTooltip }: ScopedProps<Pick<PopperAnchorProps, 'virtualRef'>>) => {
+const TooltipVirtualTrigger = ({
+  virtualRef,
+  __scopeTooltip,
+}: TooltipScopedProps<Pick<PopperAnchorProps, 'virtualRef'>>) => {
   const popperScope = usePopperScope(__scopeTooltip);
   return <PopperPrimitive.Anchor asChild {...popperScope} virtualRef={virtualRef} />;
 };
@@ -242,13 +246,16 @@ const TRIGGER_NAME = 'TooltipTrigger';
 
 type TooltipTriggerElement = ElementRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
-interface TooltipTriggerProps extends PrimitiveButtonProps {
-  content?: string;
-  side?: Side;
-}
+type TooltipTriggerProps = PrimitiveButtonProps &
+  Pick<TooltipProps, 'delayDuration'> & {
+    content?: string;
+    side?: TooltipSide;
+    suppressNextTooltip?: MutableRefObject<boolean>;
+    onInteract?: (event: MouseEvent | TouchEvent | KeyboardEvent | FocusEvent) => void;
+  };
 
 const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
-  (props: ScopedProps<TooltipTriggerProps>, forwardedRef) => {
+  (props: TooltipScopedProps<TooltipTriggerProps>, forwardedRef) => {
     const { __scopeTooltip, ...triggerProps } = props;
     const context = useTooltipContext(TRIGGER_NAME, __scopeTooltip);
     const ref = useRef<TooltipTriggerElement>(null);
@@ -332,7 +339,7 @@ interface TooltipPortalProps {
   forceMount?: true;
 }
 
-const TooltipPortal: FC<TooltipPortalProps> = (props: ScopedProps<TooltipPortalProps>) => {
+const TooltipPortal: FC<TooltipPortalProps> = (props: TooltipScopedProps<TooltipPortalProps>) => {
   const { __scopeTooltip, forceMount, children, container } = props;
   const context = useTooltipContext(PORTAL_NAME, __scopeTooltip);
   return (
@@ -364,7 +371,7 @@ interface TooltipContentProps extends TooltipContentImplProps {
 }
 
 const TooltipContent = forwardRef<TooltipContentElement, TooltipContentProps>(
-  (props: ScopedProps<TooltipContentProps>, forwardedRef) => {
+  (props: TooltipScopedProps<TooltipContentProps>, forwardedRef) => {
     const portalContext = usePortalContext(CONTENT_NAME, props.__scopeTooltip);
     const { forceMount = portalContext.forceMount, side = 'top', ...contentProps } = props;
     const context = useTooltipContext(CONTENT_NAME, props.__scopeTooltip);
@@ -388,7 +395,7 @@ type TooltipContentHoverableElement = TooltipContentImplElement;
 interface TooltipContentHoverableProps extends TooltipContentImplProps {}
 
 const TooltipContentHoverable = forwardRef<TooltipContentHoverableElement, TooltipContentHoverableProps>(
-  (props: ScopedProps<TooltipContentHoverableProps>, forwardedRef) => {
+  (props: TooltipScopedProps<TooltipContentHoverableProps>, forwardedRef) => {
     const context = useTooltipContext(CONTENT_NAME, props.__scopeTooltip);
     const ref = useRef<TooltipContentHoverableElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
@@ -486,7 +493,7 @@ interface TooltipContentImplProps extends Omit<PopperContentProps, 'onPlaced'> {
 }
 
 const TooltipContentImpl = forwardRef<TooltipContentImplElement, TooltipContentImplProps>(
-  (props: ScopedProps<TooltipContentImplProps>, forwardedRef) => {
+  (props: TooltipScopedProps<TooltipContentImplProps>, forwardedRef) => {
     const {
       __scopeTooltip,
       children,
@@ -570,7 +577,7 @@ type PopperArrowProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Arrow>;
 interface TooltipArrowProps extends PopperArrowProps {}
 
 const TooltipArrow = forwardRef<TooltipArrowElement, TooltipArrowProps>(
-  (props: ScopedProps<TooltipArrowProps>, forwardedRef) => {
+  (props: TooltipScopedProps<TooltipArrowProps>, forwardedRef) => {
     const { __scopeTooltip, ...arrowProps } = props;
     const popperScope = usePopperScope(__scopeTooltip);
     const visuallyHiddenContentContext = useVisuallyHiddenContentContext(ARROW_NAME, __scopeTooltip);
@@ -586,9 +593,9 @@ TooltipArrow.displayName = ARROW_NAME;
 
 /* ----------------------------------------------------------------------------------------------- */
 
-type Side = NonNullable<TooltipContentProps['side']>;
+type TooltipSide = NonNullable<TooltipContentProps['side']>;
 
-const getExitSideFromRect = (point: Point, rect: DOMRect): Side => {
+const getExitSideFromRect = (point: Point, rect: DOMRect): TooltipSide => {
   const top = Math.abs(rect.top - point.y);
   const bottom = Math.abs(rect.bottom - point.y);
   const right = Math.abs(rect.right - point.x);
@@ -608,7 +615,7 @@ const getExitSideFromRect = (point: Point, rect: DOMRect): Side => {
   }
 };
 
-const getPaddedExitPoints = (exitPoint: Point, exitSide: Side, padding = 5) => {
+const getPaddedExitPoints = (exitPoint: Point, exitSide: TooltipSide, padding = 5) => {
   const paddedExitPoints: Point[] = [];
   switch (exitSide) {
     case 'top':
@@ -745,6 +752,6 @@ export const Tooltip = {
   Trigger: TooltipTrigger,
 };
 
-export { createTooltipScope };
+export { createTooltipScope, useTooltipContext };
 
-export type { TooltipProviderProps, TooltipTriggerProps };
+export type { TooltipProviderProps, TooltipTriggerProps, TooltipScopedProps, TooltipSide };

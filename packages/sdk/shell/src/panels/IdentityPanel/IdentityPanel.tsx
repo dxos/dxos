@@ -125,40 +125,22 @@ const IdentityHeading = ({
             value={identity.did}
           />
           {onManageCredentials && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Toolbar.Button classNames='bs-[--rail-action]' onClick={onManageCredentials}>
-                  <span className='sr-only'>{t('manage credentials label')}</span>
-                  <IdentificationCard className={getSize(5)} />
-                </Toolbar.Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content side='bottom'>
-                  {t('manage credentials label')}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          )}
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <Toolbar.Button
-                classNames={['bs-[--rail-action]', !isConnected && errorText]}
-                onClick={() =>
-                  onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
-                }
-              >
-                <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
-                {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
+            <Tooltip.Trigger asChild content={t('manage credentials label')} side='bottom'>
+              <Toolbar.Button classNames='bs-[--rail-action]' onClick={onManageCredentials}>
+                <span className='sr-only'>{t('manage credentials label')}</span>
+                <IdentificationCard className={getSize(5)} />
               </Toolbar.Button>
             </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content side='bottom'>
-                {t(isConnected ? 'disconnect label' : 'connect label')}
-                <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
+          )}
+          <Tooltip.Trigger asChild content={t(isConnected ? 'disconnect label' : 'connect label')} side='bottom'>
+            <Toolbar.Button
+              classNames={['bs-[--rail-action]', !isConnected && errorText]}
+              onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
+            >
+              <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
+              {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
+            </Toolbar.Button>
+          </Tooltip.Trigger>
         </Toolbar.Root>
       </Avatar.Root>
     </Heading>

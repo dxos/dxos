@@ -119,6 +119,8 @@ export const os = {
   'select emoji label': 'Avatar emoji',
   'select hue label': 'Avatar background color',
   'resetting message': 'One moment while the device is reset…',
+  'expires label': 'Expires {{timeLeft}}',
+  'no expiration label': 'Doesn’t expire',
 
   // TODO(burdon): Factor out.
   'red label': 'Red',

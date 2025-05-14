@@ -3,80 +3,45 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, {
-  type ComponentPropsWithoutRef,
-  type CSSProperties,
-  forwardRef,
-  Fragment,
-  type PropsWithChildren,
-  useRef,
-  useState,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, type PropsWithChildren, useCallback, useRef } from 'react';
 
-import { Tooltip, type TooltipContentProps } from '@dxos/react-ui';
+import { Tooltip, type TooltipScopedProps, type TooltipTriggerProps } from '@dxos/react-ui';
 
 export type TextTooltipProps = PropsWithChildren<
   {
     text: string;
     asChild?: boolean;
-    portal?: boolean;
-    zIndex?: CSSProperties['zIndex'];
     onlyWhenTruncating?: boolean;
     truncateQuery?: string;
-  } & Pick<TooltipContentProps, 'side' | 'sideOffset'> &
+  } & Pick<TooltipTriggerProps, 'side'> &
     ComponentPropsWithoutRef<'button'>
 >;
 
-export const TextTooltip = forwardRef<HTMLButtonElement, TextTooltipProps>(
+export const TextTooltip = forwardRef<HTMLButtonElement, TooltipScopedProps<TextTooltipProps>>(
   (
-    {
-      text,
-      children,
-      onlyWhenTruncating,
-      asChild = true,
-      portal = true,
-      zIndex = 70,
-      sideOffset,
-      side,
-      truncateQuery,
-      ...props
-    },
+    { __scopeTooltip, text, children, onlyWhenTruncating, asChild = true, side, truncateQuery, ...props },
     forwardedRef,
   ) => {
-    const ContentRoot = portal ? Tooltip.Portal : Fragment;
     const content = useRef<HTMLButtonElement | null>(null);
     const ref = useComposedRefs(content, forwardedRef);
-    const [open, setOpen] = useState(false);
-    return (
-      <Tooltip.Root
-        open={open}
-        onOpenChange={(nextOpen) => {
-          if (onlyWhenTruncating && nextOpen && content.current) {
-            const element: HTMLElement | null = truncateQuery
-              ? content.current.querySelector(truncateQuery)
-              : content.current;
-            return setOpen(element ? element.scrollWidth > element.offsetWidth : false);
-          } else {
-            return setOpen(nextOpen);
+    const handleInteract = useCallback(
+      (event: Event) => {
+        if (onlyWhenTruncating && content.current) {
+          const element: HTMLElement | null = truncateQuery
+            ? content.current.querySelector(truncateQuery)
+            : content.current;
+          if (element && element.scrollWidth > element.offsetWidth) {
+            return;
           }
-        }}
-      >
-        <Tooltip.Trigger asChild={asChild} {...props} ref={ref}>
-          {children}
-        </Tooltip.Trigger>
-        <ContentRoot>
-          <Tooltip.Content
-            {...{
-              side,
-              sideOffset,
-              style: { zIndex },
-            }}
-          >
-            {text}
-            <Tooltip.Arrow />
-          </Tooltip.Content>
-        </ContentRoot>
-      </Tooltip.Root>
+        }
+        event.preventDefault();
+      },
+      [onlyWhenTruncating, truncateQuery],
+    );
+    return (
+      <Tooltip.Trigger asChild={asChild} {...props} content={text} side={side} onInteract={handleInteract} ref={ref}>
+        {children}
+      </Tooltip.Trigger>
     );
   },
 );
