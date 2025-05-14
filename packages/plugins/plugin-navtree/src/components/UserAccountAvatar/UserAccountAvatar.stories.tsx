@@ -5,17 +5,17 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { UserAccountAvatar } from './UserAccountAvatar';
-
-export const Default = (props: any) => {
-  return <UserAccountAvatar {...props} />;
-};
 
 const meta: Meta<typeof UserAccountAvatar> = {
   title: 'plugins/plugin-navtree/UserAccountAvatar',
   component: UserAccountAvatar,
+  decorators: [withTheme],
 };
 
 export default meta;
+
+export const Default = {};

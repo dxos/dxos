@@ -74,10 +74,7 @@ const meta: Meta<ThreadProps> = {
   component: Thread,
   decorators: [
     withSignals,
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-    }),
+    withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({ plugins: [IntentPlugin()] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center' }),

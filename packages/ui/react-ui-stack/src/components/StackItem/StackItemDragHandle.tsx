@@ -5,7 +5,7 @@
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef } from 'react';
 
-import { useStackItem } from './StackContext';
+import { useStackItem } from '../StackContext';
 
 export type StackItemDragHandleProps = ComponentPropsWithoutRef<'button'> & { asChild: boolean };
 

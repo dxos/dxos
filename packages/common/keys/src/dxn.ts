@@ -153,6 +153,7 @@ export class DXN {
     return this.#parts;
   }
 
+  // TODO(burdon): Should getters fail?
   get typename() {
     invariant(this.#kind === DXN.kind.TYPE);
     return this.#parts[0];

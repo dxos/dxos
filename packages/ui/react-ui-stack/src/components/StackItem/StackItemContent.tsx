@@ -7,7 +7,7 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack } from './StackContext';
+import { useStack } from '../StackContext';
 
 export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   /**

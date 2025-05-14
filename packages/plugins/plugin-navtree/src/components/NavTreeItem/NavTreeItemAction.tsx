@@ -9,8 +9,8 @@ import { useTranslation, toLocalizedString, IconButton, useDensityContext } from
 import { DropdownMenu, MenuProvider, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 
-import { NAVTREE_PLUGIN } from '../meta';
-import { type ActionProperties } from '../types';
+import { NAVTREE_PLUGIN } from '../../meta';
+import { type ActionProperties } from '../../types';
 
 export type NavTreeItemActionMenuProps = ActionProperties & {
   parent: Node;

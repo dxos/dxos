@@ -34,7 +34,7 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
   return <IconButton iconOnly label={label} icon={icon} size={5} variant='ghost' tooltipSide='bottom' {...props} />;
 };
 
-const plankControlSpacing = 'pli-2 plb-3';
+const plankControlSpacing = 'pli-2';
 
 type PlankComplimentControlsProps = {
   primary?: string;

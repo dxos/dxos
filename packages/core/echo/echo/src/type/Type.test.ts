@@ -37,14 +37,25 @@ namespace Testing {
 
   export interface Person extends Schema.Schema.Type<typeof Person> {}
 
-  export const Message = Schema.Struct({
-    // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
-    // TODO(burdon): Support defaults (update create and create).
-    timestamp: Schema.String.pipe(
-      Schema.propertySignature,
-      Schema.withConstructorDefault(() => new Date().toISOString()),
-    ),
-  });
+  // export const WorksFor = S.Struct({
+  //   id: Type.ObjectId,
+  //   since: S.String,
+  //   jobTitle: S.String,
+  //   ...Range({ from, to }),
+  //   ...Provenance({ source: 'duckduckgo.com', confidence: 0.9 }), // keys
+  //   ...Relation.make({ source: Contact, target: Organization }),
+  // }).pipe(
+  //   Relation.def({
+  //     typename: 'example.com/relation/WorksFor',
+  //     version: '0.1.0',
+  //   }),
+  // );
+
+  // {
+  //   const contact = db.add(create(Contact, { name: 'Test' }));
+  //   const organization = db.add(create(Organization, { name: 'DXOS' }));
+  //   db.add(create(WorksFor, { source: contact, target: organization }));
+  // }
 
   export const WorksFor = Schema.Struct({
     // id: Type.ObjectId,
@@ -61,13 +72,23 @@ namespace Testing {
 
   export interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 
-  // TODO(burdon): Fix (Type.def currently removes TypeLiteral that implements the `make` function)..
-  // }).pipe(
-  //   Type.def({
-  //     typename: 'example.com/type/Message',
-  //     version: '0.1.0',
-  //   }),
-  // );
+  // TODO(burdon): Fix (Type.def currently removes TypeLiteral that implements the `make` function).
+  //  Property 'make' does not exist on type 'EchoObjectSchema<Struct<{ timestamp: PropertySignature<":", string, never, ":", string, true, never>; }>>'.ts(2339)
+  export const MessageStruct = Schema.Struct({
+    // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
+    // TODO(burdon): Support defaults (update create and create).
+    timestamp: Schema.String.pipe(
+      Schema.propertySignature,
+      Schema.withConstructorDefault(() => new Date().toISOString()),
+    ),
+  });
+
+  export const Message = MessageStruct.pipe(
+    Type.def({
+      typename: 'example.com/type/Message',
+      version: '0.1.0',
+    }),
+  );
 
   export interface Message extends Schema.Schema.Type<typeof Message> {}
 }
@@ -98,9 +119,7 @@ describe('Experimental API review', () => {
   });
 
   test('default props', ({ expect }) => {
-    // TODO(burdon): Doesn't work after pipe(Type.def).
-    // Property 'make' does not exist on type 'EchoObjectSchema<Struct<{ timestamp: PropertySignature<":", string, never, ":", string, true, never>; }>>'.ts(2339)
-    const message = Type.create(Testing.Message, Testing.Message.make({}));
+    const message = Type.create(Testing.Message, Testing.MessageStruct.make({}));
     expect(message.timestamp).to.exist;
   });
 });

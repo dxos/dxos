@@ -6,7 +6,7 @@ import React, { forwardRef } from 'react';
 
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { translationKey } from '../translations';
+import { translationKey } from '../../translations';
 
 export type LayoutControlEvent = 'solo' | 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
 export type LayoutControlHandler = (event: LayoutControlEvent) => void;
