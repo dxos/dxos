@@ -20,19 +20,18 @@ export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> 
 
 export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
   const { tab, getItems, onBack } = useNavTreeContext();
-  const topLevelActions = getItems(root, 'item').toSorted((a, b) => byPosition(a.properties, b.properties));
+  const topLevelActions = getItems(root, 'menu').toSorted((a, b) => byPosition(a.properties, b.properties));
   const topLevelCollections = getItems(root, 'collection');
   const topLevelWorkspaces = getItems(root, 'workspace');
   const topLevelNavigation = getItems(root, 'navigation');
   const l0Items = useMemo(
     () => [
       // prettier-ignore
-      ...topLevelActions,
       ...topLevelCollections,
       ...topLevelWorkspaces,
       ...topLevelNavigation,
     ],
-    [topLevelActions, topLevelCollections, topLevelWorkspaces, topLevelNavigation],
+    [topLevelCollections, topLevelWorkspaces, topLevelNavigation],
   );
   const pinnedItems = getItems(root, 'pin-end').toSorted((a, b) => byPosition(a.properties, b.properties));
   const userAccountItem = getItems(root, 'user-account')[0];
@@ -53,6 +52,7 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
     // NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls
     <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative'>
       <L0Menu
+        menuActions={topLevelActions}
         topLevelItems={l0Items}
         pinnedItems={pinnedItems}
         userAccountItem={userAccountItem}

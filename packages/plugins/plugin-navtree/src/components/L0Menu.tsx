@@ -17,6 +17,7 @@ import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import {
   Icon,
+  IconButton,
   ListItem,
   Popover,
   ScrollArea,
@@ -25,6 +26,7 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
+import { MenuProvider, DropdownMenu, type MenuItem } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
@@ -169,7 +171,7 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
 
   const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
 
-  // TODO(burdon): Memoize?
+  // TODO(wittjosiah): Factor out as IconButton variants.
   const l0ItemTrigger = (
     <Root
       {...(rootProps as any)}
@@ -293,6 +295,7 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
 //
 
 export type L0MenuProps = {
+  menuActions: MenuItem[];
   topLevelItems: Node<any>[];
   pinnedItems: Node<any>[];
   userAccountItem: Node<any>;
@@ -300,7 +303,9 @@ export type L0MenuProps = {
   path: string[];
 };
 
-export const L0Menu = ({ topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
+export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
+  const { t } = useTranslation(NAVTREE_PLUGIN);
+
   return (
     <Tabs.Tablist
       classNames={[
@@ -310,11 +315,14 @@ export const L0Menu = ({ topLevelItems, pinnedItems, userAccountItem, parent, pa
       ]}
     >
       <div role='none' className='grid grid-rows'>
-        {topLevelItems
-          .filter((item) => l0ItemType(item) === 'action')
-          .map((item) => (
-            <L0Item key={item.id} item={item} parent={parent} path={path} />
-          ))}
+        <MenuProvider>
+          <DropdownMenu.Root group={parent} items={menuActions}>
+            <DropdownMenu.Trigger asChild>
+              {/* TODO(wittjosiah): Use L0Item trigger. */}
+              <IconButton iconOnly icon='ph--circle--regular' size={5} label={t('app menu label')} />
+            </DropdownMenu.Trigger>
+          </DropdownMenu.Root>
+        </MenuProvider>
       </div>
 
       <ScrollArea.Root>

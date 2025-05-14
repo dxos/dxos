@@ -7,6 +7,25 @@ import { createExtension, type Node } from '@dxos/plugin-graph';
 import { faker } from '@dxos/random';
 
 export const storybookGraphBuilders = [
+  // Create app menu actions.
+  createExtension({
+    id: 'app-menu',
+    filter: (node): node is Node<null> => node.id === 'root',
+    actions: ({ node }) => [
+      ...Array.from({ length: 5 }, (_, i) => ({
+        id: `${node.id}/action-${i}`,
+        data: () => {
+          log.info('action', { id: node.id, index: i });
+        },
+        properties: {
+          label: `Action ${i}`,
+          icon: faker.properties.icon(),
+          disposition: 'menu',
+        },
+      })),
+    ],
+  }),
+  // Create user account node.
   createExtension({
     id: 'user-account',
     filter: (node): node is Node<null> => node.id === 'root',

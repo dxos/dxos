@@ -46,8 +46,6 @@ import {
   SpacePresence,
   SyncStatus,
   type CreateObjectDialogProps,
-  POPOVER_ADD_SPACE,
-  PopoverAddSpace,
   MembersContainer,
   ObjectSettingsContainer,
   SpaceSettingsContainer,
@@ -211,12 +209,6 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       filter: (data): data is { props: AnyLiveObject<any> } =>
         data.component === POPOVER_RENAME_OBJECT && isLiveObject(data.props),
       component: ({ data }) => <PopoverRenameObject object={data.props} />,
-    }),
-    createSurface({
-      id: POPOVER_ADD_SPACE,
-      role: 'popover',
-      filter: (data): data is any => data.component === POPOVER_ADD_SPACE,
-      component: () => <PopoverAddSpace />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/menu-footer`,

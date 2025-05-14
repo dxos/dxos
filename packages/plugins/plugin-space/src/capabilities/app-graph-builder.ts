@@ -85,17 +85,29 @@ export default (context: PluginsContext) => {
       filter: (node): node is Node<null> => node.id === 'root',
       actions: () => [
         {
-          id: SpaceAction.AddSpace._tag,
+          id: SpaceAction.OpenCreateSpace._tag,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            await dispatch(createIntent(SpaceAction.AddSpace));
+            await dispatch(createIntent(SpaceAction.OpenCreateSpace));
           },
           properties: {
-            label: ['add space label', { ns: SPACE_PLUGIN }],
+            label: ['create space label', { ns: SPACE_PLUGIN }],
             icon: 'ph--plus--regular',
-            testId: 'spacePlugin.addSpace',
-            disposition: 'item',
-            position: 'fallback',
+            testId: 'spacePlugin.createSpace',
+            disposition: 'menu',
+          },
+        },
+        {
+          id: SpaceAction.Join._tag,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(SpaceAction.Join));
+          },
+          properties: {
+            label: ['join space label', { ns: SPACE_PLUGIN }],
+            icon: 'ph--sign-in--regular',
+            testId: 'spacePlugin.joinSpace',
+            disposition: 'menu',
           },
         },
         {
