@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { FunctionType, type ScriptType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { useClient } from '@dxos/react-client';
-import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { type Client, useClient } from '@dxos/react-client';
+import { Filter, getMeta, getSpace, type Space, useQuery } from '@dxos/react-client/echo';
+import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { errorMessageColors } from '@dxos/react-ui-theme';
 
@@ -24,28 +24,68 @@ export type DeployState = {
   error: string;
 };
 
-export const createDeploy = (state: Partial<DeployState>) => {
-  const errorItem = createMenuAction('error', {
+export type CreateDeployOptions = {
+  state: Partial<DeployState>;
+  script: ScriptType;
+  fn: FunctionType;
+  space?: Space;
+  existingFunctionUrl?: string;
+  client: Client;
+  t: TFunction;
+};
+
+export const createDeploy = ({ state, script, space, fn, client, existingFunctionUrl, t }: CreateDeployOptions) => {
+  // TODO(wittjosiah): Should this be an action?
+  const errorItem = createMenuAction('error', () => {}, {
     label: state.error ?? ['no error label', { ns: SCRIPT_PLUGIN }],
     icon: 'ph--warning-circle--regular',
     hidden: !state.error,
     classNames: state.error && errorMessageColors,
   });
 
-  const deployAction = createMenuAction<DeployActionProperties>('deploy', {
-    type: 'deploy',
-    label: [state.deploying ? 'pending label' : 'deploy label', { ns: SCRIPT_PLUGIN }],
-    icon: state.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
-    disabled: state.deploying,
-    classNames: state.deploying ? '[&_svg]:animate-spin' : '',
-  });
+  const deployAction = createMenuAction<DeployActionProperties>(
+    'deploy',
+    async () => {
+      if (!script.source || !space) {
+        return;
+      }
 
-  const copyAction = createMenuAction<DeployActionProperties>('copy', {
-    type: 'copy',
-    label: ['copy link label', { ns: SCRIPT_PLUGIN }],
-    icon: 'ph--link--regular',
-    disabled: !state.functionUrl,
-  });
+      state.error = undefined;
+      state.deploying = true;
+
+      const result = await deployScript({ script, client, space, fn, existingFunctionUrl });
+
+      if (!result.success) {
+        log.catch(result.error);
+        state.error = t('upload failed label');
+      }
+
+      state.deploying = false;
+    },
+    {
+      type: 'deploy',
+      label: [state.deploying ? 'pending label' : 'deploy label', { ns: SCRIPT_PLUGIN }],
+      icon: state.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
+      disabled: state.deploying,
+      classNames: state.deploying ? '[&_svg]:animate-spin' : '',
+    },
+  );
+
+  const copyAction = createMenuAction<DeployActionProperties>(
+    'copy',
+    async () => {
+      if (!state.functionUrl) {
+        return;
+      }
+      await navigator.clipboard.writeText(state.functionUrl);
+    },
+    {
+      type: 'copy',
+      label: ['copy link label', { ns: SCRIPT_PLUGIN }],
+      icon: 'ph--link--regular',
+      disabled: !state.functionUrl,
+    },
+  );
 
   return {
     nodes: [errorItem, deployAction, copyAction],
@@ -83,37 +123,3 @@ export const useDeployDeps = ({ script }: { script: ScriptType }) => {
   const existingFunctionUrl = useMemo(() => fn && getUserFunctionUrlInMetadata(getMeta(fn)), [fn]);
   return { space, fn, client, existingFunctionUrl };
 };
-
-/**
- * Manage EDGE function deployment.
- */
-export const useDeployHandler = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
-  const { space, fn, client, existingFunctionUrl } = useDeployDeps({ script });
-  const { t } = useTranslation(SCRIPT_PLUGIN);
-
-  return useCallback(async () => {
-    if (!script.source || !space) {
-      return;
-    }
-
-    state.error = undefined;
-    state.deploying = true;
-
-    const result = await deployScript({ script, client, space, fn, existingFunctionUrl });
-
-    if (!result.success) {
-      log.catch(result.error);
-      state.error = t('upload failed label');
-    }
-
-    state.deploying = false;
-  }, [fn, client, t, existingFunctionUrl, script, space]);
-};
-
-export const useCopyHandler = ({ state }: { state: Partial<DeployState> }) =>
-  useCallback(async () => {
-    if (!state.functionUrl) {
-      return;
-    }
-    await navigator.clipboard.writeText(state.functionUrl);
-  }, [state.functionUrl]);

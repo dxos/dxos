@@ -85,7 +85,7 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
                   void dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
                   setTimeout(() => {
                     const node = graph.nodes(group ?? action, { relation: 'inbound' })[0];
-                    void (node && isAction(action) && action.data({ node, caller: KEY_BINDING }));
+                    void (node && isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
                   });
                 }}
                 classNames='flex items-center gap-2'

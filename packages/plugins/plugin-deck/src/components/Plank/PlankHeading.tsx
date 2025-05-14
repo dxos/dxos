@@ -94,9 +94,12 @@ export const PlankHeading = memo(
       }
     }, [actions, node, variant, graph]);
 
-    const handleAction = useCallback((action: StackItemSigilAction) => {
-      typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN });
-    }, []);
+    const handleAction = useCallback(
+      (action: StackItemSigilAction) => {
+        typeof action.data === 'function' && action.data?.({ parent: node, caller: DECK_PLUGIN });
+      },
+      [node],
+    );
 
     const handlePlankAction = useCallback(
       (eventType: DeckAction.PartAdjustment) => {
