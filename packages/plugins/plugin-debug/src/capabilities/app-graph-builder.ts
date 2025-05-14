@@ -420,7 +420,7 @@ export default (context: PluginsContext) =>
           data: null,
           properties: {
             label: ['devtools overview label', { ns: DEBUG_PLUGIN }],
-            icon: 'ph--hammer--regular',
+            icon: 'ph--equalizer--regular',
             disposition: 'hidden',
             position: 'fallback',
           },
