@@ -13,6 +13,7 @@ import { getTypename } from './typename';
 import { getSchema, getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
 import { isInstanceOf } from '../types';
+import { inspect } from 'util';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {
@@ -65,5 +66,20 @@ describe('create (static version)', () => {
     });
 
     expect(getSchema(contact)).toBe(Testing.Contact);
+  });
+
+  test('inspect', () => {
+    const contact = create(Testing.Contact, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+
+    // console.log(contact);
+
+    const text = inspect(contact);
+    expect(text).toContain('Bot');
+    expect(text).toContain('bot@example.com');
+    expect(text).toContain('example.com/type/Contact');
+    expect(text).toContain('0.1.0');
   });
 });

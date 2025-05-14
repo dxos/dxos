@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 import { type BaseObject } from '../types';
 
@@ -61,7 +61,15 @@ export const setTypename = (obj: any, typename: string) => {
  */
 export const getType = (obj: BaseObject): DXN | undefined => {
   if (obj) {
-    return (obj as any)[TypeSymbol];
+    const type = (obj as any)[TypeSymbol];
+    if (type) {
+      return type;
+    }
+
+    const typename = (obj as any)[TYPENAME_SYMBOL];
+    if (typeof typename === 'string' && typename.startsWith('dxn:')) {
+      return DXN.parse(typename);
+    }
   }
 
   return undefined;
