@@ -7,88 +7,93 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
 import {
-  attachClosestEdge,
   type Edge,
+  attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import React, { type MouseEvent, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  type MouseEvent,
+  type PropsWithChildren,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import {
+  Icon,
+  IconButton,
+  ListItem,
   Popover,
   ScrollArea,
-  toLocalizedString,
   Tooltip,
+  toLocalizedString,
   useMediaQuery,
-  useSidebars,
   useTranslation,
-  ListItem,
-  Icon,
 } from '@dxos/react-ui';
+import { MenuProvider, DropdownMenu, type MenuItem } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, getFirstTwoRenderableChars } from '@dxos/util';
 
-import { useNavTreeContext } from './NavTreeContext';
-import { UserAccountAvatar } from './UserAccountAvatar';
-import { useLoadDescendents } from '../hooks';
-import { NAVTREE_PLUGIN } from '../meta';
-import { l0ItemType } from '../util';
+import { useLoadDescendents } from '../../hooks';
+import { NAVTREE_PLUGIN } from '../../meta';
+import { l0ItemType } from '../../util';
+import { useNavTreeContext } from '../NavTreeContext';
+import { UserAccountAvatar } from '../UserAccountAvatar';
 
-type L0ItemData = { id: L0ItemProps['item']['id']; type: 'l0Item' };
+//
+// L0Item
+//
 
-type L0ItemProps = {
+type L0ItemData = {
+  id: L0ItemProps['item']['id'];
+  type: 'l0Item';
+};
+
+type L0ItemRootProps = {
+  item: Node<any>;
+  parent?: Node<any>;
+  path: string[];
+};
+
+type L0ItemProps = L0ItemRootProps & {
   item: Node<any>;
   parent?: Node<any>;
   path: string[];
   pinned?: boolean;
-  userAccount?: boolean;
   onRearrange?: StackItemRearrangeHandler<L0ItemData>;
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
-  const { tab, onTabChange, onSelect, isCurrent } = useNavTreeContext();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
+  const { tab, isCurrent, onSelect, onTabChange } = useNavTreeContext();
   const [isLg] = useMediaQuery('lg', { ssr: false });
 
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
-        case 'tab':
-          // TODO(thure): This dispatch should rightly be in `onTabChange`, but that callback wasn’t reacting to changes
-          //  to its dependencies.
-          void dispatch(
-            createIntent(LayoutAction.UpdateSidebar, {
-              part: 'sidebar',
-              options: {
-                state:
-                  item.id === tab
-                    ? navigationSidebarState === 'expanded'
-                      ? isLg
-                        ? 'collapsed'
-                        : 'closed'
-                      : 'expanded'
-                    : 'expanded',
-              },
-            }),
-          );
-          return onTabChange?.(item);
-        case 'link':
-          return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
         case 'action': {
           const {
             data: invoke,
             properties: { caller },
           } = item;
+
           return invoke?.(caller ? { node: parent, caller } : { node: parent });
         }
+
+        case 'tab':
+          return onTabChange?.(item);
+
+        case 'link':
+          return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
       }
     },
-    [item, type, onSelect, isCurrent, parent, tab, navigationSidebarState, isLg, dispatch],
+    [item, parent, type, tab, isCurrent, onSelect, onTabChange, isLg],
   );
 };
 
@@ -96,28 +101,68 @@ const l0Breakpoints: Record<string, string> = {
   lg: 'hidden lg:grid',
 };
 
-const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0ItemProps) => {
+const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
+  ({ item, parent, path, children }, forwardedRef) => {
+    const { getProps } = useNavTreeContext();
+    const { id, testId } = getProps?.(item, path) ?? {};
+    const type = l0ItemType(item);
+    const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
+
+    const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
+    const rootProps =
+      type === 'tab'
+        ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
+        : type !== 'collection'
+          ? { onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
+          : { onClick: handleClick };
+
+    const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
+
+    return (
+      <Root
+        {...(rootProps as any)}
+        data-type={type}
+        className={mx(
+          'group/l0item dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
+          type === 'action' && 'flex justify-center items-center',
+          l0Breakpoints[item.properties.l0Breakpoint],
+        )}
+        ref={forwardedRef}
+      >
+        {children}
+      </Root>
+    );
+  },
+);
+
+const L0Avator = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  const itemElement = useRef<HTMLElement | null>(null);
-  const [closestEdge, setEdge] = useState<Edge | null>(null);
   const type = l0ItemType(item);
-  const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
-  const { getProps, popoverAnchorId } = useNavTreeContext();
-  const { id, testId } = getProps?.(item, path) ?? {};
-  const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
-  const handleClick = useL0ItemClick({ item, path: itemPath, parent }, type);
-  const rootProps =
-    type === 'tab'
-      ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
-      : type !== 'collection'
-        ? { onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
-        : { onClick: handleClick };
-  const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
+  const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
+  const localizedString = toLocalizedString(item.properties.label, t);
   const avatarValue = useMemo(
     () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('').toUpperCase() : []),
     [type, item.properties.label, t],
   );
+
+  return (
+    <span role='img' className='place-self-center text-xl font-light' {...hueFgStyle}>
+      {avatarValue}
+    </span>
+  );
+};
+
+// TODO(burdon): Factor out pinned (non-draggable) items.
+const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
+  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const itemElement = useRef<HTMLElement | null>(null);
+  const [closestEdge, setEdge] = useState<Edge | null>(null);
+  const type = l0ItemType(item);
+  const { getProps, popoverAnchorId } = useNavTreeContext();
+  const { id } = getProps?.(item, path) ?? {};
+  const localizedString = toLocalizedString(item.properties.label, t);
+  const hue = item.properties.hue ?? null;
   const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
 
   useLayoutEffect(() => {
@@ -125,6 +170,7 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
     if (!itemElement.current || !onRearrange) {
       return;
     }
+
     return combine(
       draggable({
         element: itemElement.current,
@@ -175,71 +221,51 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
     );
   }, [item, onRearrange]);
 
-  const l0ItemTrigger = (
-    <Root
-      {...(rootProps as any)}
-      data-type={type}
-      className={mx(
-        'group/l0i dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
-        l0Breakpoints[item.properties.l0Breakpoint],
-      )}
-      ref={itemElement}
-    >
-      {userAccount ? (
-        <UserAccountAvatar
-          userId={item.properties.userId}
-          hue={item.properties.hue}
-          emoji={item.properties.emoji}
-          status={item.properties.status}
-        />
-      ) : (
-        <div
-          role='none'
-          data-frame={true}
-          className={mx(
-            'absolute grid dx-focus-ring-group-indicator transition-colors',
-            type === 'tab' || pinned ? 'rounded' : 'rounded-full',
-            pinned
-              ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
-              : 'bg-groupSurface inset-inline-3 inset-block-2',
-          )}
-          {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
-        >
-          {(item.properties.icon && (
-            <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
-          )) ||
-            (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
-              <span role='img' className='place-self-center text-3xl font-light' {...hueFgStyle}>
-                {avatarValue}
-              </span>
-            ) : (
-              item.properties.icon && (
-                <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
-              )
-            ))}
-        </div>
-      )}
+  const trigger = (
+    <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path}>
       <div
         role='none'
-        className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
+        data-frame={true}
+        className={mx(
+          'absolute grid dx-focus-ring-group-indicator transition-colors rounded',
+          pinned
+            ? 'bg-transparent group-hover/l0item:bg-groupSurface inset-inline-1 inset-block-0.5'
+            : type === 'action'
+              ? 'bg-groupSurface is-[--rail-action] bs-[--rail-action]'
+              : 'bg-groupSurface inset-inline-3 inset-block-2',
+        )}
+        {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+      >
+        {(item.properties.icon && (
+          <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+        )) ||
+          (type === 'tab' && item.properties.disposition !== 'pin-end' && <L0Avator item={item} />)}
+      </div>
+      <div
+        role='none'
+        className='hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
       />
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
       {onRearrange && closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
-    </Root>
+    </L0ItemRoot>
   );
 
   return popoverAnchorId === id ? (
-    <Popover.Anchor asChild>{l0ItemTrigger}</Popover.Anchor>
+    <Popover.Anchor asChild>{trigger}</Popover.Anchor>
   ) : (
     <Tooltip.Trigger delayDuration={0} asChild side='right' content={localizedString}>
-      {l0ItemTrigger}
+      {trigger}
     </Tooltip.Trigger>
   );
 };
 
-const L0Collection = ({ item, path, parent }: L0ItemProps) => {
+//
+// L0Collection
+//
+
+const L0Collection = ({ item, path }: L0ItemProps) => {
   const navTreeContext = useNavTreeContext();
   useLoadDescendents(item);
   const collectionItems = navTreeContext.getItems(item);
@@ -260,6 +286,7 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
     },
     [collectionItems, item.properties.onRearrangeChildren],
   );
+
   return (
     <div
       role='group'
@@ -281,40 +308,76 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
   );
 };
 
-export const L0Menu = ({
-  topLevelItems,
-  pinnedItems,
-  userAccountItem,
-  parent,
-  path,
-}: {
+//
+// L0Menu
+//
+
+export type L0MenuProps = {
+  menuActions: MenuItem[];
   topLevelItems: Node<any>[];
   pinnedItems: Node<any>[];
   userAccountItem: Node<any>;
   parent?: Node<any>;
   path: string[];
-}) => {
+};
+
+export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
+  const { t } = useTranslation(NAVTREE_PLUGIN);
+
   return (
-    <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-baseSurface border-ie border-separator app-drag  pbe-[env(safe-area-inset-bottom)]'>
+    <Tabs.Tablist
+      classNames={[
+        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg',
+        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] gap-1 contain-layout',
+        '!is-[--l0-size] bg-baseSurface border-ie border-separator app-drag pbe-[env(safe-area-inset-bottom)]',
+      ]}
+    >
+      <div role='none' className='grid grid-rows p-1 px-3'>
+        <MenuProvider>
+          <DropdownMenu.Root group={parent} items={menuActions}>
+            <DropdownMenu.Trigger asChild>
+              {/* TODO(wittjosiah): Use L0Item trigger. */}
+              {/* TODO(burdon): Replace with Sigil. */}
+              <IconButton
+                iconOnly
+                icon='ph--dots-three--regular'
+                size={5}
+                label={t('app menu label')}
+                // classNames='bg-primary-500'
+              />
+            </DropdownMenu.Trigger>
+          </DropdownMenu.Root>
+        </MenuProvider>
+      </div>
+
       <ScrollArea.Root>
         <ScrollArea.Viewport>
           <div
             role='none'
-            className='grid auto-rows-[calc(var(--l0-size)-.5rem)] plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)] [body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]'
+            className={mx([
+              // TODO(burdon): Experiment.
+              // 'grid auto-rows-[calc(var(--l0-size))]',
+              'grid auto-rows-[calc(var(--l0-size)-.5rem)]',
+              '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
+              '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
+            ])}
           >
-            {topLevelItems.map((item) => {
-              if (l0ItemType(item) === 'collection') {
-                return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
-              } else {
-                return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-              }
-            })}
+            {topLevelItems
+              .filter((item) => l0ItemType(item) !== 'action')
+              .map((item) => {
+                if (l0ItemType(item) === 'collection') {
+                  return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
+                } else {
+                  return <L0Item key={item.id} item={item} parent={parent} path={path} />;
+                }
+              })}
           </div>
           <ScrollArea.Scrollbar orientation='vertical'>
             <ScrollArea.Thumb />
           </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
+
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')
@@ -322,11 +385,21 @@ export const L0Menu = ({
             <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
           ))}
       </div>
+
       {userAccountItem && (
-        <div role='none' className='grid py-2 app-no-drag'>
-          <L0Item key={userAccountItem.id} item={userAccountItem} parent={parent} path={path} userAccount />
+        <div role='none' className='grid app-no-drag'>
+          <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
+            <UserAccountAvatar
+              userId={userAccountItem.properties.userId}
+              hue={userAccountItem.properties.hue}
+              emoji={userAccountItem.properties.emoji}
+              status={userAccountItem.properties.status}
+              size={10}
+            />
+          </L0ItemRoot>
         </div>
       )}
+
       <div
         role='none'
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'

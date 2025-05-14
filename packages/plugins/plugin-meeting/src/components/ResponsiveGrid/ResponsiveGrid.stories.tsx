@@ -140,3 +140,5 @@ export const Dual: Story = {
     items: Array.from({ length: 2 }, (_, i) => createItem('image')),
   },
 };
+
+// TODO(burdon): Story to join/leave repeatedly to test stable position.

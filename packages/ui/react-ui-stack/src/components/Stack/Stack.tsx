@@ -9,8 +9,9 @@ import React, { Children, type CSSProperties, type ComponentPropsWithRef, forwar
 import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type StackContextValue, StackContext } from './StackContext';
-import { useStackDropForElements } from '../hooks';
+import { useStackDropForElements } from '../../hooks';
+import { StackContext } from '../StackContext';
+import { type StackContextValue } from '../defs';
 
 export type Orientation = 'horizontal' | 'vertical';
 export type Size = 'intrinsic' | 'contain' | 'contain-fit-content';

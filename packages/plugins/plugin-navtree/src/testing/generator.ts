@@ -133,10 +133,11 @@ export const createTree = () => {
       return {
         id: faker.string.uuid(),
         data: null,
-        type: 'collection',
+        type: 'category',
         properties: {
           label: l0.title,
           icon: 'ph--horse--regular',
+          disposition: 'collection',
         },
         nodes: [
           ...[...Array(4)].map(() => {

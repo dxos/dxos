@@ -4,7 +4,6 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Button, type ButtonProps, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
@@ -12,24 +11,16 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 import { byPosition } from '@dxos/util';
 
-import { useNavTreeContext } from './NavTreeContext';
-import { NavTreeItemColumns } from './NavTreeItemColumns';
-import { useLoadDescendents } from '../hooks';
-import { NAVTREE_PLUGIN } from '../meta';
-import { l0ItemType } from '../util';
+import { useLoadDescendents } from '../../hooks';
+import { NAVTREE_PLUGIN } from '../../meta';
+import { l0ItemType } from '../../util';
+import { useNavTreeContext } from '../NavTreeContext';
+import { NavTreeItemColumns } from '../NavTreeItem';
 
-export type L1PanelProps = {
-  item: Node<any>;
-  path: string[];
-  currentItemId: string;
-  onBack?: () => void;
-};
+const headingBackButtonLabel = 'absolute inset-0 min-is-0 truncate flex items-center pis-6';
 
-const headingBackButtonLabel =
-  'absolute inset-0 min-is-0 truncate flex items-center pis-6 transition-[transform,opacity] ease-in-out duration-200';
-
+// TODO(burdon): Figure out better L1 back navigation.
 const HeadingBackButton = ({ title, onClick }: { title: string } & Pick<ButtonProps, 'onClick'>) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
   return (
     <Button
       variant='ghost'
@@ -37,28 +28,20 @@ const HeadingBackButton = ({ title, onClick }: { title: string } & Pick<ButtonPr
       onClick={onClick}
     >
       <Icon icon='ph--caret-left--bold' size={3} />
-      <span
-        className={mx(
-          headingBackButtonLabel,
-          'translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-focus:translate-y-0 group-focus:opacity-100',
-        )}
-      >
-        {t('back label')}
-      </span>
-      <span
-        className={mx(
-          headingBackButtonLabel,
-          'translate-y-0 opacity-100 group-hover:-translate-y-2 group-hover:opacity-0 group-focus:-translate-y-2 group-focus:opacity-0',
-        )}
-      >
-        {title}
-      </span>
+      <span className={mx(headingBackButtonLabel)}>{title}</span>
     </Button>
   );
 };
 
-const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
-  const layout = useLayout();
+export type L1PanelProps = {
+  open?: boolean;
+  item: Node<any>;
+  path: string[];
+  currentItemId: string;
+  onBack?: () => void;
+};
+
+const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
   const { isAlternateTree, setAlternateTree, ...navTreeContext } = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
@@ -95,12 +78,14 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
       key={item.id}
       value={item.id}
       classNames={[
-        'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr] pbs-[env(safe-area-inset-top)]',
+        'absolute inset-block-0 inline-end-0',
+        'is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
+        'pbs-[env(safe-area-inset-top)]',
         item.id === currentItemId && 'grid',
       ]}
       tabIndex={-1}
       aria-label={title}
-      {...(!layout.sidebarOpen && { inert: 'true' })}
+      {...(!open && { inert: 'true' })}
     >
       {item.id === currentItemId && (
         <>
@@ -156,7 +141,7 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
   );
 };
 
-const L1PanelCollection = ({ item, path, currentItemId }: L1PanelProps) => {
+const L1PanelCollection = ({ item, path, ...props }: L1PanelProps) => {
   const { getItems } = useNavTreeContext();
   useLoadDescendents(item);
   const collectionItems = getItems(item);
@@ -166,31 +151,27 @@ const L1PanelCollection = ({ item, path, currentItemId }: L1PanelProps) => {
       {collectionItems
         .filter((item) => l0ItemType(item) === 'tab')
         .map((item) => (
-          <L1Panel key={item.id} item={item} path={groupPath} currentItemId={currentItemId} />
+          <L1Panel key={item.id} item={item} path={groupPath} {...props} />
         ))}
     </>
   );
 };
 
-export const L1Panels = ({
-  topLevelItems,
-  path,
-  currentItemId,
-  onBack,
-}: Pick<L1PanelProps, 'onBack'> & {
+export type L1PanelsProps = Pick<L1PanelProps, 'open' | 'currentItemId' | 'onBack'> & {
   topLevelItems: Node<any>[];
   path: string[];
-  currentItemId: string;
-}) => {
+};
+
+export const L1Panels = ({ topLevelItems, onBack, ...props }: L1PanelsProps) => {
   return (
     <>
       {topLevelItems.map((item) => {
         const type = l0ItemType(item);
         switch (type) {
           case 'collection':
-            return <L1PanelCollection key={item.id} item={item} path={path} currentItemId={currentItemId} />;
+            return <L1PanelCollection key={item.id} item={item} {...props} />;
           case 'tab':
-            return <L1Panel key={item.id} item={item} path={path} currentItemId={currentItemId} onBack={onBack} />;
+            return <L1Panel key={item.id} item={item} {...props} onBack={onBack} />;
           default:
             return null;
         }

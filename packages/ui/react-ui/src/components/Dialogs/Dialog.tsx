@@ -78,14 +78,18 @@ type DialogCloseProps = DialogClosePrimitiveProps;
 
 const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
 
-type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
+type OverlayLayoutContextValue = { descriptionId?: string; inOverlayLayout?: boolean };
 const DIALOG_OVERLAY_NAME = 'DialogOverlay';
 const DIALOG_CONTENT_NAME = 'DialogContent';
-const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(DIALOG_OVERLAY_NAME, {
-  inOverlayLayout: false,
-});
+const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(
+  DIALOG_OVERLAY_NAME,
+  {},
+);
 
-type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps> & { blockAlign?: 'center' | 'start' | 'end' };
+type DialogOverlayProps = ThemedClassName<
+  DialogOverlayPrimitiveProps &
+    Pick<OverlayLayoutContextValue, 'descriptionId'> & { blockAlign?: 'center' | 'start' | 'end' }
+>;
 
 const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ classNames, children, blockAlign, ...props }, forwardedRef) => {
@@ -111,11 +115,12 @@ type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps> & { inOve
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
   ({ classNames, children, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
+    const { inOverlayLayout, descriptionId } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
     return (
       <DialogContentPrimitive
-        aria-describedby={undefined}
+        // NOTE: Radix warning unless set.
+        aria-describedby={descriptionId ?? 'unknown'}
         {...props}
         className={tx(
           'dialog.content',

@@ -1897,6 +1897,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
       '@ngneat/falso':
         specifier: ^7.1.1
         version: 7.1.1
@@ -7497,9 +7500,6 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
-      '@dxos/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -7543,6 +7543,12 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/plugin-storybook-layout':
+        specifier: workspace:*
+        version: link:../plugin-storybook-layout
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

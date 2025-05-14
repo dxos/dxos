@@ -19,7 +19,6 @@ import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack, StackItemContext, type StackItemSize, type StackItemData } from './StackContext';
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
 import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
 import {
@@ -36,13 +35,15 @@ import {
   type StackItemSigilButtonProps,
   StackItemSigilButton,
 } from './StackItemSigil';
+import { useStack, StackItemContext } from '../StackContext';
+import { type StackItemSize, type StackItemData } from '../defs';
 
 // NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
 export const DEFAULT_HORIZONTAL_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
 export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
 
-export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
+type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
   order?: number;
   size?: StackItemSize;
@@ -197,6 +198,7 @@ export const StackItem = {
 };
 
 export type {
+  StackItemRootProps,
   StackItemContentProps,
   StackItemHeadingProps,
   StackItemHeadingLabelProps,
