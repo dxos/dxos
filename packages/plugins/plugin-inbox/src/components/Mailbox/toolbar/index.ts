@@ -3,5 +3,4 @@
 //
 
 export * from './MailboxToolbar';
-export * from './useMailboxToolbarAction';
 export * from './useTagFilterVisibility';

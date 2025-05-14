@@ -2,4 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './api';
+export { Format, FormatEnum } from '@dxos/echo-schema';
+export { DXN } from '@dxos/keys';
+
+export * from './type';

@@ -18,7 +18,6 @@ export type NavTreeItemActionMenuProps = ActionProperties & {
   monolithic?: boolean;
   menuActions?: Action[];
   suppressNextTooltip?: MutableRefObject<boolean>;
-  onAction?: (action: Action) => void;
 };
 
 const fallbackIcon = 'ph--placeholder--regular';
@@ -33,18 +32,24 @@ const coarseActionButtonProps = {
 };
 
 export const NavTreeItemActionDropdownMenu = ({
+  parent,
   label,
   icon,
   testId,
   menuActions,
-  onAction,
+  caller,
 }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const suppressNextTooltip = useRef<boolean>(false);
   const density = useDensityContext();
   return (
-    <MenuProvider onAction={onAction}>
-      <DropdownMenu.Root items={menuActions as MenuItem[]} suppressNextTooltip={suppressNextTooltip}>
+    <MenuProvider>
+      <DropdownMenu.Root
+        group={parent}
+        items={menuActions as MenuItem[]}
+        caller={caller}
+        suppressNextTooltip={suppressNextTooltip}
+      >
         <DropdownMenu.Trigger asChild>
           <IconButton
             {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
@@ -88,7 +93,7 @@ export const NavTreeItemMonolithicAction = ({
           return;
         }
         event.stopPropagation();
-        void invoke?.(caller ? { node: parent, caller } : { node: parent });
+        void invoke?.(caller ? { parent, caller } : { parent });
       }}
       data-testid={testId}
     />
@@ -104,12 +109,6 @@ export const NavTreeItemAction = ({ monolithic, menuActions, parent: node, ...pr
   return monolithic && menuActions?.length === 1 ? (
     <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={node} {...menuActions[0]} />
   ) : (
-    <NavTreeItemActionDropdownMenu
-      {...props}
-      label={baseLabel}
-      parent={node}
-      menuActions={menuActions}
-      onAction={(action) => action.data?.(props.caller ? { node, caller: props.caller } : { node })}
-    />
+    <NavTreeItemActionDropdownMenu {...props} label={baseLabel} parent={node} menuActions={menuActions} />
   );
 };

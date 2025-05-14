@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { ObjectId } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { live, refFromDXN } from '@dxos/live-object';
 
@@ -18,7 +18,7 @@ export default () => [
         data: {
           object: live(AIChatType, {
             assistantChatQueue: refFromDXN(
-              new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]),
+              new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, Type.ObjectId.random()]),
             ),
           }),
         },

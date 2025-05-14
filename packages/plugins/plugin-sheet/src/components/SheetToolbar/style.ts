@@ -4,11 +4,12 @@
 
 import { useEffect } from 'react';
 
-import { inRange } from '@dxos/compute';
+import { type CompleteCellRange, inRange } from '@dxos/compute';
 import { createMenuAction, createMenuItemGroup, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { SHEET_PLUGIN } from '../../meta';
-import { rangeFromIndex, type StyleKey, type StyleValue } from '../../types';
+import { type SheetModel } from '../../model';
+import { rangeFromIndex, rangeToIndex, type StyleKey, type StyleValue } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 export type StyleState = Partial<Record<StyleValue, boolean>>;
@@ -48,20 +49,55 @@ const createStyleGroup = (state: StyleState) => {
   } as ToolbarMenuActionGroupProperties);
 };
 
-const createStyleActions = (state: StyleState) =>
+const createStyleActions = (model: SheetModel, state: StyleState, cursorFallbackRange?: CompleteCellRange) =>
   Object.entries(styles).map(([styleValue, icon]) => {
-    return createMenuAction<StyleAction>(`style--${styleValue}`, {
-      key: 'style',
-      value: styleValue as StyleValue,
-      icon,
-      label: [`range value ${styleValue} label`, { ns: SHEET_PLUGIN }],
-      checked: !!state[styleValue as StyleValue],
-    });
+    return createMenuAction<StyleAction>(
+      `style--${styleValue}`,
+      () => {
+        if (!cursorFallbackRange) {
+          return;
+        }
+        const index =
+          model.sheet.ranges?.findIndex(
+            (range) =>
+              range.key === 'style' && inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
+          ) ?? -1;
+        const nextRangeEntity = {
+          range: rangeToIndex(model.sheet, cursorFallbackRange),
+          key: 'style',
+          value: styleValue as StyleValue,
+        };
+        if (
+          model.sheet.ranges
+            .filter(
+              ({ range, key: rangeKey }) =>
+                rangeKey === 'style' && inRange(rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
+            )
+            .some(({ value: rangeValue }) => rangeValue === styleValue)
+        ) {
+          // this value should be unset
+          if (index >= 0) {
+            model.sheet.ranges?.splice(index, 1);
+          }
+          state[nextRangeEntity.value] = false;
+        } else {
+          model.sheet.ranges?.push(nextRangeEntity);
+          state[nextRangeEntity.value] = true;
+        }
+      },
+      {
+        key: 'style',
+        value: styleValue as StyleValue,
+        icon,
+        label: [`range value ${styleValue} label`, { ns: SHEET_PLUGIN }],
+        checked: !!state[styleValue as StyleValue],
+      },
+    );
   });
 
-export const createStyle = (state: StyleState) => {
+export const createStyle = (model: SheetModel, state: StyleState, cursorFallbackRange?: CompleteCellRange) => {
   const styleGroupAction = createStyleGroup(state);
-  const styleActions = createStyleActions(state);
+  const styleActions = createStyleActions(model, state, cursorFallbackRange);
   return {
     nodes: [styleGroupAction, ...styleActions],
     edges: [
