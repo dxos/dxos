@@ -261,7 +261,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
       __scopeTooltip,
       onInteract,
       delayDuration: _delayDuration,
-      suppressNextTooltip: _suppressNextTooltip,
+      suppressNextTooltip,
       side,
       content,
       ...triggerProps
@@ -318,8 +318,12 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
             if (event.defaultPrevented) {
               return;
             }
-            context.onTriggerChange(ref.current);
-            context.onOpen();
+            if (suppressNextTooltip?.current) {
+              suppressNextTooltip.current = false;
+            } else {
+              context.onTriggerChange(ref.current);
+              context.onOpen();
+            }
           }
         })}
         onBlur={composeEventHandlers(props.onBlur, context.onClose)}
