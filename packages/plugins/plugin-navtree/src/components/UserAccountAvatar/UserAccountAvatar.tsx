@@ -15,18 +15,18 @@ export type UserAccountAvatarProps = {
   status?: AvatarStatus;
 };
 
-export const UserAccountAvatar = (props: UserAccountAvatarProps) => {
-  const fallbackValue = hexToFallback(props.userId ?? '0');
+export const UserAccountAvatar = ({ size, userId, hue, emoji, status }: UserAccountAvatarProps) => {
+  const fallbackValue = hexToFallback(userId ?? '0');
 
   return (
     <div className='grid place-items-center' data-joyride='welcome/account'>
       <Avatar.Root>
         <Avatar.Content
           variant='circle'
-          size={props.size ?? 12}
-          status={props.status ?? 'active'}
-          hue={props.hue || fallbackValue.hue}
-          fallback={props.emoji || fallbackValue.emoji}
+          size={size ?? 12}
+          status={status ?? 'active'}
+          hue={hue || fallbackValue.hue}
+          fallback={emoji || fallbackValue.emoji}
           data-testid='treeView.userAccount'
         />
       </Avatar.Root>

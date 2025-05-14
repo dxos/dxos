@@ -12,7 +12,7 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { MenuSignifierHorizontal } from './MenuSignifier';
-import { translationKey } from '../translations';
+import { translationKey } from '../../translations';
 
 export type KeyBinding = {
   windows?: string;

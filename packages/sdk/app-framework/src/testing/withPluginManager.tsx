@@ -16,7 +16,15 @@ import {
   defineModule,
   definePlugin,
   PluginManager,
+  type PluginsContext,
 } from '../core';
+
+// TODO(burdon): Factor out (use consistently in plugin framework?)
+export type Provider<C, R> = (context: C) => R;
+export type ProviderOrValue<C, R> = Provider<C, R> | R;
+export const getValue = <C, R>(providerOrValue: ProviderOrValue<C, R>, context: C): R => {
+  return typeof providerOrValue === 'function' ? (providerOrValue as Provider<C, R>)(context) : providerOrValue;
+};
 
 /**
  * @internal
@@ -26,7 +34,7 @@ export const setupPluginManager = ({
   plugins = [],
   core = plugins.map(({ meta }) => meta.id),
   ...options
-}: CreateAppOptions & { capabilities?: AnyCapability[] } = {}) => {
+}: CreateAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
   const pluginManager = new PluginManager({
     pluginLoader: () => raise(new Error('Not implemented')),
     plugins: [StoryPlugin(), ...plugins],
@@ -35,7 +43,7 @@ export const setupPluginManager = ({
   });
 
   if (capabilities) {
-    capabilities.forEach((capability) => {
+    getValue(capabilities, pluginManager.context).forEach((capability) => {
       pluginManager.context.contributeCapability({
         interface: capability.interface,
         implementation: capability.implementation,
@@ -48,7 +56,7 @@ export const setupPluginManager = ({
 };
 
 export type WithPluginManagerOptions = CreateAppOptions & {
-  capabilities?: AnyCapability[];
+  capabilities?: ProviderOrValue<PluginsContext, AnyCapability[]>;
   fireEvents?: (ActivationEvent | string)[];
 };
 

@@ -4,6 +4,8 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react';
+
 import { type NodeArg } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -37,16 +39,23 @@ const menuActions = faker.helpers.multiple(
   { count: 20 },
 );
 
-export default {
+const meta: Meta<typeof NavTreeItemAction> = {
   title: 'plugins/plugin-navtree/NavTreeItemAction',
   component: NavTreeItemAction,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [withTheme, withLayout({ tooltips: true })],
   args: {
     icon: 'ph--list--regular',
     parent,
     menuActions,
     label: 'Select action',
   } satisfies Partial<NavTreeItemActionMenuProps>,
+  parameters: {
+    layout: 'centered',
+  },
 };
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

@@ -18,12 +18,14 @@ import { type StackSectionItem } from '../types';
 
 const sectionActionDimensions = 'p-1 mlb-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
 
+export type StackSectionProps = StackSectionItem;
+
 export const StackSection = ({
   id,
   view,
   object,
   metadata: { icon = 'ph--placeholder--regular' },
-}: StackSectionItem) => {
+}: StackSectionProps) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { onNavigate, onAdd, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);

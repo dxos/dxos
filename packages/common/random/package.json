@@ -28,6 +28,7 @@
   ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@ngneat/falso": "^7.1.1"
   },
   "devDependencies": {},

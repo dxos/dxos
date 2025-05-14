@@ -12,7 +12,7 @@ import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
-import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
+import { KEY_BINDING, NAVTREE_PLUGIN } from '../../meta';
 
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = ({ selected: initial }: { selected?: string }) => {
