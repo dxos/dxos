@@ -10,6 +10,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { actionLabel, ActionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
 import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
+import { translationKey } from '../translations';
 import {
   type MenuAction,
   type MenuItem,
@@ -20,7 +21,6 @@ import {
   type MenuMultipleSelectActionGroup,
   type MenuSingleSelectActionGroup,
 } from '../types';
-import { translationKey } from '../translations';
 
 export type ToolbarMenuDropdownMenuActionGroup = Omit<MenuActionProperties, 'variant' | 'icon'> & {
   variant: 'dropdownMenu';
