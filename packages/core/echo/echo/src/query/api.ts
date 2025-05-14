@@ -3,13 +3,13 @@
 //
 
 import { type Schema } from 'effect';
+import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { getSchemaDXN, type Ref } from '@dxos/echo-schema';
 
 import type * as QueryAST from './ast';
 import type { Relation } from '..';
-import type { Simplify } from 'effect/Schema';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -244,8 +244,6 @@ export declare namespace Filter {
   type Or<FS extends readonly Any[]> = Simplify<{ [K in keyof FS]: Type<FS[K]> }[number]>;
 }
 
-const filterVariance: Filter<any>['~Filter'] = {} as Filter<any>['~Filter'];
-
 class FilterClass implements Filter<any> {
   private static variance: Filter<any>['~Filter'] = {} as Filter<any>['~Filter'];
 
@@ -399,7 +397,6 @@ class QueryClass implements Query<any> {
   }
 
   static type(schema: Schema.Schema.All, predicates?: Filter.Props<unknown>): Query<any> {
-    const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
     return new QueryClass({
       type: 'select',
       filter: FilterClass.type(schema, predicates).ast,
@@ -462,7 +459,6 @@ class QueryClass implements Query<any> {
   }
 
   sourceOf(relation: Schema.Schema.All, predicates?: Filter.Props<unknown> | undefined): Query<any> {
-    const dxn = getSchemaDXN(relation) ?? raise(new TypeError('Relation schema has no DXN'));
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -472,7 +468,6 @@ class QueryClass implements Query<any> {
   }
 
   targetOf(relation: Schema.Schema.All, predicates?: Filter.Props<unknown> | undefined): Query<any> {
-    const dxn = getSchemaDXN(relation) ?? raise(new TypeError('Relation schema has no DXN'));
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
