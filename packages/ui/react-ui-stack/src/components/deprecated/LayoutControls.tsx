@@ -4,15 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
-import {
-  Button,
-  ButtonGroup,
-  type ButtonGroupProps,
-  type ButtonProps,
-  Icon,
-  Tooltip,
-  useTranslation,
-} from '@dxos/react-ui';
+import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations';
 
@@ -35,19 +27,7 @@ export type LayoutControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
 };
 
 const LayoutControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
-  return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <Button variant='ghost' {...props}>
-          <span className='sr-only'>{label}</span>
-          <Icon icon={icon} />
-        </Button>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content side='bottom'>{label}</Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
-  );
+  return <IconButton iconOnly icon={icon} label={label} tooltipSide='bottom' variant='ghost' {...props} />;
 };
 
 export const LayoutControls = forwardRef<HTMLDivElement, LayoutControlsProps>(

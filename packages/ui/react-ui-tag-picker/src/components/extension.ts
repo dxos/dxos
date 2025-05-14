@@ -83,6 +83,7 @@ export type TagPickerOptions = {
   // TODO(ZaymonFC): Think of a better name for this?
   inGrid?: boolean;
   mode?: TagPickerMode;
+  onBlur?: (event: FocusEvent) => void;
   onSelect?: (id: string) => void;
   onSearch?: (text: string, ids: string[]) => TagPickerItemData[];
   onUpdate?: (ids: string[]) => void;

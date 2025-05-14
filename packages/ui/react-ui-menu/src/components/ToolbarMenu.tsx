@@ -4,12 +4,13 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { Icon, type IconButtonProps, Toolbar as NaturalToolbar, type ToolbarRootProps } from '@dxos/react-ui';
+import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
-import { ActionLabel } from './ActionLabel';
+import { actionLabel, ActionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
 import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
+import { translationKey } from '../translations';
 import {
   type MenuAction,
   type MenuItem,
@@ -51,11 +52,12 @@ export type ToolbarMenuActionProps = {
 
 const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize } = useMenu('ActionToolbarItem', __menuScope);
+  const { t } = useTranslation(translationKey);
   const handleClick = useCallback(() => action.data?.(), [action]);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const rootProps = icon
-    ? { icon, size: iconSize, iconOnly, label: <ActionLabel action={action} /> }
+    ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
     : { children: <ActionLabel action={action} /> };
   return hidden ? null : (
     <Root
@@ -64,7 +66,7 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
       onClick={handleClick}
       variant='ghost'
       {...(testId && { 'data-testid': testId })}
-      {...(rootProps as IconButtonProps)}
+      {...(rootProps as any)}
       classNames={classNames}
     />
   );
@@ -77,6 +79,7 @@ const DropdownMenuToolbarItem = ({
 }: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
   const { iconOnly, disabled, testId } = group.properties;
   const suppressNextTooltip = useRef(false);
+  const { t } = useTranslation(translationKey);
   const { iconSize } = useMenu('DropdownMenuToolbarItem', __menuScope);
   const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
   const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked);
@@ -86,15 +89,13 @@ const DropdownMenuToolbarItem = ({
       (activeItem as MenuAction)?.properties.icon) ||
     group.properties.icon;
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
-  const label = (
-    <ActionLabel action={(group.properties as any).applyActive && activeItem ? (activeItem as MenuAction) : group} />
-  );
+  const labelAction = (group.properties as any).applyActive && activeItem ? (activeItem as MenuAction) : group;
   const rootProps = icon
-    ? { icon, size: iconSize, iconOnly, label, caretDown: true, suppressNextTooltip }
+    ? { icon, size: iconSize, iconOnly, label: actionLabel(labelAction, t), caretDown: true, suppressNextTooltip }
     : {
         children: (
           <>
-            {label}
+            <ActionLabel action={labelAction} />
             <Icon size={3} icon='ph--caret-down--bold' classNames='mis-1' />
           </>
         ),
@@ -102,12 +103,7 @@ const DropdownMenuToolbarItem = ({
   return (
     <DropdownMenu.Root group={group} items={items} suppressNextTooltip={suppressNextTooltip}>
       <DropdownMenu.Trigger asChild>
-        <Root
-          variant='ghost'
-          disabled={disabled}
-          {...(rootProps as IconButtonProps)}
-          {...(testId && { 'data-testid': testId })}
-        />
+        <Root variant='ghost' disabled={disabled} {...(rootProps as any)} {...(testId && { 'data-testid': testId })} />
       </DropdownMenu.Trigger>
     </DropdownMenu.Root>
   );
@@ -115,11 +111,12 @@ const DropdownMenuToolbarItem = ({
 
 const ToggleGroupItem = ({ group, action, __menuScope }: MenuScopedProps<ToolbarMenuActionProps>) => {
   const { iconSize } = useMenu('ToggleGroupItem', __menuScope);
+  const { t } = useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
   const handleClick = useCallback(() => action.data?.({ parent: group }), [action, group]);
   const Root = icon ? NaturalToolbar.ToggleGroupIconItem : NaturalToolbar.ToggleGroupItem;
   const rootProps = icon
-    ? { icon, size: iconSize, iconOnly, label: <ActionLabel action={action} /> }
+    ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
     : { children: <ActionLabel action={action} /> };
   return hidden ? null : (
     <Root
@@ -129,7 +126,7 @@ const ToggleGroupItem = ({ group, action, __menuScope }: MenuScopedProps<Toolbar
       onClick={handleClick}
       variant='ghost'
       {...(testId && { 'data-testid': testId })}
-      {...(rootProps as IconButtonProps)}
+      {...(rootProps as any)}
       classNames={classNames}
     />
   );

@@ -68,20 +68,17 @@ export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
     case Status.PERSISTED_LOCALLY:
     default:
       return (
-        <Tooltip.Root delayDuration={400}>
-          <Tooltip.Trigger role='status' className='flex items-center'>
-            <CheckCircle className={mx(getSize(4), 'me-1')} />
-            {displayMessage && (
-              <span className={mx('text-sm', staticPlaceholderText)}>{t('persisted locally label')}</span>
-            )}
-          </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Content>
-              {t('persisted locally message')}
-              <Tooltip.Arrow />
-            </Tooltip.Content>
-          </Tooltip.Portal>
-        </Tooltip.Root>
+        <Tooltip.Trigger
+          delayDuration={400}
+          role='status'
+          content={t('persisted locally message')}
+          className='flex items-center'
+        >
+          <CheckCircle className={mx(getSize(4), 'me-1')} />
+          {displayMessage && (
+            <span className={mx('text-sm', staticPlaceholderText)}>{t('persisted locally label')}</span>
+          )}
+        </Tooltip.Trigger>
       );
   }
 };
