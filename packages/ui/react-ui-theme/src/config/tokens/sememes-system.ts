@@ -91,8 +91,8 @@ export const systemSememes = {
   'surface-40': surface40,
   'surface-50': surface50,
   'surface-60': surface60,
-  'surface-70': surface70,
-  'surface-80': surface80,
+  'surface-70': applyAlpha(surface70, 0.5), // TODO(burdon): Temporary experiment.
+  'surface-80': applyAlpha(surface80, 0.5),
 
   'surface-400': surface400,
   'surface-450': surface450,
