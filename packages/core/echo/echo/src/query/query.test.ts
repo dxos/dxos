@@ -8,7 +8,8 @@ import { describe, test } from 'vitest';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { Query } from './api';
+import { Filter, Query } from './api';
+import * as QueryAST from './ast';
 import { Type, Relation } from '..';
 
 //
@@ -18,6 +19,7 @@ import { Type, Relation } from '..';
 const Person = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
+  age: Schema.optional(Schema.Number),
 }).pipe(Type.def({ typename: 'dxos.org/type/Person', version: '0.1.0' }));
 interface Person extends Schema.Schema.Type<typeof Person> {}
 
@@ -48,88 +50,97 @@ describe('query api', () => {
     const getAllPeople = Query.type(Person);
 
     log.info('query', { ast: getAllPeople.ast });
+    Schema.validateSync(QueryAST.Query)(getAllPeople.ast);
   });
 
   test('get all people named Fred', () => {
     // Query<Person>
-    const getAllPeopleNamedFred = Query.type(Person, { name: 'Fred' });
+    const getAllPeopleNamedFred = Query.select(Filter.type(Person, { name: 'Fred' }));
 
     log.info('query', { ast: getAllPeopleNamedFred.ast });
+    Schema.validateSync(QueryAST.Query)(getAllPeopleNamedFred.ast);
   });
 
   test('get all orgs Fred worked for since 2020', () => {
     // Query<Org>
     const fred = create(Person, { name: 'Fred' });
-    const getAllOrgsFredWorkedForSince2020 = Query.type(Person, { id: fred.id })
-      .sourceOf(WorksFor, { since: Query.gt('2020') })
+    const getAllOrgsFredWorkedForSince2020 = Query.select(Filter.type(Person, { id: fred.id }))
+      .sourceOf(WorksFor, { since: Filter.gt('2020') })
       .target();
 
     log.info('query', { ast: getAllOrgsFredWorkedForSince2020.ast });
+    Schema.validateSync(QueryAST.Query)(getAllOrgsFredWorkedForSince2020.ast);
   });
 
   test('get all tasks for Fred', () => {
     // Query<Task>
     const fred = create(Person, { name: 'Fred' });
-    const getAllTasksForFred = Query.type(Person, { id: fred.id }).referencedBy(Task, 'assignee');
+    const getAllTasksForFred = Query.select(Filter.type(Person, { id: fred.id })).referencedBy(Task, 'assignee');
 
     log.info('query', { ast: getAllTasksForFred.ast });
+    Schema.validateSync(QueryAST.Query)(getAllTasksForFred.ast);
   });
 
   test('get all tasks for employees of Cyberdyne', () => {
     // Query<Task>
-    const allTasksForEmployeesOfCyberdyne = Query.type(Org, { name: 'Cyberdyne' })
+    const allTasksForEmployeesOfCyberdyne = Query.select(Filter.type(Org, { name: 'Cyberdyne' }))
       .targetOf(WorksFor)
       .source()
       .referencedBy(Task, 'assignee');
 
     log.info('query', { ast: allTasksForEmployeesOfCyberdyne.ast });
+    Schema.validateSync(QueryAST.Query)(allTasksForEmployeesOfCyberdyne.ast);
   });
 
   test('get all people or orgs', () => {
     // Query<Person | Org>
-    const allPeopleOrOrgs = Query.all(Query.type(Person), Query.type(Org));
+    const allPeopleOrOrgs = Query.all(Query.select(Filter.type(Person)), Query.select(Filter.type(Org)));
 
     log.info('query', { ast: allPeopleOrOrgs.ast });
+    Schema.validateSync(QueryAST.Query)(allPeopleOrOrgs.ast);
   });
 
   test('get assignees of all tasks created after 2020', () => {
     // Query<Person>
-    const assigneesOfAllTasksCreatedAfter2020 = Query.type(Task, { createdAt: Query.gt('2020') }).reference('assignee');
+    const assigneesOfAllTasksCreatedAfter2020 = Query.select(
+      Filter.type(Task, { createdAt: Filter.gt('2020') }),
+    ).reference('assignee');
 
     log.info('query', { ast: assigneesOfAllTasksCreatedAfter2020.ast });
+    Schema.validateSync(QueryAST.Query)(assigneesOfAllTasksCreatedAfter2020.ast);
   });
 
   test('contact full-text search', () => {
     // Query<Person>
-    const contactFullTextSearch = Query.text(Person, 'Bill');
+    const contactFullTextSearch = Query.select(Filter.text(Person, 'Bill'));
 
     log.info('query', { ast: contactFullTextSearch.ast });
+    Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
   });
 
-  // TODO(burdon): Experimental.
   test.skip('chain', () => {
-    const db: any = null;
-    const Query: any = null;
-    const Filter: any = null;
+    // NOTE: Can't support props without type since they can't be inferred.
+    // const f1: Filter<Person> = Filter.props({ name: 'Fred' });
 
-    const x = db.exec(Query.select({ id: '123' })).first();
-    const y = db.exec(Query.select(Filter.type(Person)).first());
+    // const x = Query.select(Filter.props({ id: '123' }));
+    const y = Query.select(Filter.type(Person));
+
+    const fOr = Filter.or(Filter.type(Person, { id: Filter.in('1', '2', '3') }), Filter.type(Org));
+
+    const fAnd = Filter.and(
+      Filter.type(Person, { id: Filter.in('1', '2', '3') }),
+      Filter.type(Person, { name: 'Fred' }),
+    );
 
     const q = Query
       //
-      .selectAll()
-      .select({ id: '123' })
       // NOTE: Can't support functions since they can't be serialized (to server).
       // .filter((object) => Math.random() > 0.5)
       .select(Filter.type(Person))
-      .select(Filter.props({ name: 'Fred' }))
-      .select({ age: Filter.gt(40) })
-      .select({ date: Filter.between(Date.now(), Date.now() + 1000 * 60 * 60 * 24) })
-      .select({ id: Filter.in(['1', '2', '3']) })
-      .select(Filter.and(Filter.type(Person), Filter.props({ id: Filter.in(['1', '2', '3']) })))
-      .target()
-      .select();
+      .select(Filter.type(Person, { name: 'Fred' }))
+      .select({ age: Filter.between(20, 40) })
+      .select(Filter.and(Filter.type(Person), Filter.type(Person, { name: Filter.in('bob', 'bill') })));
 
-    log.info('stuff', { x, y, q });
+    log.info('stuff', { fOr, fAnd, q, y });
   });
 });

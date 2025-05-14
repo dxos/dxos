@@ -3,17 +3,17 @@
 //
 
 import '@dxos-theme';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
-import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from './index';
 import { DropdownMenu as NaturalDropdownMenu, ToolbarMenu, MenuProvider } from '../components';
-import { type MenuAction, type MenuActionHandler } from '../defs';
-import { useMenuActions } from '../hooks';
+import { useMenuActions } from '../hooks/useMenuActions';
+import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
 import translations from '../translations';
+import { type MenuAction } from '../types';
 
 faker.seed(1234);
 
@@ -24,17 +24,14 @@ export default {
   parameters: { translations },
 };
 
-const menuActions = createActions() as MenuAction[];
-const nestedMenuActions = createNestedActionsResolver();
-
-const handleAction = (action: MenuAction) => console.log('[on action]', action);
-
 export const DropdownMenu = {
   render: () => {
+    const menuActions = useMemo(() => createActions() as MenuAction[], []);
+    const resolveGroupItems = useCallback(() => menuActions, [menuActions]);
     useMutateActions(menuActions);
-    const resolveGroupItems = useCallback(() => menuActions, []);
+
     return (
-      <MenuProvider resolveGroupItems={resolveGroupItems} onAction={handleAction as MenuActionHandler}>
+      <MenuProvider resolveGroupItems={resolveGroupItems}>
         <NaturalDropdownMenu.Root>
           <NaturalDropdownMenu.Trigger asChild>
             <IconButton icon='ph--list-checks--regular' size={5} label='Options' />
@@ -47,8 +44,10 @@ export const DropdownMenu = {
 
 export const Toolbar = {
   render: () => {
+    const nestedMenuActions = useMemo(() => createNestedActionsResolver(), []);
+
     return (
-      <MenuProvider onAction={handleAction as MenuActionHandler} {...nestedMenuActions}>
+      <MenuProvider {...nestedMenuActions}>
         <ToolbarMenu />
       </MenuProvider>
     );
@@ -58,8 +57,9 @@ export const Toolbar = {
 export const UseMenuActionsToolbar = {
   render: () => {
     const menu = useMenuActions(createNestedActions);
+
     return (
-      <MenuProvider onAction={handleAction as MenuActionHandler} {...menu}>
+      <MenuProvider {...menu}>
         <ToolbarMenu />
       </MenuProvider>
     );

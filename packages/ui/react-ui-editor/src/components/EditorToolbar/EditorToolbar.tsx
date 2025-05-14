@@ -2,62 +2,59 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { memo, useCallback } from 'react';
 
 import { type NodeArg } from '@dxos/app-graph';
 import { ElevationProvider } from '@dxos/react-ui';
-import {
-  type MenuActionHandler,
-  MenuProvider,
-  ToolbarMenu,
-  createGapSeparator,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { MenuProvider, ToolbarMenu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 import { textBlockWidth } from '@dxos/react-ui-theme';
 
 import { createBlocks } from './blocks';
 import { createComment } from './comment';
 import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
+import { createImageUpload } from './image';
 import { createLists } from './lists';
-import {
-  type EditorToolbarActionGraphProps,
-  type EditorToolbarFeatureFlags,
-  type EditorToolbarProps,
-  editorToolbarSearch,
-} from './util';
+import { createSearch } from './search';
+import { type EditorToolbarActionGraphProps, type EditorToolbarFeatureFlags, type EditorToolbarProps } from './util';
 import { createViewMode } from './view-mode';
 import { stackItemContentToolbarClassNames } from '../../defaults';
 
 const createToolbar = ({
+  getView,
   state,
   customActions,
   ...features
-}: EditorToolbarFeatureFlags & Pick<EditorToolbarActionGraphProps, 'state' | 'customActions'>): {
+}: EditorToolbarFeatureFlags & Pick<EditorToolbarActionGraphProps, 'getView' | 'state' | 'customActions'>): {
   nodes: NodeArg<any>[];
   edges: { source: string; target: string }[];
 } => {
   const nodes = [];
   const edges = [];
   if (features.headings ?? true) {
-    const headings = createHeadings(state);
+    const headings = createHeadings(state, getView);
     nodes.push(...headings.nodes);
     edges.push(...headings.edges);
   }
   if (features.formatting ?? true) {
-    const formatting = createFormatting(state);
+    const formatting = createFormatting(state, getView);
     nodes.push(...formatting.nodes);
     edges.push(...formatting.edges);
   }
   if (features.lists ?? true) {
-    const lists = createLists(state);
+    const lists = createLists(state, getView);
     nodes.push(...lists.nodes);
     edges.push(...lists.edges);
   }
   if (features.blocks ?? true) {
-    const blocks = createBlocks(state);
+    const blocks = createBlocks(state, getView);
     nodes.push(...blocks.nodes);
     edges.push(...blocks.edges);
+  }
+  if (features.image) {
+    const image = createImageUpload(features.image);
+    nodes.push(...image.nodes);
+    edges.push(...image.edges);
   }
   if (customActions) {
     const custom = customActions();
@@ -67,31 +64,33 @@ const createToolbar = ({
   const editorToolbarGap = createGapSeparator();
   nodes.push(...editorToolbarGap.nodes);
   edges.push(...editorToolbarGap.edges);
-  if (features.comment ?? true) {
-    const comment = createComment(state);
+  if (features.comment) {
+    const comment = createComment(state, getView);
     nodes.push(...comment.nodes);
     edges.push(...comment.edges);
   }
   if (features.search ?? true) {
-    nodes.push(editorToolbarSearch);
-    edges.push({ source: 'root', target: editorToolbarSearch.id });
+    const search = createSearch(getView);
+    nodes.push(...search.nodes);
+    edges.push(...search.edges);
   }
-  if (features.viewMode ?? true) {
-    const viewMode = createViewMode(state);
+  if (features.viewMode) {
+    const viewMode = createViewMode(state, features.viewMode);
     nodes.push(...viewMode.nodes);
     edges.push(...viewMode.edges);
   }
   return { nodes, edges };
 };
 
-const useEditorToolbarActionGraph = ({ onAction, ...props }: EditorToolbarProps) => {
+// TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
+//   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
+//   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
+const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
   const menuCreator = useCallback(() => createToolbar(props), [props]);
-  const { resolveGroupItems } = useMenuActions(menuCreator);
-
-  return { resolveGroupItems, onAction: onAction as MenuActionHandler };
+  return useMenuActions(menuCreator);
 };
 
-export const EditorToolbar = ({ classNames, attendableId, role, ...props }: EditorToolbarProps) => {
+export const EditorToolbar = memo(({ classNames, attendableId, role, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
   return (
     <div role='none' className={stackItemContentToolbarClassNames(role)}>
@@ -102,4 +101,4 @@ export const EditorToolbar = ({ classNames, attendableId, role, ...props }: Edit
       </ElevationProvider>
     </div>
   );
-};
+});

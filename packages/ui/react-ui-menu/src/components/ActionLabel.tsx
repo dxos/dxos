@@ -9,8 +9,8 @@ import { keySymbols } from '@dxos/keyboard';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx, descriptionText } from '@dxos/react-ui-theme';
 
-import { type MenuActionProperties } from '../defs';
 import { translationKey } from '../translations';
+import { type MenuActionProperties } from '../types';
 import { getShortcut } from '../util';
 
 export const ActionLabel = ({
