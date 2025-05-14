@@ -18,20 +18,20 @@ export type NavTreeContextValue = Pick<
 > &
   Pick<L1PanelProps, 'onBack'> & {
     tab: string;
-    onTabChange?: (node: NavTreeItemGraphNode) => void;
+    topbar?: boolean;
+    popoverAnchorId?: string;
+    renderItemEnd?: FC<{ node: Node; open: boolean }>;
     getItems: (node?: NavTreeItemGraphNode, disposition?: string) => NavTreeItemGraphNode[];
     getActions: (node: Node) => FlattenedActions;
-    loadDescendents?: (node: Node) => MaybePromise<void>;
-    renderItemEnd?: FC<{ node: Node; open: boolean }>;
-    popoverAnchorId?: string;
-    topbar?: boolean;
     isAlternateTree?: (path: string[], item: NavTreeItemGraphNode) => boolean;
     setAlternateTree?: (path: string[], open: boolean) => void;
+    loadDescendents?: (node: Node) => MaybePromise<void>;
+    onTabChange?: (node: NavTreeItemGraphNode) => void;
   };
 
 export type NavTreeItemColumnsProps = {
   path: string[];
   item: Node;
-  open: boolean; // TODO(burdon): Map to Layout.sidebarOpen?
+  open: boolean;
   density?: Density;
 };
