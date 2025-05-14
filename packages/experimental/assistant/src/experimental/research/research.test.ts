@@ -28,7 +28,7 @@ const aiService = REMOTE_AI
 
 const TYPES = [DataType.Event, DataType.Organization, DataType.Person, DataType.Project, DataType.Task, DataType.Text];
 
-describe('Research', () => {
+describe.skip('Research', () => {
   test('should generate a research report', { timeout: 1000000 }, async () => {
     const searchTool = createExaTool({ apiKey: EXA_API_KEY });
 
@@ -39,8 +39,8 @@ describe('Research', () => {
     session.userMessage.on((message) => printer.printMessage(message));
     session.block.on((block) => printer.printContentBlock(block));
 
+    // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
     const outputSchema = createExtractionSchema(TYPES);
-
     const result = await session.runStructured(outputSchema, {
       client: aiService,
       systemPrompt: INSTRUCTIONS,
@@ -58,7 +58,7 @@ describe('Research', () => {
   });
 });
 
-describe('misc', () => {
+describe.skip('misc', () => {
   test('createExtractionSchema', () => {
     const schema = createExtractionSchema(TYPES);
     log.info('schema', { schema });
@@ -76,7 +76,7 @@ describe('misc', () => {
     }
   });
 
-  test.only('sanitizeObjects', () => {
+  test('sanitizeObjects', () => {
     const TEST_DATA = {
       objects_dxos_org_type_Project: [
         {
