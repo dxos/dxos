@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 
 import type { Message, MessageContentBlock } from '@dxos/artifact';
 
