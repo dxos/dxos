@@ -26,6 +26,7 @@ export interface Query<T> {
    * @returns Query for the selected objects.
    */
   select(filter: Filter<T>): Query<T>;
+  select(props: Filter.Props<T>): Query<T>;
 
   /**
    * Traverse an outgoing reference.
@@ -97,23 +98,23 @@ interface QueryAPI {
    *
    * @deprecated Use `Filter`.
    */
-  type<S extends Schema.Schema.All>(
-    schema: S,
-    predicates?: Filter.Props<Schema.Schema.Type<S>>,
-  ): Query<Schema.Schema.Type<S>>;
+  // type<S extends Schema.Schema.All>(
+  //   schema: S,
+  //   predicates?: Filter.Props<Schema.Schema.Type<S>>,
+  // ): Query<Schema.Schema.Type<S>>;
 
   /**
    * Full-text or vector search.
    *
    * @deprecated Use `Filter`.
    */
-  text<S extends Schema.Schema.All>(
-    // TODO(dmaretskyi): Allow passing an array of schema here.
-    schema: S,
-    // TODO(dmaretskyi): Consider passing a vector here, but really the embedding should be done on the query-executor side.
-    text: string,
-    options?: Query.TextSearchOptions,
-  ): Query<Schema.Schema.Type<S>>;
+  // text<S extends Schema.Schema.All>(
+  //   // TODO(dmaretskyi): Allow passing an array of schema here.
+  //   schema: S,
+  //   // TODO(dmaretskyi): Consider passing a vector here, but really the embedding should be done on the query-executor side.
+  //   text: string,
+  //   options?: Query.TextSearchOptions,
+  // ): Query<Schema.Schema.Type<S>>;
 
   /**
    * Combine results of multiple queries.
@@ -131,7 +132,7 @@ export declare namespace Query {
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: Partial<T> };
+  '~Filter': { value: T };
 
   ast: QueryAST.Predicate;
 }
@@ -152,7 +153,7 @@ interface FilterAPI {
   /**
    * Filter by properties.
    */
-  props<T>(props: Filter.Props<T>): Filter<T>;
+  // props<T>(props: Filter.Props<T>): Filter<T>;
 
   /**
    * Full-text or vector search.
@@ -250,9 +251,9 @@ class FilterClass implements Filter<any> {
     throw new Error('Not implemented');
   }
 
-  static props<T>(props: Filter.Props<T>): Filter<T> {
-    throw new Error('Not implemented');
-  }
+  // static props<T>(props: Filter.Props<T>): Filter<T> {
+  //   throw new Error('Not implemented');
+  // }
 
   static text<S extends Schema.Schema.All>(
     schema: S,

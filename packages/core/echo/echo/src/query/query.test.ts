@@ -46,7 +46,7 @@ interface Task extends Schema.Schema.Type<typeof Task> {}
 describe('query api', () => {
   test('get all people', () => {
     // Query<Person>
-    const getAllPeople = Query.type(Person);
+    const getAllPeople = Query.select(Filter.type(Person));
 
     log.info('query', { ast: getAllPeople.ast });
   });
@@ -61,7 +61,7 @@ describe('query api', () => {
   test('get all orgs Fred worked for since 2020', () => {
     // Query<Org>
     const fred = create(Person, { name: 'Fred' });
-    const getAllOrgsFredWorkedForSince2020 = Query.type(Person, { id: fred.id })
+    const getAllOrgsFredWorkedForSince2020 = Query.select(Filter.type(Person, { id: fred.id }))
       .sourceOf(WorksFor, { since: Filter.gt('2020') })
       .target();
 
@@ -104,28 +104,33 @@ describe('query api', () => {
 
   test('contact full-text search', () => {
     // Query<Person>
-    const contactFullTextSearch = Query.text(Person, 'Bill');
+    const contactFullTextSearch = Query.select(Filter.text(Person, 'Bill'));
 
     log.info('query', { ast: contactFullTextSearch.ast });
   });
 
   test.skip('chain', () => {
-    const f1: Filter<Person> = Filter.props({ name: 'Fred' });
+    // const f1: Filter<Person> = Filter.props({ name: 'Fred' });
 
-    const x = Query.select(Filter.props({ id: '123' }));
+    // const x = Query.select(Filter.props({ id: '123' }));
     const y = Query.select(Filter.type(Person));
 
-    const f = Filter.and(Filter.type(Person), Filter.props({ name: Filter.in(['1', '2', '3']) }));
+    const fOr = Filter.or(Filter.type(Person, { id: Filter.in('1', '2', '3') }), Filter.type(Org));
+
+    const fAnd = Filter.and(
+      Filter.type(Person, { id: Filter.in('1', '2', '3') }),
+      Filter.type(Person, { name: 'Fred' }),
+    );
 
     const q = Query
       //
       // NOTE: Can't support functions since they can't be serialized (to server).
       // .filter((object) => Math.random() > 0.5)
       .select(Filter.type(Person))
-      .select(Filter.props({ name: 'Fred' }))
-      .select(Filter.props({ age: Filter.between(20, 40) }))
-      .select(Filter.and(Filter.type(Person), Filter.props({ id: Filter.in(['1', '2', '3']) })));
+      .select(Filter.type(Person, { name: 'Fred' }))
+      .select({ age: Filter.between(20, 40) })
+      .select(Filter.and(Filter.type(Person), Filter.type(Person, { name: Filter.in('bob', 'bill') })));
 
-    log.info('stuff', { x, y, q });
+    log.info('stuff', { fOr, fAnd, q, y });
   });
 });
