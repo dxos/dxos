@@ -10,7 +10,7 @@ export default [
       [CLIENT_PLUGIN]: {
         'account label': 'User Account',
         'profile label': 'Profile',
-        'profile description': 'You can adjust how you’re represented in Composer here.',
+        'profile description': 'You can adjust how your user settings here.',
         'devices label': 'Devices',
         'devices verbose label': 'Manage devices',
         'add device description':

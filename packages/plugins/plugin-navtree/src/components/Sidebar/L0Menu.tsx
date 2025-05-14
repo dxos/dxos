@@ -230,14 +230,12 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
           'absolute grid dx-focus-ring-group-indicator transition-colors rounded',
           pinned
             ? 'bg-transparent group-hover/l0item:bg-groupSurface inset-inline-1 inset-block-0.5'
-            : type === 'action'
-              ? 'bg-groupSurface is-[--rail-action] bs-[--rail-action]'
-              : 'bg-groupSurface inset-inline-3 inset-block-2',
+            : 'bg-groupSurface aspect-square inset-inline-3',
         )}
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
       >
         {(item.properties.icon && (
-          <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+          <Icon icon={item.properties.icon} size={pinned ? 5 : 6} classNames='place-self-center' {...hueFgStyle} />
         )) ||
           (type === 'tab' && item.properties.disposition !== 'pin-end' && <L0Avator item={item} />)}
       </div>
@@ -332,7 +330,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
         '!is-[--l0-size] bg-baseSurface border-ie border-separator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
-      <div role='none' className='grid grid-rows p-1 px-3'>
+      <div role='none' className='flex justify-center p-1'>
         <MenuProvider>
           <DropdownMenu.Root group={parent} items={menuActions}>
             <DropdownMenu.Trigger asChild>
@@ -343,7 +341,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                 icon='ph--dots-three--regular'
                 size={5}
                 label={t('app menu label')}
-                // classNames='bg-primary-500'
+                classNames='w-[50px] _bg-primary-500'
               />
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>
@@ -355,22 +353,19 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           <div
             role='none'
             className={mx([
-              // TODO(burdon): Experiment.
-              // 'grid auto-rows-[calc(var(--l0-size))]',
-              'grid auto-rows-[calc(var(--l0-size)-.5rem)]',
+              'grid auto-rows-[calc(var(--l0-size)-1rem)]',
+              // 'grid auto-rows-[calc(var(--l0-size)-.5rem)]',
               '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
           >
-            {topLevelItems
-              .filter((item) => l0ItemType(item) !== 'action')
-              .map((item) => {
-                if (l0ItemType(item) === 'collection') {
-                  return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
-                } else {
-                  return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-                }
-              })}
+            {topLevelItems.map((item) => {
+              if (l0ItemType(item) === 'collection') {
+                return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
+              } else {
+                return <L0Item key={item.id} item={item} parent={parent} path={path} />;
+              }
+            })}
           </div>
           <ScrollArea.Scrollbar orientation='vertical'>
             <ScrollArea.Thumb />
