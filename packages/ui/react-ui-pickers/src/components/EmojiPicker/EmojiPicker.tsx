@@ -53,71 +53,57 @@ export const EmojiPickerToolbarButton = ({
 
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
   const suppressNextTooltip = useRef<boolean>(false);
-  const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
 
   return (
-    <Tooltip.Root
-      open={triggerTooltipOpen}
+    <Popover.Root
+      open={emojiPickerOpen}
       onOpenChange={(nextOpen) => {
-        if (suppressNextTooltip.current) {
-          setTriggerTooltipOpen(false);
-          suppressNextTooltip.current = false;
-        } else {
-          setTriggerTooltipOpen(nextOpen);
-        }
+        setEmojiPickerOpen(nextOpen);
+        suppressNextTooltip.current = true;
       }}
     >
-      <Popover.Root
-        open={emojiPickerOpen}
-        onOpenChange={(nextOpen) => {
-          setEmojiPickerOpen(nextOpen);
-          suppressNextTooltip.current = true;
-        }}
+      <Tooltip.Trigger
+        asChild
+        content={t('select emoji label')}
+        side='bottom'
+        suppressNextTooltip={suppressNextTooltip}
       >
-        <Tooltip.Trigger asChild>
-          <Popover.Trigger asChild>
-            <Toolbar.Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
-              <span className='sr-only'>{t('select emoji label')}</span>
-              <Icon icon='ph--user-circle--regular' size={5} />
-            </Toolbar.Button>
-          </Popover.Trigger>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content side='bottom'>
-            {t('select emoji label')}
-            <Tooltip.Arrow />
-          </Tooltip.Content>
-        </Tooltip.Portal>
-        <Popover.Portal>
-          <Popover.Content
-            side='bottom'
-            onKeyDownCapture={(event) => {
-              if (event.key === 'Escape') {
-                event.stopPropagation();
+        <Popover.Trigger asChild>
+          <Toolbar.Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
+            <span className='sr-only'>{t('select emoji label')}</span>
+            <Icon icon='ph--user-circle--regular' size={5} />
+          </Toolbar.Button>
+        </Popover.Trigger>
+      </Tooltip.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          side='bottom'
+          onKeyDownCapture={(event) => {
+            if (event.key === 'Escape') {
+              event.stopPropagation();
+              setEmojiPickerOpen(false);
+              suppressNextTooltip.current = true;
+            }
+          }}
+        >
+          {/* https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props */}
+          <EmojiMart
+            data={emojiData}
+            onEmojiSelect={({ native }: { native?: string }) => {
+              if (native) {
+                setEmojiValue(native);
                 setEmojiPickerOpen(false);
-                suppressNextTooltip.current = true;
               }
             }}
-          >
-            {/* https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props */}
-            <EmojiMart
-              data={emojiData}
-              onEmojiSelect={({ native }: { native?: string }) => {
-                if (native) {
-                  setEmojiValue(native);
-                  setEmojiPickerOpen(false);
-                }
-              }}
-              autoFocus={true}
-              maxFrequentRows={0}
-              noCountryFlags={true}
-              theme={themeMode}
-            />
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-    </Tooltip.Root>
+            autoFocus={true}
+            maxFrequentRows={0}
+            noCountryFlags={true}
+            theme={themeMode}
+          />
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 };
 
@@ -179,20 +165,12 @@ export const EmojiPickerBlock = ({
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Root>
-      <Tooltip.Root>
-        <Tooltip.Trigger asChild>
-          <Button variant={triggerVariant} onClick={onClickClear} disabled={disabled}>
-            <span className='sr-only'>{t('clear label')}</span>
-            <Icon icon='ph--arrow-counter-clockwise--regular' size={5} />
-          </Button>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content side='right'>
-            {t('clear label')}
-            <Tooltip.Arrow />
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      </Tooltip.Root>
+      <Tooltip.Trigger asChild content={t('clear label')} side='right'>
+        <Button variant={triggerVariant} onClick={onClickClear} disabled={disabled}>
+          <span className='sr-only'>{t('clear label')}</span>
+          <Icon icon='ph--arrow-counter-clockwise--regular' size={5} />
+        </Button>
+      </Tooltip.Trigger>
     </ButtonGroup>
   );
 };

@@ -233,15 +233,9 @@ const L0Item = ({ item, parent, path, pinned, userAccount, onRearrange }: L0Item
   return popoverAnchorId === id ? (
     <Popover.Anchor asChild>{l0ItemTrigger}</Popover.Anchor>
   ) : (
-    <Tooltip.Root delayDuration={0}>
-      <Tooltip.Trigger asChild>{l0ItemTrigger}</Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content side='right'>
-          {localizedString}
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
+    <Tooltip.Trigger delayDuration={0} asChild side='right' content={localizedString}>
+      {l0ItemTrigger}
+    </Tooltip.Trigger>
   );
 };
 
