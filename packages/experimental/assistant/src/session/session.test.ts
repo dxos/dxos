@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { inspect } from 'node:util';
 import { describe, test } from 'vitest';
 
@@ -15,7 +15,8 @@ import {
   type MessageContentBlock,
 } from '@dxos/artifact';
 import { AIServiceEdgeClient } from '@dxos/assistant';
-import { create, EchoObject, ObjectId } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { create, ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -23,14 +24,19 @@ import { AISession } from './session';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
 // Define a calendar event artifact schema.
-const CalendarEventSchema = S.Struct({
-  title: S.String,
-  startTime: S.String,
-  endTime: S.String,
-  description: S.String,
-}).pipe(EchoObject({ typename: 'example.com/type/CalendarEvent', version: '0.1.0' }));
+const CalendarEventSchema = Schema.Struct({
+  title: Schema.String,
+  startTime: Schema.String,
+  endTime: Schema.String,
+  description: Schema.String,
+}).pipe(
+  Type.def({
+    typename: 'example.com/type/CalendarEvent',
+    version: '0.1.0',
+  }),
+);
 
-type CalendarEvent = S.Schema.Type<typeof CalendarEventSchema>;
+type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 
 // TODO(burdon): Flaky.
 describe.skip('AISession with Ollama', () => {
@@ -53,7 +59,7 @@ describe.skip('AISession with Ollama', () => {
         defineTool('calendar', {
           name: 'query',
           description: 'Query the calendar for events',
-          schema: S.Struct({}),
+          schema: Schema.Struct({}),
           execute: async () => {
             return ToolResult.Success(CALENDAR_EVENTS);
           },
@@ -65,13 +71,13 @@ describe.skip('AISession with Ollama', () => {
       id: 'artifact:dxos.org/plugin/table',
       name: 'Table',
       instructions: 'Use this to create and manage tables. Each table has a unique id.',
-      schema: S.Struct({}),
+      schema: Schema.Struct({}),
       tools: [
         defineTool('table', {
           name: 'create',
           description: 'Create a table',
-          schema: S.Struct({
-            data: S.Array(S.Any).annotations({ description: 'Array of data payloads to add as rows' }),
+          schema: Schema.Struct({
+            data: Schema.Array(Schema.Any).annotations({ description: 'Array of data payloads to add as rows' }),
           }),
           execute: async ({ data }) => {
             log('create table', { data });
@@ -89,12 +95,12 @@ describe.skip('AISession with Ollama', () => {
       name: 'Map',
       instructions:
         'Use this to create and manage maps. Maps source data from tables. Table id is required to create a map.',
-      schema: S.Struct({}),
+      schema: Schema.Struct({}),
       tools: [
         defineTool('map', {
           name: 'create',
           description: 'Create a map',
-          schema: S.Struct({
+          schema: Schema.Struct({
             source: ArtifactId.annotations({
               description: 'The table that will be used as the source of the map',
             }),
@@ -119,7 +125,7 @@ describe.skip('AISession with Ollama', () => {
       id: 'artifact:dxos.org/plugin/script',
       name: 'Script',
       instructions: 'Use this to create and manage scripts',
-      schema: S.Struct({}),
+      schema: Schema.Struct({}),
       tools: [],
     });
 

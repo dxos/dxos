@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
@@ -16,12 +16,12 @@ import { isInstanceOf } from '../types';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {
-    const Contact = S.Struct({
-      name: S.String.pipe(
-        S.optional,
-        S.withConstructorDefault(() => 'Anonymous'),
+    const Contact = Schema.Struct({
+      name: Schema.String.pipe(
+        Schema.optional,
+        Schema.withConstructorDefault(() => 'Anonymous'),
       ),
-      email: S.String.pipe(S.optional),
+      email: Schema.String.pipe(Schema.optional),
     });
 
     const obj = Contact.make({});

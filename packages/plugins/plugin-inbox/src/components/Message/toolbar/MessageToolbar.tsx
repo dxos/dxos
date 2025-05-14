@@ -12,34 +12,33 @@ import { type ViewMode } from '../MessageHeader';
 /**
  * Creates a view mode toggle action based on the current view mode
  */
-const createViewModeAction = (viewMode: ViewMode): MenuAction<ViewModeActionProperties> => {
-  const type = 'viewMode';
+const createViewModeAction = (viewMode: Signal<ViewMode>): MenuAction => {
+  const label =
+    viewMode.value === 'plain'
+      ? 'mailbox toolbar show enriched message'
+      : viewMode.value === 'enriched'
+        ? 'mailbox toolbar show plain message'
+        : 'mailbox toolbar enriched message not available';
+  const icon = viewMode.value === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular';
 
-  switch (viewMode) {
-    case 'plain':
-      return createMenuAction<ViewModeActionProperties>('viewMode', {
-        label: ['mailbox toolbar show enriched message', { ns: INBOX_PLUGIN }],
-        icon: 'ph--graph--regular',
-        type,
-      });
-    case 'plain-only':
-      return createMenuAction<ViewModeActionProperties>('viewMode', {
-        label: ['mailbox toolbar enriched message not available', { ns: INBOX_PLUGIN }],
-        icon: 'ph--graph--regular',
-        type,
-        disabled: true,
-      });
-    default: // enriched or any other mode
-      return createMenuAction<ViewModeActionProperties>('viewMode', {
-        label: ['mailbox toolbar show plain message', { ns: INBOX_PLUGIN }],
-        icon: 'ph--article--regular',
-        type,
-      });
-  }
+  return createMenuAction(
+    'viewMode',
+    () => {
+      viewMode.value = viewMode.value === 'plain' ? 'enriched' : 'plain';
+    },
+    {
+      label: [label, { ns: INBOX_PLUGIN }],
+      icon,
+    },
+  );
 };
 
 // TODO(ZaymonFC): Collapse state to single object.
-export const useMessageToolbarActions = (viewMode: Signal<ViewMode>, existingContact: Signal<any | undefined>) => {
+export const useMessageToolbarActions = (
+  viewMode: Signal<ViewMode>,
+  existingContact: Signal<any | undefined>,
+  onExtractContact: () => void,
+) => {
   return useMenuActions(() => {
     const nodes = [];
     const edges = [];
@@ -50,15 +49,17 @@ export const useMessageToolbarActions = (viewMode: Signal<ViewMode>, existingCon
     nodes.push(rootGroup);
 
     // Create action based on viewMode
-    const viewModeAction = createViewModeAction(viewMode.value);
+    const viewModeAction = createViewModeAction(viewMode);
 
     nodes.push(viewModeAction);
     edges.push({ source: 'root', target: viewModeAction.id });
 
-    const extractContactAction = createMenuAction<ExtractContactActionProperties>('extractContact', {
-      label: ['Extract contact', { ns: INBOX_PLUGIN }],
+    const extractContactAction = createMenuAction('extractContact', onExtractContact, {
+      label: existingContact.value
+        ? ['contact already exists label', { ns: INBOX_PLUGIN }]
+        : ['extract contact label', { ns: INBOX_PLUGIN }],
       icon: 'ph--user-plus--regular',
-      type: 'extractContact',
+      disabled: !!existingContact.value,
     });
 
     nodes.push(extractContactAction);
@@ -67,11 +68,3 @@ export const useMessageToolbarActions = (viewMode: Signal<ViewMode>, existingCon
     return { nodes, edges };
   });
 };
-
-export type ViewModeActionProperties = { type: 'viewMode' };
-
-export type ExtractContactActionProperties = { type: 'extractContact' };
-
-export type MessageToolbarActionProperties = ViewModeActionProperties | ExtractContactActionProperties;
-
-export type MessageToolbarAction = MenuAction<MessageToolbarActionProperties>;

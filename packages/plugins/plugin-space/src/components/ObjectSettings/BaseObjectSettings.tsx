@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useRef } from 'react';
 
-import { type ReactiveEchoObject } from '@dxos/react-client/echo';
+import { type AnyLiveObject } from '@dxos/react-client/echo';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -12,7 +12,7 @@ import { meta } from '../../meta';
 
 export type BaseObjectSettingsProps = ThemedClassName<
   PropsWithChildren<{
-    object: ReactiveEchoObject<any>;
+    object: AnyLiveObject<any>;
   }>
 >;
 

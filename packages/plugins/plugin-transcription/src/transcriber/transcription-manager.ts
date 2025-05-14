@@ -9,7 +9,7 @@ import { create } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { MessageType, type TranscriptionContentBlock } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
@@ -30,7 +30,7 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
-export type TranscriptMessageEnricher = (message: MessageType) => Promise<MessageType>;
+export type TranscriptMessageEnricher = (message: DataType.Message) => Promise<DataType.Message>;
 
 export type TranscriptionManagerOptions = {
   edgeClient: EdgeHttpClient;
@@ -51,7 +51,7 @@ export class TranscriptionManager extends Resource {
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _queue?: Queue<MessageType> = undefined;
+  private _queue?: Queue<DataType.Message> = undefined;
   private _enabled = false;
 
   constructor(options: TranscriptionManagerOptions) {
@@ -71,7 +71,7 @@ export class TranscriptionManager extends Resource {
   setQueue(queueDxn: DXN): TranscriptionManager {
     if (this._queue?.dxn.toString() !== queueDxn.toString()) {
       log.info('setQueue', { queueDxn: queueDxn.toString() });
-      this._queue = new QueueImpl<MessageType>(this._edgeClient, queueDxn);
+      this._queue = new QueueImpl<DataType.Message>(this._edgeClient, queueDxn);
     }
     return this;
   }
@@ -129,7 +129,7 @@ export class TranscriptionManager extends Resource {
     if (this._enabled) {
       await this._transcriber?.open();
       // TODO(burdon): Started and stopped blocks appear twice.
-      const block = create(MessageType, {
+      const block = create(DataType.Message, {
         created: new Date().toISOString(),
         blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
@@ -137,7 +137,7 @@ export class TranscriptionManager extends Resource {
       this._queue?.append([block]);
     } else {
       await this._transcriber?.close();
-      const block = create(MessageType, {
+      const block = create(DataType.Message, {
         created: new Date().toISOString(),
         blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
@@ -173,12 +173,12 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _onSegments(segments: TranscriptionContentBlock[]) {
+  private async _onSegments(segments: DataType.MessageBlock.Transcription[]) {
     if (!this.isOpen || !this._queue) {
       return;
     }
 
-    let block = create(MessageType, {
+    let block = create(DataType.Message, {
       created: new Date().toISOString(),
       blocks: segments,
       sender: { identityDid: this._identityDid },

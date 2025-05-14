@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useCallback, useMemo } from 'react';
 
-import { AST } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -18,6 +17,7 @@ import { FormField } from './FormContent';
 import { useFormValues, type FormInputStateProps } from './FormContext';
 import { InputHeader, type InputComponent } from './Input';
 import { translationKey } from '../../translations';
+import { findArrayElementType } from '../../util';
 
 const padding = 'px-2';
 
@@ -39,12 +39,11 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   invariant(Array.isArray(values), `Values at path ${path?.join('.')} must be an array.`);
   const label = title ?? pipe(name, capitalize);
 
-  const tupleType = findNode(ast, AST.isTupleType);
-  const elementType = (tupleType as AST.TupleType | undefined)?.rest[0]?.type;
+  const elementType = findArrayElementType(ast);
 
-  const getDefaultObjectValue = (typeNode: AST.AST): any => {
+  const getDefaultObjectValue = (typeNode: SchemaAST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);
-    const typeLiteral = baseNode ? getDiscriminatedType(baseNode, {}) : findNode(typeNode, AST.isTypeLiteral);
+    const typeLiteral = baseNode ? getDiscriminatedType(baseNode, {}) : findNode(typeNode, SchemaAST.isTypeLiteral);
     if (!typeLiteral) {
       return {};
     }

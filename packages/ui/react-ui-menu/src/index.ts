@@ -3,6 +3,6 @@
 //
 
 export * from './components';
-export * from './defs';
 export * from './hooks';
+export * from './types';
 export { createMenuAction, createMenuItemGroup, createLineSeparator, createGapSeparator } from './util';

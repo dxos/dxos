@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, Schema as S } from 'effect';
+import { Option, Schema } from 'effect';
 
 import {
   defineTool,
@@ -287,7 +287,7 @@ export class AISession {
     return defineTool('system', {
       name: 'query_artifact_definitions',
       description: 'Query the available artifact definitions',
-      schema: S.Struct({}),
+      schema: Schema.Struct({}),
       execute: async () => {
         return ToolResult.Success({
           artifactDefinitions: artifacts.map((artifact) => ({
@@ -308,8 +308,8 @@ export class AISession {
       name: 'require_artifact_definitions',
       description:
         'Require the use of specific artifact definitions. This will allow the model to interact with artifact definitions and use their tools.',
-      schema: S.Struct({
-        artifactDefinitionIds: S.Array(S.String).annotations({
+      schema: Schema.Struct({
+        artifactDefinitionIds: Schema.Array(Schema.String).annotations({
           description: 'The ids of the artifact definitions to require',
           examples: [['artifact:dxos.org/example/Test']],
         }),
@@ -336,20 +336,20 @@ export class AISession {
       name: 'create_plan',
       description:
         'Create a plan. Make sure that each step is independent and can be executed solely on the data returned by the previous step. The steps only share the data that is specified in the plan.',
-      schema: S.Struct({
-        goal: S.String.annotations({ description: 'The goal that the plan will achieve.' }),
-        steps: S.Array(
-          S.Struct({
-            action: S.String.annotations({
+      schema: Schema.Struct({
+        goal: Schema.String.annotations({ description: 'The goal that the plan will achieve.' }),
+        steps: Schema.Array(
+          Schema.Struct({
+            action: Schema.String.annotations({
               description: 'Complete, detailed action to perform.',
             }),
-            input: S.String.annotations({
+            input: Schema.String.annotations({
               description: 'The required input data for this step. First step must not require any data.',
             }),
-            output: S.String.annotations({
+            output: Schema.String.annotations({
               description: 'The output data from this step. This is passed to the next step as input.',
             }),
-            requiredArtifactIds: S.Array(S.String).annotations({
+            requiredArtifactIds: Schema.Array(Schema.String).annotations({
               description: 'The ids of the artifacts required to perform this step.',
               examples: [['artifact:dxos.org/example/Test']],
             }),
@@ -473,7 +473,7 @@ const createBaseInstructions = ({
   ${availableArtifacts.length > 0 ? `Artifacts already in context: ${availableArtifacts.join('\n')}` : ''}
 `;
 
-export class AIServiecOverloadedError extends S.TaggedError<AIServiecOverloadedError>()(
+export class AIServiecOverloadedError extends Schema.TaggedError<AIServiecOverloadedError>()(
   'AIServiecOverloadedError',
   {},
 ) {}
@@ -483,7 +483,7 @@ const gatherObjectVersions = (messages: Message[]): Map<ObjectId, ObjectVersion>
   for (const message of messages) {
     for (const block of message.content) {
       if (block.type === 'json' && block.disposition === VersionPin.DISPOSITION) {
-        const pin = VersionPin.pipe(S.decodeOption)(JSON.parse(block.json)).pipe(Option.getOrUndefined);
+        const pin = VersionPin.pipe(Schema.decodeOption)(JSON.parse(block.json)).pipe(Option.getOrUndefined);
         if (!pin) {
           continue;
         }

@@ -8,7 +8,7 @@ import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { Testing } from './types';
-import { Contact, MessageType, Organization } from '../common';
+import { DataType } from '../common';
 
 faker.seed(1);
 
@@ -31,9 +31,9 @@ const createDocument = (name: string, content: string): Testing.DocumentType => 
 };
 
 const createOrganization = (
-  props: Pick<Organization, 'name' | 'website'> & Partial<Omit<Organization, 'name' | 'website'>>,
-): Organization => {
-  return live(Organization, {
+  props: Pick<DataType.Organization, 'name' | 'website'> & Partial<Omit<DataType.Organization, 'name' | 'website'>>,
+): DataType.Organization => {
+  return live(DataType.Organization, {
     description: faker.lorem.paragraph(),
     image: faker.image.url(),
     ...props,
@@ -44,17 +44,19 @@ const createContact = ({
   email,
   organization,
   ...props
-}: { email: string; organization?: Organization } & Partial<Omit<Contact, 'organization'>>): Contact => {
+}: { email: string; organization?: DataType.Organization } & Partial<
+  Omit<DataType.Person, 'organization'>
+>): DataType.Person => {
   // TODO(dmaretskyi): `create` with nested refs throws an error when added to db.
-  return live(Contact, {
+  return live(DataType.Person, {
     organization: organization ? Ref.make(organization) : undefined,
     emails: [{ value: email }],
     ...props,
   });
 };
 
-const createTranscriptMessage = (sender: Contact, blocks: string[]) => {
-  return create(MessageType, {
+const createTranscriptMessage = (sender: DataType.Person, blocks: string[]) => {
+  return create(DataType.Message, {
     sender: {
       name: sender.fullName,
     },
@@ -73,14 +75,14 @@ const createTranscriptMessage = (sender: Contact, blocks: string[]) => {
 };
 
 export const createTestData = () => {
-  const organizations: Record<string, Organization> = {
+  const organizations: Record<string, DataType.Organization> = {
     amco: createOrganization({ name: 'Amco', website: 'amco.org' }),
     cyberdyne: createOrganization({ name: 'Cyberdyne', website: 'cyberdyne.com' }),
     dxos: createOrganization({ name: 'DXOS', website: 'dxos.org' }),
     inkandswitch: createOrganization({ name: 'Ink & Switch', website: 'inkandswitch.com' }),
   };
 
-  const contacts: Record<string, Contact> = {
+  const contacts: Record<string, DataType.Person> = {
     john: createContact({ fullName: 'John Doe', email: 'john.doe@example.com', organization: organizations.dxos }),
     sarah: createContact({
       fullName: 'Sarah Johnson',
@@ -172,13 +174,13 @@ export const createTestData = () => {
     createDocument('Composer VIP call', ''),
   ];
 
-  const transcriptWoflram: MessageType[] = [
+  const transcriptWoflram: DataType.Message[] = [
     createTranscriptMessage(contacts.john, [
       "And what I'd like to talk today about is Steven Wolfram's concept of a computational irreducibility.",
     ]),
   ];
 
-  const transcriptJosiah: MessageType[] = [
+  const transcriptJosiah: DataType.Message[] = [
     createTranscriptMessage(contacts.john, [
       'Today, I need to talk to Peter Van Hardenburg about the Composer VIP call.',
     ]),
@@ -186,7 +188,7 @@ export const createTestData = () => {
     createTranscriptMessage(contacts.john, ['Peter works at Ink and Switch.']),
   ];
 
-  const transcriptMessages: MessageType[] = [
+  const transcriptMessages: DataType.Message[] = [
     ...transcriptWoflram,
     ...transcriptJosiah,
 
@@ -260,9 +262,9 @@ export const createTestData = () => {
     ]),
   ];
 
-  const emails: MessageType[] = [
+  const emails: DataType.Message[] = [
     // Recent emails.
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -274,7 +276,7 @@ export const createTestData = () => {
       properties: { subject: 'Q3 Financial Review' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -286,7 +288,7 @@ export const createTestData = () => {
       properties: { subject: 'Board Feedback and Next Steps' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -298,7 +300,7 @@ export const createTestData = () => {
       properties: { subject: 'New Feature Ready for Testing' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -310,7 +312,7 @@ export const createTestData = () => {
       properties: { subject: 'URGENT: Bitcoin Wallet Verification Required' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -322,7 +324,7 @@ export const createTestData = () => {
       properties: { subject: 'Potential Strategic Partnership' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -334,7 +336,7 @@ export const createTestData = () => {
       properties: { subject: 'New Hires Starting Next Week' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -346,7 +348,7 @@ export const createTestData = () => {
       properties: { subject: 'Security Incident Report' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -358,7 +360,7 @@ export const createTestData = () => {
       properties: { subject: 'Acquisition Target Concerns' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -370,7 +372,7 @@ export const createTestData = () => {
       properties: { subject: 'Quarterly Tax Filings' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -382,7 +384,7 @@ export const createTestData = () => {
       properties: { subject: 'Speaking Opportunity: International Tech Summit' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -394,7 +396,7 @@ export const createTestData = () => {
       properties: { subject: 'MANDATORY: Security Update Required' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -406,7 +408,7 @@ export const createTestData = () => {
       properties: { subject: 'Q2 Customer Satisfaction Results' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -418,7 +420,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Company Retreat Planning' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -430,7 +432,7 @@ export const createTestData = () => {
       properties: { subject: 'Competitor Price Change - Strategic Response Needed' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -442,7 +444,7 @@ export const createTestData = () => {
       properties: { subject: 'Privacy Policy Update - Final Review' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -454,7 +456,7 @@ export const createTestData = () => {
       properties: { subject: 'Series C Funding Update - Oversubscribed' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -466,7 +468,7 @@ export const createTestData = () => {
       properties: { subject: 'Product Roadmap Finalized' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -478,7 +480,7 @@ export const createTestData = () => {
       properties: { subject: 'CONFIDENTIAL: Acquisition Offer Received' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -490,7 +492,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Audit Preparation' },
     }),
 
-    create(MessageType, {
+    create(DataType.Message, {
       blocks: [
         {
           type: 'text',
@@ -526,7 +528,7 @@ export const createTestData = () => {
 };
 
 export const seedTestData = async (space: Space) => {
-  const schemas = [Contact, Organization, Testing.DocumentType];
+  const schemas = [DataType.Person, DataType.Organization, Testing.DocumentType];
   for (const schema of schemas) {
     if (!space.db.graph.schemaRegistry.hasSchema(schema)) {
       space.db.graph.schemaRegistry.addSchema([schema]);

@@ -8,7 +8,7 @@ import { createSurface, contributes, Capabilities, useCapability } from '@dxos/a
 import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
 import { MarkdownContainer, MarkdownSettings, MarkdownPreview } from '../components';
@@ -26,6 +26,7 @@ export default () =>
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
         const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
+        const viewMode = getViewMode(fullyQualifiedId(data.subject));
 
         return (
           <MarkdownContainer
@@ -34,7 +35,7 @@ export default () =>
             role={role}
             settings={settings}
             extensionProviders={state.extensionProviders}
-            viewMode={getViewMode(fullyQualifiedId(data.subject))}
+            viewMode={viewMode}
             editorStateStore={editorState}
             onViewModeChange={setViewMode}
           />
@@ -44,8 +45,8 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/text`,
       role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { id: string; subject: TextType } =>
-        typeof data.id === 'string' && isInstanceOf(TextType, data.subject),
+      filter: (data): data is { id: string; subject: DataType.Text } =>
+        typeof data.id === 'string' && isInstanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => {
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
@@ -98,8 +99,8 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/preview`,
       role: 'popover',
-      filter: (data): data is { subject: DocumentType | TextType } =>
-        isInstanceOf(DocumentType, data.subject) || isInstanceOf(TextType, data.subject),
+      filter: (data): data is { subject: DocumentType | DataType.Text } =>
+        isInstanceOf(DocumentType, data.subject) || isInstanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => <MarkdownPreview {...data} role={role} />,
     }),
   ]);

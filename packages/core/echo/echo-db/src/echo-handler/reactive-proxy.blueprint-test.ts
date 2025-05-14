@@ -1,11 +1,10 @@
-//
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { getTypeReference, type S } from '@dxos/echo-schema';
-import { getSchema } from '@dxos/echo-schema';
+import { getTypeReference, getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler, getType } from '@dxos/live-object';
@@ -35,7 +34,7 @@ export interface TestConfiguration {
   createObjectFn: (props?: Partial<Testing.TestSchema>) => Promise<Testing.TestSchema>;
 }
 
-export type TestConfigurationFactory = (schema: S.Schema.AnyNoContext | undefined) => TestConfiguration | null;
+export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext | undefined) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
   for (const schema of [undefined, Testing.TestSchema, Testing.TestSchemaType]) {

@@ -57,23 +57,11 @@ export const ToggleComplementarySidebarButton = ({
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
 
-  const companions = useDeckCompanions();
-  const handleClick = useCallback(async () => {
-    layoutContext.complementarySidebarState =
-      layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
-    const firstCompanion = companions[0];
-    if (layoutContext.complementarySidebarState === 'expanded' && !current && firstCompanion) {
-      await dispatch(
-        createIntent(LayoutAction.UpdateComplementary, {
-          part: 'complementary',
-          subject: getCompanionId(firstCompanion.id),
-        }),
-      );
-    }
-  }, [layoutContext, current, companions, dispatch]);
-
+  // TODO(thure): This should have a tooltip but is suppressed because focus is getting set on this twice when the app
+  //  first mounts, causing even `suppressNextTooltip` not to have the intended effect.
   return (
     <IconButton
+      noTooltip
       iconOnly
       onClick={handleClick}
       variant='ghost'

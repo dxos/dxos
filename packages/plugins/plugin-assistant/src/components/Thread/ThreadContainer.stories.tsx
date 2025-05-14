@@ -18,11 +18,11 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
+import { genericTools, localServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
-import { create, ObjectId } from '@dxos/echo-schema';
+import { DXN, Type } from '@dxos/echo';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -43,7 +43,7 @@ import translations from '../../translations';
 const endpoints = localServiceEndpoints;
 
 type RenderProps = {
-  items?: IsObject[];
+  items?: Type.AnyObject[];
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 
@@ -131,7 +131,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   const handleDelete = useCallback(
     (id: string) => {
-      invariant(ObjectId.isValid(id), 'Invalid message id');
+      invariant(Type.ObjectId.isValid(id), 'Invalid message id');
       void queue?.delete([id]);
     },
     [queue],

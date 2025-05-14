@@ -38,7 +38,7 @@ import {
   createArtifactCircuit,
 } from './testing';
 
-// const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
+// const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 
 const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'controller', 'selected'] as const;
 

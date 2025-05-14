@@ -4,19 +4,21 @@
 
 import React, { useCallback } from 'react';
 
-import { type ScriptType } from '@dxos/functions/types';
+import { type ScriptType } from '@dxos/functions';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
+import { ElevationProvider, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { createGapSeparator, MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
 
 import {
+  type CreateDeployOptions,
   type ScriptToolbarState,
   createDeploy,
   createFormat,
   createTemplateSelect,
-  useToolbarAction,
+  useDeployDeps,
 } from '../../hooks';
+import { SCRIPT_PLUGIN } from '../../meta';
 
 export type ScriptToolbarProps = ThemedClassName<{
   role?: string;
@@ -24,11 +26,11 @@ export type ScriptToolbarProps = ThemedClassName<{
   state: ScriptToolbarState;
 }>;
 
-const createToolbar = (state: ScriptToolbarState) => {
-  const templateSelect = createTemplateSelect();
-  const format = createFormat();
+const createToolbar = ({ state, script, ...options }: CreateDeployOptions) => {
+  const templateSelect = createTemplateSelect(script);
+  const format = createFormat(script);
   const gap = createGapSeparator();
-  const deploy = createDeploy(state);
+  const deploy = createDeploy({ state, script, ...options });
   return {
     nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
     edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
@@ -36,14 +38,18 @@ const createToolbar = (state: ScriptToolbarState) => {
 };
 
 export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
-  const handleAction = useToolbarAction({ state, script });
-  const toolbarCreator = useCallback(() => createToolbar(state), [state]);
+  const { t } = useTranslation(SCRIPT_PLUGIN);
+  const options = useDeployDeps({ script });
+  const toolbarCreator = useCallback(
+    () => createToolbar({ state, script, t, ...options }),
+    [state, script, options, t],
+  );
   const menu = useMenuActions(toolbarCreator);
 
   return (
     <div role='none' className={stackItemContentToolbarClassNames(role)}>
       <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-        <MenuProvider {...menu} onAction={handleAction} attendableId={fullyQualifiedId(script)}>
+        <MenuProvider {...menu} attendableId={fullyQualifiedId(script)}>
           <ToolbarMenu classNames={classNames} />
         </MenuProvider>
       </ElevationProvider>

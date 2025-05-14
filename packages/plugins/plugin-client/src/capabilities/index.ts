@@ -10,6 +10,6 @@ export const IntentResolver = lazy(async () => import('./intent-resolver'));
 export const Migrations = lazy(async () => import('./migrations'));
 export const ReactContext = lazy(async () => import('./react-context'));
 export const ReactSurface = lazy(async () => import('./react-surface'));
-export const Schema = lazy(async () => import('./schema'));
+export const SchemaDefs = lazy(async () => import('./schema-defs'));
 
 export * from './capabilities';

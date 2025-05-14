@@ -4,7 +4,7 @@
 
 import { type MulticastObservable, type CleanupFn } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type QueueFactory, type CoreDatabase, type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
+import { type QueueFactory, type CoreDatabase, type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type Contact,
@@ -84,7 +84,7 @@ export interface Space {
   /**
    * Properties object.
    */
-  get properties(): ReactiveEchoObject<any>;
+  get properties(): AnyLiveObject<any>;
 
   /**
    * Current state of the space.

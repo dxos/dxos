@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Event, type CleanupFn } from '@dxos/async';
 import { Resource, type Context } from '@dxos/context';
 import {
@@ -10,7 +12,6 @@ import {
   getTypeIdentifierAnnotation,
   getTypeAnnotation,
   TypeAnnotationId,
-  S,
   StoredSchema,
   toJsonSchema,
   type ObjectId,
@@ -189,7 +190,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
     // TODO(dmaretskyi): Check for conflicts with the schema in the DB.
     for (const input of inputs) {
-      if (!S.isSchema(input)) {
+      if (!Schema.isSchema(input)) {
         throw new TypeError('Invalid schema');
       }
       results.push(this._addSchema(input));
@@ -197,7 +198,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return results;
   }
 
-  public hasSchema(schema: S.Schema.AnyNoContext): boolean {
+  public hasSchema(schema: Schema.Schema.AnyNoContext): boolean {
     const schemaId = schema instanceof EchoSchema ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
@@ -223,7 +224,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       return undefined;
     }
 
-    if (!S.is(StoredSchema)(typeObject)) {
+    if (!Schema.is(StoredSchema)(typeObject)) {
       log.warn('type object is not a stored schema', { id: typeObject?.id });
       return undefined;
     }
@@ -275,7 +276,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
   }
 
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: S.Schema.AnyNoContext): EchoSchema {
+  private _addSchema(schema: Schema.Schema.AnyNoContext): EchoSchema {
     if (schema instanceof EchoSchema) {
       schema = schema.snapshot.annotations({
         [TypeIdentifierAnnotationId]: undefined,
@@ -283,7 +284,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     }
 
     const meta = getTypeAnnotation(schema);
-    invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
+    invariant(meta, 'use Schema.Struct({}).pipe(Type.def()) or class syntax to create a valid schema');
     const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
       [TypeAnnotationId]: meta,
@@ -346,7 +347,7 @@ const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
   return true;
 };
 
-const getObjectIdFromSchema = (schema: S.Schema.AnyNoContext): ObjectId | undefined => {
+const getObjectIdFromSchema = (schema: Schema.Schema.AnyNoContext): ObjectId | undefined => {
   const echoIdentifier = getTypeIdentifierAnnotation(schema);
   if (!echoIdentifier) {
     return undefined;

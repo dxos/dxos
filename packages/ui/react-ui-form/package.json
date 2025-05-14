@@ -37,6 +37,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
+    "@dxos/react-ui-tag-picker": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",

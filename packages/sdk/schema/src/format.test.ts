@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { type JsonProp, S, TypeEnum, FormatEnum } from '@dxos/echo-schema';
+import { type JsonProp, TypeEnum, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { formatToSchema, getFormatSchema, PropertySchema, type PropertyType } from './format';
@@ -22,7 +23,7 @@ describe('format', () => {
     const prop: Partial<PropertyType> = { property: 'test' as JsonProp };
     const schema = getFormatSchema(prop.format);
     expect(schema).to.eq(formatToSchema[FormatEnum.None]);
-    const validate = S.validate(PropertySchema);
+    const validate = Schema.validate(PropertySchema);
     expect(() => validate(prop)).to.throw;
   });
 
@@ -41,12 +42,12 @@ describe('format', () => {
       const schema = getFormatSchema(prop.format);
       invariant(schema);
 
-      const decoded = S.decodeSync(schema)(prop);
+      const decoded = Schema.decodeSync(schema)(prop);
       expect(decoded).to.include({
         multipleOf: 2,
       });
 
-      const encoded = S.encodeSync(schema)(decoded);
+      const encoded = Schema.encodeSync(schema)(decoded);
       expect(encoded).to.deep.eq(prop);
     }
 
@@ -60,14 +61,14 @@ describe('format', () => {
       const schema = getFormatSchema(newProp.format);
       invariant(schema);
 
-      const decoded = S.decodeSync(schema)(newProp);
+      const decoded = Schema.decodeSync(schema)(newProp);
       expect(Object.keys(newProp)).to.include('currency');
       expect(Object.keys(decoded)).not.to.include('currency');
     }
   });
 
   test('ref format', async ({ expect }) => {
-    const validate = S.validateSync(PropertySchema);
+    const validate = Schema.validateSync(PropertySchema);
     const prop: Partial<PropertyType> = {
       property: 'organization' as JsonProp,
       type: TypeEnum.Ref,

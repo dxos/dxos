@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
+import { S, defineFunction } from 'dxos:functions';
 import {
   HttpClient,
   HttpClientRequest,

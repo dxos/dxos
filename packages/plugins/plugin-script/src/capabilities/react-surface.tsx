@@ -7,11 +7,11 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { isInstanceOf } from '@dxos/echo-schema';
-import { ScriptType } from '@dxos/functions/types';
+import { ScriptType } from '@dxos/functions';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type AccessTokenType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { ScriptCapabilities } from './capabilities';
 import {
@@ -92,7 +92,7 @@ export default () =>
     createSurface({
       id: DEPLOYMENT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: { accessToken: AccessTokenType; scriptTemplates: any } } =>
+      filter: (data): data is { props: { accessToken: DataType.AccessToken; scriptTemplates: any } } =>
         data.component === DEPLOYMENT_DIALOG,
       component: ({ data }) => <DeploymentDialog {...data.props} />,
     }),

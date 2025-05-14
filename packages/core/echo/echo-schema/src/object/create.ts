@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 
 import { failedInvariant } from '@dxos/invariant';
 
@@ -27,9 +27,9 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  *
  * @example
  * ```ts
- * const Contact = S.Struct({
- *   name: S.String,
- *   email: S.String,
+ * const Contact = Schema.Struct({
+ *   name: Schema.String,
+ *   email: Schema.String,
  * }).pipe(Type.def({
  *   typename: 'example.com/type/Contact',
  *   version: '0.1.0',
@@ -42,12 +42,12 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
  * })
  * ```
  */
-// TODO(burdon): Handle defaults (see S.make).
+// TODO(burdon): Handle defaults (see Schema.make).
 // TODO(dmaretskyi): Rename to `create` once existing `create` is renamed to `live`.
-export const create = <Schema extends S.Schema.AnyNoContext>(
-  schema: Schema,
-  data: CreateData<S.Schema.Type<Schema>>,
-): CreateData<S.Schema.Type<Schema>> & { id: string } => {
+export const create = <S extends Schema.Schema.AnyNoContext>(
+  schema: S,
+  data: CreateData<Schema.Schema.Type<S>>,
+): CreateData<Schema.Schema.Type<S>> & { id: string } => {
   const annotation = getTypeAnnotation(schema);
   if (!annotation) {
     throw new Error('Schema is not an object schema');

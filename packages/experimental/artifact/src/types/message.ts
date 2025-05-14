@@ -2,121 +2,119 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
-import { EchoObject, ObjectId, SpaceIdSchema } from '@dxos/echo-schema';
-import { type SpaceId } from '@dxos/keys';
+import { Type } from '@dxos/echo';
 
-// TODO(dmaretskyi): Extract IDs to protocols.
-// TODO(dmaretskyi): Dedupe package with dxos/edge.
+// TODO(dmaretskyi): Extract IDs to protocols and dedupe package with dxos/edge.
 
 /** @deprecated */
-export const Space = S.Struct({
-  id: SpaceIdSchema,
+export const Space = Schema.Struct({
+  id: Type.SpaceIdSchema,
 });
 /** @deprecated */
-export interface Space extends S.Schema.Type<typeof Space> {}
+export interface Space extends Schema.Schema.Type<typeof Space> {}
 
 /** @deprecated */
-export const Thread = S.Struct({
-  id: ObjectId,
-  spaceId: SpaceIdSchema,
+export const Thread = Schema.Struct({
+  id: Type.ObjectId,
+  spaceId: Type.SpaceIdSchema,
 });
 /** @deprecated */
-export interface Thread extends S.Schema.Type<typeof Thread> {}
+export interface Thread extends Schema.Schema.Type<typeof Thread> {}
 
-export const AbstractContentBlock = S.Struct({
-  pending: S.optional(S.Boolean),
+export const AbstractContentBlock = Schema.Struct({
+  pending: Schema.optional(Schema.Boolean),
 });
-export type AbstractContentBlock = S.Schema.Type<typeof AbstractContentBlock>;
+export type AbstractContentBlock = Schema.Schema.Type<typeof AbstractContentBlock>;
 
 /**
  * Text
  */
-export const TextContentBlock = S.extend(
+export const TextContentBlock = Schema.extend(
   AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('text'),
-    disposition: S.optional(S.String), // (e.g., "cot").
-    text: S.String,
+  Schema.Struct({
+    type: Schema.Literal('text'),
+    disposition: Schema.optional(Schema.String), // (e.g., "cot").
+    text: Schema.String,
   }),
-).pipe(S.mutable);
-export type TextContentBlock = S.Schema.Type<typeof TextContentBlock>;
+).pipe(Schema.mutable);
+export type TextContentBlock = Schema.Schema.Type<typeof TextContentBlock>;
 
 /**
  * JSON
  */
-export const JsonContentBlock = S.extend(
+export const JsonContentBlock = Schema.extend(
   AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('json'),
-    disposition: S.optional(S.String),
-    json: S.String,
+  Schema.Struct({
+    type: Schema.Literal('json'),
+    disposition: Schema.optional(Schema.String),
+    json: Schema.String,
   }),
-).pipe(S.mutable);
-export type JsonContentBlock = S.Schema.Type<typeof JsonContentBlock>;
+).pipe(Schema.mutable);
+export type JsonContentBlock = Schema.Schema.Type<typeof JsonContentBlock>;
 
-export const ImageSource = S.Struct({
-  type: S.Literal('base64'),
-  mediaType: S.String,
-  data: S.String,
-}).pipe(S.mutable);
+export const ImageSource = Schema.Struct({
+  type: Schema.Literal('base64'),
+  mediaType: Schema.String,
+  data: Schema.String,
+}).pipe(Schema.mutable);
 
-export type ImageSource = S.Schema.Type<typeof ImageSource>;
+export type ImageSource = Schema.Schema.Type<typeof ImageSource>;
 
 /**
  * Image
  */
-export const ImageContentBlock = S.extend(
+export const ImageContentBlock = Schema.extend(
   AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('image'),
-    id: S.optional(S.String),
-    source: S.optional(ImageSource),
+  Schema.Struct({
+    type: Schema.Literal('image'),
+    id: Schema.optional(Schema.String),
+    source: Schema.optional(ImageSource),
   }),
-).pipe(S.mutable);
-export type ImageContentBlock = S.Schema.Type<typeof ImageContentBlock>;
+).pipe(Schema.mutable);
+export type ImageContentBlock = Schema.Schema.Type<typeof ImageContentBlock>;
 
 /**
  * Tool use.
  */
-export const ToolUseContentBlock = S.extend(
+export const ToolUseContentBlock = Schema.extend(
   AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('tool_use'),
+  Schema.Struct({
+    type: Schema.Literal('tool_use'),
 
     /**
      * Opaque service-defined ID of the tool invocation.
      * Used to match the tool result block.
      */
-    id: S.String,
+    id: Schema.String,
 
     /**
      * Tool name.
      */
-    name: S.String,
+    name: Schema.String,
 
     /**
      * Input parameters.
      */
-    input: S.Unknown,
+    input: Schema.Unknown,
   }),
-).pipe(S.mutable);
+).pipe(Schema.mutable);
 
-export const ToolResultContentBlock = S.extend(
+export const ToolResultContentBlock = Schema.extend(
   AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('tool_result'),
-    toolUseId: S.String,
-    content: S.String,
-    isError: S.optional(S.Boolean), // TODO(burdon): Change to error string.
+  Schema.Struct({
+    type: Schema.Literal('tool_result'),
+    toolUseId: Schema.String,
+    content: Schema.String,
+    isError: Schema.optional(Schema.Boolean), // TODO(burdon): Change to error string.
   }),
-).pipe(S.mutable);
+).pipe(Schema.mutable);
 
 /**
  * Content union.
  */
-export const MessageContentBlock = S.Union(
+export const MessageContentBlock = Schema.Union(
   TextContentBlock,
   JsonContentBlock,
   ImageContentBlock,
@@ -126,16 +124,16 @@ export const MessageContentBlock = S.Union(
   ToolResultContentBlock,
 );
 
-export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
+export type MessageContentBlock = Schema.Schema.Type<typeof MessageContentBlock>;
 
-export const MessageRole = S.String.pipe(S.filter((role) => role === 'user' || role === 'assistant'));
-export type MessageRole = S.Schema.Type<typeof MessageRole>;
+export const MessageRole = Schema.String.pipe(Schema.filter((role) => role === 'user' || role === 'assistant'));
+export type MessageRole = Schema.Schema.Type<typeof MessageRole>;
 
 /**
  * Message.
  */
-const MessageSchema = S.Struct({
-  id: ObjectId,
+const MessageSchema = Schema.Struct({
+  id: Type.ObjectId,
 
   role: MessageRole,
 
@@ -143,18 +141,23 @@ const MessageSchema = S.Struct({
    * Content blocks.
    */
   // TODO(burdon): Rename to blocks.
-  content: S.Array(MessageContentBlock).pipe(S.mutable),
+  content: Schema.Array(MessageContentBlock).pipe(Schema.mutable),
 });
 
 /**
  * @deprecated
  */
 // TODO(burdon): Reconcile with Chat/Message types?
-export const Message = MessageSchema.pipe(EchoObject({ typename: 'dxos.org/type/Message', version: '0.1.0' }));
-export type Message = S.Schema.Type<typeof Message>;
+export const Message = MessageSchema.pipe(
+  Type.def({
+    typename: 'dxos.org/type/Message',
+    version: '0.1.0',
+  }),
+);
+export type Message = Schema.Schema.Type<typeof Message>;
 
-export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
-  id: ObjectId.random(),
+export const createUserMessage = (spaceId: Type.SpaceId, threadId: Type.ObjectId, text: string): Message => ({
+  id: Type.ObjectId.random(),
   role: 'user',
   content: [{ type: 'text', text }],
 });

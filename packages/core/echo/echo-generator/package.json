@@ -32,13 +32,15 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "effect": "3.14.21"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*"
   },
   "peerDependencies": {
-    "@dxos/random": "workspace:*"
+    "@dxos/random": "workspace:*",
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"

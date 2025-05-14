@@ -17,7 +17,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
 import { APP_KEY } from './constants';
-import { core, defaults, plugins, type PluginConfig } from './plugins';
+import { core, defaults, plugins, type PluginConfig } from './plugin-defs';
 import translations from './translations';
 import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
 

@@ -7,7 +7,7 @@ import React, { useRef, useState } from 'react';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { Icon, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
-import { errorMessageColors, errorText, mx } from '@dxos/react-ui-theme';
+import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { Prompt, type PromptController, type PromptProps } from './Prompt';
 import { ASSISTANT_PLUGIN } from '../../meta';
@@ -54,17 +54,9 @@ export const PromptBar = ({
     >
       <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
         {(error && (
-          <Tooltip.Root delayDuration={0}>
-            <Tooltip.Trigger>
-              <Icon icon='ph--warning-circle--regular' classNames={errorText} size={5} />
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content>
-                <div className={mx('text-sm', errorMessageColors)}>{error.message}</div>
-                <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
+          <Tooltip.Trigger content={error.message} delayDuration={0}>
+            <Icon icon='ph--warning-circle--regular' classNames={errorText} size={5} />
+          </Tooltip.Trigger>
         )) || <Spinner active={processing} />}
       </div>
       <Prompt

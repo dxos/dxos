@@ -37,15 +37,9 @@ export const InputHeader = ({ children, error }: InputHeaderProps) => {
     <div role='none' className='flex justify-between items-center mb-1'>
       {children}
       {error && (
-        <Tooltip.Root>
-          <Tooltip.Trigger asChild>
-            <Icon icon='ph--warning--regular' size={4} classNames={errorText} />
-          </Tooltip.Trigger>
-          <Tooltip.Content side='bottom'>
-            <Tooltip.Arrow />
-            {error}
-          </Tooltip.Content>
-        </Tooltip.Root>
+        <Tooltip.Trigger asChild content={error} side='bottom'>
+          <Icon icon='ph--warning--regular' size={4} classNames={errorText} />
+        </Tooltip.Trigger>
       )}
     </div>
   );

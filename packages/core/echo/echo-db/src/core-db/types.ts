@@ -10,7 +10,7 @@ import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject, type Live } from '@dxos/live-object';
 
-import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
+import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { symbolPath, type ProxyTarget } from '../echo-handler/echo-proxy-target';
 
 /**
@@ -24,7 +24,7 @@ export type DecodedAutomergeValue =
   | DecodedAutomergeValue[]
   | { [key: string]: DecodedAutomergeValue }
   | Reference
-  | ReactiveEchoObject<any>;
+  | AnyLiveObject<any>;
 
 export type DecodedAutomergePrimaryValue =
   | undefined

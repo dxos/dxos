@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
@@ -48,7 +48,7 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: S.Schema.AnyNoContext[];
+  types?: Schema.Schema.AnyNoContext[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -243,7 +243,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: S.Schema.AnyNoContext[]) {
+  addTypes(types: Schema.Schema.AnyNoContext[]) {
     log('addTypes', { schema: types.map((type) => getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.

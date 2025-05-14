@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { type SchemaAST as AST } from 'effect';
+import { type SchemaAST } from 'effect';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { deepMapValues } from '@dxos/util';
@@ -30,7 +30,7 @@ export const updateCounter = (touch: () => void) => {
 /**
  * Converts AST to a format that can be compared with test matchers.
  */
-export const prepareAstForCompare = (obj: AST.AST): any =>
+export const prepareAstForCompare = (obj: SchemaAST.AST): any =>
   deepMapValues(obj, (value: any, recurse, key) => {
     if (typeof value === 'function') {
       return null;
