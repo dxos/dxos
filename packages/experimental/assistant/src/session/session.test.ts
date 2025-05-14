@@ -21,7 +21,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AISession } from './session';
-import { AI_SERVICE_ENDPOINT } from '../testing';
+import { AI_SERVICE_ENDPOINT, ConsolePrinter } from '../testing';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({
@@ -133,9 +133,10 @@ describe.skip('AISession with Ollama', () => {
     //   printStreamEvent(event);
     // });
 
-    session.message.on(printMessage);
-    session.userMessage.on(printMessage);
-    session.block.on(printContentBlock);
+    const printer = new ConsolePrinter();
+    session.message.on((message) => printer.printMessage(message));
+    session.userMessage.on((message) => printer.printMessage(message));
+    session.block.on((block) => printer.printContentBlock(block));
 
     // session.update.on((update) => {
     //   log('update', { update });
@@ -194,34 +195,6 @@ const CALENDAR_EVENTS: CalendarEvent[] = [
     description: 'Travel to Madrid',
   }),
 ];
-
-const printMessage = (message: Message) => {
-  console.log(`${message.role.toUpperCase()}\n`);
-  for (const content of message.content) {
-    printContentBlock(content);
-  }
-};
-
-const printContentBlock = (content: MessageContentBlock) => {
-  switch (content.type) {
-    case 'text':
-      console.log(content.text);
-      break;
-    case 'tool_use':
-      console.log(`⚙️ [Tool Use] ${content.name} ${inspect(content.input, { depth: null, colors: true })}`);
-      break;
-    case 'tool_result': {
-      let data: any;
-      try {
-        data = JSON.parse(content.content);
-      } catch {
-        data = content.content;
-      }
-      console.log(`⚙️ [Tool Result] ${content.toolUseId} ${inspect(data, { depth: null, colors: true })}`);
-      break;
-    }
-  }
-};
 
 // const printStreamEvent = (event: GenerationStreamEvent) => {
 //   switch (event.type) {
