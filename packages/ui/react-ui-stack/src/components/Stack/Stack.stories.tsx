@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useState, useCallback } from 'react';
@@ -27,7 +29,7 @@ const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
   );
 };
 
-const StorybookStack = () => {
+const DefaultStory = () => {
   const [columns, setColumns] = useState<StoryStackItem[]>(
     faker.helpers.multiple(
       () =>
@@ -117,19 +119,19 @@ const StorybookStack = () => {
   );
 };
 
-type Story = StoryObj<typeof StorybookStack>;
+const meta: Meta<typeof DefaultStory> = {
+  title: 'ui/react-ui-stack/Stack',
+  component: DefaultStory,
+  decorators: [withTheme],
+  argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof DefaultStory>;
 
 export const Default: Story = {
   args: {
     orientation: 'horizontal',
   },
 };
-
-const meta: Meta<typeof StorybookStack> = {
-  title: 'ui/react-ui-stack/Stack',
-  component: StorybookStack,
-  decorators: [withTheme],
-  argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },
-};
-
-export default meta;

@@ -43,7 +43,7 @@ export const DEFAULT_HORIZONTAL_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
 export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
 
-export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
+type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
   order?: number;
   size?: StackItemSize;
@@ -198,6 +198,7 @@ export const StackItem = {
 };
 
 export type {
+  StackItemRootProps,
   StackItemContentProps,
   StackItemHeadingProps,
   StackItemHeadingLabelProps,
