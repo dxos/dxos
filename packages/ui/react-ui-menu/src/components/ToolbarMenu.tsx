@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { Icon, type IconButtonProps, Toolbar as NaturalToolbar, type ToolbarRootProps } from '@dxos/react-ui';
+import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
 import { ActionLabel } from './ActionLabel';
@@ -61,7 +61,7 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
       onClick={handleClick}
       variant='ghost'
       {...(testId && { 'data-testid': testId })}
-      {...(rootProps as IconButtonProps)}
+      {...(rootProps as any)}
       classNames={classNames}
     />
   );
@@ -99,12 +99,7 @@ const DropdownMenuToolbarItem = ({
   return (
     <DropdownMenu.Root group={group} items={items} suppressNextTooltip={suppressNextTooltip}>
       <DropdownMenu.Trigger asChild>
-        <Root
-          variant='ghost'
-          disabled={disabled}
-          {...(rootProps as IconButtonProps)}
-          {...(testId && { 'data-testid': testId })}
-        />
+        <Root variant='ghost' disabled={disabled} {...(rootProps as any)} {...(testId && { 'data-testid': testId })} />
       </DropdownMenu.Trigger>
     </DropdownMenu.Root>
   );
@@ -128,7 +123,7 @@ const ToggleGroupItem = ({ action, __menuScope }: MenuScopedProps<{ action: Menu
       onClick={handleClick}
       variant='ghost'
       {...(testId && { 'data-testid': testId })}
-      {...(rootProps as IconButtonProps)}
+      {...(rootProps as any)}
       classNames={classNames}
     />
   );
