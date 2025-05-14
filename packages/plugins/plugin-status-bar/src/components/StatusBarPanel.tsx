@@ -47,10 +47,10 @@ export const StatusBarPanel = () => {
 };
 
 const ENV_LABELS: Record<string, string> = {
-  'edge-dev': 'D',
-  'edge-main': 'M',
-  'edge-labs': 'L',
-  'edge-production': 'P',
+  'edge-dev': 'Dev',
+  'edge-main': 'Main',
+  'edge-labs': 'Labs',
+  'edge-production': 'Production',
 };
 
 const EnvironmentLabel = () => {
@@ -59,14 +59,17 @@ const EnvironmentLabel = () => {
   if (!edgeUrl) {
     return null;
   }
-  const edgeEnv = ENV_LABELS[new URL(edgeUrl).host.split('.')[0]];
+  const part = new URL(edgeUrl).host.split('.')[0];
+  const edgeEnv = ENV_LABELS[part];
   if (!edgeEnv) {
     return null;
   }
 
   return (
     <StatusBar.Item>
-      <StatusBar.Text classNames='text-xs text-subdued border rounded-full px-1'>{edgeEnv}</StatusBar.Text>
+      <StatusBar.Text classNames='text-xs text-subdued border border-separator rounded-full px-1'>
+        <span title={edgeEnv}>{edgeEnv[0]}</span>
+      </StatusBar.Text>
     </StatusBar.Item>
   );
 };

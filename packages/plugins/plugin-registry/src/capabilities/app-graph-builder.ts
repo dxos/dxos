@@ -22,6 +22,7 @@ export default (context: PluginsContext) =>
           properties: {
             label: ['open plugin registry label', { ns: REGISTRY_PLUGIN }],
             icon: 'ph--squares-four--regular',
+            disposition: 'menu',
           },
         },
       ],
