@@ -117,7 +117,8 @@ export class DxAvatar extends LitElement {
         ? `var(--dx-${this.hue}Surface)`
         : `var(--dx-${this.hue}Fill)`
       : 'var(--surface-bg)';
-    const fg = this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-inverse)';
+    const fg =
+      this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-accentSurfaceText)';
     return html`<span
       role="none"
       class=${`dx-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
