@@ -16,8 +16,10 @@ import { SelectInput } from './Defaults';
 import { type ComponentLookup } from './Form';
 import { useInputProps, useFormValues } from './FormContext';
 import { type InputComponent } from './Input';
-import { RefField, type QueryRefOptions } from './RefField';
+import { RefField } from './RefField';
 import { getInputComponent } from './factory';
+import { type QueryRefOptions } from '../../hooks';
+import { getRefProps } from '../../util';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
@@ -47,6 +49,10 @@ export const FormField = ({
     () => (examples?.length ? `Example: "${examples[0]}"` : description),
     [examples, description],
   );
+
+  //
+  // Registry and Custom.
+  //
 
   const FoundComponent = lookupComponent?.({
     prop: name,
@@ -81,9 +87,39 @@ export const FormField = ({
     );
   }
 
+  //
+  // Refs.
+  //
+
+  const refProps = getRefProps(property);
+  if (refProps) {
+    return (
+      <RefField
+        ast={refProps.ast}
+        array={refProps.isArray}
+        type={type}
+        format={format}
+        label={label}
+        placeholder={placeholder}
+        disabled={readonly}
+        inputOnly={inline}
+        onQueryRefOptions={onQueryRefOptions}
+        {...inputProps}
+      />
+    );
+  }
+
+  //
+  // Arrays.
+  //
+
   if (array) {
     return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
   }
+
+  //
+  // Standard Inputs.
+  //
 
   const InputComponent = getInputComponent(type, format);
   if (InputComponent) {
@@ -102,6 +138,10 @@ export const FormField = ({
     );
   }
 
+  //
+  // Select.
+  //
+
   if (options) {
     return (
       <div role='none'>
@@ -119,21 +159,9 @@ export const FormField = ({
     );
   }
 
-  // TODO(ZaymonFC): Extract this to it's own component.
-  if (format === 'ref') {
-    return (
-      <RefField
-        ast={ast}
-        type={type}
-        label={label}
-        readonly={readonly}
-        placeholder={placeholder}
-        inline={inline}
-        onQueryRefOptions={onQueryRefOptions}
-        inputProps={inputProps}
-      />
-    );
-  }
+  //
+  // Nested Objects.
+  //
 
   if (type === 'object') {
     const baseNode = findNode(ast, isDiscriminatedUnion);

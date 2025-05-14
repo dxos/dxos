@@ -8,11 +8,9 @@ import { getDXN, type TypeAnnotation } from '@dxos/echo-schema';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { type QueryRefOptions } from '../components';
+import { type QueryRefOptions } from './useQueryRefOptions';
 
-type UseRefQueryLookupProps = {
-  space?: Space;
-};
+type UseRefQueryLookupProps = { space?: Space };
 
 export const useRefQueryLookupHandler = ({ space }: UseRefQueryLookupProps): QueryRefOptions => {
   const handleRefQueryLookup = useCallback(
