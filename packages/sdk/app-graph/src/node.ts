@@ -70,12 +70,12 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
 
 export type InvokeParams = {
   /** Node the invoked action is connected to. */
-  node: Node;
+  parent?: Node;
 
   caller?: string;
 };
 
-export type ActionData = (params: InvokeParams) => MaybePromise<void>;
+export type ActionData = (params?: InvokeParams) => MaybePromise<void>;
 
 export type Action<TProperties extends Record<string, any> = Record<string, any>> = Readonly<
   Omit<Node<ActionData, TProperties>, 'properties'> & {

@@ -9,12 +9,13 @@ import { DropdownMenu as NaturalDropdownMenu, Icon, type DropdownMenuRootProps }
 
 import { ActionLabel } from './ActionLabel';
 import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
-import { type MenuAction, type MenuItem, type MenuItemGroup } from '../defs';
+import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 
 export type DropdownMenuProps = DropdownMenuRootProps & {
   group?: MenuItemGroup;
   items?: MenuItem[];
   suppressNextTooltip?: MutableRefObject<boolean>;
+  caller?: string;
 };
 
 const DropdownMenuItem = ({
@@ -49,6 +50,7 @@ const DropdownMenuRoot = ({
   defaultOpen,
   onOpenChange,
   suppressNextTooltip,
+  caller,
   children,
   __menuScope,
   ...naturalProps
@@ -58,8 +60,6 @@ const DropdownMenuRoot = ({
     defaultProp: defaultOpen,
     onChange: onOpenChange,
   });
-
-  const { onAction } = useMenu('DropdownMenuRoot', __menuScope);
 
   const handleActionClick = useCallback(
     (action: MenuAction, event: MouseEvent) => {
@@ -72,9 +72,9 @@ const DropdownMenuRoot = ({
         suppressNextTooltip.current = true;
       }
       setOptionsMenuOpen(false);
-      onAction?.(action);
+      void action.data?.({ parent: group, caller });
     },
-    [onAction],
+    [suppressNextTooltip, group, caller],
   );
 
   const items = useMenuItems(group, propsItems);

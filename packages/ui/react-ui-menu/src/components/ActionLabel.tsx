@@ -9,7 +9,7 @@ import { keySymbols } from '@dxos/keyboard';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx, descriptionText } from '@dxos/react-ui-theme';
 
-import { type MenuActionProperties } from '../defs';
+import { type MenuActionProperties } from '../types';
 import { translationKey } from '../translations';
 import { getShortcut } from '../util';
 
