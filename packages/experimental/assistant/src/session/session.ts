@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 
 import { VersionPin } from './version-pin';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest, type GenerationStream } from '../ai-service';
-import { isToolUse, runTools } from '../conversation';
+import { isToolUse, runTools } from './tools';
 
 /**
  * Contains message history, tools, current context.

@@ -11,7 +11,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AIServiceEdgeClient, ToolTypes, DEFAULT_EDGE_MODEL } from '../ai-service';
-import { runLLM } from '../conversation';
+import { runLLM } from '../experimental';
 import {
   AI_SERVICE_ENDPOINT,
   createLogger,
