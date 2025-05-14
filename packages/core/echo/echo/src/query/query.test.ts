@@ -18,6 +18,7 @@ import { Type, Relation } from '..';
 const Person = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
+  age: Schema.optional(Schema.Number),
 }).pipe(Type.def({ typename: 'dxos.org/type/Person', version: '0.1.0' }));
 interface Person extends Schema.Schema.Type<typeof Person> {}
 
@@ -109,6 +110,8 @@ describe('query api', () => {
   });
 
   test.skip('chain', () => {
+    const f1: Filter<Person> = Filter.props({ name: 'Fred' });
+
     const x = Query.select(Filter.props({ id: '123' }));
     const y = Query.select(Filter.type(Person));
 
@@ -120,11 +123,8 @@ describe('query api', () => {
       // .filter((object) => Math.random() > 0.5)
       .select(Filter.type(Person))
       .select(Filter.props({ name: 'Fred' }))
-      .select(Filter.gt(40))
-      .select(Filter.props({ date: Filter.between(Date.now(), Date.now() + 1000 * 60 * 60 * 24) }))
-      .select(Filter.props({ id: Filter.in(['1', '2', '3']) }))
-      .select(Filter.and(Filter.type(Person), Filter.props({ id: Filter.in(['1', '2', '3']) })))
-      .target()
+      .select(Filter.props({ age: Filter.between(20, 40) }))
+      .select(Filter.and(Filter.type(Person), Filter.props({ id: Filter.in(['1', '2', '3']) })));
 
     log.info('stuff', { x, y, q });
   });

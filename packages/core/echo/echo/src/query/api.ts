@@ -131,7 +131,7 @@ export declare namespace Query {
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: T };
+  '~Filter': { value: Partial<T> };
 
   ast: QueryAST.Predicate;
 }
