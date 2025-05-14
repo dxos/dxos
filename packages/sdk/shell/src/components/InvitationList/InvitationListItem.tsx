@@ -153,47 +153,37 @@ export const InvitationListItemImpl = ({
       {multiUse && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
-      <Tooltip.Root>
-        <Avatar.Root>
-          <Tooltip.Trigger asChild>
-            <Avatar.Content
-              {...avatarProps}
-              animation={avatarAnimation}
-              status={avatarStatus}
-              fallback={hexToEmoji(invitationId)}
-              tabIndex={0}
-              classNames={[focusRing, 'relative rounded-full place-self-center']}
-            />
-          </Tooltip.Trigger>
-        </Avatar.Root>
-        <Tooltip.Portal>
-          <Tooltip.Content side='left'>
-            {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
-            <Tooltip.Arrow />
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      </Tooltip.Root>
+      <Avatar.Root>
+        <Tooltip.Trigger asChild content={t(multiUse ? 'invite many qr label' : 'invite one qr label')} side='left'>
+          <Avatar.Content
+            {...avatarProps}
+            animation={avatarAnimation}
+            status={avatarStatus}
+            fallback={hexToEmoji(invitationId)}
+            tabIndex={0}
+            classNames={[focusRing, 'relative rounded-full place-self-center']}
+          />
+        </Tooltip.Trigger>
+      </Avatar.Root>
       {showShare && invitationUrl ? (
-        <Tooltip.Root>
-          <>
-            <Tooltip.Trigger asChild>
-              <Button
-                variant='ghost'
-                classNames='grow justify-start font-medium'
-                onClick={() => send({ type: 'selectInvitation', invitation })}
-                data-testid='show-qrcode'
-              >
-                <span>{t('open share panel label')}</span>
-              </Button>
-            </Tooltip.Trigger>
-            <Clipboard.IconButton variant='ghost' value={invitationUrl} />
-          </>
-          <Tooltip.Portal>
-            <Tooltip.Content side='left'>
-              {invitationHasLifetime && <span>Expires {invitationTimeLeft}</span>}
-            </Tooltip.Content>
-          </Tooltip.Portal>
-        </Tooltip.Root>
+        <>
+          <Tooltip.Trigger
+            asChild
+            content={
+              invitationHasLifetime ? t('expires label', { timeLeft: invitationTimeLeft }) : t('no expiration label')
+            }
+          >
+            <Button
+              variant='ghost'
+              classNames='grow justify-start font-medium'
+              onClick={() => send({ type: 'selectInvitation', invitation })}
+              data-testid='show-qrcode'
+            >
+              <span>{t('open share panel label')}</span>
+            </Button>
+          </Tooltip.Trigger>
+          <Clipboard.IconButton variant='ghost' value={invitationUrl} />
+        </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />
       ) : invitationStatus === Invitation.State.CONNECTING ? (

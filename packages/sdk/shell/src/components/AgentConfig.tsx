@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowsClockwise, Plus, Power } from '@phosphor-icons/react';
+import { ArrowsClockwise, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Avatar, Button, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx, valenceColorText } from '@dxos/react-ui-theme';
 
 import { type AgentFormProps } from './DeviceList';
@@ -56,22 +56,18 @@ export const AgentConfig = ({
               </Avatar.Label>
             </Avatar.Root>
             {agentStatus === 'created' && (
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <Button
-                    variant='ghost'
-                    classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
-                    data-testid='agent.destroy'
-                    onClick={onAgentDestroy}
-                  >
-                    <span className='sr-only'>{t('destroy agent label')}</span>
-                    <Power className={getSize(5)} />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content side='bottom'>{t('destroy agent label')}</Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
+              <Tooltip.Trigger asChild content={t('destroy agent label')} side='bottom'>
+                <IconButton
+                  iconOnly
+                  variant='ghost'
+                  classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
+                  data-testid='agent.destroy'
+                  label={t('destroy agent label')}
+                  icon='ph--power--regular'
+                  size={5}
+                  onClick={onAgentDestroy}
+                />
+              </Tooltip.Trigger>
             )}
           </div>
           {agentStatus === 'created' && (

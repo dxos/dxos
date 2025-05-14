@@ -61,46 +61,30 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
         <ButtonGroup classNames='mie-1'>
           {userIsAuthor && editable && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-                  classNames={messageControlClassNames}
-                  onClick={() => setEditing((editing) => !editing)}
-                >
-                  <span className='sr-only'>{editLabel}</span>
-                  {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  {editLabel}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
+            <Tooltip.Trigger asChild content={editLabel}>
+              <Button
+                variant='ghost'
+                data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+                classNames={messageControlClassNames}
+                onClick={() => setEditing((editing) => !editing)}
+              >
+                <span className='sr-only'>{editLabel}</span>
+                {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
+              </Button>
+            </Tooltip.Trigger>
           )}
           {onDelete && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  data-testid='thread.message.delete'
-                  classNames={messageControlClassNames}
-                  onClick={() => handleDelete()}
-                >
-                  <span className='sr-only'>{deleteLabel}</span>
-                  <X className={getSize(4)} />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  {deleteLabel}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
+            <Tooltip.Trigger asChild content={deleteLabel}>
+              <Button
+                variant='ghost'
+                data-testid='thread.message.delete'
+                classNames={messageControlClassNames}
+                onClick={() => handleDelete()}
+              >
+                <span className='sr-only'>{deleteLabel}</span>
+                <X className={getSize(4)} />
+              </Button>
+            </Tooltip.Trigger>
           )}
         </ButtonGroup>
       </MessageHeading>

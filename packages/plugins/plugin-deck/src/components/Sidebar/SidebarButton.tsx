@@ -50,8 +50,11 @@ export const CloseSidebarButton = () => {
 export const ToggleComplementarySidebarButton = ({ inR0, classNames }: ThemedClassName<{ inR0?: boolean }>) => {
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
+  // TODO(thure): This should have a tooltip but is suppressed because focus is getting set on this twice when the app
+  //  first mounts, causing even `suppressNextTooltip` not to have the intended effect.
   return (
     <IconButton
+      noTooltip
       iconOnly
       onClick={() =>
         (layoutContext.complementarySidebarState =
