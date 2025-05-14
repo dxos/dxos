@@ -2,17 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
 
 /**
  * Root transcript object created when the user starts a transcription.
  */
-export const TranscriptSchema = S.Struct({
-  name: S.String,
+export const TranscriptSchema = Schema.Struct({
+  name: Schema.String,
 
   // TODO(burdon): Use Date or string?
-  started: S.optional(S.String),
-  ended: S.optional(S.String),
+  started: Schema.optional(Schema.String),
+  ended: Schema.optional(Schema.String),
 
   /**
    * Queue containing TranscriptBlock objects.
@@ -32,8 +34,8 @@ export class TranscriptType extends TypedObject({
  * First message in queue.
  * Contains metadata for the recording and transcript.
  */
-const TranscriptHeader = S.Struct({
-  started: S.optional(S.String),
+const TranscriptHeader = Schema.Struct({
+  started: Schema.optional(Schema.String),
 });
 
-export type TranscriptHeader = S.Schema.Type<typeof TranscriptHeader>;
+export type TranscriptHeader = Schema.Schema.Type<typeof TranscriptHeader>;

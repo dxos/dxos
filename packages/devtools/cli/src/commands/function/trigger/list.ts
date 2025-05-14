@@ -5,10 +5,9 @@
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
-import { stringify, table, type TableOptions } from '@dxos/cli-base';
+import { table, type TableOptions } from '@dxos/cli-base';
 import { Filter } from '@dxos/client/echo';
-import { FunctionTrigger } from '@dxos/functions/types';
-import { omit } from '@dxos/log';
+import { FunctionTrigger } from '@dxos/functions';
 
 import { BaseCommand } from '../../../base';
 
@@ -58,7 +57,6 @@ export const printTriggers = (functions: FunctionTrigger[], options: TableOption
         enabled: { get: (row) => (row.enabled ? `${chalk.green('✔')}` : '') },
         function: {},
         spec: { get: (row) => row.spec.type },
-        meta: { get: (row) => stringify(omit(row.spec, 'type')) },
       },
       options,
     ),

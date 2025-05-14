@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Option, ParseResult, Schema as S, Schema, SchemaAST } from 'effect';
+import { Effect, Option, ParseResult, Schema, SchemaAST } from 'effect';
 
 import { Reference, type EncodedReference } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -43,11 +43,11 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo-schema/Ref');
 /**
  * Reference Schema.
  */
-export interface Ref$<T extends WithId> extends S.SchemaClass<Ref<T>, EncodedReference> {}
+export interface Ref$<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
 // Type of the `Ref` function and extra methods attached to it.
 interface RefFn {
-  <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
+  <T extends WithId>(schema: Schema.Schema<T, any>): Ref$<T>;
 
   /**
    * @returns True if the object is a reference.
@@ -62,7 +62,7 @@ interface RefFn {
   /**
    * @returns True if the schema is a reference schema.
    */
-  isRefSchema: (schema: S.Schema<any, any>) => schema is Ref$<any>;
+  isRefSchema: (schema: Schema.Schema<any, any>) => schema is Ref$<any>;
 
   /**
    * @returns True if the schema AST is a reference schema.
@@ -83,7 +83,7 @@ interface RefFn {
 /**
  * Schema builder for references.
  */
-export const Ref: RefFn = <T extends WithId>(schema: S.Schema<T, any>): Ref$<T> => {
+export const Ref: RefFn = <T extends WithId>(schema: Schema.Schema<T, any>): Ref$<T> => {
   assertArgument(Schema.isSchema(schema), 'Must call with an instance of effect-schema');
 
   const annotation = getTypeAnnotation(schema);
@@ -146,13 +146,20 @@ export interface Ref<T> {
   };
 }
 
+export declare namespace Ref {
+  /**
+   * Target of the reference.
+   */
+  export type Target<R> = R extends Ref<infer U> ? U : never;
+}
+
 Ref.isRef = (obj: any): obj is Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
 
-Ref.isRefSchema = (schema: S.Schema<any, any>): schema is Ref$<any> => {
+Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is Ref$<any> => {
   return Ref.isRefSchemaAST(schema.ast);
 };
 
@@ -193,7 +200,7 @@ export const createEchoReferenceSchema = (
   typename: string | undefined,
   version: string | undefined,
   schemaName?: string,
-): S.SchemaClass<Ref<any>, EncodedReference> => {
+): Schema.SchemaClass<Ref<any>, EncodedReference> => {
   if (!echoId && !typename) {
     throw new TypeError('Either echoId or typename must be provided.');
   }
@@ -206,7 +213,7 @@ export const createEchoReferenceSchema = (
     schemaVersion: version,
   };
 
-  const refSchema = S.declare<Ref<any>, EncodedReference, []>(
+  const refSchema = Schema.declare<Ref<any>, EncodedReference, []>(
     [],
     {
       encode: () => {

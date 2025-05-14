@@ -5,18 +5,18 @@
 import { Schema, SchemaAST, ParseResult, Either, Option } from 'effect';
 import { describe, test } from 'vitest';
 
-import { type PropertyKey, S } from '@dxos/echo-schema';
+import { type PropertyKey } from '@dxos/echo-schema';
 
 describe('validate', () => {
   test('clamp', ({ expect }) => {
-    const TestSchema = Schema.Number.pipe(S.clamp(-180, 180));
+    const TestSchema = Schema.Number.pipe(Schema.clamp(-180, 180));
     const decoder = Schema.decodeUnknownOption(TestSchema);
     expect(decoder(200).pipe(Option.getOrUndefined)).to.eq(180);
     expect(decoder(-300).pipe(Option.getOrUndefined)).to.eq(-180);
   });
 
   test('error', ({ expect }) => {
-    const TestSchema = Schema.Number.pipe(S.multipleOf(0.01));
+    const TestSchema = Schema.Number.pipe(Schema.multipleOf(0.01));
     const decoder = Schema.validateEither(TestSchema, { errors: 'first' });
 
     {
@@ -37,8 +37,8 @@ describe('validate', () => {
 
   test('Schema to/from AST', ({ expect }) => {
     const TestSchema = Schema.Struct({
-      name: Schema.String.pipe(S.pattern(/^\w+$/)),
-    }).pipe(S.mutable);
+      name: Schema.String.pipe(Schema.pattern(/^\w+$/)),
+    }).pipe(Schema.mutable);
 
     type TestType = Schema.Schema.Type<typeof TestSchema>;
 

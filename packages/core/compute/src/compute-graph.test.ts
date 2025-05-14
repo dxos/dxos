@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { live, fullyQualifiedId } from '@dxos/client/echo';
-import { FunctionType } from '@dxos/functions/types';
+import { FunctionType } from '@dxos/functions';
 
 import { DetailedCellError } from '#hyperformula';
 import { TestBuilder } from './testing';

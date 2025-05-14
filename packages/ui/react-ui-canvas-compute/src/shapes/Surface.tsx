@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { DEFAULT_INPUT } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
@@ -14,14 +14,14 @@ import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 
-export const SurfaceShape = S.extend(
+export const SurfaceShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('surface'),
+  Schema.Struct({
+    type: Schema.Literal('surface'),
   }),
 );
 
-export type SurfaceShape = S.Schema.Type<typeof SurfaceShape>;
+export type SurfaceShape = Schema.Schema.Type<typeof SurfaceShape>;
 
 export type CreateSurfaceProps = CreateShapeProps<SurfaceShape>;
 

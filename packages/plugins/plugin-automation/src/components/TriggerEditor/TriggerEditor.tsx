@@ -2,26 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
+import { DXN } from '@dxos/echo';
 import {
   FunctionType,
   FunctionTriggerSchema,
   type FunctionTriggerType,
   type FunctionTrigger,
   ScriptType,
-  TriggerKind,
-} from '@dxos/functions/types';
-import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
+} from '@dxos/functions';
+import { Filter, Ref, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
-import { FunctionMetaEditor } from './FunctionMetaEditor';
+import { FunctionInputEditor } from './FunctionInputEditor';
+import { SpecSelector } from './SpecSelector';
 import { AUTOMATION_PLUGIN } from '../../meta';
-
-// TODO(ZaymonFC):
-//   - Error changing trigger type once payload or other information is set.
 
 export type TriggerEditorProps = {
   space: Space;
@@ -45,23 +43,38 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
 
   const Custom = useMemo(
     (): CustomInputMap => ({
-      ['function' satisfies keyof FunctionTriggerType]: (props) => (
-        <SelectInput
-          {...props}
-          options={getWorkflowOptions(workflows).concat(getFunctionOptions(scripts, functions))}
-        />
-      ),
-      ['spec.type' as const]: (props) => (
-        <SelectInput
-          {...props}
-          options={Object.values(TriggerKind).map((kind) => ({
-            value: kind,
-            label: t(`trigger type ${kind}`),
-          }))}
-        />
-      ),
-      ['meta' as const]: (props) => (
-        <FunctionMetaEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
+      ['function' satisfies keyof FunctionTriggerType]: (props) => {
+        const getValue = useCallback(() => {
+          const formValue = props.getValue();
+          if (Ref.isRef(formValue)) {
+            return formValue.dxn.toString() as string;
+          }
+          return undefined;
+        }, [props]);
+
+        const handleOnValueChange = useCallback(
+          (_type: any, dxnString: string) => {
+            const dxn = DXN.parse(dxnString);
+            if (dxn) {
+              const ref = Ref.fromDXN(dxn);
+              props.onValueChange('object', ref);
+            }
+          },
+          [props.onValueChange],
+        );
+
+        return (
+          <SelectInput
+            {...props}
+            getValue={getValue as any}
+            onValueChange={handleOnValueChange}
+            options={getWorkflowOptions(workflows).concat(getFunctionOptions(scripts, functions))}
+          />
+        );
+      },
+      ['spec.kind' as const]: SpecSelector,
+      ['input' as const]: (props) => (
+        <FunctionInputEditor {...props} functions={functions} onQueryRefOptions={handleRefQueryLookup} />
       ),
     }),
     [workflows, scripts, functions, t],
@@ -87,5 +100,5 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
 
 const getFunctionOptions = (scripts: ScriptType[], functions: FunctionType[]) => {
   const getLabel = (fn: FunctionType) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
-  return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:worker:${fn.name}` }));
+  return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
 };

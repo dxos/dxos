@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, getSchema, type S } from '@dxos/echo-schema';
+import { type Schema, SchemaAST } from 'effect';
+
+import { getSchema } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
 import { type SearchResult } from '../types';
@@ -13,8 +15,8 @@ export const queryStringToMatch = (queryString?: string): RegExp | undefined => 
 };
 
 // TODO(burdon): Type name registry linked to schema?
-const getIcon = (schema: S.Schema.AnyNoContext | undefined): string | undefined => {
-  if (!(schema && AST.isTypeLiteral(schema.ast))) {
+const getIcon = (schema: Schema.Schema.AnyNoContext | undefined): string | undefined => {
+  if (!(schema && SchemaAST.isTypeLiteral(schema.ast))) {
     return undefined;
   }
   const keys = schema.ast.propertySignatures.map((p) => p.name);

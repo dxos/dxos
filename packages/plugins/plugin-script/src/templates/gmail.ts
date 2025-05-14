@@ -4,6 +4,7 @@
 
 // @ts-ignore
 import { create, defineFunction, Filter, ObjectId, S } from 'dxos:functions';
+// @ts-ignore
 import {
   HttpClient,
   HttpClientRequest,
@@ -11,21 +12,22 @@ import {
   // @ts-ignore
 } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
 // @ts-ignore
+import { format, subDays } from 'https://esm.sh/date-fns@3.3.1';
+// @ts-ignore
 import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
 
 import { Type } from '@dxos/echo';
 
-// TODO(ZaymonFC): Calculate this dynamically and expose a parameter.
-const DEFAULT_AFTER = '2025-01-01';
-
 export default defineFunction({
   inputSchema: S.Struct({
+    mailboxId: S.String,
+    userId: S.optional(S.String).pipe(S.withDecodingDefault(() => 'me')),
+    after: S.optional(S.Union(S.Number, S.String)).pipe(
+      S.withDecodingDefault(() => format(subDays(new Date(), 30), 'yyyy-MM-dd')),
+    ),
+    pageSize: S.optional(S.Number).pipe(S.withDecodingDefault(() => 100)),
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
     tick: S.optional(S.String),
-    userId: S.optional(S.String),
-    after: S.optional(S.Union(S.Number, S.String)),
-    pageSize: S.optional(S.Number),
-    mailboxId: S.String,
   }),
 
   outputSchema: S.Struct({
@@ -33,10 +35,10 @@ export default defineFunction({
   }),
 
   handler: ({
-    event: {
-      data: { mailboxId, userId = 'me', after = DEFAULT_AFTER, pageSize = 100 },
-    },
     context: { space },
+    event: {
+      data: { mailboxId, userId, after, pageSize },
+    },
   }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
@@ -44,9 +46,10 @@ export default defineFunction({
         catch: (e: any) => e,
       });
 
-      const makeRequest = (path: string) =>
+      // NOTE: Google API bundles size is v. large and caused runtime issues.
+      const makeRequest = (url: string) =>
         pipe(
-          path,
+          url,
           HttpClientRequest.get,
           HttpClientRequest.setHeaders({ Authorization: `Bearer ${token}`, Accept: 'application/json' }),
           HttpClient.execute,
@@ -56,13 +59,10 @@ export default defineFunction({
           Effect.scoped,
         );
 
-      const listMessages = (userId: string, q: string, pageSize: number, pageToken: string | null) => {
-        const url = `https://gmail.googleapis.com/gmail/v1/users/${userId}/messages?maxResults=${pageSize}&q=${q}`;
-        return makeRequest(pageToken ? `${url}&pageToken=${pageToken}` : url);
-      };
+      const listMessages = (userId: string, q: string, pageSize: number, pageToken: string | null) =>
+        makeRequest(getUrl(userId, undefined, { q, pageSize, pageToken }));
 
-      const getMessage = (userId: string, id: string) =>
-        makeRequest(`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages/${id}`);
+      const getMessage = (userId: string, messageId: string) => makeRequest(getUrl(userId, messageId));
 
       const mailbox = yield* Effect.tryPromise({
         try: () => space.db.query({ id: mailboxId }).first(),
@@ -139,6 +139,14 @@ export default defineFunction({
     }).pipe(Effect.provide(FetchHttpClient.layer)),
 });
 
+const getUrl = (userId: string, messageId?: string, params?: Record<string, any>) => {
+  const api = new URL(
+    [`https://gmail.googleapis.com/gmail/v1/users/${userId}/messages`, messageId].filter(Boolean).join('/'),
+  );
+  Object.entries(params ?? {}).forEach(([key, value]) => api.searchParams.set(key, value));
+  return api.toString();
+};
+
 /**
  * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
  */
@@ -157,12 +165,12 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 
 //
 // Schemas
-// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
+// TODO(wittjosiah): These schemas should be imported from @dxos/S.
 //
 
 const ActorRoles = ['user', 'assistant'] as const;
 const ActorRole = S.Literal(...ActorRoles);
-type ActorRole = S.Schema.Type<typeof ActorRole>;
+type ActorRole = S.S.Type<typeof ActorRole>;
 
 const ActorSchema = S.Struct({
   identityKey: S.optional(S.String),
@@ -174,7 +182,7 @@ const ActorSchema = S.Struct({
 const AbstractContentBlock = S.Struct({
   pending: S.optional(S.Boolean),
 });
-type AbstractContentBlock = S.Schema.Type<typeof AbstractContentBlock>;
+type AbstractContentBlock = S.S.Type<typeof AbstractContentBlock>;
 const TextContentBlock = S.extend(
   AbstractContentBlock,
   S.Struct({
@@ -183,7 +191,7 @@ const TextContentBlock = S.extend(
     text: S.String,
   }),
 ).pipe(S.mutable);
-type TextContentBlock = S.Schema.Type<typeof TextContentBlock>;
+type TextContentBlock = S.S.Type<typeof TextContentBlock>;
 const JsonContentBlock = S.extend(
   AbstractContentBlock,
   S.Struct({
@@ -192,7 +200,7 @@ const JsonContentBlock = S.extend(
     data: S.String,
   }),
 ).pipe(S.mutable);
-type JsonContentBlock = S.Schema.Type<typeof JsonContentBlock>;
+type JsonContentBlock = S.S.Type<typeof JsonContentBlock>;
 const Base64ImageSource = S.Struct({
   type: S.Literal('base64'),
   mediaType: S.String,
@@ -203,7 +211,7 @@ const HttpImageSource = S.Struct({
   url: S.String,
 }).pipe(S.mutable);
 const ImageSource = S.Union(Base64ImageSource, HttpImageSource);
-type ImageSource = S.Schema.Type<typeof ImageSource>;
+type ImageSource = S.S.Type<typeof ImageSource>;
 const ImageContentBlock = S.extend(
   AbstractContentBlock,
   S.Struct({
@@ -212,7 +220,7 @@ const ImageContentBlock = S.extend(
     source: S.optional(ImageSource),
   }),
 ).pipe(S.mutable);
-type ImageContentBlock = S.Schema.Type<typeof ImageContentBlock>;
+type ImageContentBlock = S.S.Type<typeof ImageContentBlock>;
 const ReferenceContentBlock = S.extend(
   AbstractContentBlock,
   S.Struct({
@@ -220,7 +228,7 @@ const ReferenceContentBlock = S.extend(
     reference: S.Any,
   }),
 ).pipe(S.mutable);
-type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
+type ReferenceContentBlock = S.S.Type<typeof ReferenceContentBlock>;
 const MessageContentBlock = S.Union(TextContentBlock, JsonContentBlock, ImageContentBlock, ReferenceContentBlock);
 
 const MessageType = S.Struct({
@@ -247,4 +255,4 @@ const MessageType = S.Struct({
     version: '0.1.0',
   }),
 );
-type MessageType = S.Schema.Type<typeof MessageType>;
+type MessageType = S.S.Type<typeof MessageType>;

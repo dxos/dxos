@@ -2,31 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
 import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { AUTOMATION_PLUGIN } from './meta';
 
-const TriggerTemplate = S.Union(
-  S.Struct({ type: S.Literal('timer'), cron: S.String }),
-  S.Struct({ type: S.Literal('queue'), queueDXN: S.Any }),
+const TriggerTemplate = Schema.Union(
+  Schema.Struct({ type: Schema.Literal('timer'), cron: Schema.String }),
+  Schema.Struct({ type: Schema.Literal('queue'), queueDXN: Schema.Any }),
 );
 
 export namespace AutomationAction {
   const AUTOMATION_ACTION = `${AUTOMATION_PLUGIN}/action`;
 
-  export class CreateTriggerFromTemplate extends S.TaggedClass<CreateTriggerFromTemplate>()(
+  export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(
     `${AUTOMATION_ACTION}/create-trigger-from-template`,
     {
-      input: S.Struct({
+      input: Schema.Struct({
         space: SpaceSchema,
         template: TriggerTemplate,
-        enabled: S.optional(S.Boolean),
+        enabled: Schema.optional(Schema.Boolean),
         // TODO(wittjosiah): Improve how this lookup is done.
-        scriptName: S.optional(S.String),
-        payload: S.optional(S.Record({ key: S.String, value: S.Any })),
+        scriptName: Schema.optional(Schema.String),
+        input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }),
-      output: S.Void,
+      output: Schema.Void,
     },
   ) {}
 }

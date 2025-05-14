@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { ObjectId, S } from '@dxos/echo-schema';
-import { ScriptType } from '@dxos/functions/types';
+import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { live, makeRef, type Space } from '@dxos/react-client/echo';
@@ -71,28 +72,28 @@ export default () => {
       <apis>
         export function defineFunction(params: { 
           description: string, 
-          inputSchema: S.Schema, 
-          outputSchema: S.Schema, 
+          inputSchema: Schema.Schema, 
+          outputSchema: Schema.Schema, 
           handler: (params: { event: { data: TInput } }) => Promise<TOutput> 
         }): FunctionDefinition
         /**
          * Effect Schema
          */
-        export const S; 
+        export const Schema; 
 
         // Examples: 
 
-        S.String
-        S.Number
-        S.Boolean
-        S.Struct({
-          from: S.String.annotations({ description: 'The source currency' }),
-          to: S.String.annotations({ description: 'The target currency' }),
+        Schema.String
+        Schema.Number
+        Schema.Boolean
+        Schema.Struct({
+          from: Schema.String.annotations({ description: 'The source currency' }),
+          to: Schema.String.annotations({ description: 'The target currency' }),
         })
-        S.Array(S.String)
-        S.Union(S.String, S.Number)
-        S.optional(S.String)
-        S.String.annotations({ description: 'The source currency' })
+        Schema.Array(Schema.String)
+        Schema.Union(Schema.String, Schema.Number)
+        Schema.optional(Schema.String)
+        Schema.String.annotations({ description: 'The source currency' })
       </apis>
 
       <handler_function>
@@ -113,13 +114,13 @@ export default () => {
         export default defineFunction({
           description: 'Returns the exchange rate between two currencies.',
 
-          inputSchema: S.Struct({
-            from: S.String.annotations({ description: 'The source currency' }),
-            to: S.String.annotations({ description: 'The target currency' }),
+          inputSchema: Schema.Struct({
+            from: Schema.String.annotations({ description: 'The source currency' }),
+            to: Schema.String.annotations({ description: 'The target currency' }),
           }),
 
-          outputSchema: S.Struct({
-            rate: S.String.annotations({ description: 'The exchange rate' }),
+          outputSchema: Schema.Struct({
+            rate: Schema.String.annotations({ description: 'The exchange rate' }),
           }),
 
           handler: async ({
@@ -143,9 +144,9 @@ export default () => {
         name: 'create',
         description: 'Create a new script. Returns the artifact definition for the script',
         caption: 'Creating script...',
-        schema: S.Struct({
-          name: S.String.annotations({ description: 'The name of the script' }),
-          code: S.String.annotations({
+        schema: Schema.Struct({
+          name: Schema.String.annotations({ description: 'The name of the script' }),
+          code: Schema.String.annotations({
             description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
           }),
         }),
@@ -176,8 +177,9 @@ export default () => {
         name: 'inspect',
         description: 'Inspect a script. Returns the artifact definition for the script',
         caption: 'Inspecting script...',
-        schema: S.Struct({
-          id: ObjectId.annotations({ description: 'The ID of the script' }),
+        schema: Schema.Struct({
+          // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
+          id: Schema.String.annotations({ description: 'The ID of the script' }),
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -195,9 +197,10 @@ export default () => {
         name: 'update',
         description: 'Update a script. Returns the artifact definition for the script',
         caption: 'Updating script...',
-        schema: S.Struct({
-          id: ObjectId.annotations({ description: 'The ID of the script to update' }),
-          code: S.String.annotations({
+        schema: Schema.Struct({
+          // TODO(wittjosiah): ObjectId schema should be used here but it's not working.
+          id: Schema.String.annotations({ description: 'The ID of the script to update' }),
+          code: Schema.String.annotations({
             description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
           }),
         }),

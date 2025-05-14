@@ -32,7 +32,8 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/live-object": "workspace:*"
+    "@dxos/live-object": "workspace:*",
+    "effect": "^3.13.3"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
@@ -47,7 +48,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "effect": "3.13.3",
+    "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

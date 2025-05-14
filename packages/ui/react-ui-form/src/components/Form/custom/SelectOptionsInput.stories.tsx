@@ -5,9 +5,10 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
+import { Schema } from 'effect';
 import React, { useState } from 'react';
 
-import { S, SelectOptionSchema, type SelectOption } from '@dxos/echo-schema';
+import { SelectOptionSchema, type SelectOption } from '@dxos/echo-schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectOptionInput } from './SelectOptionsInput';
@@ -15,9 +16,9 @@ import translations from '../../../translations';
 import { TestLayout, TestPanel } from '../../testing';
 import { Form } from '../Form';
 
-const schema = S.Struct({
-  options: S.Array(SelectOptionSchema).pipe(S.mutable),
-}).pipe(S.mutable);
+const schema = Schema.Struct({
+  options: Schema.Array(SelectOptionSchema).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
 
 const DefaultStory = () => {
   const [values, setValues] = useState<{ options: SelectOption[] }>({
