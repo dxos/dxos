@@ -119,6 +119,7 @@ describe('query api', () => {
   });
 
   test.skip('chain', () => {
+    // NOTE: Can't support props without type since they can't be inferred.
     // const f1: Filter<Person> = Filter.props({ name: 'Fred' });
 
     // const x = Query.select(Filter.props({ id: '123' }));
