@@ -7,7 +7,7 @@ import { useCallback, useState } from 'react';
 
 import { Graph, type NodeArg, type Node } from '@dxos/app-graph';
 
-import { type MenuItem, type MenuItemGroup } from './defs';
+import { type MenuItem, type MenuItemGroup } from '../types';
 
 type Edge = { source: string; target: string };
 
