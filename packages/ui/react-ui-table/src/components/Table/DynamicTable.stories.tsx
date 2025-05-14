@@ -59,7 +59,7 @@ const meta: Meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
   parameters: { translations },
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [withLayout({ fullscreen: true }), withTheme],
 };
 
 export default meta;

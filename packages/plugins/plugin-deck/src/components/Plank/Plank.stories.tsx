@@ -23,7 +23,7 @@ const meta: Meta<typeof Plank> = {
       plugins: [IntentPlugin(), GraphPlugin()],
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
   ],
   parameters: {
     layout: 'centered',

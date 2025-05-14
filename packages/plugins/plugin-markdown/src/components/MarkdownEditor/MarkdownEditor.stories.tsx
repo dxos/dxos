@@ -36,7 +36,7 @@ const meta: Meta<typeof MarkdownEditor> = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withLayout({ tooltips: true, fullscreen: true }),
+    withLayout({ fullscreen: true }),
     withAttention,
     withPluginManager({ plugins: [IntentPlugin()] }),
   ],

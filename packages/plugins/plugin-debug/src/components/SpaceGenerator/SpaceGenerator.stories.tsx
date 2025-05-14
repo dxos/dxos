@@ -26,7 +26,7 @@ const meta: Meta = {
   title: 'plugins/plugin-debug/SpaceGenerator',
   component: SpaceGenerator,
   render: render(DefaultStory),
-  decorators: [withClientProvider({ createSpace: true }), withLayout({ tooltips: true }), withTheme],
+  decorators: [withClientProvider({ createSpace: true }), withLayout(), withTheme],
   parameters: {
     layout: 'fullscreen',
   },

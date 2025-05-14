@@ -60,7 +60,7 @@ const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
   component: Form,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true, tooltips: true }), withTheme],
+  decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
   },

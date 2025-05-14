@@ -23,7 +23,7 @@ const meta: Meta = {
   title: 'plugins/plugin-sheet/Toolbar',
   component: SheetToolbar,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   parameters: { translations, layout: 'fullscreen' },
 };
 

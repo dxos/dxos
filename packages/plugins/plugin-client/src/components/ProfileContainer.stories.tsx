@@ -15,7 +15,7 @@ import translations from '../translations';
 const meta: Meta = {
   title: 'plugins/plugin-client/ProfileContainer',
   component: ProfileContainer,
-  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout({ tooltips: true })],
+  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout()],
   parameters: {
     layout: 'fullscreen',
     translations,

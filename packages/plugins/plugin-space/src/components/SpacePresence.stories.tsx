@@ -100,7 +100,7 @@ export const Small = () => {
 
 const meta: Meta = {
   title: 'plugins/plugin-space/SpacePresence',
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   parameters: { translations },
 };
 

@@ -132,7 +132,7 @@ const meta: Meta<EditorRootProps> = {
     }),
     withTheme,
     withAttention,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
   ],
 };
 

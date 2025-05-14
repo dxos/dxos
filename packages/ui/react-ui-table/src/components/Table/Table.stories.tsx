@@ -232,8 +232,8 @@ const meta: Meta<StoryProps> = {
         });
       },
     }),
+    withLayout({ fullscreen: true }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
   ],
 };
 
@@ -260,8 +260,8 @@ export const StaticSchema: StoryObj = {
         ]);
       },
     }),
+    withLayout({ fullscreen: true }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
   ],
 };
 
@@ -316,7 +316,7 @@ export const Tags: Meta<StoryProps> = {
         });
       },
     }),
+    withLayout({ fullscreen: true }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
   ],
 };

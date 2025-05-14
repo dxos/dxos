@@ -47,7 +47,7 @@ const DefaultStory = () => {
 const meta: Meta = {
   title: 'ui/react-ui-form/SelectOptionsInput',
   component: SelectOptionInput,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   parameters: { translations },
 };
 

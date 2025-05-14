@@ -40,7 +40,7 @@ const meta: Meta<StoryProps> = {
       </Popover.Root>
     );
   },
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
     translations,

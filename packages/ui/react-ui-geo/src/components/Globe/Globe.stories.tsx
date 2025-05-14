@@ -222,7 +222,7 @@ const initialRotation: Vector = [0, -40, 0];
 const meta: Meta = {
   title: 'ui/react-ui-geo/Globe',
   component: Globe.Root,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]', tooltips: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]' })],
 };
 
 export default meta;
