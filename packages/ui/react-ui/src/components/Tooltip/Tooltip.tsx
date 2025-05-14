@@ -249,7 +249,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
     const { __scopeTooltip, ...triggerProps } = props;
     const context = useTooltipContext(TRIGGER_NAME, __scopeTooltip);
     const ref = useRef<TooltipTriggerElement>(null);
-    const composedRefs = useComposedRefs(forwardedRef, ref, context.onTriggerChange);
+    const composedRefs = useComposedRefs(forwardedRef, ref);
     const isPointerDownRef = useRef(false);
     const hasPointerMoveOpenedRef = useRef(false);
     const handlePointerUp = useCallback(() => (isPointerDownRef.current = false), []);
