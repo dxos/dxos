@@ -80,14 +80,7 @@ const meta: Meta<StoryProps> = {
 
     return <ResponsiveGrid {...args} Cell={TestCell} items={items} pinned={pinned} onPinnedChange={setPinned} />;
   },
-  decorators: [
-    withTheme,
-    withLayout({
-      tooltips: true,
-      fullscreen: true,
-      classNames: 'justify-center',
-    }),
-  ],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   parameters: {
     translations,
   },

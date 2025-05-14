@@ -27,8 +27,6 @@ type DynamicTableProps = ThemedClassName<{
 
 /**
  * Properties define both the schema and display characteristics of the table columns.
- *
- * @deprecated Use Table.
  */
 // TODO(burdon): Instead of creating component variants, create helpers/hooks that normalize the props.
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).

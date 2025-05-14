@@ -7,7 +7,7 @@ import { type Decorator } from '@storybook/react';
 import React, { memo, useEffect, useState } from 'react';
 import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 
-import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { type ThemeMode, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 const channel = addons.getChannel();
@@ -31,7 +31,9 @@ export const withTheme: Decorator = (Story, context) => {
 
   return (
     <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={context?.parameters?.translations} noCache>
-      <MemoizedStory />
+      <Tooltip.Provider>
+        <MemoizedStory />
+      </Tooltip.Provider>
     </ThemeProvider>
   );
 };

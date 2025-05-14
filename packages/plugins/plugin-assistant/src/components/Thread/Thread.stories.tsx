@@ -77,7 +77,7 @@ const meta: Meta<ThreadProps> = {
     withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({ plugins: [IntentPlugin()] }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center' }),
+    withLayout({ fullscreen: true, classNames: 'flex justify-center' }),
   ],
   parameters: {
     translations,

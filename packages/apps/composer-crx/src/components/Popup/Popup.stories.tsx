@@ -11,7 +11,7 @@ import { Popup } from './Popup';
 export default {
   title: 'apps/composer-crx/Popup',
   component: Popup,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
 };
 
 export const Default = {

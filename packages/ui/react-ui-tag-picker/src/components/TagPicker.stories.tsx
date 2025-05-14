@@ -64,7 +64,7 @@ const meta: Meta<typeof TagPicker> = {
       </div>
     );
   },
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   parameters: { layout: 'centered' },
 };
 

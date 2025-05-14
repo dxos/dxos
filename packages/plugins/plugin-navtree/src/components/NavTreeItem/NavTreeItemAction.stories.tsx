@@ -42,7 +42,7 @@ const menuActions = faker.helpers.multiple(
 const meta: Meta<typeof NavTreeItemAction> = {
   title: 'plugins/plugin-navtree/NavTreeItemAction',
   component: NavTreeItemAction,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   args: {
     icon: 'ph--list--regular',
     parent,
