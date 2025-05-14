@@ -217,6 +217,11 @@ interface FilterAPI {
   between<T>(from: T, to: T): Filter<T>;
 
   /**
+   * Negate the filter.
+   */
+  not<F extends Filter.Any>(filter: F): Filter<F>;
+
+  /**
    * Combine filters with a logical AND.
    */
   and<FS extends Filter.Any[]>(...filters: FS): Filter<Filter.And<FS>>;
@@ -264,7 +269,7 @@ class FilterClass implements Filter<any> {
   }
 
   /**
-   * Internal.
+   * @internal
    */
   static props<T>(props: Filter.Props<T>): Filter<T> {
     return new FilterClass({
@@ -351,6 +356,13 @@ class FilterClass implements Filter<any> {
     });
   }
 
+  static not<F extends Filter.Any>(filter: F): Filter<F> {
+    return new FilterClass({
+      type: 'not',
+      filter: filter.ast,
+    });
+  }
+
   static and<T>(...filters: Filter<T>[]): Filter<T> {
     return new FilterClass({
       type: 'and',
@@ -402,16 +414,6 @@ class QueryClass implements Query<any> {
       filter: FilterClass.type(schema, predicates).ast,
     });
   }
-
-  // static text(schema: Schema.Schema.All, text: string, options?: Query.TextSearchOptions): Query<any> {
-  //   const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
-  //   return new QueryClass({
-  //     type: 'text-search',
-  //     typename: dxn.toString(),
-  //     text,
-  //     searchKind: options?.type,
-  //   });
-  // }
 
   static all(...queries: Query<any>[]): Query<any> {
     return new QueryClass({

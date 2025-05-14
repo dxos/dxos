@@ -55,6 +55,13 @@ const FilterTextSearch_ = Schema.Struct({
 interface FilterTextSearch extends Schema.Schema.Type<typeof FilterTextSearch_> {}
 const FilterTextSearch: Schema.Schema<FilterTextSearch> = FilterTextSearch_;
 
+const FilterNot_ = Schema.Struct({
+  type: Schema.Literal('not'),
+  filter: Schema.suspend(() => Filter),
+});
+interface FilterNot extends Schema.Schema.Type<typeof FilterNot_> {}
+const FilterNot: Schema.Schema<FilterNot> = FilterNot_;
+
 const FilterAnd_ = Schema.Struct({
   type: Schema.Literal('and'),
   filters: Schema.Array(Schema.suspend(() => Filter)),
@@ -75,6 +82,7 @@ export const Filter = Schema.Union(
   FilterCompare,
   FilterIn,
   FilterRange,
+  FilterNot,
   FilterAnd,
   FilterOr,
 );
