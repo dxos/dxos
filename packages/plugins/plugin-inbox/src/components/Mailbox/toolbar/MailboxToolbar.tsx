@@ -9,7 +9,11 @@ import { createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/rea
 import { INBOX_PLUGIN } from '../../../meta';
 import { type MailboxModel } from '../model/mailbox-model';
 
-export const useMailboxToolbarActions = (model: MailboxModel, tagFilterVisible: Signal<boolean>) => {
+export const useMailboxToolbarActions = (
+  model: MailboxModel,
+  tagFilterVisible: Signal<boolean>,
+  setTagFilterVisible: (visible: boolean) => void,
+) => {
   return useMenuActions(() => {
     const nodes = [];
     const edges = [];
@@ -19,23 +23,37 @@ export const useMailboxToolbarActions = (model: MailboxModel, tagFilterVisible: 
     });
     nodes.push(rootGroup);
 
-    const sortAction = createMenuAction('sort', {
-      label:
-        model.sortDirection === 'asc'
-          ? ['mailbox toolbar sort oldest', { ns: INBOX_PLUGIN }]
-          : ['mailbox toolbar sort newest', { ns: INBOX_PLUGIN }],
-      icon: model.sortDirection === 'asc' ? 'ph--sort-ascending--regular' : 'ph--sort-descending--regular',
-      type: 'sort',
-    });
+    const sortAction = createMenuAction(
+      'sort',
+      () => {
+        const newDirection = model.sortDirection === 'asc' ? 'desc' : 'asc';
+        model.sortDirection = newDirection;
+      },
+      {
+        label:
+          model.sortDirection === 'asc'
+            ? ['mailbox toolbar sort oldest', { ns: INBOX_PLUGIN }]
+            : ['mailbox toolbar sort newest', { ns: INBOX_PLUGIN }],
+        icon: model.sortDirection === 'asc' ? 'ph--sort-ascending--regular' : 'ph--sort-descending--regular',
+        type: 'sort',
+      },
+    );
     nodes.push(sortAction);
     edges.push({ source: 'root', target: sortAction.id });
 
-    const filterAction = createMenuAction('filter', {
-      label: ['mailbox toolbar filter by tags', { ns: INBOX_PLUGIN }],
-      icon: 'ph--tag--regular',
-      type: 'filter',
-      classNames: tagFilterVisible.value ? 'text-accentText' : undefined,
-    });
+    const filterAction = createMenuAction(
+      'filter',
+      () => {
+        const newVisibility = !tagFilterVisible.value;
+        setTagFilterVisible(newVisibility);
+      },
+      {
+        label: ['mailbox toolbar filter by tags', { ns: INBOX_PLUGIN }],
+        icon: 'ph--tag--regular',
+        type: 'filter',
+        classNames: tagFilterVisible.value ? 'text-accentText' : undefined,
+      },
+    );
     nodes.push(filterAction);
     edges.push({ source: 'root', target: filterAction.id });
 

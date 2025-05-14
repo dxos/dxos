@@ -19,7 +19,7 @@ import {
   type MenuActionProperties,
   type MenuMultipleSelectActionGroup,
   type MenuSingleSelectActionGroup,
-} from '../defs';
+} from '../types';
 import { translationKey } from '../translations';
 
 export type ToolbarMenuDropdownMenuActionGroup = Omit<MenuActionProperties, 'variant' | 'icon'> & {
@@ -45,12 +45,15 @@ export type ToolbarMenuActionGroupProps = {
   items?: MenuItem[];
 };
 
+export type ToolbarMenuActionProps = {
+  group: MenuItemGroup<ToolbarMenuActionGroupProperties>;
+  action: MenuAction;
+};
+
 const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
-  const { onAction, iconSize } = useMenu('ActionToolbarItem', __menuScope);
+  const { iconSize } = useMenu('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
-  const handleClick = useCallback(() => {
-    onAction?.(action);
-  }, [action, onAction]);
+  const handleClick = useCallback(() => action.data?.(), [action]);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const rootProps = icon
@@ -106,13 +109,11 @@ const DropdownMenuToolbarItem = ({
   );
 };
 
-const ToggleGroupItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
-  const { iconSize, onAction } = useMenu('ToggleGroupItem', __menuScope);
+const ToggleGroupItem = ({ group, action, __menuScope }: MenuScopedProps<ToolbarMenuActionProps>) => {
+  const { iconSize } = useMenu('ToggleGroupItem', __menuScope);
   const { t } = useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
-  const handleClick = useCallback(() => {
-    onAction?.(action);
-  }, [action, onAction]);
+  const handleClick = useCallback(() => action.data?.({ parent: group }), [action, group]);
   const Root = icon ? NaturalToolbar.ToggleGroupIconItem : NaturalToolbar.ToggleGroupItem;
   const rootProps = icon
     ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
@@ -145,7 +146,7 @@ const ToggleGroupToolbarItem = ({
       {
         // TODO(thure): Handle other menu item types.
         (items as MenuAction[]).map((action) => (
-          <ToggleGroupItem key={action.id} action={action} />
+          <ToggleGroupItem key={action.id} group={group} action={action} />
         ))
       }
     </NaturalToolbar.ToggleGroup>

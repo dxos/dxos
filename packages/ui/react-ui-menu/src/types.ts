@@ -26,8 +26,6 @@ export type MenuItemGroupProperties = {
 
 export type MenuAction<P extends {} = {}> = Action<P & MenuActionProperties>;
 
-export type MenuActionHandler<A extends Node = MenuAction> = (action: A) => void;
-
 export const MenuSeparatorType = '@dxos/react-ui-toolbar/separator' as const;
 
 export type MenuSeparator = Node<never, Pick<ToolbarSeparatorProps, 'variant'>> & {
@@ -47,9 +45,8 @@ export type MenuItem = MenuSeparator | MenuAction | MenuItemGroup;
 
 export type MenuItemsResolver = (group?: MenuItemGroup) => MenuItem[] | null;
 
-export type MenuContextValue<A extends Node = MenuAction> = {
+export type MenuContextValue = {
   resolveGroupItems: MenuItemsResolver;
   iconSize: IconButtonProps['size'];
-  onAction: MenuActionHandler<A>;
   attendableId?: string;
 };
