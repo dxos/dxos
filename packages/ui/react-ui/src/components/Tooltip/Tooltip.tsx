@@ -242,7 +242,10 @@ const TRIGGER_NAME = 'TooltipTrigger';
 
 type TooltipTriggerElement = ElementRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
-interface TooltipTriggerProps extends PrimitiveButtonProps {}
+interface TooltipTriggerProps extends PrimitiveButtonProps {
+  content?: string;
+  side?: Side;
+}
 
 const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
   (props: ScopedProps<TooltipTriggerProps>, forwardedRef) => {
@@ -264,6 +267,8 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
         // commonly anchors and the anchor `type` attribute signifies MIME type.
         aria-describedby={context.open ? context.contentId : undefined}
         data-state={context.stateAttribute}
+        data-tooltip-content={props.content}
+        data-tooltip-side={props.side}
         {...triggerProps}
         ref={composedRefs}
         onPointerMove={composeEventHandlers(props.onPointerMove, (event) => {

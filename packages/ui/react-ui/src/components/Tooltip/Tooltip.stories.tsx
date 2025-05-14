@@ -20,10 +20,8 @@ const StoryTooltip = ({ tooltips, defaultOpen }: StoryTooltipProps) => (
   <Tooltip.Provider defaultOpen={defaultOpen}>
     <div role='none' className='is-32'>
       {tooltips.map(({ label, content }, i) => (
-        <Tooltip.Trigger asChild key={i}>
-          <Button data-tooltip-content={content} data-tooltip-side='right' classNames='block is-full'>
-            {label}
-          </Button>
+        <Tooltip.Trigger asChild key={i} content={content} side='right'>
+          <Button classNames='block is-full'>{label}</Button>
         </Tooltip.Trigger>
       ))}
     </div>
