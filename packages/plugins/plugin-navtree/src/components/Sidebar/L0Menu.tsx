@@ -28,7 +28,6 @@ import {
   Icon,
   IconButton,
   ListItem,
-  Popover,
   ScrollArea,
   Tooltip,
   toLocalizedString,
@@ -108,6 +107,9 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
     const type = l0ItemType(item);
     const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
 
+    const { t } = useTranslation(NAVTREE_PLUGIN);
+    const localizedString = toLocalizedString(item.properties.label, t);
+
     const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
     const rootProps =
       type === 'tab'
@@ -119,18 +121,20 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
     const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
 
     return (
-      <Root
-        {...(rootProps as any)}
-        data-type={type}
-        className={mx(
-          'group/l0item dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
-          type === 'action' && 'flex justify-center items-center',
-          l0Breakpoints[item.properties.l0Breakpoint],
-        )}
-        ref={forwardedRef}
-      >
-        {children}
-      </Root>
+      <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
+        <Root
+          {...(rootProps as any)}
+          data-type={type}
+          className={mx(
+            'group/l0item dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
+            type === 'action' && 'flex justify-center items-center',
+            l0Breakpoints[item.properties.l0Breakpoint],
+          )}
+          ref={forwardedRef}
+        >
+          {children}
+        </Root>
+      </Tooltip.Trigger>
     );
   },
 );
@@ -159,8 +163,6 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const type = l0ItemType(item);
-  const { getProps, popoverAnchorId } = useNavTreeContext();
-  const { id } = getProps?.(item, path) ?? {};
   const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
   const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
@@ -221,7 +223,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
     );
   }, [item, onRearrange]);
 
-  const trigger = (
+  return (
     <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path}>
       <div
         role='none'
@@ -248,14 +250,6 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       </span>
       {onRearrange && closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
-  );
-
-  return popoverAnchorId === id ? (
-    <Popover.Anchor asChild>{trigger}</Popover.Anchor>
-  ) : (
-    <Tooltip.Trigger delayDuration={0} asChild side='right' content={localizedString}>
-      {trigger}
-    </Tooltip.Trigger>
   );
 };
 

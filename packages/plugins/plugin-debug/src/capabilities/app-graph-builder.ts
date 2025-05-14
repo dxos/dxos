@@ -34,7 +34,7 @@ export default (context: PluginsContext) =>
             properties: {
               label: ['devtools label', { ns: DEBUG_PLUGIN }],
               icon: 'ph--hammer--regular',
-              disposition: 'workspace',
+              disposition: 'pin-end',
               position: 'fallback',
             },
             nodes: [
