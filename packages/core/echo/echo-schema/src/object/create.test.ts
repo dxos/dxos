@@ -3,6 +3,7 @@
 //
 
 import { Schema } from 'effect';
+import { inspect } from 'util';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
@@ -13,7 +14,6 @@ import { getTypename } from './typename';
 import { getSchema, getSchemaDXN } from '../ast';
 import { Testing } from '../testing';
 import { isInstanceOf } from '../types';
-import { inspect } from 'util';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {

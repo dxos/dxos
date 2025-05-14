@@ -1,7 +1,12 @@
-import { defineTool, ToolResult } from '@dxos/artifact';
-import { log } from '@dxos/log';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema } from 'effect';
 import Exa from 'exa-js';
+
+import { defineTool, ToolResult } from '@dxos/artifact';
+import { log } from '@dxos/log';
 
 type CreateExaToolOptions = {
   apiKey: string;

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Message, type Tool } from '@dxos/artifact';
+import { type Message, type Tool } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';

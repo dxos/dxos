@@ -1,7 +1,12 @@
-import { log } from '@dxos/log';
-import { createTestData } from '@dxos/schema/testing';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { pipeline } from '@xenova/transformers';
 import { beforeAll, describe, expect, test } from 'vitest';
+
+import { log } from '@dxos/log';
+import { createTestData } from '@dxos/schema/testing';
 
 type NerToken = {
   entity: string;

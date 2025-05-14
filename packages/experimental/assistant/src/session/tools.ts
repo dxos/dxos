@@ -7,7 +7,6 @@ import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-
 export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.content.at(-1);
   invariant(block);

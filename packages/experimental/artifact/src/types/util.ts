@@ -5,7 +5,6 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { failedInvariant } from '@dxos/invariant';
 
 import type { Message } from './message';
 import { ToolResult, type Tool, type ToolExecutionContext } from './tools';

@@ -1,4 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Option, Schema, SchemaAST } from 'effect';
+import { describe, test } from 'vitest';
 
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { create, getSchemaDXN, ObjectId, ReferenceAnnotationId } from '@dxos/echo-schema';
@@ -6,12 +11,12 @@ import { mapAst } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 import { deepMapValues } from '@dxos/util';
-import { describe, test } from 'vitest';
+
+import { createExaTool } from './exa';
+import INSTRUCTIONS from './instructions.tpl?raw';
 import { AIServiceEdgeClient, OllamaClient } from '../../ai-service';
 import { AISession } from '../../session';
 import { AI_SERVICE_ENDPOINT, ConsolePrinter } from '../../testing';
-import { createExaTool } from './exa';
-import INSTRUCTIONS from './instructions.tpl?raw';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const REMOTE_AI = true;

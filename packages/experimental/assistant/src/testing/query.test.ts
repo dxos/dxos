@@ -16,8 +16,7 @@ import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData, seedTestData } from './test-data';
 import { Contact, Organization, Project, Task } from './test-schema';
 import { AIServiceEdgeClient, DEFAULT_EDGE_MODEL } from '../ai-service';
-import { runLLM } from '../experimental';
-import { EchoDataSource } from '../experimental';
+import { runLLM, EchoDataSource } from '../experimental';
 
 const client = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,

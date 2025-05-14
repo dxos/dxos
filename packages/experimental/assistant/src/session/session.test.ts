@@ -3,17 +3,9 @@
 //
 
 import { Schema } from 'effect';
-import { inspect } from 'node:util';
 import { describe, test } from 'vitest';
 
-import {
-  ArtifactId,
-  defineArtifact,
-  defineTool,
-  ToolResult,
-  type Message,
-  type MessageContentBlock,
-} from '@dxos/artifact';
+import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { create, ObjectId } from '@dxos/echo-schema';
