@@ -117,6 +117,10 @@ export const systemSememes = {
     light: surface60.light,
     dark: surface0.dark,
   },
+  inverseSurface: {
+    light: ['neutral', darkCadence(2)],
+    dark: ['neutral', lightCadence(2)],
+  },
 
   //
   // Text (text-)
@@ -126,6 +130,10 @@ export const systemSememes = {
   baseText: {
     light: ['neutral', 1000],
     dark: ['neutral', 50],
+  },
+  inverseSurfaceText: {
+    light: ['neutral', 50],
+    dark: ['neutral', 1000],
   },
   description: {
     light: ['neutral', 500],
@@ -151,7 +159,7 @@ export const systemSememes = {
     light: ['neutral', 400],
     dark: ['neutral', 500],
   },
-  inverse: {
+  accentSurfaceText: {
     light: ['neutral', 0],
     dark: ['neutral', 0],
   },
@@ -161,7 +169,7 @@ export const systemAliases = {
   // surface cadence
   'surface-10': { root: ['attention'], attention: ['baseSurface'] },
   'surface-20': { root: ['baseSurface'] },
-  'surface-30': { root: ['modalSurface', 'tooltipSurface'], attention: ['input'] },
+  'surface-30': { root: ['modalSurface'], attention: ['input'] },
   'surface-40': { root: ['input'] },
   'surface-50': { attention: ['groupSurface'] },
   'surface-60': { root: ['groupSurface'], attention: ['hoverSurface'] },

@@ -42,25 +42,17 @@ const ToggleResolvedButton = ({
   const { t } = useTranslation(THREAD_PLUGIN);
   const label = t(isResolved ? 'mark as unresolved label' : 'mark as resolved label');
   return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <Button
-          variant='ghost'
-          data-testid='thread.toggle-resolved'
-          onClick={onResolve}
-          classNames={[commentControlClassNames, !isResolved && hoverableControlItem]}
-        >
-          <span className='sr-only'>{label}</span>
-          {isResolved ? <CheckCircle className={sizeClass} weight='fill' /> : <CheckCircle className={sizeClass} />}
-        </Button>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content>
-          {label}
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
+    <Tooltip.Trigger asChild content={label}>
+      <Button
+        variant='ghost'
+        data-testid='thread.toggle-resolved'
+        onClick={onResolve}
+        classNames={[commentControlClassNames, !isResolved && hoverableControlItem]}
+      >
+        <span className='sr-only'>{label}</span>
+        {isResolved ? <CheckCircle className={sizeClass} weight='fill' /> : <CheckCircle className={sizeClass} />}
+      </Button>
+    </Tooltip.Trigger>
   );
 };
 
@@ -68,25 +60,17 @@ const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   const label = t('delete thread label');
   return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <Button
-          variant='ghost'
-          data-testid='thread.delete'
-          onClick={onDelete}
-          classNames={[commentControlClassNames, hoverableControlItem]}
-        >
-          <span className='sr-only'>{label}</span>
-          <X className={sizeClass} />
-        </Button>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content classNames='z-30'>
-          {label}
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
+    <Tooltip.Trigger asChild content={label}>
+      <Button
+        variant='ghost'
+        data-testid='thread.delete'
+        onClick={onDelete}
+        classNames={[commentControlClassNames, hoverableControlItem]}
+      >
+        <span className='sr-only'>{label}</span>
+        <X className={sizeClass} />
+      </Button>
+    </Tooltip.Trigger>
   );
 };
 
@@ -156,17 +140,9 @@ export const CommentContainer = ({
         )}
       >
         {detached ? (
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <ThreadHeading detached>{thread.name}</ThreadHeading>
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content classNames='z-30' side='top'>
-                {t('detached thread label')}
-                <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
+          <Tooltip.Trigger asChild content={t('detached thread label')} side='top'>
+            <ThreadHeading detached>{thread.name}</ThreadHeading>
+          </Tooltip.Trigger>
         ) : (
           <ThreadHeading>{thread.name}</ThreadHeading>
         )}
