@@ -264,11 +264,7 @@ const meta: Meta<typeof AudioFile> = {
       // ],
     }),
     withTheme,
-    withLayout({
-      tooltips: true,
-      fullscreen: true,
-      classNames: 'justify-center',
-    }),
+    withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
 };
 

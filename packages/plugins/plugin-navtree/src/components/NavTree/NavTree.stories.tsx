@@ -76,7 +76,7 @@ const meta: Meta<typeof NavTreeContainer> = {
         contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
       ],
     }),
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
   ],
 };
 

@@ -80,7 +80,7 @@ const meta: Meta = {
       ],
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
     withClientProvider({ createSpace: true, types: [ThreadType, DataType.Message] }),
   ],
   parameters: { translations },

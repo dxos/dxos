@@ -31,7 +31,7 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-token-manager/TokenManager',
   component: TokenManager,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   args: {
     tokens: await Promise.all([...Array(10)].map(() => generator.createObject())),
     onDelete: console.log,

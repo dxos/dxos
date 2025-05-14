@@ -29,7 +29,7 @@ const meta: Meta = {
       ],
     }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
   parameters: {
     layout: 'fullscreen',

@@ -14,14 +14,7 @@ import { ResponsiveContainer } from './ResponsiveContainer';
 const meta: Meta<typeof ResponsiveContainer> = {
   title: 'plugins/plugin-meeting/ResponsiveContainer',
   component: ResponsiveContainer,
-  decorators: [
-    withTheme,
-    withLayout({
-      tooltips: true,
-      fullscreen: true,
-      classNames: 'justify-center',
-    }),
-  ],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
 };
 
 export default meta;

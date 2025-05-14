@@ -40,7 +40,7 @@ const meta: Meta<typeof NodeEditor> = {
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [TreeType] }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
   parameters: {
     layout: 'centered',

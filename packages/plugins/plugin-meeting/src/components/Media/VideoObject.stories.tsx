@@ -44,14 +44,7 @@ const meta: Meta<typeof VideoObject> = {
       </ResponsiveContainer>
     );
   },
-  decorators: [
-    withTheme,
-    withLayout({
-      tooltips: true,
-      fullscreen: true,
-      classNames: 'justify-center',
-    }),
-  ],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
 };
 
 export default meta;

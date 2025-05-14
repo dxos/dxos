@@ -98,7 +98,7 @@ const meta: Meta<typeof EditorToolbar> = {
   title: 'plugins/plugin-markdown/Toolbar',
   component: EditorToolbar,
   render: DefaultStory as any,
-  decorators: [withTheme, withLayout({ tooltips: true, fullscreen: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     translations,
   },
