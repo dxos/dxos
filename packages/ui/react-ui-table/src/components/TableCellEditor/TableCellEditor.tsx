@@ -261,11 +261,9 @@ export const TableCellEditor = ({
           }
         }
 
-        // Return empty string if no value
         return '';
       }
 
-      // Default behavior for other formats
       const value = model.getCellData(cell);
       return value !== undefined ? String(value) : '';
     }
