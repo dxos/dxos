@@ -8,7 +8,7 @@ import { Predicate } from 'effect';
 import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions';
 import { live, makeRef } from '@dxos/live-object';
-import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
+import { IntegrationAction } from '@dxos/plugin-integration/types';
 import { DataType } from '@dxos/schema';
 
 import { DEPLOYMENT_DIALOG } from '../components';
@@ -56,9 +56,9 @@ export default () =>
       },
     }),
     createResolver({
-      intent: TokenManagerAction.AccessTokenCreated,
-      resolve: async ({ accessToken }) => {
-        const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
+      intent: IntegrationAction.IntegrationCreated,
+      resolve: async ({ object: integration }) => {
+        const scriptTemplates = (defaultScriptsForIntegration[integration.serviceId] ?? [])
           .map((id) => templates.find((t) => t.id === id))
           .filter(Predicate.isNotNullable);
 
@@ -68,13 +68,11 @@ export default () =>
               createIntent(LayoutAction.UpdateDialog, {
                 part: 'dialog',
                 subject: DEPLOYMENT_DIALOG,
-                options: { blockAlign: 'start', state: true, props: { accessToken, scriptTemplates } },
+                options: { blockAlign: 'start', state: true, props: { integration, scriptTemplates } },
               }),
             ],
           };
         }
-
-        return { data: undefined };
       },
     }),
   ]);

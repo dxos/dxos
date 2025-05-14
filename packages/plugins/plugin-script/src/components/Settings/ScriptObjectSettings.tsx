@@ -8,6 +8,7 @@ import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react
 import { createIntent, SettingsAction, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { INTEGRATION_PLUGIN } from '@dxos/plugin-integration';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
@@ -141,7 +142,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   }, [githubToken, gistKey]);
 
   const handleOpenTokenManager = useCallback(
-    () => dispatch(createIntent(SettingsAction.Open, { plugin: 'dxos.org/plugin/token-manager' })),
+    () => dispatch(createIntent(SettingsAction.Open, { plugin: INTEGRATION_PLUGIN })),
     [],
   );
 

@@ -139,6 +139,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-integration"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
@@ -149,9 +152,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-token-manager"
     }
   ]
 }

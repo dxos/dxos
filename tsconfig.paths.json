@@ -112,6 +112,12 @@
       "@dxos/plugin-inbox/types": [
         "packages/plugins/plugin-inbox/src/types/index.ts"
       ],
+      "@dxos/plugin-integration": [
+        "packages/plugins/plugin-integration/src/index.ts"
+      ],
+      "@dxos/plugin-integration/types": [
+        "packages/plugins/plugin-integration/src/types/index.ts"
+      ],
       "@dxos/plugin-kanban": [
         "packages/plugins/plugin-kanban/src/index.ts"
       ],
@@ -237,12 +243,6 @@
       ],
       "@dxos/plugin-thread/types": [
         "packages/plugins/plugin-thread/src/types.ts"
-      ],
-      "@dxos/plugin-token-manager": [
-        "packages/plugins/plugin-token-manager/src/index.ts"
-      ],
-      "@dxos/plugin-token-manager/types": [
-        "packages/plugins/plugin-token-manager/src/types.ts"
       ],
       "@dxos/plugin-transcription": [
         "packages/plugins/plugin-transcription/src/index.ts"

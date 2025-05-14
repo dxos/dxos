@@ -22,6 +22,7 @@ import { FilesPlugin, FILES_PLUGIN } from '@dxos/plugin-files';
 import { GraphPlugin, GRAPH_PLUGIN } from '@dxos/plugin-graph';
 import { HelpPlugin, HELP_PLUGIN } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { IntegrationPlugin, INTEGRATION_PLUGIN } from '@dxos/plugin-integration';
 import { KanbanPlugin, KANBAN_PLUGIN } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin, MARKDOWN_PLUGIN } from '@dxos/plugin-markdown';
@@ -46,7 +47,6 @@ import { TablePlugin, TABLE_PLUGIN } from '@dxos/plugin-table';
 import { ThemePlugin, THEME_PLUGIN } from '@dxos/plugin-theme';
 import { ThemeEditorPlugin } from '@dxos/plugin-theme-editor';
 import { ThreadPlugin, THREAD_PLUGIN } from '@dxos/plugin-thread';
-import { TokenManagerPlugin, TOKEN_MANAGER_PLUGIN } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin, TRANSCRIPTION_PLUGIN } from '@dxos/plugin-transcription';
 import { WnfsPlugin, WNFS_PLUGIN } from '@dxos/plugin-wnfs';
 import { isNotFalsy } from '@dxos/util';
@@ -89,7 +89,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     SPACE_PLUGIN,
     STATUS_BAR_PLUGIN,
     THEME_PLUGIN,
-    TOKEN_MANAGER_PLUGIN,
+    INTEGRATION_PLUGIN,
     WELCOME_PLUGIN,
   ]
     .filter(isNotFalsy)
@@ -176,7 +176,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     TablePlugin(),
     ThemePlugin({ appName: 'Composer', noCache: isDev }),
     ThreadPlugin(),
-    TokenManagerPlugin(),
+    IntegrationPlugin(),
     TranscriptionPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),

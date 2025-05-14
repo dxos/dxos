@@ -9,8 +9,9 @@ import { DataType } from '@dxos/schema';
 import { ReactSurface, AppGraphBuilder } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
+import { IntegrationType } from './types';
 
-export const TokenManagerPlugin = () =>
+export const IntegrationPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/translations`,
@@ -20,7 +21,7 @@ export const TokenManagerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [DataType.AccessToken]),
+      activate: () => contributes(ClientCapabilities.Schema, [DataType.AccessToken, IntegrationType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
