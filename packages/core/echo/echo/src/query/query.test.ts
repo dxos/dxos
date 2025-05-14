@@ -9,6 +9,7 @@ import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './api';
+import * as QueryAST from './ast';
 import { Type, Relation } from '..';
 
 //
@@ -46,9 +47,10 @@ interface Task extends Schema.Schema.Type<typeof Task> {}
 describe('query api', () => {
   test('get all people', () => {
     // Query<Person>
-    const getAllPeople = Query.select(Filter.type(Person));
+    const getAllPeople = Query.type(Person);
 
     log.info('query', { ast: getAllPeople.ast });
+    Schema.validateSync(QueryAST.Query)(getAllPeople.ast);
   });
 
   test('get all people named Fred', () => {
@@ -56,6 +58,7 @@ describe('query api', () => {
     const getAllPeopleNamedFred = Query.select(Filter.type(Person, { name: 'Fred' }));
 
     log.info('query', { ast: getAllPeopleNamedFred.ast });
+    Schema.validateSync(QueryAST.Query)(getAllPeopleNamedFred.ast);
   });
 
   test('get all orgs Fred worked for since 2020', () => {
@@ -66,6 +69,7 @@ describe('query api', () => {
       .target();
 
     log.info('query', { ast: getAllOrgsFredWorkedForSince2020.ast });
+    Schema.validateSync(QueryAST.Query)(getAllOrgsFredWorkedForSince2020.ast);
   });
 
   test('get all tasks for Fred', () => {
@@ -74,6 +78,7 @@ describe('query api', () => {
     const getAllTasksForFred = Query.select(Filter.type(Person, { id: fred.id })).referencedBy(Task, 'assignee');
 
     log.info('query', { ast: getAllTasksForFred.ast });
+    Schema.validateSync(QueryAST.Query)(getAllTasksForFred.ast);
   });
 
   test('get all tasks for employees of Cyberdyne', () => {
@@ -84,6 +89,7 @@ describe('query api', () => {
       .referencedBy(Task, 'assignee');
 
     log.info('query', { ast: allTasksForEmployeesOfCyberdyne.ast });
+    Schema.validateSync(QueryAST.Query)(allTasksForEmployeesOfCyberdyne.ast);
   });
 
   test('get all people or orgs', () => {
@@ -91,6 +97,7 @@ describe('query api', () => {
     const allPeopleOrOrgs = Query.all(Query.select(Filter.type(Person)), Query.select(Filter.type(Org)));
 
     log.info('query', { ast: allPeopleOrOrgs.ast });
+    Schema.validateSync(QueryAST.Query)(allPeopleOrOrgs.ast);
   });
 
   test('get assignees of all tasks created after 2020', () => {
@@ -100,6 +107,7 @@ describe('query api', () => {
     ).reference('assignee');
 
     log.info('query', { ast: assigneesOfAllTasksCreatedAfter2020.ast });
+    Schema.validateSync(QueryAST.Query)(assigneesOfAllTasksCreatedAfter2020.ast);
   });
 
   test('contact full-text search', () => {
@@ -107,6 +115,7 @@ describe('query api', () => {
     const contactFullTextSearch = Query.select(Filter.text(Person, 'Bill'));
 
     log.info('query', { ast: contactFullTextSearch.ast });
+    Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
   });
 
   test.skip('chain', () => {

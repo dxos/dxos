@@ -18,7 +18,7 @@ export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };
 
-  ast: QueryAST.AST;
+  ast: QueryAST.Query;
 
   /**
    * Filter the current selection based on a filter.
@@ -96,12 +96,12 @@ interface QueryAPI {
    * @param predicates - Predicates to filter the objects.
    * @returns Query for the objects.
    *
-   * @deprecated Use `Filter`.
+   * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
    */
-  // type<S extends Schema.Schema.All>(
-  //   schema: S,
-  //   predicates?: Filter.Props<Schema.Schema.Type<S>>,
-  // ): Query<Schema.Schema.Type<S>>;
+  type<S extends Schema.Schema.All>(
+    schema: S,
+    predicates?: Filter.Props<Schema.Schema.Type<S>>,
+  ): Query<Schema.Schema.Type<S>>;
 
   /**
    * Full-text or vector search.
@@ -134,7 +134,7 @@ export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Filter': { value: T };
 
-  ast: QueryAST.Predicate;
+  ast: QueryAST.Filter;
 }
 
 type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
@@ -142,6 +142,8 @@ type Intersection<Types extends readonly unknown[]> = Types extends [infer First
   : unknown;
 
 interface FilterAPI {
+  is(value: unknown): value is Filter<any>;
+
   /**
    * Filter by type.
    */
@@ -165,6 +167,16 @@ interface FilterAPI {
     text: string,
     options?: Query.TextSearchOptions,
   ): Filter<Schema.Schema.Type<S>>;
+
+  /**
+   * Predicate for property to be equal to the provided value.
+   */
+  eq<T>(value: T): Filter<T>;
+
+  /**
+   * Predicate for property to be not equal to the provided value.
+   */
+  neq<T>(value: T): Filter<T>;
 
   /**
    * Predicate for property to be greater than the provided value.
@@ -232,70 +244,130 @@ export declare namespace Filter {
   type Or<FS extends readonly Any[]> = Simplify<{ [K in keyof FS]: Type<FS[K]> }[number]>;
 }
 
-/**
- * Make from AST.
- *
- * @internal
- */
-const makeFilter = <T>(ast: QueryAST.Predicate): Filter<T> => ({ ast, '~Filter': filterVariance }) as Filter<T>;
-
 const filterVariance: Filter<any>['~Filter'] = {} as Filter<any>['~Filter'];
 
 class FilterClass implements Filter<any> {
   private static variance: Filter<any>['~Filter'] = {} as Filter<any>['~Filter'];
 
+  static is(value: unknown): value is Filter<any> {
+    return typeof value === 'object' && value !== null && '~Filter' in value;
+  }
+
   static type<S extends Schema.Schema.All>(
     schema: S,
     props?: Filter.Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>> {
-    throw new Error('Not implemented');
+    const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
+    return new FilterClass({
+      type: 'object',
+      typename: dxn.toString(),
+      props: props ? propsFilterToAst(props) : {},
+    });
   }
 
-  // static props<T>(props: Filter.Props<T>): Filter<T> {
-  //   throw new Error('Not implemented');
-  // }
+  /**
+   * Internal.
+   */
+  static props<T>(props: Filter.Props<T>): Filter<T> {
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      props: propsFilterToAst(props),
+    });
+  }
 
   static text<S extends Schema.Schema.All>(
     schema: S,
     text: string,
     options?: Query.TextSearchOptions,
   ): Filter<Schema.Schema.Type<S>> {
-    throw new Error('Not implemented');
+    const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
+    return new FilterClass({
+      type: 'text-search',
+      typename: dxn.toString(),
+      text,
+      searchKind: options?.type,
+    });
+  }
+
+  static eq<T>(value: T): Filter<T> {
+    return new FilterClass({
+      type: 'compare',
+      operator: 'eq',
+      value,
+    });
+  }
+
+  static neq<T>(value: T): Filter<T> {
+    return new FilterClass({
+      type: 'compare',
+      operator: 'neq',
+      value,
+    });
   }
 
   static gt<T>(value: T): Filter<T> {
-    throw new Error('Not implemented');
+    return new FilterClass({
+      type: 'compare',
+      operator: 'gt',
+      value,
+    });
   }
 
   static gte<T>(value: T): Filter<T> {
-    throw new Error('Not implemented');
+    return new FilterClass({
+      type: 'compare',
+      operator: 'gte',
+      value,
+    });
   }
 
   static lt<T>(value: T): Filter<T> {
-    throw new Error('Not implemented');
+    return new FilterClass({
+      type: 'compare',
+      operator: 'lt',
+      value,
+    });
   }
 
   static lte<T>(value: T): Filter<T> {
-    throw new Error('Not implemented');
+    return new FilterClass({
+      type: 'compare',
+      operator: 'lte',
+      value,
+    });
   }
 
   static in<T>(...values: T[]): Filter<T> {
-    throw new Error('Not implemented');
+    return new FilterClass({
+      type: 'in',
+      values,
+    });
   }
 
   static between<T>(from: T, to: T): Filter<T> {
-    throw new Error('Not implemented');
+    return new FilterClass({
+      type: 'range',
+      from,
+      to,
+    });
   }
 
   static and<T>(...filters: Filter<T>[]): Filter<T> {
-    throw new Error('Not implemented');
+    return new FilterClass({
+      type: 'and',
+      filters: filters.map((f) => f.ast),
+    });
   }
 
   static or<T>(...filters: Filter<T>[]): Filter<T> {
-    throw new Error('Not implemented');
+    return new FilterClass({
+      type: 'or',
+      filters: filters.map((f) => f.ast),
+    });
   }
 
-  private constructor(public readonly ast: QueryAST.Predicate) {}
+  private constructor(public readonly ast: QueryAST.Filter) {}
 
   '~Filter' = FilterClass.variance;
 }
@@ -307,37 +379,42 @@ export const Filter: FilterAPI = FilterClass;
  */
 type RefPropKey<T> = { [K in keyof T]: T[K] extends Ref<infer _U> ? K : never }[keyof T] & string;
 
-const predicateSetToAst = (predicates: Filter.Props<any>): QueryAST.PredicateSet => {
+const propsFilterToAst = (predicates: Filter.Props<any>): Record<string, QueryAST.Filter> => {
   return Object.fromEntries(
-    Object.entries(predicates).map(([key, predicate]) => [key, predicate.ast]),
-  ) as QueryAST.PredicateSet;
+    Object.entries(predicates).map(([key, predicate]) => [
+      key,
+      Filter.is(predicate) ? predicate.ast : Filter.eq(predicate).ast,
+    ]),
+  ) as Record<string, QueryAST.Filter>;
 };
 
 class QueryClass implements Query<any> {
   private static variance: Query<any>['~Query'] = {} as Query<any>['~Query'];
 
   static select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>> {
-    throw new Error('Not implemented');
+    return new QueryClass({
+      type: 'select',
+      filter: filter.ast,
+    });
   }
 
   static type(schema: Schema.Schema.All, predicates?: Filter.Props<unknown>): Query<any> {
     const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
     return new QueryClass({
-      type: 'type',
-      typename: dxn.toString(),
-      predicates: predicates ? predicateSetToAst(predicates) : undefined,
+      type: 'select',
+      filter: FilterClass.type(schema, predicates).ast,
     });
   }
 
-  static text(schema: Schema.Schema.All, text: string, options?: Query.TextSearchOptions): Query<any> {
-    const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
-    return new QueryClass({
-      type: 'text-search',
-      typename: dxn.toString(),
-      text,
-      searchKind: options?.type,
-    });
-  }
+  // static text(schema: Schema.Schema.All, text: string, options?: Query.TextSearchOptions): Query<any> {
+  //   const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
+  //   return new QueryClass({
+  //     type: 'text-search',
+  //     typename: dxn.toString(),
+  //     text,
+  //     searchKind: options?.type,
+  //   });
+  // }
 
   static all(...queries: Query<any>[]): Query<any> {
     return new QueryClass({
@@ -346,12 +423,24 @@ class QueryClass implements Query<any> {
     });
   }
 
-  constructor(public readonly ast: QueryAST.AST) {}
+  constructor(public readonly ast: QueryAST.Query) {}
 
   '~Query' = QueryClass.variance;
 
-  select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>> {
-    throw new Error('Not implemented');
+  select(filter: Filter<any> | Filter.Props<any>): Query<any> {
+    if (Filter.is(filter)) {
+      return new QueryClass({
+        type: 'filter',
+        selection: this.ast,
+        filter: filter.ast,
+      });
+    } else {
+      return new QueryClass({
+        type: 'filter',
+        selection: this.ast,
+        filter: FilterClass.props(filter).ast,
+      });
+    }
   }
 
   reference(key: string): Query<any> {
@@ -378,8 +467,7 @@ class QueryClass implements Query<any> {
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
-      typename: dxn.toString(),
-      predicates: predicates ? predicateSetToAst(predicates) : undefined,
+      filter: FilterClass.type(relation, predicates).ast,
     });
   }
 
@@ -389,8 +477,7 @@ class QueryClass implements Query<any> {
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
-      typename: dxn.toString(),
-      predicates: predicates ? predicateSetToAst(predicates) : undefined,
+      filter: FilterClass.type(relation, predicates).ast,
     });
   }
 
