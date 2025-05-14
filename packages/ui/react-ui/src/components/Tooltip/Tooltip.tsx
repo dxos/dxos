@@ -23,6 +23,7 @@ import React, {
   type ComponentPropsWithoutRef,
   type ElementRef,
   type FC,
+  type SyntheticEvent,
   forwardRef,
   type MutableRefObject,
   type ReactNode,
@@ -251,12 +252,20 @@ type TooltipTriggerProps = PrimitiveButtonProps &
     content?: string;
     side?: TooltipSide;
     suppressNextTooltip?: MutableRefObject<boolean>;
-    onInteract?: (event: MouseEvent | TouchEvent | KeyboardEvent | FocusEvent) => void;
+    onInteract?: (event: SyntheticEvent) => void;
   };
 
 const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
   (props: TooltipScopedProps<TooltipTriggerProps>, forwardedRef) => {
-    const { __scopeTooltip, ...triggerProps } = props;
+    const {
+      __scopeTooltip,
+      onInteract,
+      delayDuration: _delayDuration,
+      suppressNextTooltip: _suppressNextTooltip,
+      side,
+      content,
+      ...triggerProps
+    } = props;
     const context = useTooltipContext(TRIGGER_NAME, __scopeTooltip);
     const ref = useRef<TooltipTriggerElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
@@ -274,8 +283,8 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
         // commonly anchors and the anchor `type` attribute signifies MIME type.
         aria-describedby={context.open ? context.contentId : undefined}
         data-state={context.stateAttribute}
-        data-tooltip-content={props.content}
-        data-tooltip-side={props.side}
+        data-tooltip-content={content}
+        data-tooltip-side={side}
         {...triggerProps}
         ref={composedRefs}
         onPointerMove={composeEventHandlers(props.onPointerMove, (event) => {
@@ -283,6 +292,10 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
             return;
           }
           if (!hasPointerMoveOpenedRef.current && !context.isPointerInTransitRef.current) {
+            onInteract?.(event);
+            if (event.defaultPrevented) {
+              return;
+            }
             context.onTriggerChange(ref.current);
             context.onTriggerEnter();
             hasPointerMoveOpenedRef.current = true;
@@ -299,8 +312,12 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
           isPointerDownRef.current = true;
           document.addEventListener('pointerup', handlePointerUp, { once: true });
         })}
-        onFocus={composeEventHandlers(props.onFocus, () => {
+        onFocus={composeEventHandlers(props.onFocus, (event) => {
           if (!isPointerDownRef.current) {
+            onInteract?.(event);
+            if (event.defaultPrevented) {
+              return;
+            }
             context.onTriggerChange(ref.current);
             context.onOpen();
           }

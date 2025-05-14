@@ -3,7 +3,14 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type ComponentPropsWithoutRef, forwardRef, type PropsWithChildren, useCallback, useRef } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  forwardRef,
+  type PropsWithChildren,
+  type SyntheticEvent,
+  useCallback,
+  useRef,
+} from 'react';
 
 import { Tooltip, type TooltipScopedProps, type TooltipTriggerProps } from '@dxos/react-ui';
 
@@ -25,16 +32,15 @@ export const TextTooltip = forwardRef<HTMLButtonElement, TooltipScopedProps<Text
     const content = useRef<HTMLButtonElement | null>(null);
     const ref = useComposedRefs(content, forwardedRef);
     const handleInteract = useCallback(
-      (event: Event) => {
+      (event: SyntheticEvent) => {
         if (onlyWhenTruncating && content.current) {
           const element: HTMLElement | null = truncateQuery
             ? content.current.querySelector(truncateQuery)
             : content.current;
-          if (element && element.scrollWidth > element.offsetWidth) {
-            return;
+          if (!element || element.scrollWidth <= element.offsetWidth) {
+            event.preventDefault();
           }
         }
-        event.preventDefault();
       },
       [onlyWhenTruncating, truncateQuery],
     );
