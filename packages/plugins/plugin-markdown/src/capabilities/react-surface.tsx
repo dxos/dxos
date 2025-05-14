@@ -26,6 +26,7 @@ export default () =>
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
         const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
+        const viewMode = getViewMode(fullyQualifiedId(data.subject));
 
         return (
           <MarkdownContainer
@@ -34,7 +35,7 @@ export default () =>
             role={role}
             settings={settings}
             extensionProviders={state.extensionProviders}
-            viewMode={getViewMode(fullyQualifiedId(data.subject))}
+            viewMode={viewMode}
             editorStateStore={editorState}
             onViewModeChange={setViewMode}
           />

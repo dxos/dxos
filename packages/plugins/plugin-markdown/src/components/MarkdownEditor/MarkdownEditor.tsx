@@ -2,17 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { createIntent, type FileInfo, useIntentDispatcher } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type DNDOptions,
-  type EditorAction,
   type EditorViewMode,
   type EditorInputMode,
   type EditorSelectionState,
@@ -20,7 +19,6 @@ import {
   EditorToolbar,
   type UseTextEditorProps,
   createBasicExtensions,
-  createEditorAction,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
@@ -28,12 +26,12 @@ import {
   editorGutter,
   processEditorPayload,
   stackItemContentEditorClassNames,
-  useActionHandler,
   useCommentState,
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
   useEditorToolbarState,
+  addLink,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
@@ -178,37 +176,27 @@ export const MarkdownEditor = ({
 
         const info = await onFileUpload(file);
         if (info) {
-          processEditorPayload(editorView, { type: 'image', data: info.url });
+          addLink({ url: info.url, image: true })(editorView);
         }
       });
     }
-  }, [acceptedFiles, editorView]);
+  }, [acceptedFiles, editorView, onFileUpload]);
 
-  // Toolbar handler.
-  const handleToolbarAction = useActionHandler(editorView);
-  const handleAction = useCallback(
-    (action: EditorAction) => {
-      switch (action.properties.type) {
-        case 'search': {
-          if (editorView) {
-            openSearchPanel(editorView);
-          }
-          return;
-        }
-        case 'view-mode': {
-          onViewModeChange?.(id, action.properties.data);
-          return;
-        }
-        case 'image': {
-          open();
-          return;
-        }
-      }
+  const getView = useCallback(() => {
+    invariant(editorView);
+    return editorView;
+  }, [editorView]);
 
-      handleToolbarAction?.(action);
-    },
-    [editorView, onViewModeChange, open],
+  const handleViewModeChange = useCallback(
+    (mode: EditorViewMode) => onViewModeChange?.(id, mode),
+    [id, onViewModeChange],
   );
+
+  const handleImageUpload = useCallback(() => {
+    if (onFileUpload) {
+      open();
+    }
+  }, [onFileUpload]);
 
   return (
     <StackItem.Content toolbar={!!toolbar} classNames='is-full min-bs-0'>
@@ -218,9 +206,10 @@ export const MarkdownEditor = ({
             attendableId={id}
             role={role}
             state={toolbarState}
+            getView={getView}
             comment={comment}
-            customActions={onFileUpload ? createUploadAction : undefined}
-            onAction={handleAction}
+            image={handleImageUpload}
+            viewMode={handleViewModeChange}
           />
           <input {...getInputProps()} />
         </>
@@ -248,13 +237,3 @@ const useTest = (view?: EditorView) => {
     }
   }, [view]);
 };
-
-export const createUploadAction = () => ({
-  nodes: [
-    createEditorAction({ type: 'image', testId: 'editor.toolbar.image' }, 'ph--image-square--regular', [
-      'upload image label',
-      { ns: MARKDOWN_PLUGIN },
-    ]),
-  ],
-  edges: [{ source: 'root', target: 'image' }],
-});
