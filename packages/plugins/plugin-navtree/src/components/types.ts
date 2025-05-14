@@ -14,7 +14,7 @@ import type { FlattenedActions, NavTreeItemGraphNode } from '../types';
 
 export type NavTreeContextValue = Pick<
   TreeProps<NavTreeItemGraphNode>,
-  'getProps' | 'isCurrent' | 'isOpen' | 'onOpenChange' | 'canDrop' | 'onSelect'
+  'getProps' | 'isCurrent' | 'isOpen' | 'canDrop' | 'onOpenChange' | 'onSelect'
 > &
   Pick<L1PanelProps, 'onBack'> & {
     tab: string;
@@ -23,9 +23,9 @@ export type NavTreeContextValue = Pick<
     renderItemEnd?: FC<{ node: Node; open: boolean }>;
     getItems: (node?: NavTreeItemGraphNode, disposition?: string) => NavTreeItemGraphNode[];
     getActions: (node: Node) => FlattenedActions;
+    loadDescendents?: (node: Node) => MaybePromise<void>;
     isAlternateTree?: (path: string[], item: NavTreeItemGraphNode) => boolean;
     setAlternateTree?: (path: string[], open: boolean) => void;
-    loadDescendents?: (node: Node) => MaybePromise<void>;
     onTabChange?: (node: NavTreeItemGraphNode) => void;
   };
 
