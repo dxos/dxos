@@ -177,7 +177,7 @@ const meta: Meta<RenderProps> = {
     withClientProvider({ createIdentity: true, createSpace: true }),
     withTheme,
     withAttention,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
     withPluginManager({ capabilities }),
   ],
 };

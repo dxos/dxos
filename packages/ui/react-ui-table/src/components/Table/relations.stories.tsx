@@ -112,7 +112,7 @@ const meta: Meta<typeof DefaultStory> = {
       createSpace: true,
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
   ],
 };
 

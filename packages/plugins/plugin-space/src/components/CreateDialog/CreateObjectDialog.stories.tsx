@@ -35,7 +35,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [CollectionType] }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
   parameters: {
     translations: [...translations, osTranslations],

@@ -38,7 +38,7 @@ const meta: Meta<typeof MarkdownPreview> = {
       </Popover.Root>
     );
   },
-  decorators: [withPluginManager({ plugins: [IntentPlugin()] }), withTheme, withLayout({ tooltips: true })],
+  decorators: [withPluginManager({ plugins: [IntentPlugin()] }), withTheme, withLayout()],
   parameters: {
     layout: 'centered',
     translations,

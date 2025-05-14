@@ -224,7 +224,7 @@ const meta: Meta<typeof DefaultStory> = {
       fireEvents: [Events.SetupArtifactDefinition],
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
   ],
   parameters: {
     translations,

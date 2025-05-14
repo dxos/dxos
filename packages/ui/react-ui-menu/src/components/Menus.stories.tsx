@@ -20,7 +20,7 @@ faker.seed(1234);
 export default {
   title: 'ui/react-ui-menu/Menus',
   component: ToolbarMenu,
-  decorators: [withTheme, withLayout({ tooltips: true }), withSignals],
+  decorators: [withTheme, withLayout(), withSignals],
   parameters: { translations },
 };
 

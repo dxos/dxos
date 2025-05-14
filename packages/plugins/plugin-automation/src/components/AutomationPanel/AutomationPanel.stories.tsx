@@ -42,7 +42,7 @@ const meta: Meta = {
         }
       },
     }),
-    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex juastify-center m-2' }),
+    withLayout({ fullscreen: true, classNames: 'flex juastify-center m-2' }),
     withTheme,
   ],
   parameters: {

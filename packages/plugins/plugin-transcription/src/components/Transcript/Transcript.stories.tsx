@@ -197,7 +197,7 @@ const meta: Meta<typeof QueueStory> = {
         IntentPlugin(),
       ],
     }),
-    withLayout({ tooltips: true, fullscreen: true }),
+    withLayout({ fullscreen: true }),
   ],
   parameters: {
     translations,

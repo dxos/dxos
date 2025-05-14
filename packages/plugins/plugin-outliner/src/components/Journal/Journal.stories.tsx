@@ -43,7 +43,7 @@ const meta: Meta<typeof Journal.Root> = {
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [JournalType, JournalEntryType, TreeType] }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
+    withLayout({ fullscreen: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],
   parameters: {
     translations,

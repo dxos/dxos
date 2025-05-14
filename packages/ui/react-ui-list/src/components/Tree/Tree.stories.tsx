@@ -27,7 +27,7 @@ const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 const meta: Meta<typeof Tree> = {
   title: 'ui/react-ui-list/Tree',
   component: Tree,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   render: (args) => {
     useEffect(() => {
       return monitorForElements({
