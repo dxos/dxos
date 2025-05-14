@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Theme, type Elevation } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { arrow, chromeText, surfaceShadow, popperMotion, surfaceZIndex } from '../fragments';
+import { chromeText, surfaceShadow, popperMotion, surfaceZIndex } from '../fragments';
 
 export type TooltipStyleProps = Partial<{
   elevation: Elevation;
@@ -21,7 +21,7 @@ export const tooltipContent: ComponentFunction<TooltipStyleProps> = ({ elevation
     ...etc,
   );
 
-export const tooltipArrow: ComponentFunction<TooltipStyleProps> = (_props, ...etc) => mx(arrow, ...etc);
+export const tooltipArrow: ComponentFunction<TooltipStyleProps> = (_props, ...etc) => mx('fill-inverseSurface', ...etc);
 
 export const tooltipTheme: Theme<TooltipStyleProps> = {
   content: tooltipContent,
