@@ -14,7 +14,7 @@ import { Button } from '../Buttons';
 
 faker.seed(1234);
 
-const StorybookPopover = ({ openTrigger, children }: PropsWithChildren<{ openTrigger: ReactNode }>) => {
+const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger: ReactNode }>) => {
   return (
     <Popover.Root defaultOpen>
       <Popover.Trigger asChild>{openTrigger}</Popover.Trigger>
@@ -31,7 +31,7 @@ const StorybookPopover = ({ openTrigger, children }: PropsWithChildren<{ openTri
 export default {
   title: 'ui/react-ui-core/Popover',
   component: Popover,
-  render: StorybookPopover,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
