@@ -4,7 +4,7 @@
 
 import { Registry } from '@effect-rx/rx-react';
 import { Option } from 'effect';
-import { describe, expect, test } from 'vitest';
+import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
@@ -12,7 +12,7 @@ import { getGraph, Graph, ROOT_ID, ROOT_TYPE } from './graph';
 
 const EXAMPLE_TYPE = 'example';
 
-describe.only('RxGraph', () => {
+describe('RxGraph', () => {
   test('getGraph', () => {
     const r = Registry.make();
     const graph = new Graph();
@@ -93,7 +93,7 @@ describe.only('RxGraph', () => {
     graph.addNode(r, { id: '2', type: EXAMPLE_TYPE });
     graph.addEdge(r, { source: '1', target: '2' });
     const nodes = r.get(graph.nodes('1'));
-    expect(nodes.length).toEqual(1);
+    expect(nodes).has.length(1);
     expect(nodes[0].id).toEqual('2');
   });
 
@@ -106,6 +106,7 @@ describe.only('RxGraph', () => {
     const cancel = r.subscribe(nodeKey, (_) => {
       count++;
     });
+    onTestFinished(() => cancel());
 
     expect(r.get(nodeKey)).toEqual(Option.none());
     expect(count).toEqual(1);
@@ -125,7 +126,31 @@ describe.only('RxGraph', () => {
 
     graph.addNode(r, { id: '1', type: EXAMPLE_TYPE });
     expect(count).toEqual(2);
+  });
 
-    cancel();
+  test('update nodes', () => {
+    const r = Registry.make();
+    const graph = new Graph();
+    assert.strictEqual(graph.nodes('parent'), graph.nodes('parent'));
+    const childrenKey = graph.nodes('parent');
+
+    let count = 0;
+    const cancel = r.subscribe(childrenKey, (_) => {
+      count++;
+    });
+    onTestFinished(() => cancel());
+
+    graph.addNode(r, { id: 'parent', type: EXAMPLE_TYPE });
+    graph.addNode(r, { id: 'child', type: EXAMPLE_TYPE });
+    graph.addEdge(r, { source: 'parent', target: 'child' });
+
+    expect(count).toEqual(0);
+    const children = r.get(childrenKey);
+    expect(children).has.length(1);
+    expect(children[0].id).toEqual('child');
+    expect(count).toEqual(1);
+
+    graph.addNode(r, { id: 'child', type: EXAMPLE_TYPE, data: 'updated' });
+    expect(count).toEqual(2);
   });
 });

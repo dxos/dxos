@@ -7,9 +7,10 @@ import { Option, pipe, Record, Schema } from 'effect';
 
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type MakeOptional } from '@dxos/util';
 
-import { type NodeArg, type Node } from '../node';
+import { type NodeArg, type Node, type Relation } from '../node';
 
 const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
@@ -29,6 +30,7 @@ export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
 export type GraphParams = {
   nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
   edges?: Record<string, string[]>;
+  onExpand?: Graph['_onExpand'];
 };
 
 type Edge = { source: string; target: string };
@@ -42,30 +44,23 @@ type Edges = { inbound: string[]; outbound: string[] };
  * The Graph represents the user interface information architecture of the application constructed via plugins.
  */
 export class Graph {
-  /**
-   * @internal
-   */
-  readonly _nodes = Record.fromEntries([
+  private readonly _onExpand?: (registry: Registry.Registry, id: string, relation: Relation) => void;
+  private readonly _initialized = Record.empty<string, boolean>();
+  private readonly _edges = Record.empty<string, Rx.Writable<Edges>>();
+  private readonly _nodes = Record.fromEntries([
     [
       ROOT_ID,
-      Rx.make<Option.Option<NodeInternal>>(
-        this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} }),
-      ),
+      Rx.make<Option.Option<Node>>(this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} })),
     ],
   ]);
 
-  /**
-   * @internal
-   */
-  readonly _edges = Record.empty<string, Rx.Writable<Edges>>();
-
-  readonly node = Rx.family<string, Rx.Writable<Option.Option<NodeInternal>>>((id) => {
+  readonly node = Rx.family<string, Rx.Writable<Option.Option<Node>>>((id) => {
     return pipe(
       this._nodes,
       Record.get(id),
       Option.match({
         onSome: (rx) => rx,
-        onNone: () => Rx.make<Option.Option<NodeInternal>>(Option.none()),
+        onNone: () => Rx.make<Option.Option<Node>>(Option.none()),
       }),
     );
   });
@@ -81,18 +76,37 @@ export class Graph {
     );
   });
 
-  nodes(id: string): Rx.Rx<Node[]> {
+  private readonly _nodesFamily = Rx.family<string, Rx.Rx<Node[]>>((key) => {
     return Rx.readable((get) => {
-      const { outbound } = get(this.edge(id));
-      return outbound
+      const [id, relation] = key.split('+');
+      const edges = get(this.edge(id));
+      return edges[relation as Relation]
         .map((id) => get(this.node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
     });
+  });
+
+  constructor({ onExpand }: GraphParams = {}) {
+    this._onExpand = onExpand;
+  }
+
+  nodes(id: string, relation: Relation = 'outbound'): Rx.Rx<Node[]> {
+    return this._nodesFamily(`${id}+${relation}`);
   }
 
   edges(id: string): Rx.Rx<Edges> {
     return this.edge(id);
+  }
+
+  expand(registry: Registry.Registry, id: string, relation: Relation = 'outbound') {
+    const key = `${id}+${relation}`;
+    const initialized = Record.get(this._initialized, key).pipe(Option.getOrElse(() => false));
+    log('expand', { key, initialized });
+    if (!initialized) {
+      const success = this._onExpand?.(registry, id, relation);
+      Record.set(this._initialized, key, success);
+    }
   }
 
   addNodes(registry: Registry.Registry, nodes: NodeArg<any, Record<string, any>>[]) {
@@ -108,11 +122,14 @@ export class Graph {
         const typeChanged = node.type !== type;
         const dataChanged = node.data !== data;
         const propertiesChanged = Object.keys(properties).some((key) => node.properties[key] !== properties[key]);
+        log('existing node', { typeChanged, dataChanged, propertiesChanged });
         if (typeChanged || dataChanged || propertiesChanged) {
+          log('updating node', { id, type, data, properties });
           registry.set(nodeRx, Option.some({ ...node, type, data, properties: { ...node.properties, ...properties } }));
         }
       },
       onNone: () => {
+        log('new node', { id, type, data, properties });
         registry.set(nodeRx, this._constructNode({ id, type, data, properties }));
       },
     });
@@ -158,12 +175,14 @@ export class Graph {
     const sourceRx = this.edge(edgeArg.source);
     const source = registry.get(sourceRx);
     if (!source.outbound.includes(edgeArg.target)) {
+      log('add outbound edge', { source: edgeArg.source, target: edgeArg.target });
       registry.set(sourceRx, { inbound: source.inbound, outbound: [...source.outbound, edgeArg.target] });
     }
 
     const targetRx = this.edge(edgeArg.target);
     const target = registry.get(targetRx);
     if (!target.inbound.includes(edgeArg.source)) {
+      log('add inbound edge', { source: edgeArg.source, target: edgeArg.target });
       registry.set(targetRx, { inbound: [...target.inbound, edgeArg.source], outbound: target.outbound });
     }
   }
@@ -192,7 +211,7 @@ export class Graph {
     }
   }
 
-  private _constructNode(node: Omit<Node, typeof graphSymbol>) {
+  private _constructNode(node: Node): Option.Option<Node> {
     return Option.some({ ...node, [graphSymbol]: this });
   }
 }
