@@ -38,8 +38,8 @@ describe('RxGraphBuilder', () => {
       graph.expand(r, ROOT_ID);
       graph.expand(r, ROOT_ID, 'inbound');
 
-      const outbound = r.get(graph.nodes(ROOT_ID));
-      const inbound = r.get(graph.nodes(ROOT_ID, 'inbound'));
+      const outbound = r.get(graph.connections(ROOT_ID));
+      const inbound = r.get(graph.connections(ROOT_ID, 'inbound'));
 
       expect(outbound).has.length(1);
       expect(outbound[0].id).to.equal('child');
@@ -64,13 +64,13 @@ describe('RxGraphBuilder', () => {
       graph.expand(r, ROOT_ID);
 
       {
-        const [node] = r.get(graph.nodes(ROOT_ID));
+        const [node] = r.get(graph.connections(ROOT_ID));
         expect(node.data).to.equal(0);
       }
 
       {
         r.set(state, 1);
-        const [node] = r.get(graph.nodes(ROOT_ID));
+        const [node] = r.get(graph.connections(ROOT_ID));
         expect(node.data).to.equal(1);
       }
     });
@@ -89,13 +89,13 @@ describe('RxGraphBuilder', () => {
       const graph = builder.graph;
 
       let count = 0;
-      const cancel = r.subscribe(graph.nodes(ROOT_ID), (_) => {
+      const cancel = r.subscribe(graph.connections(ROOT_ID), (_) => {
         count++;
       });
       onTestFinished(() => cancel());
 
       expect(count).to.equal(0);
-      expect(r.get(graph.nodes(ROOT_ID))).to.have.length(0);
+      expect(r.get(graph.connections(ROOT_ID))).to.have.length(0);
       expect(count).to.equal(1);
 
       graph.expand(r, ROOT_ID);
@@ -119,7 +119,7 @@ describe('RxGraphBuilder', () => {
 
       let nodes: Node[] = [];
       let count = 0;
-      const cancel = r.subscribe(graph.nodes(ROOT_ID), (_nodes) => {
+      const cancel = r.subscribe(graph.connections(ROOT_ID), (_nodes) => {
         count++;
         nodes = _nodes;
       });
@@ -127,7 +127,7 @@ describe('RxGraphBuilder', () => {
 
       expect(nodes).has.length(0);
       expect(count).to.equal(0);
-      r.get(graph.nodes(ROOT_ID));
+      r.get(graph.connections(ROOT_ID));
       expect(nodes).has.length(1);
       expect(count).to.equal(1);
 
@@ -160,7 +160,7 @@ describe('RxGraphBuilder', () => {
       graph.expand(r, ROOT_ID);
 
       {
-        const nodes = r.get(graph.nodes(ROOT_ID));
+        const nodes = r.get(graph.connections(ROOT_ID));
         expect(nodes).has.length(2);
         expect(nodes[0].id).to.equal(exampleId(1));
         expect(nodes[1].id).to.equal(exampleId(2));
@@ -169,10 +169,95 @@ describe('RxGraphBuilder', () => {
       r.set(nodes, [{ id: exampleId(3), type: EXAMPLE_TYPE }]);
 
       {
-        const nodes = r.get(graph.nodes(ROOT_ID));
+        const nodes = r.get(graph.connections(ROOT_ID));
         expect(nodes).has.length(1);
         expect(nodes[0].id).to.equal(exampleId(3));
       }
+    });
+
+    test('updates are constrained', () => {
+      const r = Registry.make();
+      const builder = new GraphBuilder();
+      const name = Rx.make('default');
+      const sub = Rx.make('default');
+
+      builder.addExtension(r, [
+        createExtension({
+          id: 'root',
+          filter: (node): node is Node<null> => node.id === 'root',
+          connector: () =>
+            Rx.readable((get) =>
+              get(name) === 'removed' ? [] : [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(name) }],
+            ),
+        }),
+        createExtension({
+          id: 'connector1',
+          filter: (node): node is Node<string> => node.id === EXAMPLE_ID,
+          connector: () => Rx.readable((get) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: get(sub) }]),
+        }),
+        createExtension({
+          id: 'connector2',
+          filter: (node): node is Node<string> => node.id === EXAMPLE_ID,
+          connector: ({ node }) => Rx.readable(() => [{ id: exampleId(3), type: EXAMPLE_TYPE, data: node.data }]),
+        }),
+      ]);
+
+      const graph = builder.graph;
+      let independentCount = 0;
+      const independentCancel = r.subscribe(graph.node(exampleId(2)), (_) => {
+        independentCount++;
+      });
+      onTestFinished(() => independentCancel());
+
+      let dependentCount = 0;
+      const dependentCancel = r.subscribe(graph.node(exampleId(3)), (_) => {
+        dependentCount++;
+      });
+      onTestFinished(() => dependentCancel());
+
+      // Counts should not increment until the node is expanded.
+      graph.expand(r, ROOT_ID);
+      expect(independentCount).to.equal(0);
+      expect(dependentCount).to.equal(0);
+
+      // Counts should increment when the node is expanded.
+      graph.expand(r, EXAMPLE_ID);
+      expect(independentCount).to.equal(1);
+      expect(dependentCount).to.equal(1);
+
+      // Only dependent count should increment when the parent changes.
+      r.set(name, 'updated');
+      expect(independentCount).to.equal(1);
+      expect(dependentCount).to.equal(2);
+
+      // Only independent count should increment when state changes.
+      r.set(sub, 'updated');
+      expect(independentCount).to.equal(2);
+      expect(dependentCount).to.equal(2);
+
+      // Independent count should increment even when the node is removed.
+      // Dependent count should not increment because the node is removed.
+      Rx.batch(() => {
+        r.set(name, 'removed');
+        r.set(sub, 'batch');
+      });
+      expect(independentCount).to.equal(3);
+      expect(dependentCount).to.equal(2);
+
+      // Independent count should increment even when the node is removed.
+      r.set(sub, 'removed');
+      expect(independentCount).to.equal(4);
+      expect(dependentCount).to.equal(2);
+
+      // Dependent count should increment when the node is added back.
+      r.set(name, 'added');
+      expect(independentCount).to.equal(4);
+      expect(dependentCount).to.equal(3);
+
+      // Counts should not increment when the node is expanded again.
+      graph.expand(r, EXAMPLE_ID);
+      expect(independentCount).to.equal(4);
+      expect(dependentCount).to.equal(3);
     });
   });
 });
