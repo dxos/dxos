@@ -53,9 +53,9 @@ const DefaultStory = ({ editing }: StoryProps) => {
     () => ({
       selection: { enabled: true, mode: 'multiple' },
       dataEditable: true,
-      schemaEditable: isMutable(schema),
+      schemaEditable: schema && isMutable(schema),
     }),
-    [],
+    [schema],
   );
 
   const model = useTableModel({ table, projection, features });

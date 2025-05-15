@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { EchoSchema, FormatEnum } from '@dxos/echo-schema';
+import { type EchoSchema, FormatEnum, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -37,10 +37,9 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         view.query.typename = newTypename;
       }
 
-      // TODO(burdon): Need EchoSchema. @dmaretskyi?
-      invariant(Type.isMutable(schema));
-      invariant(schema instanceof EchoSchema);
-      schema.updateTypename(newTypename);
+      invariant(schema);
+      invariant(isMutable(schema));
+      (schema as EchoSchema).updateTypename(newTypename);
     },
     [views, schema],
   );
@@ -57,7 +56,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
       const jsonSchema = Type.toJsonSchema(schema);
       return new ViewProjection(jsonSchema, kanban.cardView.target);
     }
-  }, [kanban?.cardView?.target, schema, JSON.stringify(Type.toJsonSchema(schema))]);
+  }, [kanban?.cardView?.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections
@@ -88,8 +87,8 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         registry={space.db.schemaRegistry}
         schema={schema}
         view={kanban.cardView.target}
-        onTypenameChanged={schema.readonly ? undefined : handleUpdateTypename}
-        onDelete={schema.readonly ? undefined : handleDelete}
+        onTypenameChanged={isMutable(schema) ? handleUpdateTypename : undefined}
+        onDelete={isMutable(schema) ? handleDelete : undefined}
       />
     </>
   );

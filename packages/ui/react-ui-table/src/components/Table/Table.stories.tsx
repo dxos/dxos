@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { FormatEnum, isMutable } from '@dxos/echo-schema';
+import { type EchoSchema, FormatEnum, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -53,7 +53,7 @@ const useTestTableModel = () => {
     () => ({
       selection: { enabled: true, mode: 'multiple' as const },
       dataEditable: true,
-      schemaEditable: isMutable(schema),
+      schemaEditable: schema && isMutable(schema),
     }),
     [schema],
   );
@@ -152,7 +152,8 @@ const StoryViewEditor = () => {
     (typename: string) => {
       if (table?.view?.target) {
         invariant(schema);
-        schema.mutable.updateTypename(typename);
+        invariant(isMutable(schema));
+        (schema as EchoSchema).updateTypename(typename);
         table.view.target.query.typename = typename;
       }
     },

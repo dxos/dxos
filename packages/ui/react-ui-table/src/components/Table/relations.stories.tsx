@@ -9,7 +9,7 @@ import { type Schema } from 'effect';
 import { SchemaAST } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { type BaseObject, type HasId, toJsonSchema } from '@dxos/echo-schema';
+import { type BaseObject, getTypename, type HasId, toJsonSchema } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
@@ -31,12 +31,12 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
-const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema.AnyNoContext, count: number) => {
+const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, count: number) => {
   const { space } = useClientProvider();
 
   const table = useMemo(() => {
     // const { typename } = pipe(schema.ast, SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId), Option.getOrThrow);
-    const typename = Type.getTypename(schema);
+    const typename = getTypename(schema)!;
     const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
     const view = createView({ name, typename, jsonSchema: toJsonSchema(schema) });
     return live(TableType, { view: makeRef(view) });

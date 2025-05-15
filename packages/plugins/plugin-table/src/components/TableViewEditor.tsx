@@ -5,8 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo-schema';
+import { isMutable, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -23,7 +22,6 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const client = useClient();
   const space = getSpace(table);
   const schema = useSchema(client, space, table.view?.target?.query.typename);
-  const readonly = !Type.isMutable(schema);
 
   const views = useQuery(space, Filter.schema(ViewType));
   const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);
@@ -37,10 +35,9 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
         view.query.typename = newTypename;
       }
 
-      // TODO(burdon): Need EchoSchema.
-      invariant(Type.isMutable(schema));
-      invariant(schema instanceof EchoSchema);
-      schema.updateTypename(newTypename);
+      invariant(schema);
+      invariant(isMutable(schema));
+      (schema as EchoSchema).updateTypename(newTypename);
     },
     [views, schema],
   );
@@ -61,8 +58,8 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
       registry={space.db.schemaRegistry}
       schema={schema}
       view={table.view.target!}
-      onTypenameChanged={readonly ? undefined : handleUpdateTypename}
-      onDelete={readonly ? undefined : handleDelete}
+      onTypenameChanged={isMutable(schema) ? undefined : handleUpdateTypename}
+      onDelete={isMutable(schema) ? undefined : handleDelete}
     />
   );
 };

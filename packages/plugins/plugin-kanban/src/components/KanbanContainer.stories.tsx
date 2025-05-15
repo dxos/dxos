@@ -9,6 +9,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Type } from '@dxos/echo';
+import { type EchoSchema } from '@dxos/echo-schema';
+import { isMutable } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -65,7 +68,7 @@ const StorybookKanban = () => {
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
     //  @dmaretskyi? Once resolved, update in multiple places (e.g., storybooks).
-  }, [kanban?.cardView?.target, schema, JSON.stringify(Type.toJsonSchema(schema))]);
+  }, [kanban?.cardView?.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
 
   const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
@@ -98,7 +101,9 @@ const StorybookKanban = () => {
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       if (kanban?.cardView?.target) {
-        schema?.mutable.updateTypename(typename);
+        invariant(schema);
+        invariant(isMutable(schema));
+        (schema as EchoSchema).updateTypename(typename);
         kanban.cardView.target.query.typename = typename;
       }
     },

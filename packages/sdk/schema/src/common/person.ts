@@ -86,7 +86,8 @@ export const PersonSchema = Schema.Struct({
       ),
     ),
   ),
-  birthday: Schema.optional(Schema.mutable(Schema.Date.annotations({ title: 'Birthday' }))),
+  // TODO(burdon): Support date or create String type for ISO Date.
+  birthday: Schema.optional(Schema.mutable(Schema.String.annotations({ title: 'Birthday' }))),
   // TODO(burdon): Move to base object?
   fields: Schema.optional(
     Schema.mutable(
