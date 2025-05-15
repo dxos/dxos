@@ -57,6 +57,7 @@ export const deployScript = async ({
 
     const { functionId, version, meta } = await uploadWorkerFunction({
       client,
+      ownerPublicKey: space.key,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
       functionId: existingFunctionId,
       source: bundle,
