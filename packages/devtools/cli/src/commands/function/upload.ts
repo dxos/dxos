@@ -9,7 +9,7 @@ import path from 'path';
 
 import { asyncTimeout } from '@dxos/async';
 import { CollectionType } from '@dxos/cli-composer';
-import { type Client } from '@dxos/client';
+import { type PublicKey, type Client } from '@dxos/client';
 import { type AnyLiveObject, getMeta, live, makeRef } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import { FunctionType, ScriptType, makeFunctionUrl, setUserFunctionUrlInMetadata } from '@dxos/functions';
@@ -49,7 +49,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         const identity = client.halo.identity.get();
         invariant(identity, 'Identity not available');
 
-        const uploadResult = await this._upload(client, undefined, bundledScript);
+        const uploadResult = await this._upload(client, identity.identityKey, undefined, bundledScript);
 
         this.log(`Upload complete: ${uploadResult.functionId}, version ${uploadResult.version}`);
       });
@@ -64,7 +64,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
         const existingFunctionObject = await this._loadFunctionObject(space);
 
-        const uploadResult = await this._upload(client, existingFunctionObject, bundledScript);
+        const uploadResult = await this._upload(client, space.key, existingFunctionObject, bundledScript);
 
         const functionObject = this._updateFunctionObject(space, existingFunctionObject, uploadResult);
 
@@ -106,12 +106,18 @@ export default class Upload extends BaseCommand<typeof Upload> {
     return matchingFunction;
   }
 
-  private async _upload(client: Client, functionObject: FunctionType | undefined, bundledSource: string) {
+  private async _upload(
+    client: Client,
+    ownerPublicKey: PublicKey,
+    functionObject: FunctionType | undefined,
+    bundledSource: string,
+  ) {
     let result: UploadFunctionResponseBody;
     try {
       result = await asyncTimeout(
         uploadWorkerFunction({
           client,
+          ownerPublicKey,
           version: await this._getNextVersion(functionObject),
           functionId: this.flags.functionId,
           name: this.flags.name,
