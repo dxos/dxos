@@ -29,7 +29,7 @@ const DefaultStory = ({ markers = [] }: { markers?: MapMarker[] }) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-geo/Map',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;

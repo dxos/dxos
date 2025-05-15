@@ -6,16 +6,17 @@ import React from 'react';
 
 import { Capabilities, contributes, Events, defineModule, definePlugin } from '@dxos/app-framework';
 
-import { IntentResolver, State } from './capabilities';
+import { IntentResolver, type LayoutState, State } from './capabilities';
 import { Layout } from './components';
 import { meta } from './meta';
 
-export const StorybookLayoutPlugin = () =>
+export const StorybookLayoutPlugin = ({ initialState }: { initialState?: LayoutState } = {}) =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
       activatesOn: Events.Startup,
-      activate: State,
+      activatesAfter: [Events.LayoutReady],
+      activate: () => State({ initialState }),
     }),
     defineModule({
       id: `${meta.id}/module/react-context`,

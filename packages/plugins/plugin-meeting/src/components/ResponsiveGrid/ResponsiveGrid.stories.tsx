@@ -39,9 +39,16 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
 
   return (
     <ResponsiveGridItem {...props} item={item} name={item.name} mute={mute} speaking={speaking} wave={wave}>
-      {item.type === 'image' && <img className='flex aspect-video object-contain' src={item.imageUrl} />}
+      {item.type === 'image' && <img className='aspect-video object-contain' src={item.imageUrl} />}
       {item.type === 'video' && (
-        <video className='flex aspect-video object-cover' src={item.videoUrl} playsInline autoPlay loop muted />
+        <video
+          className='w-full aspect-video object-cover rounded-md'
+          src={item.videoUrl}
+          playsInline
+          autoPlay
+          loop
+          muted
+        />
       )}
     </ResponsiveGridItem>
   );
@@ -78,16 +85,13 @@ const meta: Meta<StoryProps> = {
       return () => clearInterval(interval);
     }, []);
 
-    return <ResponsiveGrid {...args} Cell={TestCell} items={items} pinned={pinned} onPinnedChange={setPinned} />;
+    return (
+      <div className='grid grow p-4'>
+        <ResponsiveGrid {...args} Cell={TestCell} items={items} pinned={pinned} onPinnedChange={setPinned} />
+      </div>
+    );
   },
-  decorators: [
-    withTheme,
-    withLayout({
-      tooltips: true,
-      fullscreen: true,
-      classNames: 'justify-center',
-    }),
-  ],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   parameters: {
     translations,
   },
@@ -135,8 +139,10 @@ export const Solo: Story = {
   },
 };
 
-export const Dual: Story = {
+export const TwoUp: Story = {
   args: {
     items: Array.from({ length: 2 }, (_, i) => createItem('image')),
   },
 };
+
+// TODO(burdon): Story to join/leave repeatedly to test stable position.

@@ -32,13 +32,15 @@ const meta: Meta<typeof NodeEditor> = {
     }, [space]);
 
     return (
-      <div className='w-[40rem] border border-divider rounded'>{tree && <NodeEditor {...args} node={tree.root} />}</div>
+      <div className='w-[40rem] border border-separator rounded'>
+        {tree && <NodeEditor {...args} node={tree.root} />}
+      </div>
     );
   },
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [TreeType] }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
   parameters: {
     layout: 'centered',

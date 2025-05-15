@@ -6,6 +6,8 @@ import { Capabilities, contributes, defineCapability } from '@dxos/app-framework
 import { live } from '@dxos/live-object';
 
 export type LayoutState = {
+  sidebarState?: 'expanded' | 'collapsed' | 'closed';
+  complementarySidebarState?: 'expanded' | 'collapsed' | 'closed';
   popoverContent?: any;
   popoverOpen?: boolean;
   popoverSide?: 'top' | 'right' | 'bottom' | 'left';
@@ -15,8 +17,13 @@ export type LayoutState = {
 };
 export const LayoutState = defineCapability<LayoutState>('dxos.org/plugin/storybook-layout/state');
 
-export default () => {
-  const state = live<LayoutState>({});
+const defaultState: LayoutState = {
+  sidebarState: 'closed',
+  complementarySidebarState: 'closed',
+};
+
+export default ({ initialState = defaultState }: { initialState?: LayoutState }) => {
+  const state = live<LayoutState>(initialState);
 
   const layout = live<Capabilities.Layout>({
     get mode() {
@@ -26,10 +33,10 @@ export default () => {
       return false;
     },
     get sidebarOpen() {
-      return false;
+      return state.sidebarState === 'expanded';
     },
     get complementarySidebarOpen() {
-      return false;
+      return state.complementarySidebarState === 'expanded';
     },
     get workspace() {
       return 'default';

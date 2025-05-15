@@ -20,7 +20,7 @@ import { isDeleted } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension, toSignal, type Node, type InvokeParams } from '@dxos/plugin-graph';
+import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
@@ -85,17 +85,29 @@ export default (context: PluginsContext) => {
       filter: (node): node is Node<null> => node.id === 'root',
       actions: () => [
         {
-          id: SpaceAction.AddSpace._tag,
-          data: async (params: InvokeParams) => {
+          id: SpaceAction.OpenCreateSpace._tag,
+          data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            await dispatch(createIntent(SpaceAction.AddSpace));
+            await dispatch(createIntent(SpaceAction.OpenCreateSpace));
           },
           properties: {
-            label: ['add space label', { ns: SPACE_PLUGIN }],
+            label: ['create space label', { ns: SPACE_PLUGIN }],
             icon: 'ph--plus--regular',
-            testId: 'spacePlugin.addSpace',
-            disposition: 'item',
-            position: 'fallback',
+            testId: 'spacePlugin.createSpace',
+            disposition: 'menu',
+          },
+        },
+        {
+          id: SpaceAction.Join._tag,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(SpaceAction.Join));
+          },
+          properties: {
+            label: ['join space label', { ns: SPACE_PLUGIN }],
+            icon: 'ph--sign-in--regular',
+            testId: 'spacePlugin.joinSpace',
+            disposition: 'menu',
           },
         },
         {

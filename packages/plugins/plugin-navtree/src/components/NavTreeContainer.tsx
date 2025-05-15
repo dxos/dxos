@@ -19,7 +19,7 @@ import {
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
-import { useMediaQuery } from '@dxos/react-ui';
+import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -28,6 +28,7 @@ import { NAV_TREE_ITEM, NavTree } from './NavTree';
 import { NavTreeContext } from './NavTreeContext';
 import { type NavTreeContextValue } from './types';
 import { NavTreeCapabilities } from '../capabilities';
+import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import {
   expandActions,
@@ -58,8 +59,9 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
-  const layout = useLayout();
   const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
+  const layout = useLayout();
+  const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
@@ -120,7 +122,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [graph],
   );
 
-  const onOpenChange = useCallback(
+  const handleOpenChange = useCallback(
     ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
       // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
       setItem(path, 'open', open);
@@ -133,9 +135,26 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [graph],
   );
 
-  const onTabChange = useCallback(
+  const handleTabChange = useCallback(
     async (node: NavTreeItemGraphNode) => {
+      await dispatch(
+        createIntent(LayoutAction.UpdateSidebar, {
+          part: 'sidebar',
+          options: {
+            state:
+              node.id === tab
+                ? navigationSidebarState === 'expanded'
+                  ? isLg
+                    ? 'collapsed'
+                    : 'closed'
+                  : 'expanded'
+                : 'expanded',
+          },
+        }),
+      );
+
       await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: node.id }));
+
       // Open the first item if the workspace is empty.
       if (layout.active.length === 0) {
         const [item] = getItems(node).filter((node) => !isActionLike(node));
@@ -144,7 +163,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
         }
       }
     },
-    [dispatch, layout],
+    [dispatch, layout.active, tab, navigationSidebarState, isLg],
   );
 
   const canDrop = useCallback((source: TreeData, target: TreeData) => {
@@ -168,7 +187,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
       if (isAction(node)) {
         const [parent] = graph.nodes(node, { relation: 'inbound' });
-        void (parent && node.data({ node: parent, caller: NAV_TREE_ITEM }));
+        void (parent && node.data({ parent, caller: NAV_TREE_ITEM }));
         return;
       }
 
@@ -201,7 +220,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [graph, dispatch, isCurrent, isLg],
   );
 
-  const onBack = useCallback(
+  const handleBack = useCallback(
     () => dispatch(createIntent(LayoutAction.RevertWorkspace, { part: 'workspace', options: { revert: true } })),
     [dispatch],
   );
@@ -275,8 +294,6 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const navTreeContextValue = useMemo(
     () => ({
       tab,
-      onTabChange,
-      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -286,16 +303,16 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       getProps,
       isCurrent,
       isOpen,
-      onOpenChange,
       canDrop,
-      onSelect: handleSelect,
       isAlternateTree,
       setAlternateTree,
+      onTabChange: handleTabChange,
+      onOpenChange: handleOpenChange,
+      onSelect: handleSelect,
+      onBack: handleBack,
     }),
     [
       tab,
-      onTabChange,
-      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -305,17 +322,19 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       getProps,
       isCurrent,
       isOpen,
-      onOpenChange,
       canDrop,
-      handleSelect,
       isAlternateTree,
       setAlternateTree,
+      handleTabChange,
+      handleOpenChange,
+      handleSelect,
+      handleBack,
     ],
   );
 
   return (
     <NavTreeContext.Provider value={navTreeContextValue}>
-      <NavTree root={graph.root} id={graph.root.id} />
+      <NavTree id={graph.root.id} root={graph.root} open={layout.sidebarOpen} />
     </NavTreeContext.Provider>
   );
 });

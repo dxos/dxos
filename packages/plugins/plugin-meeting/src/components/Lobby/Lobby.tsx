@@ -5,9 +5,11 @@
 import React, { type FC, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { MeetingCapabilities } from '../../capabilities';
+import { meta } from '../../meta';
 import { VideoObject } from '../Media';
 import { ResponsiveContainer } from '../ResponsiveGrid';
 import { Toolbar, type ToolbarProps } from '../Toolbar';
@@ -33,12 +35,39 @@ LobbyRoot.displayName = 'LobbyRoot';
 type LobbyPreviewProps = {};
 
 const LobbyPreview: FC<LobbyPreviewProps> = () => {
+  const { t } = useTranslation(meta.id);
   const call = useCapability(MeetingCapabilities.CallManager);
+  const [classNames, setClassNames] = useState('');
+  useEffect(() => {
+    if (!call.media.videoEnabled) {
+      setClassNames('');
+      return;
+    }
+
+    // Video element will expand once the stream is available.
+    const timeout = setTimeout(() => {
+      setClassNames('outline-neutral-900 opacity-100');
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [call.media.videoEnabled]);
 
   return (
-    <ResponsiveContainer>
-      <VideoObject flip muted videoStream={call.media.videoStream} />
-    </ResponsiveContainer>
+    <div className='grid grow p-4'>
+      <ResponsiveContainer>
+        {(call.media.videoEnabled && (
+          <VideoObject
+            videoStream={call.media.videoStream}
+            flip
+            muted
+            classNames={mx(
+              'rounded-md outline outline-2 outline-transparent opacity-0 transition-all duration-500',
+              classNames,
+            )}
+          />
+        )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera off label')}</div>}
+      </ResponsiveContainer>
+    </div>
   );
 };
 

@@ -16,6 +16,8 @@ import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 const ASPECT_RATIO = 16 / 9;
 const MIN_GALLERY_HEIGHT = 250;
 
+const DEFAULT_GAP = 8;
+
 const maxImageSize = 'w-[2560px] h-[1440px]';
 
 /**
@@ -56,7 +58,7 @@ const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
 export const ResponsiveGrid = <T extends object = any>({
   classNames,
   Cell,
-  gap = 0,
+  gap = DEFAULT_GAP,
   getId = defaultGetId,
   items,
   pinned,
@@ -71,7 +73,7 @@ export const ResponsiveGrid = <T extends object = any>({
   const [dividerHeight, setDividerHeight] = useState<Size>(0);
   useEffect(() => {
     if (containerWidth && containerHeight) {
-      const { height } = fitAspectRatio(containerWidth, containerHeight - gap * 2, ASPECT_RATIO);
+      const { height } = fitAspectRatio(containerWidth, containerHeight, ASPECT_RATIO);
       setDividerHeight(Math.min(height, containerHeight - MIN_GALLERY_HEIGHT));
     }
   }, [containerWidth, containerHeight]);
@@ -125,16 +127,15 @@ export const ResponsiveGrid = <T extends object = any>({
   );
 
   return (
-    <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden', classNames)}>
+    <div ref={containerRef} className={mx('relative w-full h-full', classNames)}>
       <div className='absolute inset-0 flex flex-col grow'>
         {/* Pinned item. */}
         {pinnedItem && (
           <div
-            className='relative flex shrink-0 w-full overflow-hidden'
+            className='relative flex shrink-0 w-full'
             style={{
-              paddingTop: gap,
-              paddingBottom: gap,
               height: dividerHeight,
+              marginBottom: gap * 2,
             }}
           >
             {/* Pinned item. */}
@@ -143,15 +144,13 @@ export const ResponsiveGrid = <T extends object = any>({
         )}
 
         {/* Placeholder grid used to calculate layout. */}
-        <div
-          ref={gridContainerRef}
-          className='flex w-full grow justify-center items-center overflow-hidden '
-          style={{
-            paddingTop: gap,
-            paddingBottom: gap,
-          }}
-        >
-          {mainItems.length === 1 && <SoloItem id={getId(mainItems[0])} debug={debug} />}
+        <div ref={gridContainerRef} className='flex w-full grow justify-center items-center overflow-hidden'>
+          {mainItems.length === 1 && (
+            <div style={{ width: cellWidth }} className='flex h-full'>
+              <SoloItem id={getId(mainItems[0])} debug={debug} />
+            </div>
+          )}
+
           {mainItems.length > 1 && columns > 0 && (
             <div
               role='grid'
@@ -166,7 +165,7 @@ export const ResponsiveGrid = <T extends object = any>({
                   key={getId(item)}
                   {...{ 'data-grid-item': getId(item) }}
                   className={mx(
-                    'aspect-video max-h-full max-w-full w-auto h-auto overflow-hidden',
+                    'aspect-video max-h-full max-w-full w-auto h-auto',
                     debug && 'border border-primary-500',
                   )}
                 />
@@ -266,8 +265,10 @@ const calculateLayout = (
     );
 
     // Calculate total wasted space for this configuration.
-    const usedWidth = itemWidth * cols + gap * (cols + 1);
-    const usedHeight = itemHeight * rows + gap * (rows + 1);
+    const usedWidth = itemWidth * cols + gap * cols - 1;
+    const usedHeight = itemHeight * rows + gap * rows - 1;
+
+    // Determine if optimal.
     const wastedSpace = containerWidth * containerHeight - usedWidth * usedHeight;
     if (wastedSpace < minWastedSpace) {
       minWastedSpace = wastedSpace;
@@ -291,8 +292,8 @@ const fitItemsToGrid = (
   gap: number,
 ): { width: number; height: number } => {
   // Calculate available space accounting for gaps.
-  const availableWidth = outerWidth - gap * (numCols + 1);
-  const availableHeight = outerHeight - gap * (numRows + 1);
+  const availableWidth = outerWidth - gap * (numCols - 1);
+  const availableHeight = outerHeight - gap * (numRows - 1);
 
   // Calculate max dimensions.
   const maxCellWidth = availableWidth / numCols;

@@ -6,15 +6,7 @@ import React, { forwardRef, useCallback } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import {
-  Button,
-  ButtonGroup,
-  type ButtonGroupProps,
-  type ButtonProps,
-  Icon,
-  Tooltip,
-  useTranslation,
-} from '@dxos/react-ui';
+import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../../meta';
 import { DeckAction, type LayoutMode } from '../../types';
@@ -39,22 +31,10 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
 };
 
 const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
-  return (
-    <Tooltip.Root>
-      <Tooltip.Trigger asChild>
-        <Button variant='ghost' {...props}>
-          <span className='sr-only'>{label}</span>
-          <Icon icon={icon} size={5} />
-        </Button>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content side='bottom'>{label}</Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
-  );
+  return <IconButton iconOnly label={label} icon={icon} size={5} variant='ghost' tooltipSide='bottom' {...props} />;
 };
 
-const plankControlSpacing = 'pli-2 plb-3';
+const plankControlSpacing = 'pli-2';
 
 type PlankComplimentControlsProps = {
   primary?: string;

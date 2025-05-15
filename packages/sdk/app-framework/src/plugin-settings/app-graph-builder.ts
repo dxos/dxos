@@ -26,6 +26,7 @@ export default (context: PluginsContext) =>
           properties: {
             label: ['open settings label', { ns: SETTINGS_PLUGIN }],
             icon: 'ph--gear--regular',
+            disposition: 'menu',
             keyBinding: {
               macos: 'meta+,',
               windows: 'alt+,',
@@ -81,11 +82,12 @@ export default (context: PluginsContext) =>
 
           {
             id: `${SETTINGS_KEY}:custom-plugins`,
-            type: 'collection',
+            type: 'category',
             properties: {
               label: ['custom plugins label', { ns: SETTINGS_PLUGIN }],
               icon: 'ph--squares-four--regular',
               role: 'branch',
+              disposition: 'collection',
             },
           },
         ];

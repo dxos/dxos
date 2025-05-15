@@ -54,7 +54,7 @@ const meta: Meta<typeof Toolbox> = {
       capabilities,
     }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
   parameters: {
     translations,

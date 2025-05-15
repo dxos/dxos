@@ -23,7 +23,9 @@ import {
   seed,
 } from '@ngneat/falso';
 
-import { randAirport } from './data';
+import { idEmoji, idHue } from '@dxos/util';
+
+import { airports, icons } from './data';
 import { type Range, getCount, multiple, toRange, uniqueArray } from './util';
 
 // Fake faker.
@@ -118,8 +120,13 @@ export const faker = {
     productName: () => randProductName(),
   },
   geo: {
-    airport: () => randAirport(),
-    location: () => randAirport().location,
+    airport: () => rand(airports),
+    location: () => rand(airports).location,
   },
   email: {},
+  properties: {
+    emoji: () => rand(idEmoji),
+    hue: () => rand(idHue),
+    icon: () => rand(icons),
+  },
 };

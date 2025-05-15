@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './arrow';
 export * from './density';
 export * from './disabled';
 export * from './dimension';

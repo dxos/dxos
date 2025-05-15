@@ -36,7 +36,7 @@ const meta: Meta<RecoveryCodeDialogProps> = {
   title: 'plugins/plugin-client/RecoveryCodeDialog',
   component: RecoveryCodeDialog,
   render: DefaultStory,
-  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout({ tooltips: true })],
+  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout()],
   parameters: {
     layout: 'fullscreen',
     translations,

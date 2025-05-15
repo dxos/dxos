@@ -187,19 +187,6 @@ export namespace SpaceAction {
     output: Schema.Void,
   }) {}
 
-  export class AddSpace extends Schema.TaggedClass<AddSpace>()(`${SPACE_ACTION}/add-space`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
-
-  export class AddSpaceMenuGroup extends Schema.TaggedClass<AddSpaceMenuGroup>()(
-    `${SPACE_ACTION}/add-space-menu-group`,
-    {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
-  ) {}
-
   // TODO(wittjosiah): Handle scrolling to section.
   //   This maybe motivates making the space settings its own deck?
   export class OpenSettings extends Schema.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {

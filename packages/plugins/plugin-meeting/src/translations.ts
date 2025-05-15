@@ -32,7 +32,7 @@ export default [
 
         'meeting summary label': 'Summary',
         'summarize label': 'Summarize',
-        'summarizing label': 'Summarizing...',
+        'summarizing label': 'Creating summary...',
         'create summary message': 'A summary doesn’t exist for this meeting yet. Create one now?',
 
         'join call': 'Join',
@@ -52,6 +52,7 @@ export default [
         'mic off': 'Mute',
         'camera on': 'Turn camera on',
         'camera off': 'Turn camera off',
+        'camera off label': 'Camera off',
 
         'raise hand': 'Raise hand',
         'lower hand': 'Lower hand',

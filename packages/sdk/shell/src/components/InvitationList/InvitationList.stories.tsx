@@ -15,7 +15,7 @@ import { inviteWithState } from '../../testing/fixtures';
 export default {
   title: 'sdk/shell/InvitationList',
   component: InvitationList,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   parameters: { chromatic: { disableSnapshot: false } },
 };
 

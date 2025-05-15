@@ -17,12 +17,7 @@ import { TagPicker } from '@dxos/react-ui-tag-picker';
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
 import { useMailboxModel } from './model';
-import {
-  useMailboxToolbarAction,
-  useMailboxToolbarActions,
-  useTagFilterVisibility,
-  useTagPickerFocusRef,
-} from './toolbar';
+import { useMailboxToolbarActions, useTagFilterVisibility, useTagPickerFocusRef } from './toolbar';
 import { InboxCapabilities } from '../../capabilities/capabilities';
 import { InboxAction, type MailboxType } from '../../types';
 
@@ -40,17 +35,16 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   // Use the new hook for tag filter visibility management
   const { tagFilterState, tagFilterVisible, dispatch: filterDispatch } = useTagFilterVisibility();
 
-  const menu = useMailboxToolbarActions(model, tagFilterVisible);
-  const handleToolbarAction = useMailboxToolbarAction({
-    model,
-    tagFilterVisible: tagFilterVisible.value,
-    setTagFilterVisible: (visible: boolean) => {
+  const setTagFilterVisible = useCallback(
+    (visible: boolean) => {
       if (!visible) {
         model.clearSelectedTags();
       }
       filterDispatch('toggle_from_toolbar');
     },
-  });
+    [model, filterDispatch],
+  );
+  const menu = useMailboxToolbarActions(model, tagFilterVisible, setTagFilterVisible);
 
   const tagPickerFocusRef = useTagPickerFocusRef(tagFilterState);
 
@@ -116,7 +110,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
       <div role='none' className={gridLayout}>
         <div role='none' className={stackItemContentToolbarClassNames('section')}>
           <ElevationProvider elevation='positioned'>
-            <MenuProvider {...menu} onAction={handleToolbarAction} attendableId={id}>
+            <MenuProvider {...menu} attendableId={id}>
               <ToolbarMenu />
             </MenuProvider>
           </ElevationProvider>

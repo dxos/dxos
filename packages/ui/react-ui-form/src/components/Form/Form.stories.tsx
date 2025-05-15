@@ -60,7 +60,7 @@ const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
   component: Form,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true, tooltips: true }), withTheme],
+  decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
   },
@@ -250,6 +250,7 @@ export const Enum: StoryObj<FormProps<ColorType>> = {
 const RefSchema = Schema.Struct({
   contact: Ref(ContactType).annotations({ title: 'Contact Reference' }),
   optionalContact: Schema.optional(Ref(ContactType).annotations({ title: 'Optional Contact Reference' })),
+  refArray: Schema.optional(Schema.Array(Ref(ContactType))),
   unknownExpando: Schema.optional(Ref(Expando).annotations({ title: 'Optional Ref to an Expando (DXN Input)' })),
 });
 

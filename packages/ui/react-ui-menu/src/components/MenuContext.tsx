@@ -5,15 +5,7 @@
 import { createContextScope, type Scope } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo } from 'react';
 
-import { type Node } from '@dxos/app-graph';
-
-import {
-  type MenuActionHandler,
-  type MenuAction,
-  type MenuContextValue,
-  type MenuItem,
-  type MenuItemGroup,
-} from '../defs';
+import { type MenuContextValue, type MenuItem, type MenuItemGroup } from '../types';
 
 export type MenuScopedProps<P> = P & { __menuScope?: Scope };
 
@@ -21,28 +13,25 @@ const MENU_NAME = 'GraphMenu';
 
 const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME, []);
 
-const [MenuContextProvider, useMenu] = createMenuContext<MenuContextValue<any>>(MENU_NAME);
+const [MenuContextProvider, useMenu] = createMenuContext<MenuContextValue>(MENU_NAME);
 
-export const menuContextDefaults: MenuContextValue<MenuAction> = {
+export const menuContextDefaults: MenuContextValue = {
   iconSize: 5,
-  onAction: () => {},
   resolveGroupItems: () => null,
 };
 
 const useMenuScope = createMenuScope();
 
-const MenuProvider = <A extends Node = MenuAction>({
+const MenuProvider = ({
   children,
   resolveGroupItems = menuContextDefaults.resolveGroupItems,
-  onAction = menuContextDefaults.onAction as MenuActionHandler<A>,
   iconSize = menuContextDefaults.iconSize,
   attendableId,
-}: PropsWithChildren<Partial<MenuContextValue<A>>>) => {
+}: PropsWithChildren<Partial<MenuContextValue>>) => {
   const { scope } = useMenuScope(undefined);
   return (
     <MenuContextProvider
       resolveGroupItems={resolveGroupItems}
-      onAction={onAction}
       iconSize={iconSize}
       attendableId={attendableId}
       scope={scope}
