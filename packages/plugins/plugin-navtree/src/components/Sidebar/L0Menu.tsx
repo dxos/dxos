@@ -229,9 +229,10 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
         data-frame={true}
         className={mx(
           'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded',
+          // TODO(burdon): Create reusable button/component and/or create var for size.
           pinned
             ? 'bg-transparent w-[50px] p-2 group-hover/l0item:bg-groupSurface'
-            : 'bg-groupSurface w-[50px] h-[50px]', // TODO(burdon): Create var for size.
+            : 'bg-groupSurface w-[50px] h-[50px]',
         )}
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
       >
