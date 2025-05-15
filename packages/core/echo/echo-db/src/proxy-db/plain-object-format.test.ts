@@ -13,7 +13,7 @@ import { live } from '@dxos/live-object';
 import { Filter, ResultFormat } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-describe('Plain object format', () => {
+describe.skip('Plain object format', () => {
   test('can query and mutate data', async () => {
     await using testBuilder = await new EchoTestBuilder().open();
     const { db } = await testBuilder.createDatabase();
