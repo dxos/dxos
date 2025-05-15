@@ -50,7 +50,7 @@
     "@dxos/react-ui-kanban": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.75.1",
+    "@effect/platform": "0.80.12",
     "effect": "3.14.21",
     "jsonpath-plus": "10.2.0",
     "ollama": "^0.5.11"

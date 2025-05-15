@@ -41,9 +41,12 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@effect-rx/rx-react": "^0.33.6",
+    "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
+    "effect": "3.14.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"
@@ -51,7 +54,10 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@effect-rx/rx-react": "^0.33.6",
+    "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
+    "effect": "3.14.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
