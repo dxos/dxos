@@ -11,8 +11,8 @@ import { isLiveObject } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type Filter } from './filter';
-import { type ObjectCore } from '../core-db';
-import { getObjectCore, type AnyLiveObject } from '../echo-handler';
+import { type ObjectCore } from '../../core-db';
+import { getObjectCore, type AnyLiveObject } from '../../echo-handler';
 
 /**
  * Query logic that checks if object complaint with a filter.

@@ -5,8 +5,8 @@
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import type { Filter$, FilterSource } from './filter';
-import { type QueryResult } from './query';
+import type { Filter$, FilterSource } from './deprecated';
+import { type QueryResult } from './query-result';
 import { type AnyLiveObject } from '../echo-handler';
 
 /**

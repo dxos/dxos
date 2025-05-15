@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
 
-import { type Filter } from './filter';
+import { type Filter } from './deprecated';
 import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.

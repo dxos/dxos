@@ -17,7 +17,7 @@ import {
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
 import { type Filter as FilterProto, type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { getReferenceWithSpaceKey } from '../echo-handler';
+import { getReferenceWithSpaceKey } from '../../echo-handler';
 
 // TODO(dmaretskyi): Rename `hasInstanceOf`.
 // TODO(dmaretskyi): Remove from echo api
