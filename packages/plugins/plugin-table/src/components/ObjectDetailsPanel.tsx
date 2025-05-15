@@ -4,6 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { Type } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
@@ -24,7 +25,7 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const schema = useSchema(client, space, view.query?.typename);
 
   // TODO(burdon): Why is this needed?
-  const effectSchema = useMemo(() => schema?.snapshot, [JSON.stringify(schema?.jsonSchema)]);
+  const effectSchema = useMemo(() => schema?.snapshot, [JSON.stringify(Type.toJsonSchema(schema))]);
 
   // NOTE(ZaymonFC): Since selection is currently a set, the order these objects show
   //   up in will not necessarily match the order in the selected context.

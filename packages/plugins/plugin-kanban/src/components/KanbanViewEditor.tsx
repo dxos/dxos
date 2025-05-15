@@ -5,7 +5,8 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { FormatEnum } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { EchoSchema, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -36,7 +37,10 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         view.query.typename = newTypename;
       }
 
-      schema.mutable.updateTypename(newTypename);
+      // TODO(burdon): Need EchoSchema. @dmaretskyi?
+      invariant(Type.isMutable(schema));
+      invariant(schema instanceof EchoSchema);
+      schema.updateTypename(newTypename);
     },
     [views, schema],
   );
@@ -50,9 +54,10 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   const projection = useMemo(() => {
     if (kanban?.cardView?.target && schema) {
-      return new ViewProjection(schema.jsonSchema, kanban.cardView.target);
+      const jsonSchema = Type.toJsonSchema(schema);
+      return new ViewProjection(jsonSchema, kanban.cardView.target);
     }
-  }, [kanban?.cardView?.target, schema, JSON.stringify(schema)]);
+  }, [kanban?.cardView?.target, schema, JSON.stringify(Type.toJsonSchema(schema))]);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections

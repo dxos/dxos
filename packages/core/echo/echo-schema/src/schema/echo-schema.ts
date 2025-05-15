@@ -149,6 +149,11 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
   } as any;
 };
 
+// TODO(burdon): Resolve (add annotation?)
+export const isMutable = (schema: Schema.Schema.AnyNoContext): boolean => {
+  return false;
+};
+
 /**
  * Represents a schema that is stored in the ECHO database.
  * Schema can me mutable or readonly (specified by the {@link EchoSchema.readonly} field).

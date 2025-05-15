@@ -26,6 +26,7 @@ import {
   getSchemaTypename,
   getSchemaVersion,
   isInstanceOf,
+  isMutable as isMutable$,
   toJsonSchema as toJsonSchema$,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -139,5 +140,6 @@ export namespace Type {
     return typename;
   };
   export const getVersion = getSchemaVersion;
+  export const isMutable = isMutable$;
   export const toJsonSchema = toJsonSchema$;
 }

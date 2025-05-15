@@ -44,6 +44,7 @@ export class ViewProjection {
   private _fieldProjections = computed(() => this._view.fields.map((field) => this.getFieldProjection(field.id)));
   private _hiddenProperties = computed(() => this._view.hiddenFields?.map((field) => field.path as string) ?? []);
 
+  // TOOD(burdon): Should this take an instane of S.S.AnyNoContext and derive the JsonSchemaType itselft (and watch for reactivity)?
   constructor(
     /** Possibly reactive object. */
     // TODO(burdon): Pass in boolean readonly?

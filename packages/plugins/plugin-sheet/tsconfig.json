@@ -53,6 +53,9 @@
       "path": "../../core/compute"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-generator"
     },
     {
