@@ -44,7 +44,12 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
       speaking={user.speaking}
       debug={debug}
     >
-      <VideoObject videoStream={videoStream} flip={isSelf && !isScreenshare} contain={!!isScreenshare} />
+      <VideoObject
+        videoStream={videoStream}
+        flip={isSelf && !isScreenshare}
+        contain={!!isScreenshare}
+        classNames='rounded-md'
+      />
     </ResponsiveGridItem>
   );
 };

@@ -127,12 +127,12 @@ export const ResponsiveGrid = <T extends object = any>({
   );
 
   return (
-    <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden', classNames)}>
+    <div ref={containerRef} className={mx('relative w-full h-full', classNames)}>
       <div className='absolute inset-0 flex flex-col grow'>
         {/* Pinned item. */}
         {pinnedItem && (
           <div
-            className='relative flex shrink-0 w-full overflow-hidden'
+            className='relative flex shrink-0 w-full'
             style={{
               paddingTop: gap,
               paddingBottom: gap,
@@ -147,7 +147,7 @@ export const ResponsiveGrid = <T extends object = any>({
         {/* Placeholder grid used to calculate layout. */}
         <div
           ref={gridContainerRef}
-          className='flex w-full grow justify-center items-center overflow-hidden '
+          className='flex w-full grow justify-center items-center'
           style={{
             paddingTop: gap,
             paddingBottom: gap,
@@ -168,7 +168,7 @@ export const ResponsiveGrid = <T extends object = any>({
                   key={getId(item)}
                   {...{ 'data-grid-item': getId(item) }}
                   className={mx(
-                    'aspect-video max-h-full max-w-full w-auto h-auto overflow-hidden',
+                    'aspect-video max-h-full max-w-full w-auto h-auto',
                     debug && 'border border-primary-500',
                   )}
                 />
@@ -197,7 +197,7 @@ export const ResponsiveGrid = <T extends object = any>({
 
 const SoloItem: FC<Pick<ResponsiveGridProps, 'debug'> & { id: string }> = ({ debug, id }) => {
   return (
-    <ResponsiveContainer classNames='p-4'>
+    <ResponsiveContainer>
       <div
         {...{ 'data-grid-item': id }}
         className={mx('aspect-video overflow-hidden', debug && 'z-20 border-2 border-primary-500')}

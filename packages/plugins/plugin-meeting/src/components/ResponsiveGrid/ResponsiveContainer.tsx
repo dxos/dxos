@@ -4,7 +4,6 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 /**
@@ -16,14 +15,14 @@ import { mx } from '@dxos/react-ui-theme';
  *   <VideoObject />
  * </ResponsiveContainer>
  */
-export const ResponsiveContainer = ({ children, classNames }: PropsWithChildren<ThemedClassName>) => {
+export const ResponsiveContainer = ({ children }: PropsWithChildren) => {
   return (
     // Outer container that takes full size of parent.
-    <div role='none' className='relative flex w-full h-full overflow-hidden'>
+    <div role='none' className='relative flex w-full h-full'>
       {/* Absolute positioning layer for centering content. */}
-      <div role='none' className='absolute inset-0 flex overflow-hidden items-center justify-center'>
+      <div role='none' className='absolute inset-0 flex justify-center items-center'>
         {/* Content container that maintains given aspect ratio and proper scaling */}
-        <div role='none' className={mx('max-h-full max-w-full w-auto h-auto p-2', classNames)}>
+        <div role='none' className={mx('max-h-full max-w-full w-auto h-auto aspect-video')}>
           {children}
         </div>
       </div>

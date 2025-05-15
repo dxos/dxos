@@ -39,9 +39,16 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
 
   return (
     <ResponsiveGridItem {...props} item={item} name={item.name} mute={mute} speaking={speaking} wave={wave}>
-      {item.type === 'image' && <img className='flex aspect-video object-contain' src={item.imageUrl} />}
+      {item.type === 'image' && <img className='aspect-video object-contain' src={item.imageUrl} />}
       {item.type === 'video' && (
-        <video className='flex aspect-video object-cover' src={item.videoUrl} playsInline autoPlay loop muted />
+        <video
+          className='w-full aspect-video object-cover rounded-md'
+          src={item.videoUrl}
+          playsInline
+          autoPlay
+          loop
+          muted
+        />
       )}
     </ResponsiveGridItem>
   );

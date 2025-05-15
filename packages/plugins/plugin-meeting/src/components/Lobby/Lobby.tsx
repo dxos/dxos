@@ -53,19 +53,21 @@ const LobbyPreview: FC<LobbyPreviewProps> = () => {
   }, [call.media.videoEnabled]);
 
   return (
-    <ResponsiveContainer classNames='p-4'>
-      {(call.media.videoEnabled && (
-        <VideoObject
-          videoStream={call.media.videoStream}
-          flip
-          muted
-          classNames={mx(
-            'rounded-md outline outline-2 outline-transparent opacity-0 transition-all duration-500',
-            classNames,
-          )}
-        />
-      )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera off label')}</div>}
-    </ResponsiveContainer>
+    <div className='grid grow p-4'>
+      <ResponsiveContainer>
+        {(call.media.videoEnabled && (
+          <VideoObject
+            videoStream={call.media.videoStream}
+            flip
+            muted
+            classNames={mx(
+              'rounded-md outline outline-2 outline-transparent opacity-0 transition-all duration-500',
+              classNames,
+            )}
+          />
+        )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera off label')}</div>}
+      </ResponsiveContainer>
+    </div>
   );
 };
 
