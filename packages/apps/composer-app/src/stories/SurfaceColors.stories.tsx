@@ -131,7 +131,10 @@ const KitchenSinkStory = () => {
         <NavTreeContainer tab={state.tab} />
       </Main.NavigationSidebar>
       <Main.Content bounce>
-        <div className='bs-dvh relative'>{model ? <TableComponent /> : <div />}</div>
+        <div className='bs-dvh relative grid grid-rows-2'>
+          {model ? <TableComponent /> : <div />}
+          {/* TODO: add editor */}
+        </div>
       </Main.Content>
     </Main.Root>
   );
