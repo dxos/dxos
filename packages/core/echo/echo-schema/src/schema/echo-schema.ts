@@ -40,6 +40,7 @@ export interface BaseSchema<A = any, I = any> extends TypedObject<A, I> {
 
 /**
  * Immutable schema type.
+ * @deprecated Use `Schema.Schema.AnyNoContext` instead.
  */
 // TODO(burdon): Common abstract base class?
 export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
@@ -175,7 +176,6 @@ export const isMutable = (schema: Schema.Schema.AnyNoContext): boolean => {
  *
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
-// TODO(burdon): Rename MutableSchema; extend ImmutableSchema.
 export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implements BaseSchema<A, I> {
   private _schema: Schema.Schema.AnyNoContext | undefined;
   private _isDirty = true;
