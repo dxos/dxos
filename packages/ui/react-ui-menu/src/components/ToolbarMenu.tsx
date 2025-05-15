@@ -38,7 +38,7 @@ export type ToolbarMenuActionGroupProperties = (
 ) &
   (MenuSingleSelectActionGroup | MenuMultipleSelectActionGroup);
 
-export type ToolbarMenuProps = ToolbarRootProps;
+export type ToolbarMenuProps = ToolbarRootProps & { ignoreAttention?: boolean };
 
 export type ToolbarMenuActionGroupProps = {
   group: MenuItemGroup<ToolbarMenuActionGroupProperties>;
@@ -153,14 +153,23 @@ const ToggleGroupToolbarItem = ({
   );
 };
 
-export const ToolbarMenu = ({ __menuScope, classNames, ...props }: MenuScopedProps<ToolbarMenuProps>) => {
+export const ToolbarMenu = ({
+  __menuScope,
+  classNames,
+  ignoreAttention,
+  ...props
+}: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
   const { attendableId } = useMenu('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
   return (
     <NaturalToolbar.Root
       {...props}
-      classNames={['p-0 pointer-fine:p-1 attention-surface', !hasAttention && 'opacity-20', classNames]}
+      classNames={[
+        'p-0 pointer-fine:p-1 attention-surface',
+        !ignoreAttention && !hasAttention && 'opacity-20',
+        classNames,
+      ]}
     >
       {items?.map((item: MenuItem, i: number) =>
         isSeparator(item) ? (

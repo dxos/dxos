@@ -7,3 +7,4 @@ export { NavTreeEvents } from './events';
 export * from './NavTreePlugin';
 export * from './meta';
 export * from './util';
+export { NavTreeContainer } from './components';
