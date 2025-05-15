@@ -21,7 +21,7 @@ import { isNonNullable } from '@dxos/util';
 import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
-import { type Filter, type QueryResultEntry } from '../query';
+import { type DeprecatedFilter, type Filter, type QueryResultEntry } from '../query';
 
 export type LoadObjectParams = {
   spaceId: SpaceId;
@@ -61,7 +61,7 @@ export type IndexQuerySourceParams = {
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
-  private _filter?: Filter = undefined;
+  private _filter?: DeprecatedFilter = undefined;
   private _results?: QueryResultEntry[] = [];
   private _stream?: Stream<QueryResponse>;
 
@@ -78,14 +78,14 @@ export class IndexQuerySource implements QuerySource {
     return this._results ?? [];
   }
 
-  async run(filter: Filter): Promise<QueryResultEntry[]> {
+  async run(filter: DeprecatedFilter): Promise<QueryResultEntry[]> {
     this._filter = filter;
     return new Promise((resolve, reject) => {
       this._queryIndex(filter, QueryReactivity.ONE_SHOT, resolve, reject);
     });
   }
 
-  update(filter: Filter): void {
+  update(filter: DeprecatedFilter): void {
     if (filter.options?.dataLocation === QueryOptions.DataLocation.LOCAL) {
       return;
     }
@@ -102,7 +102,7 @@ export class IndexQuerySource implements QuerySource {
   }
 
   private _queryIndex(
-    filter: Filter,
+    filter: DeprecatedFilter,
     queryType: QueryReactivity,
     onResult: (results: QueryResultEntry[]) => void,
     onError?: (error: Error) => void,

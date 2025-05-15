@@ -20,7 +20,14 @@ import { isNonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';
-import { filterMatch, type Filter, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
+import {
+  filterMatch,
+  type DeprecatedFilter,
+  type Filter,
+  type QueryContext,
+  type QueryJoinSpec,
+  type QueryResultEntry,
+} from '../query';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -47,7 +54,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     return this._lastResult;
   }
 
-  async run(filter: Filter<any>): Promise<QueryResultEntry<any>[]> {
+  async run(filter: DeprecatedFilter<any>): Promise<QueryResultEntry<any>[]> {
     const queryId = nextQueryId++;
     // Disposed when this method exists.
     await using ctx = new Context();
@@ -103,11 +110,11 @@ export class CoreDatabaseQueryContext implements QueryContext {
     return results;
   }
 
-  update(filter: Filter<any>): void {}
+  update(filter: DeprecatedFilter<any>): void {}
 
   private async _filterMapResult(
     ctx: Context,
-    filter: Filter,
+    filter: DeprecatedFilter,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<QueryResultEntry | null> {
@@ -170,7 +177,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
   }
 
   private async _filterMapCore(
-    filter: Filter,
+    filter: DeprecatedFilter,
     core: ObjectCore,
     queryStartTimestamp: number,
     result: RemoteQueryResult | undefined,

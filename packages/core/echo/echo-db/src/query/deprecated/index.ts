@@ -1,2 +1,9 @@
 export * from './filter-match';
-export { Filter, type Filter$, hasType, type FilterParams, type FilterSource, type PropertyFilter } from './filter';
+export {
+  Filter as DeprecatedFilter,
+  type Filter$ as DeprecatedFilter$,
+  hasType,
+  type FilterParams,
+  type FilterSource,
+  type PropertyFilter as DeprecatedPropertyFilter,
+} from './filter';
