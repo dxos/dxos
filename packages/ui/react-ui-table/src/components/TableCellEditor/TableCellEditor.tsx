@@ -5,7 +5,7 @@
 import { type Completion } from '@codemirror/autocomplete';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import { useThemeContext } from '@dxos/react-ui';
@@ -29,6 +29,45 @@ import { type FieldProjection } from '@dxos/schema';
 import { completion } from './extension';
 import { type TableModel, type ModalController } from '../../model';
 
+// ArrayEditorPlaceholder gets positioning from context itself
+const ArrayEditorPlaceholder = ({
+  fieldProjection,
+  model,
+  __gridScope,
+}: {
+  fieldProjection: FieldProjection;
+  model?: TableModel;
+  __gridScope: any;
+}) => {
+  // Get positioning info from grid context
+  const { editing, editBox } = useGridContext('ArrayEditor', __gridScope);
+
+  // Get cell value if needed
+  const cellValue = useMemo(() => {
+    if (model && editing) {
+      const cell = parseCellIndex(editing.index);
+      return model.getCellData(cell);
+    }
+    return undefined;
+  }, [model, editing]);
+
+  return (
+    <div
+      className='absolute z-[1] dx-focus-ring'
+      style={{
+        ...editBox,
+        ...{ '--dx-gridCellWidth': `${editBox?.inlineSize ?? 200}px` },
+      }}
+    >
+      <div className='p-2 bg-surface-raised rounded-md border border-separator'>
+        <div className='text-sm'>Array Editor Placeholder</div>
+        <div className='text-xs text-muted'>{fieldProjection.field.path || 'Unnamed field'}</div>
+        {cellValue && <div className='text-xs'>Value: {JSON.stringify(cellValue)}</div>}
+      </div>
+    </div>
+  );
+};
+
 const newValue = Symbol.for('newValue');
 
 /**
@@ -46,6 +85,47 @@ export type TableCellEditorProps = {
   onEnter?: (cell: DxGridPlanePosition) => void;
   onFocus?: DxGrid['refocus'];
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
+};
+
+export const TableValueEditor = ({
+  model,
+  modals,
+  onEnter,
+  onFocus,
+  onQuery,
+  __gridScope,
+}: GridScopedProps<TableCellEditorProps>) => {
+  const { editing } = useGridContext('TableValueEditor', __gridScope);
+
+  const fieldProjection = useMemo<FieldProjection | undefined>(() => {
+    if (!model || !editing) {
+      return;
+    }
+
+    const { col } = parseCellIndex(editing.index);
+    const field = model.projection.view.fields[col];
+    const fieldProjection = model.projection.getFieldProjection(field.id);
+    invariant(fieldProjection);
+    return fieldProjection;
+  }, [model, editing]);
+
+  // Check if we're dealing with an array type
+  if (fieldProjection?.props.type === TypeEnum.Array) {
+    // Placeholder for array editing - will be implemented later
+    return <ArrayEditorPlaceholder fieldProjection={fieldProjection} model={model} __gridScope={__gridScope} />;
+  }
+
+  // For all other types, use the existing cell editor
+  return (
+    <TableCellEditor
+      model={model}
+      modals={modals}
+      onEnter={onEnter}
+      onFocus={onFocus}
+      onQuery={onQuery}
+      __gridScope={__gridScope}
+    />
+  );
 };
 
 export const TableCellEditor = ({

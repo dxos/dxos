@@ -40,7 +40,7 @@ import { RowActionsMenu } from './RowActionsMenu';
 import { ModalController, type TableModel, type TablePresentation } from '../../model';
 import { translationKey } from '../../translations';
 import { tableButtons, tableControls } from '../../util';
-import { createOption, TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
+import { createOption, TableValueEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 //
 // Table.Root
@@ -343,7 +343,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     return (
       <Grid.Root id={model.id ?? 'table-grid'}>
-        <TableCellEditor
+        <TableValueEditor
           model={model}
           modals={modals}
           onEnter={handleEnter}
