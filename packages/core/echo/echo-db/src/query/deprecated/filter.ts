@@ -15,7 +15,7 @@ import {
   type QueryOptions_DataLocation,
   type QueryOptions_ShowDeletedOption,
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
-import { type Filter as FilterProto, type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { getReferenceWithSpaceKey } from '../../echo-handler';
 import type { QueryAST } from '..';
@@ -266,10 +266,11 @@ export class Filter<T extends BaseObject = any> {
     switch (ast.type) {
       case 'object':
         return new Filter({
-          type: ast.typename ? [DXN.fromTypename(ast.typename)] : undefined,
+          type: ast.typename ? [DXN.parse(ast.typename)] : undefined,
           properties: mapValues(ast.props, (prop) =>
             prop.type === 'compare' && prop.operator === 'eq' ? prop.value : raise(new Error('Not supported')),
           ),
+          metaKeys: ast.foreignKeys as ForeignKey[],
         });
       case 'compare':
         throw new Error('Not implemented');
@@ -391,7 +392,25 @@ export const deprecatedFilterFromQueryAST = (ast: QueryAST.Query): Filter => {
   switch (ast.type) {
     case 'select':
       return Filter.fromAST(ast.filter);
+    case 'options': {
+      const top = deprecatedFilterFromQueryAST(ast.query);
+      if (ast.options.spaceIds) {
+        top.options.spaceIds = ast.options.spaceIds as string[];
+      }
+      switch (ast.options.deleted) {
+        case 'include':
+          top.options.deleted = QueryOptions.ShowDeletedOption.SHOW_DELETED;
+          break;
+        case 'exclude':
+          top.options.deleted = QueryOptions.ShowDeletedOption.HIDE_DELETED;
+          break;
+        case 'only':
+          top.options.deleted = QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY;
+          break;
+      }
+      return top;
+    }
     default:
-      throw new Error('Not implemented');
+      throw new Error(`Not implemented: ${ast.type}`);
   }
 };

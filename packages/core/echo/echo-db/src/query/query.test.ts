@@ -58,7 +58,7 @@ describe('Queries', () => {
 
     test('filter properties', async () => {
       {
-        const { objects } = await db.query().run();
+        const { objects } = await db.query(Query.select(Filter.all())).run();
         expect(objects).to.have.length(10);
       }
 
@@ -87,27 +87,8 @@ describe('Queries', () => {
     });
 
     test('filter expando', async () => {
-      const { objects } = await db.query(Filter.type(Expando, { label: 'red' })).run();
+      const { objects } = await db.query(Query.select(Filter.type(Expando, { label: 'red' }))).run();
       expect(objects).to.have.length(3);
-    });
-
-    test('filter operators', async () => {
-      {
-        const { objects } = await db.query(() => false).run();
-        expect(objects).to.have.length(0);
-      }
-
-      {
-        const { objects } = await db.query(() => true).run();
-        expect(objects).to.have.length(10);
-      }
-
-      {
-        const { objects } = await db
-          .query((object: Expando) => object.label === 'red' || object.label === 'green')
-          .run();
-        expect(objects).to.have.length(5);
-      }
     });
 
     test('filter by reference', async () => {
@@ -132,18 +113,6 @@ describe('Queries', () => {
     test('filter nothing', async () => {
       const { objects } = await db.query(Filter.nothing()).run();
       expect(objects).toHaveLength(0);
-    });
-
-    test('filter chaining', async () => {
-      {
-        // prettier-ignore
-        const { objects } = await db.query([
-        () => true,
-        { label: 'blue' },
-        (object: any) => object.idx > 6
-      ]).run();
-        expect(objects).to.have.length(2);
-      }
     });
 
     test('options', async () => {
@@ -535,7 +504,7 @@ describe('Queries with types', () => {
     const contact = db.add(live(schema, {}));
 
     // NOTE: Must use `Filter.type` with EchoSchema instance since matching is done by the object ID of the mutable schema.
-    const query = db.query(Filter.type(schema));
+    const query = db.query(Query.type(schema));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);

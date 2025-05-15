@@ -120,7 +120,14 @@ import { type Schema } from 'effect';
 import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
-import { getSchemaDXN, type ForeignKey, type Ref, type RelationSource, type RelationTarget } from '@dxos/echo-schema';
+import {
+  getSchemaDXN,
+  getTypeReference,
+  type ForeignKey,
+  type Ref,
+  type RelationSource,
+  type RelationTarget,
+} from '@dxos/echo-schema';
 
 import type { Live } from '@dxos/live-object';
 import type * as QueryAST from './ast';
@@ -231,6 +238,7 @@ interface QueryAPI {
    * @param queries - Queries to combine.
    * @returns Query for the combined results.
    */
+  // TODO(dmaretskyi): Rename to `combine` or `union`.
   all<T>(...queries: Query<T>[]): Query<T>;
 }
 
@@ -418,7 +426,7 @@ class FilterClass implements Filter<any> {
     schema: S,
     props?: Filter.Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>> {
-    const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
+    const dxn = getTypeReference(schema)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
     return new FilterClass({
       type: 'object',
       typename: dxn.toString(),
@@ -459,7 +467,7 @@ class FilterClass implements Filter<any> {
     text: string,
     options?: Query.TextSearchOptions,
   ): Filter<Schema.Schema.Type<S>> {
-    const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
+    const dxn = getTypeReference(schema)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
     return new FilterClass({
       type: 'text-search',
       typename: dxn.toString(),
@@ -469,7 +477,7 @@ class FilterClass implements Filter<any> {
   }
 
   static foreignKeys<S extends Schema.Schema.All>(schema: S, keys: ForeignKey[]): Filter<Schema.Schema.Type<S>> {
-    const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
+    const dxn = getTypeReference(schema)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
     return new FilterClass({
       type: 'object',
       typename: dxn.toString(),
@@ -645,7 +653,7 @@ class QueryClass implements Query<any> {
   }
 
   referencedBy(target: Schema.Schema.All, key: string): Query<any> {
-    const dxn = getSchemaDXN(target) ?? raise(new TypeError('Target schema has no DXN'));
+    const dxn = getTypeReference(target)?.toDXN() ?? raise(new TypeError('Target schema has no DXN'));
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
@@ -726,11 +734,13 @@ export const normalizeQuery = (
     query = query.options({
       spaceIds: userOptions.spaceIds ?? (opts?.defaultSpaceId != null ? [opts.defaultSpaceId] : undefined),
       deleted:
-        userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.SHOW_DELETED
-          ? 'include'
-          : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.HIDE_DELETED
-            ? 'exclude'
-            : 'only',
+        userOptions?.deleted === undefined
+          ? undefined
+          : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.SHOW_DELETED
+            ? 'include'
+            : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.HIDE_DELETED
+              ? 'exclude'
+              : 'only',
     });
   }
 
