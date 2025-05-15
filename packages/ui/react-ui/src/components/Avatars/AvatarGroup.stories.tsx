@@ -13,7 +13,7 @@ import { withTheme } from '../../testing';
 
 const hues = ['lime', 'teal', 'purple', 'pink'];
 
-const StorybookAvatarGroupItem = ({ n }: { n: number }) => {
+const AvatarItem = ({ n }: { n: number }) => {
   const emoji = toEmoji(n);
   return (
     <Avatar.Root>
@@ -22,12 +22,12 @@ const StorybookAvatarGroupItem = ({ n }: { n: number }) => {
   );
 };
 
-const StorybookAvatarGroup = () => {
+const DefaultStory = () => {
   const labelId = useId('sb-avatar-group');
   return (
     <div className='dx-avatar-group' aria-labelledby={labelId}>
       {[0, 1, 2, 3].map((n) => (
-        <StorybookAvatarGroupItem key={n} n={n} />
+        <AvatarItem key={n} n={n} />
       ))}
       <span className='sr-only' id={labelId}>
         23
@@ -38,8 +38,7 @@ const StorybookAvatarGroup = () => {
 
 export default {
   title: 'ui/react-ui-core/AvatarGroup',
-  component: StorybookAvatarGroup,
-  render: StorybookAvatarGroup,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

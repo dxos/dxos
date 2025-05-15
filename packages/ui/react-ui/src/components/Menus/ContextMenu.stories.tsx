@@ -9,7 +9,7 @@ import React from 'react';
 import { ContextMenu } from './ContextMenu';
 import { withTheme } from '../../testing';
 
-const StorybookContextMenu = () => {
+const DefaultStory = () => {
   // NOTE(thure): Since long-tap will select text in some OSs, apply `select-none` to `ContextMenu.Trigger` where possible.
   return (
     <ContextMenu.Root>
@@ -94,7 +94,7 @@ const StorybookContextMenu = () => {
 export default {
   title: 'ui/react-ui-core/ContextMenu',
   component: ContextMenu,
-  render: StorybookContextMenu,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
