@@ -5,10 +5,9 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { failedInvariant } from '@dxos/invariant';
 
 import type { Message } from './message';
-import { type Tool, type ToolExecutionContext, type ToolResult } from './tools';
+import { ToolResult, type Tool, type ToolExecutionContext } from './tools';
 
 export type DefineToolParams<Params extends Schema.Schema.AnyNoContext> = {
   /**
@@ -79,7 +78,9 @@ export const structuredOutputParser = <TSchema extends Schema.Schema.AnyNoContex
     name: 'submit_result',
     description: 'You must call this tool with the result of your work.',
     schema,
-    execute: async (params, context) => failedInvariant(),
+    execute: async (params, context) => {
+      return ToolResult.Break(params);
+    },
   });
 
   return {

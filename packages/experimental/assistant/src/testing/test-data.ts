@@ -23,7 +23,7 @@ import {
   type Relationship,
   formatInferredRelationshipLabel,
   formatNodeLabel,
-} from '../cypher';
+} from '../experimental';
 import { Contact, Organization, Project, Task } from '../testing';
 
 export const seedTestData = (db: EchoDatabase) => {

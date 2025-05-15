@@ -3,6 +3,7 @@
 //
 
 export * from './ai-service';
-export * from './cypher';
-export * from './conversation';
 export * from './session';
+
+// TODO(dmaretskyi): Separate entrypoint for experimental features.
+export * from './experimental';
