@@ -71,7 +71,7 @@ export default (context: PluginsContext) =>
           },
           properties: {
             label: ['open assistant label', { ns: ASSISTANT_PLUGIN }],
-            icon: 'ph--star-four--regular',
+            icon: 'ph--sparkle--regular',
             disposition: 'pin-end',
             position: 'hoist',
             keyBinding: {
@@ -94,7 +94,7 @@ export default (context: PluginsContext) =>
           data: 'assistant-chat',
           properties: {
             label: ['assistant chat label', { ns: ASSISTANT_PLUGIN }],
-            icon: 'ph--star-four--regular',
+            icon: 'ph--sparkle--regular',
             position: 'hoist',
           },
         },

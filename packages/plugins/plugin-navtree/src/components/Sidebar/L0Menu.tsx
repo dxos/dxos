@@ -28,7 +28,6 @@ import {
   Icon,
   IconButton,
   ListItem,
-  Popover,
   ScrollArea,
   Tooltip,
   toLocalizedString,
@@ -108,6 +107,9 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
     const type = l0ItemType(item);
     const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
 
+    const { t } = useTranslation(NAVTREE_PLUGIN);
+    const localizedString = toLocalizedString(item.properties.label, t);
+
     const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
     const rootProps =
       type === 'tab'
@@ -119,18 +121,20 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
     const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
 
     return (
-      <Root
-        {...(rootProps as any)}
-        data-type={type}
-        className={mx(
-          'group/l0item dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
-          type === 'action' && 'flex justify-center items-center',
-          l0Breakpoints[item.properties.l0Breakpoint],
-        )}
-        ref={forwardedRef}
-      >
-        {children}
-      </Root>
+      <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
+        <Root
+          {...(rootProps as any)}
+          data-type={type}
+          className={mx(
+            'group/l0item dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
+            type === 'action' && 'flex justify-center items-center',
+            l0Breakpoints[item.properties.l0Breakpoint],
+          )}
+          ref={forwardedRef}
+        >
+          {children}
+        </Root>
+      </Tooltip.Trigger>
     );
   },
 );
@@ -159,8 +163,6 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const type = l0ItemType(item);
-  const { getProps, popoverAnchorId } = useNavTreeContext();
-  const { id } = getProps?.(item, path) ?? {};
   const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
   const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
@@ -221,7 +223,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
     );
   }, [item, onRearrange]);
 
-  const trigger = (
+  return (
     <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path}>
       <div
         role='none'
@@ -230,14 +232,12 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
           'absolute grid dx-focus-ring-group-indicator transition-colors rounded',
           pinned
             ? 'bg-transparent group-hover/l0item:bg-groupSurface inset-inline-1 inset-block-0.5'
-            : type === 'action'
-              ? 'bg-groupSurface is-[--rail-action] bs-[--rail-action]'
-              : 'bg-groupSurface inset-inline-3 inset-block-2',
+            : 'bg-groupSurface aspect-square inset-inline-3',
         )}
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
       >
         {(item.properties.icon && (
-          <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+          <Icon icon={item.properties.icon} size={pinned ? 5 : 6} classNames='place-self-center' {...hueFgStyle} />
         )) ||
           (type === 'tab' && item.properties.disposition !== 'pin-end' && <L0Avator item={item} />)}
       </div>
@@ -250,14 +250,6 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       </span>
       {onRearrange && closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
-  );
-
-  return popoverAnchorId === id ? (
-    <Popover.Anchor asChild>{trigger}</Popover.Anchor>
-  ) : (
-    <Tooltip.Trigger delayDuration={0} asChild side='right' content={localizedString}>
-      {trigger}
-    </Tooltip.Trigger>
   );
 };
 
@@ -332,7 +324,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
         '!is-[--l0-size] bg-baseSurface border-ie border-separator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
-      <div role='none' className='grid grid-rows p-1 px-3'>
+      <div role='none' className='flex justify-center p-1'>
         <MenuProvider>
           <DropdownMenu.Root group={parent} items={menuActions}>
             <DropdownMenu.Trigger asChild>
@@ -343,7 +335,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                 icon='ph--dots-three--regular'
                 size={5}
                 label={t('app menu label')}
-                // classNames='bg-primary-500'
+                classNames='w-[50px] _bg-primary-500'
               />
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>
@@ -355,22 +347,19 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           <div
             role='none'
             className={mx([
-              // TODO(burdon): Experiment.
-              // 'grid auto-rows-[calc(var(--l0-size))]',
-              'grid auto-rows-[calc(var(--l0-size)-.5rem)]',
+              'grid auto-rows-[calc(var(--l0-size)-1rem)]',
+              // 'grid auto-rows-[calc(var(--l0-size)-.5rem)]',
               '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
           >
-            {topLevelItems
-              .filter((item) => l0ItemType(item) !== 'action')
-              .map((item) => {
-                if (l0ItemType(item) === 'collection') {
-                  return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
-                } else {
-                  return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-                }
-              })}
+            {topLevelItems.map((item) => {
+              if (l0ItemType(item) === 'collection') {
+                return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
+              } else {
+                return <L0Item key={item.id} item={item} parent={parent} path={path} />;
+              }
+            })}
           </div>
           <ScrollArea.Scrollbar orientation='vertical'>
             <ScrollArea.Thumb />

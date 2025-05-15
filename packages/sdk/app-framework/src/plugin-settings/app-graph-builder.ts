@@ -26,6 +26,7 @@ export default (context: PluginsContext) =>
           properties: {
             label: ['open settings label', { ns: SETTINGS_PLUGIN }],
             icon: 'ph--gear--regular',
+            disposition: 'menu',
             keyBinding: {
               macos: 'meta+,',
               windows: 'alt+,',
