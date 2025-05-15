@@ -3,6 +3,7 @@
 //
 
 import { Schema } from 'effect';
+import { inspect } from 'util';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
@@ -65,5 +66,20 @@ describe('create (static version)', () => {
     });
 
     expect(getSchema(contact)).toBe(Testing.Contact);
+  });
+
+  test('inspect', () => {
+    const contact = create(Testing.Contact, {
+      name: 'Bot',
+      email: 'bot@example.com',
+    });
+
+    // console.log(contact);
+
+    const text = inspect(contact);
+    expect(text).toContain('Bot');
+    expect(text).toContain('bot@example.com');
+    expect(text).toContain('example.com/type/Contact');
+    expect(text).toContain('0.1.0');
   });
 });

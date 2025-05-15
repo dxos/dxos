@@ -7,6 +7,7 @@ import { Option, Schema } from 'effect';
 import {
   defineTool,
   Message,
+  structuredOutputParser,
   ToolResult,
   type ArtifactDefinition,
   type MessageContentBlock,
@@ -18,9 +19,9 @@ import { create, type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { isToolUse, runTools } from './tools';
 import { VersionPin } from './version-pin';
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest, type GenerationStream } from '../ai-service';
-import { isToolUse, runTools } from '../conversation';
 
 /**
  * Contains message history, tools, current context.
@@ -243,6 +244,15 @@ export class AISession {
     }
 
     return this._pending;
+  }
+
+  async runStructured<S extends Schema.Schema.AnyNoContext>(schema: S, options: SessionRunOptions) {
+    const parser = structuredOutputParser(schema);
+    const result = await this.run({
+      ...options,
+      tools: [...options.tools, parser.tool],
+    });
+    return parser.getResult(result);
   }
 
   private async _formatUserPrompt(

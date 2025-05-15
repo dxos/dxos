@@ -32,13 +32,7 @@ export const OrganizationSchema = Schema.Struct({
   description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
   // TODO(wittjosiah): Remove; change to relation.
   status: Schema.optional(
-    Schema.Union(
-      Schema.Literal('prospect'),
-      Schema.Literal('qualified'),
-      Schema.Literal('active'),
-      Schema.Literal('commit'),
-      Schema.Literal('reject'),
-    ).annotations({
+    Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject').annotations({
       title: 'Status',
       [PropertyMetaAnnotationId]: {
         singleSelect: {

@@ -14,7 +14,7 @@ import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AIServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from './types';
-import { isToolUse, runTools } from '../conversation';
+import { isToolUse, runTools } from '../session';
 
 export type OllamaClientParams = {
   endpoint?: string;
