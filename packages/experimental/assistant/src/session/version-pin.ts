@@ -18,6 +18,12 @@ const VersionPinSchema = Schema.Struct({
   // TODO(dmaretskyi): Could be opaque
   version: ObjectVersionSchema,
 });
+
+/**
+ * Used to pin a specific version of an object during the course of a conversation.
+ *
+ * This allows us to detect when the object changes during the course of the conversation.
+ */
 export interface VersionPin extends Schema.Schema.Type<typeof VersionPinSchema> {}
 
 export const VersionPin: typeof VersionPinSchema & {

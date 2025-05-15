@@ -86,9 +86,12 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Array reactivity is already handled by the schema validator.
     }
 
-    if (inspectCustom) {
-      defineHiddenProperty(target, inspectCustom, this._inspect.bind(target));
-    }
+    // Maybe have been set by `create`.
+    Object.defineProperty(target, inspectCustom, {
+      enumerable: false,
+      configurable: true,
+      value: this._inspect.bind(target),
+    });
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {

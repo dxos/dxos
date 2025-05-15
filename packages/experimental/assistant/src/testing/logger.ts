@@ -4,7 +4,7 @@
 
 import type { ImageSource, MessageContentBlock } from '@dxos/artifact';
 
-import type { ConversationEvent } from '../conversation';
+import type { ConversationEvent } from '../experimental';
 
 export const createLogger = ({
   stream,
