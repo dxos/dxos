@@ -27,6 +27,7 @@ import { type AnyLiveObject, getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
+  DeprecatedFilter,
   filterMatch,
   optionsToProto,
   Filter,
@@ -143,13 +144,13 @@ export class Hypergraph {
         invariant(spaceIds && spaceIds.length === 1, 'Plain format requires a single space.');
         return new QueryResult(
           this._createPlainObjectQueryContext(spaceIds[0] as SpaceId),
-          Filter.from(filter, optionsToProto(options ?? {})),
+          DeprecatedFilter.from(filter, optionsToProto(options ?? {})),
         );
       }
       case ResultFormat.Live: {
         return new QueryResult(
           this._createLiveObjectQueryContext(),
-          Filter.from(filter, optionsToProto(options ?? {})),
+          DeprecatedFilter.from(filter, optionsToProto(options ?? {})),
         );
       }
       case ResultFormat.AutomergeDocAccessor: {
@@ -366,12 +367,12 @@ export interface QuerySource {
   /**
    * One-shot query.
    */
-  run(filter: Filter): Promise<QueryResultEntry[]>;
+  run(filter: DeprecatedFilter): Promise<QueryResultEntry[]>;
 
   /**
    * Set the filter and trigger continuous updates.
    */
-  update(filter: Filter): void;
+  update(filter: DeprecatedFilter): void;
 }
 
 /**
@@ -380,7 +381,7 @@ export interface QuerySource {
 export class GraphQueryContext implements QueryContext {
   private readonly _sources = new Set<QuerySource>();
 
-  private _filter?: Filter = undefined;
+  private _filter?: DeprecatedFilter = undefined;
 
   private _ctx?: Context = undefined;
 
@@ -425,7 +426,7 @@ export class GraphQueryContext implements QueryContext {
     );
   }
 
-  async run(filter: Filter, { timeout = 30_000 }: QueryRunOptions = {}): Promise<QueryResultEntry[]> {
+  async run(filter: DeprecatedFilter, { timeout = 30_000 }: QueryRunOptions = {}): Promise<QueryResultEntry[]> {
     const runTasks = [...this._sources.values()].map((s) => asyncTimeout<QueryResultEntry[]>(s.run(filter), timeout));
     if (runTasks.length === 0) {
       return [];
@@ -435,7 +436,7 @@ export class GraphQueryContext implements QueryContext {
     return filteredResults;
   }
 
-  update(filter: Filter): void {
+  update(filter: DeprecatedFilter): void {
     this._filter = filter;
     for (const source of this._sources) {
       source.update(filter);
@@ -454,7 +455,7 @@ export class GraphQueryContext implements QueryContext {
     }
   }
 
-  private _filterResults(filter: Filter, results: QueryResultEntry[]): QueryResultEntry[] {
+  private _filterResults(filter: DeprecatedFilter, results: QueryResultEntry[]): QueryResultEntry[] {
     return results.filter(
       (result) => result.object && filterMatch(filter, getObjectCore(result.object), result.object),
     );
@@ -468,7 +469,7 @@ class SpaceQuerySource implements QuerySource {
   public readonly changed = new Event<void>();
 
   private _ctx: Context = new Context();
-  private _filter: Filter | undefined = undefined;
+  private _filter: DeprecatedFilter | undefined = undefined;
   private _results?: QueryResultEntry<AnyLiveObject<any>>[] = undefined;
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
@@ -513,7 +514,7 @@ class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(filter: Filter): Promise<QueryResultEntry<AnyLiveObject<any>>[]> {
+  async run(filter: DeprecatedFilter): Promise<QueryResultEntry<AnyLiveObject<any>>[]> {
     if (!this._isValidSourceForFilter(filter)) {
       return [];
     }
@@ -546,7 +547,7 @@ class SpaceQuerySource implements QuerySource {
     return this._results!;
   }
 
-  update(filter: Filter<AnyLiveObject<any>>): void {
+  update(filter: DeprecatedFilter): void {
     if (!this._isValidSourceForFilter(filter)) {
       this._filter = undefined;
       return;
@@ -562,7 +563,7 @@ class SpaceQuerySource implements QuerySource {
     this.changed.emit();
   }
 
-  private _query(filter: Filter): QueryResultEntry<AnyLiveObject<any>>[] {
+  private _query(filter: DeprecatedFilter): QueryResultEntry<AnyLiveObject<any>>[] {
     const filteredCores = filter.isObjectIdFilter()
       ? filter
           .objectIds!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -575,7 +576,7 @@ class SpaceQuerySource implements QuerySource {
     return filteredCores.map((core) => this._mapCoreToResult(core));
   }
 
-  private _isValidSourceForFilter(filter: Filter<AnyLiveObject<any>>): boolean {
+  private _isValidSourceForFilter(filter: DeprecatedFilter<AnyLiveObject<any>>): boolean {
     // Disabled by spaces filter.
     if (filter.spaceIds !== undefined && !filter.spaceIds.some((id) => id === this.spaceId)) {
       return false;

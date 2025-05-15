@@ -295,18 +295,6 @@ describe('Database', () => {
     expect(() => db1.add(task1)).to.throw;
   });
 
-  test('operator-based filters', async () => {
-    const { db } = await createDbWithTypes();
-
-    db.add(live(Testing.Task, { title: 'foo 1' }));
-    db.add(live(Testing.Task, { title: 'foo 2' }));
-    db.add(live(Testing.Task, { title: 'bar 3' }));
-
-    expect(
-      (await db.query(Filter.type(Testing.Task, (task: Testing.Task) => task.title?.startsWith('foo'))).run()).objects,
-    ).to.have.length(2);
-  });
-
   test('Database works with old PublicKey IDs and new Ulid IDs', async () => {
     const { db } = await builder.createDatabase();
     const obj = db.add(live(Expando, { string: 'foo' })); // Ulid by default

@@ -34,7 +34,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
+import { Filter, type FilterSource, type DeprecatedPropertyFilter, type QueryFn, type QueryOptions } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -73,8 +73,9 @@ export interface EchoDatabase {
 
   /**
    * Update objects.
+   * @deprecated Query then update.
    */
-  update(filter: PropertyFilter, operation: UpdateOperation): Promise<void>;
+  update(filter: DeprecatedPropertyFilter, operation: UpdateOperation): Promise<void>;
 
   /**
    * Insert new objects.
@@ -248,7 +249,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Update objects.
    */
-  async update(filter: PropertyFilter, operation: UpdateOperation) {
+  async update(filter: DeprecatedPropertyFilter, operation: UpdateOperation) {
     await this._coreDatabase.update(filter, operation);
   }
 

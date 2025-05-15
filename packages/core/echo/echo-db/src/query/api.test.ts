@@ -5,12 +5,20 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { create } from '@dxos/echo-schema';
+import { create, EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './api';
 import * as QueryAST from './ast';
-import { Type, Relation } from '..';
+
+// TODO(dmaretskyi): Temp until API is stable.
+const Type = {
+  def: EchoObject,
+};
+
+const Relation = {
+  def: EchoRelation,
+};
 
 //
 // Example schema
@@ -36,7 +44,7 @@ interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 const Task = Schema.Struct({
   title: Schema.String,
   createdAt: Schema.String,
-  assignee: Type.Ref(Person),
+  assignee: Ref(Person),
 }).pipe(Type.def({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
 interface Task extends Schema.Schema.Type<typeof Task> {}
 

@@ -6,4 +6,5 @@ export {
   type FilterParams,
   type FilterSource,
   type PropertyFilter as DeprecatedPropertyFilter,
+  deprecatedFilterFromQueryAST,
 } from './filter';

@@ -12,8 +12,9 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
 
-import { type Filter } from './deprecated';
 import { prohibitSignalActions } from '../guarded-scope';
+import { type Query } from './api';
+import { DeprecatedFilter, deprecatedFilterFromQueryAST } from './deprecated';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;
@@ -69,12 +70,12 @@ export interface QueryContext<T extends BaseObject = any> {
   /**
    * One-shot query.
    */
-  run(filter: Filter, opts?: QueryRunOptions): Promise<QueryResultEntry[]>;
+  run(filter: DeprecatedFilter, opts?: QueryRunOptions): Promise<QueryResultEntry[]>;
 
   /**
    * Set the filter and trigger continuous updates.
    */
-  update(filter: Filter): void;
+  update(filter: DeprecatedFilter): void;
 
   /**
    * Start creating query sources and firing events.
@@ -108,7 +109,7 @@ export type QueryRunOptions = {
  * Predicate based query.
  */
 export class QueryResult<T extends BaseObject = any> {
-  private readonly _filter: Filter;
+  private readonly _query: Query<T>;
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
@@ -120,9 +121,9 @@ export class QueryResult<T extends BaseObject = any> {
 
   constructor(
     private readonly _queryContext: QueryContext<T>,
-    filter: Filter,
+    query: Query<T>,
   ) {
-    this._filter = filter;
+    this._query = query;
 
     this._queryContext.changed.on(() => {
       this._resultCache = undefined;
@@ -133,20 +134,20 @@ export class QueryResult<T extends BaseObject = any> {
         this._signal.notifyWrite();
       });
     });
-    this._queryContext.update(filter);
+    this._queryContext.update(deprecatedFilterFromQueryAST(query.ast));
 
     this._diagnostic = {
       isActive: this._isActive,
-      filter: JSON.stringify(this._filter),
+      filter: JSON.stringify(this._query),
       creationStack: new StackTrace(),
     };
     QUERIES.add(this._diagnostic);
 
-    log('construct', { filter: this._filter.toProto() });
+    log('construct', { filter: this._query.ast });
   }
 
-  get filter(): Filter {
-    return this._filter;
+  get query(): Query<T> {
+    return this._query;
   }
 
   get results(): QueryResultEntry<T>[] {
@@ -168,7 +169,9 @@ export class QueryResult<T extends BaseObject = any> {
    * Does not subscribe to updates.
    */
   async run(timeout: { timeout?: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
-    const filteredResults = await this._queryContext.run(this._filter, { timeout: timeout.timeout });
+    const filteredResults = await this._queryContext.run(deprecatedFilterFromQueryAST(this._query.ast), {
+      timeout: timeout.timeout,
+    });
     return {
       results: filteredResults,
       objects: this._uniqueObjects(filteredResults),
@@ -201,13 +204,13 @@ export class QueryResult<T extends BaseObject = any> {
   subscribe(callback?: (query: QueryResult<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
-    log('subscribe', { filter: this._filter.type, active: this._isActive });
+    log('subscribe', { filter: this._query.ast, active: this._isActive });
     this._subscribers++;
     const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
     this._handleQueryLifecycle();
 
     const unsubscribe = () => {
-      log('unsubscribe', { filter: this._filter.type, active: this._isActive });
+      log('unsubscribe', { filter: this._query.ast, active: this._isActive });
       this._subscribers--;
       unsubscribeFromEvent?.();
       this._handleQueryLifecycle();
@@ -258,10 +261,10 @@ export class QueryResult<T extends BaseObject = any> {
 
   private _handleQueryLifecycle() {
     if (this._subscribers === 0 && this._isActive) {
-      log('stop query', { filter: this._filter.toProto() });
+      log('stop query', { filter: this._query.ast });
       this._stop();
     } else if (this._subscribers > 0 && !this._isActive) {
-      log('start query', { filter: this._filter.toProto() });
+      log('start query', { filter: this._query.ast });
       this._start();
     }
   }

@@ -18,6 +18,9 @@ import {
 import { type Filter as FilterProto, type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { getReferenceWithSpaceKey } from '../../echo-handler';
+import type { QueryAST } from '..';
+import { mapValues } from '@dxos/util';
+import { raise } from '@dxos/debug';
 
 // TODO(dmaretskyi): Rename `hasInstanceOf`.
 // TODO(dmaretskyi): Remove from echo api
@@ -259,6 +262,41 @@ export class Filter<T extends BaseObject = any> {
     );
   }
 
+  static fromAST(ast: QueryAST.Filter): Filter {
+    switch (ast.type) {
+      case 'object':
+        return new Filter({
+          type: ast.typename ? [DXN.fromTypename(ast.typename)] : undefined,
+          properties: mapValues(ast.props, (prop) =>
+            prop.type === 'compare' && prop.operator === 'eq' ? prop.value : raise(new Error('Not supported')),
+          ),
+        });
+      case 'compare':
+        throw new Error('Not implemented');
+
+      case 'in':
+        throw new Error('Not implemented');
+
+      case 'range':
+        throw new Error('Not implemented');
+
+      case 'text-search':
+        throw new Error('Not implemented');
+
+      case 'not':
+        return Filter.not(Filter.fromAST(ast.filter));
+
+      case 'and':
+        return Filter.and(ast.filters.map(Filter.fromAST));
+
+      case 'or':
+        return Filter.or(ast.filters.map(Filter.fromAST));
+
+      default:
+        throw new Error('Not implemented');
+    }
+  }
+
   // TODO(burdon): Make plain immutable object (unless generics are important).
   // TODO(burdon): Split into protobuf serializable and non-serializable (operator) predicates.
 
@@ -347,4 +385,13 @@ const sanitizeIdArray = (ids: string | EncodedReference | (string | EncodedRefer
     invariant(dxn.parts[0] === LOCAL_SPACE_TAG, 'Only local space references are supported');
     return dxn.parts[1];
   });
+};
+
+export const deprecatedFilterFromQueryAST = (ast: QueryAST.Query): Filter => {
+  switch (ast.type) {
+    case 'select':
+      return Filter.fromAST(ast.filter);
+    default:
+      throw new Error('Not implemented');
+  }
 };

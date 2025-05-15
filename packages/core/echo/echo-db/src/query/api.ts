@@ -2,21 +2,31 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type PublicKey } from '@dxos/keys';
+import { assertArgument } from '@dxos/invariant';
+import { DXN, type PublicKey } from '@dxos/keys';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type AnyLiveObject } from '../echo-handler';
-import type { Filter$, FilterSource } from './deprecated';
+import type { FilterSource } from './deprecated';
 import { type QueryResult } from './query-result';
 
 /**
  * `query` API function declaration.
  */
-// TODO(dmaretskyi): Type based on the result format.
 export interface QueryFn {
+  <Q extends Query.Any>(query: Q, options?: QueryOptions | undefined): QueryResult<Live<Query.Type<Q>>>;
+
+  /**
+   * @deprecated Pass `Query` instead.
+   */
   (): QueryResult;
-  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<AnyLiveObject<Filter$.Object<F>>>;
-  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): QueryResult<AnyLiveObject<any>>;
+  /**
+   * @deprecated Pass `Query` instead.
+   */
+  <F extends Filter.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<Live<Filter.Type<F>>>;
+  /**
+   * @deprecated Pass `Query` instead.
+   */
+  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): QueryResult<Live<any>>;
 }
 
 /**
@@ -42,8 +52,6 @@ export enum ResultFormat {
 }
 
 export type QueryOptions = {
-  format?: ResultFormat;
-
   /**
    * Query only in specific spaces.
    */
@@ -72,14 +80,19 @@ export type QueryOptions = {
   include?: QueryJoinSpec;
 
   /**
-   * @deprecated Use `spaceIds` instead.
-   */
-  spaces?: PublicKey[];
-
-  /**
    * Return only the first `limit` results.
    */
   limit?: number;
+
+  /**
+   * @deprecated Stick to live format.
+   */
+  format?: ResultFormat;
+
+  /**
+   * @deprecated Use `spaceIds` instead.
+   */
+  spaces?: PublicKey[];
 };
 
 export interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
@@ -105,6 +118,7 @@ import type { Simplify } from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { getSchemaDXN, type Ref, type RelationSource, type RelationTarget } from '@dxos/echo-schema';
 
+import type { Live } from '@dxos/live-object';
 import type * as QueryAST from './ast';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
@@ -221,6 +235,10 @@ interface QueryAPI {
 }
 
 export declare namespace Query {
+  export type Any = Query<any>;
+
+  export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
+
   export type TextSearchOptions = {
     type?: 'full-text' | 'vector';
   };
@@ -241,12 +259,32 @@ interface FilterAPI {
   is(value: unknown): value is Filter<any>;
 
   /**
+   * Filter that matches all objects.
+   */
+  all(): Filter<any>;
+
+  /**
+   * Filter that matches no objects.
+   */
+  nothing(): Filter<any>;
+
+  /**
    * Filter by type.
    */
   type<S extends Schema.Schema.All>(
     schema: S,
     props?: Filter.Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
+
+  /**
+   * Filter by non-qualified typename.
+   */
+  typename(typename: string): Filter<any>;
+
+  /**
+   * Filter by fully qualified type DXN.
+   */
+  typeDXN(dxn: DXN): Filter<any>;
 
   /**
    * Filter by properties.
@@ -352,6 +390,25 @@ class FilterClass implements Filter<any> {
     return typeof value === 'object' && value !== null && '~Filter' in value;
   }
 
+  static all() {
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      props: {},
+    });
+  }
+
+  static nothing() {
+    return new FilterClass({
+      type: 'not',
+      filter: {
+        type: 'object',
+        typename: null,
+        props: {},
+      },
+    });
+  }
+
   static type<S extends Schema.Schema.All>(
     schema: S,
     props?: Filter.Props<Schema.Schema.Type<S>>,
@@ -361,6 +418,23 @@ class FilterClass implements Filter<any> {
       type: 'object',
       typename: dxn.toString(),
       props: props ? propsFilterToAst(props) : {},
+    });
+  }
+
+  static typename(typename: string): Filter<any> {
+    assertArgument(!typename.startsWith('dxn:'), 'Typename must no be qualified');
+    return new FilterClass({
+      type: 'object',
+      typename: DXN.fromTypename(typename).toString(),
+      props: {},
+    });
+  }
+
+  static typeDXN(dxn: DXN): Filter<any> {
+    return new FilterClass({
+      type: 'object',
+      typename: dxn.toString(),
+      props: {},
     });
   }
 
