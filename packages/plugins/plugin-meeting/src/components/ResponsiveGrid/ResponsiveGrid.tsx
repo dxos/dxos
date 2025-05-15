@@ -131,7 +131,7 @@ export const ResponsiveGrid = <T extends object = any>({
       <div className='absolute inset-0 flex flex-col grow gap-2'>
         {/* Pinned item. */}
         {pinnedItem && (
-          <div className='relative flex shrink-0 w-full flex-1' style={{ height: dividerHeight }}>
+          <div className='relative flex shrink-0 w-full flex-1 overflow-hidden' style={{ height: dividerHeight }}>
             <SoloItem id={getId(pinnedItem)} debug={debug} />
           </div>
         )}
