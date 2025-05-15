@@ -63,7 +63,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   return (
     <div
       className={mx(
-        'relative w-full h-full aspect-video group',
+        'relative w-full h-full group',
         'rounded-md outline outline-2 outline-neutral-900 transition-[outline-color] duration-500',
         speaking ? 'outline-green-500' : !video && 'outline-separator',
         classNames,

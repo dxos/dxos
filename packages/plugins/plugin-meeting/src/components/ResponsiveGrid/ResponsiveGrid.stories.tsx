@@ -85,7 +85,11 @@ const meta: Meta<StoryProps> = {
       return () => clearInterval(interval);
     }, []);
 
-    return <ResponsiveGrid {...args} Cell={TestCell} items={items} pinned={pinned} onPinnedChange={setPinned} />;
+    return (
+      <div className='grid grow p-4'>
+        <ResponsiveGrid {...args} Cell={TestCell} items={items} pinned={pinned} onPinnedChange={setPinned} />
+      </div>
+    );
   },
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   parameters: {
@@ -135,7 +139,7 @@ export const Solo: Story = {
   },
 };
 
-export const Dual: Story = {
+export const TwoUp: Story = {
   args: {
     items: Array.from({ length: 2 }, (_, i) => createItem('image')),
   },
