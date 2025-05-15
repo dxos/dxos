@@ -52,10 +52,9 @@ export const Toolbar = ({
   const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
-  // TODO(burdon): Create large toolbar/button sizes.
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
-    <div className={mx('flex justify-center m-4', call.joined && autoHideControls && hoverableHidden)}>
+    <div className={mx('z-20 flex justify-center m-4', call.joined && autoHideControls && hoverableHidden)}>
       <div className='bg-modalSurface p-2 rounded-lg shadow-lg'>
         <NativeToolbar.Root classNames={['!is-fit', classNames]}>
           <ToggleButton

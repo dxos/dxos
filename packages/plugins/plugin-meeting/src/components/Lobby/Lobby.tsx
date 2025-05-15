@@ -6,6 +6,7 @@ import React, { type FC, type PropsWithChildren, useEffect, useState } from 'rea
 
 import { useCapability } from '@dxos/app-framework';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { MeetingCapabilities } from '../../capabilities';
 import { VideoObject } from '../Media';
@@ -34,10 +35,19 @@ type LobbyPreviewProps = {};
 
 const LobbyPreview: FC<LobbyPreviewProps> = () => {
   const call = useCapability(MeetingCapabilities.CallManager);
+  const [classNames, setClassNames] = useState('');
+  useEffect(() => {
+    setClassNames('outline-primary-500');
+  }, []);
 
   return (
-    <ResponsiveContainer>
-      <VideoObject flip muted videoStream={call.media.videoStream} />
+    <ResponsiveContainer classNames='p-2'>
+      <VideoObject
+        flip
+        muted
+        videoStream={call.media.videoStream}
+        classNames={mx('rounded outline outline-transparent transition-all duration-500', classNames)}
+      />
     </ResponsiveContainer>
   );
 };
