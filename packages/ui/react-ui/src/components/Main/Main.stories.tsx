@@ -22,7 +22,7 @@ const ComplementarySidebarToggle = () => {
   return <Button onClick={toggleComplementarySidebar}>Toggle complementary sidebar</Button>;
 };
 
-const StoryMain = (_args: StoryMainArgs) => {
+const DefaultStory = (_args: StoryMainArgs) => {
   return (
     <Main.Root>
       <Main.Overlay />
@@ -48,7 +48,7 @@ const StoryMain = (_args: StoryMainArgs) => {
 export default {
   title: 'ui/react-ui-core/Main',
   component: Main.Root,
-  render: StoryMain,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

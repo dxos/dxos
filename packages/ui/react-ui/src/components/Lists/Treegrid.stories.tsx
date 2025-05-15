@@ -6,7 +6,7 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 
-import { Treegrid as Tg } from './Treegrid';
+import { Treegrid } from './Treegrid';
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
@@ -122,30 +122,30 @@ const flattenedContent = Array.from(visitor(content, () => true));
 
 const DefaultStory = () => {
   return (
-    <Tg.Root gridTemplateColumns='1fr'>
+    <Treegrid.Root gridTemplateColumns='1fr'>
       {flattenedContent.map(({ node, parentOf, path }) => {
         return (
-          <Tg.Row
+          <Treegrid.Row
             key={node.id}
-            id={path.join(Tg.PATH_SEPARATOR)}
-            {...(parentOf && { parentOf: parentOf.join(Tg.PARENT_OF_SEPARATOR) })}
+            id={path.join(Treegrid.PATH_SEPARATOR)}
+            {...(parentOf && { parentOf: parentOf.join(Treegrid.PARENT_OF_SEPARATOR) })}
           >
-            <Tg.Cell indent classNames='flex items-center'>
+            <Treegrid.Cell indent classNames='flex items-center'>
               {node.icon && <Icon icon={node.icon} classNames='is-[1em] bs-[1em] mlb-1' />}
               {node.title}
-            </Tg.Cell>
-          </Tg.Row>
+            </Treegrid.Cell>
+          </Treegrid.Row>
         );
       })}
-    </Tg.Root>
+    </Treegrid.Root>
   );
 };
 
-export const Default = {};
-
 export default {
   title: 'ui/react-ui-core/Treegrid',
-  component: Tg.Root,
+  component: Treegrid.Root,
   render: DefaultStory,
   decorators: [withTheme],
 };
+
+export const Default = {};
