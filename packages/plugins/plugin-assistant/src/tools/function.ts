@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import type { SpaceId } from '@dxos/react-client/echo';
 import { getMeta } from '@dxos/react-client/echo';
 
-export const covertFunctionToTool = (
+export const convertFunctionToTool = (
   fn: FunctionType,
   edgeUrl: string,
   spaceId?: SpaceId | undefined,
@@ -24,9 +24,7 @@ export const covertFunctionToTool = (
   if (!existingFunctionUrl) {
     return undefined;
   }
-  const url = getInvocationUrl(existingFunctionUrl, edgeUrl, {
-    spaceId,
-  });
+  const url = getInvocationUrl(existingFunctionUrl, edgeUrl, { spaceId });
 
   return defineTool('user-function', {
     name: fn.name,
