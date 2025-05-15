@@ -145,6 +145,9 @@
       "@dxos/plugin-navtree": [
         "packages/plugins/plugin-navtree/src/index.ts"
       ],
+      "@dxos/plugin-navtree/testing": [
+        "packages/plugins/plugin-navtree/src/testing/index.ts"
+      ],
       "@dxos/plugin-observability": [
         "packages/plugins/plugin-observability/src/index.ts"
       ],

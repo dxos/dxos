@@ -26,7 +26,11 @@ export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view';
 type TableToolbarState = Partial<{ viewDirty: boolean }>;
 
 export type TableToolbarProps = ThemedClassName<
-  TableToolbarState & { onAction: (action: TableToolbarAction) => void; attendableId?: string }
+  TableToolbarState & {
+    onAction: (action: TableToolbarAction) => void;
+    attendableId?: string;
+    ignoreAttention?: boolean;
+  }
 >;
 
 const createTableToolbarActions = (state: TableToolbarState, onAction: (action: TableToolbarAction) => void) => {
@@ -58,14 +62,14 @@ const createTableToolbarActions = (state: TableToolbarState, onAction: (action: 
   };
 };
 
-export const TableToolbar = ({ classNames, viewDirty, attendableId, onAction }: TableToolbarProps) => {
+export const TableToolbar = ({ classNames, viewDirty, attendableId, onAction, ignoreAttention }: TableToolbarProps) => {
   const state = useMemo(() => live<TableToolbarState>({ viewDirty }), []);
   const actionsCreator = useCallback(() => createTableToolbarActions(state, onAction), [state, onAction]);
   const menu = useMenuActions(actionsCreator);
 
   return (
     <MenuProvider {...menu} attendableId={attendableId}>
-      <ToolbarMenu classNames={classNames} />
+      <ToolbarMenu classNames={classNames} ignoreAttention={ignoreAttention} />
     </MenuProvider>
   );
 };
