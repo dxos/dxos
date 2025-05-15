@@ -20,7 +20,7 @@ type StorybookToastProps = Partial<{
   closeTrigger: ReactNode;
 }>;
 
-const StorybookToast = ({ title, description, actionTriggers, openTrigger, closeTrigger }: StorybookToastProps) => {
+const DefaultStory = ({ title, description, actionTriggers, openTrigger, closeTrigger }: StorybookToastProps) => {
   const [open, setOpen] = useState(true);
   return (
     <Toast.Provider>
@@ -47,7 +47,7 @@ const StorybookToast = ({ title, description, actionTriggers, openTrigger, close
 export default {
   title: 'ui/react-ui-core/Toast',
   component: Toast,
-  render: StorybookToast,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
@@ -55,9 +55,14 @@ export default {
 export const Default = {
   args: {
     openTrigger: 'Open toast',
-    title: 'Hi, this is a toast',
+    title: 'This is a toast',
     description: 'This goes away on its own with a timer.',
-    actionTriggers: [{ altText: 'Press F5 to reload the page', trigger: <Button variant='primary'>Reload</Button> }],
+    actionTriggers: [
+      {
+        altText: 'Press F5 to reload the page',
+        trigger: <Button variant='primary'>Reload</Button>,
+      },
+    ],
     closeTrigger: <Button>Close</Button>,
   },
   parameters: {

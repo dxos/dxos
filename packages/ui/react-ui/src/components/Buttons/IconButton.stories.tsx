@@ -6,22 +6,18 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { IconButton } from './IconButton';
+import { IconButton, type IconButtonProps } from './IconButton';
 import { withTheme } from '../../testing';
 import { Tooltip } from '../Tooltip';
 
-type StorybookIconButtonProps = {
-  iconOnly?: boolean;
-};
-
-const StorybookIconButton = (props: StorybookIconButtonProps) => {
+const DefaultStory = (props: IconButtonProps) => {
   return (
     <Tooltip.Provider>
       <div className='mbe-4'>
-        <IconButton label='Bold' icon='ph--text-b--regular' {...props} />
+        <IconButton {...props} />
       </div>
       <div className='mbe-4'>
-        <IconButton iconOnly label='Bold' icon='ph--text-b--regular' {...props} />
+        <IconButton iconOnly {...props} />
       </div>
     </Tooltip.Provider>
   );
@@ -30,11 +26,14 @@ const StorybookIconButton = (props: StorybookIconButtonProps) => {
 export default {
   title: 'ui/react-ui-core/IconButton',
   component: IconButton,
-  render: StorybookIconButton,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
 
 export const Default = {
-  args: {},
+  args: {
+    label: 'Bold',
+    icon: 'ph--text-b--regular',
+  },
 };
