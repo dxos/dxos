@@ -28,7 +28,7 @@ export class EchoDataSource implements DataSource {
       return [];
     }
 
-    const { objects } = await this._db.query(Filter.schema(schema)).run();
+    const { objects } = await this._db.query(Filter.type(schema)).run();
     return objects.map(this._objectToNode);
   }
 
@@ -58,7 +58,7 @@ export class EchoDataSource implements DataSource {
       return []; // TODO(dmaretskyi): Handle real relationships.
     }
 
-    const { objects } = await this._db.query(Filter.schema(relationship.schema)).run();
+    const { objects } = await this._db.query(Filter.type(relationship.schema)).run();
     return (
       await Promise.all(objects.map((object) => this._projectRefRelationship(object, relationship.property)))
     ).flat();

@@ -22,7 +22,7 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const space = getSpace(table);
   const schema = useSchema(client, space, table.view?.target?.query.typename);
 
-  const views = useQuery(space, Filter.schema(ViewType));
+  const views = useQuery(space, Filter.type(ViewType));
   const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);
 
   const handleUpdateTypename = useCallback(

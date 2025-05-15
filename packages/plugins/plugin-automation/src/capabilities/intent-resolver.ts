@@ -31,11 +31,11 @@ export default (context: PluginsContext) =>
         if (scriptName) {
           const {
             objects: [script],
-          } = await space.db.query(Filter.schema(ScriptType, { name: scriptName })).run();
+          } = await space.db.query(Filter.type(ScriptType, { name: scriptName })).run();
           if (script) {
             const {
               objects: [fn],
-            } = await space.db.query(Filter.schema(FunctionType, { source: script })).run();
+            } = await space.db.query(Filter.type(FunctionType, { source: script })).run();
             if (fn) {
               trigger.function = Type.ref(fn);
             }

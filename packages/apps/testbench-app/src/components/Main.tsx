@@ -60,7 +60,7 @@ export const Main = () => {
   const getSchema = (type: string | undefined) => typeMap.get(type ?? Item.typename) ?? Item;
   const objects = useQuery(
     space,
-    Filter.schema(getSchema(type), (object: Item) => match(filter, object.content)),
+    Filter.type(getSchema(type), (object: Item) => match(filter, object.content)),
     {},
     [type, filter],
   );

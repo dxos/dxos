@@ -105,7 +105,7 @@ export default (context: PluginsContext) =>
       id: `${ASSISTANT_PLUGIN}/root`,
       filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       connector: ({ node }) => {
-        const templates = memoizeQuery(node.data, Filter.schema(TemplateType));
+        const templates = memoizeQuery(node.data, Filter.type(TemplateType));
         return templates.length > 0
           ? [
               {
@@ -127,7 +127,7 @@ export default (context: PluginsContext) =>
       id: `${ASSISTANT_PLUGIN}/templates`,
       filter: (node): node is Node<null, { space: Space }> => node.id === `${ASSISTANT_PLUGIN}/templates`,
       connector: ({ node }) => {
-        const templates = memoizeQuery(node.properties.space, Filter.schema(TemplateType));
+        const templates = memoizeQuery(node.properties.space, Filter.type(TemplateType));
         return templates
           .toSorted((a, b) => {
             const nameA = a.name ?? '';
@@ -149,7 +149,7 @@ export default (context: PluginsContext) =>
 
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
-  const { objects } = await space.db.query(Filter.schema(AIChatType)).run();
+  const { objects } = await space.db.query(Filter.type(AIChatType)).run();
   // console.log('objects', JSON.stringify(objects, null, 2));
   if (objects.length > 0) {
     // TODO(burdon): Is this the most recent?

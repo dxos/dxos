@@ -302,12 +302,12 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const queryResult = await db.query(Filter.schema(Testing.TestType)).run();
+        const queryResult = await db.query(Filter.type(Testing.TestType)).run();
         expect(queryResult.objects.length).to.eq(1);
       }
 
       {
-        const queryResult = await db.query(Filter.schema(Testing.TestSchemaType)).run();
+        const queryResult = await db.query(Filter.type(Testing.TestSchemaType)).run();
         expect(queryResult.objects.length).to.eq(1);
       }
     });
@@ -316,7 +316,7 @@ describe('Reactive Object with ECHO database', () => {
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([Testing.TestType]);
       const obj = db.add(live(Testing.TestType, { string: 'foo' }));
-      const query = db.query(Filter.schema(Testing.TestType));
+      const query = db.query(Filter.type(Testing.TestType));
 
       expect((await query.run()).objects.length).to.eq(1);
 
@@ -329,7 +329,7 @@ describe('Reactive Object with ECHO database', () => {
       graph.schemaRegistry.addSchema([Testing.TestType]);
       const obj = db.add(live(Testing.TestType, { string: 'foo' }));
       db.remove(obj);
-      const query = await db.query(Filter.schema(Testing.TestType));
+      const query = await db.query(Filter.type(Testing.TestType));
       expect((await query.run()).objects.length).to.eq(0);
 
       db.add(obj);

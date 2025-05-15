@@ -26,7 +26,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [kanban?.cardView?.target?.query?.typename],
   );
   const schema = useSchema(client, space, currentTypename);
-  const views = useQuery(space, Filter.schema(ViewType));
+  const views = useQuery(space, Filter.type(ViewType));
 
   const handleUpdateTypename = useCallback(
     (newTypename: string) => {

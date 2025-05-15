@@ -21,7 +21,7 @@ const generator: ValueGenerator = faker as any;
 
 const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
   for (const { type, count } of specs) {
-    const { objects } = await db.query(Filter.schema(type)).run();
+    const { objects } = await db.query(Filter.type(type)).run();
     expect(objects).to.have.length(count);
     log.info('objects', {
       typename: type.typename,

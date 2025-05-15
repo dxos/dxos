@@ -45,7 +45,7 @@ const StorybookKanban = () => {
   const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const kanbans = useQuery(space, Filter.schema(KanbanType));
+  const kanbans = useQuery(space, Filter.type(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
   const [projection, setProjection] = useState<ViewProjection>();
   const schema = useSchema(client, space, kanban?.cardView?.target?.query.typename);
@@ -64,7 +64,7 @@ const StorybookKanban = () => {
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
   }, [kanban?.cardView?.target, schema, JSON.stringify(schema?.jsonSchema)]);
 
-  const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({

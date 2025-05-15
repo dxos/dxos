@@ -63,7 +63,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
 
       const {
         objects: [fn],
-      } = await space.db.query(Filter.schema(FunctionType, { source: object })).run();
+      } = await space.db.query(Filter.type(FunctionType, { source: object })).run();
       if (!fn) {
         return;
       }

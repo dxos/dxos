@@ -86,7 +86,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
 
       this._objectsSubscription = space.db
         // TODO(burdon): ERROR: Cannot mix type and or filters.
-        .query(Filter.not(Filter.or(Filter.schema(StoredSchema), Filter.schema(CollectionType))))
+        .query(Filter.not(Filter.or(Filter.type(StoredSchema), Filter.type(CollectionType))))
         .subscribe(
           ({ objects }) => {
             this._objects = objects;

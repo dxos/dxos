@@ -134,7 +134,7 @@ export const PreviewPlugin = () =>
               const handleOrgClick = useCallback(
                 async (org: DataType.Organization) => {
                   const space = getSpace(org);
-                  const tablesQuery = await space?.db.query(Filter.schema(TableType)).run();
+                  const tablesQuery = await space?.db.query(Filter.type(TableType)).run();
                   const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
                     return table.view?.target?.query?.typename === DataType.Organization.typename;
                   });

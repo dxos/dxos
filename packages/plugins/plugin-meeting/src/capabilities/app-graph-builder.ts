@@ -47,7 +47,7 @@ export default (context: PluginsContext) =>
       id: `${MEETING_PLUGIN}/root`,
       filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       connector: ({ node }) => {
-        const meetings = memoizeQuery(node.data, Filter.schema(MeetingType));
+        const meetings = memoizeQuery(node.data, Filter.type(MeetingType));
         return meetings.length > 0
           ? [
               {
@@ -78,7 +78,7 @@ export default (context: PluginsContext) =>
           (capability): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
             capability.id === MeetingType.typename,
         );
-        const meetings = memoizeQuery(node.properties.space, Filter.schema(MeetingType));
+        const meetings = memoizeQuery(node.properties.space, Filter.type(MeetingType));
         return meetings
           .toSorted((a, b) => {
             const nameA = a.name ?? '';

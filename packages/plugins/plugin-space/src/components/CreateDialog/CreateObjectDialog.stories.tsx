@@ -66,7 +66,7 @@ export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
 export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
     const space = useSpace();
-    const [collection] = useQuery(space, Filter.schema(CollectionType));
+    const [collection] = useQuery(space, Filter.type(CollectionType));
 
     useEffect(() => {
       if (space) {

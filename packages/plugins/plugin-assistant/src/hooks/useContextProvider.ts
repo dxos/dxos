@@ -29,7 +29,7 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
       query: async ({ query }) => {
         const artifactSchemas = artifactDefinitions.map((artifact) => artifact.schema);
         const { objects } = await space.db
-          .query(Filter.or(...artifactSchemas.map((schema) => Filter.schema(schema))))
+          .query(Filter.or(...artifactSchemas.map((schema) => Filter.type(schema))))
           .run();
         return objects
           .map((object) => {

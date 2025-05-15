@@ -16,7 +16,7 @@ import { TaskType } from '../types';
 
 const TaskList = ({ id, spaceKey }: { id: number; spaceKey?: PublicKey }) => {
   const space = useSpace(spaceKey);
-  const tasks = useQuery(space, Filter.schema(TaskType));
+  const tasks = useQuery(space, Filter.type(TaskType));
   const [value, setValue] = useState('');
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {

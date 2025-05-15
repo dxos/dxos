@@ -481,7 +481,7 @@ describe('Integration tests', () => {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const schema = db.schemaRegistry.getSchema('example.com/type/Test');
 
-        const { objects } = await db.query(Filter.schema(schema!)).run();
+        const { objects } = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(getSchema(objects[0])!)).to.include({
           typename: 'example.com/type/Test',

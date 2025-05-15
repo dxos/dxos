@@ -68,7 +68,7 @@ export const useExtensions = ({
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
-  // const query = space?.db.query(Filter.schema(DocumentType));
+  // const query = space?.db.query(Filter.type(DocumentType));
   // query?.subscribe();
   const baseExtensions = useMemo(
     () =>

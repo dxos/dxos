@@ -180,7 +180,7 @@ type EntityExtractionEnricherFactoryOptions = {
 
 const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
   return async (message: DataType.Message) => {
-    const { objects } = await space.db.query(Filter.or(...contextTypes.map((s) => Filter.schema(s)))).run();
+    const { objects } = await space.db.query(Filter.or(...contextTypes.map((s) => Filter.type(s)))).run();
     log.info('context', { objects });
 
     const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({

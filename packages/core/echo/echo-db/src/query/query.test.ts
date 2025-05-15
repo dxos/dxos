@@ -87,7 +87,7 @@ describe('Queries', () => {
     });
 
     test('filter expando', async () => {
-      const { objects } = await db.query(Filter.schema(Expando, { label: 'red' })).run();
+      const { objects } = await db.query(Filter.type(Expando, { label: 'red' })).run();
       expect(objects).to.have.length(3);
     });
 
@@ -115,7 +115,7 @@ describe('Queries', () => {
       const objB = db.add(live(Expando, { label: 'obj b', ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
-      const { objects } = await db.query(Filter.schema(Expando, { ref: objA })).run();
+      const { objects } = await db.query(Filter.type(Expando, { ref: objA })).run();
       expect(objects).toEqual([objB]);
     });
 
@@ -342,8 +342,8 @@ describe('Queries', () => {
 
     const assertQueries = async (db: EchoDatabase) => {
       await assertQuery(db, Filter.typename(ContactV1.typename), [contactV1, contactV2]);
-      await assertQuery(db, Filter.schema(ContactV1), [contactV1]);
-      await assertQuery(db, Filter.schema(ContactV2), [contactV2]);
+      await assertQuery(db, Filter.type(ContactV1), [contactV1]);
+      await assertQuery(db, Filter.type(ContactV2), [contactV2]);
       await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact'), [contactV1, contactV2]);
       await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.1.0'), [contactV1]);
       await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.1.0'), [contactV1]);
@@ -379,7 +379,7 @@ describe('Queries', () => {
         }),
       );
 
-      const { objects } = await db.query(Filter.schema(Testing.HasManager)).run();
+      const { objects } = await db.query(Filter.type(Testing.HasManager)).run();
       expect(objects).toEqual([hasManager]);
     });
   });
@@ -534,8 +534,8 @@ describe('Queries with types', () => {
     const [schema] = await db.schemaRegistry.register([Testing.Contact]);
     const contact = db.add(live(schema, {}));
 
-    // NOTE: Must use `Filter.schema` with EchoSchema instance since matching is done by the object ID of the mutable schema.
-    const query = db.query(Filter.schema(schema));
+    // NOTE: Must use `Filter.type` with EchoSchema instance since matching is done by the object ID of the mutable schema.
+    const query = db.query(Filter.type(schema));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);
@@ -554,7 +554,7 @@ describe('Queries with types', () => {
 
     // query
     {
-      const contact = (await db.query(Filter.schema(Testing.Contact)).run()).objects[0];
+      const contact = (await db.query(Filter.type(Testing.Contact)).run()).objects[0];
       expect(contact.name).to.eq(name);
       expect(contact instanceof Testing.Contact).to.be.true;
     }

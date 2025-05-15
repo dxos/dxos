@@ -118,7 +118,7 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
 
 export const useDeployDeps = ({ script }: { script: ScriptType }) => {
   const space = getSpace(script);
-  const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
+  const [fn] = useQuery(space, Filter.type(FunctionType, { source: script }));
   const client = useClient();
   const existingFunctionUrl = useMemo(() => fn && getUserFunctionUrlInMetadata(getMeta(fn)), [fn]);
   return { space, fn, client, existingFunctionUrl };

@@ -23,7 +23,7 @@ export const TaskListContainer = () => {
   const { spaceKey } = useParams<{ spaceKey: string }>();
 
   const space = useSpace(spaceKey);
-  const tasks = useQuery<Task>(space, Filter.schema(Task));
+  const tasks = useQuery<Task>(space, Filter.type(Task));
   const shell = useShell();
 
   return (

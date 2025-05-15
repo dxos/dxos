@@ -67,7 +67,7 @@ export default (context: PluginsContext) => {
 
         const {
           objects: [spacesOrder],
-        } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
+        } = await client.spaces.default.db.query(Filter.type(Expando, { key: SHARED })).run();
         if (spacesOrder) {
           spacesOrder.order = nextOrder.map(({ id }) => id);
         } else {
@@ -188,7 +188,7 @@ export default (context: PluginsContext) => {
 
         // TODO(wittjosiah): During client reset, accessing default space throws.
         try {
-          const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
+          const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.type(Expando, { key: SHARED }));
           const order: string[] = spacesOrder?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
           return [

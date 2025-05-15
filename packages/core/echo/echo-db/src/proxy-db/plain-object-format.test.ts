@@ -154,7 +154,7 @@ describe('Plain object format', () => {
     }
 
     {
-      const { objects } = await db.query(Filter.schema(Testing.Task)).run();
+      const { objects } = await db.query(Filter.type(Testing.Task)).run();
       expect(objects.length).to.eq(1);
       expect(objects[0].id).to.eq(id);
     }
