@@ -57,7 +57,6 @@ export const deployScript = async ({
 
     const { functionId, version, meta } = await uploadWorkerFunction({
       client,
-      spaceId: space.id,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
       functionId: existingFunctionId,
       source: bundle,
@@ -71,7 +70,7 @@ export const deployScript = async ({
     script.changed = false;
     updateFunctionMetadata(script, storedFunction, meta, functionId);
 
-    const functionUrl = makeFunctionUrl(space.id, { functionId });
+    const functionUrl = makeFunctionUrl({ functionId });
     setUserFunctionUrlInMetadata(getMeta(storedFunction), functionUrl);
 
     return { success: true, functionUrl };

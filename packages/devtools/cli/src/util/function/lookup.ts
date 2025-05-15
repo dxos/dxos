@@ -9,7 +9,7 @@ export const findFunctionByDeploymentId = async (space: Space, functionId?: stri
   if (!functionId) {
     return undefined;
   }
-  const invocationUrl = makeFunctionUrl(space.id, { functionId });
+  const invocationUrl = makeFunctionUrl({ functionId });
   const functions = await space.db.query(Filter.schema(FunctionType)).run();
   return functions.objects.find((fn) => getUserFunctionUrlInMetadata(getMeta(fn)) === invocationUrl);
 };
