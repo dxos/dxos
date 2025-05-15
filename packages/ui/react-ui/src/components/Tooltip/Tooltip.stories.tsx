@@ -11,12 +11,12 @@ import { Tooltip } from './Tooltip';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
-type StoryTooltipProps = {
+type StoryProps = {
   tooltips: { label: string; content: string }[];
   defaultOpen?: boolean;
 };
 
-const StoryTooltip = ({ tooltips, defaultOpen }: StoryTooltipProps) => (
+const DefaultStory = ({ tooltips, defaultOpen }: StoryProps) => (
   <Tooltip.Provider defaultOpen={defaultOpen}>
     <div role='none' className='is-32'>
       {tooltips.map(({ label, content }, i) => (
@@ -31,7 +31,7 @@ const StoryTooltip = ({ tooltips, defaultOpen }: StoryTooltipProps) => (
 export default {
   title: 'ui/react-ui-core/Tooltip',
   component: Tooltip,
-  render: StoryTooltip,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
