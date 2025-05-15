@@ -11,8 +11,8 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
-import { AIServiceEdgeClient, DEFAULT_EDGE_MODEL } from '../ai-service';
-import { AI_SERVICE_ENDPOINT } from '../testing';
+import { AIServiceEdgeClient, DEFAULT_EDGE_MODEL } from '../../ai-service';
+import { AI_SERVICE_ENDPOINT } from '../../testing';
 
 // TODO(burdon): Local live LLM test.
 describe.skip('Conversation tests', () => {

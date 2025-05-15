@@ -4,3 +4,4 @@
 
 export * from './session';
 export * from './version-pin';
+export * from './tools';
