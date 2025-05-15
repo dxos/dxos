@@ -41,6 +41,7 @@ const StoryState = defineCapability<{ tab: string }>('story-state');
 // TODO(burdon): How to adjust existing surfaces for this test?
 // TODO(burdon): How to toggle attention in this test?
 // TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
+// TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
 
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
@@ -51,6 +52,7 @@ const TestPanel = () => {
   return (
     <StackItem.Content toolbar classNames='w-full'>
       {/* TODO(burdon): Should the separator be applied by StackItem.Content? */}
+      {/* TODO(burdon): Toolbar is not the same height as the sidebar here. */}
       <Toolbar.Root classNames='border-be border-separator'>
         <Toolbar.Button>Test</Toolbar.Button>
       </Toolbar.Root>
