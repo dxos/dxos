@@ -10,19 +10,25 @@ import React from 'react';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
+import translations from '../../translations';
+import { VideoObject as VideoObjectComponent } from '../Media';
 
 const meta: Meta<typeof ResponsiveContainer> = {
   title: 'plugins/plugin-meeting/ResponsiveContainer',
   component: ResponsiveContainer,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof ResponsiveContainer>;
 
-export const Default: Story = {
+export const Image: Story = {
   args: {
+    classNames: 'p-4',
     children: <img src='https://placehold.co/3200x1800/333/999?font=roboto&text=X' />,
   },
 };
@@ -30,6 +36,7 @@ export const Default: Story = {
 export const Video: Story = {
   // NOTE: The video's max size is 1280x720.
   args: {
+    classNames: 'p-4',
     children: (
       <video
         src='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'
@@ -42,18 +49,9 @@ export const Video: Story = {
   },
 };
 
-export const Custom: Story = {
-  render: () => {
-    return (
-      <div className='flex flex-col w-full _w-[800px] h-full'>
-        <div className='flex shrink-0 w-full h-[60px] p-2' />
-        <div className='flex w-full grow border border-blue-500'>
-          <ResponsiveContainer>
-            <img src='https://placehold.co/3200x1800/333/999?font=roboto&text=X' />
-          </ResponsiveContainer>
-        </div>
-        <div className='flex shrink-0 w-full h-[200px] p-2' />
-      </div>
-    );
+export const VideoObject: Story = {
+  args: {
+    classNames: 'p-4',
+    children: <VideoObjectComponent classNames='rounded-md outline outline-primary-500' />,
   },
 };
