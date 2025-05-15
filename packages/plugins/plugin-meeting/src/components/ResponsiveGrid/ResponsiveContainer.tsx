@@ -25,11 +25,11 @@ import { mx } from '@dxos/react-ui-theme';
 export const ResponsiveContainer = ({ children, classNames }: PropsWithChildren<ThemedClassName>) => {
   return (
     // Outer container that takes full size of parent.
-    <div role='none' className={mx('relative flex w-full h-full overflow-hidden', classNames)}>
+    <div role='none' className='relative flex w-full h-full overflow-hidden'>
       {/* Absolute positioning layer for centering content. */}
       <div role='none' className='absolute inset-0 flex overflow-hidden items-center justify-center'>
         {/* Content container that maintains aspect ratio and proper scaling */}
-        <div role='none' className='aspect-video max-h-full max-w-full w-auto h-auto'>
+        <div role='none' className={mx('aspect-video max-h-full max-w-full w-auto h-auto p-2', classNames)}>
           {children}
         </div>
       </div>

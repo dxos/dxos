@@ -18,6 +18,7 @@ export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
     name?: string;
     self?: boolean;
     screenshare?: boolean;
+    video?: boolean;
     mute?: boolean;
     wave?: boolean;
     speaking?: boolean;
@@ -38,6 +39,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   self,
   pinned,
   screenshare,
+  video,
   mute,
   wave,
   speaking,
@@ -62,8 +64,8 @@ export const ResponsiveGridItem = <T extends object = any>({
     <div
       className={mx(
         'relative w-full h-full aspect-video group rounded overflow-hidden',
-        'outline outline-[3px] outline-neutral-900 transition-[outline-color] duration-1000',
-        speaking && 'outline-green-500',
+        'outline outline-neutral-900 transition-[outline-color] duration-500',
+        speaking ? 'outline-2 outline-green-500' : !video && 'outline-2 outline-separator',
         classNames,
       )}
       style={style}

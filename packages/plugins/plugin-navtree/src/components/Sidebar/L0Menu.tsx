@@ -126,8 +126,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
           {...(rootProps as any)}
           data-type={type}
           className={mx(
-            'group/l0item dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
-            type === 'action' && 'flex justify-center items-center',
+            'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group',
             l0Breakpoints[item.properties.l0Breakpoint],
           )}
           ref={forwardedRef}
@@ -229,16 +228,15 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
         role='none'
         data-frame={true}
         className={mx(
-          'absolute grid dx-focus-ring-group-indicator transition-colors rounded',
+          'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded',
+          // TODO(burdon): Create reusable button/component and/or create var for size.
           pinned
-            ? 'bg-transparent group-hover/l0item:bg-groupSurface inset-inline-1 inset-block-0.5'
-            : 'bg-groupSurface aspect-square inset-inline-3',
+            ? 'bg-transparent w-[50px] p-2 group-hover/l0item:bg-groupSurface'
+            : 'bg-groupSurface w-[50px] h-[50px]',
         )}
         {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
       >
-        {(item.properties.icon && (
-          <Icon icon={item.properties.icon} size={pinned ? 5 : 6} classNames='place-self-center' {...hueFgStyle} />
-        )) ||
+        {(item.properties.icon && <Icon icon={item.properties.icon} size={pinned ? 5 : 6} {...hueFgStyle} />) ||
           (type === 'tab' && item.properties.disposition !== 'pin-end' && <L0Avator item={item} />)}
       </div>
       <div
@@ -347,8 +345,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           <div
             role='none'
             className={mx([
-              'grid auto-rows-[calc(var(--l0-size)-1rem)]',
-              // 'grid auto-rows-[calc(var(--l0-size)-.5rem)]',
+              'flex flex-col gap-2',
               '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
@@ -383,7 +380,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
               hue={userAccountItem.properties.hue}
               emoji={userAccountItem.properties.emoji}
               status={userAccountItem.properties.status}
-              size={10}
+              size={11}
             />
           </L0ItemRoot>
         </div>
