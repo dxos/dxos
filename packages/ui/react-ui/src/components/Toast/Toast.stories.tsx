@@ -13,27 +13,27 @@ import { Button } from '../Buttons';
 type ActionTriggerProps = { altText: string; trigger: ReactNode };
 
 type StorybookToastProps = Partial<{
-  openTrigger: string;
   title: string;
   description: string;
   actionTriggers: ActionTriggerProps[];
+  openTrigger: string;
   closeTrigger: ReactNode;
 }>;
 
-const StorybookToast = (props: StorybookToastProps) => {
+const StorybookToast = ({ title, description, actionTriggers, openTrigger, closeTrigger }: StorybookToastProps) => {
   const [open, setOpen] = useState(true);
   return (
     <Toast.Provider>
-      <Button onClick={() => setOpen(true)}>{props.openTrigger}</Button>
+      <Button onClick={() => setOpen(true)}>{openTrigger}</Button>
       <Toast.Viewport />
       <Toast.Root open={open} onOpenChange={setOpen}>
         <Toast.Body>
-          <Toast.Title>{props.title}</Toast.Title>
-          <Toast.Description>{props.description}</Toast.Description>
+          <Toast.Title>{title}</Toast.Title>
+          <Toast.Description>{description}</Toast.Description>
         </Toast.Body>
         <Toast.Actions>
-          <Toast.Close asChild={typeof props.closeTrigger !== 'string'}>{props.closeTrigger}</Toast.Close>
-          {(props.actionTriggers || []).map(({ altText, trigger }: ActionTriggerProps, index: number) => (
+          <Toast.Close asChild={typeof closeTrigger !== 'string'}>{closeTrigger}</Toast.Close>
+          {(actionTriggers || []).map(({ altText, trigger }: ActionTriggerProps, index: number) => (
             <Toast.Action key={index} altText={altText} asChild={typeof trigger !== 'string'}>
               {trigger}
             </Toast.Action>
