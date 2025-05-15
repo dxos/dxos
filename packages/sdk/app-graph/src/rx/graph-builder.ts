@@ -9,35 +9,99 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { byPosition, isNonNullable, type Position } from '@dxos/util';
 
-import { Graph } from './graph';
-import { type Node, type NodeArg, type Relation } from '../node';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, type GraphParams } from './graph';
+import { actionGroupSymbol, type ActionData, type Node, type NodeArg, type Relation } from '../node';
 
+/**
+ * Graph builder extension for adding nodes to the graph based on a connection to an existing node.
+ *
+ * @param params.node The existing node the returned nodes will be connected to.
+ */
 export type ConnectorExtension<T = any> = (params: { node: Node<T> }) => Rx.Rx<NodeArg<any>[]>;
+
+/**
+ * Constrained case of the connector extension for more easily adding actions to the graph.
+ */
+export type ActionsExtension<T = any> = (params: {
+  node: Node<T>;
+}) => Rx.Rx<Omit<NodeArg<ActionData>, 'type' | 'nodes' | 'edges'>[]>;
+
+/**
+ * Constrained case of the connector extension for more easily adding action groups to the graph.
+ */
+export type ActionGroupsExtension<T = any> = (params: {
+  node: Node<T>;
+}) => Rx.Rx<Omit<NodeArg<typeof actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[]>;
 
 type GuardedNodeType<T> = T extends (value: any) => value is infer N ? (N extends Node<infer D> ? D : unknown) : never;
 
-export type BuilderExtension = Readonly<{
-  id: string;
-  position: Position;
-  connector?: ConnectorExtension;
-  // Only for connector.
-  relation?: Relation;
-  filter?: (node: Node) => boolean;
-}>;
-
+/**
+ * A graph builder extension is used to add nodes to the graph.
+ *
+ * @param params.id The unique id of the extension.
+ * @param params.relation The relation the graph is being expanded from the existing node.
+ * @param params.type If provided, all nodes returned are expected to have this type.
+ * @param params.disposition Affects the order the extensions are processed in.
+ * @param params.filter A filter function to determine if an extension should act on a node.
+ * @param params.resolver A function to add nodes to the graph based on just the node id.
+ * @param params.connector A function to add nodes to the graph based on a connection to an existing node.
+ * @param params.actions A function to add actions to the graph based on a connection to an existing node.
+ * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
+ */
 export type CreateExtensionOptions<T = any> = {
   id: string;
   relation?: Relation;
   position?: Position;
   filter?: (node: Node) => node is Node<T>;
+  // resolver?: ResolverExtension;
   connector?: ConnectorExtension<GuardedNodeType<CreateExtensionOptions<T>['filter']>>;
+  actions?: ActionsExtension<GuardedNodeType<CreateExtensionOptions<T>['filter']>>;
+  actionGroups?: ActionGroupsExtension<GuardedNodeType<CreateExtensionOptions<T>['filter']>>;
 };
 
+/**
+ * Create a graph builder extension.
+ */
 export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): BuilderExtension[] => {
-  const { id, position = 'static', connector, ...rest } = extension;
+  const { id, position = 'static', connector, actions, actionGroups, ...rest } = extension;
   const getId = (key: string) => `${id}/${key}`;
-  return [connector ? { ...rest, id: getId('connector'), position, connector } : undefined].filter(isNonNullable);
+  return [
+    // resolver ? { id: getId('resolver'), position, resolver } : undefined,
+    connector ? { ...rest, id: getId('connector'), position, connector } : undefined,
+    actionGroups
+      ? ({
+          ...rest,
+          id: getId('actionGroups'),
+          position,
+          relation: 'outbound',
+          connector: ({ node }) =>
+            Rx.readable((get) =>
+              get(actionGroups({ node })).map((arg) => ({ ...arg, data: actionGroupSymbol, type: ACTION_GROUP_TYPE })),
+            ),
+        } satisfies BuilderExtension)
+      : undefined,
+    actions
+      ? ({
+          ...rest,
+          id: getId('actions'),
+          position,
+          relation: 'outbound',
+          connector: ({ node }) =>
+            Rx.readable((get) => get(actions({ node })).map((arg) => ({ ...arg, type: ACTION_TYPE }))),
+        } satisfies BuilderExtension)
+      : undefined,
+  ].filter(isNonNullable);
 };
+
+export type BuilderExtension = Readonly<{
+  id: string;
+  position: Position;
+  // resolver?: ResolverExtension;
+  connector?: ConnectorExtension;
+  // Only for connector.
+  relation?: Relation;
+  filter?: (node: Node) => boolean;
+}>;
 
 type ExtensionArg = BuilderExtension | BuilderExtension[] | ExtensionArg[];
 
@@ -49,19 +113,41 @@ export const flattenExtensions = (extension: ExtensionArg, acc: BuilderExtension
   }
 };
 
+/**
+ * The builder provides an extensible way to compose the construction of the graph.
+ */
+// TODO(wittjosiah): Add api for setting subscription set and/or radius.
+//   Should unsubscribe from nodes that are not in the set/radius.
+//   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
 export class GraphBuilder {
   private readonly _connectorSubscriptions = new Map<string, CleanupFn>();
   private readonly _extensions = Rx.make(Record.empty<string, BuilderExtension>());
   private readonly _graph: Graph;
 
-  constructor() {
+  constructor(params: Pick<GraphParams, 'nodes' | 'edges'> = {}) {
     this._graph = new Graph({
+      ...params,
       onExpand: (registry, id, relation) => this._onExpand(registry, id, relation),
+      onInitialize: (registry, id) => this._onInitialize(registry, id),
+      onRemoveNode: (registry, id) => this._onRemoveNode(registry, id),
     });
+  }
+
+  static from(pickle?: string) {
+    if (!pickle) {
+      return new GraphBuilder();
+    }
+
+    const { nodes, edges } = JSON.parse(pickle);
+    return new GraphBuilder({ nodes, edges });
   }
 
   get graph() {
     return this._graph;
+  }
+
+  get extensions() {
+    return this._extensions;
   }
 
   addExtension(registry: Registry.Registry, extensionArg: ExtensionArg): GraphBuilder {
@@ -76,6 +162,11 @@ export class GraphBuilder {
     const extensions = registry.get(this._extensions);
     registry.set(this._extensions, Record.remove(extensions, id));
     return this;
+  }
+
+  destroy() {
+    this._connectorSubscriptions.forEach((unsubscribe) => unsubscribe());
+    this._connectorSubscriptions.clear();
   }
 
   private readonly _connections = Rx.family<string, Rx.Rx<NodeArg<any>[]>>((key) => {
@@ -130,5 +221,14 @@ export class GraphBuilder {
     registry.get(connections);
 
     this._connectorSubscriptions.set(id, cancel);
+  }
+
+  private _onInitialize(registry: Registry.Registry, id: string) {
+    log('onInitialize', { id });
+  }
+
+  private _onRemoveNode(_: Registry.Registry, id: string) {
+    this._connectorSubscriptions.get(id)?.();
+    this._connectorSubscriptions.delete(id);
   }
 }

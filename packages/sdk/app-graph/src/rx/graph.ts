@@ -31,6 +31,8 @@ export type GraphParams = {
   nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
   edges?: Record<string, string[]>;
   onExpand?: Graph['_onExpand'];
+  onInitialize?: Graph['_onInitialize'];
+  onRemoveNode?: Graph['_onRemoveNode'];
 };
 
 type Edge = { source: string; target: string };
@@ -45,67 +47,101 @@ type Edges = { inbound: string[]; outbound: string[] };
  */
 export class Graph {
   private readonly _onExpand?: (registry: Registry.Registry, id: string, relation: Relation) => void;
+  private readonly _onInitialize?: (registry: Registry.Registry, id: string) => void;
+  private readonly _onRemoveNode?: (registry: Registry.Registry, id: string) => void;
+
+  private readonly _expanded = Record.empty<string, boolean>();
   private readonly _initialized = Record.empty<string, boolean>();
-  private readonly _edges = Record.empty<string, Rx.Writable<Edges>>();
-  private readonly _nodes = Record.fromEntries([
+  private readonly _edgeCache = Record.empty<string, Rx.Writable<Edges>>();
+  private readonly _nodeCache = Record.fromEntries([
     [
       ROOT_ID,
       Rx.make<Option.Option<Node>>(this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} })),
     ],
   ]);
 
-  readonly node = Rx.family<string, Rx.Writable<Option.Option<Node>>>((id) => {
+  private readonly _node = Rx.family<string, Rx.Writable<Option.Option<Node>>>((id) => {
     return pipe(
-      this._nodes,
+      this._nodeCache,
       Record.get(id),
       Option.match({
         onSome: (rx) => rx,
+        // TODO(wittjosiah): Should this store the rx in the cache before returning it?
         onNone: () => Rx.make<Option.Option<Node>>(Option.none()),
       }),
     );
   });
 
-  readonly edge = Rx.family<string, Rx.Writable<Edges>>((id) => {
+  private readonly _edges = Rx.family<string, Rx.Writable<Edges>>((id) => {
     return pipe(
-      this._edges,
+      this._edgeCache,
       Record.get(id),
       Option.match({
         onSome: (rx) => rx,
+        // TODO(wittjosiah): Should this store the rx in the cache before returning it?
         onNone: () => Rx.make<Edges>({ inbound: [], outbound: [] }),
       }),
     );
   });
 
-  private readonly _nodesFamily = Rx.family<string, Rx.Rx<Node[]>>((key) => {
+  private readonly _connections = Rx.family<string, Rx.Rx<Node[]>>((key) => {
     return Rx.readable((get) => {
       const [id, relation] = key.split('+');
-      const edges = get(this.edge(id));
+      const edges = get(this._edges(id));
       return edges[relation as Relation]
-        .map((id) => get(this.node(id)))
+        .map((id) => get(this._node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
     });
   });
 
-  constructor({ onExpand }: GraphParams = {}) {
+  constructor({ nodes, edges, onExpand, onInitialize, onRemoveNode }: GraphParams = {}) {
     this._onExpand = onExpand;
+    this._onInitialize = onInitialize;
+    this._onRemoveNode = onRemoveNode;
+
+    if (nodes) {
+      todo();
+    }
+
+    if (edges) {
+      todo();
+    }
   }
 
-  nodes(id: string, relation: Relation = 'outbound'): Rx.Rx<Node[]> {
-    return this._nodesFamily(`${id}+${relation}`);
+  static from(pickle: string, options: Omit<GraphParams, 'nodes' | 'edges'> = {}) {
+    const { nodes, edges } = JSON.parse(pickle);
+    return new Graph({ nodes, edges, ...options });
+  }
+
+  node(id: string): Rx.Rx<Option.Option<Node>> {
+    return this._node(id);
+  }
+
+  connections(id: string, relation: Relation = 'outbound'): Rx.Rx<Node[]> {
+    return this._connections(`${id}+${relation}`);
   }
 
   edges(id: string): Rx.Rx<Edges> {
-    return this.edge(id);
+    return this._edges(id);
+  }
+
+  initialize(registry: Registry.Registry, id: string) {
+    const initialized = Record.get(this._initialized, id).pipe(Option.getOrElse(() => false));
+    log('initialize', { id, initialized });
+    if (!initialized) {
+      this._onInitialize?.(registry, id);
+      Record.set(this._initialized, id, true);
+    }
   }
 
   expand(registry: Registry.Registry, id: string, relation: Relation = 'outbound') {
     const key = `${id}+${relation}`;
-    const initialized = Record.get(this._initialized, key).pipe(Option.getOrElse(() => false));
-    log('expand', { key, initialized });
-    if (!initialized) {
-      const success = this._onExpand?.(registry, id, relation);
-      Record.set(this._initialized, key, success);
+    const expanded = Record.get(this._expanded, key).pipe(Option.getOrElse(() => false));
+    log('expand', { key, expanded });
+    if (!expanded) {
+      this._onExpand?.(registry, id, relation);
+      Record.set(this._expanded, key, true);
     }
   }
 
@@ -115,7 +151,7 @@ export class Graph {
 
   addNode(registry: Registry.Registry, { nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>) {
     const { id, type, data = null, properties = {} } = nodeArg;
-    const nodeRx = this.node(id);
+    const nodeRx = this._node(id);
     const node = registry.get(nodeRx);
     Option.match(node, {
       onSome: (node) => {
@@ -152,19 +188,22 @@ export class Graph {
   }
 
   removeNode(registry: Registry.Registry, id: string, edges = false) {
-    const nodeRx = this.node(id);
+    const nodeRx = this._node(id);
     // TODO(wittjosiah): Is there a way to mark these rx values for garbage collection?
     registry.set(nodeRx, Option.none());
-    Record.remove(this._nodes, id);
+    // TODO(wittjosiah): Remove the node from the cache?
+    // TODO(wittjosiah): Reset expanded and initialized flags?
 
     if (edges) {
-      const { inbound, outbound } = registry.get(this.edge(id));
+      const { inbound, outbound } = registry.get(this._edges(id));
       const edges = [
         ...inbound.map((source) => ({ source, target: id })),
         ...outbound.map((target) => ({ source: id, target })),
       ];
       this.removeEdges(registry, edges);
     }
+
+    this._onRemoveNode?.(registry, id);
   }
 
   addEdges(registry: Registry.Registry, edges: Edge[]) {
@@ -172,14 +211,14 @@ export class Graph {
   }
 
   addEdge(registry: Registry.Registry, edgeArg: Edge) {
-    const sourceRx = this.edge(edgeArg.source);
+    const sourceRx = this._edges(edgeArg.source);
     const source = registry.get(sourceRx);
     if (!source.outbound.includes(edgeArg.target)) {
       log('add outbound edge', { source: edgeArg.source, target: edgeArg.target });
       registry.set(sourceRx, { inbound: source.inbound, outbound: [...source.outbound, edgeArg.target] });
     }
 
-    const targetRx = this.edge(edgeArg.target);
+    const targetRx = this._edges(edgeArg.target);
     const target = registry.get(targetRx);
     if (!target.inbound.includes(edgeArg.source)) {
       log('add inbound edge', { source: edgeArg.source, target: edgeArg.target });
@@ -192,7 +231,7 @@ export class Graph {
   }
 
   removeEdge(registry: Registry.Registry, edgeArg: Edge) {
-    const sourceRx = this.edge(edgeArg.source);
+    const sourceRx = this._edges(edgeArg.source);
     const source = registry.get(sourceRx);
     if (source.outbound.includes(edgeArg.target)) {
       registry.set(sourceRx, {
@@ -201,7 +240,7 @@ export class Graph {
       });
     }
 
-    const targetRx = this.edge(edgeArg.target);
+    const targetRx = this._edges(edgeArg.target);
     const target = registry.get(targetRx);
     if (target.inbound.includes(edgeArg.source)) {
       registry.set(targetRx, {
@@ -209,6 +248,15 @@ export class Graph {
         outbound: target.outbound,
       });
     }
+  }
+
+  sortEdges(registry: Registry.Registry, id: string, relation: Relation, order: string[]) {
+    const edgesRx = this._edges(id);
+    const edges = registry.get(edgesRx);
+    const unsorted = edges[relation].filter((id) => !order.includes(id)) ?? [];
+    const sorted = order.filter((id) => edges[relation].includes(id)) ?? [];
+    edges[relation].splice(0, edges[relation].length, ...[...sorted, ...unsorted]);
+    registry.set(edgesRx, edges);
   }
 
   private _constructNode(node: Node): Option.Option<Node> {
