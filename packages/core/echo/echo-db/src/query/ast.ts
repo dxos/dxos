@@ -165,6 +165,17 @@ const QueryUnionClause_ = Schema.Struct({
 interface QueryUnionClause extends Schema.Schema.Type<typeof QueryUnionClause_> {}
 const QueryUnionClause: Schema.Schema<QueryUnionClause> = QueryUnionClause_;
 
+/**
+ * Add options to a query.
+ */
+const QueryOptionsClause_ = Schema.Struct({
+  type: Schema.Literal('options'),
+  query: Schema.suspend(() => Query),
+  options: Schema.suspend(() => QueryOptions),
+});
+interface QueryOptionsClause extends Schema.Schema.Type<typeof QueryOptionsClause_> {}
+const QueryOptionsClause: Schema.Schema<QueryOptionsClause> = QueryOptionsClause_;
+
 const Query_ = Schema.Union(
   QuerySelectClause,
   QueryFilterClause,
@@ -173,7 +184,15 @@ const Query_ = Schema.Union(
   QueryRelationClause,
   QueryRelationTraversalClause,
   QueryUnionClause,
+  QueryOptionsClause,
 );
 
 export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;
+
+export const QueryOptions = Schema.Struct({
+  spaceIds: Schema.optional(Schema.Array(Schema.String)),
+  deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
+});
+export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
+
