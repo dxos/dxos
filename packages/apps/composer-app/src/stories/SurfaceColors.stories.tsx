@@ -150,7 +150,7 @@ const meta: Meta = {
         NavTreePlugin(),
       ],
       capabilities: (context) => [
-        contributes(StoryState, live({ tab: 'default' })),
+        contributes(StoryState, live({ tab: 'space-0' })),
         contributes(Capabilities.IntentResolver, [
           createResolver({
             intent: LayoutAction.UpdateLayout,
