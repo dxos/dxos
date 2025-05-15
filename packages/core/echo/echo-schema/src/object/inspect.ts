@@ -23,7 +23,7 @@ export const attachedTypedObjectInspector = (obj: any) => {
     value: typedObjectInspectFunction,
     writable: false,
     enumerable: false,
-    configurable: false,
+    configurable: true,
   });
 };
 

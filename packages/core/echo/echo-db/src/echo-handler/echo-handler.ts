@@ -90,9 +90,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     defineHiddenProperty(target, symbolHandler, this);
 
-    if (inspectCustom) {
-      defineHiddenProperty(target, inspectCustom, this._inspect.bind(target));
-    }
+    // Maybe have been set by `create`.
+    Object.defineProperty(target, inspectCustom, {
+      enumerable: false,
+      configurable: true,
+      value: this._inspect.bind(target),
+    });
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
