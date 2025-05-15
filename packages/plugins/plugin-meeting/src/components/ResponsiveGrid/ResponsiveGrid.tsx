@@ -194,7 +194,7 @@ export const ResponsiveGrid = <T extends object = any>({
 
 const SoloItem: FC<Pick<ResponsiveGridProps, 'debug'> & { id: string }> = ({ debug, id }) => {
   return (
-    <ResponsiveContainer>
+    <ResponsiveContainer classNames='p-2'>
       <div
         {...{ 'data-grid-item': id }}
         className={mx('aspect-video overflow-hidden', debug && 'z-20 border-2 border-primary-500')}

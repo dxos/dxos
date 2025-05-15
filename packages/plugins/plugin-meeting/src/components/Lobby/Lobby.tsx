@@ -5,7 +5,11 @@
 import React, { type FC, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
+<<<<<<< HEAD
 import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
+=======
+import { type ThemedClassName } from '@dxos/react-ui';
+>>>>>>> origin/main
 import { mx } from '@dxos/react-ui-theme';
 
 import { MeetingCapabilities } from '../../capabilities';
