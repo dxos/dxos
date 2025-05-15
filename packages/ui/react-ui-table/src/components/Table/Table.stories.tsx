@@ -5,9 +5,17 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
+import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { assertEchoSchema, FormatEnum, isMutable, toJsonSchema } from '@dxos/echo-schema';
+import {
+  assertEchoSchema,
+  FormatEnum,
+  isMutable,
+  toJsonSchema,
+  EchoObject,
+  GeneratorAnnotationId,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -240,22 +248,37 @@ export default meta;
 
 export const Default = {};
 
+export const ContactWithArrayOfEmails = Schema.Struct({
+  name: Schema.String.annotations({
+    [GeneratorAnnotationId]: 'person.fullName',
+  }),
+  emails: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        value: Schema.String,
+        label: Schema.String.pipe(Schema.optional),
+      }),
+    ),
+  ),
+}).pipe(EchoObject({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
+
 export const StaticSchema: StoryObj = {
   render: DefaultStory,
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Contact, Testing.Organization],
+      types: [TableType, ViewType, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
         const table = space.db.add(live(TableType, {}));
-        await initializeTable({ client, space, table, typename: Testing.Contact.typename });
+        await initializeTable({ client, space, table, typename: ContactWithArrayOfEmails.typename });
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          { type: Testing.Contact, count: 10 },
-          { type: Testing.Organization, count: 1 },
+          // { type: Testing.Contact, count: 10 },
+          // { type: Testing.Organization, count: 1 },
+          { type: ContactWithArrayOfEmails, count: 10 },
         ]);
       },
     }),

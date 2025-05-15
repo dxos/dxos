@@ -132,9 +132,10 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
       if (include && !include.includes(property.name)) {
         continue;
       }
-      if (property.array) {
-        continue;
-      }
+
+      // if (property.array) {
+      //   continue;
+      // }
 
       const referencePath =
         property.format === FormatEnum.Ref
