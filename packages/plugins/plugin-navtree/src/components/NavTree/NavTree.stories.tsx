@@ -24,9 +24,10 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { Input, Main } from '@dxos/react-ui';
+import { Input, Main, Toolbar } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
-import { attentionSurface, defaultTx, mx } from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
@@ -37,7 +38,6 @@ faker.seed(1234);
 
 const StoryState = defineCapability<{ tab: string }>('story-state');
 
-// TODO(burdon): Define 3 semantic levels.
 // TODO(burdon): How to adjust existing surfaces for this test?
 // TODO(burdon): How to toggle attention in this test?
 // TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
@@ -45,10 +45,17 @@ const StoryState = defineCapability<{ tab: string }>('story-state');
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
 const TestPanel = () => {
+  // TODO(burdon): Where should attention be applied?
   const attentionAttrs = useAttendableAttributes('test');
 
   return (
-    <div className={mx('flex flex-col grow bs-full p-4', attentionSurface)} {...attentionAttrs}>
+    <StackItem.Content toolbar classNames='w-full'>
+      {/* TODO(burdon): Should the separator be applied by StackItem.Content? */}
+      <Toolbar.Root classNames='border-be border-separator'>
+        <Toolbar.Button>Test</Toolbar.Button>
+      </Toolbar.Root>
+
+      {/* <div className={mx('flex flex-col grow bs-full p-4', attentionSurface)} {...attentionAttrs}> */}
       <div className={mx(container, 'bg-groupSurface')}>
         <Input.Root>
           <Input.Label>Level 1</Input.Label>
@@ -56,16 +63,12 @@ const TestPanel = () => {
         <div className={mx(container, 'bg-baseSurface')}>
           <Input.Root>
             <Input.Label>Level 2</Input.Label>
+            <Input.TextArea placeholder='Enter text' />
           </Input.Root>
-          <div className={mx(container, 'bg-inputSurface')}>
-            <Input.Root>
-              <Input.Label>Level 3</Input.Label>
-              <Input.TextArea placeholder='Enter text' />
-            </Input.Root>
-          </div>
         </div>
       </div>
-    </div>
+      {/* </div> */}
+    </StackItem.Content>
   );
 };
 
