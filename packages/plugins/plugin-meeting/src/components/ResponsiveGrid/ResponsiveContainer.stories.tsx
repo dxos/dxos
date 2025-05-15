@@ -28,7 +28,6 @@ type Story = StoryObj<typeof ResponsiveContainer>;
 
 export const Image: Story = {
   args: {
-    classNames: 'p-4',
     children: <img src='https://placehold.co/3200x1800/333/999?font=roboto&text=X' />,
   },
 };
@@ -36,7 +35,6 @@ export const Image: Story = {
 export const Video: Story = {
   // NOTE: The video's max size is 1280x720.
   args: {
-    classNames: 'p-4',
     children: (
       <video
         src='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'
@@ -51,7 +49,6 @@ export const Video: Story = {
 
 export const VideoObject: Story = {
   args: {
-    classNames: 'p-4',
     children: <VideoObjectComponent classNames='rounded-md outline outline-primary-500' />,
   },
 };
