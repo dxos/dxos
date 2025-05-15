@@ -41,7 +41,7 @@ const LobbyPreview: FC<LobbyPreviewProps> = () => {
   }, []);
 
   return (
-    <ResponsiveContainer classNames='p-2'>
+    <ResponsiveContainer classNames='p-4'>
       <VideoObject
         flip
         muted
