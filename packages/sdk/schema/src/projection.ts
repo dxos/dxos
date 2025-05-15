@@ -93,11 +93,17 @@ export class ViewProjection {
 
     const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
     const type = referenceSchema ? TypeEnum.Ref : (schemaType as TypeEnum);
-    const format = referenceSchema
-      ? FormatEnum.Ref
-      : schemaFormat === FormatEnum.None
-        ? typeToFormat[type]!
-        : (schemaFormat as FormatEnum);
+
+    const format =
+      (() => {
+        if (referenceSchema) {
+          return FormatEnum.Ref;
+        } else if (schemaFormat === FormatEnum.None) {
+          return typeToFormat[type];
+        } else {
+          return schemaFormat as FormatEnum;
+        }
+      })() ?? FormatEnum.None;
 
     const getOptions = () => {
       if (format === FormatEnum.SingleSelect) {
