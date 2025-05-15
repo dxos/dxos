@@ -32,10 +32,6 @@ export const sheetSememes = {
     light: ['neutral', 50],
     dark: ['neutral', 800],
   },
-  gridHeader: {
-    light: ['neutral', 25],
-    dark: ['neutral', 750],
-  },
   gridOverlay: {
     light: ['primary', '500/.5'],
     dark: ['primary', '500/.5'],
