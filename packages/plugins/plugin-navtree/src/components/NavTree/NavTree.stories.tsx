@@ -40,6 +40,7 @@ const StoryState = defineCapability<{ tab: string }>('story-state');
 // TODO(burdon): Define 3 semantic levels.
 // TODO(burdon): How to adjust existing surfaces for this test?
 // TODO(burdon): How to toggle attention in this test?
+// TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
 
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
