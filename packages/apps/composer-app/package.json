@@ -108,7 +108,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
-    "@effect/platform": "0.75.1",
+    "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
     "@sentry/vite-plugin": "^2.14.0",
     "@socketsupply/socket": "^0.5.4",
