@@ -5,6 +5,7 @@
 import { Option, Schema, SchemaAST } from 'effect';
 import { describe, test } from 'vitest';
 
+import { structuredOutputParser } from '@dxos/artifact';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { create, getSchemaDXN, ObjectId, ReferenceAnnotationId } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
@@ -17,7 +18,6 @@ import INSTRUCTIONS from './instructions.tpl?raw';
 import { AIServiceEdgeClient, OllamaClient } from '../../ai-service';
 import { AISession } from '../../session';
 import { AI_SERVICE_ENDPOINT, ConsolePrinter } from '../../testing';
-import { structuredOutputParser } from '@dxos/artifact';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const REMOTE_AI = true;
