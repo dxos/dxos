@@ -24,8 +24,9 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { Main } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { Input, Main } from '@dxos/react-ui';
+import { useAttendableAttributes } from '@dxos/react-ui-attention';
+import { attentionSurface, defaultTx, mx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
@@ -36,13 +37,49 @@ faker.seed(1234);
 
 const StoryState = defineCapability<{ tab: string }>('story-state');
 
+// TODO(burdon): Define 3 semantic levels.
+// TODO(burdon): How to adjust existing surfaces for this test?
+// TODO(burdon): How to toggle attention in this test?
+
+const container = 'flex flex-col grow gap-2 p-4 rounded-md';
+
+const TestPanel = () => {
+  const attentionAttrs = useAttendableAttributes('test');
+
+  return (
+    <div className={mx('flex flex-col grow bs-full p-4', attentionSurface)} {...attentionAttrs}>
+      <div className={mx(container, 'bg-groupSurface')}>
+        <Input.Root>
+          <Input.Label>Level 1</Input.Label>
+        </Input.Root>
+        <div className={mx(container, 'bg-baseSurface')}>
+          <Input.Root>
+            <Input.Label>Level 2</Input.Label>
+          </Input.Root>
+          <div className={mx(container, 'bg-inputSurface')}>
+            <Input.Root>
+              <Input.Label>Level 3</Input.Label>
+              <Input.TextArea placeholder='Enter text' />
+            </Input.Root>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DefaultStory = () => {
   const state = useCapability(StoryState);
 
   return (
-    <Main.NavigationSidebar label='Navigation' classNames='grid'>
-      <NavTreeContainer tab={state.tab} />
-    </Main.NavigationSidebar>
+    <Main.Root>
+      <Main.NavigationSidebar label='Navigation' classNames='grid'>
+        <NavTreeContainer tab={state.tab} />
+      </Main.NavigationSidebar>
+      <Main.Content bounce handlesFocus>
+        <TestPanel />
+      </Main.Content>
+    </Main.Root>
   );
 };
 
@@ -78,6 +115,9 @@ const meta: Meta<typeof NavTreeContainer> = {
     }),
     withLayout({ fullscreen: true }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
 
 export default meta;
