@@ -32,7 +32,7 @@ export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
     return (
       <video
         className={mx(
-          'is-full aspect-video',
+          'w-full aspect-video',
           flip && 'scale-x-[-1]',
           contain ? 'object-contain' : 'object-cover',
           classNames,
