@@ -18,7 +18,7 @@ import { prohibitSignalActions } from '../guarded-scope';
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;
 
-export type QueryResult<T extends BaseObject = any> = {
+export type QueryResultEntry<T extends BaseObject = any> = {
   id: string;
 
   spaceId: SpaceId;
@@ -56,12 +56,12 @@ export type QueryResult<T extends BaseObject = any> = {
 };
 
 export type OneShotQueryResult<T extends BaseObject = any> = {
-  results: QueryResult<T>[];
+  results: QueryResultEntry<T>[];
   objects: T[];
 };
 
 export interface QueryContext<T extends BaseObject = any> {
-  getResults(): QueryResult<T>[];
+  getResults(): QueryResultEntry<T>[];
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
@@ -69,7 +69,7 @@ export interface QueryContext<T extends BaseObject = any> {
   /**
    * One-shot query.
    */
-  run(filter: Filter, opts?: QueryRunOptions): Promise<QueryResult[]>;
+  run(filter: Filter, opts?: QueryRunOptions): Promise<QueryResultEntry[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -107,14 +107,14 @@ export type QueryRunOptions = {
 /**
  * Predicate based query.
  */
-export class Query<T extends BaseObject = any> {
+export class QueryResult<T extends BaseObject = any> {
   private readonly _filter: Filter;
   private readonly _signal = compositeRuntime.createSignal();
-  private readonly _event = new Event<Query<T>>();
+  private readonly _event = new Event<QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
 
   private _isActive = false;
-  private _resultCache?: QueryResult<T>[] = undefined;
+  private _resultCache?: QueryResultEntry<T>[] = undefined;
   private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
 
@@ -149,7 +149,7 @@ export class Query<T extends BaseObject = any> {
     return this._filter;
   }
 
-  get results(): QueryResult<T>[] {
+  get results(): QueryResultEntry<T>[] {
     this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
@@ -188,7 +188,7 @@ export class Query<T extends BaseObject = any> {
    * WARNING: This method will only return the data already cached and may return incomplete results.
    * Use `this.run()` for a complete list of results stored on-disk.
    */
-  runSync(): QueryResult<T>[] {
+  runSync(): QueryResultEntry<T>[] {
     this._ensureCachePresent();
     return this._resultCache!;
   }
@@ -198,7 +198,7 @@ export class Query<T extends BaseObject = any> {
    * Queries that have at least one subscriber are updated reactively when the underlying data changes.
    */
   // TODO(burdon): Change to SubscriptionHandle (make uniform).
-  subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn {
+  subscribe(callback?: (query: QueryResult<T>) => void, opts?: QuerySubscriptionOptions): CleanupFn {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
     log('subscribe', { filter: this._filter.type, active: this._isActive });
@@ -237,7 +237,7 @@ export class Query<T extends BaseObject = any> {
     }
   }
 
-  private _uniqueObjects(results: QueryResult<T>[]): T[] {
+  private _uniqueObjects(results: QueryResultEntry<T>[]): T[] {
     const seen = new Set<unknown>();
     return results
       .map((result) => result.object)

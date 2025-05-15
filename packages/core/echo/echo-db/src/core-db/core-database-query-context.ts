@@ -20,7 +20,7 @@ import { isNonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';
-import { filterMatch, type Filter, type QueryContext, type QueryJoinSpec, type QueryResult } from '../query';
+import { filterMatch, type Filter, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
@@ -28,7 +28,7 @@ const QUERY_SERVICE_TIMEOUT = 20_000;
  * Services plain data queries from the CoreDatabase class
  */
 export class CoreDatabaseQueryContext implements QueryContext {
-  private _lastResult: QueryResult<any>[] = [];
+  private _lastResult: QueryResultEntry<any>[] = [];
 
   readonly changed = new Event();
 
@@ -43,11 +43,11 @@ export class CoreDatabaseQueryContext implements QueryContext {
   // TODO(dmaretskyi): Make async.
   stop(): void {}
 
-  getResults(): QueryResult<any>[] {
+  getResults(): QueryResultEntry<any>[] {
     return this._lastResult;
   }
 
-  async run(filter: Filter<any>): Promise<QueryResult<any>[]> {
+  async run(filter: Filter<any>): Promise<QueryResultEntry<any>[]> {
     const queryId = nextQueryId++;
     // Disposed when this method exists.
     await using ctx = new Context();
@@ -110,7 +110,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     filter: Filter,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
-  ): Promise<QueryResult | null> {
+  ): Promise<QueryResultEntry | null> {
     if (!SpaceId.isValid(result.spaceId)) {
       log.warn('dropping result with invalid space id', { id: result.id, spaceId: result.spaceId });
       return null;
@@ -130,7 +130,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
         object: JSON.parse(result.documentJson),
         match: { rank: result.rank },
         resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
-      } satisfies QueryResult;
+      } satisfies QueryResultEntry;
     } else if (!FORCE_DATA_SERVICE_FETCH && result.documentAutomerge) {
       // Return snapshot from automerge CRDT.
       const doc = A.load(result.documentAutomerge) as SpaceDoc;
@@ -147,7 +147,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
         object,
         match: { rank: result.rank },
         resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
-      } satisfies QueryResult;
+      } satisfies QueryResultEntry;
     } else {
       // Return CRDT from data service.
       const objectDocId = this._coreDatabase._automergeDocLoader.getObjectDocumentId(result.id);
@@ -174,7 +174,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     core: ObjectCore,
     queryStartTimestamp: number,
     result: RemoteQueryResult | undefined,
-  ): Promise<QueryResult | null> {
+  ): Promise<QueryResultEntry | null> {
     if (!filterMatch(filter, core)) {
       return null;
     }
@@ -192,7 +192,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
       object: data,
       match: result && { rank: result.rank },
       resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
-    } satisfies QueryResult;
+    } satisfies QueryResultEntry;
   }
 
   private async _recursivelyJoinFields(

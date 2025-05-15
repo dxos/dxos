@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Filter, type Query, type AnyLiveObject } from '@dxos/echo-db';
+import { Filter, type QueryResult, type AnyLiveObject } from '@dxos/echo-db';
 import { Expando, Ref } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -77,7 +77,7 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: Query, objects: AnyLiveObject<any>[]) => {
+  const matchObjects = async (query: QueryResult, objects: AnyLiveObject<any>[]) => {
     const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {

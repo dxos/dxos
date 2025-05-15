@@ -26,7 +26,7 @@ export {
   type IDocHandle,
   type ObjectMigration,
   type Queue,
-  type Query,
+  type QueryResult as Query,
   type AnyLiveObject,
   ResultFormat,
   type Selection,

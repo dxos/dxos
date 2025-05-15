@@ -21,7 +21,7 @@ import { isNonNullable } from '@dxos/util';
 import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
-import { type Filter, type QueryResult } from '../query';
+import { type Filter, type QueryResultEntry } from '../query';
 
 export type LoadObjectParams = {
   spaceId: SpaceId;
@@ -62,7 +62,7 @@ export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
   private _filter?: Filter = undefined;
-  private _results?: QueryResult[] = [];
+  private _results?: QueryResultEntry[] = [];
   private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
@@ -74,11 +74,11 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
   }
 
-  getResults(): QueryResult[] {
+  getResults(): QueryResultEntry[] {
     return this._results ?? [];
   }
 
-  async run(filter: Filter): Promise<QueryResult[]> {
+  async run(filter: Filter): Promise<QueryResultEntry[]> {
     this._filter = filter;
     return new Promise((resolve, reject) => {
       this._queryIndex(filter, QueryReactivity.ONE_SHOT, resolve, reject);
@@ -104,7 +104,7 @@ export class IndexQuerySource implements QuerySource {
   private _queryIndex(
     filter: Filter,
     queryType: QueryReactivity,
-    onResult: (results: QueryResult[]) => void,
+    onResult: (results: QueryResultEntry[]) => void,
     onError?: (error: Error) => void,
   ) {
     const queryId = nextQueryId++;
@@ -184,7 +184,7 @@ export class IndexQuerySource implements QuerySource {
     ctx: Context,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
-  ): Promise<QueryResult | null> {
+  ): Promise<QueryResultEntry | null> {
     if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {
         objectId: result.id,
@@ -209,7 +209,7 @@ export class IndexQuerySource implements QuerySource {
     }
 
     const core = getObjectCore(object);
-    const queryResult: QueryResult = {
+    const queryResult: QueryResultEntry = {
       id: object.id,
       spaceId: core.database!.spaceId,
       spaceKey: core.database!.spaceKey,

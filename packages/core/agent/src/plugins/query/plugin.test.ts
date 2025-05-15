@@ -9,7 +9,7 @@ import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { type AnyLiveObject, type Live } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { Filter, type Query } from '@dxos/echo-db';
+import { Filter, type QueryResult } from '@dxos/echo-db';
 import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
@@ -180,7 +180,7 @@ describe('QueryPlugin', () => {
       await builder.destroy();
     });
 
-    const waitForQueryResults = async (query: Query) => {
+    const waitForQueryResults = async (query: QueryResult) => {
       const results = new Trigger<AnyLiveObject<any>[]>();
       query.subscribe((query) => {
         if (query.results.some((result) => result.resolution?.source === 'remote')) {

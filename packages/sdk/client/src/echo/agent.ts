@@ -7,7 +7,7 @@ import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
 import {
   type Filter,
-  type QueryResult,
+  type QueryResultEntry,
   type QuerySource,
   type QuerySourceProvider,
   type AnyLiveObject,
@@ -97,7 +97,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 }
 
 export class AgentQuerySource implements QuerySource {
-  private _results?: QueryResult[];
+  private _results?: QueryResultEntry[];
   private _cancelPreviousRequest?: () => void = undefined;
 
   public readonly changed = new Event<void>();
@@ -116,11 +116,11 @@ export class AgentQuerySource implements QuerySource {
     // No-op.
   }
 
-  getResults(): QueryResult[] {
+  getResults(): QueryResultEntry[] {
     return this._results ?? [];
   }
 
-  async run(): Promise<QueryResult[]> {
+  async run(): Promise<QueryResultEntry[]> {
     return this._results ?? [];
   }
 

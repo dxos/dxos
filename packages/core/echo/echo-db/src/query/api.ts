@@ -6,7 +6,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { Filter$, FilterSource } from './filter';
-import { type Query } from './query';
+import { type QueryResult } from './query';
 import { type AnyLiveObject } from '../echo-handler';
 
 /**
@@ -14,9 +14,9 @@ import { type AnyLiveObject } from '../echo-handler';
  */
 // TODO(dmaretskyi): Type based on the result format.
 export interface QueryFn {
-  (): Query;
-  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): Query<AnyLiveObject<Filter$.Object<F>>>;
-  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): Query<AnyLiveObject<any>>;
+  (): QueryResult;
+  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<AnyLiveObject<Filter$.Object<F>>>;
+  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): QueryResult<AnyLiveObject<any>>;
 }
 
 /**
