@@ -111,7 +111,7 @@ const TableComponent = () => {
   const { tableRef, model, presentation, handleToolbarAction } = useTestTableModel();
 
   return (
-    <div className='grow grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
+    <div className='absolute inset-0 grid grid-rows-[min-content_1fr] min-bs-0'>
       <TableToolbar classNames='border-be border-separator' onAction={handleToolbarAction} ignoreAttention />
       <Table.Root>
         <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
@@ -125,12 +125,14 @@ const KitchenSinkStory = () => {
   const { model } = useTestTableModel();
 
   return (
-    <Main.Root>
+    <Main.Root complementarySidebarState='closed' navigationSidebarState='expanded'>
       <Main.Overlay />
       <Main.NavigationSidebar label='Navigation' classNames='grid'>
         <NavTreeContainer tab={state.tab} />
       </Main.NavigationSidebar>
-      <Main.Content>{model ? <TableComponent /> : <div />}</Main.Content>
+      <Main.Content bounce>
+        <div className='bs-dvh relative'>{model ? <TableComponent /> : <div />}</div>
+      </Main.Content>
     </Main.Root>
   );
 };
@@ -174,7 +176,7 @@ const meta: Meta = {
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          { type: Testing.Contact, count: 10 },
+          { type: Testing.Contact, count: 32 },
           { type: Testing.Organization, count: 1 },
         ]);
       },
