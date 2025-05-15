@@ -93,6 +93,7 @@ export const useForm = <T extends BaseObject>({
   invariant(SchemaAST.isTypeLiteral(schema.ast));
 
   const [values, setValues] = useState<Partial<T>>(initialValues);
+
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);

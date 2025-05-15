@@ -4,15 +4,16 @@
 
 import { Schema } from 'effect';
 import { isTypeLiteral, TypeLiteral } from 'effect/SchemaAST';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
+import { getSnapshot } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { Form } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
-import { getSchemaProperties, type FieldProjection } from '@dxos/schema';
+import { type FieldProjection } from '@dxos/schema';
+import { getDeep, setDeep } from '@dxos/util';
 
 import { type TableModel } from '../../model';
-import { Form } from '@dxos/react-ui-form';
-import { invariant } from '@dxos/invariant';
-import { getSnapshot } from '@dxos/echo-schema';
 
 type FormCellEditorProps = {
   fieldProjection: FieldProjection;
@@ -22,8 +23,15 @@ type FormCellEditorProps = {
 };
 
 export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: FormCellEditorProps) => {
-  const { editing, editBox } = useGridContext('ArrayEditor', __gridScope);
+  const { editing, editBox, setEditing } = useGridContext('ArrayEditor', __gridScope);
 
+  /**
+   * A narrowed schema from the original schema that only includes
+   * the field being edited. This allows the Form component to only display
+   * and edit / validate this specific field rather than the entire object.
+   *
+   * @returns A Schema instance containing only the property corresponding to the current field path
+   */
   const narrowSchema = useMemo(() => {
     const ast = (schema as any)?.ast;
     if (isTypeLiteral(ast)) {
@@ -37,16 +45,34 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     }
   }, [JSON.stringify(schema), fieldProjection.field.path]);
 
-  const rowValue = useMemo(() => {
+  const originalRow = useMemo(() => {
     if (model && editing) {
       const cell = parseCellIndex(editing.index);
       const row = model.getRowAt(cell.row);
       invariant(row);
-      return getSnapshot(row);
+
+      return row;
     }
 
-    return {};
+    return undefined;
   }, [model, editing]);
+
+  const formValues = useMemo(() => {
+    if (originalRow) {
+      // NOTE(ZaymonFC): Important to get a snapshot to eject from the live object.
+      return getSnapshot(originalRow);
+    }
+  }, [originalRow]);
+
+  const handleSave = useCallback(
+    (values: any) => {
+      const path = fieldProjection.field.path;
+      const value = getDeep(values, [path]);
+      setDeep(originalRow, [path], value);
+      setEditing(null);
+    },
+    [fieldProjection.field.path, originalRow],
+  );
 
   return (
     <div
@@ -61,7 +87,7 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
         tabIndex={-1}
         className='dx-focus-ring bg-baseSurface rounded-sm border border-separator'
       >
-        <Form values={rowValue} schema={narrowSchema as any} />
+        <Form values={formValues} schema={narrowSchema as any} onSave={handleSave} />
       </div>
     </div>
   );
