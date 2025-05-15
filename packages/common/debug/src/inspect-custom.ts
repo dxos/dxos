@@ -9,7 +9,12 @@ import type { InspectOptionsStylized, inspect as inspectFn } from 'node:util';
  */
 export const inspectCustom = Symbol.for('nodejs.util.inspect.custom');
 
-export type CustomInspectFunction = (depth: number, options: InspectOptionsStylized, inspect: typeof inspectFn) => any; // TODO: , inspect: inspect
+export type CustomInspectFunction<T = any> = (
+  this: T,
+  depth: number,
+  options: InspectOptionsStylized,
+  inspect: typeof inspectFn,
+) => any; // TODO: , inspect: inspect
 
 export interface CustomInspectable {
   [inspectCustom]: CustomInspectFunction;

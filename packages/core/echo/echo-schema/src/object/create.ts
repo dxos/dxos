@@ -7,6 +7,7 @@ import { type Schema } from 'effect';
 import { failedInvariant } from '@dxos/invariant';
 
 import { ObjectId } from './ids';
+import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { setTypename } from './typename';
 import { getSchemaDXN, getTypeAnnotation, setSchema } from '../ast';
@@ -60,5 +61,6 @@ export const create = <S extends Schema.Schema.AnyNoContext>(
   setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Missing schema DXN'));
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
+  attachedTypedObjectInspector(obj);
   return obj;
 };
