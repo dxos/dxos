@@ -53,5 +53,6 @@ export const getConfig = (options?: LogOptions): LogConfig => {
     captureFilters: parseFilter(mergedOptions.captureFilter ?? LogLevel.WARN),
     processors: mergedOptions.processor ? [processors[mergedOptions.processor]] : DEFAULT_PROCESSORS,
     prefix: mergedOptions.prefix,
+    globalContext: mergedOptions.globalContext,
   };
 };

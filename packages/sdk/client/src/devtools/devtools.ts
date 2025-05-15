@@ -8,7 +8,7 @@ import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, type IDBProcessorOptions } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
 import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
@@ -20,6 +20,8 @@ import { SpaceState, Filter, getMeta } from '../echo';
 type FeedWrapper = unknown;
 
 exposeModule('@automerge/automerge', am);
+
+const DEFAULT_LOG_ENDPOINT = 'https://tail-logger.dxos.workers.dev/upload';
 
 /**
  * A hook bound to window.__DXOS__.
@@ -54,6 +56,8 @@ export interface DevtoolsHook {
   exportProfile?: () => Promise<void>;
 
   importProfile?: () => Promise<void>;
+
+  uploadLogs?: (opts: { endpoint?: string; since?: number; processorOpts?: IDBProcessorOptions }) => Promise<void>;
 
   /**
    * Utility function.
@@ -154,6 +158,75 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     // Globals.
     Filter,
     getMeta,
+  };
+
+  hook.uploadLogs = async ({
+    endpoint = DEFAULT_LOG_ENDPOINT,
+    since = Date.now() - 1000 * 60 * 60 * 24, // 1 day
+    processorOpts,
+    serviceName,
+  }: {
+    endpoint?: string;
+    since?: number;
+    processorOpts?: IDBProcessorOptions;
+    serviceName?: string;
+  } = {}) => {
+    const { IDBProcessor } = await import('@dxos/log');
+    const processor = new IDBProcessor(processorOpts);
+    const logs = await processor.getLogs({ startTime: since });
+
+    const SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
+    let trimmedLogs = [],
+      cumulativeSize = 0,
+      oldest = logs[0].timestamp,
+      newest = logs[0].timestamp;
+    for (let i = logs.length - 1; i >= 0; i--) {
+      const log = logs[i];
+      // approximate size of the log
+      cumulativeSize += JSON.stringify(log).length + ', '.length;
+      if (cumulativeSize > SIZE_LIMIT) {
+        break;
+      }
+      trimmedLogs.push(log);
+      oldest = Math.min(oldest, log.timestamp);
+      newest = Math.max(newest, log.timestamp);
+    }
+    trimmedLogs.reverse();
+
+    console.log('Uploading logs', {
+      size: JSON.stringify(trimmedLogs).length,
+      count: trimmedLogs.length,
+      oldest,
+      newest,
+    });
+
+    let identityDid: string | undefined, deviceKey: string | undefined;
+    try {
+      identityDid = client?.halo.identity.get()?.did;
+      deviceKey = client?.halo.device?.deviceKey.toHex().slice(0, 8);
+    } catch (error) {
+      log.error('Failed to get identity or device key', { error });
+    }
+
+    serviceName = serviceName ?? (typeof window !== 'undefined' ? window?.location?.hostname : undefined);
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({
+        logs: trimmedLogs,
+        meta: {
+          identityDid,
+          deviceKey,
+          serviceName,
+        },
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to upload logs: ${response.statusText}:\n${await response.text()}`);
+    }
+    const data = await response.json();
+    console.log('Logs uploaded', data);
+    return data;
   };
 
   if (client) {

@@ -64,7 +64,7 @@ const createLog = (): LogImp => {
 
   // Set config.
   log.config = (options: LogOptions) => {
-    log._config = getConfig(options);
+    log._config = getConfig({ globalContext: log._config.globalContext, ...options });
   };
 
   // TODO(burdon): API to set context and separate error object.
