@@ -39,6 +39,7 @@ import {
   type QueryResultEntry,
   type QueryRunOptions,
   ResultFormat,
+  normalizeQuery,
 } from './query';
 
 /**
@@ -144,14 +145,11 @@ export class Hypergraph {
         invariant(spaceIds && spaceIds.length === 1, 'Plain format requires a single space.');
         return new QueryResult(
           this._createPlainObjectQueryContext(spaceIds[0] as SpaceId),
-          DeprecatedFilter.from(filter, optionsToProto(options ?? {})),
+          normalizeQuery(filter, options),
         );
       }
       case ResultFormat.Live: {
-        return new QueryResult(
-          this._createLiveObjectQueryContext(),
-          DeprecatedFilter.from(filter, optionsToProto(options ?? {})),
-        );
+        return new QueryResult(this._createLiveObjectQueryContext(), normalizeQuery(filter, options));
       }
       case ResultFormat.AutomergeDocAccessor: {
         throw new Error('Not implemented: ResultFormat.AutomergeDocAccessor');

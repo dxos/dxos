@@ -34,7 +34,7 @@ import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 import { getSource, getTarget } from '../echo-handler/relations';
-import { Filter } from '../query';
+import { Filter, Query } from '../query';
 
 registerSignalsRuntime();
 
@@ -467,7 +467,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const { objects } = await db.query(Filter.typeDXN(schemaDxn)).run();
+        const { objects } = await db.query(Query.select(Filter.typeDXN(DXN.parse(schemaDxn)))).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(getSchema(objects[0])!)).to.include({
           typename: 'example.com/type/Test',
@@ -511,7 +511,7 @@ describe('Integration tests', () => {
       await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
       const {
         objects: [obj],
-      } = await db.query(Filter.typeDXN(typeDXN.toString())).run();
+      } = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
       log.info('xxx', { typeDXN, obj });
       expect(getSchema(obj)).toBeDefined();
       expect(getSchemaTypename(getSchema(obj)!)).toEqual(Testing.Contact.typename);

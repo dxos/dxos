@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { DXN } from '@dxos/echo-schema';
+import { DXN, ForeignKeySchema } from '@dxos/echo-schema';
 
 const TypenameSpecifier = Schema.Union(DXN, Schema.Null).annotations({
   description: 'DXN or null. Null means any type will match',
@@ -12,6 +12,11 @@ const TypenameSpecifier = Schema.Union(DXN, Schema.Null).annotations({
 
 // NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
 
+/**
+ * Filter by object type and properties.
+ *
+ * Clauses are combined using logical AND.
+ */
 const FilterObject_ = Schema.Struct({
   type: Schema.Literal('object'),
   typename: TypenameSpecifier,
@@ -19,6 +24,10 @@ const FilterObject_ = Schema.Struct({
     key: Schema.String.annotations({ description: 'Property name' }),
     value: Schema.suspend(() => Filter),
   }),
+  /**
+   * Objects that have any of the given foreign keys.
+   */
+  foreignKeys: Schema.optional(Schema.Array(ForeignKeySchema)),
 });
 interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
 const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
@@ -195,4 +204,3 @@ export const QueryOptions = Schema.Struct({
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
 });
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
-

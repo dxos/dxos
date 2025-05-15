@@ -50,7 +50,14 @@ import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { DeprecatedFilter, optionsToProto, QueryResult, type FilterSource, type QueryFn } from '../query';
+import {
+  DeprecatedFilter,
+  normalizeQuery,
+  optionsToProto,
+  QueryResult,
+  type FilterSource,
+  type QueryFn,
+} from '../query';
 import type { PropertyFilter } from '../query/deprecated/filter';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
@@ -398,10 +405,10 @@ export class CoreDatabase {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(filter?: FilterSource, options?: QueryOptions) {
+  private _query(filter?: unknown, options?: QueryOptions) {
     return new QueryResult(
       this._createQueryContext(),
-      DeprecatedFilter.from(filter, optionsToProto({ ...options, spaceIds: [this.spaceId] })),
+      normalizeQuery(filter, options, { defaultSpaceId: this.spaceId }),
     );
   }
 

@@ -10,14 +10,14 @@ import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live, getMeta } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { Filter } from './deprecated';
+import { Filter, Query } from './api';
 import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
@@ -125,7 +125,7 @@ describe('Queries', () => {
       db.add(obj);
       await db.flush({ indexes: true });
 
-      const { objects } = await db.query(Filter.foreignKeys([{ id: 'test-id', source: 'test-source' }])).run();
+      const { objects } = await db.query(Filter.foreignKeys(Expando, [{ id: 'test-id', source: 'test-source' }])).run();
       expect(objects).toEqual([obj]);
     });
 
@@ -344,10 +344,10 @@ describe('Queries', () => {
       await assertQuery(db, Filter.typename(ContactV1.typename), [contactV1, contactV2]);
       await assertQuery(db, Filter.type(ContactV1), [contactV1]);
       await assertQuery(db, Filter.type(ContactV2), [contactV2]);
-      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact'), [contactV1, contactV2]);
-      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.1.0'), [contactV1]);
-      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.1.0'), [contactV1]);
-      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.2.0'), [contactV2]);
+      await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Contact')), [contactV1, contactV2]);
+      await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Contact:0.1.0')), [contactV1]);
+      await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Contact:0.2.0')), [contactV2]);
+      await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Contact:0.2.0')), [contactV2]);
     };
 
     await assertQueries(db);
@@ -584,8 +584,8 @@ const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { co
   return objects;
 };
 
-const assertQuery = async (db: EchoDatabase, filter: Filter, expected: any[]) => {
-  const { objects } = await db.query(filter).run();
+const assertQuery = async (db: EchoDatabase, filter: Filter.Any, expected: any[]) => {
+  const { objects } = await db.query(Query.select(filter)).run();
   expect(sortById(objects)).toEqual(expect.arrayContaining(sortById(expected)));
 };
 

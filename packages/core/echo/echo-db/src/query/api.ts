@@ -3,11 +3,12 @@
 //
 
 import { assertArgument } from '@dxos/invariant';
-import { DXN, type PublicKey } from '@dxos/keys';
-import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { FilterSource } from './deprecated';
 import { type QueryResult } from './query-result';
+import * as AST from './ast';
 
 /**
  * `query` API function declaration.
@@ -51,6 +52,9 @@ export enum ResultFormat {
   AutomergeDocAccessor = 'automergeDocAccessor',
 }
 
+/**
+ * @deprecated Use `Query.options` instead.
+ */
 export type QueryOptions = {
   /**
    * Query only in specific spaces.
@@ -116,10 +120,12 @@ import { type Schema } from 'effect';
 import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
-import { getSchemaDXN, type Ref, type RelationSource, type RelationTarget } from '@dxos/echo-schema';
+import { getSchemaDXN, type ForeignKey, type Ref, type RelationSource, type RelationTarget } from '@dxos/echo-schema';
 
 import type { Live } from '@dxos/live-object';
 import type * as QueryAST from './ast';
+import { mapEntries } from 'effect/Record';
+import { mapValues } from '@dxos/util';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -190,9 +196,16 @@ export interface Query<T> {
    * @returns Query for the target objects.
    */
   target(): Query<RelationTarget<T>>;
+
+  /**
+   * Add options to a query.
+   */
+  options(options: AST.QueryOptions): Query<T>;
 }
 
 interface QueryAPI {
+  is(value: unknown): value is Query.Any;
+
   /**
    * Select objects based on a filter.
    * @param filter - Filter to select the objects.
@@ -212,19 +225,6 @@ interface QueryAPI {
     schema: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
-
-  /**
-   * Full-text or vector search.
-   *
-   * @deprecated Use `Filter`.
-   */
-  // text<S extends Schema.Schema.All>(
-  //   // TODO(dmaretskyi): Allow passing an array of schema here.
-  //   schema: S,
-  //   // TODO(dmaretskyi): Consider passing a vector here, but really the embedding should be done on the query-executor side.
-  //   text: string,
-  //   options?: Query.TextSearchOptions,
-  // ): Query<Schema.Schema.Type<S>>;
 
   /**
    * Combine results of multiple queries.
@@ -301,6 +301,11 @@ interface FilterAPI {
     text: string,
     options?: Query.TextSearchOptions,
   ): Filter<Schema.Schema.Type<S>>;
+
+  /**
+   * Filter by foreign keys.
+   */
+  foreignKeys<S extends Schema.Schema.All>(schema: S, keys: ForeignKey[]): Filter<Schema.Schema.Type<S>>;
 
   /**
    * Predicate for property to be equal to the provided value.
@@ -463,6 +468,16 @@ class FilterClass implements Filter<any> {
     });
   }
 
+  static foreignKeys<S extends Schema.Schema.All>(schema: S, keys: ForeignKey[]): Filter<Schema.Schema.Type<S>> {
+    const dxn = getSchemaDXN(schema) ?? raise(new TypeError('Schema has no DXN'));
+    return new FilterClass({
+      type: 'object',
+      typename: dxn.toString(),
+      props: {},
+      foreignKeys: keys,
+    });
+  }
+
   static eq<T>(value: T): Filter<T> {
     return new FilterClass({
       type: 'compare',
@@ -571,6 +586,10 @@ const propsFilterToAst = (predicates: Filter.Props<any>): Record<string, QueryAS
 class QueryClass implements Query<any> {
   private static variance: Query<any>['~Query'] = {} as Query<any>['~Query'];
 
+  static is(value: unknown): value is Query<any> {
+    return typeof value === 'object' && value !== null && '~Query' in value;
+  }
+
   static select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>> {
     return new QueryClass({
       type: 'select',
@@ -586,6 +605,11 @@ class QueryClass implements Query<any> {
   }
 
   static all(...queries: Query<any>[]): Query<any> {
+    if (queries.length === 0) {
+      throw new TypeError(
+        'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.all())',
+      );
+    }
     return new QueryClass({
       type: 'union',
       queries: queries.map((q) => q.ast),
@@ -663,6 +687,52 @@ class QueryClass implements Query<any> {
       direction: 'target',
     });
   }
+
+  options(options: AST.QueryOptions): Query<any> {
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options,
+    });
+  }
 }
 
 export const Query: QueryAPI = QueryClass;
+
+type NormalizeQueryOptions = {
+  defaultSpaceId?: SpaceId;
+};
+
+export const normalizeQuery = (
+  query_: unknown | undefined,
+  userOptions: QueryOptions | undefined,
+  opts?: NormalizeQueryOptions,
+) => {
+  let query: Query.Any;
+
+  if (Query.is(query_)) {
+    query = query_;
+  } else if (Filter.is(query_)) {
+    query = Query.select(query_);
+  } else if (query_ === undefined) {
+    query = Query.select(Filter.all());
+  } else if (typeof query_ === 'object' && query_ !== null) {
+    query = Query.select(FilterClass.props(query_));
+  } else {
+    throw new TypeError('Invalid query');
+  }
+
+  if (userOptions != undefined) {
+    query = query.options({
+      spaceIds: userOptions.spaceIds ?? (opts?.defaultSpaceId != null ? [opts.defaultSpaceId] : undefined),
+      deleted:
+        userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.SHOW_DELETED
+          ? 'include'
+          : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.HIDE_DELETED
+            ? 'exclude'
+            : 'only',
+    });
+  }
+
+  return query;
+};
