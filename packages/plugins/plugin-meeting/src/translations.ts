@@ -52,6 +52,7 @@ export default [
         'mic off': 'Mute',
         'camera on': 'Turn camera on',
         'camera off': 'Turn camera off',
+        'camera off label': 'Camera off',
 
         'raise hand': 'Raise hand',
         'lower hand': 'Lower hand',

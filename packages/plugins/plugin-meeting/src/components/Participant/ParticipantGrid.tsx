@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useDynamicRef } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
 
 import { Participant, SCREENSHARE_SUFFIX } from './Participant';
 import { type UserState } from '../../types';
@@ -12,13 +12,13 @@ import { ResponsiveGrid } from '../ResponsiveGrid';
 
 const getId = (user: UserState): string => user.id!;
 
-export type ParticipantGridProps = {
+export type ParticipantGridProps = ThemedClassName<{
   self: UserState;
   users: UserState[];
   debug: boolean;
-};
+}>;
 
-export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) => {
+export const ParticipantGrid = ({ classNames, self, users, debug }: ParticipantGridProps) => {
   const [pinned, setPinned] = useState<string | undefined>();
   const currentPinned = useDynamicRef(pinned);
 
@@ -80,7 +80,7 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
   // TODO(burdon): Show ghost view of user for a second before leaving.
   return (
     <ResponsiveGrid<UserState>
-      classNames='dark:bg-neutral-900'
+      classNames={classNames}
       Cell={Participant}
       debug={debug}
       getId={getId}
