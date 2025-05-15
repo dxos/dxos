@@ -59,6 +59,10 @@ export class ViewProjection {
     return this._view;
   }
 
+  get schema() {
+    return this._schema;
+  }
+
   /**
    * Construct a new property.
    */

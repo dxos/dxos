@@ -60,6 +60,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   }, [type, elementType]);
 
   const handleAdd = useCallback(() => {
+    console.log({ newValue });
     inputProps.onValueChange(type, [...values, newValue]);
   }, [type, elementType, inputProps, newValue, values]);
 

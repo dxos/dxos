@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema } from 'effect/Schema';
 import React, {
   type MouseEvent,
   type PropsWithChildren,
@@ -75,13 +76,14 @@ export type TableController = {
 export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
+  schema?: Schema.AnyNoContext;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
   onRowClick?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, onRowClick }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, schema, onRowClick }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
@@ -346,6 +348,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         <TableValueEditor
           model={model}
           modals={modals}
+          schema={schema}
           onEnter={handleEnter}
           onFocus={handleFocus}
           onQuery={handleQuery}

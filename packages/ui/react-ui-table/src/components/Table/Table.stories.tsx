@@ -197,7 +197,7 @@ const DefaultStory = () => {
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
         <TableToolbar classNames='border-be border-separator' onAction={handleToolbarAction} />
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
+          <Table.Main ref={tableRef} model={model} presentation={presentation} schema={schema} ignoreAttention />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>

@@ -1,8 +1,9 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { type Completion } from '@codemirror/autocomplete';
+import { type Schema } from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
@@ -26,47 +27,9 @@ import {
 import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
+import { FormCellEditor } from './FormCellEditor';
 import { completion } from './extension';
 import { type TableModel, type ModalController } from '../../model';
-
-// ArrayEditorPlaceholder gets positioning from context itself
-const ArrayEditorPlaceholder = ({
-  fieldProjection,
-  model,
-  __gridScope,
-}: {
-  fieldProjection: FieldProjection;
-  model?: TableModel;
-  __gridScope: any;
-}) => {
-  // Get positioning info from grid context
-  const { editing, editBox } = useGridContext('ArrayEditor', __gridScope);
-
-  // Get cell value if needed
-  const cellValue = useMemo(() => {
-    if (model && editing) {
-      const cell = parseCellIndex(editing.index);
-      return model.getCellData(cell);
-    }
-    return undefined;
-  }, [model, editing]);
-
-  return (
-    <div
-      className='absolute z-[1] dx-focus-ring'
-      style={{
-        ...editBox,
-        ...{ '--dx-gridCellWidth': `${editBox?.inlineSize ?? 200}px` },
-      }}
-    >
-      <div className='p-2 bg-surface-raised rounded-md border border-separator'>
-        <div className='text-sm'>Array Editor Placeholder</div>
-        <div className='text-xs text-muted'>{fieldProjection.field.path || 'Unnamed field'}</div>
-        {cellValue && <div className='text-xs'>Value: {JSON.stringify(cellValue)}</div>}
-      </div>
-    </div>
-  );
-};
 
 const newValue = Symbol.for('newValue');
 
@@ -82,6 +45,7 @@ export type QueryResult = Pick<Completion, 'label'> & { data: any };
 export type TableCellEditorProps = {
   model?: TableModel;
   modals?: ModalController;
+  schema?: Schema.AnyNoContext;
   onEnter?: (cell: DxGridPlanePosition) => void;
   onFocus?: DxGrid['refocus'];
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
@@ -90,6 +54,7 @@ export type TableCellEditorProps = {
 export const TableValueEditor = ({
   model,
   modals,
+  schema,
   onEnter,
   onFocus,
   onQuery,
@@ -109,10 +74,8 @@ export const TableValueEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
-  // Check if we're dealing with an array type
   if (fieldProjection?.props.type === TypeEnum.Array) {
-    // Placeholder for array editing - will be implemented later
-    return <ArrayEditorPlaceholder fieldProjection={fieldProjection} model={model} __gridScope={__gridScope} />;
+    return <FormCellEditor fieldProjection={fieldProjection} model={model} schema={schema} __gridScope={__gridScope} />;
   }
 
   // For all other types, use the existing cell editor
