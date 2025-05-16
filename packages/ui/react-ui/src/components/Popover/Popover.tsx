@@ -246,13 +246,13 @@ PopoverPortal.displayName = PORTAL_NAME;
 
 const CONTENT_NAME = 'PopoverContent';
 
-interface PopoverContentProps extends PopoverContentTypeProps {
+type PopoverContentProps = ThemedClassName<PopoverContentTypeProps> & {
   /**
    * Used to force mounting when more control is needed. Useful when
    * controlling animation with React animation libraries.
    */
-  forceMount?: true;
-}
+  forceMount?: boolean;
+};
 
 const PopoverContent = forwardRef<PopoverContentTypeElement, PopoverContentProps>(
   (props: ScopedProps<PopoverContentProps>, forwardedRef) => {

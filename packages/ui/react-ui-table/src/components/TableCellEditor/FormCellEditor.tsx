@@ -4,10 +4,11 @@
 
 import { Schema } from 'effect';
 import { isTypeLiteral, TypeLiteral } from 'effect/SchemaAST';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { getSnapshot } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
@@ -23,7 +24,14 @@ type FormCellEditorProps = {
 };
 
 export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: FormCellEditorProps) => {
-  const { editing, editBox, setEditing } = useGridContext('ArrayEditor', __gridScope);
+  const { editing, setEditing } = useGridContext('ArrayEditor', __gridScope);
+  const cellRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (editing && editing.cellElement) {
+      cellRef.current = editing.cellElement as HTMLButtonElement;
+    }
+  }, [editing?.cellElement]);
 
   /**
    * A narrowed schema from the original schema that only includes
@@ -74,21 +82,26 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     [fieldProjection.field.path, originalRow],
   );
 
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (nextOpen === false) {
+        setEditing(null);
+      }
+    },
+    [setEditing],
+  );
+
+  if (!editing) {
+    return null;
+  }
+
   return (
-    <div
-      className='absolute z-[1] '
-      style={{
-        ...editBox,
-        ...{ '--dx-gridCellWidth': `${editBox?.inlineSize ?? 200}px` },
-      }}
-    >
-      <div
-        ref={(el) => editing && el?.focus()}
-        tabIndex={-1}
-        className='dx-focus-ring bg-baseSurface rounded-sm border border-separator'
-      >
+    <Popover.Root open={editing !== null} onOpenChange={handleOpenChange}>
+      <Popover.VirtualTrigger virtualRef={cellRef} />
+      <Popover.Content tabIndex={-1} classNames='popover-consistent-width'>
+        <Popover.Arrow />
         <Form values={formValues} schema={narrowSchema as any} onSave={handleSave} />
-      </div>
-    </div>
+      </Popover.Content>
+    </Popover.Root>
   );
 };
