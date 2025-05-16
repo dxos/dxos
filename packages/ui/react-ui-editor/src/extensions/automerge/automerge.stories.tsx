@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
 import { Expando } from '@dxos/echo-schema';
-import { DocAccessor, Filter, live, createDocAccessor, useQuery, useSpace, type Space } from '@dxos/react-client/echo';
+import { DocAccessor, Filter, live, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
@@ -103,7 +103,7 @@ const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
   const [source, setSource] = useState<DocAccessor>();
-  const objects = useQuery<Expando>(space, Filter.from({ type: 'test' }));
+  const objects = useQuery(space, Query.type(Expando, { type: 'test' }));
 
   useEffect(() => {
     if (!source && objects.length) {
