@@ -27,7 +27,6 @@ import { invariant } from '@dxos/invariant';
 import { Organization } from './common/organization';
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';
-import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
