@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { create, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
+import { create, defineFunction, DXN, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
 import {
   FetchHttpClient,
   // @ts-ignore
@@ -13,8 +13,6 @@ import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'https://esm.s
 // @ts-ignore
 import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.13.3';
 
-import { Type } from '@dxos/echo';
-
 const MessageSchema = S.Struct({
   id: ObjectId,
   foreignId: S.Any, // bigint?
@@ -22,7 +20,7 @@ const MessageSchema = S.Struct({
   created: S.String,
   content: S.String,
 }).pipe(
-  Type.def({
+  EchoObject({
     typename: 'example.com/type/Message',
     version: '0.1.0',
   }),
