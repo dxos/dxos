@@ -159,7 +159,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
             .map(getLabel)
             .filter(isNotNullable)
             .map((title) => {
-              return `<span class="dx-tag" data-hue="neutral">${title}</span>`;
+              return `<span class="dx-tag rounded-xl" data-hue="neutral">${title}</span>`;
             })
             .join('');
 
