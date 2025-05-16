@@ -97,6 +97,7 @@ export default (context: PluginsContext) =>
 
         // TODO(dmaretskyi): Request via capability.
         const aiClient: AIServiceClient | undefined = new AIServiceEdgeClient({
+          // TODO(burdon): Get from config.
           endpoint: AI_SERVICE_ENDPOINT.REMOTE,
         });
 
