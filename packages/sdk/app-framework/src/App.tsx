@@ -50,7 +50,7 @@ export type CreateAppOptions = {
  * @param params.placeholder Placeholder component to render during startup.
  * @param params.fallback Fallback component to render if an error occurs during startup.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
- * @param params.safeMode Whether to enable safe mode.
+ * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
  */
 export const createApp = ({
   pluginManager,
@@ -61,7 +61,7 @@ export const createApp = ({
   placeholder,
   fallback = DefaultFallback,
   cacheEnabled = false,
-  safeMode = true,
+  safeMode = false,
 }: CreateAppOptions) => {
   // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader =
