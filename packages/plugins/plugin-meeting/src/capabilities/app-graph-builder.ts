@@ -10,7 +10,7 @@ import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { COMPOSER_SPACE_LOCK, memoizeQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, Query, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { Query, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';

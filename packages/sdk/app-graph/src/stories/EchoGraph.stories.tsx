@@ -12,14 +12,12 @@ import {
   isSpace,
   Query,
   type Echo,
-  type FilterSource,
   type Space,
   SpaceState,
   type QueryOptions,
   type Live,
   Expando,
 } from '@dxos/client/echo';
-import type { BaseObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';

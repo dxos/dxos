@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { asyncTimeout, sleep } from './timeout';
+import { sleep } from './timeout';
 import { Trigger } from './trigger';
 
 /**

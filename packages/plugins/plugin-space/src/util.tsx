@@ -3,7 +3,7 @@
 //
 
 import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject, makeRef, type Live } from '@dxos/live-object';
@@ -21,16 +21,13 @@ import {
   type NodeArg,
 } from '@dxos/plugin-graph';
 import {
-  Filter,
   fullyQualifiedId,
   getSpace,
   isEchoObject,
   isSpace,
-  Query,
+  type Query,
   SpaceState,
   type Echo,
-  type FilterSource,
-  type QueryOptions,
   type AnyLiveObject,
   type Space,
 } from '@dxos/react-client/echo';

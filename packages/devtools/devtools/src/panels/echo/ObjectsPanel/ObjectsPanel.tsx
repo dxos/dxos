@@ -9,7 +9,7 @@ import { checkoutVersion, Filter, getEditHistory, Query, type AnyLiveObject } fr
 import { FormatEnum, getDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { getType, isDeleted } from '@dxos/live-object';
-import { QueryOptions, useQuery, type Space } from '@dxos/react-client/echo';
+import { useQuery, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';

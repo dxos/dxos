@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { Schema } from 'effect';
 import { useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { BaseEchoObject, getDXN, getLabel } from '@dxos/echo-schema';
+import { type BaseEchoObject, getDXN, getLabel } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import type { Schema } from 'effect';
 
 export type ContextProvider = {
   query: (params: { query: string }) => Promise<Array<{ uri: string; label: string }>>;

@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
 import { Expando } from '@dxos/echo-schema';
-import { DocAccessor, Filter, live, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
+import { DocAccessor, live, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';

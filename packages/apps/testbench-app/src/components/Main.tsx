@@ -11,7 +11,7 @@ import { Type } from '@dxos/echo';
 import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import { Filter, Query, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Query, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 
 import { AppToolbar } from './AppToolbar';

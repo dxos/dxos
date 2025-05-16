@@ -21,12 +21,12 @@ import {
 import { assertArgument } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import type { Live } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type * as AST from './ast';
 import type { FilterSource } from './deprecated';
 import { type QueryResult } from './query-result';
-import { log } from '@dxos/log';
 
 /**
  * `query` API function declaration.

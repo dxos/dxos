@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { type EchoDatabase, Filter, Query } from '@dxos/echo-db';
+import { type EchoDatabase, Query } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';

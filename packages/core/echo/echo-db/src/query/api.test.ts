@@ -6,11 +6,11 @@ import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { create, EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './api';
 import * as QueryAST from './ast';
-import { DXN } from '@dxos/keys';
 
 // TODO(dmaretskyi): Temp until API is stable.
 const Type = {

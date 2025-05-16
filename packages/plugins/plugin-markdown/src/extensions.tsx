@@ -13,7 +13,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { createDocAccessor, fullyQualifiedId, getSpace, type Query, type QueryResult } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getSpace, type QueryResult } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import {
