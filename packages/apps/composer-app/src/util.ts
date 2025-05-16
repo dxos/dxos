@@ -8,8 +8,9 @@ import { log } from '@dxos/log';
 import { type Client } from '@dxos/react-client';
 import { type Credential } from '@dxos/react-client/halo';
 
-export const isTrue = (str?: string) => str === 'true' || str === '1';
-export const isFalse = (str?: string) => str === 'false' || str === '0';
+export const isTrue = (str?: string | null, strict = true): boolean =>
+  strict ? str === 'true' || str === '1' : str != null && !isFalse(str);
+export const isFalse = (str?: string | null): boolean => str === 'false' || str === '0';
 
 export const defaultStorageIsEmpty = async (config?: defs.Runtime.Client.Storage): Promise<boolean> => {
   try {

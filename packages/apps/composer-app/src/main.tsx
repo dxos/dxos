@@ -98,7 +98,8 @@ const main = async () => {
     plugins: plugins(conf),
     core: core(conf),
     defaults: defaults(conf),
-    cacheEnabled: true,
+    cacheEnabled: false,
+    safeMode: isTrue(new URL(window.location.href).searchParams.get('safe'), false),
   });
 
   const root = document.getElementById('root')!;

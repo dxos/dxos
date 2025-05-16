@@ -24,6 +24,7 @@ export type CreateAppOptions = {
   placeholder?: FC<{ stage: number }>;
   fallback?: ErrorBoundary['props']['fallback'];
   cacheEnabled?: boolean;
+  safeMode?: boolean;
 };
 
 /**
@@ -49,6 +50,7 @@ export type CreateAppOptions = {
  * @param params.placeholder Placeholder component to render during startup.
  * @param params.fallback Fallback component to render if an error occurs during startup.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
+ * @param params.safeMode Whether to enable safe mode.
  */
 export const createApp = ({
   pluginManager,
@@ -59,6 +61,7 @@ export const createApp = ({
   placeholder,
   fallback = DefaultFallback,
   cacheEnabled = false,
+  safeMode = true,
 }: CreateAppOptions) => {
   // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader =
@@ -71,7 +74,7 @@ export const createApp = ({
 
   const state = live({ ready: false, error: null });
   const cached: string[] = JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]');
-  const enabled = cacheEnabled && cached.length > 0 ? cached : defaults;
+  const enabled = safeMode ? [] : cacheEnabled && cached.length > 0 ? cached : defaults;
   const manager = pluginManager ?? new PluginManager({ pluginLoader, plugins, core, enabled });
 
   manager.activation.on(({ event, state: _state, error }) => {
