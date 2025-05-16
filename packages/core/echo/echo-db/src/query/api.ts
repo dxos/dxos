@@ -26,6 +26,7 @@ import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/ec
 import type * as AST from './ast';
 import type { FilterSource } from './deprecated';
 import { type QueryResult } from './query-result';
+import { log } from '@dxos/log';
 
 /**
  * `query` API function declaration.
@@ -746,7 +747,10 @@ export const normalizeQuery = (
     query = Query.select(Filter.everything());
   } else if (typeof query_ === 'object' && query_ !== null) {
     query = Query.select(FilterClass.props(query_));
+  } else if (typeof query_ === 'function') {
+    throw new TypeError('Functions are not supported as queries');
   } else {
+    log.error('Invalid query', { query: query_ });
     throw new TypeError('Invalid query');
   }
 
