@@ -87,7 +87,7 @@ const surface: Record<string, Sememe> = {
 };
 
 // TODO(burdon): Define enum for sememe names.
-export const systemSememes: ColorSememes = {
+export const systemSememes = {
   //
   // Surfaces (bg-)
   //
@@ -127,11 +127,11 @@ export const systemSememes: ColorSememes = {
   // Special surfaces (intentionally not part of contrast-order cadence).
   //
 
-  deckSurface: {
+  ['deckSurface' as const]: {
     light: surface['60'].light,
     dark: surface['10'].dark,
   },
-  inverseSurface: {
+  ['inverseSurface' as const]: {
     light: ['neutral', darkCadence(2)],
     dark: ['neutral', lightCadence(2)],
   },
@@ -141,45 +141,45 @@ export const systemSememes: ColorSememes = {
   // TODO(thure): Establish contrast-order cadence for text
   //
 
-  baseText: {
+  ['baseText' as const]: {
     light: ['neutral', 1000],
     dark: ['neutral', 50],
   },
-  inverseSurfaceText: {
+  ['inverseSurfaceText' as const]: {
     light: ['neutral', 50],
     dark: ['neutral', 1000],
   },
-  description: {
+  ['description' as const]: {
     light: ['neutral', 500],
     dark: ['neutral', 400],
   },
-  subdued: {
+  ['subdued' as const]: {
     light: ['neutral', 700],
     dark: ['neutral', 300],
   },
-  accentText: {
+  ['accentText' as const]: {
     light: ['primary', 550],
     dark: ['primary', 400],
   },
-  accentTextHover: {
+  ['accentTextHover' as const]: {
     light: ['primary', 500],
     dark: ['primary', 350],
   },
-  accentFocusIndicator: {
+  ['accentFocusIndicator' as const]: {
     light: ['primary', 350],
     dark: ['primary', 450],
   },
-  unAccentHover: {
+  ['unAccentHover' as const]: {
     light: ['neutral', 400],
     dark: ['neutral', 500],
   },
-  accentSurfaceText: {
+  ['accentSurfaceText' as const]: {
     light: ['neutral', 0],
     dark: ['neutral', 0],
   },
-};
+} satisfies ColorSememes;
 
-type SememeName = keyof ColorSememes;
+type SememeName = keyof typeof systemSememes;
 
 type Alias =
   //
@@ -210,16 +210,13 @@ type Alias =
   | 'unAccent'
   | 'unAccentHover';
 
-// TODO(burdon): Import/factor out type?
-type SurfaceDef = { root?: SememeName; attention?: SememeName };
-
-export const defs: Record<Alias, SurfaceDef> = {
+export const defs: Record<Alias, { root?: SememeName; attention?: SememeName }> = {
   baseSurface: { root: 'surface-20', attention: 'surface-0' },
   modalSurface: { root: 'surface-30' },
   sidebarSurface: { root: 'surface-30' },
-  groupSurface: { root: 'surface-60___', attention: 'surface-40' },
+  groupSurface: { root: 'surface-60', attention: 'surface-40' },
   toolbarSurface: { root: 'surface-30' },
-  gridHeaderSurface: { root: 'surface-20', attention: 'surface-30' },
+  gridHeaderSurface: { root: 'surface-40', attention: 'surface-30' },
   accentSurface: { root: 'accentSurface-500' },
   accentSurfaceHover: { root: 'accentSurface-400' },
   hoverSurface: { root: 'surface-70', attention: 'surface-60' },
@@ -229,7 +226,7 @@ export const defs: Record<Alias, SurfaceDef> = {
   hoverOverlay: { root: 'surface-450t' },
   input: { root: 'surface-50', attention: 'surface-40' },
   scrim: { root: 'surface-10t' },
-  separator: { root: 'surface-60' },
+  separator: { root: 'surface-40' },
   subduedSeparator: { root: 'surface-40' },
   unAccent: { root: 'surface-400' },
   unAccentHover: { root: 'surface-450' },
