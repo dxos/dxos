@@ -58,7 +58,7 @@ describe('Queries', () => {
 
     test('filter properties', async () => {
       {
-        const { objects } = await db.query(Query.select(Filter.all())).run();
+        const { objects } = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(10);
       }
 

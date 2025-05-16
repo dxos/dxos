@@ -270,7 +270,7 @@ interface FilterAPI {
   /**
    * Filter that matches all objects.
    */
-  all(): Filter<any>;
+  everything(): Filter<any>;
 
   /**
    * Filter that matches no objects.
@@ -404,7 +404,7 @@ class FilterClass implements Filter<any> {
     return typeof value === 'object' && value !== null && '~Filter' in value;
   }
 
-  static all() {
+  static everything() {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -733,7 +733,7 @@ export const normalizeQuery = (
   } else if (Filter.is(query_)) {
     query = Query.select(query_);
   } else if (query_ === undefined) {
-    query = Query.select(Filter.all());
+    query = Query.select(Filter.everything());
   } else if (typeof query_ === 'object' && query_ !== null) {
     query = Query.select(FilterClass.props(query_));
   } else {

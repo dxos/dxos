@@ -22,7 +22,7 @@ describe.skip('Plain object format', () => {
     await db.flush({ indexes: true });
 
     {
-      const { objects } = await db.query(Filter.all(), { format: ResultFormat.Plain }).run();
+      const { objects } = await db.query(Filter.everything(), { format: ResultFormat.Plain }).run();
       expect(objects).to.deep.eq([
         {
           id,
@@ -46,7 +46,7 @@ describe.skip('Plain object format', () => {
     );
 
     {
-      const { objects } = await db.query(Filter.all(), { format: ResultFormat.Plain }).run();
+      const { objects } = await db.query(Filter.everything(), { format: ResultFormat.Plain }).run();
       expect(objects).to.deep.eq([
         {
           id,
@@ -104,7 +104,7 @@ describe.skip('Plain object format', () => {
     await db.flush({ indexes: true });
 
     {
-      const { objects } = await db.query(Filter.all(), { format: ResultFormat.Plain, limit: 2 }).run();
+      const { objects } = await db.query(Filter.everything(), { format: ResultFormat.Plain, limit: 2 }).run();
       expect(objects).to.have.length(2);
     }
   });

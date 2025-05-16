@@ -18,6 +18,7 @@ import { range } from '@dxos/util';
 import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
+import { Filter, Query } from '../query';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -173,7 +174,7 @@ export const createDataAssertion = ({
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
   let seedObjects: AnyLiveObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
-    const { objects } = await db.query().run();
+    const { objects } = await db.query(Query.select(Filter.everything())).run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));
     return { objects, received };
   };
