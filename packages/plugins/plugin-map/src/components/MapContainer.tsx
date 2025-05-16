@@ -33,7 +33,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
   const space = getSpace(map);
 
   const schema = useSchema(client, space, map?.view?.target?.query.typename);
-  const objects = useQuery(space, schema ? Filter.type(schema) : undefined);
+  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
 
   useEffect(() => {
     const locationProperty = getLocationProperty(map?.view?.target);

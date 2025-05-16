@@ -16,7 +16,7 @@ import { type DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, Ref } from '@dxos/react-client/echo';
 
 import { AutomationAction } from '../types';
 
@@ -35,7 +35,7 @@ export default (context: PluginsContext) =>
           if (script) {
             const {
               objects: [fn],
-            } = await space.db.query(Filter.type(FunctionType, { source: script })).run();
+            } = await space.db.query(Filter.type(FunctionType, { source: Ref.make(script) })).run();
             if (fn) {
               trigger.function = Type.ref(fn);
             }
