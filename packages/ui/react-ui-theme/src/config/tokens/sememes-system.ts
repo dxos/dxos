@@ -191,6 +191,7 @@ type Alias =
   | 'modalSurface'
   | 'sidebarSurface'
   | 'groupSurface'
+  | 'headerSurface'
   | 'toolbarSurface'
   | 'gridHeaderSurface'
   | 'accentSurface'
@@ -215,7 +216,8 @@ export const defs: Record<Alias, { root?: SememeName; attention?: SememeName }> 
   modalSurface: { root: 'surface-30' },
   sidebarSurface: { root: 'surface-30' },
   groupSurface: { root: 'surface-60', attention: 'surface-40' },
-  toolbarSurface: { root: 'surface-30' },
+  headerSurface: { root: 'surface-30', attention: 'surface-20' },
+  toolbarSurface: { root: 'surface-30', attention: 'surface-20' },
   gridHeaderSurface: { root: 'surface-40', attention: 'surface-30' },
   accentSurface: { root: 'accentSurface-500' },
   accentSurfaceHover: { root: 'accentSurface-400' },
