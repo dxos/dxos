@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Reference } from '@dxos/echo-protocol';
+import { decodeReference, isEncodedReference, Reference } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME, foreignKeyEquals } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -110,10 +110,12 @@ const filterMatchInner = (filter: Filter, core: ObjectCore, echoObject?: AnyLive
 // TODO(dmaretskyi): Should be resolved at the DSL level.
 const sanitizePropertyFilter = (value: any) => {
   if (isLiveObject(value)) {
+    // TODO(dmaretskyi): Remove this branch
     const core = getObjectCore(value as any);
     return Reference.fromDXN(DXN.fromLocalObjectId(core.id));
+  } else if (isEncodedReference(value)) {
+    return decodeReference(value);
   }
-  // TODO(dmaretskyi): Handle encoded references.
 
   return value;
 };

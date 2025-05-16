@@ -346,6 +346,17 @@ describe('Queries', () => {
     expect(result.objects[0]).to.eq(expando);
   });
 
+  test('filter by refs', async () => {
+    const { db } = await builder.createDatabase();
+
+    const a = db.add(live(Expando, { name: 'a' }));
+    const b = db.add(live(Expando, { name: 'b', owner: Ref.make(a) }));
+    const _c = db.add(live(Expando, { name: 'c' }));
+
+    const { objects } = await db.query(Query.select(Filter.type(Expando, { owner: Ref.make(a) }))).run();
+    expect(objects).toEqual([b]);
+  });
+
   describe('Relations', () => {
     test('query by type', async () => {
       const { db, graph } = await builder.createDatabase();
