@@ -84,12 +84,14 @@ export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | u
 export const getEntityKind = (schema: Schema.Schema.All): EntityKind | undefined => getTypeAnnotation(schema)?.kind;
 
 /**
+ * @deprecated
  * @returns Schema typename (without dxn: prefix or version number).
  */
-// TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects; (burdon): Use namespaces.
+// TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects.
 export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
 
 /**
+ * @deprecated
  * @returns Schema version in semver format.
  */
 export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
