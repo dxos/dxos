@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type JSX, forwardRef, useEffect, useRef } from 'react';
+import React, { type JSX, forwardRef, memo, useEffect, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,8 +15,8 @@ export type VideoObjectProps = Omit<JSX.IntrinsicElements['video'], 'className' 
     contain?: boolean;
   }>;
 
-export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
-  ({ videoStream, classNames, flip, contain, ...rest }, ref) => {
+export const VideoObject = memo(
+  forwardRef<HTMLVideoElement, VideoObjectProps>(({ videoStream, classNames, flip, contain, ...rest }, ref) => {
     const internalRef = useRef<HTMLVideoElement | null>(null);
 
     useEffect(() => {
@@ -52,7 +52,7 @@ export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
         {...rest}
       />
     );
-  },
+  }),
 );
 
 VideoObject.displayName = 'VideoObject';

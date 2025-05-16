@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 
@@ -13,7 +13,7 @@ import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveG
 
 export const SCREENSHARE_SUFFIX = '_screenshare';
 
-export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
+export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
   const call = useCapability(MeetingCapabilities.CallManager);
   const isSelf: boolean = call.self.id !== undefined && user.id !== undefined && user.id.startsWith(call.self.id);
   const isScreenshare = user.id?.endsWith(SCREENSHARE_SUFFIX);
@@ -52,6 +52,6 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
       />
     </ResponsiveGridItem>
   );
-};
+});
 
 Participant.displayName = 'Participant';
