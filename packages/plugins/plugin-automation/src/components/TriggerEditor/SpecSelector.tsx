@@ -21,15 +21,15 @@ export const SpecSelector = (props: SpecSelectorProps) => {
       const getDefaultTriggerSpec = (kind: string) => {
         switch (kind) {
           case TriggerKind.Timer:
-            return { type: TriggerKind.Timer, cron: '' };
+            return { kind: TriggerKind.Timer, cron: '' };
           case TriggerKind.Subscription:
-            return { type: TriggerKind.Subscription, filter: {} };
+            return { kind: TriggerKind.Subscription, filter: {} };
           case TriggerKind.Queue:
-            return { type: TriggerKind.Queue, queue: '' };
+            return { kind: TriggerKind.Queue, queue: '' };
           case TriggerKind.Email:
-            return { type: TriggerKind.Email };
+            return { kind: TriggerKind.Email };
           case TriggerKind.Webhook:
-            return { type: TriggerKind.Webhook };
+            return { kind: TriggerKind.Webhook };
           default:
             return undefined;
         }
@@ -40,7 +40,7 @@ export const SpecSelector = (props: SpecSelectorProps) => {
         return;
       }
 
-      // Update the entire spec object, not just the `spec.type`.
+      // Update the entire spec object, not just the `spec.kind`.
       specProps.onValueChange('object', defaultSpec);
     },
     [specProps],
