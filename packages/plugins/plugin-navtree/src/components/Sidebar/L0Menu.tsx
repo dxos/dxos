@@ -348,7 +348,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           <div
             role='none'
             className={mx([
-              'flex flex-col gap-2',
+              'flex flex-col gap-2 pbs-1',
               '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
