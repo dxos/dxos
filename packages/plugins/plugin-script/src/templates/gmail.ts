@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { create, defineFunction, Filter, ObjectId, S } from 'dxos:functions';
+import { create, defineFunction, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
 // @ts-ignore
 import {
   HttpClient,
@@ -15,8 +15,6 @@ import {
 import { format, subDays } from 'https://esm.sh/date-fns@3.3.1';
 // @ts-ignore
 import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.13.3';
-
-import { Type } from '@dxos/echo';
 
 export default defineFunction({
   inputSchema: S.Struct({
@@ -34,12 +32,7 @@ export default defineFunction({
     newMessages: S.Number,
   }),
 
-  handler: ({
-    context: { space },
-    event: {
-      data: { mailboxId, userId, after, pageSize },
-    },
-  }: any) =>
+  handler: ({ context: { space }, data: { mailboxId, userId, after, pageSize } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'gmail.com' })).first(),
@@ -170,7 +163,7 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 
 const ActorRoles = ['user', 'assistant'] as const;
 const ActorRole = S.Literal(...ActorRoles);
-type ActorRole = S.S.Type<typeof ActorRole>;
+type ActorRole = S.Schema.Type<typeof ActorRole>;
 
 const ActorSchema = S.Struct({
   identityKey: S.optional(S.String),
@@ -182,7 +175,7 @@ const ActorSchema = S.Struct({
 const AbstractContentBlock = S.Struct({
   pending: S.optional(S.Boolean),
 });
-type AbstractContentBlock = S.S.Type<typeof AbstractContentBlock>;
+type AbstractContentBlock = S.Schema.Type<typeof AbstractContentBlock>;
 const TextContentBlock = S.extend(
   AbstractContentBlock,
   S.Struct({
@@ -191,7 +184,7 @@ const TextContentBlock = S.extend(
     text: S.String,
   }),
 ).pipe(S.mutable);
-type TextContentBlock = S.S.Type<typeof TextContentBlock>;
+type TextContentBlock = S.Schema.Type<typeof TextContentBlock>;
 const JsonContentBlock = S.extend(
   AbstractContentBlock,
   S.Struct({
@@ -200,7 +193,7 @@ const JsonContentBlock = S.extend(
     data: S.String,
   }),
 ).pipe(S.mutable);
-type JsonContentBlock = S.S.Type<typeof JsonContentBlock>;
+type JsonContentBlock = S.Schema.Type<typeof JsonContentBlock>;
 const Base64ImageSource = S.Struct({
   type: S.Literal('base64'),
   mediaType: S.String,
@@ -211,7 +204,7 @@ const HttpImageSource = S.Struct({
   url: S.String,
 }).pipe(S.mutable);
 const ImageSource = S.Union(Base64ImageSource, HttpImageSource);
-type ImageSource = S.S.Type<typeof ImageSource>;
+type ImageSource = S.Schema.Type<typeof ImageSource>;
 const ImageContentBlock = S.extend(
   AbstractContentBlock,
   S.Struct({
@@ -220,7 +213,7 @@ const ImageContentBlock = S.extend(
     source: S.optional(ImageSource),
   }),
 ).pipe(S.mutable);
-type ImageContentBlock = S.S.Type<typeof ImageContentBlock>;
+type ImageContentBlock = S.Schema.Type<typeof ImageContentBlock>;
 const ReferenceContentBlock = S.extend(
   AbstractContentBlock,
   S.Struct({
@@ -228,7 +221,7 @@ const ReferenceContentBlock = S.extend(
     reference: S.Any,
   }),
 ).pipe(S.mutable);
-type ReferenceContentBlock = S.S.Type<typeof ReferenceContentBlock>;
+type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
 const MessageContentBlock = S.Union(TextContentBlock, JsonContentBlock, ImageContentBlock, ReferenceContentBlock);
 
 const MessageType = S.Struct({
@@ -250,9 +243,9 @@ const MessageType = S.Struct({
     ),
   ),
 }).pipe(
-  Type.def({
+  EchoObject({
     typename: 'dxos.org/type/Message',
     version: '0.1.0',
   }),
 );
-type MessageType = S.S.Type<typeof MessageType>;
+type MessageType = S.Schema.Type<typeof MessageType>;

@@ -14,6 +14,7 @@ import { clearUndefined, orderKeys } from '@dxos/util';
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
+  ECHO_ANNOTATIONS_NS_KEY,
   EntityKind,
   EntityKindSchema,
   getNormalizedEchoAnnotations,
@@ -387,13 +388,13 @@ const annotationsToJsonSchemaFields = (annotations: SchemaAST.Annotations): Reco
   }
   if (Object.keys(echoAnnotations).length > 0) {
     // TODO(dmaretskyi): use new namespace.
-    schemaFields[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] = echoAnnotations;
+    schemaFields[ECHO_ANNOTATIONS_NS_KEY] = echoAnnotations;
   }
 
   const echoIdentifier = annotations[TypeIdentifierAnnotationId];
   if (echoIdentifier) {
-    schemaFields[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY] ??= {};
-    schemaFields[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY].schemaId = echoIdentifier;
+    schemaFields[ECHO_ANNOTATIONS_NS_KEY] ??= {};
+    schemaFields[ECHO_ANNOTATIONS_NS_KEY].schemaId = echoIdentifier;
   }
 
   // Custom (at end).

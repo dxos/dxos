@@ -351,7 +351,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onQuery={handleQuery}
         />
         <Grid.Content
-          className={mx('[--dx-grid-base:var(--surface-bg)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
+          className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
           // getCells={getCells}
           columns={model.columnMeta.value}

@@ -23,11 +23,7 @@ export default defineFunction({
 
   outputSchema: S.String.annotations({ description: 'The exchange rate between the two currencies' }),
 
-  handler: async ({
-    event: {
-      data: { from, to },
-    },
-  }: any) =>
+  handler: async ({ data: { from, to } }: any) =>
     Effect.gen(function* () {
       const res = yield* HttpClientRequest.get(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`).pipe(
         HttpClient.execute,
