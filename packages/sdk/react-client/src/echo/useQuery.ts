@@ -23,7 +23,7 @@ export const useQuery: UseQueryFn = (
   spaceOrEcho: Space | Echo | undefined,
   queryOrFilter: Query.Any | Filter.Any,
   deps?: any[],
-): unknown[] => {
+): Live<unknown>[] => {
   const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
 
   const { getObjects, subscribe } = useMemo(() => {
@@ -50,7 +50,7 @@ export const useQuery: UseQueryFn = (
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes; make sure it is stable.
-  const objects = useSyncExternalStore<unknown[] | undefined>(subscribe, getObjects);
+  const objects = useSyncExternalStore<Live<unknown>[] | undefined>(subscribe, getObjects);
   return objects ?? [];
 };
 
