@@ -96,7 +96,7 @@ export namespace Testing {
 
   export const ContactSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: Schema.String.pipe(FormatAnnotation.set(FormatEnum.DateTime)).annotations({
+    name: Schema.String.annotations({
       [GeneratorAnnotationId]: 'person.fullName',
     }),
     image: Schema.optional(
