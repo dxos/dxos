@@ -248,7 +248,32 @@ export default meta;
 
 export const Default = {};
 
-export const ContactWithArrayOfEmails = Schema.Struct({
+export const StaticSchema: StoryObj = {
+  render: DefaultStory,
+  parameters: { translations },
+  decorators: [
+    withClientProvider({
+      types: [TableType, ViewType, Testing.Contact, Testing.Organization],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: async ({ client, space }) => {
+        const table = space.db.add(live(TableType, {}));
+        await initializeTable({ client, space, table, typename: Testing.Organization.typename });
+
+        const factory = createObjectFactory(space.db, faker as any);
+        await factory([
+          // { type: Testing.Contact, count: 10 },
+          // { type: Testing.Organization, count: 1 },
+          { type: ContactWithArrayOfEmails, count: 10 },
+        ]);
+      },
+    }),
+    withLayout({ fullscreen: true }),
+    withTheme,
+  ],
+};
+
+const ContactWithArrayOfEmails = Schema.Struct({
   name: Schema.String.annotations({
     [GeneratorAnnotationId]: 'person.fullName',
   }),
@@ -262,7 +287,7 @@ export const ContactWithArrayOfEmails = Schema.Struct({
   ),
 }).pipe(EchoObject({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
 
-export const StaticSchema: StoryObj = {
+export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
   parameters: { translations },
   decorators: [
