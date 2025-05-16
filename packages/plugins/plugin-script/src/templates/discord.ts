@@ -49,12 +49,7 @@ export default defineFunction({
     newMessages: S.Number,
   }),
 
-  handler: ({
-    event: {
-      data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 },
-    },
-    context: { space },
-  }: any) =>
+  handler: ({ data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 }, context: { space } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),

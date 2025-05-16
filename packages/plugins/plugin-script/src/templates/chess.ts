@@ -25,12 +25,7 @@ export default defineFunction({
     }),
   }),
 
-  handler: async ({
-    event: {
-      data: { changedObjectId, player = 'b' },
-    },
-    context: { space },
-  }: any) => {
+  handler: async ({ data: { changedObjectId, player = 'b' }, context: { space } }: any) => {
     const { pgn } = await space.db.query({ id: changedObjectId }).first();
     const game = new Chess();
     game.load_pgn(pgn);

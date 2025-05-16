@@ -13,11 +13,7 @@ export default defineFunction({
     to: S.String.annotations({ description: 'The target currency' }),
   }),
 
-  handler: async ({
-    event: {
-      data: { from, to },
-    },
-  }: any) => {
+  handler: async ({ data: { from, to } }: any) => {
     const res = await fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`);
     const {
       data: { rates },

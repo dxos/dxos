@@ -34,12 +34,7 @@ export default defineFunction({
     newMessages: S.Number,
   }),
 
-  handler: ({
-    context: { space },
-    event: {
-      data: { mailboxId, userId, after, pageSize },
-    },
-  }: any) =>
+  handler: ({ context: { space }, data: { mailboxId, userId, after, pageSize } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'gmail.com' })).first(),
