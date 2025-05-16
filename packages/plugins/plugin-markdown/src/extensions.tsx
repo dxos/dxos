@@ -13,7 +13,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { createDocAccessor, fullyQualifiedId, getSpace, type Query } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getSpace, type Query, type QueryResult } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import {
@@ -47,7 +47,7 @@ type ExtensionsOptions = {
   id?: string;
   text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
-  query?: Query<DocumentType>;
+  query?: QueryResult<DocumentType>;
   settings: MarkdownSettingsProps;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
