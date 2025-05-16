@@ -10162,6 +10162,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-rx/rx-react':
+        specifier: ^0.33.6
+        version: 0.33.6(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -10181,6 +10184,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10223,6 +10229,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-rx/rx-react':
+        specifier: ^0.33.6
+        version: 0.33.6(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -10245,9 +10254,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@effect-rx/rx-react':
-        specifier: ^0.33.6
-        version: 0.33.6(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)

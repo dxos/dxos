@@ -65,9 +65,9 @@ export class Graph {
       this._nodeCache,
       Record.get(id),
       Option.match({
-        onSome: (rx) => rx,
+        onSome: (value) => value,
         // TODO(wittjosiah): Should this store the rx in the cache before returning it?
-        onNone: () => Rx.make<Option.Option<Node>>(Option.none()),
+        onNone: () => Rx.make<Option.Option<Node>>(Option.none()).pipe(Rx.keepAlive),
       }),
     );
   });
@@ -77,13 +77,15 @@ export class Graph {
       this._edgeCache,
       Record.get(id),
       Option.match({
-        onSome: (rx) => rx,
+        onSome: (value) => value,
         // TODO(wittjosiah): Should this store the rx in the cache before returning it?
-        onNone: () => Rx.make<Edges>({ inbound: [], outbound: [] }),
+        onNone: () => Rx.make<Edges>({ inbound: [], outbound: [] }).pipe(Rx.keepAlive),
       }),
     );
   });
 
+  // NOTE: Currently the argument to the family needs to be referentially stable for the rx to be referentially stable.
+  // TODO(wittjosiah): Rx feature request, support for something akin to `ComplexMap` to allow for complex arguments.
   private readonly _connections = Rx.family<string, Rx.Rx<Node[]>>((key) => {
     return Rx.readable((get) => {
       const [id, relation] = key.split('+');

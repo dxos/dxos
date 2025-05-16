@@ -164,6 +164,8 @@ export class GraphBuilder {
     return this;
   }
 
+  explore() {}
+
   destroy() {
     this._connectorSubscriptions.forEach((unsubscribe) => unsubscribe());
     this._connectorSubscriptions.clear();

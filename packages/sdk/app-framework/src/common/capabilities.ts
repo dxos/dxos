@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Registry } from '@effect-rx/rx-react';
 import { type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
@@ -21,6 +22,8 @@ export namespace Capabilities {
   export const PluginManager = defineCapability<PluginManager>('dxos.org/app-framework/capability/plugin-manager');
 
   export const Null = defineCapability<null>('dxos.org/app-framework/capability/null');
+
+  export const RxRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/rx-registry');
 
   export type ReactContext = Readonly<{ id: string; dependsOn?: string[]; context: FC<PropsWithChildren> }>;
   export const ReactContext = defineCapability<ReactContext>('dxos.org/app-framework/capability/react-context');
@@ -68,7 +71,7 @@ export namespace Capabilities {
     'dxos.org/app-framework/capability/app-graph',
   );
 
-  export const AppGraphBuilder = defineCapability<Parameters<GraphBuilder['addExtension']>[0]>(
+  export const AppGraphBuilder = defineCapability<Parameters<GraphBuilder['addExtension']>[1]>(
     'dxos.org/app-framework/capability/app-graph-builder',
   );
 
