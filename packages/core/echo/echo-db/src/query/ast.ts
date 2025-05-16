@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { DXN, ForeignKeySchema } from '@dxos/echo-schema';
+import { DXN, ForeignKeySchema, ObjectId } from '@dxos/echo-schema';
 
 const TypenameSpecifier = Schema.Union(DXN, Schema.Null).annotations({
   description: 'DXN or null. Null means any type will match',
@@ -19,7 +19,15 @@ const TypenameSpecifier = Schema.Union(DXN, Schema.Null).annotations({
  */
 const FilterObject_ = Schema.Struct({
   type: Schema.Literal('object'),
+
   typename: TypenameSpecifier,
+
+  id: Schema.optional(Schema.Array(ObjectId)),
+
+  /**
+   * Filter by property.
+   * Must not include object ID.
+   */
   props: Schema.Record({
     key: Schema.String.annotations({ description: 'Property name' }),
     value: Schema.suspend(() => Filter),
@@ -29,8 +37,8 @@ const FilterObject_ = Schema.Struct({
    */
   foreignKeys: Schema.optional(Schema.Array(ForeignKeySchema)),
 });
-interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
-const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
+export interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
+export const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
 
 const FilterCompare_ = Schema.Struct({
   type: Schema.Literal('compare'),

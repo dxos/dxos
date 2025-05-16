@@ -270,7 +270,8 @@ export class Filter<T extends BaseObject = any> {
           properties: mapValues(ast.props, (prop) =>
             prop.type === 'compare' && prop.operator === 'eq' ? prop.value : raise(new Error('Not supported')),
           ),
-          metaKeys: ast.foreignKeys as ForeignKey[],
+          metaKeys: ast.foreignKeys ? [...ast.foreignKeys] : undefined,
+          objectIds: ast.id ? [...ast.id] : undefined,
         });
       case 'compare':
         throw new Error('Not implemented');

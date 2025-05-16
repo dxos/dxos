@@ -3,7 +3,7 @@
 //
 
 import { assertArgument } from '@dxos/invariant';
-import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, PublicKey, type SpaceId } from '@dxos/keys';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { FilterSource } from './deprecated';
@@ -116,13 +116,14 @@ export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import { Schema } from 'effect';
 import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import {
   getSchemaDXN,
   getTypeReference,
+  ObjectId,
   type ForeignKey,
   type Ref,
   type RelationSource,
@@ -430,7 +431,7 @@ class FilterClass implements Filter<any> {
     return new FilterClass({
       type: 'object',
       typename: dxn.toString(),
-      props: props ? propsFilterToAst(props) : {},
+      ...propsFilterToAst(props ?? {}),
     });
   }
 
@@ -458,7 +459,7 @@ class FilterClass implements Filter<any> {
     return new FilterClass({
       type: 'object',
       typename: null,
-      props: propsFilterToAst(props),
+      ...propsFilterToAst(props),
     });
   }
 
@@ -582,13 +583,22 @@ export const Filter: FilterAPI = FilterClass;
  */
 type RefPropKey<T> = { [K in keyof T]: T[K] extends Ref<infer _U> ? K : never }[keyof T] & string;
 
-const propsFilterToAst = (predicates: Filter.Props<any>): Record<string, QueryAST.Filter> => {
-  return Object.fromEntries(
-    Object.entries(predicates).map(([key, predicate]) => [
-      key,
-      Filter.is(predicate) ? predicate.ast : Filter.eq(predicate).ast,
-    ]),
-  ) as Record<string, QueryAST.Filter>;
+const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
+  let idFilter: readonly ObjectId[] | undefined;
+  if ('id' in predicates) {
+    assertArgument(typeof predicates.id === 'string' || Array.isArray(predicates.id), 'invalid id filter');
+    idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
+    Schema.Array(ObjectId).pipe(Schema.validateSync)(idFilter);
+  }
+
+  return {
+    id: idFilter,
+    props: Object.fromEntries(
+      Object.entries(predicates)
+        .filter(([prop, _value]) => prop != 'id')
+        .map(([prop, predicate]) => [prop, Filter.is(predicate) ? predicate.ast : Filter.eq(predicate).ast]),
+    ) as Record<string, QueryAST.Filter>,
+  };
 };
 
 class QueryClass implements Query<any> {
