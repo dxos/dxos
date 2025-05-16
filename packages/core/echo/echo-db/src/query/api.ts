@@ -565,7 +565,7 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  static not<F extends Filter.Any>(filter: F): Filter<F> {
+  static not<F extends Filter.Any>(filter: F): Filter<Filter.Type<F>> {
     return new FilterClass({
       type: 'not',
       filter: filter.ast,
