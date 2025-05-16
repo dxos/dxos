@@ -749,9 +749,9 @@ export const normalizeQuery = (
     throw new TypeError('Invalid query');
   }
 
-  if (userOptions != undefined) {
+  if (userOptions) {
     query = query.options({
-      spaceIds: userOptions.spaceIds ?? (!!opts?.defaultSpaceId ? [opts.defaultSpaceId] : undefined),
+      spaceIds: userOptions.spaceIds ?? (opts?.defaultSpaceId ? [opts.defaultSpaceId] : undefined),
       deleted:
         userOptions?.deleted === undefined
           ? undefined
