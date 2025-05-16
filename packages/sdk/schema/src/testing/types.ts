@@ -5,13 +5,7 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { Format, Type } from '@dxos/echo';
-import {
-  FieldLookupAnnotationId,
-  FormatAnnotation,
-  FormatEnum,
-  GeneratorAnnotationId,
-  LabelAnnotationId,
-} from '@dxos/echo-schema';
+import { FieldLookupAnnotationId, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
