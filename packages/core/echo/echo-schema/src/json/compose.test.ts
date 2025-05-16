@@ -5,11 +5,11 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
+import { composeSchema } from './compose';
+import { toJsonSchema } from './json-schema';
 import { ECHO_ANNOTATIONS_NS_KEY, FieldPath } from '../ast';
 import { FormatAnnotation, FormatEnum } from '../formats';
 import { TypedObject } from '../object';
-import { composeSchema } from './compose';
-import { toJsonSchema } from './json-schema';
 
 describe('schema composition', () => {
   test('schema composition', ({ expect }) => {
