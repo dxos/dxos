@@ -89,16 +89,17 @@ const gridCellGetter = (model: SheetModel) => {
 
 export const rowLabelCell = (row: number) => ({
   value: rowToA1Notation(row),
-  className: 'text-end pie-1 text-subdued',
+  className: '!bg-gridHeader text-subdued text-end pie-1',
   resizeHandle: 'row',
 });
 
 export const colLabelCell = (col: number) => ({
   value: colToA1Notation(col),
-  className: 'text-subdued',
+  className: '!bg-gridHeader text-subdued',
   resizeHandle: 'col',
 });
 
+// TODO(burdon): Return 'bg-gridHeader' for cell (1,1)
 const cellGetter = (model: SheetModel) => {
   const getGridCells = gridCellGetter(model);
   return (nextBounds: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {

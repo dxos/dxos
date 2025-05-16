@@ -152,6 +152,7 @@ export const GridSheet = () => {
     },
     [editing],
   );
+
   const handleWheel = useCallback(
     (event: WheelEvent) => {
       if (!ignoreAttention && !hasAttention) {
@@ -310,11 +311,11 @@ export const GridSheet = () => {
         limitRows={DEFAULT_ROWS}
         columns={columns}
         rows={rows}
+        columnDefault={sheetColDefault}
+        rowDefault={sheetRowDefault}
+        frozen={frozen}
         onAxisResize={handleAxisResize}
         onSelect={handleSelect}
-        rowDefault={sheetRowDefault}
-        columnDefault={sheetColDefault}
-        frozen={frozen}
         onFocus={handleFocus}
         onWheelCapture={handleWheel}
         onKeyDown={handleKeyDown}
