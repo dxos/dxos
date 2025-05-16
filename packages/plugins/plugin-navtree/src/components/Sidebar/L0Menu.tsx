@@ -337,6 +337,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                 tooltipSide='right'
                 classNames='w-[50px] _bg-primary-500'
                 suppressNextTooltip={suppressNextTooltip}
+                data-testid='spacePlugin.addSpace'
               />
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>
