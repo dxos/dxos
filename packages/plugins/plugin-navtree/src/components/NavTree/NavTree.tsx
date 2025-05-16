@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
 import React, { useMemo } from 'react';
 
 import { type TreeProps } from '@dxos/react-ui-list';
@@ -19,8 +18,6 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1PanelsProps, 'open'>;
 
 export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
-  // TODO(thure): Without this, we get `Groupper API used before initialization`, but why?
-  const _ = useFocusableGroup();
   const { tab, getItems, onBack } = useNavTreeContext();
   const topLevelActions = getItems(root, 'menu').toSorted((a, b) => byPosition(a.properties, b.properties));
   const topLevelCollections = getItems(root, 'collection');
