@@ -277,7 +277,7 @@ PopoverContent.displayName = CONTENT_NAME;
 /* ----------------------------------------------------------------------------------------------- */
 
 type PopoverContentTypeElement = PopoverContentImplElement;
-interface PopoverContentTypeProps extends Omit<PopoverContentImplProps, 'trapFocus' | 'disableOutsidePointerEvents'> {}
+export interface PopoverContentTypeProps extends Omit<PopoverContentImplProps, 'trapFocus' | 'disableOutsidePointerEvents'> {}
 
 const PopoverContentModal = forwardRef<PopoverContentTypeElement, PopoverContentTypeProps>(
   (props: ScopedProps<PopoverContentTypeProps>, forwardedRef) => {
