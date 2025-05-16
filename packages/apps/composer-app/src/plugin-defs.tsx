@@ -24,7 +24,7 @@ import { HelpPlugin, HELP_PLUGIN } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { KanbanPlugin, KANBAN_PLUGIN } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
-import { MarkdownPlugin, MARKDOWN_PLUGIN } from '@dxos/plugin-markdown';
+import { MARKDOWN_PLUGIN, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { MeetingPlugin, MEETING_PLUGIN } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin, NATIVE_PLUGIN } from '@dxos/plugin-native';
