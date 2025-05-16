@@ -119,6 +119,9 @@ export const defaultTheme: ThemeStyles = {
   '.cm-selectionBackground': {
     background: 'var(--dx-cmSelection)',
   },
+  '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
+    background: 'var(--dx-cmFocusedSelection)',
+  },
 
   /**
    * Search.
