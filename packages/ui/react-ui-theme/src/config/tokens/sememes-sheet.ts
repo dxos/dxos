@@ -49,8 +49,8 @@ export const sheetSememes = {
     dark: ['emerald', '500/.24'],
   },
   gridHighlight: {
-    light: ['amber', '200/.2'],
-    dark: ['amber', '200/.2'],
+    light: ['yellow', '200/.33'],
+    dark: ['yellow', '200/.33'],
   },
 } satisfies ColorSememes;
 
