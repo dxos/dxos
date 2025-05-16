@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 import { findAnnotation, type JsonProp } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { toEffectSchema, toJsonSchema } from './json-schema';
 import {
+  EchoObject,
   EntityKind,
   FieldLookupAnnotationId,
   getNormalizedEchoAnnotations,
@@ -17,14 +17,16 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   JsonSchemaType,
+  LabelAnnotationId,
   PropertyMeta,
   setSchemaProperty,
 } from '../ast';
 import { Email, FormatAnnotationId } from '../formats';
-import { TypedObject } from '../object';
+import { ObjectId, TypedObject } from '../object';
 import { createSchemaReference, getSchemaReference, Ref } from '../ref';
 import { StoredSchema } from '../schema';
 import { prepareAstForCompare, Testing } from '../testing';
+import { toEffectSchema, toJsonSchema } from './json-schema';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -284,6 +286,43 @@ describe('effect-to-json', () => {
       },
       propertyOrder: ['since', 'id'],
       required: ['id'],
+      additionalProperties: false,
+    });
+  });
+
+  test('label prop', () => {
+    const Organization = Schema.Struct({
+      id: ObjectId,
+      name: Schema.String,
+    })
+      .annotations({
+        [LabelAnnotationId]: 'name',
+      })
+      .pipe(EchoObject({ typename: 'example.com/type/Organization', version: '0.1.0' }));
+
+    const jsonSchema = toJsonSchema(Organization);
+    expect(jsonSchema).toEqual({
+      $id: 'dxn:type:example.com/type/Organization',
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      typename: 'example.com/type/Organization',
+      version: '0.1.0',
+      entityKind: 'object',
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
+          description: 'a Universally Unique Lexicographically Sortable Identifier',
+        },
+        name: {
+          type: 'string',
+        },
+      },
+      annotations: {
+        labelProp: 'name',
+      },
+      propertyOrder: ['id', 'name'],
+      required: ['id', 'name'],
       additionalProperties: false,
     });
   });
