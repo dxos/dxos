@@ -6,11 +6,11 @@ import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
 import {
-  type Filter,
+  type AnyLiveObject,
+  type DeprecatedFilter,
   type QueryResultEntry,
   type QuerySource,
   type QuerySourceProvider,
-  type AnyLiveObject,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -124,7 +124,7 @@ export class AgentQuerySource implements QuerySource {
     return this._results ?? [];
   }
 
-  update(filter: Filter): void {
+  update(filter: DeprecatedFilter): void {
     if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
       // Disabled by dataLocation filter.
       return;

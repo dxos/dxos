@@ -369,7 +369,7 @@ interface FilterAPI {
   /**
    * Negate the filter.
    */
-  not<F extends Filter.Any>(filter: F): Filter<F>;
+  not<F extends Filter.Any>(filter: F): Filter<Filter.Type<F>>;
 
   /**
    * Combine filters with a logical AND.
