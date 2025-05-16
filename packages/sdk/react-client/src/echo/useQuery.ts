@@ -7,50 +7,59 @@ import { useMemo, useSyncExternalStore } from 'react';
 import {
   type Echo,
   Filter,
-  type FilterSource,
-  type Query,
-  type QueryOptions,
+  type Live,
+  Query,
   type Space,
-  isSpace,
+  isSpace
 } from '@dxos/client/echo';
-import type { BaseObject } from '@dxos/echo-schema';
+
+// TODO(dmaretskyi): Queries are fully serializable, so we can remove `deps` argument.
+interface UseQueryFn {
+  <Q extends Query.Any>(spaceOrEcho: Space | Echo | undefined, query: Q, deps?: any[]): Live<Query.Type<Q>>;
+
+  /**
+   * @deprecated Pass `Query` instead.
+   */
+  <F extends Filter.Any>(spaceOrEcho: Space | Echo | undefined, filter: F, deps?: any[]): Live<Filter.Type<F>>;
+}
 
 /**
  * Create subscription.
  */
-// TODO(burdon): Support typed operator filters (e.g., Note.filter(note => ...)).
-export const useQuery = <T extends BaseObject>(
-  spaceOrEcho?: Space | Echo,
-  filter?: FilterSource<T>,
-  options?: QueryOptions,
+export const useQuery: UseQueryFn = (
+  spaceOrEcho: Space | Echo | undefined,
+  queryOrFilter: Query.Any | Filter.Any,
   deps?: any[],
-): T[] => {
+): unknown[] => {
+  const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+
   const { getObjects, subscribe } = useMemo(() => {
     let subscribed = false;
-    const query = isSpace(spaceOrEcho)
-      ? spaceOrEcho.db.query(filter, options)
-      : (spaceOrEcho?.query(filter, options) as Query<T> | undefined);
+    const queryResult =
+      spaceOrEcho === undefined
+        ? undefined
+        : isSpace(spaceOrEcho)
+          ? spaceOrEcho.db.query(query)
+          : spaceOrEcho.query(query);
 
     return {
-      getObjects: () => (subscribed && query ? query.objects : EMPTY_ARRAY),
+      getObjects: () => (subscribed && queryResult ? queryResult.objects : EMPTY_ARRAY),
       subscribe: (cb: () => void) => {
         subscribed = true;
-        const unsubscribe = query?.subscribe(cb) ?? noop;
+        const unsubscribe = queryResult?.subscribe(cb) ?? noop;
         return () => {
           unsubscribe?.();
           subscribed = false;
         };
       },
     };
-  }, [spaceOrEcho, ...filterToDepsArray(filter), ...(deps ?? [])]);
+  }, [spaceOrEcho, ...JSON.stringify(query.ast), ...(deps ?? [])]);
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes; make sure it is stable.
-  const objects = useSyncExternalStore<T[] | undefined>(subscribe, getObjects);
+  const objects = useSyncExternalStore<unknown[] | undefined>(subscribe, getObjects);
   return objects ?? [];
 };
-
-const filterToDepsArray = (filter?: FilterSource<any>) => [JSON.stringify(Filter.from(filter).toProto())];
 
 const noop = () => {};
 

@@ -31,6 +31,7 @@ import { type QueryResult } from './query-result';
  * `query` API function declaration.
  */
 export interface QueryFn {
+  // TODO(dmaretskyi): Remove query options.
   <Q extends Query.Any>(query: Q, options?: QueryOptions | undefined): QueryResult<Live<Query.Type<Q>>>;
 
   /**
