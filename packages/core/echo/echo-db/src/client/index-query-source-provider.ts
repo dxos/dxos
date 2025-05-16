@@ -127,23 +127,30 @@ export class IndexQuerySource implements QuerySource {
 
     stream.subscribe(
       async (response) => {
-        if (queryType === QueryReactivity.ONE_SHOT) {
-          if (currentCtx) {
-            return;
-          }
-          void stream.close().catch(() => {});
-        }
-
-        await currentCtx?.dispose();
-        const ctx = new Context();
-        currentCtx = ctx;
-
-        log('queryIndex raw results', {
-          queryId,
-          length: response.results?.length ?? 0,
-        });
-
         try {
+          if (filter.options?.spaceIds && filter.options?.spaceIds.length > 0) {
+            invariant(
+              response.results?.every((r) => filter.options.spaceIds?.includes(r.spaceId)),
+              'Result spaceId mismatch',
+            );
+          }
+
+          if (queryType === QueryReactivity.ONE_SHOT) {
+            if (currentCtx) {
+              return;
+            }
+            void stream.close().catch(() => {});
+          }
+
+          await currentCtx?.dispose();
+          const ctx = new Context();
+          currentCtx = ctx;
+
+          log('queryIndex raw results', {
+            queryId,
+            length: response.results?.length ?? 0,
+          });
+
           const processedResults = await Promise.all(
             (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
           );
