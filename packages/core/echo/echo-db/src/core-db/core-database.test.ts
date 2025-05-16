@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { Expando, Ref } from '@dxos/echo-schema';
+import { Expando, ObjectId, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -222,7 +222,9 @@ describe('CoreDatabase', () => {
       const obj = createExpando({});
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
-      const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: '1', title: 'test' });
+      const id1 = ObjectId.random();
+      const id2 = ObjectId.random();
+      const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: id1, title: 'test' });
       expect((await (db.query({ id: beforeUpdate.id }).first() as any)).title).to.eq(beforeUpdate.title);
 
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
@@ -231,7 +233,7 @@ describe('CoreDatabase', () => {
       });
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
-      const afterUpdate = addObjectToDoc(oldRootDocHandle, { id: '2', title: 'test2' });
+      const afterUpdate = addObjectToDoc(oldRootDocHandle, { id: id2, title: 'test2' });
       expect(db.getObjectById(afterUpdate.id)).to.be.undefined;
     });
 
