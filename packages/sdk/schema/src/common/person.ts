@@ -18,7 +18,7 @@ import { PostalAddress } from './postal-address';
  * https://schema.org/Person
  * Based on fields from Apple Contacts.
  */
-export const PersonSchema = Schema.Struct({
+const PersonSchema = Schema.Struct({
   fullName: Schema.optional(
     Schema.String.annotations({ [GeneratorAnnotationId]: 'person.fullName', title: 'Full Name' }),
   ),

@@ -51,14 +51,14 @@ const StorybookTreeItem = ({ data, prefix }: StorybookTreeItemProps) => {
   );
 };
 
-const StorybookTree = ({ data }: StorybookTreeProps) => {
+const DefaultStory = ({ data }: StorybookTreeProps) => {
   return <StorybookTreeItem data={data} />;
 };
 
 export default {
   title: 'ui/react-ui-core/Tree',
   component: Tree,
-  render: StorybookTree,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

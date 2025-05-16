@@ -12,13 +12,13 @@ import { type MessageValence } from '@dxos/react-ui-types';
 import { Message } from './Message';
 import { withTheme } from '../../testing';
 
-type StoryMessageProps = {
+type StoryProps = {
   valence: MessageValence;
   title: string;
   body: string;
 };
 
-const StoryMessage = ({ valence, title, body }: StoryMessageProps) => (
+const DefaultStory = ({ valence, title, body }: StoryProps) => (
   <Message.Root valence={valence}>
     <Message.Title>
       <Info className='inline w-5 h-5 mb-1' weight='duotone' /> {title}
@@ -30,7 +30,7 @@ const StoryMessage = ({ valence, title, body }: StoryMessageProps) => (
 export default {
   title: 'ui/react-ui-core/Message',
   component: Message,
-  render: StoryMessage,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

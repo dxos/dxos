@@ -26,7 +26,7 @@ export const OrganizationStatusOptions = [
 /**
  * https://schema.org/Organization
  */
-export const OrganizationSchema = Schema.Struct({
+const OrganizationSchema = Schema.Struct({
   id: Type.ObjectId,
   name: Schema.optional(Schema.String.annotations({ title: 'Name', [GeneratorAnnotationId]: 'company.name' })),
   description: Schema.optional(Schema.String.annotations({ title: 'Description' })),

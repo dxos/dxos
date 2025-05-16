@@ -5,15 +5,4 @@
 /**
  * Echos the request data.
  */
-export default async ({
-  event: {
-    data: { request },
-  },
-}: any) => {
-  const data = await request.json();
-  return new Response(JSON.stringify(data ?? {}), {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-};
+export default async ({ data }: any) => data;

@@ -87,6 +87,7 @@ export default defineConfig((env) => ({
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
+      'node:util': '@dxos/node-std/util',
     },
   },
   worker: {
@@ -214,26 +215,26 @@ export default defineConfig((env) => ({
         theme_color: '#003E70',
         icons: [
           {
-            "src": "pwa-64x64.png",
-            "sizes": "64x64",
-            "type": "image/png"
+            src: 'pwa-64x64.png',
+            sizes: '64x64',
+            type: 'image/png',
           },
           {
-            "src": "pwa-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
           },
           {
-            "src": "pwa-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png"
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
           },
           {
-            "src": "maskable-icon-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-          }
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
         ],
       },
     }),
@@ -329,26 +330,28 @@ function importMapPlugin(options: { modules: string[] }) {
       },
 
       generateBundle() {
-        imports = Object.fromEntries(options.modules.map(m => [m, `/${this.getFileName(chunkRefIds[m])}`]));
-      }
+        imports = Object.fromEntries(options.modules.map((m) => [m, `/${this.getFileName(chunkRefIds[m])}`]));
+      },
     },
     {
       name: 'import-map:transform-index-html',
       enforce: 'post',
       transformIndexHtml(html: string) {
-        const tags = [{
-          tag: 'script',
-          attrs: {
-            type: 'importmap',
+        const tags = [
+          {
+            tag: 'script',
+            attrs: {
+              type: 'importmap',
+            },
+            children: JSON.stringify({ imports }, null, 2),
           },
-          children: JSON.stringify({ imports }, null, 2),
-        }];
+        ];
 
         return {
           html,
           tags,
-        }
-      }
-    }
+        };
+      },
+    },
   ] satisfies Plugin[];
 }

@@ -117,6 +117,7 @@ export type UploadFunctionRequest = {
   name?: string;
   script: string;
   version: string;
+  ownerPublicKey: string;
 };
 
 export type UploadFunctionResponseBody = {

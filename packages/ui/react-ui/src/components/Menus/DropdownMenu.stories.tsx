@@ -10,7 +10,7 @@ import { DropdownMenu } from './DropdownMenu';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
-const StorybookDropdownMenu = () => {
+const DefaultStory = () => {
   return (
     <DropdownMenu.Root defaultOpen>
       <DropdownMenu.Trigger asChild>
@@ -94,7 +94,7 @@ const StorybookDropdownMenu = () => {
 export default {
   title: 'ui/react-ui-core/DropdownMenu',
   component: DropdownMenu,
-  render: StorybookDropdownMenu,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

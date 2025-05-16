@@ -56,7 +56,7 @@ export const printTriggers = (functions: FunctionTrigger[], options: TableOption
         id: { primary: true, truncate: true },
         enabled: { get: (row) => (row.enabled ? `${chalk.green('✔')}` : '') },
         function: {},
-        spec: { get: (row) => row.spec.type },
+        spec: { get: (row) => row.spec.kind },
       },
       options,
     ),

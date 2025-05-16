@@ -23,6 +23,10 @@ export const codeMirrorSememes = {
     dark: ['neutral', 100],
   },
   cmSelection: {
+    light: ['primary', '400/.5'],
+    dark: ['primary', '600/.5'],
+  },
+  cmFocusedSelection: {
     light: ['primary', 400],
     dark: ['primary', 600],
   },

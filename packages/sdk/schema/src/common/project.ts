@@ -12,7 +12,7 @@ import { IconAnnotationId } from '../annotations';
 /**
  * Project schema.
  */
-export const ProjectSchema = Schema.Struct({
+const ProjectSchema = Schema.Struct({
   id: Type.ObjectId,
   name: Schema.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
   image: Schema.optional(Format.URL),
