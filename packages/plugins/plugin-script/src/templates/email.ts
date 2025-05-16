@@ -6,15 +6,9 @@
  * Appends a message to the end of a Document configured through a trigger.
  * Trigger must have a targetDocumentId field set in Meta.
  */
-export default async ({
-  event: {
-    data: { request },
-  },
-  context: { space },
-}: any) => {
-  const { data, trigger } = (await request.json()) as RequestPayload;
+export default async ({ data: { bodyText }, context: { space } }: any) => {
+  const { email, targetDocumentId: documentId } = JSON.parse(bodyText) as RequestPayload;
 
-  const documentId = trigger.meta.targetDocumentId;
   const document = await space.db.query({ id: documentId }, { format: 'plain' }).first();
 
   const contentId = document.content['/'].split(':')[3];
@@ -23,11 +17,11 @@ export default async ({
     documentContent.content,
     '',
     '---',
-    `**From:** ${data.from}`,
-    `**Subject:** ${data.subject}`,
-    `**Date:** ${data.created}`,
+    `**From:** ${email.from}`,
+    `**Subject:** ${email.subject}`,
+    `**Date:** ${email.created}`,
     '',
-    data.body,
+    email.body,
   ].join('\n');
 
   await space.db.update({ id: contentId }, { content: modifiedContent });
@@ -36,6 +30,6 @@ export default async ({
 };
 
 type RequestPayload = {
-  data: { from: string; subject: string; created: string; body: string };
-  trigger: { meta: { targetDocumentId: string } };
+  email: { from: string; subject: string; created: string; body: string };
+  targetDocumentId: string;
 };
