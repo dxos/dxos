@@ -6,11 +6,11 @@ import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
 import {
-  type Filter,
-  type QueryResult,
+  type AnyLiveObject,
+  type DeprecatedFilter,
+  type QueryResultEntry,
   type QuerySource,
   type QuerySourceProvider,
-  type AnyLiveObject,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -97,7 +97,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 }
 
 export class AgentQuerySource implements QuerySource {
-  private _results?: QueryResult[];
+  private _results?: QueryResultEntry[];
   private _cancelPreviousRequest?: () => void = undefined;
 
   public readonly changed = new Event<void>();
@@ -116,15 +116,15 @@ export class AgentQuerySource implements QuerySource {
     // No-op.
   }
 
-  getResults(): QueryResult[] {
+  getResults(): QueryResultEntry[] {
     return this._results ?? [];
   }
 
-  async run(): Promise<QueryResult[]> {
+  async run(): Promise<QueryResultEntry[]> {
     return this._results ?? [];
   }
 
-  update(filter: Filter): void {
+  update(filter: DeprecatedFilter): void {
     if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
       // Disabled by dataLocation filter.
       return;

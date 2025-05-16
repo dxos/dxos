@@ -5,11 +5,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import type { State as AmState } from '@dxos/automerge/automerge';
-import { checkoutVersion, Filter, getEditHistory, type AnyLiveObject } from '@dxos/echo-db';
+import { checkoutVersion, Filter, getEditHistory, Query, type AnyLiveObject } from '@dxos/echo-db';
 import { FormatEnum, getDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { getType, isDeleted } from '@dxos/live-object';
-import { QueryOptions, useQuery, type Space } from '@dxos/react-client/echo';
+import { useQuery, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
@@ -54,7 +54,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
   // TODO(burdon): Sort by type?
-  const items = useQuery(space, Filter.all(), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
+  const items = useQuery(space, Query.select(Filter.everything()).options({ deleted: 'include' }));
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<AnyLiveObject<any>>();
   const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);

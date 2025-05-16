@@ -26,7 +26,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const layout = useLayout();
 
   const client = useClient();
-  const objects = useQuery(client.spaces, Filter.all());
+  const objects = useQuery(client.spaces, Filter.everything());
 
   useEffect(() => {
     if (!id) {

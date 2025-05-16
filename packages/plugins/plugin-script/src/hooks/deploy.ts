@@ -7,7 +7,7 @@ import { useEffect, useMemo } from 'react';
 import { FunctionType, type ScriptType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
-import { Filter, getMeta, getSpace, type Space, useQuery } from '@dxos/react-client/echo';
+import { getMeta, getSpace, Query, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { errorMessageColors } from '@dxos/react-ui-theme';
@@ -118,7 +118,7 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
 
 export const useDeployDeps = ({ script }: { script: ScriptType }) => {
   const space = getSpace(script);
-  const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
+  const [fn] = useQuery(space, Query.type(FunctionType, { source: Ref.make(script) }));
   const client = useClient();
   const existingFunctionUrl = useMemo(() => fn && getUserFunctionUrlInMetadata(getMeta(fn)), [fn]);
   return { space, fn, client, existingFunctionUrl };

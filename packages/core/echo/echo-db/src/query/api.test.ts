@@ -3,14 +3,23 @@
 //
 
 import { Schema } from 'effect';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { create } from '@dxos/echo-schema';
+import { create, EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './api';
 import * as QueryAST from './ast';
-import { Type, Relation } from '..';
+
+// TODO(dmaretskyi): Temp until API is stable.
+const Type = {
+  def: EchoObject,
+};
+
+const Relation = {
+  def: EchoRelation,
+};
 
 //
 // Example schema
@@ -36,7 +45,7 @@ interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 const Task = Schema.Struct({
   title: Schema.String,
   createdAt: Schema.String,
-  assignee: Type.Ref(Person),
+  assignee: Ref(Person),
 }).pipe(Type.def({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
 interface Task extends Schema.Schema.Type<typeof Task> {}
 
@@ -49,7 +58,7 @@ describe('query api', () => {
     // Query<Person>
     const getAllPeople = Query.type(Person);
 
-    log.info('query', { ast: getAllPeople.ast });
+    log('query', { ast: getAllPeople.ast });
     Schema.validateSync(QueryAST.Query)(getAllPeople.ast);
   });
 
@@ -57,7 +66,7 @@ describe('query api', () => {
     // Query<Person>
     const getAllPeopleNamedFred = Query.select(Filter.type(Person, { name: 'Fred' }));
 
-    log.info('query', { ast: getAllPeopleNamedFred.ast });
+    log('query', { ast: getAllPeopleNamedFred.ast });
     Schema.validateSync(QueryAST.Query)(getAllPeopleNamedFred.ast);
   });
 
@@ -68,7 +77,7 @@ describe('query api', () => {
       .sourceOf(WorksFor, { since: Filter.gt('2020') })
       .target();
 
-    log.info('query', { ast: getAllOrgsFredWorkedForSince2020.ast });
+    log('query', { ast: getAllOrgsFredWorkedForSince2020.ast });
     Schema.validateSync(QueryAST.Query)(getAllOrgsFredWorkedForSince2020.ast);
   });
 
@@ -77,7 +86,7 @@ describe('query api', () => {
     const fred = create(Person, { name: 'Fred' });
     const getAllTasksForFred = Query.select(Filter.type(Person, { id: fred.id })).referencedBy(Task, 'assignee');
 
-    log.info('query', { ast: getAllTasksForFred.ast });
+    log('query', { ast: getAllTasksForFred.ast });
     Schema.validateSync(QueryAST.Query)(getAllTasksForFred.ast);
   });
 
@@ -88,7 +97,7 @@ describe('query api', () => {
       .source()
       .referencedBy(Task, 'assignee');
 
-    log.info('query', { ast: allTasksForEmployeesOfCyberdyne.ast });
+    log('query', { ast: allTasksForEmployeesOfCyberdyne.ast });
     Schema.validateSync(QueryAST.Query)(allTasksForEmployeesOfCyberdyne.ast);
   });
 
@@ -96,7 +105,7 @@ describe('query api', () => {
     // Query<Person | Org>
     const allPeopleOrOrgs = Query.all(Query.select(Filter.type(Person)), Query.select(Filter.type(Org)));
 
-    log.info('query', { ast: allPeopleOrOrgs.ast });
+    log('query', { ast: allPeopleOrOrgs.ast });
     Schema.validateSync(QueryAST.Query)(allPeopleOrOrgs.ast);
   });
 
@@ -106,7 +115,7 @@ describe('query api', () => {
       Filter.type(Task, { createdAt: Filter.gt('2020') }),
     ).reference('assignee');
 
-    log.info('query', { ast: assigneesOfAllTasksCreatedAfter2020.ast });
+    log('query', { ast: assigneesOfAllTasksCreatedAfter2020.ast });
     Schema.validateSync(QueryAST.Query)(assigneesOfAllTasksCreatedAfter2020.ast);
   });
 
@@ -114,8 +123,26 @@ describe('query api', () => {
     // Query<Person>
     const contactFullTextSearch = Query.select(Filter.text(Person, 'Bill'));
 
-    log.info('query', { ast: contactFullTextSearch.ast });
+    log('query', { ast: contactFullTextSearch.ast });
     Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
+  });
+
+  test('filter by ref', () => {
+    const fred = create(Person, { name: 'Fred' });
+    const tasksByFred = Filter.type(Task, { assignee: Ref.make(fred) });
+    expect(tasksByFred.ast).toEqual({
+      props: {
+        assignee: {
+          operator: 'eq',
+          type: 'compare',
+          value: {
+            '/': DXN.fromLocalObjectId(fred.id).toString(),
+          },
+        },
+      },
+      type: 'object',
+      typename: 'dxn:type:dxos.org/type/Task:0.1.0',
+    });
   });
 
   test.skip('chain', () => {
@@ -141,6 +168,6 @@ describe('query api', () => {
       .select({ age: Filter.between(20, 40) })
       .select(Filter.and(Filter.type(Person), Filter.type(Person, { name: Filter.in('bob', 'bill') })));
 
-    log.info('stuff', { fOr, fAnd, q, y });
+    log('stuff', { fOr, fAnd, q, y });
   });
 });

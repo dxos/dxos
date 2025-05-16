@@ -128,7 +128,7 @@ export const WithEchoSchema: StoryObj = {
     const client = useClient();
     const { space } = useClientProvider();
     const schema = useSchema(client, space, Testing.Contact.typename);
-    const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+    const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {
       return <div>Loading schema...</div>;
     }

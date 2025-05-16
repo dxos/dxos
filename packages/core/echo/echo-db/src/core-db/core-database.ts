@@ -50,7 +50,8 @@ import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
+import { DeprecatedFilter, normalizeQuery, QueryResult, type QueryFn } from '../query';
+import type { PropertyFilter } from '../query/deprecated/filter';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -397,10 +398,10 @@ export class CoreDatabase {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(filter?: FilterSource, options?: QueryOptions) {
-    return new Query(
+  private _query(filter?: unknown, options?: QueryOptions) {
+    return new QueryResult(
       this._createQueryContext(),
-      Filter.from(filter, optionsToProto({ ...options, spaceIds: [this.spaceId] })),
+      normalizeQuery(filter, options, { defaultSpaceId: this.spaceId }),
     );
   }
 
@@ -415,7 +416,7 @@ export class CoreDatabase {
    * Update objects.
    */
   async update(filter: PropertyFilter, operation: UpdateOperation) {
-    const filterObj = Filter.fromFilterJson(filter);
+    const filterObj = DeprecatedFilter.fromFilterJson(filter);
     if (!filterObj.isObjectIdFilter() && filterObj.objectIds?.length !== 1) {
       throw new Error('Need to specify exactly one object id in the filter');
     }

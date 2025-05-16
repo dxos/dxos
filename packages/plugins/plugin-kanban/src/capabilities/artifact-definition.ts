@@ -87,7 +87,7 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.schema(KanbanType)).run();
+          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
 
           const boardInfo = await Promise.all(
             boards.map(async (board: KanbanType) => {
@@ -110,7 +110,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.schema(KanbanType)).run();
+          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
           const board = boards.find((board: KanbanType) => fullyQualifiedId(board) === id);
           invariant(isInstanceOf(KanbanType, board));
 

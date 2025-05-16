@@ -34,7 +34,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
   const client = useClient();
   const space = getSpace(table);
   const schema = useSchema(client, space, table.view?.target?.query.typename);
-  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const handleThreadCreate = useCallback(() => {

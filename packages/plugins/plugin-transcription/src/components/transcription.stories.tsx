@@ -99,9 +99,9 @@ const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
         const { objects } = await space.db
           .query(
             Filter.or(
-              Filter.schema(DataType.Person),
-              Filter.schema(DataType.Organization),
-              Filter.schema(Testing.DocumentType),
+              Filter.type(DataType.Person),
+              Filter.type(DataType.Organization),
+              Filter.type(Testing.DocumentType),
             ),
           )
           .run();

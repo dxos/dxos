@@ -25,7 +25,7 @@ export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, 
   const allSpaces = false;
 
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
-  const objects = useQuery(allSpaces ? client.spaces : space, Filter.all());
+  const objects = useQuery(allSpaces ? client.spaces : space, Filter.everything());
   const results = useGlobalSearchResults(objects);
 
   const {

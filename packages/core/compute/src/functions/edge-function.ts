@@ -36,7 +36,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
 
         const {
           objects: [fn],
-        } = await space.db.query(Filter.schema(FunctionType, { binding })).run();
+        } = await space.db.query(Filter.type(FunctionType, { binding })).run();
         if (!fn) {
           log.info('Function not found', { binding });
           return new CellError(ErrorType.REF, 'Function not found');

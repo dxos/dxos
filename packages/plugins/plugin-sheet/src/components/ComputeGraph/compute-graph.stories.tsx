@@ -51,7 +51,7 @@ const Story = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleTest = async () => {
     if (space && graph) {
-      const { objects } = await space.db.query(Filter.schema(FunctionType)).run();
+      const { objects } = await space.db.query(Filter.type(FunctionType)).run();
       const mapped = graph.mapFunctionBindingToId(text);
       const unmapped = graph.mapFunctionBindingFromId(mapped);
       const internal = graph.mapFormulaToNative(text);

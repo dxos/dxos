@@ -40,7 +40,7 @@ export default () => {
         schema: Schema.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const { objects } = await extensions.space.db.query(Filter.schema(MapType)).run();
+          const { objects } = await extensions.space.db.query(Filter.type(MapType)).run();
           invariant(objects.length > 0, 'No maps found');
           return ToolResult.Success(objects);
         },

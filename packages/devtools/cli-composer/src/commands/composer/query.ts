@@ -26,11 +26,11 @@ export default class Query extends BaseCommand<typeof Query> {
   async run(): Promise<any> {
     return await this.execWithSpace(
       async ({ space }) => {
-        let filter: Filter | undefined;
+        let filter: Filter.Any | undefined;
         let printer: ObjectPrinter<any> | undefined;
         switch (this.flags.type) {
           case DataType.Message.typename: {
-            filter = Filter.schema(DataType.Message);
+            filter = Filter.type(DataType.Message);
             printer = (data: DataType.Message) => {
               return stringify({ from: data.sender.email, content: data.blocks.length });
             };

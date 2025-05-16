@@ -202,7 +202,7 @@ describe('Database', () => {
     await db.flush();
     expect(getObjectCore(task).database).to.exist;
 
-    const { objects: tasks } = await db.query(Filter.schema(Testing.Task)).run();
+    const { objects: tasks } = await db.query(Filter.type(Testing.Task)).run();
     expect(tasks).to.have.length(1);
     expect(tasks[0].id).to.eq(task.id);
   });
@@ -216,7 +216,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = await db.query(Filter.schema(Testing.Container)).run();
+      const { objects } = await db.query(Filter.type(Testing.Container)).run();
       const [container] = objects;
       expect(container.records).to.have.length(1);
       expect(container.records![0].type).to.eq(Testing.RecordType.WORK);
@@ -235,7 +235,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = await db.query(Filter.schema(Testing.Container)).run();
+      const { objects } = await db.query(Filter.type(Testing.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       expect(container.objects![0].target!.foo).to.equal(100);
@@ -255,7 +255,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = await db.query(Filter.schema(Testing.Container)).run();
+      const { objects } = await db.query(Filter.type(Testing.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       expect(getTypename(container.objects![0].target!)).to.equal(Testing.Task.typename);
@@ -293,19 +293,6 @@ describe('Database', () => {
     expect(task2.id).to.equal(task1.id);
 
     expect(() => db1.add(task1)).to.throw;
-  });
-
-  test('operator-based filters', async () => {
-    const { db } = await createDbWithTypes();
-
-    db.add(live(Testing.Task, { title: 'foo 1' }));
-    db.add(live(Testing.Task, { title: 'foo 2' }));
-    db.add(live(Testing.Task, { title: 'bar 3' }));
-
-    expect(
-      (await db.query(Filter.schema(Testing.Task, (task: Testing.Task) => task.title?.startsWith('foo'))).run())
-        .objects,
-    ).to.have.length(2);
   });
 
   test('Database works with old PublicKey IDs and new Ulid IDs', async () => {
@@ -400,7 +387,7 @@ describe('Database', () => {
       const { db } = await addToDatabase(root);
 
       expect(root.records).to.have.length(1);
-      const queriedContainer = (await db.query(Filter.schema(Testing.Container)).run()).objects[0]!;
+      const queriedContainer = (await db.query(Filter.type(Testing.Container)).run()).objects[0]!;
       expect(queriedContainer.records!.length).to.equal(1);
       expect(queriedContainer.records![0]!.contacts![0]!.target!.name).to.equal('tester');
     });

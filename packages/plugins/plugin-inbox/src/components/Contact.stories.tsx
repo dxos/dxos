@@ -95,7 +95,7 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
 export const Contacts = {
   render: () => {
     const space = useSpace();
-    const contacts = useQuery(space, Filter.schema(DataType.Person));
+    const contacts = useQuery(space, Filter.type(DataType.Person));
 
     return (
       <List>
@@ -110,7 +110,7 @@ export const Contacts = {
 export const Organizations = {
   render: () => {
     const space = useSpace();
-    const organizations = useQuery(space, Filter.schema(DataType.Organization));
+    const organizations = useQuery(space, Filter.type(DataType.Organization));
 
     return (
       <List>

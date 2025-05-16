@@ -31,9 +31,9 @@ export type TriggerEditorProps = {
 export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEditorProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
 
-  const functions = useQuery(space, Filter.schema(FunctionType));
-  const workflows = useQuery(space, Filter.schema(ComputeGraph));
-  const scripts = useQuery(space, Filter.schema(ScriptType));
+  const functions = useQuery(space, Filter.type(FunctionType));
+  const workflows = useQuery(space, Filter.type(ComputeGraph));
+  const scripts = useQuery(space, Filter.type(ScriptType));
 
   const handleSave = (values: FunctionTriggerType) => {
     onSave?.(values);

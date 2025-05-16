@@ -32,7 +32,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [adding, setAdding] = useState(false);
-  const tokens = useQuery(space, Filter.schema(DataType.AccessToken));
+  const tokens = useQuery(space, Filter.type(DataType.AccessToken));
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);

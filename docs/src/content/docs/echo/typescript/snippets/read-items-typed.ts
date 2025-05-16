@@ -17,4 +17,4 @@ const spaces = client.spaces.get();
 const space = spaces[0];
 
 // Get items that match a filter: type inferred from Task.filter().
-const _tasks = await space.db.query(Filter.schema(Task)).run();
+const _tasks = await space.db.query(Filter.type(Task)).run();

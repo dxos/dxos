@@ -42,7 +42,7 @@ const DefaultStory = () => {
     }
   }, [space]);
 
-  const views = useQuery(space, Filter.schema(ViewType));
+  const views = useQuery(space, Filter.type(ViewType));
   const currentTypename = useMemo(() => view?.query?.typename, [view]);
   const updateViewTypename = useCallback(
     (newTypename: string) => {

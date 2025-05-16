@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { DXN } from '@dxos/echo-schema';
+import { DXN, ForeignKeySchema, ObjectId } from '@dxos/echo-schema';
 
 const TypenameSpecifier = Schema.Union(DXN, Schema.Null).annotations({
   description: 'DXN or null. Null means any type will match',
@@ -12,16 +12,33 @@ const TypenameSpecifier = Schema.Union(DXN, Schema.Null).annotations({
 
 // NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
 
+/**
+ * Filter by object type and properties.
+ *
+ * Clauses are combined using logical AND.
+ */
 const FilterObject_ = Schema.Struct({
   type: Schema.Literal('object'),
+
   typename: TypenameSpecifier,
+
+  id: Schema.optional(Schema.Array(ObjectId)),
+
+  /**
+   * Filter by property.
+   * Must not include object ID.
+   */
   props: Schema.Record({
     key: Schema.String.annotations({ description: 'Property name' }),
     value: Schema.suspend(() => Filter),
   }),
+  /**
+   * Objects that have any of the given foreign keys.
+   */
+  foreignKeys: Schema.optional(Schema.Array(ForeignKeySchema)),
 });
-interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
-const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
+export interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
+export const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
 
 const FilterCompare_ = Schema.Struct({
   type: Schema.Literal('compare'),
@@ -165,6 +182,17 @@ const QueryUnionClause_ = Schema.Struct({
 interface QueryUnionClause extends Schema.Schema.Type<typeof QueryUnionClause_> {}
 const QueryUnionClause: Schema.Schema<QueryUnionClause> = QueryUnionClause_;
 
+/**
+ * Add options to a query.
+ */
+const QueryOptionsClause_ = Schema.Struct({
+  type: Schema.Literal('options'),
+  query: Schema.suspend(() => Query),
+  options: Schema.suspend(() => QueryOptions),
+});
+interface QueryOptionsClause extends Schema.Schema.Type<typeof QueryOptionsClause_> {}
+const QueryOptionsClause: Schema.Schema<QueryOptionsClause> = QueryOptionsClause_;
+
 const Query_ = Schema.Union(
   QuerySelectClause,
   QueryFilterClause,
@@ -173,7 +201,14 @@ const Query_ = Schema.Union(
   QueryRelationClause,
   QueryRelationTraversalClause,
   QueryUnionClause,
+  QueryOptionsClause,
 );
 
 export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;
+
+export const QueryOptions = Schema.Struct({
+  spaceIds: Schema.optional(Schema.Array(Schema.String)),
+  deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
+});
+export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}

@@ -19,7 +19,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useMemo(() => getSpace(object), [object]);
-  const triggers = useQuery(space, Filter.schema(FunctionTrigger));
+  const triggers = useQuery(space, Filter.type(FunctionTrigger));
 
   const handleConfigureSync = useCallback(() => {
     invariant(space);

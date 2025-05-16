@@ -73,12 +73,12 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     // Preloading schema is required for ECHO to operate.
     // TODO(dmaretskyi): Does this change with strong object deps.
     if (this._preloadSchemaOnOpen) {
-      const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
+      const { objects } = await this._db.query(Filter.type(StoredSchema)).run();
       objects.forEach((object) => this._registerSchema(object));
     }
 
     if (this._reactiveQuery) {
-      const unsubscribe = this._db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
+      const unsubscribe = this._db.query(Filter.type(StoredSchema)).subscribe(({ objects }) => {
         const currentObjectIds = new Set(objects.map((o) => o.id));
         const newObjects = objects.filter((object) => !this._schemaById.has(object.id));
         const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
@@ -149,7 +149,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       changes,
       getResultsSync() {
         const objects = self._db
-          .query(Filter.schema(StoredSchema))
+          .query(Filter.type(StoredSchema))
           .runSync()
           .map((result) => result.object)
           .filter((object) => object != null);
@@ -161,7 +161,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
         return results;
       },
       async getResults() {
-        const { objects } = await self._db.query(Filter.schema(StoredSchema)).run();
+        const { objects } = await self._db.query(Filter.type(StoredSchema)).run();
 
         return filterOrderResults(
           objects.map((stored) => {

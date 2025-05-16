@@ -14,9 +14,9 @@ import { range } from '@dxos/util';
 
 import { Filter } from './filter';
 import { filterMatch } from './filter-match';
-import { ObjectCore } from '../core-db';
-import { getObjectCore } from '../echo-handler';
-import { EchoTestBuilder } from '../testing';
+import { ObjectCore } from '../../core-db';
+import { getObjectCore } from '../../echo-handler';
+import { EchoTestBuilder } from '../../testing';
 
 describe('Filter', () => {
   let builder: EchoTestBuilder;

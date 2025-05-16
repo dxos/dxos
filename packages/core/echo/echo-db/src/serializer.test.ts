@@ -186,7 +186,7 @@ describe('Serializer', () => {
 
         const {
           objects: [contact],
-        } = await db.query(Filter.schema(Testing.Contact)).run();
+        } = await db.query(Filter.type(Testing.Contact)).run();
         expect(contact.name).to.eq(name);
         expect(contact instanceof Testing.Contact).to.be.true;
         expect(getSchema(contact)).to.eq(Testing.Contact);

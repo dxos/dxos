@@ -39,7 +39,7 @@ export const Default = {};
 
 const WithCompanionStory = () => {
   const space = useSpace();
-  const [mailbox] = useQuery(space, Filter.schema(MailboxType));
+  const [mailbox] = useQuery(space, Filter.type(MailboxType));
   const state = useCapability(InboxCapabilities.MailboxState);
 
   const mailboxData = useMemo(() => ({ subject: mailbox }), [mailbox]);

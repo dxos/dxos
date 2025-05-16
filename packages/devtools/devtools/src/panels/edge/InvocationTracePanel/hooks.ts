@@ -15,8 +15,8 @@ import { getUuidFromDxn } from './utils';
  * Maps invocation target identifiers to readable script names.
  */
 export const useScriptNameResolver = ({ space }: { space?: Space }) => {
-  const scripts = useQuery(space, Filter.schema(ScriptType));
-  const functions = useQuery(space, Filter.schema(FunctionType));
+  const scripts = useQuery(space, Filter.type(ScriptType));
+  const functions = useQuery(space, Filter.type(FunctionType));
 
   return useCallback(
     (invocationTargetId: DXN | undefined) => {
@@ -42,7 +42,7 @@ export const useScriptNameResolver = ({ space }: { space?: Space }) => {
 
 export const useInvocationTargetsForScript = (script: ScriptType | undefined) => {
   const space = getSpace(script);
-  const functions = useQuery(space, Filter.schema(FunctionType));
+  const functions = useQuery(space, Filter.type(FunctionType));
 
   return useMemo(() => {
     if (!script) {

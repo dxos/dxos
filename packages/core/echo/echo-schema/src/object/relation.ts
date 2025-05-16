@@ -28,3 +28,7 @@ export type RelationSourceTargetRefs<TSource = any, TTarget = any> = {
    */
   [RelationTargetId]: TTarget;
 };
+
+export type RelationSource<R> = R extends RelationSourceTargetRefs<infer TSource, infer _TTarget> ? TSource : never;
+
+export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _TSource, infer TTarget> ? TTarget : never;

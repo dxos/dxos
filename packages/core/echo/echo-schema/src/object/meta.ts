@@ -21,12 +21,14 @@ const _ForeignKeySchema = Schema.Struct({
 
 export type ForeignKey = Schema.Schema.Type<typeof _ForeignKeySchema>;
 
+// TODO(dmaretskyi): Rename to ForeignKey
 export const ForeignKeySchema: Schema.Schema<ForeignKey> = _ForeignKeySchema;
 
 //
 // ObjectMeta
 //
 
+// TODO(dmaretskyi): Rename to ObjectMeta
 export const ObjectMetaSchema = Schema.Struct({
   keys: Schema.mutable(Schema.Array(ForeignKeySchema)),
 });

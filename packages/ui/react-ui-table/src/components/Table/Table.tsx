@@ -307,7 +307,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           invariant(space);
           const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
           if (schema) {
-            const { objects } = await space.db.query(Filter.schema(schema)).run();
+            const { objects } = await space.db.query(Filter.type(schema)).run();
             const options = objects
               .map((obj) => {
                 const value = getValue(obj, field.referencePath!);

@@ -19,5 +19,5 @@ async () => {
   const space = spaces[0];
 
   // get items that match a filter: type inferred from Task.filter()
-  const tasks = await space.db.query(Filter.schema(TaskType)).run();
+  const tasks = await space.db.query(Filter.type(TaskType)).run();
 };

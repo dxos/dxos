@@ -66,7 +66,7 @@ export default () => {
         schema: Schema.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const { objects: games } = await extensions.space.db.query(Filter.schema(ChessType)).run();
+          const { objects: games } = await extensions.space.db.query(Filter.type(ChessType)).run();
           invariant(games.length > 0, 'No chess games found');
           return ToolResult.Success(games);
         },

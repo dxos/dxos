@@ -79,7 +79,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   ) {
     super(schemaMap, generators, async (type: T) => {
       const schema = this.getSchema(type);
-      return (schema && (await this._space.db.query(Filter.schema(schema)).run()).objects) ?? [];
+      return (schema && (await this._space.db.query(Filter.type(schema)).run()).objects) ?? [];
     });
   }
 

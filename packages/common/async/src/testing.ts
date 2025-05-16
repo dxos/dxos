@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { asyncTimeout, sleep } from './timeout';
+import { sleep } from './timeout';
 import { Trigger } from './trigger';
 
 /**
@@ -19,11 +19,13 @@ export const waitForCondition = <FunctionType extends (...args: any) => any>({
   timeout = 0,
   interval = 10,
   error,
+  breakOnError = false,
 }: {
   condition: FunctionType;
   timeout?: number;
   interval?: number;
   error?: Error;
+  breakOnError?: boolean;
 }) => {
   const stopTime = timeout ? Date.now() + timeout : 0;
   const trigger = new Trigger<ReturnType<FunctionType>>();
@@ -37,8 +39,10 @@ export const waitForCondition = <FunctionType extends (...args: any) => any>({
           trigger.wake(value);
           break;
         }
-      } catch (err) {
-        // Pass...
+      } catch (err: any) {
+        if (breakOnError === true) {
+          trigger.throw(err);
+        }
       }
 
       // eslint-disable-next-line no-await-in-loop
@@ -48,5 +52,5 @@ export const waitForCondition = <FunctionType extends (...args: any) => any>({
 
   setTimeout(waiter, 0);
 
-  return timeout ? asyncTimeout(trigger.wait(), timeout, error ?? new Error('Timeout')) : trigger.wait();
+  return trigger.wait({ timeout });
 };

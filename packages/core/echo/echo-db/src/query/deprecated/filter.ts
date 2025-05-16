@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+import { raise } from '@dxos/debug';
 import { type EncodedReference, type ForeignKey, isEncodedReference } from '@dxos/echo-protocol';
 import { type BaseObject, requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -15,9 +16,11 @@ import {
   type QueryOptions_DataLocation,
   type QueryOptions_ShowDeletedOption,
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
-import { type Filter as FilterProto, type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { mapValues } from '@dxos/util';
 
-import { getReferenceWithSpaceKey } from '../echo-handler';
+import type { QueryAST } from '..';
+import { getReferenceWithSpaceKey } from '../../echo-handler';
 
 // TODO(dmaretskyi): Rename `hasInstanceOf`.
 // TODO(dmaretskyi): Remove from echo api
@@ -259,6 +262,45 @@ export class Filter<T extends BaseObject = any> {
     );
   }
 
+  static fromAST(ast: QueryAST.Filter): Filter {
+    switch (ast.type) {
+      case 'object': {
+        const properties = mapValues(ast.props, (prop) =>
+          prop.type === 'compare' && prop.operator === 'eq' ? prop.value : raise(new Error('Not supported')),
+        );
+        return new Filter({
+          type: ast.typename ? [DXN.parse(ast.typename)] : undefined,
+          properties: Object.keys(properties).length > 0 ? properties : undefined,
+          metaKeys: ast.foreignKeys ? [...ast.foreignKeys] : undefined,
+          objectIds: ast.id ? [...ast.id] : undefined,
+        });
+      }
+      case 'compare':
+        throw new Error('Not implemented');
+
+      case 'in':
+        throw new Error('Not implemented');
+
+      case 'range':
+        throw new Error('Not implemented');
+
+      case 'text-search':
+        throw new Error('Not implemented');
+
+      case 'not':
+        return Filter.not(Filter.fromAST(ast.filter));
+
+      case 'and':
+        return Filter.and(...ast.filters.map(Filter.fromAST));
+
+      case 'or':
+        return Filter.or(...ast.filters.map(Filter.fromAST));
+
+      default:
+        throw new Error('Not implemented');
+    }
+  }
+
   // TODO(burdon): Make plain immutable object (unless generics are important).
   // TODO(burdon): Split into protobuf serializable and non-serializable (operator) predicates.
 
@@ -347,4 +389,31 @@ const sanitizeIdArray = (ids: string | EncodedReference | (string | EncodedRefer
     invariant(dxn.parts[0] === LOCAL_SPACE_TAG, 'Only local space references are supported');
     return dxn.parts[1];
   });
+};
+
+export const deprecatedFilterFromQueryAST = (ast: QueryAST.Query): Filter => {
+  switch (ast.type) {
+    case 'select':
+      return Filter.fromAST(ast.filter);
+    case 'options': {
+      const top = deprecatedFilterFromQueryAST(ast.query);
+      if (ast.options.spaceIds) {
+        top.options.spaceIds = ast.options.spaceIds as string[];
+      }
+      switch (ast.options.deleted) {
+        case 'include':
+          top.options.deleted = QueryOptions.ShowDeletedOption.SHOW_DELETED;
+          break;
+        case 'exclude':
+          top.options.deleted = QueryOptions.ShowDeletedOption.HIDE_DELETED;
+          break;
+        case 'only':
+          top.options.deleted = QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY;
+          break;
+      }
+      return top;
+    }
+    default:
+      throw new Error(`Not implemented: ${ast.type}`);
+  }
 };

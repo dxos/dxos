@@ -156,7 +156,7 @@ describe('Client', () => {
     await space1.waitUntilReady();
     const spaceKey = space1.key;
 
-    const query = space1.db.query(Filter.schema(ThreadType));
+    const query = space1.db.query(Filter.type(ThreadType));
     query.subscribe(
       ({ objects }) => {
         if (objects.length === 1) {

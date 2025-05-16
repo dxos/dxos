@@ -43,7 +43,7 @@ export const useChatProcessor = ({
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // Services.
-  const services = useQuery(space, Filter.schema(ServiceType));
+  const services = useQuery(space, Filter.type(ServiceType));
   const [serviceTools, setServiceTools] = useState<Tool[]>([]);
   useEffect(() => {
     log('creating service tools...');
@@ -55,7 +55,7 @@ export const useChatProcessor = ({
 
   // Tools and context.
   const config = useConfig();
-  const functions = useQuery(space, Filter.schema(FunctionType));
+  const functions = useQuery(space, Filter.type(FunctionType));
   const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
   const [tools, extensions] = useMemo(() => {
     log('creating tools...');

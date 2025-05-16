@@ -71,7 +71,7 @@ export default () =>
       component: ({ data: { subject: contact } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = useSpace();
-        const [mailbox] = useQuery(space, Filter.schema(MailboxType));
+        const [mailbox] = useQuery(space, Filter.type(MailboxType));
         const queue = useQueue<DataType.Message>(mailbox?.queue.dxn);
         const messages = queue?.items ?? [];
         const related = messages
@@ -118,18 +118,18 @@ export default () =>
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(organization);
         const defaultSpace = useSpace();
-        const currentSpaceContacts = useQuery(space, Filter.schema(DataType.Person));
+        const currentSpaceContacts = useQuery(space, Filter.type(DataType.Person));
         const defaultSpaceContacts = useQuery(
           defaultSpace === space ? undefined : defaultSpace,
-          Filter.schema(DataType.Person),
+          Filter.type(DataType.Person),
         );
         const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
         const related = contacts.filter((contact) =>
           typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
         );
 
-        const currentSpaceTables = useQuery(space, Filter.schema(TableType));
-        const defaultSpaceTables = useQuery(defaultSpace, Filter.schema(TableType));
+        const currentSpaceTables = useQuery(space, Filter.type(TableType));
+        const defaultSpaceTables = useQuery(defaultSpace, Filter.type(TableType));
         const currentSpaceContactTable = currentSpaceTables?.find((table) => {
           return table.view?.target?.query?.typename === DataType.Person.typename;
         });
