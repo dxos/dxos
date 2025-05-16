@@ -21,6 +21,7 @@ import { type DocHandleProxy, type RepoProxy } from '../client';
 import { getObjectCore, type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
+import { Query } from '../query';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -72,7 +73,7 @@ describe('CoreDatabase', () => {
 
       const document = createExpando({ text: Ref.make(createTextObject('Hello, world!')) });
       const db = await createClientDbInSpaceWithObject(document);
-      const loadedDocument = (await db.query({ id: document.id }).first()!) as Expando;
+      const loadedDocument = await db.query(Query.type(Expando, { id: document.id })).first();
       expect(loadedDocument).not.to.be.undefined;
 
       let isFirstInvocation = true;
@@ -93,7 +94,7 @@ describe('CoreDatabase', () => {
     test('reference access triggers document loading', async () => {
       const textObject = createTextObject('Hello, world!');
       const db = await createClientDbInSpaceWithObject(textObject);
-      await db.query({ id: textObject.id }).first({ timeout: 1000 });
+      await db.query(Query.type(Expando, { id: textObject.id })).first({ timeout: 1000 });
     });
 
     test("separate-doc object is treated as inline if it's both linked and inline", async () => {
@@ -132,7 +133,7 @@ describe('CoreDatabase', () => {
       const oldObject = createExpando({ title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(oldObject);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
-      const beforeUpdate = await db.query({ id: oldObject.id }).first();
+      const beforeUpdate = await db.query(Query.type(Expando, { id: oldObject.id })).first();
       expect(beforeUpdate).not.to.be.undefined;
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
       const afterUpdate = db.getObjectById(oldObject.id);
@@ -146,7 +147,7 @@ describe('CoreDatabase', () => {
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
       });
-      const beforeUpdate = (await db.query({ id: originalObj.id }).first())!;
+      const beforeUpdate = await db.query(Query.type(Expando, { id: originalObj.id })).first();
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(db).spaceRootHandle.docSync().links?.[beforeUpdate.id].toString(),
       );
@@ -169,7 +170,7 @@ describe('CoreDatabase', () => {
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
       });
 
-      await db.query({ id: stack.loadedDocument.target?.id }).run({ timeout: 1000 });
+      await db.query(Query.type(Expando, { id: stack.loadedDocument.target?.id })).run({ timeout: 1000 });
 
       // trigger loading but don't wait for it to finish
       db.getObjectById(stack.partiallyLoadedDocument.target?.id);
@@ -190,7 +191,7 @@ describe('CoreDatabase', () => {
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
 
       for (const obj of [stack.text1.target, stack.text2.target, stack.text3.target]) {
-        await db.query({ id: obj.id }).run();
+        await db.query(Query.type(Expando, { id: obj.id })).run();
       }
 
       newRootDocHandle.change((newDoc: any) => {
@@ -225,7 +226,7 @@ describe('CoreDatabase', () => {
       const id1 = ObjectId.random();
       const id2 = ObjectId.random();
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: id1, title: 'test' });
-      expect((await (db.query({ id: beforeUpdate.id }).first() as any)).title).to.eq(beforeUpdate.title);
+      expect((await db.query(Query.type(Expando, { id: beforeUpdate.id })).first()).title).to.eq(beforeUpdate.title);
 
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
@@ -294,13 +295,15 @@ describe('CoreDatabase', () => {
         expect(db.getObjectById(obj.id)).to.be.undefined;
       }
       for (const obj of objectsToAdd) {
-        expect(getObjectDocHandle(await db.query({ id: obj.id }).first()).url).to.eq(newRootDocHandle.url);
+        expect(getObjectDocHandle(await db.query(Query.type(Expando, { id: obj.id })).first()).url).to.eq(
+          newRootDocHandle.url,
+        );
       }
       for (const obj of [...loadedLinks]) {
-        expect(getObjectDocHandle(await db.query({ id: obj.id }).first())).not.to.be.undefined;
+        expect(getObjectDocHandle(await db.query(Query.type(Expando, { id: obj.id })).first())).not.to.be.undefined;
       }
       for (const obj of partiallyLoadedLinks) {
-        await db.query({ id: obj.id }).first();
+        await db.query(Query.type(Expando, { id: obj.id })).first();
       }
     });
 
