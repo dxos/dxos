@@ -24,7 +24,7 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { Input, Main, Toolbar } from '@dxos/react-ui';
+import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
@@ -45,32 +45,44 @@ const StoryState = defineCapability<{ tab: string }>('story-state');
 
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
+// TODO(burdon): Factor out PlankHeader.
+const PlankHeader = () => {
+  return (
+    <div className='flex p-1 items-center border-b border-separator'>
+      <IconButton density='coarse' icon='ph--atom--regular' label='Test' iconOnly classNames='w-[40px] h-[40px]' />
+    </div>
+  );
+};
+
 const TestPanel = () => {
   // TODO(burdon): Where should attention be applied?
   const attentionAttrs = useAttendableAttributes('test');
 
   return (
-    <StackItem.Content toolbar classNames='w-full'>
-      {/* TODO(burdon): Should the separator be applied by StackItem.Content? */}
-      {/* TODO(burdon): Toolbar is not the same height as the sidebar here. */}
-      <Toolbar.Root classNames='border-be border-separator'>
-        <Toolbar.Button>Test</Toolbar.Button>
-      </Toolbar.Root>
+    // TODO(burdon): Simulate Plank layout?
+    <div>
+      <PlankHeader />
+      <StackItem.Content toolbar classNames='w-full'>
+        {/* TODO(burdon): Should the separator be applied by StackItem.Content? */}
+        <Toolbar.Root classNames='border-be border-separator'>
+          <Toolbar.Button>Test</Toolbar.Button>
+        </Toolbar.Root>
 
-      {/* <div className={mx('flex flex-col grow bs-full p-4', attentionSurface)} {...attentionAttrs}> */}
-      <div className={mx(container, 'bg-groupSurface')}>
-        <Input.Root>
-          <Input.Label>Level 1</Input.Label>
-        </Input.Root>
-        <div className={mx(container, 'bg-baseSurface')}>
+        {/* <div className={mx('flex flex-col grow bs-full p-4', attentionSurface)} {...attentionAttrs}> */}
+        <div className={mx(container, 'bg-groupSurface')}>
           <Input.Root>
-            <Input.Label>Level 2</Input.Label>
-            <Input.TextArea placeholder='Enter text' />
+            <Input.Label>Level 1</Input.Label>
           </Input.Root>
+          <div className={mx(container, 'bg-baseSurface')}>
+            <Input.Root>
+              <Input.Label>Level 2</Input.Label>
+              <Input.TextArea placeholder='Enter text' />
+            </Input.Root>
+          </div>
         </div>
-      </div>
-      {/* </div> */}
-    </StackItem.Content>
+        {/* </div> */}
+      </StackItem.Content>
+    </div>
   );
 };
 
