@@ -9,8 +9,9 @@ import { type Schema } from 'effect';
 import { SchemaAST } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { type BaseObject, getTypename, type HasId, toJsonSchema } from '@dxos/echo-schema';
+import { type BaseObject, getSchemaTypename, type HasId, toJsonSchema } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -34,11 +35,12 @@ const generator: ValueGenerator = faker as any;
 const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, count: number) => {
   const { space } = useClientProvider();
 
+  const jsonSchema = useMemo(() => toJsonSchema(schema), [schema]);
   const table = useMemo(() => {
-    // const { typename } = pipe(schema.ast, SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId), Option.getOrThrow);
-    const typename = getTypename(schema)!;
+    const typename = getSchemaTypename(schema);
+    invariant(typename);
     const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
-    const view = createView({ name, typename, jsonSchema: toJsonSchema(schema) });
+    const view = createView({ name, typename, jsonSchema });
     return live(TableType, { view: makeRef(view) });
   }, [schema]);
 
@@ -48,7 +50,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, co
     }
 
     // TODO(burdon): Just pass in view? Reuse same jsonSchema instance? View determines if mutable, etc.
-    return new ViewProjection(toJsonSchema(schema), table.view.target);
+    return new ViewProjection(jsonSchema, table.view.target);
   }, [schema, table]);
 
   const features = useMemo<TableFeatures>(
@@ -68,8 +70,6 @@ const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, co
     });
   }, [model, space]);
 
-  console.log(projection?.getFieldProjections());
-
   const presentation = useMemo(() => {
     if (!model) {
       return;
@@ -82,13 +82,9 @@ const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, co
 };
 
 const DefaultStory = () => {
-  const { model: orgModel, presentation: orgPresentation } = useTestModel<DataType.Organization>(
-    DataType.Organization,
-    50,
-  );
-
+  const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization, 50);
   // TODO(burdon): Generate links with references.
-  const { model: contactModel, presentation: contactPresentation } = useTestModel<DataType.Person>(DataType.Person, 50);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person, 50);
 
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
