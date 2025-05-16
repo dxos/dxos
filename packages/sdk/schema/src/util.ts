@@ -91,8 +91,8 @@ export const makeSingleSelectAnnotations = (
 ) => {
   jsonProperty.enum = options.map(({ id }) => id);
   jsonProperty.format = FormatEnum.SingleSelect;
-  jsonProperty.echo = {
-    annotations: {
+  jsonProperty.annotations = {
+    meta: {
       singleSelect: {
         options: options.map(({ id, title, color }) => ({ id, title, color })),
       },
@@ -113,8 +113,8 @@ export const makeMultiSelectAnnotations = (
   jsonProperty.type = 'object';
   jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };
   jsonProperty.format = FormatEnum.MultiSelect;
-  jsonProperty.echo = {
-    annotations: {
+  jsonProperty.annotations = {
+    meta: {
       multiSelect: {
         options: options.map(({ id, title, color }) => ({ id, title, color })),
       },
