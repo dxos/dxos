@@ -319,7 +319,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       classNames={[
         'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg',
         'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] gap-1 contain-layout',
-        '!is-[--l0-size] bg-baseSurface border-ie border-separator app-drag pbe-[env(safe-area-inset-bottom)]',
+        '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
       <div role='none' className='flex justify-center p-1'>

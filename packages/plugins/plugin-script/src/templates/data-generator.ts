@@ -16,12 +16,7 @@ export default defineFunction({
 
   outputSchema: S.Struct({}),
 
-  handler: async ({
-    event: {
-      data: { documentAmount = 1, textSize = 10, mutationAmount = 0 },
-    },
-    context: { space },
-  }: any) => {
+  handler: async ({ data: { documentAmount = 1, textSize = 10, mutationAmount = 0 }, context: { space } }: any) => {
     await space.db.graph.schemaRegistry.addSchema([Expando]);
     const result: Record<string, any> = {};
     const objects: Expando[] = [];
