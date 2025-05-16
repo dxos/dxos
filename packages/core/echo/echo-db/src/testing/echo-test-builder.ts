@@ -19,7 +19,6 @@ import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
-import { log } from '@dxos/log';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;

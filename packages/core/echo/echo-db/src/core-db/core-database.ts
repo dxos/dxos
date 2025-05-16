@@ -50,14 +50,7 @@ import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import {
-  DeprecatedFilter,
-  normalizeQuery,
-  optionsToProto,
-  QueryResult,
-  type FilterSource,
-  type QueryFn,
-} from '../query';
+import { DeprecatedFilter, normalizeQuery, QueryResult, type QueryFn } from '../query';
 import type { PropertyFilter } from '../query/deprecated/filter';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;

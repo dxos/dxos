@@ -2,13 +2,30 @@
 // Copyright 2024 DXOS.org
 //
 
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
+import type { Simplify } from 'effect/Schema';
+
+import { raise } from '@dxos/debug';
+import {
+  getTypeReference,
+  ObjectId,
+  type ForeignKey,
+  type Ref,
+  type RelationSource,
+  type RelationTarget,
+} from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import type { Live } from '@dxos/live-object';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
+import type * as AST from './ast';
 import type { FilterSource } from './deprecated';
 import { type QueryResult } from './query-result';
-import * as AST from './ast';
 
 /**
  * `query` API function declaration.
@@ -112,29 +129,6 @@ export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
   };
 };
 
-//
-// Copyright 2025 DXOS.org
-//
-
-import { Schema } from 'effect';
-import type { Simplify } from 'effect/Schema';
-
-import { raise } from '@dxos/debug';
-import {
-  getSchemaDXN,
-  getTypeReference,
-  ObjectId,
-  type ForeignKey,
-  type Ref,
-  type RelationSource,
-  type RelationTarget,
-} from '@dxos/echo-schema';
-
-import type { Live } from '@dxos/live-object';
-import type * as QueryAST from './ast';
-import { mapEntries } from 'effect/Record';
-import { mapValues } from '@dxos/util';
-
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
 
@@ -142,7 +136,7 @@ export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };
 
-  ast: QueryAST.Query;
+  ast: AST.Query;
 
   /**
    * Filter the current selection based on a filter.
@@ -257,7 +251,7 @@ export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Filter': { value: T };
 
-  ast: QueryAST.Filter;
+  ast: AST.Filter;
 }
 
 type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
@@ -586,7 +580,7 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  private constructor(public readonly ast: QueryAST.Filter) {}
+  private constructor(public readonly ast: AST.Filter) {}
 
   '~Filter' = FilterClass.variance;
 }
@@ -598,7 +592,7 @@ export const Filter: FilterAPI = FilterClass;
  */
 type RefPropKey<T> = { [K in keyof T]: T[K] extends Ref<infer _U> ? K : never }[keyof T] & string;
 
-const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
+const propsFilterToAst = (predicates: Filter.Props<any>): Pick<AST.FilterObject, 'id' | 'props'> => {
   let idFilter: readonly ObjectId[] | undefined;
   if ('id' in predicates) {
     assertArgument(typeof predicates.id === 'string' || Array.isArray(predicates.id), 'invalid id filter');
@@ -610,9 +604,9 @@ const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterOb
     id: idFilter,
     props: Object.fromEntries(
       Object.entries(predicates)
-        .filter(([prop, _value]) => prop != 'id')
+        .filter(([prop, _value]) => prop !== 'id')
         .map(([prop, predicate]) => [prop, Filter.is(predicate) ? predicate.ast : Filter.eq(predicate).ast]),
-    ) as Record<string, QueryAST.Filter>,
+    ) as Record<string, AST.Filter>,
   };
 };
 
@@ -649,7 +643,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  constructor(public readonly ast: QueryAST.Query) {}
+  constructor(public readonly ast: AST.Query) {}
 
   '~Query' = QueryClass.variance;
 
@@ -757,7 +751,7 @@ export const normalizeQuery = (
 
   if (userOptions != undefined) {
     query = query.options({
-      spaceIds: userOptions.spaceIds ?? (opts?.defaultSpaceId != null ? [opts.defaultSpaceId] : undefined),
+      spaceIds: userOptions.spaceIds ?? (!!opts?.defaultSpaceId ? [opts.defaultSpaceId] : undefined),
       deleted:
         userOptions?.deleted === undefined
           ? undefined

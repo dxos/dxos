@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 export * from './filter-match';
 export {
   Filter as DeprecatedFilter,

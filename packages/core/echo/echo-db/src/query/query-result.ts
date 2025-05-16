@@ -12,9 +12,9 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
 
-import { prohibitSignalActions } from '../guarded-scope';
 import { type Query } from './api';
-import { DeprecatedFilter, deprecatedFilterFromQueryAST } from './deprecated';
+import { type DeprecatedFilter, deprecatedFilterFromQueryAST } from './deprecated';
+import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;

@@ -27,10 +27,8 @@ import { type AnyLiveObject, getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
-  DeprecatedFilter,
+  type DeprecatedFilter,
   filterMatch,
-  optionsToProto,
-  Filter,
   type FilterSource,
   QueryResult,
   type QueryContext,

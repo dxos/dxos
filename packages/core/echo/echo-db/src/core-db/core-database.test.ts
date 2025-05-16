@@ -20,8 +20,8 @@ import { type CoreDatabase } from './core-database';
 import { type DocHandleProxy, type RepoProxy } from '../client';
 import { getObjectCore, type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
-import { EchoTestBuilder } from '../testing';
 import { Query } from '../query';
+import { EchoTestBuilder } from '../testing';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {

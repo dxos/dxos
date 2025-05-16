@@ -21,7 +21,7 @@ import { isNonNullable } from '@dxos/util';
 import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
-import { type DeprecatedFilter, type Filter, type QueryResultEntry } from '../query';
+import { type DeprecatedFilter, type QueryResultEntry } from '../query';
 
 export type LoadObjectParams = {
   spaceId: SpaceId;

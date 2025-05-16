@@ -23,7 +23,6 @@ import type { ObjectCore } from './object-core';
 import {
   filterMatch,
   type DeprecatedFilter,
-  type Filter,
   type QueryContext,
   type QueryJoinSpec,
   type QueryResultEntry,
