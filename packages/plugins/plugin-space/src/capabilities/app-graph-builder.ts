@@ -15,6 +15,7 @@ import {
   SpaceState,
   type Space,
   parseId,
+  Query,
 } from '@dxos/client/echo';
 import { isDeleted } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -188,7 +189,7 @@ export default (context: PluginsContext) => {
 
         // TODO(wittjosiah): During client reset, accessing default space throws.
         try {
-          const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.type(Expando, { key: SHARED }));
+          const [spacesOrder] = memoizeQuery(client.spaces.default, Query.type(Expando, { key: SHARED }));
           const order: string[] = spacesOrder?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
           return [
@@ -343,7 +344,7 @@ export default (context: PluginsContext) => {
           return;
         }
 
-        const [object] = memoizeQuery(space, { id: objectId });
+        const [object] = memoizeQuery(space, Query.select(Filter.ids(objectId)));
         if (!object) {
           return;
         }

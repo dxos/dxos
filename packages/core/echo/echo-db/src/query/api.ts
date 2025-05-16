@@ -635,7 +635,7 @@ class QueryClass implements Query<any> {
   static all(...queries: Query<any>[]): Query<any> {
     if (queries.length === 0) {
       throw new TypeError(
-        'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.all())',
+        'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.everything())',
       );
     }
     return new QueryClass({

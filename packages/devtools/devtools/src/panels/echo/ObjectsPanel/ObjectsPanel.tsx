@@ -54,7 +54,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
   // TODO(burdon): Sort by type?
-  const items = useQuery(space, Filter.all(), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
+  const items = useQuery(space, Filter.everything(), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<AnyLiveObject<any>>();
   const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);

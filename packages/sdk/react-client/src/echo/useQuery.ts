@@ -4,23 +4,16 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import {
-  type Echo,
-  Filter,
-  type Live,
-  Query,
-  type Space,
-  isSpace
-} from '@dxos/client/echo';
+import { type Echo, Filter, type Live, Query, type Space, isSpace } from '@dxos/client/echo';
 
 // TODO(dmaretskyi): Queries are fully serializable, so we can remove `deps` argument.
 interface UseQueryFn {
-  <Q extends Query.Any>(spaceOrEcho: Space | Echo | undefined, query: Q, deps?: any[]): Live<Query.Type<Q>>;
+  <Q extends Query.Any>(spaceOrEcho: Space | Echo | undefined, query: Q, deps?: any[]): Live<Query.Type<Q>>[];
 
   /**
    * @deprecated Pass `Query` instead.
    */
-  <F extends Filter.Any>(spaceOrEcho: Space | Echo | undefined, filter: F, deps?: any[]): Live<Filter.Type<F>>;
+  <F extends Filter.Any>(spaceOrEcho: Space | Echo | undefined, filter: F, deps?: any[]): Live<Filter.Type<F>>[];
 }
 
 /**

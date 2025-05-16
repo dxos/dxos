@@ -6,7 +6,7 @@ import { createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/
 import { EXPANDO_TYPENAME, getTypeAnnotation, getTypename, type BaseObject, type Expando } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject, makeRef } from '@dxos/live-object';
+import { isLiveObject, makeRef, type Live } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
@@ -26,10 +26,10 @@ import {
   getSpace,
   isEchoObject,
   isSpace,
+  Query,
   SpaceState,
   type Echo,
   type FilterSource,
-  type Query,
   type QueryOptions,
   type AnyLiveObject,
   type Space,
@@ -53,27 +53,23 @@ const EMPTY_ARRAY: never[] = [];
  * @param options
  * @returns
  */
-export const memoizeQuery = <T extends BaseObject>(
-  spaceOrEcho?: Space | Echo,
-  filter?: FilterSource<T>,
-  options?: QueryOptions,
-): T[] => {
+export const memoizeQuery = <Q extends Query.Any>(
+  spaceOrEcho: Space | Echo | undefined,
+  query: Q,
+): Live<Query.Type<Q>>[] => {
   const key = JSON.stringify({
     space: isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined,
-    filter: Filter.from(filter).toProto(),
+    query: query.ast,
   });
 
-  const query = memoize(
-    () =>
-      isSpace(spaceOrEcho)
-        ? spaceOrEcho.db.query(filter, options)
-        : (spaceOrEcho?.query(filter, options) as Query<T> | undefined),
+  const queryResult = memoize(
+    () => (isSpace(spaceOrEcho) ? spaceOrEcho.db.query(query) : spaceOrEcho?.query(query)),
     key,
   );
-  const unsubscribe = memoize(() => query?.subscribe(), key);
+  const unsubscribe = memoize(() => queryResult?.subscribe(), key);
   cleanup(() => unsubscribe?.());
 
-  return query?.objects ?? EMPTY_ARRAY;
+  return queryResult?.objects ?? EMPTY_ARRAY;
 };
 
 // TODO(wittjosiah): Factor out? Expose via capability?

@@ -10,7 +10,7 @@ import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { COMPOSER_SPACE_LOCK, memoizeQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { Filter, Query, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
@@ -47,7 +47,7 @@ export default (context: PluginsContext) =>
       id: `${MEETING_PLUGIN}/root`,
       filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       connector: ({ node }) => {
-        const meetings = memoizeQuery(node.data, Filter.type(MeetingType));
+        const meetings = memoizeQuery(node.data, Query.type(MeetingType));
         return meetings.length > 0
           ? [
               {
@@ -78,7 +78,7 @@ export default (context: PluginsContext) =>
           (capability): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
             capability.id === MeetingType.typename,
         );
-        const meetings = memoizeQuery(node.properties.space, Filter.type(MeetingType));
+        const meetings = memoizeQuery(node.properties.space, Query.type(MeetingType));
         return meetings
           .toSorted((a, b) => {
             const nameA = a.name ?? '';
