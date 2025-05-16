@@ -3,6 +3,7 @@
 //
 
 import { signal } from '@preact/signals-core';
+import { isNotNullable } from 'effect/Predicate';
 
 import { FormatEnum, getDXN, getValue, TypeEnum } from '@dxos/echo-schema';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
@@ -14,12 +15,11 @@ import {
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { SelectOptionType, VIEW_FIELD_LIMIT, type FieldType } from '@dxos/schema';
+import { VIEW_FIELD_LIMIT, type FieldType } from '@dxos/schema';
 
 import { type SelectionMode } from './selection-model';
 import { type TableRow, type TableModel } from './table-model';
 import { tableButtons, tableControls } from '../util';
-import { isNotNullable } from 'effect/Predicate';
 
 /**
  * Presentation layer for a table component, handling cell rendering and grid display logic.
