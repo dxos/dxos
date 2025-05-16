@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { inspect } from '@dxos/node-std/util';
-
 import type { Message, MessageContentBlock } from '@dxos/artifact';
+import { inspect } from '@dxos/node-std/util';
 
 export class ConsolePrinter {
   printMessage = (message: Message) => {
