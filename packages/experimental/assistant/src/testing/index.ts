@@ -8,3 +8,4 @@ export * from './ollama';
 export * from './query-promts';
 export * from './test-data';
 export * from './test-schema';
+export * from './printer';

@@ -128,23 +128,16 @@ export const ResponsiveGrid = <T extends object = any>({
 
   return (
     <div ref={containerRef} className={mx('relative w-full h-full', classNames)}>
-      <div className='absolute inset-0 flex flex-col grow'>
+      <div className='absolute inset-0 flex flex-col grow gap-2'>
         {/* Pinned item. */}
         {pinnedItem && (
-          <div
-            className='relative flex shrink-0 w-full'
-            style={{
-              height: dividerHeight,
-              marginBottom: gap * 2,
-            }}
-          >
-            {/* Pinned item. */}
+          <div className='relative flex shrink-0 w-full flex-1 overflow-hidden' style={{ height: dividerHeight }}>
             <SoloItem id={getId(pinnedItem)} debug={debug} />
           </div>
         )}
 
         {/* Placeholder grid used to calculate layout. */}
-        <div ref={gridContainerRef} className='flex w-full grow justify-center items-center overflow-hidden'>
+        <div ref={gridContainerRef} className='flex w-full flex-1 justify-center items-center overflow-hidden'>
           {mainItems.length === 1 && (
             <div style={{ width: cellWidth }} className='flex h-full'>
               <SoloItem id={getId(mainItems[0])} debug={debug} />

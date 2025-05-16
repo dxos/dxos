@@ -88,7 +88,7 @@ export class ViewProjection {
     invariant(field.path.indexOf('.') === -1);
 
     const jsonProperty: JsonSchemaType = this._schema.properties[field.path] ?? { format: FormatEnum.None };
-    const { type: schemaType, format: schemaFormat = FormatEnum.None, echo, ...rest } = jsonProperty;
+    const { type: schemaType, format: schemaFormat = FormatEnum.None, annotations, ...rest } = jsonProperty;
 
     const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
     const type = referenceSchema ? TypeEnum.Ref : (schemaType as TypeEnum);
@@ -100,16 +100,16 @@ export class ViewProjection {
 
     const getOptions = () => {
       if (format === FormatEnum.SingleSelect) {
-        return echo?.annotations?.singleSelect?.options;
+        return annotations?.meta?.singleSelect?.options;
       }
       if (format === FormatEnum.MultiSelect) {
-        return echo?.annotations?.multiSelect?.options;
+        return annotations?.meta?.multiSelect?.options;
       }
     };
 
     const options = getOptions();
 
-    const values = {
+    const values: typeof PropertySchema.Type = {
       type,
       format,
       property: field.path as JsonProp,

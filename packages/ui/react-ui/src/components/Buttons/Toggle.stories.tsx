@@ -12,7 +12,7 @@ import { withTheme } from '../../testing';
 
 type StorybookToggleProps = {};
 
-const StorybookToggle = (props: StorybookToggleProps) => {
+const DefaultStory = (props: StorybookToggleProps) => {
   return (
     <Toggle {...props}>
       <TextB />
@@ -23,7 +23,7 @@ const StorybookToggle = (props: StorybookToggleProps) => {
 export default {
   title: 'ui/react-ui-core/Toggle',
   component: Toggle,
-  render: StorybookToggle,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

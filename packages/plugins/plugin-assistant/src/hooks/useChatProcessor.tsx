@@ -15,7 +15,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { AssistantCapabilities } from '../capabilities';
 import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
-import { covertFunctionToTool, createToolsFromService } from '../tools';
+import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
@@ -63,7 +63,7 @@ export const useChatProcessor = ({
       ...globalTools.flat(),
       ...serviceTools,
       ...functions
-        .map((fn) => covertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
+        .map((fn) => convertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
         .filter(isNonNullable),
     ];
     const extensions = { space, dispatch, pivotId: chatId, part };
