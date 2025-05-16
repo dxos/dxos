@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { type EchoSchema, FormatEnum, isMutable, toJsonSchema } from '@dxos/echo-schema';
+import { assertEchoSchema, FormatEnum, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -150,12 +150,10 @@ const StoryViewEditor = () => {
 
   const handleTypenameChanged = useCallback(
     (typename: string) => {
-      if (table?.view?.target) {
-        invariant(schema);
-        invariant(isMutable(schema));
-        (schema as EchoSchema).updateTypename(typename);
-        table.view.target.query.typename = typename;
-      }
+      invariant(schema);
+      invariant(table?.view?.target);
+      assertEchoSchema(schema).updateTypename(typename);
+      table.view.target.query.typename = typename;
     },
     [schema, table?.view?.target],
   );

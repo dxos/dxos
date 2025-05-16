@@ -150,9 +150,18 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
   } as any;
 };
 
+/**
+ * @param schema @deprecated
+ */
+// TODO(burdon): Remove once we've stabilized the schema API.
+export const assertEchoSchema = (schema: Schema.Schema.AnyNoContext): EchoSchema => {
+  invariant(schema instanceof EchoSchema, 'Schema is not an EchoSchema');
+  return schema;
+};
+
 // TODO(burdon): Resolve (add annotation?)
 export const isMutable = (schema: Schema.Schema.AnyNoContext): boolean => {
-  return false;
+  return schema instanceof EchoSchema;
 };
 
 /**
