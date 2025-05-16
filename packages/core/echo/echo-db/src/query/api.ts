@@ -13,8 +13,8 @@ import { raise } from '@dxos/debug';
 import {
   getTypeReference,
   ObjectId,
+  Ref,
   type ForeignKey,
-  type Ref,
   type RelationSource,
   type RelationTarget,
 } from '@dxos/echo-schema';
@@ -501,7 +501,7 @@ class FilterClass implements Filter<any> {
     return new FilterClass({
       type: 'compare',
       operator: 'eq',
-      value,
+      value: Ref.isRef(value) ? value.noInline().encode() : value,
     });
   }
 

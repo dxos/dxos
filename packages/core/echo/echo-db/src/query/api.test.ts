@@ -3,13 +3,14 @@
 //
 
 import { Schema } from 'effect';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { create, EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './api';
 import * as QueryAST from './ast';
+import { DXN } from '@dxos/keys';
 
 // TODO(dmaretskyi): Temp until API is stable.
 const Type = {
@@ -124,6 +125,24 @@ describe('query api', () => {
 
     log('query', { ast: contactFullTextSearch.ast });
     Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
+  });
+
+  test('filter by ref', () => {
+    const fred = create(Person, { name: 'Fred' });
+    const tasksByFred = Filter.type(Task, { assignee: Ref.make(fred) });
+    expect(tasksByFred.ast).toEqual({
+      props: {
+        assignee: {
+          operator: 'eq',
+          type: 'compare',
+          value: {
+            '/': DXN.fromLocalObjectId(fred.id).toString(),
+          },
+        },
+      },
+      type: 'object',
+      typename: 'dxn:type:dxos.org/type/Task:0.1.0',
+    });
   });
 
   test.skip('chain', () => {
