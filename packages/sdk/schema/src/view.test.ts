@@ -5,7 +5,7 @@
 import { Schema, SchemaAST, String, pipe } from 'effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Format, Type } from '@dxos/echo';
+import { Format, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import { live, createStoredSchema } from '@dxos/live-object';
@@ -54,7 +54,7 @@ describe('View', () => {
     const contact = live(Testing.Contact, {
       name: 'Alice',
       email: 'alice@example.com',
-      organization: Type.ref(organization),
+      organization: Ref.make(organization),
     });
     log('schema', { organization: toJsonSchema(Testing.Organization), contact: toJsonSchema(Testing.Contact) });
     log('objects', { organization, contact });
