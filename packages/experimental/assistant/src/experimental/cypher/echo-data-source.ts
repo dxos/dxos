@@ -22,8 +22,7 @@ export class EchoDataSource implements DataSource {
       return objects.map(this._objectToNode);
     }
 
-    const schema = (await this._getAllSchema()).find((s) => getSchemaTypename(s)?.endsWith(label));
-
+    const schema = (await this._getAllSchema()).find((schema) => getSchemaTypename(schema)?.endsWith(label));
     if (!schema) {
       return [];
     }
@@ -68,7 +67,7 @@ export class EchoDataSource implements DataSource {
     return [
       ...(await this._db.schemaRegistry.query().run()),
       // TODO(dmaretskyi): Remove once we can serialize recursive schema.
-      ...this._db.graph.schemaRegistry.schemas.filter((s) => getSchemaTypename(s)?.startsWith('example.org')),
+      ...this._db.graph.schemaRegistry.schemas.filter((schema) => getSchemaTypename(schema)?.startsWith('example.org')),
     ].filter((schema) => getSchemaTypename(schema) !== StoredSchema.typename);
   }
 

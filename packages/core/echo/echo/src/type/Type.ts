@@ -125,12 +125,12 @@ export const instanceOf = isInstanceOf;
 
 // TODO(burdon): Reconcile getDXN and getTypename.
 export const getDXN = getSchemaDXN;
+export const getMeta = getTypeAnnotation;
 export const getTypename = (schema: Schema.Schema.AnyNoContext): string => {
   const typename = getSchemaTypename(schema);
   invariant(typename, 'Invalid object');
   return typename;
 };
-export const getMeta = getTypeAnnotation;
 export const getVersion = getSchemaVersion;
 export const isMutable = isMutable$;
 export const toJsonSchema = toJsonSchema$;
