@@ -264,15 +264,17 @@ export class Filter<T extends BaseObject = any> {
 
   static fromAST(ast: QueryAST.Filter): Filter {
     switch (ast.type) {
-      case 'object':
+      case 'object': {
+        const properties = mapValues(ast.props, (prop) =>
+          prop.type === 'compare' && prop.operator === 'eq' ? prop.value : raise(new Error('Not supported')),
+        );
         return new Filter({
           type: ast.typename ? [DXN.parse(ast.typename)] : undefined,
-          properties: mapValues(ast.props, (prop) =>
-            prop.type === 'compare' && prop.operator === 'eq' ? prop.value : raise(new Error('Not supported')),
-          ),
+          properties: Object.keys(properties).length > 0 ? properties : undefined,
           metaKeys: ast.foreignKeys ? [...ast.foreignKeys] : undefined,
           objectIds: ast.id ? [...ast.id] : undefined,
         });
+      }
       case 'compare':
         throw new Error('Not implemented');
 

@@ -56,6 +56,11 @@ describe('Queries', () => {
       await db.flush({ indexes: true });
     });
 
+    test('query everything', async () => {
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      expect(objects).to.have.length(10);
+    });
+
     test('filter properties', async () => {
       {
         const { objects } = await db.query(Query.select(Filter.everything())).run();

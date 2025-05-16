@@ -221,7 +221,6 @@ describe('Integration tests', () => {
   });
 
   test('replicating 2 databases', async () => {
-    console.log('foo');
     const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
     const dataAssertion = createDataAssertion();

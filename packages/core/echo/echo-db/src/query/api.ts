@@ -277,6 +277,8 @@ interface FilterAPI {
    */
   nothing(): Filter<any>;
 
+  ids(...id: ObjectId[]): Filter<any>;
+
   /**
    * Filter by type.
    */
@@ -420,6 +422,19 @@ class FilterClass implements Filter<any> {
         typename: null,
         props: {},
       },
+    });
+  }
+
+  static ids(...ids: ObjectId[]): Filter<any> {
+    assertArgument(
+      ids.every((id) => ObjectId.isValid(id)),
+      'ids must be valid',
+    );
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      id: ids,
+      props: {},
     });
   }
 
