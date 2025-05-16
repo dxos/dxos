@@ -4,7 +4,7 @@
 
 import { signal } from '@preact/signals-core';
 
-import { FormatEnum, getDXN, getValue } from '@dxos/echo-schema';
+import { FormatEnum, getDXN, getValue, TypeEnum } from '@dxos/echo-schema';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridPlane,
@@ -14,11 +14,12 @@ import {
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { VIEW_FIELD_LIMIT, type FieldType } from '@dxos/schema';
+import { SelectOptionType, VIEW_FIELD_LIMIT, type FieldType } from '@dxos/schema';
 
 import { type SelectionMode } from './selection-model';
 import { type TableRow, type TableModel } from './table-model';
 import { tableButtons, tableControls } from '../util';
+import { isNotNullable } from 'effect/Predicate';
 
 /**
  * Presentation layer for a table component, handling cell rendering and grid display logic.
@@ -84,6 +85,10 @@ export class TablePresentation<T extends TableRow = TableRow> {
             return '';
           }
 
+          if (props.type === 'array') {
+            return '';
+          }
+
           switch (props.format) {
             case FormatEnum.Boolean:
             case FormatEnum.SingleSelect:
@@ -119,6 +124,47 @@ export class TablePresentation<T extends TableRow = TableRow> {
       }
       if (classes.length > 0) {
         cell.className = mx(classes.flat());
+      }
+
+      if (props.type === TypeEnum.Array) {
+        const targetArray = getValue(obj, field.path);
+        if (targetArray && Array.isArray(targetArray)) {
+          // TODO(ZaymonFC): For arrays of objects, objects should have a 'label' annotation on the field
+          // that can be used to render tags.
+          // TODO(ZaymonFC): Move to util.
+          const getLabel = (value: any) => {
+            // If the value is falsy, return undefined
+            // If the object is an array, check for 'name' property
+            // If the object is a primitive type (string, number, boolean) stringify
+            // If the object is an array return 'Array'
+            if (!value) {
+              return undefined;
+            }
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+              return String(value);
+            }
+            if (Array.isArray(value)) {
+              return 'Array';
+            }
+            if (typeof value === 'object' && value.name) {
+              return value.name;
+            }
+            if (typeof value === 'object' && value.value) {
+              return `${value.value}`;
+            }
+            return 'Object';
+          };
+
+          const tags = targetArray
+            .map(getLabel)
+            .filter(isNotNullable)
+            .map((title) => {
+              return `<span class="dx-tag" data-hue="neutral">${title}</span>`;
+            })
+            .join('');
+
+          cell.accessoryHtml = `<div role='none' class="flex flex-row gap-1 overflow-x-auto">${tags}</div>`;
+        }
       }
 
       if (props.format === FormatEnum.Ref && props.referenceSchema) {
@@ -166,7 +212,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
             .join(' ');
 
           if (tags) {
-            cell.accessoryHtml = tags;
+            cell.accessoryHtml = `<div role='none' class="flex flex-row gap-1">${tags}</div>`;
           }
         }
       }
