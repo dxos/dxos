@@ -190,8 +190,8 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
         {!isEmpty && (
           <Main.Content
             bounce
-            classNames={mainPosition}
             handlesFocus
+            classNames={mainPosition}
             style={
               {
                 '--dx-main-sidebarWidth':

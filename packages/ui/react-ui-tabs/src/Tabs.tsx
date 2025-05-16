@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
+import { useFocusFinders, useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -51,6 +51,9 @@ const TabsRoot = ({
   attendableId,
   ...props
 }: TabsRootProps) => {
+  // TODO(thure): Without these, we get Groupper/Mover `API used before initialization`, but why?
+  const _1 = useArrowNavigationGroup();
+  const _2 = useFocusableGroup();
   const [activePart = 'list', setActivePart] = useControllableState({
     prop: propsActivePart,
     onChange: onActivePartChange,
