@@ -32,10 +32,6 @@ export const sheetSememes = {
     light: ['neutral', 50],
     dark: ['neutral', 800],
   },
-  gridHeader: {
-    light: ['neutral', 25],
-    dark: ['neutral', 750],
-  },
   gridOverlay: {
     light: ['primary', '500/.5'],
     dark: ['primary', '500/.5'],
@@ -53,8 +49,8 @@ export const sheetSememes = {
     dark: ['emerald', '500/.24'],
   },
   gridHighlight: {
-    light: ['amber', '200/.2'],
-    dark: ['amber', '200/.2'],
+    light: ['yellow', '200/.33'],
+    dark: ['yellow', '200/.33'],
   },
 } satisfies ColorSememes;
 

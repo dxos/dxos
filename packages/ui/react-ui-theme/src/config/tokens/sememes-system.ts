@@ -36,15 +36,15 @@ const surface0: Sememe = {
   dark: ['neutral', darkCadence(0)],
 };
 const surface10: Sememe = {
-  light: ['neutral', lightCadence(1)],
-  dark: ['neutral', darkCadence(1)],
+  light: ['neutral', lightCadence(0.8)],
+  dark: ['neutral', darkCadence(0.8)],
 };
 const surface20: Sememe = {
-  light: ['neutral', lightCadence(2)],
-  dark: ['neutral', darkCadence(2)],
+  light: ['neutral', lightCadence(1.6)],
+  dark: ['neutral', darkCadence(1.6)],
 };
 const surface30: Sememe = {
-  light: ['neutral', lightCadence(3)],
+  light: ['neutral', lightCadence(2.8)],
   dark: ['neutral', darkCadence(3)],
 };
 const surface40: Sememe = {
@@ -167,11 +167,11 @@ export const systemSememes = {
 
 export const systemAliases = {
   // surface cadence
-  'surface-10': { root: ['attention'], attention: ['baseSurface'] },
-  'surface-20': { root: ['baseSurface'] },
-  'surface-30': { root: ['modalSurface'], attention: ['input'] },
-  'surface-40': { root: ['input'] },
-  'surface-50': { attention: ['groupSurface'] },
+  'surface-10': { root: ['attention', 'gridHeader'], attention: ['baseSurface'] },
+  'surface-20': { root: ['baseSurface'], attention: ['gridHeader'] },
+  'surface-30': { root: ['modalSurface'] },
+  'surface-40': { root: ['subduedSeparator'], attention: ['input'] },
+  'surface-50': { root: ['input'], attention: ['groupSurface'] },
   'surface-60': { root: ['groupSurface'], attention: ['hoverSurface'] },
   'surface-70': { root: ['hoverSurface'], attention: ['separator'] },
   'surface-80': { root: ['separator'] },
