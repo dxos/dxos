@@ -291,10 +291,10 @@ export class Filter<T extends BaseObject = any> {
         return Filter.not(Filter.fromAST(ast.filter));
 
       case 'and':
-        return Filter.and(ast.filters.map(Filter.fromAST));
+        return Filter.and(...ast.filters.map(Filter.fromAST));
 
       case 'or':
-        return Filter.or(ast.filters.map(Filter.fromAST));
+        return Filter.or(...ast.filters.map(Filter.fromAST));
 
       default:
         throw new Error('Not implemented');

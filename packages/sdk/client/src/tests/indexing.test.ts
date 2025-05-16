@@ -256,23 +256,24 @@ describe('Index queries', () => {
 
   test('`not(or)` query', async () => {
     const builder = new TestBuilder();
+
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const { contacts, documents } = createObjects();
 
     const contactsInDatabase = await addObjects(space, contacts);
     const documentsInDatabase = await addObjects(space, documents);
-    const expectedIds = [...contactsInDatabase, ...documentsInDatabase].map(({ id }) => id);
+    const excludedIds = [...contactsInDatabase, ...documentsInDatabase].map(({ id }) => id);
 
     {
       const query = space.db.query(
         Filter.not(Filter.or(Filter.type(ContactType), Filter.type(DocumentType), Filter.type(PropertiesType))),
       );
       const ids = (await query.run()).objects.map(({ id }) => id);
-      expect(ids.every((id) => expectedIds.every((expectedId) => expectedId !== id))).to.be.true;
-      expect(expectedIds.every((expectedId) => ids.every((id) => expectedId !== id))).to.be.true;
+      expect(ids.every((id) => !excludedIds.includes(id))).to.be.true;
     }
   });
 

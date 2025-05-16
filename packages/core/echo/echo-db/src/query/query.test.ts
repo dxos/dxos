@@ -330,6 +330,22 @@ describe('Queries', () => {
     await assertQueries(await peer.openLastDatabase());
   });
 
+  test('not(or) query', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.schemaRegistry.addSchema([Testing.Contact, Testing.Task]);
+
+    const _contact = db.add(live(Testing.Contact, {}));
+    const _task = db.add(live(Testing.Task, {}));
+    const expando = db.add(live(Expando, { name: 'expando' }));
+
+    const query = db.query(
+      Query.select(Filter.not(Filter.or(Filter.type(Testing.Contact), Filter.type(Testing.Task)))),
+    );
+    const result = await query.run();
+    expect(result.objects).to.have.length(1);
+    expect(result.objects[0]).to.eq(expando);
+  });
+
   describe('Relations', () => {
     test('query by type', async () => {
       const { db, graph } = await builder.createDatabase();

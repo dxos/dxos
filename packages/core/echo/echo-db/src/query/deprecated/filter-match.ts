@@ -113,6 +113,7 @@ const sanitizePropertyFilter = (value: any) => {
     const core = getObjectCore(value as any);
     return Reference.fromDXN(DXN.fromLocalObjectId(core.id));
   }
+  // TODO(dmaretskyi): Handle encoded references.
 
   return value;
 };
