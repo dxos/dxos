@@ -5,13 +5,7 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { Format, Type } from '@dxos/echo';
-import {
-  FieldLookupAnnotationId,
-  FormatAnnotation,
-  FormatEnum,
-  GeneratorAnnotationId,
-  LabelAnnotationId,
-} from '@dxos/echo-schema';
+import { FieldLookupAnnotationId, GeneratorAnnotationId, LabelAnnotationId } from '@dxos/echo-schema';
 
 import { IconAnnotationId } from '../annotations';
 
@@ -96,7 +90,7 @@ export namespace Testing {
 
   export const ContactSchema = Schema.Struct({
     id: Type.ObjectId,
-    name: Schema.String.pipe(FormatAnnotation.set(FormatEnum.DateTime)).annotations({
+    name: Schema.String.annotations({
       [GeneratorAnnotationId]: 'person.fullName',
     }),
     image: Schema.optional(

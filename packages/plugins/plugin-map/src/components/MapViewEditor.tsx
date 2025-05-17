@@ -5,7 +5,7 @@
 import { Schema, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnum, type EchoSchema } from '@dxos/echo-schema';
+import { FormatEnum, toJsonSchema, type EchoSchema } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
@@ -53,12 +53,13 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     }));
   }, [allSchemata]);
 
+  const jsonSchema = useMemo(() => (currentSchema ? toJsonSchema(currentSchema) : {}), [currentSchema]);
   const locationFields = useMemo(() => {
-    if (!currentSchema?.jsonSchema?.properties) {
+    if (!jsonSchema?.properties) {
       return [];
     }
 
-    const columns = Object.entries(currentSchema.jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
+    const columns = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
       if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
         acc.push(key);
       }
@@ -66,7 +67,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     }, []);
 
     return columns.map((column) => ({ value: column, label: column }));
-  }, [currentSchema?.jsonSchema]);
+  }, [jsonSchema]);
 
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {
