@@ -54,105 +54,103 @@ export const Toolbar = ({
 
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
-    <div className={mx('z-20 flex justify-center m-4', call.joined && autoHideControls && hoverableHidden)}>
-      <div className='bg-modalSurface p-2 rounded-lg shadow-lg'>
-        <NativeToolbar.Root classNames={['!is-fit', classNames]}>
-          <ToggleButton
-            active={call.media.audioEnabled}
-            state={{
-              on: {
-                icon: 'ph--microphone--regular',
-                label: t('mic off'),
-                onClick: () => call.turnAudioOff(),
-                classNames: 'bg-callActive',
-              },
-              off: {
-                icon: 'ph--microphone-slash--duotone',
-                label: t('mic on'),
-                onClick: () => call.turnAudioOn(),
-                classNames: [call.joined && 'bg-callAlert'],
-              },
-            }}
-          />
-          <ToggleButton
-            active={call.media.videoEnabled}
-            state={{
-              on: {
-                icon: 'ph--video-camera--regular',
-                label: t('camera off'),
-                onClick: () => call.turnVideoOff(),
-              },
-              off: {
-                icon: 'ph--video-camera-slash--duotone',
-                label: t('camera on'),
-                onClick: () => call.turnVideoOn(),
-              },
-            }}
-          />
+    <div className={mx('z-20 flex justify-center m-8', call.joined && autoHideControls && hoverableHidden)}>
+      <NativeToolbar.Root classNames={['p-2 bg-modalSurface rounded-lg shadow-lg', classNames]}>
+        <ToggleButton
+          active={call.media.audioEnabled}
+          state={{
+            on: {
+              icon: 'ph--microphone--regular',
+              label: t('mic off'),
+              onClick: () => call.turnAudioOff(),
+              classNames: 'bg-callActive',
+            },
+            off: {
+              icon: 'ph--microphone-slash--duotone',
+              label: t('mic on'),
+              onClick: () => call.turnAudioOn(),
+              classNames: [call.joined && 'bg-callAlert'],
+            },
+          }}
+        />
+        <ToggleButton
+          active={call.media.videoEnabled}
+          state={{
+            on: {
+              icon: 'ph--video-camera--regular',
+              label: t('camera off'),
+              onClick: () => call.turnVideoOff(),
+            },
+            off: {
+              icon: 'ph--video-camera-slash--duotone',
+              label: t('camera on'),
+              onClick: () => call.turnVideoOn(),
+            },
+          }}
+        />
 
-          {(participants !== undefined && (
-            <div className='flex justify-center items-center gap-2 is-[5rem] text-xs text-subdued'>
-              <Icon icon='ph--users--regular' size={4} />
-              <div>{participants}</div>
-            </div>
-          )) || <NativeToolbar.Separator variant='gap' />}
+        {(participants !== undefined && (
+          <div className='flex justify-center items-center gap-2 is-[5rem] text-xs text-subdued'>
+            <Icon icon='ph--users--regular' size={4} />
+            <div>{participants}</div>
+          </div>
+        )) || <NativeToolbar.Separator variant='gap' />}
 
-          {call.joined && (
-            <>
-              <ToggleButton
-                disabled={!canSharescreen}
-                active={isScreensharing}
-                state={{
-                  on: {
-                    icon: 'ph--monitor--regular',
-                    label: t('screenshare off'),
-                    onClick: () => call.turnScreenshareOff(),
-                  },
-                  off: {
-                    icon: 'ph--monitor-arrow-up--duotone',
-                    label: t('screenshare on'),
-                    onClick: () => call.turnScreenshareOn(),
-                  },
-                }}
+        {call.joined && (
+          <>
+            <ToggleButton
+              disabled={!canSharescreen}
+              active={isScreensharing}
+              state={{
+                on: {
+                  icon: 'ph--monitor--regular',
+                  label: t('screenshare off'),
+                  onClick: () => call.turnScreenshareOff(),
+                },
+                off: {
+                  icon: 'ph--monitor-arrow-up--duotone',
+                  label: t('screenshare on'),
+                  onClick: () => call.turnScreenshareOn(),
+                },
+              }}
+            />
+
+            {/* Companion actions. */}
+            {actions.map((action) => (
+              <IconButton
+                key={action.id}
+                {...defaultButtonProps}
+                icon={action.properties.icon}
+                label={toLocalizedString(action.properties.label, t)}
+                classNames={action.properties.classNames}
+                onClick={() => action.data({ node })}
               />
+            ))}
 
-              {/* Companion actions. */}
-              {actions.map((action) => (
-                <IconButton
-                  key={action.id}
-                  {...defaultButtonProps}
-                  icon={action.properties.icon}
-                  label={toLocalizedString(action.properties.label, t)}
-                  classNames={action.properties.classNames}
-                  onClick={() => action.data({ node })}
-                />
-              ))}
-
-              <ToggleButton
-                active={call.raisedHand}
-                state={{
-                  on: {
-                    icon: 'ph--hand-waving--regular',
-                    label: t('lower hand'),
-                    onClick: () => call.setRaisedHand(false),
-                    classNames: [call.joined && 'bg-callAlert'],
-                  },
-                  off: {
-                    icon: 'ph--hand-palm--duotone',
-                    label: t('raise hand'),
-                    onClick: () => call.setRaisedHand(true),
-                  },
-                }}
-              />
-            </>
-          )}
-          {(call.joined && (
-            <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={onLeave} />
-          )) || (
-            <IconButton variant='primary' icon='ph--phone-incoming--regular' label={t('join call')} onClick={onJoin} />
-          )}
-        </NativeToolbar.Root>
-      </div>
+            <ToggleButton
+              active={call.raisedHand}
+              state={{
+                on: {
+                  icon: 'ph--hand-waving--regular',
+                  label: t('lower hand'),
+                  onClick: () => call.setRaisedHand(false),
+                  classNames: [call.joined && 'bg-callAlert'],
+                },
+                off: {
+                  icon: 'ph--hand-palm--duotone',
+                  label: t('raise hand'),
+                  onClick: () => call.setRaisedHand(true),
+                },
+              }}
+            />
+          </>
+        )}
+        {(call.joined && (
+          <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={onLeave} />
+        )) || (
+          <IconButton variant='primary' icon='ph--phone-incoming--regular' label={t('join call')} onClick={onJoin} />
+        )}
+      </NativeToolbar.Root>
     </div>
   );
 };

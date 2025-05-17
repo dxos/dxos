@@ -96,7 +96,7 @@ export const EditorToolbar = memo(({ classNames, attendableId, role, ...props }:
     <div role='none' className={stackItemContentToolbarClassNames(role)}>
       <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
         <MenuProvider {...menuProps} attendableId={attendableId}>
-          <ToolbarMenu classNames={[textBlockWidth, '!bg-transparent', classNames]} />
+          <ToolbarMenu classNames={[textBlockWidth, classNames]} />
         </MenuProvider>
       </ElevationProvider>
     </div>

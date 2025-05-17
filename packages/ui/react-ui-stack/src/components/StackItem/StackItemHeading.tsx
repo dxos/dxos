@@ -24,7 +24,7 @@ export const StackItemHeading = ({ children, classNames, ...props }: StackItemHe
       tabIndex={0}
       {...focusableGroupAttrs}
       className={mx(
-        'flex items-center dx-focus-ring-inset-over-all relative !border-is-0',
+        'flex items-center dx-focus-ring-inset-over-all relative !border-is-0 bg-headerSurface',
         orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size] flex-col',
         classNames,
       )}

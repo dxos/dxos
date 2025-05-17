@@ -395,7 +395,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
         style={{
           background:
-            'linear-gradient(to bottom, var(--dx-baseSurface) 0%, var(--dx-baseSurface) 70%, transparent 100%)',
+            'linear-gradient(to bottom, var(--dx-sidebarSurface) 0%, var(--dx-sidebarSurface) 70%, transparent 100%)',
         }}
       />
     </Tabs.Tablist>

@@ -146,7 +146,7 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 border-be border-subduedSeparator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
+          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
           part === 'solo' ? soloInlinePadding : 'pli-1',
           layoutMode === 'solo--fullscreen' &&
             'opacity-0 border-transparent hover:border-separator hover:opacity-100 transition-[border-color,opacity]',
