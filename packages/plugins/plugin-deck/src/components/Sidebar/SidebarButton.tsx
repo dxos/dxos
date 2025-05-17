@@ -8,7 +8,8 @@ import { createIntent, LayoutAction, useCapability, useIntentDispatcher } from '
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
-import { getCompanionId, useDeckCompanions } from '../../hooks';
+import { useDeckCompanions } from '../../hooks';
+import { getCompanionId } from '../../hooks/useDeckCompanions';
 import { DECK_PLUGIN } from '../../meta';
 
 export const ToggleSidebarButton = ({
@@ -56,6 +57,21 @@ export const ToggleComplementarySidebarButton = ({
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
+
+  const companions = useDeckCompanions();
+  const handleClick = useCallback(async () => {
+    layoutContext.complementarySidebarState =
+      layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
+    const firstCompanion = companions[0];
+    if (layoutContext.complementarySidebarState === 'expanded' && !current && firstCompanion) {
+      await dispatch(
+        createIntent(LayoutAction.UpdateComplementary, {
+          part: 'complementary',
+          subject: getCompanionId(firstCompanion.id),
+        }),
+      );
+    }
+  }, [layoutContext, current, companions, dispatch]);
 
   // TODO(thure): This should have a tooltip but is suppressed because focus is getting set on this twice when the app
   //  first mounts, causing even `suppressNextTooltip` not to have the intended effect.
