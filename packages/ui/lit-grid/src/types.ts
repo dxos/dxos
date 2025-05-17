@@ -153,16 +153,18 @@ export class DxAxisResizeInternal extends Event {
   }
 }
 
-export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox' | 'initialContent'>;
+export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox' | 'cellElement' | 'initialContent'>;
 
 export class DxEditRequest extends Event {
   public readonly cellIndex: DxGridCellIndex;
   public readonly cellBox: Record<'insetInlineStart' | 'insetBlockStart' | 'inlineSize' | 'blockSize', number>;
+  public readonly cellElement: HTMLElement | null;
   public readonly initialContent?: string;
   constructor(props: DxEditRequestProps) {
     super('dx-edit-request');
     this.cellIndex = props.cellIndex;
     this.cellBox = props.cellBox;
+    this.cellElement = props.cellElement;
     this.initialContent = props.initialContent;
   }
 }
