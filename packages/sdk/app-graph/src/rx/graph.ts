@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Registry, Rx } from '@effect-rx/rx-react';
+import { Registry, Rx } from '@effect-rx/rx-react';
 import { Option, pipe, Record, Schema } from 'effect';
 
 import { todo } from '@dxos/debug';
@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional } from '@dxos/util';
 
-import { type NodeArg, type Node, type Relation } from '../node';
+import { type NodeArg, type Node, type Relation, type Action, type ActionGroup } from '../node';
 
 const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
@@ -28,6 +28,7 @@ export const ACTION_TYPE = 'dxos.org/type/GraphAction';
 export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
 
 export type GraphParams = {
+  registry?: Registry.Registry;
   nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
   edges?: Record<string, string[]>;
   onExpand?: Graph['_onExpand'];
@@ -46,10 +47,11 @@ type Edges = { inbound: string[]; outbound: string[] };
  * The Graph represents the user interface information architecture of the application constructed via plugins.
  */
 export class Graph {
-  private readonly _onExpand?: (registry: Registry.Registry, id: string, relation: Relation) => void;
-  private readonly _onInitialize?: (registry: Registry.Registry, id: string) => void;
-  private readonly _onRemoveNode?: (registry: Registry.Registry, id: string) => void;
+  private readonly _onExpand?: (id: string, relation: Relation) => void;
+  private readonly _onInitialize?: (id: string) => void;
+  private readonly _onRemoveNode?: (id: string) => void;
 
+  private readonly _registry: Registry.Registry;
   private readonly _expanded = Record.empty<string, boolean>();
   private readonly _initialized = Record.empty<string, boolean>();
   private readonly _edgeCache = Record.empty<string, Rx.Writable<Edges>>();
@@ -70,6 +72,14 @@ export class Graph {
         onNone: () => Rx.make<Option.Option<Node>>(Option.none()).pipe(Rx.keepAlive),
       }),
     );
+  });
+
+  private readonly _nodeOrThrow = Rx.family<string, Rx.Rx<Node>>((id) => {
+    return Rx.readable((get) => {
+      const node = get(this._node(id));
+      invariant(Option.isSome(node), `Node not available: ${id}`);
+      return node.value;
+    });
   });
 
   private readonly _edges = Rx.family<string, Rx.Writable<Edges>>((id) => {
@@ -94,10 +104,20 @@ export class Graph {
         .map((id) => get(this._node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
-    });
+      // TODO(wittjosiah): Do derived rx values need keep alive if they depend on other values which are kept alive?
+    }).pipe(Rx.keepAlive);
   });
 
-  constructor({ nodes, edges, onExpand, onInitialize, onRemoveNode }: GraphParams = {}) {
+  private readonly _actions = Rx.family<string, Rx.Rx<(Action | ActionGroup)[]>>((id) => {
+    return Rx.readable((get) => {
+      return get(this._connections(`${id}+outbound`)).filter(
+        (node) => node.type === ACTION_TYPE || node.type === ACTION_GROUP_TYPE,
+      );
+    }).pipe(Rx.keepAlive);
+  });
+
+  constructor({ registry, nodes, edges, onExpand, onInitialize, onRemoveNode }: GraphParams = {}) {
+    this._registry = registry ?? Registry.make();
     this._onExpand = onExpand;
     this._onInitialize = onInitialize;
     this._onRemoveNode = onRemoveNode;
@@ -116,45 +136,73 @@ export class Graph {
     return new Graph({ nodes, edges, ...options });
   }
 
+  get root() {
+    return Option.getOrThrow(this.getNode(ROOT_ID));
+  }
+
   node(id: string): Rx.Rx<Option.Option<Node>> {
     return this._node(id);
+  }
+
+  nodeOrThrow(id: string): Rx.Rx<Node> {
+    return this._nodeOrThrow(id);
   }
 
   connections(id: string, relation: Relation = 'outbound'): Rx.Rx<Node[]> {
     return this._connections(`${id}+${relation}`);
   }
 
+  actions(id: string) {
+    return this._actions(id);
+  }
+
   edges(id: string): Rx.Rx<Edges> {
     return this._edges(id);
   }
 
-  initialize(registry: Registry.Registry, id: string) {
+  getNode(id: string): Option.Option<Node> {
+    return this._registry.get(this.node(id));
+  }
+
+  getConnections(id: string, relation: Relation = 'outbound'): Node[] {
+    return this._registry.get(this.connections(id, relation));
+  }
+
+  getActions(id: string): Node[] {
+    return this._registry.get(this.actions(id));
+  }
+
+  getEdges(id: string): Edges {
+    return this._registry.get(this.edges(id));
+  }
+
+  initialize(id: string) {
     const initialized = Record.get(this._initialized, id).pipe(Option.getOrElse(() => false));
     log('initialize', { id, initialized });
     if (!initialized) {
-      this._onInitialize?.(registry, id);
+      this._onInitialize?.(id);
       Record.set(this._initialized, id, true);
     }
   }
 
-  expand(registry: Registry.Registry, id: string, relation: Relation = 'outbound') {
+  expand(id: string, relation: Relation = 'outbound') {
     const key = `${id}+${relation}`;
     const expanded = Record.get(this._expanded, key).pipe(Option.getOrElse(() => false));
     log('expand', { key, expanded });
     if (!expanded) {
-      this._onExpand?.(registry, id, relation);
+      this._onExpand?.(id, relation);
       Record.set(this._expanded, key, true);
     }
   }
 
-  addNodes(registry: Registry.Registry, nodes: NodeArg<any, Record<string, any>>[]) {
-    Rx.batch(() => nodes.map((node) => this.addNode(registry, node)));
+  addNodes(nodes: NodeArg<any, Record<string, any>>[]) {
+    Rx.batch(() => nodes.map((node) => this.addNode(node)));
   }
 
-  addNode(registry: Registry.Registry, { nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>) {
+  addNode({ nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>) {
     const { id, type, data = null, properties = {} } = nodeArg;
     const nodeRx = this._node(id);
-    const node = registry.get(nodeRx);
+    const node = this._registry.get(nodeRx);
     Option.match(node, {
       onSome: (node) => {
         const typeChanged = node.type !== type;
@@ -163,20 +211,23 @@ export class Graph {
         log('existing node', { typeChanged, dataChanged, propertiesChanged });
         if (typeChanged || dataChanged || propertiesChanged) {
           log('updating node', { id, type, data, properties });
-          registry.set(nodeRx, Option.some({ ...node, type, data, properties: { ...node.properties, ...properties } }));
+          this._registry.set(
+            nodeRx,
+            Option.some({ ...node, type, data, properties: { ...node.properties, ...properties } }),
+          );
         }
       },
       onNone: () => {
         log('new node', { id, type, data, properties });
-        registry.set(nodeRx, this._constructNode({ id, type, data, properties }));
+        this._registry.set(nodeRx, this._constructNode({ id, type, data, properties }));
       },
     });
 
     if (nodes) {
       Rx.batch(() => {
-        this.addNodes(registry, nodes);
+        this.addNodes(nodes);
         const _edges = nodes.map((node) => ({ source: id, target: node.id }));
-        this.addEdges(registry, _edges);
+        this.addEdges(_edges);
       });
     }
 
@@ -185,80 +236,91 @@ export class Graph {
     }
   }
 
-  removeNodes(registry: Registry.Registry, ids: string[], edges = false) {
-    Rx.batch(() => ids.map((id) => this.removeNode(registry, id, edges)));
+  removeNodes(ids: string[], edges = false) {
+    Rx.batch(() => ids.map((id) => this.removeNode(id, edges)));
   }
 
-  removeNode(registry: Registry.Registry, id: string, edges = false) {
+  removeNode(id: string, edges = false) {
     const nodeRx = this._node(id);
     // TODO(wittjosiah): Is there a way to mark these rx values for garbage collection?
-    registry.set(nodeRx, Option.none());
+    this._registry.set(nodeRx, Option.none());
     // TODO(wittjosiah): Remove the node from the cache?
     // TODO(wittjosiah): Reset expanded and initialized flags?
 
     if (edges) {
-      const { inbound, outbound } = registry.get(this._edges(id));
+      const { inbound, outbound } = this._registry.get(this._edges(id));
       const edges = [
         ...inbound.map((source) => ({ source, target: id })),
         ...outbound.map((target) => ({ source: id, target })),
       ];
-      this.removeEdges(registry, edges);
+      this.removeEdges(edges);
     }
 
-    this._onRemoveNode?.(registry, id);
+    this._onRemoveNode?.(id);
   }
 
-  addEdges(registry: Registry.Registry, edges: Edge[]) {
-    Rx.batch(() => edges.map((edge) => this.addEdge(registry, edge)));
+  addEdges(edges: Edge[]) {
+    Rx.batch(() => edges.map((edge) => this.addEdge(edge)));
   }
 
-  addEdge(registry: Registry.Registry, edgeArg: Edge) {
+  addEdge(edgeArg: Edge) {
     const sourceRx = this._edges(edgeArg.source);
-    const source = registry.get(sourceRx);
+    const source = this._registry.get(sourceRx);
     if (!source.outbound.includes(edgeArg.target)) {
       log('add outbound edge', { source: edgeArg.source, target: edgeArg.target });
-      registry.set(sourceRx, { inbound: source.inbound, outbound: [...source.outbound, edgeArg.target] });
+      this._registry.set(sourceRx, { inbound: source.inbound, outbound: [...source.outbound, edgeArg.target] });
     }
 
     const targetRx = this._edges(edgeArg.target);
-    const target = registry.get(targetRx);
+    const target = this._registry.get(targetRx);
     if (!target.inbound.includes(edgeArg.source)) {
       log('add inbound edge', { source: edgeArg.source, target: edgeArg.target });
-      registry.set(targetRx, { inbound: [...target.inbound, edgeArg.source], outbound: target.outbound });
+      this._registry.set(targetRx, { inbound: [...target.inbound, edgeArg.source], outbound: target.outbound });
     }
   }
 
-  removeEdges(registry: Registry.Registry, edges: Edge[]) {
-    Rx.batch(() => edges.map((edge) => this.removeEdge(registry, edge)));
+  removeEdges(edges: Edge[], removeOrphans = false) {
+    Rx.batch(() => edges.map((edge) => this.removeEdge(edge, removeOrphans)));
   }
 
-  removeEdge(registry: Registry.Registry, edgeArg: Edge) {
+  removeEdge(edgeArg: Edge, removeOrphans = false) {
     const sourceRx = this._edges(edgeArg.source);
-    const source = registry.get(sourceRx);
+    const source = this._registry.get(sourceRx);
     if (source.outbound.includes(edgeArg.target)) {
-      registry.set(sourceRx, {
+      this._registry.set(sourceRx, {
         inbound: source.inbound,
         outbound: source.outbound.filter((id) => id !== edgeArg.target),
       });
     }
 
     const targetRx = this._edges(edgeArg.target);
-    const target = registry.get(targetRx);
+    const target = this._registry.get(targetRx);
     if (target.inbound.includes(edgeArg.source)) {
-      registry.set(targetRx, {
+      this._registry.set(targetRx, {
         inbound: target.inbound.filter((id) => id !== edgeArg.source),
         outbound: target.outbound,
       });
     }
+
+    if (removeOrphans) {
+      const source = this._registry.get(sourceRx);
+      const target = this._registry.get(targetRx);
+      if (source.outbound.length === 0 && source.inbound.length === 0 && edgeArg.source !== ROOT_ID) {
+        this.removeNodes([edgeArg.source]);
+      }
+      if (target.outbound.length === 0 && target.inbound.length === 0 && edgeArg.target !== ROOT_ID) {
+        this.removeNodes([edgeArg.target]);
+      }
+    }
   }
 
-  sortEdges(registry: Registry.Registry, id: string, relation: Relation, order: string[]) {
+  sortEdges(id: string, relation: Relation, order: string[]) {
     const edgesRx = this._edges(id);
-    const edges = registry.get(edgesRx);
+    const edges = this._registry.get(edgesRx);
     const unsorted = edges[relation].filter((id) => !order.includes(id)) ?? [];
     const sorted = order.filter((id) => edges[relation].includes(id)) ?? [];
     edges[relation].splice(0, edges[relation].length, ...[...sorted, ...unsorted]);
-    registry.set(edgesRx, edges);
+    this._registry.set(edgesRx, edges);
   }
 
   private _constructNode(node: Node): Option.Option<Node> {

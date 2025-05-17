@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, Rx } from '@effect-rx/rx-react';
+import { Registry, Rx } from '@effect-rx/rx-react';
+import { effect } from '@preact/signals-core';
 import { Array, Option, pipe, Record } from 'effect';
 
-import { type CleanupFn } from '@dxos/async';
+import { type MulticastObservable, type CleanupFn } from '@dxos/async';
+import { type Ref, type BaseObject } from '@dxos/echo-schema';
+import { getSnapshot } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { byPosition, isNonNullable, type Position } from '@dxos/util';
+import { byPosition, getDebugName, isNonNullable, type Position } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, type GraphParams } from './graph';
 import { actionGroupSymbol, type ActionData, type Node, type NodeArg, type Relation } from '../node';
@@ -17,77 +21,105 @@ import { actionGroupSymbol, type ActionData, type Node, type NodeArg, type Relat
  *
  * @param params.node The existing node the returned nodes will be connected to.
  */
-export type ConnectorExtension<T = any> = (params: { node: Node<T> }) => Rx.Rx<NodeArg<any>[]>;
+export type ConnectorExtension = (params: { get: Rx.Context; node: Node }) => NodeArg<any>[];
 
 /**
  * Constrained case of the connector extension for more easily adding actions to the graph.
  */
-export type ActionsExtension<T = any> = (params: {
-  node: Node<T>;
-}) => Rx.Rx<Omit<NodeArg<ActionData>, 'type' | 'nodes' | 'edges'>[]>;
+export type ActionsExtension = (params: {
+  get: Rx.Context;
+  node: Node;
+}) => Omit<NodeArg<ActionData>, 'type' | 'nodes' | 'edges'>[];
 
 /**
  * Constrained case of the connector extension for more easily adding action groups to the graph.
  */
-export type ActionGroupsExtension<T = any> = (params: {
-  node: Node<T>;
-}) => Rx.Rx<Omit<NodeArg<typeof actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[]>;
-
-type GuardedNodeType<T> = T extends (value: any) => value is infer N ? (N extends Node<infer D> ? D : unknown) : never;
+export type ActionGroupsExtension = (params: {
+  get: Rx.Context;
+  node: Node;
+}) => Omit<NodeArg<typeof actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[];
 
 /**
  * A graph builder extension is used to add nodes to the graph.
  *
  * @param params.id The unique id of the extension.
  * @param params.relation The relation the graph is being expanded from the existing node.
- * @param params.type If provided, all nodes returned are expected to have this type.
- * @param params.disposition Affects the order the extensions are processed in.
- * @param params.filter A filter function to determine if an extension should act on a node.
+ * @param params.position Affects the order the extensions are processed in.
  * @param params.resolver A function to add nodes to the graph based on just the node id.
  * @param params.connector A function to add nodes to the graph based on a connection to an existing node.
  * @param params.actions A function to add actions to the graph based on a connection to an existing node.
  * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
  */
-export type CreateExtensionOptions<T = any> = {
+export type CreateExtensionOptions = {
   id: string;
   relation?: Relation;
   position?: Position;
-  filter?: (node: Node) => node is Node<T>;
   // resolver?: ResolverExtension;
-  connector?: ConnectorExtension<GuardedNodeType<CreateExtensionOptions<T>['filter']>>;
-  actions?: ActionsExtension<GuardedNodeType<CreateExtensionOptions<T>['filter']>>;
-  actionGroups?: ActionGroupsExtension<GuardedNodeType<CreateExtensionOptions<T>['filter']>>;
+  connector?: ConnectorExtension;
+  actions?: ActionsExtension;
+  actionGroups?: ActionGroupsExtension;
 };
 
 /**
  * Create a graph builder extension.
  */
-export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): BuilderExtension[] => {
-  const { id, position = 'static', connector, actions, actionGroups, ...rest } = extension;
+export const createExtension = (extension: CreateExtensionOptions): BuilderExtension[] => {
+  const { id, position = 'static', relation = 'outbound', connector, actions, actionGroups } = extension;
   const getId = (key: string) => `${id}/${key}`;
   return [
     // resolver ? { id: getId('resolver'), position, resolver } : undefined,
-    connector ? { ...rest, id: getId('connector'), position, connector } : undefined,
+    connector
+      ? ({
+          id: getId('connector'),
+          position,
+          relation,
+          connector: Rx.family((key) =>
+            Rx.readable((get) => {
+              return pipe(
+                get(key),
+                Option.flatMap((node) => (connector ? Option.some(connector({ get, node })) : Option.none())),
+                Option.getOrElse(() => []),
+              );
+            }).pipe(Rx.keepAlive),
+          ),
+        } satisfies BuilderExtension)
+      : undefined,
     actionGroups
       ? ({
-          ...rest,
           id: getId('actionGroups'),
           position,
           relation: 'outbound',
-          connector: ({ node }) =>
-            Rx.readable((get) =>
-              get(actionGroups({ node })).map((arg) => ({ ...arg, data: actionGroupSymbol, type: ACTION_GROUP_TYPE })),
-            ),
+          connector: Rx.family((node) =>
+            Rx.readable((get) => {
+              return pipe(
+                get(node),
+                Option.flatMap((node) => (actionGroups ? Option.some(actionGroups({ get, node })) : Option.none())),
+                Option.getOrElse(() => []),
+                Array.map((arg) => ({
+                  ...arg,
+                  data: actionGroupSymbol,
+                  type: ACTION_GROUP_TYPE,
+                })),
+              );
+            }).pipe(Rx.keepAlive),
+          ),
         } satisfies BuilderExtension)
       : undefined,
     actions
       ? ({
-          ...rest,
           id: getId('actions'),
           position,
           relation: 'outbound',
-          connector: ({ node }) =>
-            Rx.readable((get) => get(actions({ node })).map((arg) => ({ ...arg, type: ACTION_TYPE }))),
+          connector: Rx.family((node) =>
+            Rx.readable((get) => {
+              return pipe(
+                get(node),
+                Option.flatMap((node) => (actions ? Option.some(actions({ get, node })) : Option.none())),
+                Option.getOrElse(() => []),
+                Array.map((arg) => ({ ...arg, type: ACTION_TYPE })),
+              );
+            }).pipe(Rx.keepAlive),
+          ),
         } satisfies BuilderExtension)
       : undefined,
   ].filter(isNonNullable);
@@ -96,16 +128,14 @@ export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): 
 export type BuilderExtension = Readonly<{
   id: string;
   position: Position;
+  relation?: Relation; // Only for connector.
   // resolver?: ResolverExtension;
-  connector?: ConnectorExtension;
-  // Only for connector.
-  relation?: Relation;
-  filter?: (node: Node) => boolean;
+  connector?: (node: Rx.Rx<Option.Option<Node>>) => Rx.Rx<NodeArg<any>[]>;
 }>;
 
-type ExtensionArg = BuilderExtension | BuilderExtension[] | ExtensionArg[];
+export type BuilderExtensions = BuilderExtension | BuilderExtension[] | BuilderExtensions[];
 
-export const flattenExtensions = (extension: ExtensionArg, acc: BuilderExtension[] = []): BuilderExtension[] => {
+export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExtension[] = []): BuilderExtension[] => {
   if (Array.isArray(extension)) {
     return [...acc, ...extension.flatMap((ext) => flattenExtensions(ext, acc))];
   } else {
@@ -122,24 +152,27 @@ export const flattenExtensions = (extension: ExtensionArg, acc: BuilderExtension
 export class GraphBuilder {
   private readonly _connectorSubscriptions = new Map<string, CleanupFn>();
   private readonly _extensions = Rx.make(Record.empty<string, BuilderExtension>());
+  private readonly _registry: Registry.Registry;
   private readonly _graph: Graph;
 
-  constructor(params: Pick<GraphParams, 'nodes' | 'edges'> = {}) {
+  constructor({ registry, ...params }: Pick<GraphParams, 'registry' | 'nodes' | 'edges'> = {}) {
+    this._registry = registry ?? Registry.make();
     this._graph = new Graph({
       ...params,
-      onExpand: (registry, id, relation) => this._onExpand(registry, id, relation),
-      onInitialize: (registry, id) => this._onInitialize(registry, id),
-      onRemoveNode: (registry, id) => this._onRemoveNode(registry, id),
+      registry: this._registry,
+      onExpand: (id, relation) => this._onExpand(id, relation),
+      onInitialize: (id) => this._onInitialize(id),
+      onRemoveNode: (id) => this._onRemoveNode(id),
     });
   }
 
-  static from(pickle?: string) {
+  static from(pickle?: string, registry?: Registry.Registry) {
     if (!pickle) {
-      return new GraphBuilder();
+      return new GraphBuilder({ registry });
     }
 
     const { nodes, edges } = JSON.parse(pickle);
-    return new GraphBuilder({ nodes, edges });
+    return new GraphBuilder({ nodes, edges, registry });
   }
 
   get graph() {
@@ -150,17 +183,17 @@ export class GraphBuilder {
     return this._extensions;
   }
 
-  addExtension(registry: Registry.Registry, extensionArg: ExtensionArg): GraphBuilder {
-    flattenExtensions(extensionArg).forEach((extension) => {
-      const extensions = registry.get(this._extensions);
-      registry.set(this._extensions, Record.set(extensions, extension.id, extension));
+  addExtension(extensions: BuilderExtensions): GraphBuilder {
+    flattenExtensions(extensions).forEach((extension) => {
+      const extensions = this._registry.get(this._extensions);
+      this._registry.set(this._extensions, Record.set(extensions, extension.id, extension));
     });
     return this;
   }
 
-  removeExtension(registry: Registry.Registry, id: string): GraphBuilder {
-    const extensions = registry.get(this._extensions);
-    registry.set(this._extensions, Record.remove(extensions, id));
+  removeExtension(id: string): GraphBuilder {
+    const extensions = this._registry.get(this._extensions);
+    this._registry.set(this._extensions, Record.remove(extensions, id));
     return this;
   }
 
@@ -174,45 +207,41 @@ export class GraphBuilder {
   private readonly _connections = Rx.family<string, Rx.Rx<NodeArg<any>[]>>((key) => {
     return Rx.readable((get) => {
       const [id, relation] = key.split('+');
-      const nodeOption = get(this._graph.node(id));
-      if (Option.isNone(nodeOption)) {
-        return [];
-      }
+      const node = this._graph.node(id);
 
-      const node = nodeOption.value;
       return pipe(
         get(this._extensions),
         Record.values,
         Array.sortBy(byPosition),
         Array.filter(({ relation: _relation = 'outbound' }) => _relation === relation),
-        Array.filter(({ filter }) => (filter ? filter(node) : true)),
-        Array.map(({ connector }) => connector),
+        Array.map(({ id, connector }) => {
+          const result = connector?.(node);
+          return result;
+        }),
         Array.filter(isNonNullable),
-        Array.map((connector) => connector({ node })),
         Array.flatMap((result) => get(result)),
       );
-    });
+    }).pipe(Rx.keepAlive);
   });
 
-  private _onExpand(registry: Registry.Registry, id: string, relation: Relation) {
+  private _onExpand(id: string, relation: Relation) {
     log('onExpand', { id, relation });
     const connections = this._connections(`${id}+${relation}`);
 
     let previous: string[] = [];
-    const cancel = registry.subscribe(connections, (nodes) => {
-      log('update', { id, relation, nodes });
+    const cancel = this._registry.subscribe(connections, (nodes) => {
       const ids = nodes.map((n) => n.id);
       const removed = previous.filter((id) => !ids.includes(id));
       previous = ids;
 
+      log.info('update', { id, relation, ids, removed });
       Rx.batch(() => {
         this._graph.removeEdges(
-          registry,
           removed.map((target) => ({ source: id, target })),
+          true,
         );
-        this._graph.addNodes(registry, nodes);
+        this._graph.addNodes(nodes);
         this._graph.addEdges(
-          registry,
           nodes.map((node) =>
             relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
           ),
@@ -220,17 +249,60 @@ export class GraphBuilder {
       });
     });
     // Trigger subscription.
-    registry.get(connections);
+    this._registry.get(connections);
 
     this._connectorSubscriptions.set(id, cancel);
   }
 
-  private _onInitialize(registry: Registry.Registry, id: string) {
+  private _onInitialize(id: string) {
     log('onInitialize', { id });
   }
 
-  private _onRemoveNode(_: Registry.Registry, id: string) {
+  private _onRemoveNode(id: string) {
     this._connectorSubscriptions.get(id)?.();
     this._connectorSubscriptions.delete(id);
   }
 }
+
+const liveObjectFamily = Rx.family((live: Live<BaseObject>) => {
+  return Rx.readable((get) => {
+    const dispose = effect(() => {
+      const _ = getSnapshot(live);
+      get.setSelf(live);
+    });
+
+    get.addFinalizer(() => dispose());
+  }).pipe(Rx.keepAlive);
+});
+
+export const rxFromLive = <T extends BaseObject>(live: Live<T>): Rx.Rx<T> => {
+  return liveObjectFamily(live) as Rx.Rx<T>;
+};
+
+const refFamily = Rx.family((ref: Ref<any>) => {
+  return Rx.readable((get) => {
+    const dispose = effect(() => {
+      get.setSelf(ref.target);
+    });
+
+    get.addFinalizer(() => dispose());
+  }).pipe(Rx.keepAlive);
+});
+
+export const rxFromRef = <T>(ref: Ref<T>): Rx.Rx<T | undefined> => {
+  return refFamily(ref) as Rx.Rx<T | undefined>;
+};
+
+const observableFamily = Rx.family((observable: MulticastObservable<any>) => {
+  return Rx.readable((get) => {
+    const subscription = observable.subscribe((value) => get.setSelf(value));
+
+    get.addFinalizer(() => subscription.unsubscribe());
+
+    return observable.get();
+  }).pipe(Rx.keepAlive);
+});
+
+export const rxFromObservable = <T>(observable: MulticastObservable<T>): Rx.Rx<T> => {
+  return observableFamily(observable) as Rx.Rx<T>;
+};

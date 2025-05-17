@@ -32,16 +32,17 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-rx/rx-react": "^0.33.6",
     "@preact/signals-core": "^1.6.0",
     "main-thread-scheduling": "^14.1.1"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@effect-rx/rx-react": "^0.33.6",
     "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
@@ -54,6 +55,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@effect-rx/rx-react": "^0.33.6",
     "@effect/platform": "0.80.12",
     "@phosphor-icons/react": "^2.1.5",
     "effect": "3.14.21",

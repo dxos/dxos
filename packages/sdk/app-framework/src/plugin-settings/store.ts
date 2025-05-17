@@ -23,6 +23,8 @@ export default (context: PluginContext) => {
       settingsStore.removeStore(setting.prefix);
     });
   });
+  // TODO(wittjosiah): This is currently required to initialize the above subscription.
+  registry.get(context.capabilities(Capabilities.Settings));
 
   return contributes(Capabilities.SettingsStore, settingsStore, () => cancel());
 };
