@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { raise } from '@dxos/debug';
 import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
 
-import { Type } from './Type';
+import { Obj, Ref, Type } from '.';
 
 namespace Testing {
   export const Organization = Schema.Struct({
@@ -95,8 +95,8 @@ namespace Testing {
 
 describe('Experimental API review', () => {
   test('type checks', ({ expect }) => {
-    const contact = Type.create(Testing.Person, { name: 'Test' });
-    const type: Schema.Schema<Testing.Person> = Type.getSchema(contact) ?? raise(new Error('No schema found'));
+    const contact = Obj.create(Testing.Person, { name: 'Test' });
+    const type: Schema.Schema<Testing.Person> = Obj.getSchema(contact) ?? raise(new Error('No schema found'));
 
     expect(Type.getDXN(type)?.typename).to.eq(Testing.Person.typename);
     expect(Type.getTypename(type)).to.eq('example.com/type/Person');
@@ -109,8 +109,11 @@ describe('Experimental API review', () => {
   });
 
   test('instance checks', ({ expect }) => {
-    const organization = Type.create(Testing.Organization, { name: 'DXOS' });
-    const contact = Type.create(Testing.Person, { name: 'Test', organization: Type.ref(organization) });
+    const organization: Obj.Obj.Live<Testing.Organization> = Obj.create(Testing.Organization, { name: 'DXOS' });
+    const contact: Obj.Obj.Live<Testing.Person> = Obj.create(Testing.Person, {
+      name: 'Test',
+      organization: Ref.make(organization),
+    });
 
     expect(Schema.is(Testing.Person)(contact)).to.be.true;
     expect(Testing.Person.instanceOf(contact)).to.be.true;
@@ -119,7 +122,7 @@ describe('Experimental API review', () => {
   });
 
   test('default props', ({ expect }) => {
-    const message = Type.create(Testing.Message, Testing.MessageStruct.make({}));
+    const message = Obj.create(Testing.Message, Testing.MessageStruct.make({}));
     expect(message.timestamp).to.exist;
   });
 });

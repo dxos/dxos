@@ -512,7 +512,6 @@ describe('Integration tests', () => {
       const {
         objects: [obj],
       } = await db.query(Filter.typeDXN(typeDXN.toString())).run();
-      log.info('xxx', { typeDXN, obj });
       expect(getSchema(obj)).toBeDefined();
       expect(getSchemaTypename(getSchema(obj)!)).toEqual(Testing.Contact.typename);
     }

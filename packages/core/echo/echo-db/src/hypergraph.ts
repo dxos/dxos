@@ -63,6 +63,9 @@ export class Hypergraph {
     return this._schemaRegistry;
   }
 
+  /**
+   * @deprecated
+   */
   // TODO(burdon): Use DXN.
   // TODO(burdon): Ensure static and dynamic schema do not have overlapping type names.
   async getSchemaByTypename(typename: string, db: EchoDatabase): Promise<BaseSchema | undefined> {

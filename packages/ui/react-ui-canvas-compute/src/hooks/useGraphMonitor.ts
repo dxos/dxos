@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 
 import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
+import { ObjectId, Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type GraphMonitor, type CanvasGraphModel, type Connection } from '@dxos/react-ui-canvas-editor';
@@ -27,7 +27,7 @@ export const mapEdge = (
   invariant(targetNode?.node);
 
   return {
-    id: Type.ObjectId.random(),
+    id: ObjectId.random(),
     source: sourceNode.node,
     target: targetNode.node,
     output,
@@ -113,7 +113,7 @@ export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
 const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode, triggerData: TriggerShape) => {
   const functionTrigger = triggerData.functionTrigger?.target;
   invariant(functionTrigger);
-  functionTrigger.function = Type.ref(graph.root);
+  functionTrigger.function = Ref.make(graph.root);
   functionTrigger.inputNodeId = computeNode.id;
 };
 
