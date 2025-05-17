@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
+import { getCompanionId, useDeckCompanions } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 
 export const ToggleSidebarButton = ({
@@ -47,19 +48,22 @@ export const CloseSidebarButton = () => {
   );
 };
 
-export const ToggleComplementarySidebarButton = ({ inR0, classNames }: ThemedClassName<{ inR0?: boolean }>) => {
+export const ToggleComplementarySidebarButton = ({
+  inR0,
+  classNames,
+  current,
+}: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
+
   // TODO(thure): This should have a tooltip but is suppressed because focus is getting set on this twice when the app
   //  first mounts, causing even `suppressNextTooltip` not to have the intended effect.
   return (
     <IconButton
       noTooltip
       iconOnly
-      onClick={() =>
-        (layoutContext.complementarySidebarState =
-          layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded')
-      }
+      onClick={handleClick}
       variant='ghost'
       label={t('open complementary sidebar label')}
       classNames={['[&>svg]:-scale-x-100', classNames]}

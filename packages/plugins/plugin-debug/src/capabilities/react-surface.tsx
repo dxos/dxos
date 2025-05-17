@@ -24,7 +24,7 @@ import {
   EdgeDashboardPanel,
   FeedsPanel,
   IdentityPanel,
-  InvocationTracePanel,
+  InvocationTraceContainer,
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
@@ -361,7 +361,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is any => data.subject === Devtools.Edge.Traces,
       component: () => {
         const space = useCurrentSpace();
-        return <InvocationTracePanel space={space} />;
+        return <InvocationTraceContainer space={space} />;
       },
     }),
     createSurface({

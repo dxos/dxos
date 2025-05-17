@@ -12,50 +12,19 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  LayoutAction,
-  Surface,
-  createIntent,
-  useAppGraph,
-  useCapability,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
-import { type Node } from '@dxos/plugin-graph';
+import { LayoutAction, Surface, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { Main, useTranslation, toLocalizedString, IconButton, type Label } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { byPosition, type Position } from '@dxos/util';
 
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
+import { type DeckCompanion, getCompanionId, useDeckCompanions } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
-import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, getMode } from '../../types';
+import { getMode } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 import { PlankContentError, PlankLoading } from '../Plank';
 
 const label = ['complementary sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
-
-const getCompanionId = (id: string) => {
-  const [_, companionId] = id.split(ATTENDABLE_PATH_SEPARATOR);
-  return companionId ?? 'never';
-};
-
-type DeckCompanion = Node<
-  any,
-  {
-    label: Label;
-    icon: string;
-    // TODO(burdon): Scroll area should be controlled by surface.
-    /** If true, the panel will not be wrapped in a scroll area. */
-    fixed?: boolean;
-    position?: Position;
-  }
->;
-
-const useDeckCompanions = (): DeckCompanion[] => {
-  const { graph } = useAppGraph();
-  const companions = graph.nodes(graph.root, { type: DECK_COMPANION_TYPE }) as DeckCompanion[];
-  return companions.toSorted((a, b) => byPosition(a.properties, b.properties));
-};
 
 export type ComplementarySidebarProps = {
   current?: string;

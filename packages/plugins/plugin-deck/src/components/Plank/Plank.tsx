@@ -205,7 +205,7 @@ export const Plank = ({ id = UNKNOWN_ID, ...props }: PlankProps) => {
   const companions = useCompanions(id);
   const currentCompanion = companions.find(({ id }) => id === props.companionId);
 
-  if (props.companionId) {
+  if (props.companionId && currentCompanion) {
     const Root = props.part === 'solo' ? SplitFrame : Fragment;
     return (
       <Root>
