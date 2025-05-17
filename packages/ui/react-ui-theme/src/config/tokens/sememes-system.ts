@@ -87,7 +87,6 @@ const surface: Record<string, Sememe> = {
   },
 };
 
-// TODO(burdon): Define enum for sememe names.
 export const systemSememes = {
   //
   // Surfaces (bg-)
@@ -139,7 +138,7 @@ export const systemSememes = {
 
   //
   // Text (text-)
-  // TODO(thure): Establish contrast-order cadence for text
+  // TODO(thure): Establish contrast-order cadence for text.
   //
 
   ['baseText' as const]: {
@@ -187,7 +186,7 @@ type Alias =
   // Surfaces
   //
 
-  // Base surface for text (e.g., Document, Table, Sheet)
+  // Base surface for text (e.g., Document, Table, Sheet.)
   | 'baseSurface'
   | 'modalSurface'
   | 'sidebarSurface'
