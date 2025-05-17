@@ -9,13 +9,13 @@ import { Schema } from 'effect';
 import React from 'react';
 
 import {
-  contributes,
   Capabilities,
   IntentPlugin,
-  createResolver,
-  defineCapability,
   LayoutAction,
   SettingsPlugin,
+  contributes,
+  createResolver,
+  defineCapability,
   useCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
