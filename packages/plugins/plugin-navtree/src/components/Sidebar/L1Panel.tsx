@@ -17,14 +17,13 @@ import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemColumns } from '../NavTreeItem';
 
-const headingBackButtonLabel = 'absolute inset-0 min-is-0 truncate flex items-center pis-6';
+const headingBackButtonLabel = 'inset-0 min-is-0 truncate flex items-center pis-2';
 
-// TODO(burdon): Figure out better L1 back navigation.
-const HeadingBackButton = ({ title, onClick }: { title: string } & Pick<ButtonProps, 'onClick'>) => {
+const TitleButton = ({ title, onClick }: { title: string } & Pick<ButtonProps, 'onClick'>) => {
   return (
     <Button
       variant='ghost'
-      classNames='pli-1 flex-1 relative group text-start justify-start bs-[--rail-action] font-normal'
+      classNames='pli-1 flex-1 group text-start justify-start bs-[--rail-action] font-normal'
       onClick={onClick}
     >
       <Icon icon='ph--caret-left--bold' size={3} />
@@ -91,7 +90,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
         <>
           <h2 className='flex items-center border-be border-separator app-drag pli-1'>
             {backCapable ? (
-              <HeadingBackButton title={title} onClick={handleBack} />
+              <TitleButton title={title} onClick={handleBack} />
             ) : (
               <span className='flex-1 truncate min-is-0 pis-6'>{title}</span>
             )}
