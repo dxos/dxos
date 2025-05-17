@@ -213,8 +213,8 @@ type Alias =
 
 export const defs: Record<Alias, { root?: SememeName; attention?: SememeName }> = {
   baseSurface: { root: 'surface-20', attention: 'surface-0' },
-  modalSurface: { root: 'surface-30' },
   sidebarSurface: { root: 'surface-30' },
+  modalSurface: { root: 'surface-40' },
   groupSurface: { root: 'surface-60', attention: 'surface-40' },
   headerSurface: { root: 'surface-30', attention: 'surface-20' },
   toolbarSurface: { root: 'surface-30', attention: 'surface-20' },
@@ -229,7 +229,7 @@ export const defs: Record<Alias, { root?: SememeName; attention?: SememeName }> 
   input: { root: 'surface-50', attention: 'surface-40' },
   scrim: { root: 'surface-10t' },
   separator: { root: 'surface-40' },
-  subduedSeparator: { root: 'surface-40' },
+  subduedSeparator: { root: 'surface-30' },
   unAccent: { root: 'surface-400' },
   unAccentHover: { root: 'surface-450' },
 };
