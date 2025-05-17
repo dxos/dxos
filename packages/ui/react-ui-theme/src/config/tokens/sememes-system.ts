@@ -184,19 +184,22 @@ type SememeName = keyof typeof systemSememes;
 type Alias =
   //
   // Surfaces
+  // TODO(burdon): Define surface for list selection, sheet ranges, etc.
   //
 
   // Base surface for text (e.g., Document, Table, Sheet.)
   | 'baseSurface'
+  // Forms, cards, etc.
+  | 'groupSurface'
+  // Dialogs, menus, popovers, etc.
   | 'modalSurface'
   | 'sidebarSurface'
-  | 'groupSurface'
   | 'headerSurface'
+  // Toolbars, table/sheet headers, etc.
   | 'toolbarSurface'
-  | 'gridHeaderSurface'
+  | 'hoverSurface'
   | 'accentSurface'
   | 'accentSurfaceHover'
-  | 'hoverSurface'
 
   //
   // TODO(burdon): Why are these here, but not deck, text, above?
@@ -211,17 +214,16 @@ type Alias =
   | 'unAccent'
   | 'unAccentHover';
 
-const aliasDefs: Record<Alias, { root?: SememeName; attention?: SememeName }> = {
+const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName }> = {
   baseSurface: { root: 'surface-20', attention: 'surface-0' },
+  groupSurface: { root: 'surface-60', attention: 'surface-40' },
   sidebarSurface: { root: 'surface-30' },
   modalSurface: { root: 'surface-40' },
-  groupSurface: { root: 'surface-60', attention: 'surface-40' },
   headerSurface: { root: 'surface-30', attention: 'surface-20' },
   toolbarSurface: { root: 'surface-30', attention: 'surface-20' },
-  gridHeaderSurface: { root: 'surface-40', attention: 'surface-30' },
+  hoverSurface: { root: 'surface-70', attention: 'surface-60' },
   accentSurface: { root: 'accentSurface-500' },
   accentSurfaceHover: { root: 'accentSurface-400' },
-  hoverSurface: { root: 'surface-70', attention: 'surface-60' },
 
   attention: { root: 'surface-10' },
   currentRelated: { root: 'accentSurface-300t' },
@@ -234,7 +236,7 @@ const aliasDefs: Record<Alias, { root?: SememeName; attention?: SememeName }> = 
   unAccentHover: { root: 'surface-450' },
 };
 
-export const systemAliases: ColorAliases = Object.entries(aliasDefs).reduce((aliases, [alias, values]) => {
+export const systemAliases: ColorAliases = Object.entries(aliasDefssDefs).reduce((aliases, [alias, values]) => {
   Object.entries(values).forEach(([key, sememe]) => {
     const record = getMapValue(aliases, sememe, () => ({}));
     const list = getMapValue<string[]>(record, key, () => []);
