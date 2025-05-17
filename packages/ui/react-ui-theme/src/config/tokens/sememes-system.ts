@@ -211,7 +211,7 @@ type Alias =
   | 'unAccent'
   | 'unAccentHover';
 
-export const defs: Record<Alias, { root?: SememeName; attention?: SememeName }> = {
+const aliasDefs: Record<Alias, { root?: SememeName; attention?: SememeName }> = {
   baseSurface: { root: 'surface-20', attention: 'surface-0' },
   sidebarSurface: { root: 'surface-30' },
   modalSurface: { root: 'surface-40' },
@@ -234,7 +234,7 @@ export const defs: Record<Alias, { root?: SememeName; attention?: SememeName }> 
   unAccentHover: { root: 'surface-450' },
 };
 
-export const systemAliases: ColorAliases = Object.entries(defs).reduce((aliases, [alias, values]) => {
+export const systemAliases: ColorAliases = Object.entries(aliasDefs).reduce((aliases, [alias, values]) => {
   Object.entries(values).forEach(([key, sememe]) => {
     const record = getMapValue(aliases, sememe, () => ({}));
     const list = getMapValue<string[]>(record, key, () => []);
