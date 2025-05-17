@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { assertEchoSchema, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -28,13 +29,12 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const handleUpdateTypename = useCallback(
     (newTypename: string) => {
       invariant(schema);
-
       const matchingViews = views.filter((view) => view.query.typename === currentTypename);
       for (const view of matchingViews) {
         view.query.typename = newTypename;
       }
 
-      schema.mutable.updateTypename(newTypename);
+      assertEchoSchema(schema).updateTypename(newTypename);
     },
     [views, schema],
   );
@@ -55,8 +55,8 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
       registry={space.db.schemaRegistry}
       schema={schema}
       view={table.view.target!}
-      onTypenameChanged={schema.readonly ? undefined : handleUpdateTypename}
-      onDelete={schema.readonly ? undefined : handleDelete}
+      onTypenameChanged={isMutable(schema) ? undefined : handleUpdateTypename}
+      onDelete={isMutable(schema) ? undefined : handleDelete}
     />
   );
 };

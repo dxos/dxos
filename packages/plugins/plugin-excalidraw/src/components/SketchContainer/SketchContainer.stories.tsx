@@ -15,7 +15,12 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { SketchContainer } from './SketchContainer';
 
 const createSketch = () => {
-  return createObject(live(DiagramType, { canvas: makeRef(live(CanvasType, { content: {} })) }));
+  // TODO(burdon): Remove dependency on echo-db.
+  return createObject(
+    live(DiagramType, {
+      canvas: makeRef(live(CanvasType, { content: {} })),
+    }),
+  );
 };
 
 const DefaultStory = () => {

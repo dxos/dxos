@@ -2,23 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { useRef, useMemo, useCallback } from 'react';
 
-import { type BaseSchema, type JsonSchemaType } from '@dxos/echo-schema';
+import { type JsonSchemaType } from '@dxos/echo-schema';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
-import { getBaseSchems as getBaseSchema, makeDynamicTable, type TablePropertyDefinition } from '../../util';
+import { getBaseSchema, makeDynamicTable, type TablePropertyDefinition } from '../../util';
 
 type DynamicTableProps = ThemedClassName<{
   name?: string; // TODO(burdon): Remove?
   rows: any[];
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchemaType;
-  schema?: BaseSchema;
+  schema?: Schema.Schema.AnyNoContext;
   features?: Partial<TableFeatures>;
   rowActions?: TableRowAction[];
   onRowClick?: (row: any) => void;

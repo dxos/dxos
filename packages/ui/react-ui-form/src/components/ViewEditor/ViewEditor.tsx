@@ -6,7 +6,7 @@ import { Schema, SchemaAST } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { Format, type BaseSchema, type JsonProp } from '@dxos/echo-schema';
+import { Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -31,7 +31,7 @@ const ViewMetaSchema = Schema.Struct({
 type ViewMetaType = Schema.Schema.Type<typeof ViewMetaSchema>;
 
 export type ViewEditorProps = ThemedClassName<{
-  schema: BaseSchema;
+  schema: Schema.Schema.AnyNoContext;
   view: ViewType;
   registry?: SchemaRegistry;
   readonly?: boolean;
@@ -54,8 +54,9 @@ export const ViewEditor = ({
   onDelete,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const projection = useMemo(() => new ViewProjection(schema.jsonSchema, view), [schema, view]);
+  const projection = useMemo(() => new ViewProjection(toJsonSchema(schema), view), [schema, view]);
   const [field, setField] = useState<FieldType>();
+  const immutable = readonly || !isMutable(schema);
 
   // TODO(burdon): Should be reactive.
   const viewValues = useMemo(() => {
@@ -74,14 +75,14 @@ export const ViewEditor = ({
   // TODO(burdon): Check if mutable; variant of useCallback that return undefined if readonly?
 
   const handleAdd = useCallback(() => {
-    invariant(!schema.readonly);
+    invariant(!immutable);
     const field = projection.createFieldProjection();
     setField(field);
   }, [schema, view]);
 
   const handleUpdate = useCallback(
     ({ name, typename }: ViewMetaType) => {
-      invariant(!schema.readonly);
+      invariant(!immutable);
       requestAnimationFrame(() => {
         if (view.name !== name) {
           view.name = name;
@@ -97,7 +98,7 @@ export const ViewEditor = ({
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      invariant(!schema.readonly);
+      invariant(!immutable);
       if (fieldId === field?.id) {
         setField(undefined);
       }
@@ -109,7 +110,7 @@ export const ViewEditor = ({
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
-      invariant(!schema.readonly);
+      invariant(!immutable);
       // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
       const fields = [...view.fields];
       const [moved] = fields.splice(fromIndex, 1);
@@ -145,7 +146,7 @@ export const ViewEditor = ({
         autoSave
         schema={ViewMetaSchema}
         values={viewValues}
-        onSave={schema.readonly ? undefined : handleUpdate}
+        onSave={immutable ? undefined : handleUpdate}
         classNames='min-bs-0 overflow-y-auto'
       />
 
@@ -159,7 +160,7 @@ export const ViewEditor = ({
           items={view.fields}
           isItem={Schema.is(FieldSchema)}
           getId={(field) => field.id}
-          onMove={schema.readonly ? undefined : handleMove}
+          onMove={immutable ? undefined : handleMove}
         >
           {({ items: fields }) => (
             <>
@@ -181,7 +182,7 @@ export const ViewEditor = ({
                         disabled={view.fields.length <= 1}
                         onClick={() => handleHide(field.id)}
                       />
-                      {!schema.readonly && (
+                      {!immutable && (
                         <List.ItemDeleteButton
                           icon='ph--trash--regular'
                           disabled={view.fields.length <= 1}
@@ -243,7 +244,7 @@ export const ViewEditor = ({
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
-            onClick={schema.readonly ? undefined : handleAdd}
+            onClick={immutable ? undefined : handleAdd}
             // TODO(burdon): Show field limit in ux (not tooltip).
             disabled={view.fields.length >= VIEW_FIELD_LIMIT}
           />

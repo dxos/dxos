@@ -151,6 +151,20 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
 };
 
 /**
+ * @param schema @deprecated
+ */
+// TODO(burdon): Remove once we've stabilized the schema API.
+export const assertEchoSchema = (schema: Schema.Schema.AnyNoContext): EchoSchema => {
+  invariant(schema instanceof EchoSchema, 'Schema is not an EchoSchema');
+  return schema;
+};
+
+// TODO(burdon): Resolve (add annotation?)
+export const isMutable = (schema: Schema.Schema.AnyNoContext): boolean => {
+  return schema instanceof EchoSchema;
+};
+
+/**
  * Represents a schema that is stored in the ECHO database.
  * Schema can me mutable or readonly (specified by the {@link EchoSchema.readonly} field).
  *
