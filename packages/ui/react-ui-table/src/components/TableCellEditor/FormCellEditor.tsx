@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { getSnapshot } from '@dxos/echo-schema';
