@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(thure): TS2742 at it again
+// TODO(thure): TS2742
 /* eslint-disable unused-imports/no-unused-imports */
 import * as _colors from '@ch-ui/colors';
 
@@ -27,8 +27,6 @@ const applyAlpha = (sememe: Sememe, alpha: number): Sememe => {
   };
 };
 
-// Surface cadence sememes (in contrast-order)
-
 const STEPS = 8;
 
 const DARK_MIN = 850;
@@ -39,6 +37,9 @@ const LIGHT_MIN = 10;
 const LIGHT_MAX = 180;
 const lightCadence = (step: number) => Math.floor(LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (step / STEPS));
 
+/**
+ * Surface cadence sememes (in contrast-order)
+ */
 const surface: Record<string, Sememe> = {
   '0': {
     light: ['neutral', lightCadence(0)],
