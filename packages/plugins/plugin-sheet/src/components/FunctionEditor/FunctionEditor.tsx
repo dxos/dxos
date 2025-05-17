@@ -26,7 +26,7 @@ export const FunctionEditor = () => {
   }
 
   return (
-    <div className='flex shrink-0 justify-between items-center px-4 py-1 text-sm attention-surface border-bs !border-separator'>
+    <div className='flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbarSurface border-bs !border-separator'>
       <div className='flex gap-4 items-center'>
         <div className='flex w-16 items-center font-mono'>
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
