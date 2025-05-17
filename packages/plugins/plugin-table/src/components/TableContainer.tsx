@@ -121,7 +121,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
         classNames='border-be border-separator'
       />
       <Table.Root role={role}>
-        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
+        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} schema={schema} />
       </Table.Root>
     </StackItem.Content>
   );

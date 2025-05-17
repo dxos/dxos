@@ -9,6 +9,7 @@ import { createAnnotationHelper } from '../ast/annotation-helper';
 
 export enum TypeEnum {
   Object = 'object',
+  Array = 'array',
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',
@@ -25,6 +26,8 @@ export type ScalarType =
 // TODO(burdon): Ref.
 export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
   switch ((property as any).type) {
+    case 'array':
+      return TypeEnum.Array;
     case 'object':
       return TypeEnum.Object;
     case 'string':

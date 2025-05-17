@@ -27,7 +27,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
   const [editing, setEditing] = useState<GridEditing>(null);
   const handleEditingChange = useCallback<NonNullable<GridRootProps['onEditingChange']>>((event) => {
     // TODO(burdon): Not working?
-    setEditing(event ? { index: event.index, initialContent: '' } : null);
+    setEditing(event ? { index: event.index, initialContent: '', cellElement: event.cellElement } : null);
   }, []);
 
   // Multiselect

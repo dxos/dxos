@@ -20,6 +20,7 @@ import {
   toJsonSchema,
   type JsonPath,
   type JsonProp,
+  EchoObject,
 } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
@@ -834,5 +835,29 @@ describe('ViewProjection', () => {
         },
       ],
     });
+  });
+
+  test('property that is an array of objects', () => {
+    const ContactWithArrayOfEmails = Schema.Struct({
+      name: Schema.String,
+      emails: Schema.optional(
+        Schema.Array(
+          Schema.Struct({
+            value: Schema.String,
+            label: Schema.String.pipe(Schema.optional),
+          }),
+        ),
+      ),
+    }).pipe(EchoObject({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
+
+    const jsonSchema = toJsonSchema(ContactWithArrayOfEmails);
+
+    const view = createView({ name: 'view', typename: ContactWithArrayOfEmails.typename, jsonSchema });
+    const projection = new ViewProjection(jsonSchema, view);
+
+    const fieldId = projection.getFieldId('emails' as JsonPath);
+    const field = projection.getFieldProjection(fieldId!);
+
+    console.log(field);
   });
 });

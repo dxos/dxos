@@ -10,11 +10,12 @@ import {
   FormatEnum,
   type JsonPath,
   type JsonProp,
+  Ref,
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { live, makeRef, type Space } from '@dxos/react-client/echo';
+import { live, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
 
 import { type TableType } from '../types';
@@ -43,7 +44,7 @@ export const initializeTable = async ({
 
     const fields = getSchemaProperties(schema.ast).map((prop) => prop.name);
 
-    table.view = makeRef(
+    table.view = Ref.make(
       createView({
         // TODO(ZaymonFC): Don't hardcode name?
         name: 'View',
@@ -58,7 +59,7 @@ export const initializeTable = async ({
     const [schema] = await space.db.schemaRegistry.register([ContactSchema]);
     const fields = ContactFields;
 
-    table.view = makeRef(
+    table.view = Ref.make(
       createView({
         name: 'View',
         typename: schema.typename,

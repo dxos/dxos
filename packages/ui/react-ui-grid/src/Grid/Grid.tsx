@@ -42,6 +42,7 @@ const initialBox = {
 
 type GridEditing = {
   index: DxEditRequest['cellIndex'];
+  cellElement: DxEditRequest['cellElement'];
   initialContent: DxEditRequest['initialContent'];
 } | null;
 
@@ -138,7 +139,7 @@ const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>
 
   const handleEdit = useCallback((event: DxEditRequest) => {
     setEditBox(event.cellBox);
-    setEditing({ index: event.cellIndex, initialContent: event.initialContent });
+    setEditing({ index: event.cellIndex, cellElement: event.cellElement, initialContent: event.initialContent });
   }, []);
 
   return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={setDxGrid} />;
