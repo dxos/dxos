@@ -9,7 +9,6 @@ import { type AnyLiveObject } from '@dxos/react-client/echo';
 import { Clipboard } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { AdvancedObjectSettings } from './AdvancedObjectSettings';
 import { BaseObjectSettings } from './BaseObjectSettings';
 
 export type ObjectSettingsContainerProps = {
@@ -28,7 +27,8 @@ export const ObjectSettingsContainer = ({ object, role }: ObjectSettingsContaine
             <Surface role='base-object-settings' data={data} />
           </BaseObjectSettings>
           <Surface role='object-settings' data={data} />
-          <AdvancedObjectSettings object={object} />
+          {/* TODO(wittjosiah): Remove? */}
+          {/* <AdvancedObjectSettings object={object} /> */}
         </div>
       </StackItem.Content>
     </Clipboard.Provider>

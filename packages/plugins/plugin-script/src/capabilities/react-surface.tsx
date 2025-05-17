@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { InvocationTracePanel } from '@dxos/devtools';
+import { InvocationTraceContainer } from '@dxos/devtools';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions';
 import { SettingsStore } from '@dxos/local-storage';
@@ -84,7 +84,7 @@ export default () =>
         const space = getSpace(data.companionTo);
         return (
           <StackItem.Content role={role}>
-            <InvocationTracePanel space={space} script={data.companionTo} detailAxis='block' />
+            <InvocationTraceContainer space={space} script={data.companionTo} detailAxis='block' />
           </StackItem.Content>
         );
       },
