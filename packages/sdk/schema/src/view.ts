@@ -133,10 +133,6 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
         continue;
       }
 
-      // if (property.array) {
-      //   continue;
-      // }
-
       const referencePath =
         property.format === FormatEnum.Ref
           ? findAnnotation<JsonPath>(property.ast, FieldLookupAnnotationId)

@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { isTypeLiteral, TypeLiteral } from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { getSnapshot } from '@dxos/echo-schema';
@@ -15,6 +13,7 @@ import { type FieldProjection } from '@dxos/schema';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { type TableModel } from '../../model';
+import { narrowSchema } from '../../util';
 
 type FormCellEditorProps = {
   fieldProjection: FieldProjection;
@@ -33,24 +32,11 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
     }
   }, [editing?.cellElement]);
 
-  /**
-   * A narrowed schema from the original schema that only includes
-   * the field being edited. This allows the Form component to only display
-   * and edit / validate this specific field rather than the entire object.
-   *
-   * @returns A Schema instance containing only the property corresponding to the current field path
-   */
-  const narrowSchema = useMemo(() => {
-    const ast = (schema as any)?.ast;
-    if (isTypeLiteral(ast)) {
-      const propertySignature = ast.propertySignatures.find(
-        (signature) => signature.name === fieldProjection.field.path,
-      );
-      if (propertySignature) {
-        const narrowType = new TypeLiteral([propertySignature], []);
-        return Schema.make(narrowType);
-      }
+  const narrowedSchema = useMemo(() => {
+    if (!schema) {
+      return undefined;
     }
+    return narrowSchema(schema, [fieldProjection.field.path]);
   }, [JSON.stringify(schema), fieldProjection.field.path]);
 
   const originalRow = useMemo(() => {
@@ -100,7 +86,7 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
       <Popover.VirtualTrigger virtualRef={cellRef} />
       <Popover.Content tabIndex={-1} classNames='popover-consistent-width'>
         <Popover.Arrow />
-        <Form values={formValues} schema={narrowSchema as any} onSave={handleSave} />
+        <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />
       </Popover.Content>
     </Popover.Root>
   );
