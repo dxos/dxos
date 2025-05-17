@@ -193,13 +193,17 @@ type Alias =
   | 'groupSurface'
   // Dialogs, menus, popovers, etc.
   | 'modalSurface'
+  // Main sidebar panel.
   | 'sidebarSurface'
+  // Plank header.
   | 'headerSurface'
   // Toolbars, table/sheet headers, etc.
   | 'toolbarSurface'
   | 'hoverSurface'
   | 'accentSurface'
   | 'accentSurfaceHover'
+  // Screen overlay for modal dialogs.
+  | 'scrimSurface'
 
   //
   // TODO(burdon): Why are these here, but not deck, text, above?
@@ -208,8 +212,6 @@ type Alias =
   | 'currentRelated'
   | 'hoverOverlay'
   | 'input'
-  // TODO(burdon): Where is this used?
-  | 'scrim'
   | 'separator'
   | 'subduedSeparator'
   | 'unAccent'
@@ -225,13 +227,12 @@ const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName 
   hoverSurface: { root: 'surface-70', attention: 'surface-60' },
   accentSurface: { root: 'accentSurface-500' },
   accentSurfaceHover: { root: 'accentSurface-400' },
+  scrimSurface: { root: 'surface-10t' },
 
   attention: { root: 'surface-10' },
   currentRelated: { root: 'accentSurface-300t' },
   hoverOverlay: { root: 'surface-450t' },
   input: { root: 'surface-50', attention: 'surface-40' },
-  // scrim: { root: 'surface-10t' },
-  scrim: { root: 'accentSurface-500' },
   separator: { root: 'surface-50' },
   subduedSeparator: { root: 'surface-30' },
   unAccent: { root: 'surface-400' },
