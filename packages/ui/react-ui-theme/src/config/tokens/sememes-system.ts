@@ -230,7 +230,7 @@ const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName 
   hoverOverlay: { root: 'surface-450t' },
   input: { root: 'surface-50', attention: 'surface-40' },
   scrim: { root: 'surface-10t' },
-  separator: { root: 'surface-50' },
+  separator: { root: 'surface-10' },
   subduedSeparator: { root: 'surface-20' },
   unAccent: { root: 'surface-400' },
   unAccentHover: { root: 'surface-450' },
