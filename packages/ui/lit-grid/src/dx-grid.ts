@@ -262,15 +262,16 @@ export class DxGrid extends LitElement {
     this.snapPosToFocusedCell();
     if (!this.cellReadonly(this.focusedCell.col, this.focusedCell.row, this.focusedCell.plane)) {
       // Without deferring, the event dispatches before `focusedCellBox` can get updated bounds of the cell, hence:
-      queueMicrotask(() =>
-        this.dispatchEvent(
+      queueMicrotask(() => {
+        const cellIndex = toCellIndex(this.focusedCell);
+        return this.dispatchEvent(
           new DxEditRequest({
-            cellIndex: toCellIndex(this.focusedCell),
+            cellIndex,
             cellBox: this.focusedCellBox(),
-            initialContent,
+            cellElement: this.focusedCellElement(),
           }),
-        ),
-      );
+        );
+      });
     }
   }
 
