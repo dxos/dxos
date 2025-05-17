@@ -120,6 +120,7 @@ export const Default: Story = {
     editing: {
       index: 'grid,0,3',
       initialContent: 'Test',
+      cellElement: null,
     },
   },
 };
