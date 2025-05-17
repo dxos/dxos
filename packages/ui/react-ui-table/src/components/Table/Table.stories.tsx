@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { FormatEnum, ImmutableSchema } from '@dxos/echo-schema';
+import { assertEchoSchema, FormatEnum, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -45,7 +45,7 @@ const useTestTableModel = () => {
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {
-      return new ViewProjection(schema.jsonSchema, table.view.target);
+      return new ViewProjection(toJsonSchema(schema), table.view.target);
     }
   }, [schema, table?.view?.target]);
 
@@ -53,7 +53,7 @@ const useTestTableModel = () => {
     () => ({
       selection: { enabled: true, mode: 'multiple' as const },
       dataEditable: true,
-      schemaEditable: !(schema instanceof ImmutableSchema),
+      schemaEditable: schema && isMutable(schema),
     }),
     [schema],
   );
@@ -150,11 +150,10 @@ const StoryViewEditor = () => {
 
   const handleTypenameChanged = useCallback(
     (typename: string) => {
-      if (table?.view?.target) {
-        invariant(schema);
-        schema.mutable.updateTypename(typename);
-        table.view.target.query.typename = typename;
-      }
+      invariant(schema);
+      invariant(table?.view?.target);
+      assertEchoSchema(schema).updateTypename(typename);
+      table.view.target.query.typename = typename;
     },
     [schema, table?.view?.target],
   );

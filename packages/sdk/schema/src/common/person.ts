@@ -18,7 +18,7 @@ import { PostalAddress } from './postal-address';
  * https://schema.org/Person
  * Based on fields from Apple Contacts.
  */
-export const PersonSchema = Schema.Struct({
+const PersonSchema = Schema.Struct({
   fullName: Schema.optional(
     Schema.String.annotations({ [GeneratorAnnotationId]: 'person.fullName', title: 'Full Name' }),
   ),
@@ -86,7 +86,8 @@ export const PersonSchema = Schema.Struct({
       ),
     ),
   ),
-  birthday: Schema.optional(Schema.mutable(Schema.Date.annotations({ title: 'Birthday' }))),
+  // TODO(burdon): Support date or create String type for ISO Date.
+  birthday: Schema.optional(Schema.mutable(Schema.String.annotations({ title: 'Birthday' }))),
   // TODO(burdon): Move to base object?
   fields: Schema.optional(
     Schema.mutable(

@@ -13,6 +13,7 @@ import { Actor } from './actor';
 export const AbstractContentBlock = Schema.Struct({
   pending: Schema.optional(Schema.Boolean),
 });
+
 export interface AbstractContentBlock extends Schema.Schema.Type<typeof AbstractContentBlock> {}
 
 /**
@@ -26,6 +27,7 @@ export const TextContentBlock = Schema.extend(
     text: Schema.String,
   }),
 ).pipe(Schema.mutable);
+
 export interface TextContentBlock extends Schema.Schema.Type<typeof TextContentBlock> {}
 
 /**
@@ -39,6 +41,7 @@ export const JsonContentBlock = Schema.extend(
     data: Schema.String,
   }),
 ).pipe(Schema.mutable);
+
 export interface JsonContentBlock extends Schema.Schema.Type<typeof JsonContentBlock> {}
 
 export const Base64ImageSource = Schema.Struct({
@@ -69,6 +72,7 @@ export const ImageContentBlock = Schema.extend(
     source: Schema.optional(ImageSource),
   }),
 ).pipe(Schema.mutable);
+
 export interface ImageContentBlock extends Schema.Schema.Type<typeof ImageContentBlock> {}
 
 /**
@@ -83,6 +87,7 @@ export const ReferenceContentBlock = Schema.extend(
     reference: Ref(Expando),
   }),
 ).pipe(Schema.mutable);
+
 export interface ReferenceContentBlock extends Schema.Schema.Type<typeof ReferenceContentBlock> {}
 
 /**
@@ -96,6 +101,7 @@ export const TranscriptContentBlock = Schema.extend(
     text: Schema.String,
   }),
 ).pipe(Schema.mutable);
+
 export interface TranscriptContentBlock extends Schema.Schema.Type<typeof TranscriptContentBlock> {}
 
 export const MessageContentBlock = Schema.Union(
@@ -138,6 +144,7 @@ export const Message = MessageSchema.pipe(
     version: '0.2.0',
   }),
 );
+
 export interface Message extends Schema.Schema.Type<typeof Message> {}
 
 /** @deprecated */

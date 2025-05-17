@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { ImmutableSchema, type BaseSchema } from '@dxos/echo-schema';
+import { type BaseSchema } from '@dxos/echo-schema';
 
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
@@ -15,7 +16,7 @@ export const useSchema = (
   client: Client,
   space: Space | undefined,
   typename: string | undefined,
-): BaseSchema | undefined => {
+): Schema.Schema.AnyNoContext | undefined => {
   const { subscribe, getSchema } = useMemo(() => {
     if (!typename || !space) {
       return {
@@ -26,11 +27,9 @@ export const useSchema = (
 
     const staticSchema = client.graph.schemaRegistry.getSchema(typename);
     if (staticSchema) {
-      // Don't inline into getSchema, need a stable reference.
-      const immutableSchema = new ImmutableSchema(staticSchema);
       return {
         subscribe: () => () => {},
-        getSchema: () => immutableSchema,
+        getSchema: () => staticSchema,
       };
     }
 

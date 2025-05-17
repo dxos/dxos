@@ -27,4 +27,5 @@ export const Actor = Schema.Struct({
   name: Schema.optional(Schema.String),
   role: Schema.optional(ActorRole),
 });
+
 export interface Actor extends Schema.Schema.Type<typeof Actor> {}

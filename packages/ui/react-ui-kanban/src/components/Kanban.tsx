@@ -6,7 +6,7 @@ import React, { type ComponentProps, useCallback, useEffect, useMemo, useState }
 
 import { Surface } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
-import { getSnapshot, type JsonPath, setValue } from '@dxos/echo-schema';
+import { getSnapshot, getTypename, type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
@@ -25,7 +25,7 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const { select, clear } = useSelectionActions([model.id, model.schema.typename]);
+  const { select, clear } = useSelectionActions([model.id, getTypename(model.schema)!]);
   const selectedItems = useSelectedItems(model.id);
   const [_focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);

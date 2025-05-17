@@ -773,6 +773,7 @@ export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore =>
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
     throw new Error('object is not an EchoObject');
   }
+
   const { core } = (obj as any as ProxyTarget)[symbolInternals];
   return core;
 };

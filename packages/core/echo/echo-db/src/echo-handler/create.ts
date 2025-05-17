@@ -134,6 +134,9 @@ export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => 
   }
 };
 
+/**
+ * @internal
+ */
 // TODO(burdon): Call and remove subscriptions.
 export const destroyObject = <T extends BaseObject>(proxy: AnyLiveObject<T>) => {
   invariant(isEchoObject(proxy));
