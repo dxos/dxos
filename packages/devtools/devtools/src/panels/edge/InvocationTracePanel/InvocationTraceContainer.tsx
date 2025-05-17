@@ -6,7 +6,7 @@ import React, { useState, useMemo, useCallback, type FC } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
-import { type InvocationSpan, type ScriptType } from '@dxos/functions/types';
+import { type InvocationSpan, type ScriptType } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
