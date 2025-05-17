@@ -5,7 +5,7 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
 import { FunctionTrigger, TriggerKind, EmailTriggerOutput, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -542,7 +542,7 @@ const setupQueue = (
 
 const attachTrigger = (functionTrigger: FunctionTrigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
-  functionTrigger.function = Type.ref(computeModel.root);
+  functionTrigger.function = Ref.make(computeModel.root);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
   functionTrigger.inputNodeId = inputNode.id;
 };

@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { type StoryObj, type Meta } from '@storybook/react';
 import React from 'react';
 
 import { Button, ButtonGroup, type ButtonProps } from './Button';
@@ -31,32 +32,36 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   );
 };
 
-const defaults = { children: 'Test' };
+const meta: Meta<typeof Button> = {
+  title: 'ui/react-ui-core/Button',
+  component: Button,
+  render: DefaultStory,
+  decorators: [withVariants(), withTheme],
+  parameters: { chromatic: { disableSnapshot: false } },
+};
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const defaults: Story['args'] = { children: 'Test' };
+
+export const Default: Story = {
   args: { ...defaults, variant: 'default' },
 };
 
-export const Primary = {
+export const Primary: Story = {
   args: { ...defaults, variant: 'primary' },
 };
 
-export const Destructive = {
+export const Destructive: Story = {
   args: { ...defaults, variant: 'destructive' },
 };
 
-export const Outline = {
+export const Outline: Story = {
   args: { ...defaults, variant: 'outline' },
 };
 
-export const Ghost = {
+export const Ghost: Story = {
   args: { ...defaults, variant: 'ghost' },
-};
-
-export default {
-  title: 'ui/react-ui-core/Button',
-  component: Button,
-  decorators: [withVariants(), withTheme],
-  render: DefaultStory,
-  parameters: { chromatic: { disableSnapshot: false } },
 };

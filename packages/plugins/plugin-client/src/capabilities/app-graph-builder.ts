@@ -27,6 +27,7 @@ export default (context: PluginsContext) =>
           properties: {
             label: ['open user account label', { ns: CLIENT_PLUGIN }],
             icon: 'ph--user--regular',
+            disposition: 'menu',
             keyBinding: {
               macos: 'meta+shift+.',
               // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.

@@ -18,7 +18,7 @@ const meta: Meta<CallContainerProps> = {
   component: CallContainer,
   decorators: [
     withPluginManager({ plugins: [...(await createMeetingPlugins())] }),
-    withLayout({ tooltips: true, Container: ColumnContainer, classNames: 'w-[40rem] overflow-hidden' }),
+    withLayout({ Container: ColumnContainer, classNames: 'w-[40rem] overflow-hidden' }),
     withTheme,
   ],
   parameters: {

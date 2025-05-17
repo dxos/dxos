@@ -90,9 +90,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     defineHiddenProperty(target, symbolHandler, this);
 
-    if (inspectCustom) {
-      defineHiddenProperty(target, inspectCustom, this._inspect.bind(target));
-    }
+    // Maybe have been set by `create`.
+    Object.defineProperty(target, inspectCustom, {
+      enumerable: false,
+      configurable: true,
+      value: this._inspect.bind(target),
+    });
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
@@ -770,6 +773,7 @@ export const getObjectCore = <T extends BaseObject>(obj: Live<T>): ObjectCore =>
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
     throw new Error('object is not an EchoObject');
   }
+
   const { core } = (obj as any as ProxyTarget)[symbolInternals];
   return core;
 };

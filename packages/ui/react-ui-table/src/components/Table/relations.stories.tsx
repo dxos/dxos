@@ -5,11 +5,13 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
+import { type Schema } from 'effect';
 import { SchemaAST } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { type BaseObject, ImmutableSchema, type BaseSchema, type HasId } from '@dxos/echo-schema';
+import { type BaseObject, getSchemaTypename, type HasId, toJsonSchema } from '@dxos/echo-schema';
 import { getAnnotation } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { live, makeRef } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -30,14 +32,15 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
-const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count: number) => {
+const useTestModel = <T extends BaseObject & HasId>(schema: Schema.Schema<T>, count: number) => {
   const { space } = useClientProvider();
 
+  const jsonSchema = useMemo(() => toJsonSchema(schema), [schema]);
   const table = useMemo(() => {
-    // const { typename } = pipe(schema.ast, SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId), Option.getOrThrow);
-    const typename = schema.typename;
+    const typename = getSchemaTypename(schema);
+    invariant(typename);
     const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
-    const view = createView({ name, typename, jsonSchema: schema.jsonSchema });
+    const view = createView({ name, typename, jsonSchema });
     return live(TableType, { view: makeRef(view) });
   }, [schema]);
 
@@ -47,7 +50,7 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     }
 
     // TODO(burdon): Just pass in view? Reuse same jsonSchema instance? View determines if mutable, etc.
-    return new ViewProjection(schema.jsonSchema, table.view.target);
+    return new ViewProjection(jsonSchema, table.view.target);
   }, [schema, table]);
 
   const features = useMemo<TableFeatures>(
@@ -67,8 +70,6 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
     });
   }, [model, space]);
 
-  console.log(projection?.getFieldProjections());
-
   const presentation = useMemo(() => {
     if (!model) {
       return;
@@ -81,13 +82,9 @@ const useTestModel = <T extends BaseObject & HasId>(schema: BaseSchema<T>, count
 };
 
 const DefaultStory = () => {
-  // TODO(burdon): Remove need for ImmutableSchema wrapper at API-level.
-  const orgSchema = useMemo(() => new ImmutableSchema(DataType.Organization), []);
-  const { model: orgModel, presentation: orgPresentation } = useTestModel<DataType.Organization>(orgSchema, 50);
-
+  const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization, 50);
   // TODO(burdon): Generate links with references.
-  const contactSchema = useMemo(() => new ImmutableSchema(DataType.Person), []);
-  const { model: contactModel, presentation: contactPresentation } = useTestModel<DataType.Person>(contactSchema, 50);
+  const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person, 50);
 
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
@@ -112,7 +109,7 @@ const meta: Meta<typeof DefaultStory> = {
       createSpace: true,
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
   ],
 };
 

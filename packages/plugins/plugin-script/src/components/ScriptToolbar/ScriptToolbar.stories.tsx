@@ -24,7 +24,7 @@ export const Default = {
 const meta: Meta = {
   title: 'plugins/plugin-script/Toolbar',
   component: ScriptToolbar,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
 };
 
 export default meta;

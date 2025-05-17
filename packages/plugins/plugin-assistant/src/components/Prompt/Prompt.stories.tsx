@@ -17,7 +17,7 @@ import translations from '../../translations';
 const meta: Meta<typeof Prompt> = {
   title: 'plugins/plugin-automation/Prompt',
   component: Prompt,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
     translations,

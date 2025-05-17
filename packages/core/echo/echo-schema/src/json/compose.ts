@@ -5,29 +5,28 @@
 import { invariant } from '@dxos/invariant';
 
 import type { JsonSchemaType } from '../ast';
+import { getSnapshot } from '../schema';
 
 /**
  * Creates a composite schema from the source and projection schemas.
  */
 // TODO(burdon): Use effect schema projections.
 // TODO(burdon): Can avoid having to call this every time we modify any property on the view?
-// TODO(dmaretskyi): Fix to not use deprecated fields.
 export const composeSchema = (source: JsonSchemaType, target: JsonSchemaType): JsonSchemaType => {
-  // TODO(dmaretskyi): Better way to clone echo proxies.
-  const result: JsonSchemaType = JSON.parse(JSON.stringify(target));
+  const result: JsonSchemaType = getSnapshot(target);
   invariant('type' in result && result.type === 'object', 'source schema must be an object');
   invariant('type' in source && source.type === 'object', 'target schema must be an object');
 
   for (const prop in result.properties) {
     const propSchema = source.properties![prop]; // TODO(dmaretskyi): Find by json-path instead.
-    const annotations = (propSchema as JsonSchemaType)?.echo?.annotations;
+    const annotations = (propSchema as JsonSchemaType)?.annotations?.meta;
     if (annotations) {
-      (result.properties[prop] as JsonSchemaType).echo ??= {};
-      (result.properties[prop] as JsonSchemaType).echo!.annotations ??= {};
+      (result.properties[prop] as JsonSchemaType).annotations ??= {};
+      (result.properties[prop] as JsonSchemaType).annotations!.meta ??= {};
       for (const key in annotations) {
-        (result.properties[prop] as JsonSchemaType).echo!.annotations![key] ??= {};
-        Object.assign((result.properties[prop] as JsonSchemaType).echo!.annotations![key], annotations[key], {
-          ...(result.properties[prop] as JsonSchemaType).echo!.annotations![key],
+        (result.properties[prop] as JsonSchemaType).annotations!.meta![key] ??= {};
+        Object.assign((result.properties[prop] as JsonSchemaType).annotations!.meta![key], annotations[key], {
+          ...(result.properties[prop] as JsonSchemaType).annotations!.meta![key],
         });
       }
     }

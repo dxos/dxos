@@ -12,7 +12,7 @@ import { hexToFallback } from '@dxos/util';
 import { Avatar, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
 import { withTheme } from '../../testing';
 
-type StorybookAvatarProps = {
+type StoryProps = {
   id?: string;
   imgSrc?: string;
   fallbackText?: string;
@@ -25,7 +25,7 @@ type StorybookAvatarProps = {
   hue?: HuePalette;
 };
 
-const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
+const DefaultStory = (props: PropsWithChildren<StoryProps>) => {
   const {
     id = '20970b563fc49b5bb194a6ffdff376031a3a11f9481360c071c3fed87874106b',
     status,
@@ -58,7 +58,7 @@ const StorybookAvatar = (props: PropsWithChildren<StorybookAvatarProps>) => {
 export default {
   title: 'ui/react-ui-core/Avatar',
   component: Avatar,
-  render: StorybookAvatar,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
@@ -68,9 +68,9 @@ const sampleImage =
 
 const row = (size: Size) => (
   <>
-    <StorybookAvatar size={size} status='inactive' description='Offline' />
-    <StorybookAvatar size={size} status='active' />
-    <StorybookAvatar size={size} status='active' imgSrc={sampleImage} />
+    <DefaultStory size={size} status='inactive' description='Offline' />
+    <DefaultStory size={size} status='active' />
+    <DefaultStory size={size} status='active' imgSrc={sampleImage} />
   </>
 );
 
@@ -93,48 +93,48 @@ export const Default = () => (
 
 export const Image = () => (
   <div>
-    <StorybookAvatar variant='circle' imgSrc={sampleImage} />
+    <DefaultStory variant='circle' imgSrc={sampleImage} />
   </div>
 );
 
 export const Square = () => (
   <div className='flex flex-row gap-4'>
-    <StorybookAvatar variant='square' status='inactive' description='Offline' />
-    <StorybookAvatar variant='square' status='active' />
-    <StorybookAvatar variant='square' status='error' />
-    <StorybookAvatar variant='square' status='warning' />
+    <DefaultStory variant='square' status='inactive' description='Offline' />
+    <DefaultStory variant='square' status='active' />
+    <DefaultStory variant='square' status='error' />
+    <DefaultStory variant='square' status='warning' />
   </div>
 );
 
 export const DefaultEmoji = () => (
   <div className='flex flex-row gap-4'>
-    <StorybookAvatar fallbackText='🦄' status='active' animation='pulse' />
-    <StorybookAvatar fallbackText='🐒' status='warning' animation='pulse' />
-    <StorybookAvatar fallbackText='🪲' status='inactive' />
-    <StorybookAvatar fallbackText='🦁' />
+    <DefaultStory fallbackText='🦄' status='active' animation='pulse' />
+    <DefaultStory fallbackText='🐒' status='warning' animation='pulse' />
+    <DefaultStory fallbackText='🪲' status='inactive' />
+    <DefaultStory fallbackText='🦁' />
   </div>
 );
 
-export const SquareEmoji = () => <StorybookAvatar variant='square' fallbackText='🦄' />;
+export const SquareEmoji = () => <DefaultStory variant='square' fallbackText='🦄' />;
 
 export const DefaultText = () => (
   <div className='flex flex-row gap-4'>
-    <StorybookAvatar fallbackText='PT' />
-    <StorybookAvatar fallbackText='AP' />
-    <StorybookAvatar fallbackText='Z' />
-    <StorybookAvatar fallbackText='pt' />
-    <StorybookAvatar fallbackText='ap' />
-    <StorybookAvatar fallbackText='z' />
+    <DefaultStory fallbackText='PT' />
+    <DefaultStory fallbackText='AP' />
+    <DefaultStory fallbackText='Z' />
+    <DefaultStory fallbackText='pt' />
+    <DefaultStory fallbackText='ap' />
+    <DefaultStory fallbackText='z' />
   </div>
 );
 
-export const Error = () => <StorybookAvatar status='error' description='Errored' />;
+export const Error = () => <DefaultStory status='error' description='Errored' />;
 
 export const Pulse = () => (
   <div className='flex flex-row gap-4'>
-    <StorybookAvatar description='Online' status='active' animation='pulse' />
-    <StorybookAvatar description='Offline' status='inactive' animation='pulse' />
-    <StorybookAvatar description='Error' status='error' animation='pulse' />
-    <StorybookAvatar description='Warning' status='warning' animation='pulse' />
+    <DefaultStory description='Online' status='active' animation='pulse' />
+    <DefaultStory description='Offline' status='inactive' animation='pulse' />
+    <DefaultStory description='Error' status='error' animation='pulse' />
+    <DefaultStory description='Warning' status='warning' animation='pulse' />
   </div>
 );

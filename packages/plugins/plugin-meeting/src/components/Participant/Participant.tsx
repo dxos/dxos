@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 
@@ -13,7 +13,7 @@ import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveG
 
 export const SCREENSHARE_SUFFIX = '_screenshare';
 
-export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
+export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
   const call = useCapability(MeetingCapabilities.CallManager);
   const isSelf: boolean = call.self.id !== undefined && user.id !== undefined && user.id.startsWith(call.self.id);
   const isScreenshare = user.id?.endsWith(SCREENSHARE_SUFFIX);
@@ -21,7 +21,7 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
     isScreenshare || !isSelf ? (user.tracks?.video as EncodedTrackName) : undefined,
   );
 
-  const videoStream: MediaStream | undefined = useMemo(() => {
+  const videoStream = useMemo<MediaStream | undefined>(() => {
     if (isSelf && !isScreenshare) {
       return call.media.videoStream;
     } else if (isSelf && isScreenshare) {
@@ -29,7 +29,7 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
     } else if (!isSelf) {
       return pulledVideoStream;
     }
-  }, [isSelf, call.media.videoStream, call.media.screenshareVideoStream, isScreenshare, pulledVideoStream]);
+  }, [isSelf, isScreenshare, call.media.videoStream, call.media.screenshareVideoStream, pulledVideoStream]);
 
   return (
     <ResponsiveGridItem
@@ -37,15 +37,21 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
       item={user}
       name={user.name}
       self={isSelf}
-      screenshare={!!isScreenshare}
+      screenshare={!!call.media.videoStream}
+      video={call.media.videoEnabled}
       mute={user ? !user.tracks?.audioEnabled : false}
       wave={user.raisedHand}
       speaking={user.speaking}
       debug={debug}
     >
-      <VideoObject videoStream={videoStream} flip={isSelf && !isScreenshare} contain={!!isScreenshare} />
+      <VideoObject
+        videoStream={videoStream}
+        flip={isSelf && !isScreenshare}
+        contain={!!isScreenshare}
+        classNames='rounded-md'
+      />
     </ResponsiveGridItem>
   );
-};
+});
 
 Participant.displayName = 'Participant';

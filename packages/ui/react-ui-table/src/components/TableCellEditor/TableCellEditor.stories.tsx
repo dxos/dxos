@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { ImmutableSchema, type EchoSchema } from '@dxos/echo-schema';
+import { type EchoSchema, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, live } from '@dxos/react-client/echo';
@@ -53,9 +53,9 @@ const DefaultStory = ({ editing }: StoryProps) => {
     () => ({
       selection: { enabled: true, mode: 'multiple' },
       dataEditable: true,
-      schemaEditable: !(schema instanceof ImmutableSchema),
+      schemaEditable: schema && isMutable(schema),
     }),
-    [],
+    [schema],
   );
 
   const model = useTableModel({ table, projection, features });
@@ -107,7 +107,7 @@ const meta: Meta<StoryProps> = {
       },
     }),
     withTheme,
-    withLayout({ tooltips: true }),
+    withLayout(),
   ],
 };
 
@@ -120,6 +120,7 @@ export const Default: Story = {
     editing: {
       index: 'grid,0,3',
       initialContent: 'Test',
+      cellElement: null,
     },
   },
 };

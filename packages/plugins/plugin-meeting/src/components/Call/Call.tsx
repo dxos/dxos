@@ -49,7 +49,11 @@ const CallGrid: FC<CallGridProps> = () => {
   const debug = useDebugMode();
   const call = useCapability(MeetingCapabilities.CallManager);
 
-  return <ParticipantGrid self={call.self} users={call.users} debug={debug} />;
+  return (
+    <div className='grid grow p-4 dark:bg-neutral-900'>
+      <ParticipantGrid self={call.self} users={call.users} debug={debug} />
+    </div>
+  );
 };
 
 CallGrid.displayName = 'CallGrid';

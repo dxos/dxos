@@ -11,17 +11,21 @@ import {
   EntityKind,
   Format,
   FormatEnum,
-  type JsonPath,
-  type JsonProp,
+  Ref,
+  TypeAnnotationId,
   TypeEnum,
   TypedObject,
-  TypeAnnotationId,
-  Ref,
   getPropertyMetaAnnotation,
+  getSchemaTypename,
+  toJsonSchema,
+  type JsonPath,
+  type JsonProp,
+  EchoObject,
 } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 
+import { Organization } from './common/organization';
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';
 
@@ -358,8 +362,8 @@ describe('ViewProjection', () => {
       type: 'string',
       format: 'single-select',
       enum: ['draft', 'published'],
-      echo: {
-        annotations: {
+      annotations: {
+        meta: {
           singleSelect: {
             options: [
               { id: 'draft', title: 'Draft', color: 'gray' },
@@ -393,8 +397,8 @@ describe('ViewProjection', () => {
     });
 
     // Verify updated JSON Schema.
-    expect(mutable.jsonSchema.properties?.status?.echo).to.deep.include({
-      annotations: {
+    expect(mutable.jsonSchema.properties?.status?.annotations).to.deep.include({
+      meta: {
         singleSelect: {
           options: [
             { id: 'draft', title: 'Draft', color: 'indigo' },
@@ -463,8 +467,8 @@ describe('ViewProjection', () => {
     expect(mutable.jsonSchema.properties?.tags).to.deep.include({
       type: 'object',
       format: 'multi-select',
-      echo: {
-        annotations: {
+      annotations: {
+        meta: {
           multiSelect: {
             options: [
               { id: 'feature', title: 'Feature', color: 'emerald' },
@@ -505,8 +509,8 @@ describe('ViewProjection', () => {
       { id: 'archived', title: 'Archived', color: 'amber' },
     ]);
 
-    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
-      annotations: {
+    expect(mutable.jsonSchema.properties?.tags?.annotations).to.deep.include({
+      meta: {
         multiSelect: {
           options: [
             { id: 'draft', title: 'Draft', color: 'indigo' },
@@ -518,8 +522,8 @@ describe('ViewProjection', () => {
     });
 
     // Verify updated JSON Schema.
-    expect(mutable.jsonSchema.properties?.tags?.echo).to.deep.include({
-      annotations: {
+    expect(mutable.jsonSchema.properties?.tags?.annotations).to.deep.include({
+      meta: {
         multiSelect: {
           options: [
             { id: 'draft', title: 'Draft', color: 'indigo' },
@@ -785,5 +789,75 @@ describe('ViewProjection', () => {
     expect(mutable.jsonSchema.properties?.['email' as const]).to.be.undefined;
     hiddenProps = projection.getHiddenProperties();
     expect(hiddenProps).to.not.include('email');
+  });
+
+  test('create view from static organization schema', async ({ expect }) => {
+    const schema = Organization;
+    const jsonSchema = toJsonSchema(schema);
+
+    const view = createView({ name: 'Test', typename: getSchemaTypename(schema), jsonSchema });
+    const projection = new ViewProjection(jsonSchema, view);
+    const fieldId = projection.getFieldId('status');
+    invariant(fieldId);
+
+    const { field, props } = projection.getFieldProjection(fieldId);
+    expect(field.path).toEqual('status');
+    expect(props).toEqual({
+      property: 'status',
+      title: 'Status',
+      type: 'string',
+      format: 'single-select',
+      options: [
+        {
+          color: 'indigo',
+          id: 'prospect',
+          title: 'Prospect',
+        },
+        {
+          color: 'purple',
+          id: 'qualified',
+          title: 'Qualified',
+        },
+        {
+          color: 'amber',
+          id: 'active',
+          title: 'Active',
+        },
+        {
+          color: 'emerald',
+          id: 'commit',
+          title: 'Commit',
+        },
+        {
+          color: 'red',
+          id: 'reject',
+          title: 'Reject',
+        },
+      ],
+    });
+  });
+
+  test('property that is an array of objects', () => {
+    const ContactWithArrayOfEmails = Schema.Struct({
+      name: Schema.String,
+      emails: Schema.optional(
+        Schema.Array(
+          Schema.Struct({
+            value: Schema.String,
+            label: Schema.String.pipe(Schema.optional),
+          }),
+        ),
+      ),
+    }).pipe(EchoObject({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
+
+    const jsonSchema = toJsonSchema(ContactWithArrayOfEmails);
+
+    const view = createView({ name: 'view', typename: ContactWithArrayOfEmails.typename, jsonSchema });
+    const projection = new ViewProjection(jsonSchema, view);
+
+    const fieldId = projection.getFieldId('emails' as JsonPath);
+    const field = projection.getFieldProjection(fieldId!);
+
+    console.log(field);
   });
 });

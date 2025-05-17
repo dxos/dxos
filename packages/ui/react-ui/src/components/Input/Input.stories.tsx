@@ -4,28 +4,44 @@
 
 import '@dxos-theme';
 
+import { type StoryObj, type Meta } from '@storybook/react';
 import React from 'react';
 
 import { baseSurface, modalSurface, groupSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
 
-import { Input } from './Input';
+import {
+  type CheckboxProps,
+  Input,
+  type PinInputProps,
+  type SwitchProps,
+  type TextInputProps,
+  type TextAreaProps,
+} from './Input';
 import { withTheme } from '../../testing';
 
-type StoryInputProps = Partial<{
+type VariantMap = {
+  text: TextInputProps;
+  pin: PinInputProps;
+  textarea: TextAreaProps;
+  checkbox: CheckboxProps;
+  switch: SwitchProps;
+};
+
+type Variant = { [K in keyof VariantMap]: { type: K } & VariantMap[K] }[keyof VariantMap];
+
+type BaseProps = Partial<{
+  kind: keyof VariantMap;
   label: string;
-  placeholder: string;
-  disabled: boolean;
-  description: string;
   labelVisuallyHidden: boolean;
+  description: string;
   descriptionVisuallyHidden: boolean;
-  type: 'default' | 'pin' | 'textarea' | 'checkbox' | 'switch';
-  validationMessage: string;
   validationValence: MessageValence;
+  validationMessage: string;
 }>;
 
-const StoryInputContent = ({
-  type = 'default',
+const Wrapper = ({
+  kind,
   label,
   description,
   labelVisuallyHidden,
@@ -33,15 +49,17 @@ const StoryInputContent = ({
   validationValence,
   validationMessage,
   ...props
-}: StoryInputProps) => {
+}: BaseProps) => {
   return (
     <Input.Root {...{ validationValence }}>
       <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
-      {type === 'pin' && <Input.PinInput {...props} />}
-      {type === 'textarea' && <Input.TextArea {...props} />}
-      {type === 'checkbox' && <Input.Checkbox {...props} />}
-      {type === 'switch' && <Input.Switch {...props} />}
-      {type === 'default' && <Input.TextInput {...props} />}
+
+      {kind === 'text' && <Input.TextInput {...props} />}
+      {kind === 'pin' && <Input.PinInput {...props} />}
+      {kind === 'textarea' && <Input.TextArea {...props} />}
+      {kind === 'checkbox' && <Input.Checkbox {...props} />}
+      {kind === 'switch' && <Input.Switch {...props} />}
+
       <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && (
           <>
@@ -54,47 +72,37 @@ const StoryInputContent = ({
   );
 };
 
-const StoryInput = (props: StoryInputProps) => {
-  // TODO(thure): Implement
+const DefaultStory = (props: BaseProps) => {
   return (
     <div className='space-b-4'>
       <div className={mx(baseSurface, 'p-4')}>
-        <StoryInputContent {...props} />
+        <Wrapper {...props} />
       </div>
       <div className={mx(groupSurface, 'p-4 rounded-lg', surfaceShadow({ elevation: 'positioned' }))}>
-        <StoryInputContent {...props} />
+        <Wrapper {...props} />
       </div>
       <div className={mx(modalSurface, 'p-4 rounded-lg', surfaceShadow({ elevation: 'dialog' }))}>
-        <StoryInputContent {...props} />
+        <Wrapper {...props} />
       </div>
     </div>
   );
 };
 
-export default {
+const meta: Meta<BaseProps> = {
   title: 'ui/react-ui-core/Input',
-  component: Input,
-  render: StoryInput,
-  // TODO(thure): Refactor.
-  argTypes: {
-    label: { control: 'text' },
-    description: { control: 'text' },
-    validationMessage: { control: 'text' },
-    validationValence: {
-      control: 'select',
-      options: ['success', 'info', 'warning', 'error'],
-    },
-    type: {
-      control: 'select',
-      options: ['default', 'textarea', 'pin'],
-    },
-  },
+  component: Input.Root,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<BaseProps & Variant>;
+
+export const Default: Story = {
   args: {
+    kind: 'text',
     label: 'Hello',
     placeholder: 'This is an input',
     disabled: false,
@@ -103,12 +111,12 @@ export const Default = {
     descriptionVisuallyHidden: false,
     validationMessage: '',
     validationValence: undefined,
-    length: 6,
   },
 };
 
-export const DensityFine = {
+export const DensityFine: Story = {
   args: {
+    kind: 'text',
     label: 'This is an Input with a density value of ‘fine’',
     placeholder: 'This is a density:fine input',
     disabled: false,
@@ -117,13 +125,13 @@ export const DensityFine = {
     descriptionVisuallyHidden: false,
     validationMessage: '',
     validationValence: undefined,
-    length: 6,
     density: 'fine',
   },
 };
 
-export const Subdued = {
+export const Subdued: Story = {
   args: {
+    kind: 'text',
     label: 'Hello',
     placeholder: 'This is a subdued input',
     disabled: false,
@@ -132,37 +140,40 @@ export const Subdued = {
     descriptionVisuallyHidden: false,
     validationMessage: '',
     validationValence: undefined,
-    length: 6,
     variant: 'subdued',
   },
 };
 
-export const Disabled = {
+export const Disabled: Story = {
   args: {
+    kind: 'text',
     label: 'Disabled',
     placeholder: 'This is a disabled input',
     disabled: true,
   },
 };
 
-export const LabelVisuallyHidden = {
+export const LabelVisuallyHidden: Story = {
   args: {
+    kind: 'text',
     label: 'The label is for screen readers',
     labelVisuallyHidden: true,
     placeholder: 'The label for this input exists but is only read by screen readers',
   },
 };
 
-export const InputWithDescription = {
+export const InputWithDescription: Story = {
   args: {
+    kind: 'text',
     label: 'Described input',
     placeholder: 'This input has an accessible description',
     description: 'This helper text is accessibly associated with the input.',
   },
 };
 
-export const InputWithErrorAndDescription = {
+export const InputWithErrorAndDescription: Story = {
   args: {
+    kind: 'text',
     label: 'Described invalid input',
     placeholder: 'This input has both an accessible description and a validation error',
     description: 'This description is identified separately in the accessibility tree.',
@@ -171,8 +182,9 @@ export const InputWithErrorAndDescription = {
   },
 };
 
-export const InputWithValidationAndDescription = {
+export const InputWithValidationAndDescription: Story = {
   args: {
+    kind: 'text',
     label: 'Described input with validation message',
     placeholder: 'This input is styled to express a validation valence',
     description: 'This description is extra.',
@@ -181,39 +193,38 @@ export const InputWithValidationAndDescription = {
   },
 };
 
-export const TextArea = {
+export const TextArea: Story = {
   args: {
+    kind: 'textarea',
     label: 'This input is a text area input',
-    type: 'textarea',
     description: 'Type a long paragraph',
     placeholder: 'Lorem ipsum dolor sit amet',
   },
 };
 
-export const PinInput = {
+export const PinInput: Story = {
   args: {
+    kind: 'pin',
     label: 'This input is a PIN-style input',
-    type: 'pin',
     length: 6,
     description: 'Type in secret you received',
     placeholder: '••••••',
   },
 };
 
-export const Checkbox = {
+export const Checkbox: Story = {
   args: {
+    kind: 'checkbox',
     label: 'This is a checkbox',
-    type: 'checkbox',
     description: 'It’s checked, indeterminate, or unchecked',
     size: 5,
-    weight: 'bold',
   },
 };
 
 export const Switch = {
   args: {
+    kind: 'switch',
     label: 'This is a switch',
-    type: 'switch',
     description: 'It’s either off... or on.',
   },
 };

@@ -82,7 +82,7 @@ const meta: Meta<typeof ViewEditor> = {
   title: 'ui/react-ui-form/ViewEditor',
   component: ViewEditor,
   render: DefaultStory,
-  decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true, tooltips: true }), withTheme],
+  decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
   },

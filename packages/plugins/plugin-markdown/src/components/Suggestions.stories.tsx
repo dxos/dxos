@@ -163,7 +163,7 @@ const meta: Meta<typeof DefaultStory> = {
       ],
       capabilities: [contributes(MarkdownCapabilities.Extensions, [() => command()])],
     }),
-    withLayout({ tooltips: true, fullscreen: true, classNames: 'grid grid-cols-2' }),
+    withLayout({ fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],
   parameters: {
     translations,

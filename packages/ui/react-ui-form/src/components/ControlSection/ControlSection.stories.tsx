@@ -14,7 +14,7 @@ import translations from '../../translations';
 const meta: Meta<ControlSectionProps> = {
   title: 'ui/react-ui-form/ControlSection',
   component: ControlSection,
-  decorators: [withLayout({ tooltips: true }), withTheme],
+  decorators: [withLayout(), withTheme],
   parameters: {
     translations,
   },

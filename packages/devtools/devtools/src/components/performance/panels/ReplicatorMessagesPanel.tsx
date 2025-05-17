@@ -64,8 +64,8 @@ export const ReplicatorMessagesPanel = ({ database, ...props }: CustomPanelProps
           {entries.map(({ direction, type, quantity }, i) => (
             <tr key={i}>
               <td className='p-1 text-left'>{direction}</td>
-              <td className='p-1 text-center overflow-hidden'>{type}</td>
-              <td className='p-1 text-right'>{quantity}</td>
+              <td className='p-1 truncate text-center'>{type}</td>
+              <td className='p-1 truncate text-right'>{quantity}</td>
             </tr>
           ))}
         </tbody>
