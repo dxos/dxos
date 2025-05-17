@@ -22,7 +22,7 @@ export const narrowSchema = <S extends Schema.Schema.AnyNoContext>(
 
   if (isTypeLiteral(ast)) {
     // Filter property signatures that match any of the provided paths
-    const propertySignatures = ast.propertySignatures.filter((signature) => paths.includes(signature.name));
+    const propertySignatures = ast.propertySignatures.filter((signature) => paths.includes(signature.name.toString()));
 
     // If we found at least one matching property
     if (propertySignatures.length > 0) {
