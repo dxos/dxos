@@ -208,6 +208,7 @@ type Alias =
   | 'currentRelated'
   | 'hoverOverlay'
   | 'input'
+  // TODO(burdon): Where is this used?
   | 'scrim'
   | 'separator'
   | 'subduedSeparator'
@@ -229,9 +230,10 @@ const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName 
   currentRelated: { root: 'accentSurface-300t' },
   hoverOverlay: { root: 'surface-450t' },
   input: { root: 'surface-50', attention: 'surface-40' },
-  scrim: { root: 'surface-10t' },
+  // scrim: { root: 'surface-10t' },
+  scrim: { root: 'accentSurface-500' },
   separator: { root: 'surface-50' },
-  subduedSeparator: { root: 'surface-20' },
+  subduedSeparator: { root: 'surface-30' },
   unAccent: { root: 'surface-400' },
   unAccentHover: { root: 'surface-450' },
 };
