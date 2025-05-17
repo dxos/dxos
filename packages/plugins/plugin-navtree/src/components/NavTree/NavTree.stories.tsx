@@ -9,13 +9,13 @@ import { Schema } from 'effect';
 import React from 'react';
 
 import {
-  contributes,
   Capabilities,
   IntentPlugin,
-  createResolver,
-  defineCapability,
   LayoutAction,
   SettingsPlugin,
+  contributes,
+  createResolver,
+  defineCapability,
   useCapability,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -26,7 +26,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { useAttendableAttributes } from '@dxos/react-ui-attention';
+import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
@@ -40,17 +40,25 @@ faker.seed(1234);
 const StoryState = defineCapability<{ tab: string }>('story-state');
 
 // TODO(burdon): How to adjust existing surfaces for this test?
-// TODO(burdon): How to toggle attention in this test?
 // TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
 // TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
 
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
 // TODO(burdon): Factor out PlankHeader.
-const StoryPlankHeading = () => {
+const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
+  const { hasAttention } = useAttention(attendableId);
+  console.log('hasAttention', hasAttention);
   return (
     <div className='flex p-1 items-center border-b border-separator'>
-      <IconButton density='coarse' icon='ph--atom--regular' label='Test' iconOnly classNames='w-[40px] h-[40px]' />
+      <IconButton
+        density='coarse'
+        icon='ph--atom--regular'
+        label='Test'
+        iconOnly
+        variant={hasAttention ? 'primary' : 'ghost'}
+        classNames={mx('is-[--rail-action] bs-[--rail-action]')}
+      />
       <StackItem.ResizeHandle />
     </div>
   );
@@ -60,14 +68,13 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
   const attentionAttrs = useAttendableAttributes(attendableId);
 
   return (
-    // TODO(burdon): Simulate Plank layout?
     <StackItem.Root
       item={{ id: attendableId }}
       {...attentionAttrs}
-      classNames='attention-surface border-ie border-separator'
+      classNames='bg-baseSurface border-ie border-separator'
       size={20}
     >
-      <StoryPlankHeading />
+      <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
         {/* TODO(burdon): Should the separator be applied by StackItem.Content? */}
         <Toolbar.Root classNames='border-be border-separator'>
@@ -76,11 +83,11 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
 
         <div className={mx(container, 'm-2 bg-groupSurface')}>
           <Input.Root>
-            <Input.Label>Level 1</Input.Label>
+            <Input.Label>Level 1 (group)</Input.Label>
           </Input.Root>
           <div className={mx(container, 'bg-baseSurface')}>
             <Input.Root>
-              <Input.Label>Level 2</Input.Label>
+              <Input.Label>Level 2 (base)</Input.Label>
               <Input.TextArea placeholder='Enter text' />
             </Input.Root>
           </div>

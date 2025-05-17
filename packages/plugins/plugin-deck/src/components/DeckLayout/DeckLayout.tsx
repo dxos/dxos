@@ -38,7 +38,7 @@ export type DeckLayoutProps = {
 };
 
 const PlankSeparator = ({ order }: { order: number }) =>
-  order > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: order }} /> : null;
+  order > 0 ? <span role='separator' className='row-span-2 bg-deckSurface is-4' style={{ gridColumn: order }} /> : null;
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -213,7 +213,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
           >
             <div
               role='none'
-              className={!solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+              className={!solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
               {...(solo && { inert: '' })}
             >
               {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
@@ -247,7 +247,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
             </div>
             <div
               role='none'
-              className={solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+              className={solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
               {...(!solo && { inert: '' })}
             >
               {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}

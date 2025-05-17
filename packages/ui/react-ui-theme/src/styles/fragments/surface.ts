@@ -11,9 +11,9 @@
 // NOTE: This should align with theme's root --surface-bg.
 export const baseSurface = 'base-surface';
 
-// Sidebars, main heading (“topbar”), and nothing else.
-export const fixedSurface = 'base-surface md:fixed-surface backdrop-blur-md dark:backdrop-blur-lg';
-export const fixedBorder = 'border-separator';
+// Sidebars.
+export const sidebarSurface = 'sidebar-surface backdrop-blur-md dark:backdrop-blur-lg';
+export const sidebarBorder = 'border-separator';
 
 // Generic grouping style.
 export const groupSurface = 'base-surface';
