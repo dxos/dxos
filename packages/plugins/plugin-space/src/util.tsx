@@ -413,8 +413,10 @@ export const constructObjectActions = ({
           { ns: SPACE_PLUGIN },
         ],
         icon: 'ph--pencil-simple-line--regular',
-        // TODO(wittjosiah): Doesn't work.
-        // keyBinding: 'shift+F6',
+        // TODO(wittjosiah): Need's focus.
+        keyBinding: {
+          macos: 'shift+F6',
+        },
         testId: 'spacePlugin.renameObject',
       },
     },
