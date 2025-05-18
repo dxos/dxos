@@ -99,18 +99,17 @@ export const colLabelCell = (col: number) => ({
   resizeHandle: 'col',
 });
 
-// TODO(burdon): Return 'bg-toolbarSurface' for cell (1,1)
 const cellGetter = (model: SheetModel) => {
   const getGridCells = gridCellGetter(model);
   return (nextBounds: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
     switch (plane) {
       case 'grid':
         return getGridCells(nextBounds);
-      // case 'fixedStartStart': {
-      //   return {
-      //     '0,0': { className: '!bg-toolbarSurface' },
-      //   };
-      // }
+      case 'fixedStartStart': {
+        return {
+          '0,0': { className: '!bg-toolbarSurface' },
+        };
+      }
       case 'frozenColsStart':
         return [...Array(nextBounds.end.row - nextBounds.start.row)].reduce((acc, _, r0) => {
           const r = nextBounds.start.row + r0;
