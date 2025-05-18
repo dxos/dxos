@@ -40,6 +40,11 @@ export const sheetSememes = {
     light: ['primary', '500/.2'],
     dark: ['primary', '500/.2'],
   },
+  gridHighlight: {
+    light: ['emerald', '500/.5'],
+    dark: ['emerald', '500/.5'],
+  },
+  // TODO(burdon): Factor out def (in common with editor).
   gridCommented: {
     light: ['green', 200],
     dark: ['green', 600],
@@ -47,10 +52,6 @@ export const sheetSememes = {
   gridCommentedActive: {
     light: ['green', '200/.5'],
     dark: ['green', '600/.5'],
-  },
-  gridHighlight: {
-    light: ['emerald', '500/.5'],
-    dark: ['emerald', '500/.5'],
   },
 } satisfies ColorSememes;
 

@@ -76,8 +76,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
-        {/* TODO(burdon): Should the separator be applied by StackItem.Content? */}
-        <Toolbar.Root classNames='border-be border-separator'>
+        <Toolbar.Root>
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 

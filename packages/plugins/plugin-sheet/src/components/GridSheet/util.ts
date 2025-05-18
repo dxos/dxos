@@ -99,7 +99,6 @@ export const colLabelCell = (col: number) => ({
   resizeHandle: 'col',
 });
 
-// TODO(burdon): Return 'bg-toolbarSurface' for cell (1,1)
 const cellGetter = (model: SheetModel) => {
   const getGridCells = gridCellGetter(model);
   return (nextBounds: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
