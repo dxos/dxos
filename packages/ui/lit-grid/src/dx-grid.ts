@@ -8,7 +8,7 @@ import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { unsafeStatic, html as staticHtml } from 'lit/static-html.js';
 
-import { defaultSizeCol, defaultSizeRow } from './defs';
+import { defaultColSize, defaultRowSize } from './defs';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import './dx-grid-axis-resize-handle';
 import {
@@ -85,12 +85,12 @@ export class DxGrid extends LitElement {
 
   @property({ type: Object })
   rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, DxGridAxisMetaProps> = {
-    grid: { size: defaultSizeRow },
+    grid: { size: defaultRowSize },
   };
 
   @property({ type: Object })
   columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, DxGridAxisMetaProps> = {
-    grid: { size: defaultSizeCol },
+    grid: { size: defaultColSize },
   };
 
   @property({ type: Object })
@@ -167,13 +167,13 @@ export class DxGrid extends LitElement {
   private binInlineMin = 0;
 
   @state()
-  private binInlineMax = defaultSizeCol;
+  private binInlineMax = defaultColSize;
 
   @state()
   private binBlockMin = 0;
 
   @state()
-  private binBlockMax = defaultSizeRow;
+  private binBlockMax = defaultRowSize;
 
   //
   // `vis`, short for ‘visible’, is the range in numeric index of the columns or rows which should be rendered within
@@ -496,12 +496,12 @@ export class DxGrid extends LitElement {
 
   private colSize(c: number | string, plane: DxGridPlane) {
     const resolvedPlane = resolveColPlane(plane);
-    return this.colSizes?.[resolvedPlane]?.[c] ?? this.columnDefault[resolvedPlane]?.size ?? defaultSizeCol;
+    return this.colSizes?.[resolvedPlane]?.[c] ?? this.columnDefault[resolvedPlane]?.size ?? defaultColSize;
   }
 
   private rowSize(r: number | string, plane: DxGridPlane) {
     const resolvedPlane = resolveRowPlane(plane);
-    return this.rowSizes?.[resolvedPlane]?.[r] ?? this.rowDefault[resolvedPlane]?.size ?? defaultSizeRow;
+    return this.rowSizes?.[resolvedPlane]?.[r] ?? this.rowDefault[resolvedPlane]?.size ?? defaultRowSize;
   }
 
   private cell(c: number | string, r: number | string, plane: DxGridPlane): DxGridCellValue | undefined {

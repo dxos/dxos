@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { defaultSizeRow } from './defs';
+import { defaultRowSize } from './defs';
 import {
   type DxGridPlaneCellIndex,
   type DxGridCellIndex,
@@ -80,9 +80,9 @@ export const selectTolerance = 4;
 //
 // `size`, when suffixed with ‘row’ or ‘col’, are limits on size applied when resizing
 //
-export const sizeColMin = defaultSizeRow;
+export const sizeColMin = defaultRowSize;
 export const sizeColMax = 1024;
-export const sizeRowMin = defaultSizeRow;
+export const sizeRowMin = defaultRowSize;
 export const sizeRowMax = 1024;
 
 export const shouldSelect = (pointer: DxGridPointer, { pageX, pageY }: PointerEvent) => {
