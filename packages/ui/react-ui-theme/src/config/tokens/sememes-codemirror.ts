@@ -38,6 +38,7 @@ export const codeMirrorSememes = {
     light: ['sky', 200],
     dark: ['cyan', 600],
   },
+  // TODO(burdon): Factor out def (in common with sheet).
   cmComment: {
     light: ['neutral', 950],
     dark: ['neutral', 50],

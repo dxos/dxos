@@ -94,8 +94,8 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
   };
 
   return (
-    <StackItem.Content toolbar classNames='w-full'>
-      <Toolbar.Root classNames='border-be border-separator'>
+    <StackItem.Content toolbar>
+      <Toolbar.Root>
         <IconButton icon='ph--plus--regular' disabled={!queue} label='Insert' onClick={handleInsert} />
       </Toolbar.Root>
       <div ref={parentRef} className='p-4' />

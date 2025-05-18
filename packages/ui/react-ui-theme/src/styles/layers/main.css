@@ -146,7 +146,7 @@
   }
 
   .dx-main-overlay {
-    @apply fixed inset-0 bg-scrim;
+    @apply fixed inset-0 bg-scrimSurface;
     @apply transition-opacity duration-200 ease-in-out-symmetric;
     @apply opacity-0 hidden;
     z-index: 6;
