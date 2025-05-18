@@ -57,7 +57,7 @@ export const ScriptContainer = ({
   );
 
   return (
-    <StackItem.Content toolbar classNames='divide-y divide-separator'>
+    <StackItem.Content toolbar>
       <ScriptToolbar state={state} role={role} script={script} />
       <TypescriptEditor
         id={script.id}
