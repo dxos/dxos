@@ -3,7 +3,7 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Option, pipe, Record, Schema } from 'effect';
+import { Option, pipe, Record } from 'effect';
 
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -36,12 +36,8 @@ export type GraphParams = {
   onRemoveNode?: Graph['_onRemoveNode'];
 };
 
-type Edge = { source: string; target: string };
-const Edges = Schema.Struct({
-  inbound: Schema.Array(Schema.String),
-  outbound: Schema.Array(Schema.String),
-});
-type Edges = { inbound: string[]; outbound: string[] };
+export type Edge = { source: string; target: string };
+export type Edges = { inbound: string[]; outbound: string[] };
 
 /**
  * The Graph represents the user interface information architecture of the application constructed via plugins.
@@ -58,7 +54,9 @@ export class Graph {
   private readonly _nodeCache = Record.fromEntries([
     [
       ROOT_ID,
-      Rx.make<Option.Option<Node>>(this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} })),
+      Rx.make<Option.Option<Node>>(
+        this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} }),
+      ).pipe(Rx.keepAlive, Rx.withLabel('graph:node:root')),
     ],
   ]);
 
@@ -69,7 +67,7 @@ export class Graph {
       Option.match({
         onSome: (value) => value,
         // TODO(wittjosiah): Should this store the rx in the cache before returning it?
-        onNone: () => Rx.make<Option.Option<Node>>(Option.none()).pipe(Rx.keepAlive),
+        onNone: () => Rx.make<Option.Option<Node>>(Option.none()).pipe(Rx.keepAlive, Rx.withLabel(`graph:node:${id}`)),
       }),
     );
   });
@@ -89,7 +87,8 @@ export class Graph {
       Option.match({
         onSome: (value) => value,
         // TODO(wittjosiah): Should this store the rx in the cache before returning it?
-        onNone: () => Rx.make<Edges>({ inbound: [], outbound: [] }).pipe(Rx.keepAlive),
+        onNone: () =>
+          Rx.make<Edges>({ inbound: [], outbound: [] }).pipe(Rx.keepAlive, Rx.withLabel(`graph:edges:${id}`)),
       }),
     );
   });
@@ -105,7 +104,7 @@ export class Graph {
         .filter(Option.isSome)
         .map((o) => o.value);
       // TODO(wittjosiah): Do derived rx values need keep alive if they depend on other values which are kept alive?
-    }).pipe(Rx.keepAlive);
+    }).pipe(Rx.keepAlive, Rx.withLabel(`graph:connections:${key}`));
   });
 
   private readonly _actions = Rx.family<string, Rx.Rx<(Action | ActionGroup)[]>>((id) => {
@@ -113,7 +112,7 @@ export class Graph {
       return get(this._connections(`${id}+outbound`)).filter(
         (node) => node.type === ACTION_TYPE || node.type === ACTION_GROUP_TYPE,
       );
-    }).pipe(Rx.keepAlive);
+    }).pipe(Rx.keepAlive, Rx.withLabel(`graph:actions:${id}`));
   });
 
   constructor({ registry, nodes, edges, onExpand, onInitialize, onRemoveNode }: GraphParams = {}) {

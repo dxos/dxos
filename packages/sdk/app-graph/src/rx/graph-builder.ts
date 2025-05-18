@@ -11,7 +11,7 @@ import { type Ref, type BaseObject } from '@dxos/echo-schema';
 import { getSnapshot } from '@dxos/live-object';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { byPosition, getDebugName, isNonNullable, type Position } from '@dxos/util';
+import { byPosition, isNonNullable, type Position } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, type GraphParams } from './graph';
 import { actionGroupSymbol, type ActionData, type Node, type NodeArg, type Relation } from '../node';
@@ -80,7 +80,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
                 Option.flatMap((node) => (connector ? Option.some(connector({ get, node })) : Option.none())),
                 Option.getOrElse(() => []),
               );
-            }).pipe(Rx.keepAlive),
+            }).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:connector:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -101,7 +101,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
                   type: ACTION_GROUP_TYPE,
                 })),
               );
-            }).pipe(Rx.keepAlive),
+            }).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:actionGroups:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -118,7 +118,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
                 Option.getOrElse(() => []),
                 Array.map((arg) => ({ ...arg, type: ACTION_TYPE })),
               );
-            }).pipe(Rx.keepAlive),
+            }).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:actions:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -151,7 +151,11 @@ export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExte
 //   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
 export class GraphBuilder {
   private readonly _connectorSubscriptions = new Map<string, CleanupFn>();
-  private readonly _extensions = Rx.make(Record.empty<string, BuilderExtension>());
+  private readonly _extensions = Rx.make(Record.empty<string, BuilderExtension>()).pipe(
+    Rx.keepAlive,
+    Rx.withLabel('graph-builder:extensions'),
+  );
+
   private readonly _registry: Registry.Registry;
   private readonly _graph: Graph;
 
@@ -204,32 +208,30 @@ export class GraphBuilder {
     this._connectorSubscriptions.clear();
   }
 
-  private readonly _connections = Rx.family<string, Rx.Rx<NodeArg<any>[]>>((key) => {
+  private readonly _connectors = Rx.family<string, Rx.Rx<NodeArg<any>[]>>((key) => {
     return Rx.readable((get) => {
       const [id, relation] = key.split('+');
       const node = this._graph.node(id);
 
+      console.log('GraphBuilder.connectors', id, relation);
       return pipe(
         get(this._extensions),
         Record.values,
         Array.sortBy(byPosition),
         Array.filter(({ relation: _relation = 'outbound' }) => _relation === relation),
-        Array.map(({ id, connector }) => {
-          const result = connector?.(node);
-          return result;
-        }),
+        Array.map(({ connector }) => connector?.(node)),
         Array.filter(isNonNullable),
         Array.flatMap((result) => get(result)),
       );
-    }).pipe(Rx.keepAlive);
+    }).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:connectors:${key}`));
   });
 
   private _onExpand(id: string, relation: Relation) {
     log('onExpand', { id, relation });
-    const connections = this._connections(`${id}+${relation}`);
+    const connectors = this._connectors(`${id}+${relation}`);
 
     let previous: string[] = [];
-    const cancel = this._registry.subscribe(connections, (nodes) => {
+    const cancel = this._registry.subscribe(connectors, (nodes) => {
       const ids = nodes.map((n) => n.id);
       const removed = previous.filter((id) => !ids.includes(id));
       previous = ids;
@@ -249,7 +251,7 @@ export class GraphBuilder {
       });
     });
     // Trigger subscription.
-    this._registry.get(connections);
+    this._registry.get(connectors);
 
     this._connectorSubscriptions.set(id, cancel);
   }
