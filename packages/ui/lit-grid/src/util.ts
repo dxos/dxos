@@ -16,8 +16,8 @@ import {
   type DxGridFrozenPlane,
   type DxGridAxis,
   type DxGridPlanePosition,
-  separator,
   type DxGridReadonlyValue,
+  separator,
 } from './types';
 
 export const toPlaneCellIndex = (cellCoords: Partial<DxGridPosition> & DxGridPlanePosition): DxGridPlaneCellIndex =>
