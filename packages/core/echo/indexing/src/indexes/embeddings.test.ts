@@ -1,7 +1,7 @@
 import { pipeline } from '@xenova/transformers';
 import { describe, test } from 'vitest';
 import * as Orama from '@orama/orama';
-import { inspect } from 'node:util';
+import { TestData } from '../testing';
 
 // Associated research: https://chatgpt.com/share/6828c870-7f08-8012-b4d6-676f00545e79
 
@@ -98,18 +98,7 @@ describe('Embeddings', () => {
 });
 
 const TEST_ARTICLES = {
-  marineLife: `
-    Many marine animals migrate between foraging areas and reproductive sites, often timing the return migration with extreme precision. In theory, the decision to return should reflect energy acquisition at foraging areas, energetic costs associated with transit, and timing arrival for successful reproduction. For long-distance migrations to be successful, animals must integrate ‘map’ information to assess where they are relative to their reproductive site as well as ‘calendar’ information to know when to initiate the return migration given their distance from home1. Elephant seals, Mirounga angustirostris, migrate thousands of kilometers from reproductive sites to open ocean foraging areas (Figure 1A), yet return within a narrow window of time to specific beaches2. Each year, pregnant female elephant seals undertake a ∼240-day, 10,000 km foraging migration across the Northeast Pacific Ocean before returning to their breeding beaches, where they give birth 5 days after arriving2. We found that the seals’ abilities to adjust the timing of their return migration is based on the perception of space and time, which further elucidates the mechanisms behind their astonishing navigational feats3.
-  `,
-  warsawWeather: `
-    Warsaw Weather Forecast. Providing a local hourly Warsaw weather forecast of rain, sun, wind, humidity and temperature.
-    The Long-range 12 day forecast also includes detail for Warsaw weather today. Live weather reports from Warsaw weather stations and weather warnings that include risk of thunder, high UV index and forecast gales. See the links below the 12-day Warsaw weather forecast table for other cities and towns nearby along with weather conditions for local outdoor activities.
-    Warsaw is 78 m above sea level and located at 52.25° N 21.04° E. Warsaw has a population of 1702139. Local time in Warsaw is 1:57:03 PM CEST.
-  `,
-  developmentsInBiomedicine: `
-    Since the completion of the groundbreaking Human Genome Project, massive strides have been made in our understanding of biology, science, and the human body.
-    Many developments have been made on the genetic or cellular level that could have enormous applications for the future.
-    But which have been the most important?
-    The last decade has already borne significant fruit from 3D printing new organs using stem cells to customizing drug therapies for patients to potentially making human cells virus-proof. As science improves and our understanding grows, the next decade or decades could change healthcare forever. 
-  `,
+  marineLife: TestData.DOCUMENTS.marineLife.doc.data.content,
+  warsawWeather: TestData.DOCUMENTS.warsawWeather.doc.data.content,
+  developmentsInBiomedicine: TestData.DOCUMENTS.developmentsInBiomedicine.doc.data.content,
 };
