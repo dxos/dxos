@@ -4,7 +4,7 @@
 
 import { Registry, Rx } from '@effect-rx/rx-react';
 import { effect } from '@preact/signals-core';
-import { Array, Option, pipe, Record } from 'effect';
+import { Array, type Option, pipe, Record } from 'effect';
 
 import { type MulticastObservable, type CleanupFn } from '@dxos/async';
 import { type Ref, type BaseObject } from '@dxos/echo-schema';
@@ -21,23 +21,21 @@ import { actionGroupSymbol, type ActionData, type Node, type NodeArg, type Relat
  *
  * @param params.node The existing node the returned nodes will be connected to.
  */
-export type ConnectorExtension = (params: { get: Rx.Context; node: Node }) => NodeArg<any>[];
+export type ConnectorExtension = (node: Rx.Rx<Option.Option<Node>>) => Rx.Rx<NodeArg<any>[]>;
 
 /**
  * Constrained case of the connector extension for more easily adding actions to the graph.
  */
-export type ActionsExtension = (params: {
-  get: Rx.Context;
-  node: Node;
-}) => Omit<NodeArg<ActionData>, 'type' | 'nodes' | 'edges'>[];
+export type ActionsExtension = (
+  node: Rx.Rx<Option.Option<Node>>,
+) => Rx.Rx<Omit<NodeArg<ActionData>, 'type' | 'nodes' | 'edges'>[]>;
 
 /**
  * Constrained case of the connector extension for more easily adding action groups to the graph.
  */
-export type ActionGroupsExtension = (params: {
-  get: Rx.Context;
-  node: Node;
-}) => Omit<NodeArg<typeof actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[];
+export type ActionGroupsExtension = (
+  node: Rx.Rx<Option.Option<Node>>,
+) => Rx.Rx<Omit<NodeArg<typeof actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[]>;
 
 /**
  * A graph builder extension is used to add nodes to the graph.
@@ -64,8 +62,28 @@ export type CreateExtensionOptions = {
  * Create a graph builder extension.
  */
 export const createExtension = (extension: CreateExtensionOptions): BuilderExtension[] => {
-  const { id, position = 'static', relation = 'outbound', connector, actions, actionGroups } = extension;
+  const {
+    id,
+    position = 'static',
+    relation = 'outbound',
+    connector,
+    actions: _actions,
+    actionGroups: _actionGroups,
+  } = extension;
   const getId = (key: string) => `${id}/${key}`;
+
+  const actionGroups =
+    _actionGroups &&
+    Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
+      _actionGroups(node).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:actionGroups:${id}`)),
+    );
+
+  const actions =
+    _actions &&
+    Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
+      _actions(node).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:actions:${id}`)),
+    );
+
   return [
     // resolver ? { id: getId('resolver'), position, resolver } : undefined,
     connector
@@ -74,13 +92,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           position,
           relation,
           connector: Rx.family((key) =>
-            Rx.readable((get) => {
-              return pipe(
-                get(key),
-                Option.flatMap((node) => (connector ? Option.some(connector({ get, node })) : Option.none())),
-                Option.getOrElse(() => []),
-              );
-            }).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:connector:${id}`)),
+            connector(key).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:connector:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -90,18 +102,13 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           position,
           relation: 'outbound',
           connector: Rx.family((node) =>
-            Rx.readable((get) => {
-              return pipe(
-                get(node),
-                Option.flatMap((node) => (actionGroups ? Option.some(actionGroups({ get, node })) : Option.none())),
-                Option.getOrElse(() => []),
-                Array.map((arg) => ({
-                  ...arg,
-                  data: actionGroupSymbol,
-                  type: ACTION_GROUP_TYPE,
-                })),
-              );
-            }).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:actionGroups:${id}`)),
+            Rx.readable((get) =>
+              get(actionGroups(node)).map((arg) => ({
+                ...arg,
+                data: actionGroupSymbol,
+                type: ACTION_GROUP_TYPE,
+              })),
+            ).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:connector:actionGroups:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -111,14 +118,10 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           position,
           relation: 'outbound',
           connector: Rx.family((node) =>
-            Rx.readable((get) => {
-              return pipe(
-                get(node),
-                Option.flatMap((node) => (actions ? Option.some(actions({ get, node })) : Option.none())),
-                Option.getOrElse(() => []),
-                Array.map((arg) => ({ ...arg, type: ACTION_TYPE })),
-              );
-            }).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:actions:${id}`)),
+            Rx.readable((get) => get(actions(node)).map((arg) => ({ ...arg, type: ACTION_TYPE }))).pipe(
+              Rx.keepAlive,
+              Rx.withLabel(`graph-builder:connector:actions:${id}`),
+            ),
           ),
         } satisfies BuilderExtension)
       : undefined,

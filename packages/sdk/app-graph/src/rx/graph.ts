@@ -3,7 +3,7 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Option, pipe, Record } from 'effect';
+import { Option, Record } from 'effect';
 
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -50,26 +50,14 @@ export class Graph {
   private readonly _registry: Registry.Registry;
   private readonly _expanded = Record.empty<string, boolean>();
   private readonly _initialized = Record.empty<string, boolean>();
-  private readonly _edgeCache = Record.empty<string, Rx.Writable<Edges>>();
-  private readonly _nodeCache = Record.fromEntries([
-    [
-      ROOT_ID,
-      Rx.make<Option.Option<Node>>(
-        this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} }),
-      ).pipe(Rx.keepAlive, Rx.withLabel('graph:node:root')),
-    ],
+  private readonly _initialEdges = Record.empty<string, Edges>();
+  private readonly _initialNodes = Record.fromEntries([
+    [ROOT_ID, this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} })],
   ]);
 
   private readonly _node = Rx.family<string, Rx.Writable<Option.Option<Node>>>((id) => {
-    return pipe(
-      this._nodeCache,
-      Record.get(id),
-      Option.match({
-        onSome: (value) => value,
-        // TODO(wittjosiah): Should this store the rx in the cache before returning it?
-        onNone: () => Rx.make<Option.Option<Node>>(Option.none()).pipe(Rx.keepAlive, Rx.withLabel(`graph:node:${id}`)),
-      }),
-    );
+    const initial = Option.flatten(Record.get(this._initialNodes, id));
+    return Rx.make<Option.Option<Node>>(initial).pipe(Rx.keepAlive, Rx.withLabel(`graph:node:${id}`));
   });
 
   private readonly _nodeOrThrow = Rx.family<string, Rx.Rx<Node>>((id) => {
@@ -81,16 +69,8 @@ export class Graph {
   });
 
   private readonly _edges = Rx.family<string, Rx.Writable<Edges>>((id) => {
-    return pipe(
-      this._edgeCache,
-      Record.get(id),
-      Option.match({
-        onSome: (value) => value,
-        // TODO(wittjosiah): Should this store the rx in the cache before returning it?
-        onNone: () =>
-          Rx.make<Edges>({ inbound: [], outbound: [] }).pipe(Rx.keepAlive, Rx.withLabel(`graph:edges:${id}`)),
-      }),
-    );
+    const initial = Record.get(this._initialEdges, id).pipe(Option.getOrElse(() => ({ inbound: [], outbound: [] })));
+    return Rx.make<Edges>(initial).pipe(Rx.keepAlive, Rx.withLabel(`graph:edges:${id}`));
   });
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the rx to be referentially stable.

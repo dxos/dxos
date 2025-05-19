@@ -30,14 +30,14 @@ describe('RxGraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'outbound-connector',
-          connector: () => [{ id: 'child', type: EXAMPLE_TYPE, data: 2 }],
+          connector: () => Rx.make([{ id: 'child', type: EXAMPLE_TYPE, data: 2 }]),
         }),
       );
       builder.addExtension(
         createExtension({
           id: 'inbound-connector',
           relation: 'inbound',
-          connector: () => [{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }],
+          connector: () => Rx.make([{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }]),
         }),
       );
 
@@ -63,7 +63,7 @@ describe('RxGraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: ({ get }) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }],
+          connector: () => Rx.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
       );
       const graph = builder.graph;
@@ -88,7 +88,7 @@ describe('RxGraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: ({ get }) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }],
+          connector: () => Rx.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
       );
       const graph = builder.graph;
@@ -115,7 +115,7 @@ describe('RxGraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: () => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE }],
+          connector: () => Rx.make([{ id: EXAMPLE_ID, type: EXAMPLE_TYPE }]),
         }),
       );
       const graph = builder.graph;
@@ -138,7 +138,7 @@ describe('RxGraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector-2',
-          connector: () => [{ id: exampleId(2), type: EXAMPLE_TYPE }],
+          connector: () => Rx.make([{ id: exampleId(2), type: EXAMPLE_TYPE }]),
         }),
       );
       expect(nodes).has.length(2);
@@ -155,7 +155,7 @@ describe('RxGraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: ({ get }) => get(nodes),
+          connector: () => Rx.make((get) => get(nodes)),
         }),
       );
       const graph = builder.graph;
@@ -185,12 +185,15 @@ describe('RxGraphBuilder', () => {
       builder.addExtension([
         createExtension({
           id: 'root',
-          connector: ({ get, node }) =>
-            pipe(
-              node.id === 'root' ? Option.some(get(name)) : Option.none(),
-              Option.filter((name) => name !== 'removed'),
-              Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
-              Option.getOrElse(() => []),
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
+                Option.filter((name) => name !== 'removed'),
+                Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
+                Option.getOrElse(() => []),
+              ),
             ),
         }),
       ]);
@@ -231,30 +234,39 @@ describe('RxGraphBuilder', () => {
       builder.addExtension([
         createExtension({
           id: 'root',
-          connector: ({ get, node }) =>
-            pipe(
-              node.id === 'root' ? Option.some(get(name)) : Option.none(),
-              Option.filter((name) => name !== 'removed'),
-              Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
-              Option.getOrElse(() => []),
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
+                Option.filter((name) => name !== 'removed'),
+                Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
+                Option.getOrElse(() => []),
+              ),
             ),
         }),
         createExtension({
           id: 'connector1',
-          connector: ({ get, node }) =>
-            pipe(
-              node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none(),
-              Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
-              Option.getOrElse(() => []),
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none())),
+                Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
+                Option.getOrElse(() => []),
+              ),
             ),
         }),
         createExtension({
           id: 'connector2',
-          connector: ({ get, node }) =>
-            pipe(
-              node.id === EXAMPLE_ID ? Option.some(node.data) : Option.none(),
-              Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
-              Option.getOrElse(() => []),
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(node.data) : Option.none())),
+                Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
+                Option.getOrElse(() => []),
+              ),
             ),
         }),
       ]);
@@ -320,30 +332,39 @@ describe('RxGraphBuilder', () => {
       builder.addExtension([
         createExtension({
           id: 'root',
-          connector: ({ get, node }) =>
-            pipe(
-              node.id === 'root' ? Option.some(get(name)) : Option.none(),
-              Option.filter((name) => name !== 'removed'),
-              Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
-              Option.getOrElse(() => []),
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
+                Option.filter((name) => name !== 'removed'),
+                Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
+                Option.getOrElse(() => []),
+              ),
             ),
         }),
         createExtension({
           id: 'connector1',
-          connector: ({ get, node }) =>
-            pipe(
-              node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none(),
-              Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
-              Option.getOrElse(() => []),
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none())),
+                Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
+                Option.getOrElse(() => []),
+              ),
             ),
         }),
         createExtension({
           id: 'connector2',
-          connector: ({ get, node }) =>
-            pipe(
-              node.id === EXAMPLE_ID ? Option.some(node.data) : Option.none(),
-              Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
-              Option.getOrElse(() => []),
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(get(node.data)) : Option.none())),
+                Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
+                Option.getOrElse(() => []),
+              ),
             ),
         }),
       ]);
@@ -444,43 +465,40 @@ describe('RxGraphBuilder', () => {
       builder.addExtension([
         createExtension({
           id: 'root',
-          connector: ({ get, node }) => {
-            const result = pipe(
-              node.id === 'root' ? Option.some(get(name)) : Option.none(),
-              Option.filter((name) => name !== 'removed'),
-              Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
-              Option.getOrElse(() => []),
-            );
-            console.log('!!root', getDebugName(node), getDebugName(result), node.id);
-            return result;
-          },
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
+                Option.filter((name) => name !== 'removed'),
+                Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
         }),
         createExtension({
           id: 'connector1',
-          connector: ({ get, node }) => {
-            const result = pipe(
-              node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none(),
-              Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
-              Option.getOrElse(() => []),
-            );
-            console.log('!!connector1', getDebugName(node), getDebugName(result), node.id);
-            return result;
-          },
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none())),
+                Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
         }),
         createExtension({
           id: 'connector2',
-          connector: ({ get, node }) => {
-            const result = pipe(
-              node.id === EXAMPLE_ID ? Option.some(node.data) : Option.none(),
-              Option.map((data) => {
-                console.log('??connector2', data);
-                return [{ id: exampleId(3), type: EXAMPLE_TYPE, data }];
-              }),
-              Option.getOrElse(() => []),
-            );
-            console.log('!!connector2', getDebugName(node), getDebugName(result), node.id);
-            return result;
-          },
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(get(node.data)) : Option.none())),
+                Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
         }),
       ]);
 
@@ -676,49 +694,65 @@ describe('RxGraphBuilder', () => {
             'root/connector',
             createExtension({
               id: 'root',
-              connector: ({ get, node }) => {
-                const result = pipe(
-                  node.id === 'root' ? Option.some(get(name)) : Option.none(),
-                  Option.filter((name) => name !== 'removed'),
-                  Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
-                  Option.getOrElse(() => []),
-                );
-                console.log('!!root', getDebugName(node), getDebugName(result), node.id);
-                return result;
-              },
+              connector: (key) =>
+                Rx.make((get) => {
+                  const node = get(key);
+                  const result = pipe(
+                    node,
+                    Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
+                    Option.filter((name) => name !== 'removed'),
+                    Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
+                    Option.getOrElse(() => []),
+                  );
+                  console.log('!!root', getDebugName(node), getDebugName(result), node.pipe(Option.getOrNull)?.id);
+                  return result;
+                }),
             })[0],
           ],
           [
             'connector1/connector',
             createExtension({
               id: 'connector1',
-              connector: ({ get, node }) => {
-                const result = pipe(
-                  node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none(),
-                  Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
-                  Option.getOrElse(() => []),
-                );
-                console.log('!!connector1', getDebugName(node), getDebugName(result), node.id);
-                return result;
-              },
+              connector: (key) =>
+                Rx.make((get) => {
+                  const node = get(key);
+                  const result = pipe(
+                    node,
+                    Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none())),
+                    Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
+                    Option.getOrElse(() => []),
+                  );
+                  console.log(
+                    '!!connector1',
+                    getDebugName(node),
+                    getDebugName(result),
+                    node.pipe(Option.getOrNull)?.id,
+                  );
+                  return result;
+                }),
             })[0],
           ],
           [
             'connector2/connector',
             createExtension({
               id: 'connector2',
-              connector: ({ get, node }) => {
-                const result = pipe(
-                  node.id === EXAMPLE_ID ? Option.some(node.data) : Option.none(),
-                  Option.map((data) => {
-                    console.log('??connector2', data);
-                    return [{ id: exampleId(3), type: EXAMPLE_TYPE, data }];
-                  }),
-                  Option.getOrElse(() => []),
-                );
-                console.log('!!connector2', getDebugName(node), getDebugName(result), node.id);
-                return result;
-              },
+              connector: (key) =>
+                Rx.make((get) => {
+                  const node = get(key);
+                  const result = pipe(
+                    node,
+                    Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(node.data) : Option.none())),
+                    Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
+                    Option.getOrElse(() => []),
+                  );
+                  console.log(
+                    '!!connector2',
+                    getDebugName(node),
+                    getDebugName(result),
+                    node.pipe(Option.getOrNull)?.id,
+                  );
+                  return result;
+                }),
             })[0],
           ],
         ]),
@@ -919,10 +953,11 @@ describe('RxGraphBuilder', () => {
         builder.addExtension(
           createExtension({
             id: 'outbound-connector',
-            connector: ({ get }) => {
-              const inner = get(innerRx) as any;
-              return inner ? [{ id: inner.id, type: EXAMPLE_TYPE, data: inner.name }] : [];
-            },
+            connector: () =>
+              Rx.make((get) => {
+                const inner = get(innerRx) as any;
+                return inner ? [{ id: inner.id, type: EXAMPLE_TYPE, data: inner.name }] : [];
+              }),
           }),
         );
 
