@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as orama from '@orama/orama';
+import * as Orama from '@orama/orama';
 import { describe, expect, test } from 'vitest';
 
 describe('Orama', () => {
@@ -122,21 +122,21 @@ describe('Orama', () => {
   ];
 
   const getOrama = async () => {
-    const db = await orama.create({
+    const db = await Orama.create({
       schema: {
         system: {
           type: { objectId: 'string' },
         },
       },
     });
-    await Promise.all(objects.map((object) => orama.insert<any>(db, object)));
+    await Promise.all(objects.map((object) => Orama.insert<any>(db, object)));
     return db;
   };
 
   test('basic', async () => {
     const db = await getOrama();
 
-    const result = await orama.search(db, { term: typename, exact: true, threshold: 0 });
+    const result = await Orama.search(db, { term: typename, exact: true, threshold: 0 });
     expect(result.hits.length).to.equal(6);
   });
 
@@ -145,17 +145,17 @@ describe('Orama', () => {
 
     {
       // Serialize and deserialize.
-      const serialized = await orama.save(db);
+      const serialized = await Orama.save(db);
 
-      const deserializedDb = await orama.create({
+      const deserializedDb = await Orama.create({
         schema: {
           schema: 'string',
         },
       });
-      await orama.load(deserializedDb, serialized);
+      await Orama.load(deserializedDb, serialized);
 
       {
-        const result = await orama.search(deserializedDb, {
+        const result = await Orama.search(deserializedDb, {
           term: typename,
           exact: true,
           threshold: 0,
@@ -167,7 +167,7 @@ describe('Orama', () => {
 
   test('get everything', async () => {
     const db = await getOrama();
-    const result = await orama.search(db, { term: '', exact: true, threshold: 1, limit: 1_000_000 });
+    const result = await Orama.search(db, { term: '', exact: true, threshold: 1, limit: 1_000_000 });
     expect(result.hits.length).to.equal(objects.length);
   });
 });
