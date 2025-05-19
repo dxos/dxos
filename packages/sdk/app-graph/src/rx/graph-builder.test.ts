@@ -329,4 +329,34 @@ describe('RxGraphBuilder', () => {
       expect(dependentCount).to.equal(3);
     });
   });
+
+  describe('explore', () => {
+    test('works', async () => {
+      const builder = new GraphBuilder();
+      builder.addExtension(
+        createExtension({
+          id: 'connector',
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.map((node) => (node.data ? node.data + 1 : 1)),
+                Option.filter((data) => data <= 5),
+                Option.map((data) => [{ id: `node-${data}`, type: EXAMPLE_TYPE, data }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+      );
+
+      let count = 0;
+      await builder.explore({
+        visitor: () => {
+          count++;
+        },
+      });
+
+      expect(count).to.equal(6);
+    });
+  });
 });

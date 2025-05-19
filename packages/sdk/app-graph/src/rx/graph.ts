@@ -236,7 +236,8 @@ export class Graph implements WritableGraph {
     [ROOT_ID, this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} })],
   ]);
 
-  private readonly _node = Rx.family<string, Rx.Writable<Option.Option<Node>>>((id) => {
+  /** @internal */
+  readonly _node = Rx.family<string, Rx.Writable<Option.Option<Node>>>((id) => {
     const initial = Option.flatten(Record.get(this._initialNodes, id));
     return Rx.make<Option.Option<Node>>(initial).pipe(Rx.keepAlive, Rx.withLabel(`graph:node:${id}`));
   });
@@ -572,7 +573,8 @@ export class Graph implements WritableGraph {
     return trigger.wait({ timeout }).finally(() => clearInterval(i));
   }
 
-  private _constructNode(node: NodeArg<any>): Option.Option<Node> {
+  /** @internal */
+  _constructNode(node: NodeArg<any>): Option.Option<Node> {
     return Option.some({ [graphSymbol]: this, data: null, properties: {}, ...node });
   }
 }

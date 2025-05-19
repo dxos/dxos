@@ -8,9 +8,9 @@ import { Array, type Option, pipe, Record } from 'effect';
 
 import { type MulticastObservable, type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
-import { byPosition, isNonNullable, type Position } from '@dxos/util';
+import { byPosition, isNode, isNonNullable, type MaybePromise, type Position } from '@dxos/util';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, type GraphParams } from './graph';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams } from './graph';
 import { actionGroupSymbol, type ActionData, type Node, type NodeArg, type Relation } from '../node';
 
 /**
@@ -120,6 +120,13 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
   ].filter(isNonNullable);
 };
 
+export type GraphBuilderTraverseOptions = {
+  visitor: (node: Node, path: string[]) => MaybePromise<boolean | void>;
+  registry?: Registry.Registry;
+  source?: string;
+  relation?: Relation;
+};
+
 export type BuilderExtension = Readonly<{
   id: string;
   position: Position;
@@ -145,6 +152,7 @@ export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExte
 //   Should unsubscribe from nodes that are not in the set/radius.
 //   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
 export class GraphBuilder {
+  // TODO(wittjosiah): Use Context.
   private readonly _connectorSubscriptions = new Map<string, CleanupFn>();
   private readonly _extensions = Rx.make(Record.empty<string, BuilderExtension>()).pipe(
     Rx.keepAlive,
@@ -196,7 +204,49 @@ export class GraphBuilder {
     return this;
   }
 
-  explore() {}
+  async explore(
+    // TODO(wittjosiah): Currently defaulting to new registry.
+    //   Currently unsure about how to handle nodes which are expanded in the background.
+    //   This seems like a good place to start.
+    { registry = Registry.make(), source = ROOT_ID, relation = 'outbound', visitor }: GraphBuilderTraverseOptions,
+    path: string[] = [],
+  ) {
+    // Break cycles.
+    if (path.includes(source)) {
+      return;
+    }
+
+    // TODO(wittjosiah): This is a workaround for esm not working in the test runner.
+    //   Switching to vitest is blocked by having node esm versions of echo-schema & echo-signals.
+    if (!isNode()) {
+      const { yieldOrContinue } = await import('main-thread-scheduling');
+      await yieldOrContinue('idle');
+    }
+
+    const node = registry.get(this._graph.nodeOrThrow(source));
+    const shouldContinue = await visitor(node, [...path, node.id]);
+    if (shouldContinue === false) {
+      return;
+    }
+
+    const nodes = Object.values(this._registry.get(this._extensions))
+      .filter((extension) => relation === (extension.relation ?? 'outbound'))
+      .map((extension) => extension.connector)
+      .filter(isNonNullable)
+      .flatMap((connector) => registry.get(connector(this._graph.node(source))));
+
+    await Promise.all(
+      nodes.map((nodeArg) => {
+        registry.set(this._graph._node(nodeArg.id), this._graph._constructNode(nodeArg));
+        return this.explore({ registry, source: nodeArg.id, relation, visitor }, [...path, node.id]);
+      }),
+    );
+
+    if (registry !== this._registry) {
+      registry.reset();
+      registry.dispose();
+    }
+  }
 
   destroy() {
     this._connectorSubscriptions.forEach((unsubscribe) => unsubscribe());
