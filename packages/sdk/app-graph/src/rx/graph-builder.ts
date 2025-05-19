@@ -216,10 +216,10 @@ export class GraphBuilder {
       const [id, relation] = key.split('+');
       const node = this._graph.node(id);
 
-      console.log('GraphBuilder.connectors', id, relation);
       return pipe(
         get(this._extensions),
         Record.values,
+        // TODO(wittjosiah): Sort on write rather than read.
         Array.sortBy(byPosition),
         Array.filter(({ relation: _relation = 'outbound' }) => _relation === relation),
         Array.map(({ connector }) => connector?.(node)),
@@ -239,7 +239,7 @@ export class GraphBuilder {
       const removed = previous.filter((id) => !ids.includes(id));
       previous = ids;
 
-      log.info('update', { id, relation, ids, removed });
+      log('update', { id, relation, ids, removed });
       Rx.batch(() => {
         this._graph.removeEdges(
           removed.map((target) => ({ source: id, target })),
@@ -269,6 +269,20 @@ export class GraphBuilder {
   }
 }
 
+/**
+ * Creates an Rx.Rx<T> from a callback which accesses signals.
+ * Will return a new rx instance each time.
+ */
+export const rxFromSignal = <T>(cb: () => T) => {
+  return Rx.readable((get) => {
+    const dispose = effect(() => {
+      get.setSelf(cb());
+    });
+
+    get.addFinalizer(() => dispose());
+  }).pipe(Rx.keepAlive);
+};
+
 const liveObjectFamily = Rx.family((live: Live<BaseObject>) => {
   return Rx.readable((get) => {
     const dispose = effect(() => {
@@ -280,6 +294,10 @@ const liveObjectFamily = Rx.family((live: Live<BaseObject>) => {
   }).pipe(Rx.keepAlive);
 });
 
+/**
+ * Creates an Rx.Rx<T> from a Live<T>
+ * Will return the same rx instance for the same live object.
+ */
 export const rxFromLive = <T extends BaseObject>(live: Live<T>): Rx.Rx<T> => {
   return liveObjectFamily(live) as Rx.Rx<T>;
 };
@@ -294,6 +312,10 @@ const refFamily = Rx.family((ref: Ref<any>) => {
   }).pipe(Rx.keepAlive);
 });
 
+/**
+ * Creates an Rx.Rx<T> from a Ref<T>
+ * Will return the same rx instance for the same ref.
+ */
 export const rxFromRef = <T>(ref: Ref<T>): Rx.Rx<T | undefined> => {
   return refFamily(ref) as Rx.Rx<T | undefined>;
 };

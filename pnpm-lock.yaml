@@ -10162,9 +10162,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect-rx/rx-react':
-        specifier: ^0.33.6
-        version: 0.33.6(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -10184,6 +10181,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
@@ -10229,9 +10229,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect-rx/rx-react':
-        specifier: ^0.33.6
-        version: 0.33.6(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -10239,6 +10236,9 @@ importers:
         specifier: ^14.1.1
         version: 14.2.0
     devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -10254,6 +10254,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
         specifier: 0.80.12
         version: 0.80.12(effect@3.14.21)
@@ -16198,18 +16201,18 @@ packages:
   '@dxos/automerge-wasm@0.17.1':
     resolution: {integrity: sha512-iFqAuNpoBuqXOCaB8l8uvm/8AfDMFD4HLhKKMmIeTGuLWtY3TbuyNF5XzUNE1slRBlVsg4orzCWh6IAiAPvB8A==}
 
-  '@effect-rx/rx-react@0.33.6':
-    resolution: {integrity: sha512-ttMPUX6U8XloRkoZlQ9wvBpi2OxZKA2FSupXzDPpikWfCOhvG4OPeCaOwWppWajo2RZrM2nDsIltHTTv0MfZ+g==}
+  '@effect-rx/rx-react@0.34.1':
+    resolution: {integrity: sha512-qZ3Bql1BYaGoQD2Npl0GTmYpZWUERKf9xci/z9fqiLUOpWZtaYcg2v+Ug68Crau/3YzeMI0whAgBX35q6l4IzQ==}
     peerDependencies:
       effect: ^3.14.12
       react: ~18.2.0
       scheduler: '*'
 
-  '@effect-rx/rx@0.38.7':
-    resolution: {integrity: sha512-qf0eoOXbxnNVvzfMV9TtDqxlau8d0TmWDhpoo2yr9/Dqj0j0QzMCEaspxQ8XHVGQVorQDaMd9otRpiALeh6V8w==}
+  '@effect-rx/rx@0.39.1':
+    resolution: {integrity: sha512-xyNscgqwZ3jtcOxeI/AFb9Jwq5USD7fs8HSNtXVUOLp/quGRWmjEJECnga6WW3DnGbkNfVZcB5V8QUN0dy+HFA==}
     peerDependencies:
-      '@effect/platform': ^0.80.12
-      effect: ^3.14.12
+      '@effect/platform': ^0.82.0
+      effect: ^3.15.0
 
   '@effect/ai@0.8.0':
     resolution: {integrity: sha512-IqlMIL5gurllSvQNMBFIhWAJDs/W5qt98nbM+80QQDnvhCz34PmIKyaq5GaLwLk/RBTBALXSnQpTBSme38qigg==}
@@ -38925,16 +38928,16 @@ snapshots:
 
   '@dxos/automerge-wasm@0.17.1': {}
 
-  '@effect-rx/rx-react@0.33.6(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)':
+  '@effect-rx/rx-react@0.34.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)':
     dependencies:
-      '@effect-rx/rx': 0.38.7(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)
+      '@effect-rx/rx': 0.39.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)
       effect: 3.14.21
       react: 18.2.0
       scheduler: 0.23.2
     transitivePeerDependencies:
       - '@effect/platform'
 
-  '@effect-rx/rx@0.38.7(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)':
+  '@effect-rx/rx@0.39.1(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)':
     dependencies:
       '@effect/platform': 0.80.12(effect@3.14.21)
       effect: 3.14.21
