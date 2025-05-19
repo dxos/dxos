@@ -39,7 +39,7 @@ describe('Embeddings', () => {
     type Record = {
       id: string;
       content: string;
-      embedding: number[];
+      embedding?: number[];
     };
 
     const records: Record[] = await Promise.all(
@@ -47,7 +47,11 @@ describe('Embeddings', () => {
         const embedding = await extractor(content, { pooling: 'mean', normalize: true });
         const vector = embedding.tolist()[0];
 
-        return { id, content, embedding: vector };
+        return {
+          id,
+          content,
+          embedding: vector,
+        };
       }),
     );
 
@@ -82,7 +86,8 @@ describe('Embeddings', () => {
       'elephant seals',
       'will it rain?',
       'warsaw weather',
-      'synthetic organ production',
+      
+      'synthetic heart production', // purely vector
     ];
 
     for (const query of QUERIES) {
