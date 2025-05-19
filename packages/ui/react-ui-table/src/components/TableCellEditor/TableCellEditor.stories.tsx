@@ -31,7 +31,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   const { space } = useClientProvider();
   invariant(space);
 
-  const tables = useQuery(space, Filter.schema(TableType));
+  const tables = useQuery(space, Filter.type(TableType));
   const [table, setTable] = useState<TableType>();
   const [schema, setSchema] = useState<EchoSchema>();
   useEffect(() => {

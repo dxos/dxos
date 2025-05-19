@@ -241,7 +241,7 @@ export class ComputeGraph extends Resource {
   protected override async _open() {
     if (this._space) {
       // Subscribe to remote function definitions.
-      const query = this._space.db.query(Filter.schema(FunctionType));
+      const query = this._space.db.query(Filter.type(FunctionType));
       const unsubscribe = query.subscribe(({ objects }) => {
         this._remoteFunctions = objects.filter(({ binding }) => binding);
         this.update.emit({ type: 'functionsUpdated' });

@@ -105,7 +105,8 @@ export const getTypenameOrThrow = (schema: Schema.Schema.AnyNoContext): string =
 /**
  * Returns a reference that will be used to point to a schema.
  */
-export const getTypeReference = (schema: Schema.Schema.AnyNoContext | undefined): Reference | undefined => {
+// TODO(dmaretskyi): Unify with `getSchemaDXN`.
+export const getTypeReference = (schema: Schema.Schema.All | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
   }

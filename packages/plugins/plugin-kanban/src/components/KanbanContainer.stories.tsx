@@ -48,7 +48,7 @@ const StorybookKanban = () => {
   const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const kanbans = useQuery(space, Filter.schema(KanbanType));
+  const kanbans = useQuery(space, Filter.type(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
   const [projection, setProjection] = useState<ViewProjection>();
   const schema = useSchema(client, space, kanban?.cardView?.target?.query.typename);
@@ -69,7 +69,7 @@ const StorybookKanban = () => {
     //  @dmaretskyi? Once resolved, update in multiple places (e.g., storybooks).
   }, [kanban?.cardView?.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
 
-  const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({

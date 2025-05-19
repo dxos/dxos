@@ -106,7 +106,7 @@ describe('EchoSchema', () => {
     expect(getTypename(object)).to.be.eq(Testing.EmptySchemaType.typename);
 
     db.add(object);
-    const queried = (await db.query(Filter.schema(schema)).run()).objects;
+    const queried = (await db.query(Filter.type(schema)).run()).objects;
     expect(queried.length).to.eq(1);
     expect(queried[0].id).to.eq(object.id);
   });

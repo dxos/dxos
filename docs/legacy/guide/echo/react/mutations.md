@@ -87,7 +87,7 @@ import { TaskType } from './schema';
 export const App = () => {
   useIdentity();
   const [space] = useSpaces();
-  const tasks = useQuery(space, Filter.schema(TaskType));
+  const tasks = useQuery(space, Filter.type(TaskType));
   return (
     <>
       {tasks.map((task) => (

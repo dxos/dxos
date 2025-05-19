@@ -16,7 +16,7 @@ import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-de
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
-import { type Space, Filter, fullyQualifiedId, getSpace, isLiveObject } from '@dxos/react-client/echo';
+import { type Space, Filter, fullyQualifiedId, getSpace, isLiveObject, Query } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
 import { AIChatType, AssistantAction, TemplateType } from '../types';
@@ -105,7 +105,7 @@ export default (context: PluginsContext) =>
       id: `${ASSISTANT_PLUGIN}/root`,
       filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
       connector: ({ node }) => {
-        const templates = memoizeQuery(node.data, Filter.schema(TemplateType));
+        const templates = memoizeQuery(node.data, Query.type(TemplateType));
         return templates.length > 0
           ? [
               {
@@ -127,7 +127,7 @@ export default (context: PluginsContext) =>
       id: `${ASSISTANT_PLUGIN}/templates`,
       filter: (node): node is Node<null, { space: Space }> => node.id === `${ASSISTANT_PLUGIN}/templates`,
       connector: ({ node }) => {
-        const templates = memoizeQuery(node.properties.space, Filter.schema(TemplateType));
+        const templates = memoizeQuery(node.properties.space, Query.type(TemplateType));
         return templates
           .toSorted((a, b) => {
             const nameA = a.name ?? '';
@@ -149,7 +149,7 @@ export default (context: PluginsContext) =>
 
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
-  const { objects } = await space.db.query(Filter.schema(AIChatType)).run();
+  const { objects } = await space.db.query(Filter.type(AIChatType)).run();
   // console.log('objects', JSON.stringify(objects, null, 2));
   if (objects.length > 0) {
     // TODO(burdon): Is this the most recent?

@@ -141,6 +141,18 @@ export interface Ref<T> {
    */
   noInline(): this;
 
+  /**
+   * Serializes the reference to a JSON object.
+   * The serialization format is compatible with the IPLD-style encoded references.
+   * When a reference has a saved target (i.e. the target or object holding the reference is not in the database),
+   * the target is included in the serialized object.
+   *
+   * Examples:
+   * `{ "/": "dxn:..." }`
+   * `{ "/": "dxn:...", "target": { ... } }`
+   */
+  encode(): EncodedReference;
+
   [RefTypeId]: {
     _T: T;
   };
@@ -349,6 +361,13 @@ export class RefImpl<T> implements Ref<T> {
     return this;
   }
 
+  encode(): EncodedReference {
+    return {
+      '/': this.#dxn.toString(),
+      ...(this.#target ? { target: this.#target } : {}),
+    };
+  }
+
   /**
    * Serializes the reference to a JSON object.
    * The serialization format is compatible with the IPLD-style encoded references.
@@ -356,10 +375,7 @@ export class RefImpl<T> implements Ref<T> {
    * the target is included in the serialized object.
    */
   toJSON() {
-    return {
-      '/': this.#dxn.toString(),
-      ...(this.#target ? { target: this.#target } : {}),
-    };
+    return this.encode();
   }
 
   toString() {

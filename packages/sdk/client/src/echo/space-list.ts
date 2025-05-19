@@ -16,7 +16,13 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject } from '@dxos/debug';
-import { type EchoClient, type FilterSource, type Query, type QueryOptions, type QueuesService } from '@dxos/echo-db';
+import {
+  type EchoClient,
+  type FilterSource,
+  type QueryResult,
+  type QueryOptions,
+  type QueuesService,
+} from '@dxos/echo-db';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -352,7 +358,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @param filter
    * @param options
    */
-  query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
+  query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): QueryResult<T> {
     return this._echoClient.graph.query(filter, options);
   }
 
