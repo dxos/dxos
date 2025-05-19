@@ -5,8 +5,11 @@
 import { type Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
 import { type ObjectStructure } from '@dxos/echo-protocol';
+import type { ObjectId } from '@dxos/echo-schema';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { Schema } from 'effect';
+import type { SchemaClass } from 'effect/Schema';
 
 /**
  * @deprecated To be replaced by a specialized API for each index.
@@ -20,6 +23,27 @@ export type IndexQuery = {
 
   // TODO(burdon): Hack to exclude.
   inverted?: boolean;
+
+  /**
+   * Graph-based search.
+   */
+  graph?: {
+    /**
+     * Relation kind.
+     */
+    kind: 'inbound-reference' | 'relation-source' | 'relation-target';
+
+    /**
+     * anchor objects to search from.
+     */
+    anchors: ObjectId[];
+
+    /**
+     * Filter by property name.
+     * Only when kind is 'inbound-reference'.
+     */
+    property: EscapedPropPath | null;
+  };
 };
 
 export type ObjectSnapshot = {
@@ -69,3 +93,25 @@ export const staticImplements =
   <U extends T>(constructor: U) => {
     return constructor;
   };
+
+/**
+ * Escaped property path within an object.
+ *
+ * Escaping rules:
+ *
+ * - '.' -> '\.'
+ * - '\' -> '\\'
+ * - contact with .
+ */
+export const EscapedPropPath: SchemaClass<string, string> & {
+  escape: (path: string[]) => EscapedPropPath;
+  unescape: (path: EscapedPropPath) => string[];
+} = class extends Schema.String.annotations({ title: 'EscapedPropPath' }) {
+  static escape(path: string[]): EscapedPropPath {
+    return path.map((p) => p.replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
+  }
+  static unescape(path: EscapedPropPath): string[] {
+    return path.split(/(?<!\\)\./).map((p) => p.replaceAll('\\\\', '\\').replaceAll('\\.', '.'));
+  }
+};
+export type EscapedPropPath = Schema.Schema.Type<typeof EscapedPropPath>;

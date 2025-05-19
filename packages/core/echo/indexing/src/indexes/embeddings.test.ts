@@ -86,7 +86,7 @@ describe('Embeddings', () => {
       'elephant seals',
       'will it rain?',
       'warsaw weather',
-      
+
       'synthetic heart production', // purely vector
     ];
 

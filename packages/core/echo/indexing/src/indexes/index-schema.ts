@@ -22,6 +22,9 @@ import {
   staticImplements,
 } from '../types';
 
+/**
+ * Indexes objects by their typename.
+ */
 @trace.resource()
 @staticImplements<IndexStaticProps>()
 export class IndexSchema extends Resource implements Index {
