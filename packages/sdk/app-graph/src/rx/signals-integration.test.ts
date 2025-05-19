@@ -7,14 +7,15 @@ import { signal } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Filter, type QueryResult } from '@dxos/echo-db';
+import { Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { type BaseObject, Expando, Ref } from '@dxos/echo-schema';
+import { Expando, Ref } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { live } from '@dxos/live-object';
 
 import { ROOT_ID } from './graph';
 import { createExtension, GraphBuilder, rxFromSignal } from './graph-builder';
+import { rxFromQuery } from '../testing';
 
 registerSignalsRuntime();
 
@@ -175,18 +176,6 @@ describe('signals integration', () => {
       await using db = await peer.createDatabase();
       db.add(live(Expando, { name: 'a' }));
       db.add(live(Expando, { name: 'b' }));
-
-      const rxFromQuery = <T extends BaseObject>(query: QueryResult<T>): Rx.Rx<T[]> => {
-        return Rx.readable((get) => {
-          const unsubscribe = query.subscribe((result) => {
-            get.setSelf(result.objects);
-          });
-
-          get.addFinalizer(() => unsubscribe());
-
-          return query.objects;
-        });
-      };
 
       const builder = new GraphBuilder({ registry });
       builder.addExtension(
