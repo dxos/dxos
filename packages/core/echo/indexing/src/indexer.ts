@@ -62,7 +62,7 @@ export class Indexer extends Resource {
   private readonly _db: LevelDB;
   private readonly _metadataStore: IndexMetadataStore;
 
-  private readonly _indexerEngine: IndexingEngine;
+  private readonly _engine: IndexingEngine;
 
   private readonly _indexUpdateBatchSize: number;
   private readonly _indexCooldownTime: number;
@@ -85,7 +85,7 @@ export class Indexer extends Resource {
     this._indexUpdateBatchSize = indexUpdateBatchSize;
     this._indexCooldownTime = indexCooldownTime;
     this._indexTimeBudget = indexTimeBudget;
-    this._indexerEngine = new IndexingEngine({
+    this._engine = new IndexingEngine({
       db,
       metadataStore,
       indexStore,
@@ -107,9 +107,9 @@ export class Indexer extends Resource {
     }
     this._indexConfig = config;
     if (this._lifecycleState === LifecycleState.OPEN) {
-      for (const kind of this._indexerEngine.indexKinds) {
+      for (const kind of this._engine.indexKinds) {
         if (!config.indexes?.some((kind) => isEqual(kind, kind))) {
-          this._indexerEngine.deleteIndex(kind);
+          this._engine.deleteIndex(kind);
         }
       }
       this._run.schedule();
@@ -122,7 +122,7 @@ export class Indexer extends Resource {
       log.warn('Index config is not set');
     }
 
-    await this._indexerEngine.open(ctx);
+    await this._engine.open(ctx);
 
     // Needs to be re-created because context changes.
     // TODO(dmaretskyi): Find a way to express this better for resources.
@@ -137,7 +137,7 @@ export class Indexer extends Resource {
           await sleepWithContext(this._ctx, cooldownMs);
         }
 
-        if (this._indexerEngine.newIndexCount > 0) {
+        if (this._engine.newIndexCount > 0) {
           await this._promoteNewIndexes();
         }
         await this._indexUpdatedObjects();
@@ -158,7 +158,7 @@ export class Indexer extends Resource {
   protected override async _close(ctx: Context): Promise<void> {
     await this._run.join();
 
-    this._indexerEngine.close(ctx);
+    this._engine.close(ctx);
   }
 
   protected override async _catch(err: Error): Promise<void> {
@@ -171,7 +171,7 @@ export class Indexer extends Resource {
     if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
       throw new Error('Indexer is not initialized or not enabled');
     }
-    const arraysOfIds = await Promise.all(this._indexerEngine.indexes.map((index) => index.find(filter)));
+    const arraysOfIds = await Promise.all(this._engine.indexes.map((index) => index.find(filter)));
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
@@ -192,36 +192,36 @@ export class Indexer extends Resource {
   }
 
   private async _loadIndexes() {
-    const kinds = await this._indexerEngine.loadIndexKindsFromDisk();
+    const kinds = await this._engine.loadIndexKindsFromDisk();
     for (const [identifier, kind] of kinds.entries()) {
       if (!this._indexConfig || this._indexConfig.indexes?.some((configKind) => isEqual(configKind, kind))) {
         try {
-          await this._indexerEngine.loadIndexFromDisk(identifier);
+          await this._engine.loadIndexFromDisk(identifier);
         } catch (err) {
           log.warn('Failed to load index', { err, identifier });
         }
       } else {
         // Note: We remove indexes that are not used
         //       to not store indexes that are getting out of sync with database.
-        await this._indexerEngine.removeIndexFromDisk(identifier);
+        await this._engine.removeIndexFromDisk(identifier);
       }
     }
 
     // Create indexes that are not loaded from disk.
     for (const kind of this._indexConfig?.indexes || []) {
-      if (!this._indexerEngine.getIndex(kind)) {
+      if (!this._engine.getIndex(kind)) {
         const IndexConstructor = IndexConstructors[kind.kind];
         invariant(IndexConstructor, `Index kind ${kind.kind} is not supported`);
         // Note: New indexes are not saved to disk until they are promoted.
         //       New Indexes will be promoted to `_indexes` map on indexing job run.
-        await this._indexerEngine.addNewIndex(new IndexConstructor(kind));
+        await this._engine.addNewIndex(new IndexConstructor(kind));
       }
     }
   }
 
   @trace.span({ showInBrowserTimeline: true })
   private async _promoteNewIndexes() {
-    await this._indexerEngine.promoteNewIndexes();
+    await this._engine.promoteNewIndexes();
     this.updated.emit();
   }
 
@@ -231,7 +231,7 @@ export class Indexer extends Resource {
       return;
     }
 
-    const { completed, updated } = await this._indexerEngine.indexUpdatedObjects({
+    const { completed, updated } = await this._engine.indexUpdatedObjects({
       indexTimeBudget: this._indexTimeBudget,
       indexUpdateBatchSize: this._indexUpdateBatchSize,
     });
