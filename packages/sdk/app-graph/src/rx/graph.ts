@@ -83,8 +83,7 @@ export class Graph {
         .map((id) => get(this._node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
-      // TODO(wittjosiah): Do derived rx values need keep alive if they depend on other values which are kept alive?
-    }).pipe(Rx.keepAlive, Rx.withLabel(`graph:connections:${key}`));
+    }).pipe(Rx.withLabel(`graph:connections:${key}`));
   });
 
   private readonly _actions = Rx.family<string, Rx.Rx<(Action | ActionGroup)[]>>((id) => {
@@ -92,7 +91,7 @@ export class Graph {
       return get(this._connections(`${id}+outbound`)).filter(
         (node) => node.type === ACTION_TYPE || node.type === ACTION_GROUP_TYPE,
       );
-    }).pipe(Rx.keepAlive, Rx.withLabel(`graph:actions:${id}`));
+    }).pipe(Rx.withLabel(`graph:actions:${id}`));
   });
 
   constructor({ registry, nodes, edges, onExpand, onInitialize, onRemoveNode }: GraphParams = {}) {

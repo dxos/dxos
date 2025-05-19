@@ -75,14 +75,12 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
   const actionGroups =
     _actionGroups &&
     Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
-      _actionGroups(node).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:actionGroups:${id}`)),
+      _actionGroups(node).pipe(Rx.withLabel(`graph-builder:actionGroups:${id}`)),
     );
 
   const actions =
     _actions &&
-    Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
-      _actions(node).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:actions:${id}`)),
-    );
+    Rx.family((node: Rx.Rx<Option.Option<Node>>) => _actions(node).pipe(Rx.withLabel(`graph-builder:actions:${id}`)));
 
   return [
     // resolver ? { id: getId('resolver'), position, resolver } : undefined,
@@ -91,9 +89,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           id: getId('connector'),
           position,
           relation,
-          connector: Rx.family((key) =>
-            connector(key).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:connector:${id}`)),
-          ),
+          connector: Rx.family((key) => connector(key).pipe(Rx.withLabel(`graph-builder:connector:${id}`))),
         } satisfies BuilderExtension)
       : undefined,
     actionGroups
@@ -108,7 +104,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
                 data: actionGroupSymbol,
                 type: ACTION_GROUP_TYPE,
               })),
-            ).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:connector:actionGroups:${id}`)),
+            ).pipe(Rx.withLabel(`graph-builder:connector:actionGroups:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -119,7 +115,6 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           relation: 'outbound',
           connector: Rx.family((node) =>
             Rx.readable((get) => get(actions(node)).map((arg) => ({ ...arg, type: ACTION_TYPE }))).pipe(
-              Rx.keepAlive,
               Rx.withLabel(`graph-builder:connector:actions:${id}`),
             ),
           ),
@@ -212,7 +207,7 @@ export class GraphBuilder {
   }
 
   private readonly _connectors = Rx.family<string, Rx.Rx<NodeArg<any>[]>>((key) => {
-    return Rx.readable((get) => {
+    return Rx.make((get) => {
       const [id, relation] = key.split('+');
       const node = this._graph.node(id);
 
@@ -226,7 +221,7 @@ export class GraphBuilder {
         Array.filter(isNonNullable),
         Array.flatMap((result) => get(result)),
       );
-    }).pipe(Rx.keepAlive, Rx.withLabel(`graph-builder:connectors:${key}`));
+    }).pipe(Rx.withLabel(`graph-builder:connectors:${key}`));
   });
 
   private _onExpand(id: string, relation: Relation) {
@@ -280,7 +275,7 @@ export const rxFromSignal = <T>(cb: () => T) => {
     });
 
     get.addFinalizer(() => dispose());
-  }).pipe(Rx.keepAlive);
+  });
 };
 
 const liveObjectFamily = Rx.family((live: Live<BaseObject>) => {
@@ -291,7 +286,7 @@ const liveObjectFamily = Rx.family((live: Live<BaseObject>) => {
     });
 
     get.addFinalizer(() => dispose());
-  }).pipe(Rx.keepAlive);
+  });
 });
 
 /**
@@ -309,7 +304,7 @@ const refFamily = Rx.family((ref: Ref<any>) => {
     });
 
     get.addFinalizer(() => dispose());
-  }).pipe(Rx.keepAlive);
+  });
 });
 
 /**
@@ -327,7 +322,7 @@ const observableFamily = Rx.family((observable: MulticastObservable<any>) => {
     get.addFinalizer(() => subscription.unsubscribe());
 
     return observable.get();
-  }).pipe(Rx.keepAlive);
+  });
 });
 
 export const rxFromObservable = <T>(observable: MulticastObservable<T>): Rx.Rx<T> => {
