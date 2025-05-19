@@ -170,4 +170,6 @@ describe('Orama', () => {
     const result = await Orama.search(db, { term: '', exact: true, threshold: 1, limit: 1_000_000 });
     expect(result.hits.length).to.equal(objects.length);
   });
+
+  // TODO(dmaretskyi): Add a test to serialize the index, then deserialize and update it.
 });
