@@ -4,24 +4,24 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
 // import { ThreadType } from '@dxos/plugin-space/types';
-import { LabelAnnotationId } from '@dxos/echo-schema';
+import { LabelAnnotationId, ObjectId, Ref, Expando, EchoObject } from '@dxos/echo-schema';
 import { ViewType } from '@dxos/schema';
 
 export const TableSchema = Schema.Struct({
-  id: Type.ObjectId,
+  id: ObjectId,
   name: Schema.optional(Schema.String),
-  view: Schema.optional(Type.Ref(ViewType)),
+  view: Schema.optional(Ref(ViewType)),
   // TODO(burdon): Document why threads is included here?
-  threads: Schema.optional(Schema.Array(Type.Ref(Type.Expando /* ThreadType */))),
+  threads: Schema.optional(Schema.Array(Ref(Expando /* ThreadType */))),
 }).annotations({
   // TODO(burdon): Move annotation to property.
   [LabelAnnotationId]: 'name',
 });
 
+// TODO(burdon): Move out of react-ui-xxx.
 export const TableType = TableSchema.pipe(
-  Type.def({
+  EchoObject({
     typename: 'dxos.org/type/Table',
     version: '0.1.0',
   }),

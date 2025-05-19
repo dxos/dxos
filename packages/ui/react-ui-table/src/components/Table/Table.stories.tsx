@@ -5,9 +5,17 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
+import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { FormatEnum, ImmutableSchema } from '@dxos/echo-schema';
+import {
+  assertEchoSchema,
+  FormatEnum,
+  isMutable,
+  toJsonSchema,
+  EchoObject,
+  GeneratorAnnotationId,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -45,7 +53,7 @@ const useTestTableModel = () => {
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {
-      return new ViewProjection(schema.jsonSchema, table.view.target);
+      return new ViewProjection(toJsonSchema(schema), table.view.target);
     }
   }, [schema, table?.view?.target]);
 
@@ -53,7 +61,7 @@ const useTestTableModel = () => {
     () => ({
       selection: { enabled: true, mode: 'multiple' as const },
       dataEditable: true,
-      schemaEditable: !(schema instanceof ImmutableSchema),
+      schemaEditable: schema && isMutable(schema),
     }),
     [schema],
   );
@@ -150,11 +158,10 @@ const StoryViewEditor = () => {
 
   const handleTypenameChanged = useCallback(
     (typename: string) => {
-      if (table?.view?.target) {
-        invariant(schema);
-        schema.mutable.updateTypename(typename);
-        table.view.target.query.typename = typename;
-      }
+      invariant(schema);
+      invariant(table?.view?.target);
+      assertEchoSchema(schema).updateTypename(typename);
+      table.view.target.query.typename = typename;
     },
     [schema, table?.view?.target],
   );
@@ -190,7 +197,7 @@ const DefaultStory = () => {
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
         <TableToolbar classNames='border-be border-separator' onAction={handleToolbarAction} />
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
+          <Table.Main ref={tableRef} model={model} presentation={presentation} schema={schema} ignoreAttention />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
@@ -251,12 +258,52 @@ export const StaticSchema: StoryObj = {
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
         const table = space.db.add(live(TableType, {}));
-        await initializeTable({ client, space, table, typename: Testing.Contact.typename });
+        await initializeTable({ client, space, table, typename: Testing.Organization.typename });
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          { type: Testing.Contact, count: 10 },
-          { type: Testing.Organization, count: 1 },
+          // { type: Testing.Contact, count: 10 },
+          // { type: Testing.Organization, count: 1 },
+          { type: ContactWithArrayOfEmails, count: 10 },
+        ]);
+      },
+    }),
+    withLayout({ fullscreen: true }),
+    withTheme,
+  ],
+};
+
+const ContactWithArrayOfEmails = Schema.Struct({
+  name: Schema.String.annotations({
+    [GeneratorAnnotationId]: 'person.fullName',
+  }),
+  emails: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        value: Schema.String,
+        label: Schema.String.pipe(Schema.optional),
+      }),
+    ),
+  ),
+}).pipe(EchoObject({ typename: 'dxos.org/type/ContactWithArrayOfEmails', version: '0.1.0' }));
+
+export const ArrayOfObjects: StoryObj = {
+  render: DefaultStory,
+  parameters: { translations },
+  decorators: [
+    withClientProvider({
+      types: [TableType, ViewType, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: async ({ client, space }) => {
+        const table = space.db.add(live(TableType, {}));
+        await initializeTable({ client, space, table, typename: ContactWithArrayOfEmails.typename });
+
+        const factory = createObjectFactory(space.db, faker as any);
+        await factory([
+          // { type: Testing.Contact, count: 10 },
+          // { type: Testing.Organization, count: 1 },
+          { type: ContactWithArrayOfEmails, count: 10 },
         ]);
       },
     }),

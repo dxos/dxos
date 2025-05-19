@@ -45,6 +45,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -69,6 +72,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-list"
     },
     {
@@ -85,6 +91,9 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"

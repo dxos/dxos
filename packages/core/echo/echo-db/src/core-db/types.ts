@@ -64,6 +64,7 @@ export const DocAccessor = {
 export const isValidKeyPath = (value: unknown): value is KeyPath =>
   Array.isArray(value) && value.every((v) => typeof v === 'string' || typeof v === 'number');
 
+// TODO(burdon): Move to @dxos/live-object?
 export const createDocAccessor = <T extends BaseObject>(obj: Live<T>, path: KeyPath | keyof T): DocAccessor<T> => {
   if (!Array.isArray(path)) {
     path = [path as any];
@@ -74,6 +75,5 @@ export const createDocAccessor = <T extends BaseObject>(obj: Live<T>, path: KeyP
   const core = getObjectCore(obj);
   const basePath = (obj as any as ProxyTarget)[symbolPath];
   const fullPath = basePath ? [...basePath, ...path] : path;
-
   return core.getDocAccessor(fullPath);
 };

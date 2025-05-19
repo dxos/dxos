@@ -4,7 +4,7 @@
 
 import { SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -51,17 +51,12 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
     return Object.fromEntries(getSchemaProperties(typeLiteral, {}).map((prop) => [prop.name, prop.defaultValue]));
   };
 
-  const newValue = useMemo(() => {
-    if (type === 'object' && elementType) {
-      return getDefaultObjectValue(elementType);
-    } else {
-      return SimpleType.getDefaultValue(type);
-    }
-  }, [type, elementType]);
+  const getDefaultValue = () =>
+    type === 'object' && elementType ? getDefaultObjectValue(elementType) : SimpleType.getDefaultValue(type);
 
   const handleAdd = useCallback(() => {
-    inputProps.onValueChange(type, [...values, newValue]);
-  }, [type, elementType, inputProps, newValue, values]);
+    inputProps.onValueChange(type, [...values, getDefaultValue()]);
+  }, [type, elementType, inputProps, values]);
 
   const handleRemove = useCallback(
     (index: number) => {

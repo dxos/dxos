@@ -9,14 +9,14 @@
     --surface-bg: var(--dx-baseSurface);
   }
 
-  .fixed-surface {
-    background-color: var(--dx-baseSurface);
-    --surface-bg: var(--dx-baseSurface);
+  .sidebar-surface {
+    background-color: var(--dx-sidebarSurface);
+    --surface-bg: var(--dx-sidebarSurface);
   }
 
-  .dark .fixed-surface {
-    background-color: var(--dx-baseSurface);
-    --surface-bg: var(--dx-baseSurface);
+  .dark .sidebar-surface {
+    background-color: var(--dx-sidebarSurface);
+    --surface-bg: var(--dx-sidebarSurface);
   }
 
   .modal-surface {

@@ -199,7 +199,7 @@ export const MarkdownEditor = ({
   }, [onFileUpload]);
 
   return (
-    <StackItem.Content toolbar={!!toolbar} classNames='is-full min-bs-0'>
+    <StackItem.Content toolbar={!!toolbar}>
       {toolbar && (
         <>
           <EditorToolbar

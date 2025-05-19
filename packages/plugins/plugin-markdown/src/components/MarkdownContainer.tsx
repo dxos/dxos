@@ -23,7 +23,6 @@ export type MarkdownContainerProps = Pick<
   settings: MarkdownSettingsProps;
 };
 
-// TODO(burdon): Move toolbar here.
 // TODO(burdon): Factor out difference for ECHO and non-ECHO objects; i.e., single component.
 const MarkdownContainer = ({
   id,

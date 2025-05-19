@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { ImmutableSchema } from '@dxos/echo-schema';
+import { isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
@@ -67,14 +67,14 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
       return;
     }
 
-    return new ViewProjection(schema.jsonSchema, table.view.target!);
+    return new ViewProjection(toJsonSchema(schema), table.view.target!);
   }, [schema, table.view?.target]);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({
       selection: { enabled: true, mode: 'multiple' },
       dataEditable: true,
-      schemaEditable: !(schema instanceof ImmutableSchema),
+      schemaEditable: schema && isMutable(schema),
     }),
     [],
   );
@@ -121,7 +121,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
         classNames='border-be border-separator'
       />
       <Table.Root role={role}>
-        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
+        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} schema={schema} />
       </Table.Root>
     </StackItem.Content>
   );

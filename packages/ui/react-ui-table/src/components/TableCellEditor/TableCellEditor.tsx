@@ -1,11 +1,12 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { type Completion } from '@codemirror/autocomplete';
+import { type Schema } from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import { useThemeContext } from '@dxos/react-ui';
@@ -26,6 +27,7 @@ import {
 import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
+import { FormCellEditor } from './FormCellEditor';
 import { completion } from './extension';
 import { type TableModel, type ModalController } from '../../model';
 
@@ -43,9 +45,50 @@ export type QueryResult = Pick<Completion, 'label'> & { data: any };
 export type TableCellEditorProps = {
   model?: TableModel;
   modals?: ModalController;
+  schema?: Schema.AnyNoContext;
   onEnter?: (cell: DxGridPlanePosition) => void;
   onFocus?: DxGrid['refocus'];
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
+};
+
+export const TableValueEditor = ({
+  model,
+  modals,
+  schema,
+  onEnter,
+  onFocus,
+  onQuery,
+  __gridScope,
+}: GridScopedProps<TableCellEditorProps>) => {
+  const { editing } = useGridContext('TableValueEditor', __gridScope);
+
+  const fieldProjection = useMemo<FieldProjection | undefined>(() => {
+    if (!model || !editing) {
+      return;
+    }
+
+    const { col } = parseCellIndex(editing.index);
+    const field = model.projection.view.fields[col];
+    const fieldProjection = model.projection.getFieldProjection(field.id);
+    invariant(fieldProjection);
+    return fieldProjection;
+  }, [model, editing]);
+
+  if (fieldProjection?.props.type === TypeEnum.Array) {
+    return <FormCellEditor fieldProjection={fieldProjection} model={model} schema={schema} __gridScope={__gridScope} />;
+  }
+
+  // For all other types, use the existing cell editor
+  return (
+    <TableCellEditor
+      model={model}
+      modals={modals}
+      onEnter={onEnter}
+      onFocus={onFocus}
+      onQuery={onQuery}
+      __gridScope={__gridScope}
+    />
+  );
 };
 
 export const TableCellEditor = ({
@@ -261,11 +304,9 @@ export const TableCellEditor = ({
           }
         }
 
-        // Return empty string if no value
         return '';
       }
 
-      // Default behavior for other formats
       const value = model.getCellData(cell);
       return value !== undefined ? String(value) : '';
     }

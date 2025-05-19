@@ -5,7 +5,6 @@
 import { pipe } from 'effect';
 
 import { contributes, Capabilities, type PluginsContext, chain, createIntent } from '@dxos/app-framework';
-import { getSchemaTypename } from '@dxos/echo-schema';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 
@@ -15,7 +14,7 @@ import { MarkdownAction, DocumentType } from '../types';
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
-      inputType: getSchemaTypename(DocumentType)!,
+      inputType: DocumentType.typename,
       outputType: 'text/markdown',
       // Reconcile with metadata serializers.
       serialize: async (node) => {

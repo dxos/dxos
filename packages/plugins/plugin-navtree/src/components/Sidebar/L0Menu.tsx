@@ -313,13 +313,14 @@ export type L0MenuProps = {
 
 export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
+  const suppressNextTooltip = useRef(true);
 
   return (
     <Tabs.Tablist
       classNames={[
         'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg',
         'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] gap-1 contain-layout',
-        '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
+        '!is-[--l0-size] bg-baseSurface border-ie border-separator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
       <div role='none' className='flex justify-center p-1'>
@@ -333,7 +334,10 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                 icon='ph--dots-three--regular'
                 size={5}
                 label={t('app menu label')}
+                tooltipSide='right'
                 classNames='w-[50px] _bg-primary-500'
+                suppressNextTooltip={suppressNextTooltip}
+                data-testid='spacePlugin.addSpace'
               />
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>
@@ -345,7 +349,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           <div
             role='none'
             className={mx([
-              'flex flex-col gap-2',
+              'flex flex-col gap-2 pbs-1',
               '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
@@ -391,7 +395,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
         style={{
           background:
-            'linear-gradient(to bottom, var(--dx-baseSurface) 0%, var(--dx-baseSurface) 70%, transparent 100%)',
+            'linear-gradient(to bottom, var(--dx-sidebarSurface) 0%, var(--dx-sidebarSurface) 70%, transparent 100%)',
         }}
       />
     </Tabs.Tablist>

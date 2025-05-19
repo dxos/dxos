@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { BaseSchema, JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
+import { type Schema } from 'effect';
+
+import { getTypename, toJsonSchema } from '@dxos/echo-schema';
+import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
 import { live, makeRef } from '@dxos/live-object';
 import {
   createView,
@@ -27,7 +30,7 @@ export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<Propert
  * @deprecated
  */
 // TODO(burdon): Remove variance.
-export const getBaseSchems = ({
+export const getBaseSchema = ({
   typename,
   properties,
   jsonSchema,
@@ -36,13 +39,13 @@ export const getBaseSchems = ({
   typename?: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: JsonSchemaType;
-  schema?: BaseSchema;
+  schema?: Schema.Schema.AnyNoContext;
 }): { typename: string; jsonSchema: JsonSchemaType } => {
   if (typename && properties) {
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
     return { typename: schema.typename, jsonSchema: schema.jsonSchema };
   } else if (schema) {
-    return { typename: schema.typename, jsonSchema: schema.jsonSchema };
+    return { typename: getTypename(schema)!, jsonSchema: toJsonSchema(schema) };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {
