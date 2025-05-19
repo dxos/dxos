@@ -93,7 +93,7 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
   // Registered services.
-  const services = useQuery(space, Filter.schema(ServiceType));
+  const services = useQuery(space, Filter.type(ServiceType));
   const [serviceTools, setServiceTools] = useState<{ service: ServiceType; tools: Tool[] }[]>([]);
   useEffect(() => {
     log('creating service tools...', { services: services.length });
@@ -107,7 +107,7 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
   }, [services]);
 
   // Deployed functions.
-  const functions = useQuery(space, Filter.schema(FunctionType));
+  const functions = useQuery(space, Filter.type(FunctionType));
 
   return (
     <Toolbox classNames={classNames} artifacts={artifactDefinitions} services={serviceTools} functions={functions} />

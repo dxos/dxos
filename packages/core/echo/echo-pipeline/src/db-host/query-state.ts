@@ -135,6 +135,13 @@ export class QueryState extends Resource {
           ) {
             return;
           }
+          const spaceId = await createIdFromSpaceKey(PublicKey.from(spaceKey));
+          if (
+            this._params.request.filter.options?.spaceIds?.length &&
+            !this._params.request.filter.options.spaceIds.includes(spaceId)
+          ) {
+            return;
+          }
 
           if (this._firstRun) {
             this.metrics.objectsReturned++;
@@ -143,7 +150,7 @@ export class QueryState extends Resource {
           return {
             id: objectId,
             documentId,
-            spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
+            spaceId,
             spaceKey: PublicKey.from(spaceKey),
             rank: result.rank,
           } satisfies QueryResult;

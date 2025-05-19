@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { expectToThrow } from '@dxos/debug';
+import { expectToThrow, raise } from '@dxos/debug';
 
 import { waitForCondition } from './testing';
 
@@ -19,5 +19,11 @@ describe('waitForCondition', () => {
   test('fails', async () => {
     const stop = Date.now() + 200;
     await expectToThrow(() => waitForCondition({ condition: () => Date.now() > stop, timeout: 100 }));
+  });
+
+  test('breakOnError', async () => {
+    await expect(() =>
+      waitForCondition({ condition: () => raise(new Error('test')), timeout: 100, breakOnError: true }),
+    ).rejects.toThrow('test');
   });
 });

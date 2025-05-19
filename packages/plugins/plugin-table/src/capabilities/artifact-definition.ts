@@ -98,7 +98,7 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const tableInfo = await Promise.all(
             tables.map(async (table) => {
               const view = await table.view?.load();
@@ -122,7 +122,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
           invariant(isInstanceOf(TableType, table));
 
@@ -148,7 +148,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
           invariant(isInstanceOf(TableType, table));
 
@@ -159,7 +159,7 @@ export default () => {
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
-          const { objects: rows } = await space.db.query(Filter.schema(schema)).run();
+          const { objects: rows } = await space.db.query(Filter.type(schema)).run();
           return ToolResult.Success(rows);
         },
       }),
@@ -179,7 +179,7 @@ export default () => {
           invariant(extensions?.dispatch, 'No intent dispatcher');
 
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
           invariant(isInstanceOf(TableType, table));
 

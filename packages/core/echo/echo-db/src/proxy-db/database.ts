@@ -34,7 +34,14 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
+import {
+  Filter,
+  type FilterSource,
+  type DeprecatedPropertyFilter,
+  type QueryFn,
+  type QueryOptions,
+  Query,
+} from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -73,8 +80,9 @@ export interface EchoDatabase {
 
   /**
    * Update objects.
+   * @deprecated Query then update.
    */
-  update(filter: PropertyFilter, operation: UpdateOperation): Promise<void>;
+  update(filter: DeprecatedPropertyFilter, operation: UpdateOperation): Promise<void>;
 
   /**
    * Insert new objects.
@@ -248,7 +256,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Update objects.
    */
-  async update(filter: PropertyFilter, operation: UpdateOperation) {
+  async update(filter: DeprecatedPropertyFilter, operation: UpdateOperation) {
     await this._coreDatabase.update(filter, operation);
   }
 
@@ -300,7 +308,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const { objects } = await this._coreDatabase.graph.query(Filter.typeDXN(migration.fromType.toString())).run();
+      const { objects } = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
       log.verbose('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
       for (const object of objects) {
         const output = await migration.transform(object, { db: this });

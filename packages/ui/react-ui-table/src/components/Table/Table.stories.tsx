@@ -46,7 +46,7 @@ const useTestTableModel = () => {
   const client = useClient();
   const { space } = useClientProvider();
 
-  const filter = useMemo(() => Filter.schema(TableType), []);
+  const filter = useMemo(() => Filter.type(TableType), []);
   const tables = useQuery(space, filter);
   const table = useMemo(() => tables.at(0), [tables]);
   const schema = useSchema(client, space, table?.view?.target?.query.typename);
@@ -66,7 +66,7 @@ const useTestTableModel = () => {
     [schema],
   );
 
-  const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const tableRef = useRef<TableController>(null);

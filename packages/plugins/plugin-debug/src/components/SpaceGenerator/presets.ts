@@ -134,7 +134,7 @@ export const presets = {
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          const results = space.db.query(Filter.schema(TableType)).runSync();
+          const results = space.db.query(Filter.type(TableType)).runSync();
           const emailTable = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Email'));
           invariant(emailTable, 'Email table not found.');
 
@@ -231,7 +231,7 @@ export const presets = {
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          const results = space.db.query(Filter.schema(TableType)).runSync();
+          const results = space.db.query(Filter.type(TableType)).runSync();
           const emailTable = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Email'));
           invariant(emailTable, 'Email table not found.');
 
@@ -405,11 +405,11 @@ export const presets = {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
           // TODO(wittjosiah): Integrate directly w/ Kanban.
-          // const results = space.db.query(Filter.schema(KanbanType)).runSync();
+          // const results = space.db.query(Filter.type(KanbanType)).runSync();
           // const kanban = results.find((r) => r.object?.cardView?.target?.query?.type?.endsWith('Message'));
           // invariant(kanban, 'Kanban not found.');
 
-          const results = space.db.query(Filter.schema(TableType)).runSync();
+          const results = space.db.query(Filter.type(TableType)).runSync();
           const messages = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Message'));
           invariant(messages, 'Table not found.');
 

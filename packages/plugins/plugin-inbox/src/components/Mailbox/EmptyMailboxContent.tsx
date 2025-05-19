@@ -15,7 +15,7 @@ import { type MailboxType } from '../../types';
 
 export const EmptyMailboxContent = ({ mailbox }: { mailbox: MailboxType }) => {
   const space = getSpace(mailbox);
-  const tokens = useQuery(space, Filter.schema(DataType.AccessToken));
+  const tokens = useQuery(space, Filter.type(DataType.AccessToken));
   const { t } = useTranslation(INBOX_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
