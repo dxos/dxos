@@ -251,7 +251,7 @@ export class GraphBuilder {
     this._connectorSubscriptions.set(id, cancel);
   }
 
-  private _onInitialize(id: string) {
+  private async _onInitialize(id: string) {
     log('onInitialize', { id });
   }
 

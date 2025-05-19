@@ -88,6 +88,23 @@ describe('RxGraph', () => {
     }
   });
 
+  test('onNodeChanged', () => {
+    const graph = new Graph();
+
+    let node: Option.Option<Node> = Option.none();
+    graph.onNodeChanged.on(({ node: newNode }) => {
+      node = newNode;
+    });
+
+    graph.addNode({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+    assert.ok(Option.isSome(node));
+    expect(node.value.id).toEqual(EXAMPLE_ID);
+    expect(node.value.type).toEqual(EXAMPLE_TYPE);
+
+    graph.removeNode(EXAMPLE_ID);
+    expect(node.pipe(Option.getOrNull)).toEqual(null);
+  });
+
   test('add edge', () => {
     const registry = Registry.make();
     const graph = new Graph({ registry });
@@ -145,7 +162,7 @@ describe('RxGraph', () => {
     }
   });
 
-  test('get nodes', () => {
+  test('get connections', () => {
     const registry = Registry.make();
     const graph = new Graph({ registry });
     graph.addNode({ id: exampleId(1), type: EXAMPLE_TYPE });
@@ -226,5 +243,169 @@ describe('RxGraph', () => {
       graph.addNode({ id: exampleId(6), type: EXAMPLE_TYPE });
     });
     expect(count).toEqual(6);
+  });
+
+  test('toJSON', () => {
+    const graph = new Graph();
+
+    graph.addNode({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
+    });
+    graph.addEdge({ source: 'test1', target: 'test2' });
+
+    const json = graph.toJSON();
+    expect(json).to.deep.equal({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
+        { id: 'test2', type: 'test' },
+      ],
+    });
+  });
+
+  test('get path', () => {
+    const graph = new Graph();
+    graph.addNode({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: exampleId(1), type: EXAMPLE_TYPE },
+        { id: exampleId(2), type: EXAMPLE_TYPE },
+      ],
+    });
+    graph.addEdge({ source: exampleId(1), target: exampleId(2) });
+
+    expect(graph.getPath({ target: exampleId(2) }).pipe(Option.getOrNull)).to.deep.equal([
+      'root',
+      exampleId(1),
+      exampleId(2),
+    ]);
+    expect(graph.getPath({ source: exampleId(1), target: exampleId(2) }).pipe(Option.getOrNull)).to.deep.equal([
+      exampleId(1),
+      exampleId(2),
+    ]);
+    expect(graph.getPath({ source: exampleId(2), target: exampleId(1) }).pipe(Option.getOrNull)).to.be.null;
+  });
+
+  describe('traverse', () => {
+    test('can be traversed', () => {
+      const graph = new Graph();
+      graph.addNode({
+        id: ROOT_ID,
+        type: ROOT_TYPE,
+        nodes: [
+          { id: 'test1', type: 'test' },
+          { id: 'test2', type: 'test' },
+        ],
+      });
+
+      const nodes: string[] = [];
+      graph.traverse({
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
+    });
+
+    test('traversal breaks cycles', () => {
+      const graph = new Graph();
+      graph.addNode({
+        id: ROOT_ID,
+        type: ROOT_TYPE,
+        nodes: [
+          { id: 'test1', type: 'test' },
+          { id: 'test2', type: 'test' },
+        ],
+      });
+      graph.addEdge({ source: 'test1', target: 'root' });
+
+      const nodes: string[] = [];
+      graph.traverse({
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
+    });
+
+    test('traversal can be started from any node', () => {
+      const graph = new Graph();
+      graph.addNode({
+        id: ROOT_ID,
+        type: ROOT_TYPE,
+        nodes: [
+          {
+            id: 'test1',
+            type: 'test',
+            nodes: [{ id: 'test2', type: 'test', nodes: [{ id: 'test3', type: 'test' }] }],
+          },
+        ],
+      });
+
+      const nodes: string[] = [];
+      graph.traverse({
+        source: 'test2',
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['test2', 'test3']);
+    });
+
+    test('traversal can follow inbound edges', () => {
+      const graph = new Graph();
+      graph.addNode({
+        id: ROOT_ID,
+        type: ROOT_TYPE,
+        nodes: [
+          {
+            id: 'test1',
+            type: 'test',
+            nodes: [{ id: 'test2', type: 'test', nodes: [{ id: 'test3', type: 'test' }] }],
+          },
+        ],
+      });
+
+      const nodes: string[] = [];
+      graph.traverse({
+        source: 'test2',
+        relation: 'inbound',
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['test2', 'test1', 'root']);
+    });
+
+    test('traversal can be terminated early', () => {
+      const graph = new Graph();
+      graph.addNode({
+        id: ROOT_ID,
+        type: ROOT_TYPE,
+        nodes: [
+          { id: 'test1', type: 'test' },
+          { id: 'test2', type: 'test' },
+        ],
+      });
+
+      const nodes: string[] = [];
+      graph.traverse({
+        visitor: (node) => {
+          if (nodes.length === 2) {
+            return false;
+          }
+
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['root', 'test1']);
+    });
   });
 });
