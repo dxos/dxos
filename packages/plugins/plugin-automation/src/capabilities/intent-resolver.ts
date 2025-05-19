@@ -16,7 +16,7 @@ import { type DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, Ref } from '@dxos/react-client/echo';
+import { Filter } from '@dxos/react-client/echo';
 
 import { AutomationAction } from '../types';
 
