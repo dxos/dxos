@@ -23,8 +23,8 @@ export type FunctionsPanelProps = {
 
 export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
-  const functions = useQuery(space, Filter.schema(FunctionType));
-  const scripts = useQuery(space, Filter.schema(ScriptType));
+  const functions = useQuery(space, Filter.type(FunctionType));
+  const scripts = useQuery(space, Filter.type(ScriptType));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const functionToScriptMap = useMemo(

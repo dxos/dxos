@@ -41,7 +41,7 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
   const viewMode = useSignal<ViewMode>(initialViewMode);
 
   const hasEmail = useComputed(() => !!message?.sender.email);
-  const contacts = useQuery(space, Filter.schema(DataType.Person));
+  const contacts = useQuery(space, Filter.type(DataType.Person));
   const existingContact = useSignal<DataType.Person | undefined>(undefined);
   const contactDxn = useComputed(() => (existingContact.value ? getDXN(existingContact.value)?.toString() : undefined));
 

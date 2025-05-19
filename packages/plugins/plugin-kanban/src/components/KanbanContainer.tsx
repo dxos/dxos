@@ -56,7 +56,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
   }, [kanban.cardView?.target, JSON.stringify(jsonSchema)]);
 
-  const objects = useQuery(space, cardSchema ? Filter.schema(cardSchema) : Filter.nothing());
+  const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({

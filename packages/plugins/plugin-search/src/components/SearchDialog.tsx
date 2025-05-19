@@ -51,7 +51,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
     .filter(Boolean);
   const [queryString, setQueryString] = useState('');
   const client = useClient();
-  const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.all());
+  const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.everything());
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
   const { dispatchPromise: dispatch } = useIntentDispatcher();

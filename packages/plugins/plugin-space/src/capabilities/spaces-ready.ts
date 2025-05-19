@@ -49,7 +49,7 @@ export default async (context: PluginsContext) => {
 
   const {
     objects: [spacesOrder],
-  } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run();
+  } = await defaultSpace.db.query(Filter.type(Expando, { key: SHARED })).run();
   if (!spacesOrder) {
     // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
     //  Instead, we store order as an array of space ids.

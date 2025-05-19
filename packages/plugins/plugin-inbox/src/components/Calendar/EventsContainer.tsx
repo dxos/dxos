@@ -23,7 +23,7 @@ export type EventsContainerProps = {
 export const EventsContainer = ({ calendar }: EventsContainerProps) => {
   const [selected, setSelected] = useState<DataType.Event>();
   const space = getSpace(calendar);
-  const objects = useQuery(space, Filter.schema(DataType.Event));
+  const objects = useQuery(space, Filter.type(DataType.Event));
   objects.sort(byDate());
 
   return (

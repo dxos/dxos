@@ -4,7 +4,7 @@
 
 import { type Schema, SchemaAST, Effect } from 'effect';
 
-import { type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
+import { type EchoDatabase, type AnyLiveObject, Query, Filter } from '@dxos/echo-db';
 import {
   FormatEnum,
   GeneratorAnnotationId,
@@ -98,7 +98,8 @@ export const createReferences = <T extends BaseObject>(schema: Schema.Schema<T>,
             const { typename } = getSchemaReference(jsonSchema) ?? {};
             invariant(typename);
             // TODO(burdon): Filter.typename doesn't currently work for mutable objects.
-            const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
+            const { objects: allObjects } = await db.query(Query.select(Filter.everything())).run();
+            const objects = allObjects.filter((obj) => getTypename(obj) === typename);
             if (objects.length) {
               const object = randomElement(objects);
               (obj as any)[property.name] = Ref.make(object);

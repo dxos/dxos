@@ -26,7 +26,7 @@ faker.seed(1);
 const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
-  const threads = useQuery(space, Filter.schema(ThreadType));
+  const threads = useQuery(space, Filter.type(ThreadType));
   const [detached, setDetached] = useState<string[]>([]);
 
   useEffect(() => {

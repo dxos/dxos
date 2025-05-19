@@ -10,6 +10,6 @@ export const findFunctionByDeploymentId = async (space: Space, functionId?: stri
     return undefined;
   }
   const invocationUrl = makeFunctionUrl({ functionId });
-  const functions = await space.db.query(Filter.schema(FunctionType)).run();
+  const functions = await space.db.query(Filter.type(FunctionType)).run();
   return functions.objects.find((fn) => getUserFunctionUrlInMetadata(getMeta(fn)) === invocationUrl);
 };

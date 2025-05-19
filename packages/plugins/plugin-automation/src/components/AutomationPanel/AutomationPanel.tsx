@@ -36,9 +36,9 @@ export type AutomationPanelProps = {
 export const AutomationPanel = ({ space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const client = useClient();
-  const triggers = useQuery(space, Filter.schema(FunctionTrigger));
-  const functions = useQuery(space, Filter.schema(FunctionType));
-  const scripts = useQuery(space, Filter.schema(ScriptType));
+  const triggers = useQuery(space, Filter.type(FunctionTrigger));
+  const functions = useQuery(space, Filter.type(FunctionType));
+  const scripts = useQuery(space, Filter.type(ScriptType));
 
   const [trigger, setTrigger] = useState<FunctionTriggerType | undefined>(initialTrigger);
   const [selected, setSelected] = useState<FunctionTrigger>();

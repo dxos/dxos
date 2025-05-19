@@ -25,7 +25,7 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
 
   // NOTE(ZaymonFC): Since selection is currently a set, the order these objects show
   //   up in will not necessarily match the order in the selected context.
-  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelectedItems(objectId);
   const selectedObjects = queriedObjects.filter((obj) => selectedRows.has(obj.id));
 

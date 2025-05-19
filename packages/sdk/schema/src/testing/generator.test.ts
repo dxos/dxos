@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { type EchoDatabase, Filter } from '@dxos/echo-db';
+import { type EchoDatabase, Query } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -21,7 +21,7 @@ const generator: ValueGenerator = faker as any;
 
 const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
   for (const { type, count } of specs) {
-    const { objects } = await db.query(Filter.schema(type)).run();
+    const { objects } = await db.query(Query.type(type)).run();
     expect(objects).to.have.length(count);
     log.info('objects', {
       typename: type.typename,

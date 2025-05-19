@@ -24,7 +24,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
   const space = props.space ?? state.space;
   const [displayMode, setDisplayMode] = useState(DisplayMode.COMPILED);
   const [executionMode, setExecutionMode] = useState(WorkflowDebugPanelMode.LOCAL);
-  const graphs = useQuery(space, Filter.schema(ComputeGraph));
+  const graphs = useQuery(space, Filter.type(ComputeGraph));
   const [selectedId, setSelectedId] = useState<string>();
   const selected = useMemo(() => graphs.find((graph) => graph.id === selectedId), [graphs, selectedId]);
 
