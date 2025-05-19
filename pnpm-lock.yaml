@@ -2710,8 +2710,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@orama/orama':
-        specifier: ^2.0.8
-        version: 2.0.8
+        specifier: ^3.1.7
+        version: 3.1.7
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -2826,8 +2826,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@orama/orama':
-        specifier: ^2.0.8
-        version: 2.0.8
+        specifier: ^3.1.7
+        version: 3.1.7
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
@@ -18644,9 +18644,9 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
 
-  '@orama/orama@2.0.8':
-    resolution: {integrity: sha512-qaku4eOWLH80pneJ/PtqvF/VXGO3b1W1X6NSji3Yh6s3BNuoyprOifNfSWEkIbymzT89/B+ZFoq6PKG43fW6PA==}
-    engines: {node: '>= 16.0.0'}
+  '@orama/orama@3.1.7':
+    resolution: {integrity: sha512-6yB0117ZjsgNevZw3LP+bkrZa9mU/POPVaXgzMPOBbBc35w2P3R+1vMMhEfC06kYCpd5bf0jodBaTkYQW5TVeQ==}
+    engines: {node: '>= 20.0.0'}
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
@@ -42047,7 +42047,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
 
-  '@orama/orama@2.0.8': {}
+  '@orama/orama@3.1.7': {}
 
   '@oslojs/encoding@1.1.0': {}
 

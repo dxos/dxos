@@ -39,7 +39,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@orama/orama": "^2.0.8",
+    "@orama/orama": "^3.1.7",
     "level-transcoder": "^1.0.1",
     "lodash.isequal": "^4.5.0"
   },
