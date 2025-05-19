@@ -5,13 +5,20 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { create, Ref } from '@dxos/echo-schema';
+import { create, EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './api';
 import * as QueryAST from './ast';
-import { Relation, Type } from '..';
+
+// TODO(dmaretskyi): Move those out.
+const Type = {
+  def: EchoObject,
+};
+const Relation = {
+  def: EchoRelation,
+};
 
 //
 // Example schema
