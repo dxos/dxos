@@ -7,9 +7,6 @@ import { effect } from '@preact/signals-core';
 import { Array, type Option, pipe, Record } from 'effect';
 
 import { type MulticastObservable, type CleanupFn } from '@dxos/async';
-import { type Ref, type BaseObject } from '@dxos/echo-schema';
-import { getSnapshot } from '@dxos/live-object';
-import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { byPosition, isNonNullable, type Position } from '@dxos/util';
 
@@ -268,51 +265,16 @@ export class GraphBuilder {
  * Creates an Rx.Rx<T> from a callback which accesses signals.
  * Will return a new rx instance each time.
  */
-export const rxFromSignal = <T>(cb: () => T) => {
+export const rxFromSignal = <T>(cb: () => T): Rx.Rx<T> => {
   return Rx.readable((get) => {
     const dispose = effect(() => {
       get.setSelf(cb());
     });
 
     get.addFinalizer(() => dispose());
+
+    return cb();
   });
-};
-
-const liveObjectFamily = Rx.family((live: Live<BaseObject>) => {
-  return Rx.readable((get) => {
-    const dispose = effect(() => {
-      const _ = getSnapshot(live);
-      get.setSelf(live);
-    });
-
-    get.addFinalizer(() => dispose());
-  });
-});
-
-/**
- * Creates an Rx.Rx<T> from a Live<T>
- * Will return the same rx instance for the same live object.
- */
-export const rxFromLive = <T extends BaseObject>(live: Live<T>): Rx.Rx<T> => {
-  return liveObjectFamily(live) as Rx.Rx<T>;
-};
-
-const refFamily = Rx.family((ref: Ref<any>) => {
-  return Rx.readable((get) => {
-    const dispose = effect(() => {
-      get.setSelf(ref.target);
-    });
-
-    get.addFinalizer(() => dispose());
-  });
-});
-
-/**
- * Creates an Rx.Rx<T> from a Ref<T>
- * Will return the same rx instance for the same ref.
- */
-export const rxFromRef = <T>(ref: Ref<T>): Rx.Rx<T | undefined> => {
-  return refFamily(ref) as Rx.Rx<T | undefined>;
 };
 
 const observableFamily = Rx.family((observable: MulticastObservable<any>) => {
@@ -325,6 +287,10 @@ const observableFamily = Rx.family((observable: MulticastObservable<any>) => {
   });
 });
 
+/**
+ * Creates an Rx.Rx<T> from a MulticastObservable<T>
+ * Will return the same rx instance for the same observable.
+ */
 export const rxFromObservable = <T>(observable: MulticastObservable<T>): Rx.Rx<T> => {
   return observableFamily(observable) as Rx.Rx<T>;
 };
