@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as orama from '@orama/orama';
+import * as Orama from '@orama/orama';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
@@ -24,12 +24,12 @@ import {
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;
 
-type OramaSchemaType = orama.Orama<
+type OramaSchemaType = Orama.Orama<
   {
     // TODO(mykola): Fix type to support full text search for documents.
   },
-  orama.IIndex<orama.components.index.Index>,
-  orama.IDocumentsStore<orama.components.documentsStore.DocumentsStore>
+  Orama.IIndex<Orama.components.index.Index>,
+  Orama.IDocumentsStore<Orama.components.documentsStore.DocumentsStore>
 >;
 
 @trace.resource()
@@ -42,7 +42,7 @@ export class IndexText extends Resource implements Index {
   private _orama?: OramaSchemaType = undefined;
 
   override async _open() {
-    this._orama = await orama.create({
+    this._orama = await Orama.create({
       schema: {
         // TODO(mykola): Fix type to support full text search for documents.
       },
@@ -60,7 +60,7 @@ export class IndexText extends Resource implements Index {
 
   async remove(id: string) {
     invariant(this._orama, 'Index is not initialized');
-    await orama.remove(this._orama, id);
+    await Orama.remove(this._orama, id);
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -71,7 +71,7 @@ export class IndexText extends Resource implements Index {
   @trace.span({ showInBrowserTimeline: true })
   async serialize(): Promise<string> {
     invariant(this._orama, 'Index is not initialized');
-    return JSON.stringify(await orama.save(this._orama), null, 2);
+    return JSON.stringify(await Orama.save(this._orama), null, 2);
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -82,7 +82,7 @@ export class IndexText extends Resource implements Index {
     await index.open();
     invariant(index._orama, 'Index is not initialized');
     index._identifier = identifier;
-    await orama.load(index._orama, deserialized);
+    await Orama.load(index._orama, deserialized);
     return index;
   }
 }
