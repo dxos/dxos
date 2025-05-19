@@ -9,9 +9,9 @@ import { create, Ref } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Relation, Type } from '..';
 import { Filter, Query } from './api';
 import * as QueryAST from './ast';
+import { Relation, Type } from '..';
 
 //
 // Example schema
