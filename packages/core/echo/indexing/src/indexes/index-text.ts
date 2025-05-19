@@ -19,7 +19,7 @@ import {
   type IndexStaticProps,
   type LoadParams,
   type FindResult,
-} from './types';
+} from '../types';
 
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;

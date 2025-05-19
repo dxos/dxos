@@ -20,7 +20,7 @@ import {
   type IndexStaticProps,
   type LoadParams,
   staticImplements,
-} from './types';
+} from '../types';
 
 @trace.resource()
 @staticImplements<IndexStaticProps>()

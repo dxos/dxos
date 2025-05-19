@@ -8,7 +8,7 @@ import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-pro
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
-import { IndexSchema } from './index-schema';
+import { IndexSchema } from '../indexes';
 import { IndexStore } from './index-store';
 
 describe('IndexStore', () => {

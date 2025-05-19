@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
@@ -10,9 +10,8 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { openAndClose } from '@dxos/test-utils';
 
-import { IndexMetadataStore } from './index-metadata-store';
-import { IndexStore } from './index-store';
 import { Indexer } from './indexer';
+import { IndexMetadataStore, IndexStore } from './store';
 import { type ObjectSnapshot } from './types';
 
 describe('Indexer', () => {

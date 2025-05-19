@@ -13,9 +13,8 @@ import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/ind
 import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
 
-import { IndexConstructors } from './index-constructors';
-import { type IndexMetadataStore } from './index-metadata-store';
-import { type IndexStore } from './index-store';
+import { IndexConstructors } from './indexes';
+import { type IndexMetadataStore, type IndexStore } from './store';
 import { type FindResult, type IdToHeads, type Index, type IndexQuery, type ObjectSnapshot } from './types';
 
 const DEFAULT_INDEX_UPDATE_BATCH_SIZE = 100;

@@ -61,7 +61,9 @@ export interface IndexStaticProps {
   load(params: LoadParams): Promise<Index>;
 }
 
-/* class decorator */
+/**
+ * Type-only annotation to assert that a class-constructor implements an interface T (with it's static methods).
+ */
 export const staticImplements =
   <T>() =>
   <U extends T>(constructor: U) => {
