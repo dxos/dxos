@@ -58,11 +58,6 @@ export const huePalettes = {
 };
 
 /**
- *  #F0F0F1
- * #F0F0F1
- */
-
-/**
  * The keyPoint represents the LCH value (Lightness: 0-1, Chroma: 0-1, Hue: 0-360 [0=Red, 120=Green, 240=Blue]).
  *
  * NOTE: Rebuild the theme and restart the dev server to see changes.
