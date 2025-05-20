@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
+import { IndexedDBStorageAdapter } from '@automerge/automerge-repo-storage-indexeddb';
+
 import { createLevel } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { AutomergeStorageAdapter, LevelDBStorageAdapter } from '@dxos/echo-pipeline';

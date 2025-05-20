@@ -25,9 +25,9 @@
   "dependencies": {
     "@antv/graphlib": "^2.0.4",
     "@antv/layout": "^1.2.13",
+    "@automerge/automerge": "3.0.0-alpha.4",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/automerge": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",

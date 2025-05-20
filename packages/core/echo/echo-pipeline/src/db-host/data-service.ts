@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import { type DocumentId } from '@automerge/automerge-repo';
+
 import { UpdateScheduler } from '@dxos/async';
-import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
@@ -91,7 +92,7 @@ export class DataServiceImpl implements DataService {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    synchronizer.update(request.updates);
+    await synchronizer.update(request.updates);
   }
 
   async flush(request: FlushRequest): Promise<void> {

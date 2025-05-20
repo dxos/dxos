@@ -2,14 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Doc } from '@automerge/automerge';
+import { interpretAsDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { type Doc } from '@dxos/automerge/automerge';
-import {
-  interpretAsDocumentId,
-  type AutomergeUrl,
-  type DocHandle,
-  type DocumentId,
-} from '@dxos/automerge/automerge-repo';
 import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
@@ -177,24 +173,28 @@ export class DataSpaceManager extends Resource {
       id: 'spaces',
       name: 'Spaces',
       fetch: async () => {
-        return Array.from(this._spaces.values()).map((space) => {
-          const rootUrl = space.automergeSpaceState.rootUrl;
-          const rootHandle = rootUrl ? this._echoHost.automergeRepo.find(rootUrl as AutomergeUrl) : undefined;
-          const rootDoc = rootHandle?.docSync() as Doc<SpaceDoc> | undefined;
+        return Promise.all(
+          Array.from(this._spaces.values()).map(async (space) => {
+            const rootUrl = space.automergeSpaceState.rootUrl;
+            const rootHandle = rootUrl
+              ? await this._echoHost.automergeRepo.find<Doc<SpaceDoc>>(rootUrl as AutomergeUrl)
+              : undefined;
+            const rootDoc = rootHandle?.doc();
 
-          const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
+            const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
 
-          return {
-            key: space.key.toHex(),
-            state: SpaceState[space.state],
-            name: properties?.[1].data.name ?? null,
-            inlineObjects: rootDoc ? Object.keys(rootDoc.objects ?? {}).length : null,
-            linkedObjects: rootDoc ? Object.keys(rootDoc.links ?? {}).length : null,
-            credentials: space.inner.spaceState.credentials.length,
-            members: space.inner.spaceState.members.size,
-            rootUrl,
-          };
-        });
+            return {
+              key: space.key.toHex(),
+              state: SpaceState[space.state],
+              name: properties?.[1].data.name ?? null,
+              inlineObjects: rootDoc ? Object.keys(rootDoc.objects ?? {}).length : null,
+              linkedObjects: rootDoc ? Object.keys(rootDoc.links ?? {}).length : null,
+              credentials: space.inner.spaceState.credentials.length,
+              members: space.inner.spaceState.members.size,
+              rootUrl,
+            };
+          }),
+        );
       },
     });
   }
@@ -319,7 +319,7 @@ export class DataSpaceManager extends Resource {
     }
     switch (space.databaseRoot.getVersion()) {
       case SpaceDocVersion.CURRENT: {
-        const [_, properties] = findInlineObjectOfType(space.databaseRoot.docSync()!, TYPE_PROPERTIES) ?? [];
+        const [_, properties] = findInlineObjectOfType(space.databaseRoot.doc()!, TYPE_PROPERTIES) ?? [];
         return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
       }
       case SpaceDocVersion.LEGACY: {
@@ -361,7 +361,7 @@ export class DataSpaceManager extends Resource {
   private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<SpaceDoc>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
+    const document = await this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
     return document;
   }

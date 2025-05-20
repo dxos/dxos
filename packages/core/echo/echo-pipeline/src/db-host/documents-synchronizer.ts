@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A, type Heads } from '@automerge/automerge';
+import { type Repo, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+
 import { UpdateScheduler } from '@dxos/async';
-import { next as A, type Heads } from '@dxos/automerge/automerge';
-import { type Repo, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -51,10 +52,10 @@ export class DocumentsSynchronizer extends Resource {
     }
 
     for (const documentId of documentIds) {
-      const doc = this._params.repo.find<SpaceDoc>(documentId as DocumentId);
-      doc
-        .whenReady()
-        .then(() => {
+      this._params.repo
+        .find<SpaceDoc>(documentId as DocumentId)
+        .then(async (doc) => {
+          await doc.whenReady();
           this._startSync(doc);
           this._pendingUpdates.add(doc.documentId);
           this._sendUpdatesJob!.trigger();
@@ -85,10 +86,10 @@ export class DocumentsSynchronizer extends Resource {
     this._syncStates.clear();
   }
 
-  update(updates: DocumentUpdate[]) {
+  async update(updates: DocumentUpdate[]) {
     for (const { documentId, mutation, isNew } of updates) {
       if (isNew) {
-        const doc = this._params.repo.find<SpaceDoc>(documentId as DocumentId);
+        const doc = await this._params.repo.find<SpaceDoc>(documentId as DocumentId);
         doc.update((doc) => A.loadIncremental(doc, mutation));
         this._startSync(doc);
       } else {
@@ -141,7 +142,7 @@ export class DocumentsSynchronizer extends Resource {
   private _getPendingChanges(documentId: DocumentId): Uint8Array | void {
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
-    const doc = syncState.handle.docSync();
+    const doc = syncState.handle.doc();
     if (!doc) {
       return;
     }

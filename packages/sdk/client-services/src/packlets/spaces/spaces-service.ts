@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import type { AutomergeUrl } from '@automerge/automerge-repo';
+
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
-import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import {
   type CredentialProcessor,

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Repo } from '@automerge/automerge-repo';
+import { IndexedDBStorageAdapter } from '@automerge/automerge-repo-storage-indexeddb';
 import WebSocket from 'isomorphic-ws';
 
-import { Repo } from '@dxos/automerge/automerge-repo';
-import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { Context } from '@dxos/context';
 import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
@@ -174,10 +174,10 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       BrowserWebSocketClientAdapter,
       NodeWSServerAdapter,
     }: // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    typeof import('@dxos/automerge/automerge-repo-network-websocket') =
+    typeof import('@automerge/automerge-repo-network-websocket') =
       runtime.platform === 'nodejs'
-        ? await importEsm('@dxos/automerge/automerge-repo-network-websocket')
-        : await import('@dxos/automerge/automerge-repo-network-websocket');
+        ? await importEsm('@automerge/automerge-repo-network-websocket')
+        : await import('@automerge/automerge-repo-network-websocket');
 
     switch (config.type) {
       case 'server':

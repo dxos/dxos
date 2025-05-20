@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+
 import { Event } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { isEncodedReference, type SpaceDoc } from '@dxos/echo-protocol';

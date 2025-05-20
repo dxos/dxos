@@ -85,7 +85,7 @@ const cloneInner = <T extends BaseObject>(obj: AnyLiveObject<T>, id: string): An
 };
 
 const getObjectDoc = (core: ObjectCore): any => {
-  let value = core.doc ?? core.docHandle!.docSync();
+  let value = core.doc ?? core.docHandle!.doc();
   for (const key of core.mountPath) {
     value = (value as any)?.[key];
   }

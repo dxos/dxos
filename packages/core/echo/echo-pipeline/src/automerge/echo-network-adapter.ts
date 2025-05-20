@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { NetworkAdapter, type Message, type PeerId, type PeerMetadata } from '@automerge/automerge-repo';
+
 import { synchronized, Trigger } from '@dxos/async';
-import { NetworkAdapter, type Message, type PeerId, type PeerMetadata } from '@dxos/automerge/automerge-repo';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -53,9 +54,18 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private readonly _connections = new Map<PeerId, ConnectionEntry>();
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
+  private readonly _ready = new Trigger();
 
   constructor(private readonly _params: EchoNetworkAdapterParams) {
     super();
+  }
+
+  override isReady(): boolean {
+    return this._lifecycleState === LifecycleState.OPEN;
+  }
+
+  override whenReady(): Promise<void> {
+    return this._ready.wait();
   }
 
   override connect(peerId: PeerId, peerMetadata?: PeerMetadata | undefined): void {
@@ -78,11 +88,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       return;
     }
     this._lifecycleState = LifecycleState.OPEN;
-
-    log('emit ready');
-    this.emit('ready', {
-      network: this,
-    });
   }
 
   @synchronized

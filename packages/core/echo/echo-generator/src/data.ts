@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { Schema } from 'effect';
 
-import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
 import { Ref } from '@dxos/echo-schema';
 import { createEchoSchema } from '@dxos/live-object';

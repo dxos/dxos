@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { getHeads } from '@automerge/automerge';
+import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+
 import { DeferredTask } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
-import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
@@ -166,7 +167,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
       if (visited.has(handle.documentId)) {
         return;
       }
-      const doc = handle.docSync()!;
+      const doc = handle.doc()!;
 
       const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
 

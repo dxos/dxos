@@ -2,8 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { save } from '@automerge/automerge';
+import { type DocHandle } from '@automerge/automerge-repo';
+
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
-import { save } from '@dxos/automerge/automerge';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
@@ -352,7 +354,7 @@ export class DataSpace {
 
   async *getAllDocuments(): AsyncIterable<[string, Uint8Array]> {
     invariant(this._databaseRoot, 'Space is not ready');
-    const doc = this._databaseRoot.docSync() ?? failedInvariant();
+    const doc = this._databaseRoot.doc() ?? failedInvariant();
     const root = save(doc);
     yield [this._databaseRoot.documentId, root];
 
@@ -459,12 +461,13 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string) {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    const handle = this._echoHost.automergeRepo.find<SpaceDoc>(rootUrl as any);
+    let handle: DocHandle<SpaceDoc>;
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
+          handle = await this._echoHost.automergeRepo.find<SpaceDoc>(rootUrl as any);
           await cancelWithContext(this._ctx, handle.whenReady());
         });
         if (this._ctx.disposed) {
@@ -475,7 +478,7 @@ export class DataSpace {
         using _guard = await this._epochProcessingMutex.acquire();
 
         // Attaching space keys to legacy documents.
-        const doc = handle.docSync() ?? failedInvariant();
+        const doc = handle.doc() ?? failedInvariant();
         if (!doc.access?.spaceKey) {
           handle.change((doc: any) => {
             doc.access = { spaceKey: this.key.toHex() };

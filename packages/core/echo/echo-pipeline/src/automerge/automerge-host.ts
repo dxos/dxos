@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, asyncTimeout } from '@dxos/async';
 import {
   getBackend,
   getHeads,
@@ -11,7 +10,7 @@ import {
   save,
   type Doc,
   type Heads,
-} from '@dxos/automerge/automerge';
+} from '@automerge/automerge';
 import {
   type DocHandleChangePayload,
   Repo,
@@ -24,7 +23,9 @@ import {
   type StorageAdapterInterface,
   type StorageKey,
   interpretAsDocumentId,
-} from '@dxos/automerge/automerge-repo';
+} from '@automerge/automerge-repo';
+
+import { Event, asyncTimeout } from '@dxos/async';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
@@ -215,7 +216,7 @@ export class AutomergeHost extends Resource {
       handle = this._repo.handles[documentId as DocumentId];
     }
     if (!handle) {
-      handle = this._repo.find(documentId as DocumentId);
+      handle = await this._repo.find(documentId as DocumentId);
     }
 
     // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
@@ -292,14 +293,14 @@ export class AutomergeHost extends Resource {
   async reIndexHeads(documentIds: DocumentId[]) {
     for (const documentId of documentIds) {
       log.info('re-indexing heads for document', { documentId });
-      const handle = this._repo.find(documentId);
+      const handle = await this._repo.find(documentId);
       await handle.whenReady(['ready', 'requesting']);
       if (handle.inState(['requesting'])) {
         log.warn('document is not available locally, skipping', { documentId });
         continue; // Handle not available locally.
       }
 
-      const doc = handle.docSync();
+      const doc = handle.doc();
       invariant(doc);
 
       const heads = getHeads(doc);
@@ -336,7 +337,7 @@ export class AutomergeHost extends Resource {
     if (!handle) {
       return;
     }
-    const doc = handle.docSync();
+    const doc = handle.doc();
     if (!doc) {
       return;
     }
@@ -369,7 +370,7 @@ export class AutomergeHost extends Resource {
     this._indexMetadataStore.notifyMarkedDirty();
 
     const documentId = path[0] as DocumentId;
-    const document = this._repo.handles[documentId]?.docSync();
+    const document = this._repo.handles[documentId]?.doc();
     if (document) {
       const heads = getHeads(document);
       this._onHeadsChanged(documentId, heads);
@@ -393,7 +394,7 @@ export class AutomergeHost extends Resource {
   }
 
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
-    const doc = this._repo.handles[documentId as any]?.docSync();
+    const doc = this._repo.handles[documentId as any]?.doc();
     if (doc) {
       const spaceKeyHex = getSpaceKeyFromDoc(doc);
       if (spaceKeyHex) {
@@ -431,7 +432,7 @@ export class AutomergeHost extends Resource {
     const storeRequestIds: DocumentId[] = [];
     const storeResultIndices: number[] = [];
     for (const documentId of documentIds) {
-      const doc = this._repo.handles[documentId]?.docSync();
+      const doc = this._repo.handles[documentId]?.doc();
       if (doc) {
         result.push(getHeads(doc));
       } else {
@@ -593,7 +594,7 @@ const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
   await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
-      if (changeIsPresentInDoc(handle.docSync()!, changeHash)) {
+      if (changeIsPresentInDoc(handle.doc()!, changeHash)) {
         unavailableHeads.delete(changeHash);
       }
     }

@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
 import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
 import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer, TestReplicator, TestReplicatorConnection } from '@dxos/echo-db/testing';

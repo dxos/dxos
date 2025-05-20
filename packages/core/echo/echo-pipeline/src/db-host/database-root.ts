@@ -2,13 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as A from '@dxos/automerge/automerge';
-import {
-  interpretAsDocumentId,
-  type AutomergeUrl,
-  type DocHandle,
-  type DocumentId,
-} from '@dxos/automerge/automerge-repo';
+import type * as A from '@automerge/automerge';
+import { interpretAsDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
@@ -41,19 +37,19 @@ export class DatabaseRoot {
   }
 
   get isLoaded(): boolean {
-    return !!this._rootHandle.docSync();
+    return !!this._rootHandle.doc();
   }
 
   get handle(): DocHandle<SpaceDoc> {
     return this._rootHandle;
   }
 
-  docSync(): A.Doc<SpaceDoc> | null {
-    return this._rootHandle.docSync() ?? null;
+  doc(): A.Doc<SpaceDoc> | null {
+    return this._rootHandle.doc() ?? null;
   }
 
   getVersion(): SpaceDocVersion | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -62,7 +58,7 @@ export class DatabaseRoot {
   }
 
   getSpaceKey(): string | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -71,7 +67,7 @@ export class DatabaseRoot {
   }
 
   getInlineObjectCount(): number | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -80,7 +76,7 @@ export class DatabaseRoot {
   }
 
   getLinkedObjectCount(): number | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -89,7 +85,7 @@ export class DatabaseRoot {
   }
 
   getAllLinkedDocuments(): AutomergeUrl[] {
-    const doc = this.docSync();
+    const doc = this.doc();
     invariant(doc);
 
     // .toString() to handle RawString.
@@ -97,7 +93,7 @@ export class DatabaseRoot {
   }
 
   measureMetrics(): DocMetrics | null {
-    const doc = this.docSync();
+    const doc = this.doc();
     if (!doc) {
       return null;
     }

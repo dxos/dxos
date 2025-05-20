@@ -28,15 +28,15 @@ describe('AutomergeDocumentLoader', () => {
   test('space access is set on root doc handle and it is accessible', async () => {
     const { loader, spaceRootDocHandle } = await setupTest();
     expect(loader.getSpaceRootDocHandle()).not.to.throw;
-    expect(spaceRootDocHandle.docSync()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
+    expect(spaceRootDocHandle.doc()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
   });
 
   test('new object document is linked with space and root document', async () => {
     const objectId = ObjectId.random();
     const { loader, spaceRootDocHandle } = await setupTest();
     const objectDocHandle = loader.createDocumentForObject(objectId);
-    const handle = spaceRootDocHandle.docSync();
-    expect(objectDocHandle.docSync()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
+    const handle = spaceRootDocHandle.doc();
+    expect(objectDocHandle.doc()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
     expect(handle?.links?.[objectId].toString()).to.eq(objectDocHandle.url);
   });
 

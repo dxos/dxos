@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as A from '@dxos/automerge/automerge';
-import { type DocumentId } from '@dxos/automerge/automerge-repo';
+import * as A from '@automerge/automerge';
+import { type DocumentId } from '@automerge/automerge-repo';
+
 import { Context } from '@dxos/context';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
@@ -29,7 +30,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
         const { documentId, objectId } = objectPointerCodec.decode(id);
         const handle = await automergeHost.loadDoc<SpaceDoc>(Context.default(), documentId as DocumentId);
 
-        let doc = handle.docSync();
+        let doc = handle.doc();
         invariant(doc);
 
         const currentHeads = A.getHeads(doc);

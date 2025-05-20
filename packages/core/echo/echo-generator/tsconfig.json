@@ -28,9 +28,6 @@
       "path": "../../../sdk/schema"
     },
     {
-      "path": "../automerge"
-    },
-    {
       "path": "../echo-db"
     },
     {
