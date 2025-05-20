@@ -39,6 +39,9 @@ export type ResponsiveGridProps<T extends object = any> = ThemedClassName<{
   /** ID of the pinned item. */
   pinned?: string;
 
+  /** Whether to hide the gallery (unpinned items) when an item is pinned. */
+  hideGallery?: boolean;
+
   /** Whether the divider is resizable. */
   resizable?: boolean;
 
@@ -62,6 +65,7 @@ export const ResponsiveGrid = <T extends object = any>({
   getId = defaultGetId,
   items,
   pinned,
+  hideGallery = false,
   debug,
   onPinnedChange,
 }: ResponsiveGridProps<T>) => {
@@ -104,6 +108,7 @@ export const ResponsiveGrid = <T extends object = any>({
     const t = setTimeout(() => {
       setBounds(
         items
+          .filter((item) => !hideGallery || item === pinnedItem)
           .map((item) => {
             invariant(containerRef.current);
             const el = containerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
@@ -119,7 +124,7 @@ export const ResponsiveGrid = <T extends object = any>({
     });
 
     return () => clearTimeout(t);
-  }, [items, time]);
+  }, [items, hideGallery, pinnedItem, time]);
 
   const handleClick = useCallback(
     (item: T) => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item)),
@@ -131,13 +136,20 @@ export const ResponsiveGrid = <T extends object = any>({
       <div className='absolute inset-0 flex flex-col grow gap-2'>
         {/* Pinned item. */}
         {pinnedItem && (
-          <div className='relative flex shrink-0 w-full flex-1 overflow-hidden' style={{ height: dividerHeight }}>
+          <div
+            className={mx('flex grow-[2] shrink overflow-hidden justify-center items-center', hideGallery && 'h-full')}
+            style={hideGallery ? {} : { height: dividerHeight }}
+          >
             <SoloItem id={getId(pinnedItem)} debug={debug} />
           </div>
         )}
 
         {/* Placeholder grid used to calculate layout. */}
-        <div ref={gridContainerRef} className='flex w-full flex-1 justify-center items-center overflow-hidden'>
+        <div
+          ref={gridContainerRef}
+          className={mx(hideGallery ? 'hidden' : 'flex grow-[1] overflow-hidden justify-center items-center')}
+          style={hideGallery ? {} : { minHeight: MIN_GALLERY_HEIGHT }}
+        >
           {mainItems.length === 1 && (
             <div style={{ width: cellWidth }} className='flex h-full'>
               <SoloItem id={getId(mainItems[0])} debug={debug} />
