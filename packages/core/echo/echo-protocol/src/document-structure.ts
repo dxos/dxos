@@ -14,7 +14,9 @@ export type SpaceState = {
   rootUrl?: string;
 };
 
-// TODO(dmaretskyi): Rename DatabaseRootDoc.
+/**
+ * Link to all documents that hold objects in the space.
+ */
 export interface DatabaseDirectory {
   version?: SpaceDocVersion;
 
