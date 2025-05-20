@@ -72,7 +72,7 @@ export default (context: PluginsContext) =>
           return;
         }
 
-        const { objects: existingContacts } = await space.db.query(Filter.schema(DataType.Person)).run();
+        const { objects: existingContacts } = await space.db.query(Filter.type(DataType.Person)).run();
 
         // Check for existing contact
         const existingContact = existingContacts.find((contact) =>
@@ -101,7 +101,7 @@ export default (context: PluginsContext) =>
 
         log.info('Extracted email domain', { emailDomain });
 
-        const { objects: existingOrganisations } = await space.db.query(Filter.schema(DataType.Organization)).run();
+        const { objects: existingOrganisations } = await space.db.query(Filter.type(DataType.Organization)).run();
         const matchingOrg = existingOrganisations.find((org) => {
           if (org.website) {
             try {
@@ -132,7 +132,7 @@ export default (context: PluginsContext) =>
         space.db.add(newContact);
         log.info('Contact extracted and added to space', { contact: newContact });
 
-        const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+        const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
         const contactTable = tables.find((table) => {
           return table.view?.target?.query?.typename === DataType.Person.typename;
         });

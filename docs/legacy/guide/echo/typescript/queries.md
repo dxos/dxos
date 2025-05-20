@@ -46,7 +46,7 @@ It's possible to receive strongly typed results from `query`. This is done by de
 
 ::: details Benefits of schema declarations
 
-* ability to generate type-safe data access code, which makes development faster and safer.
+- ability to generate type-safe data access code, which makes development faster and safer.
   :::
 
 Consider this expression of schema declared with Effect Schema:
@@ -85,7 +85,7 @@ async () => {
   const space = spaces[0];
 
   // get items that match a filter: type inferred from Task.filter()
-  const tasks = await space.db.query(Filter.schema(TaskType)).run();
+  const tasks = await space.db.query(Filter.type(TaskType)).run();
 };
 ```
 

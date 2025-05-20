@@ -40,7 +40,7 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: documents } = await space.db.query(Filter.schema(DocumentType)).run();
+          const { objects: documents } = await space.db.query(Filter.type(DocumentType)).run();
           const documentInfo = documents.map((doc) => {
             invariant(isInstanceOf(DocumentType, doc));
             return {

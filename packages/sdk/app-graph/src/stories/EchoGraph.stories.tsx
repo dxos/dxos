@@ -10,14 +10,14 @@ import React, { useEffect, useState } from 'react';
 import {
   live,
   isSpace,
+  Query,
   type Echo,
-  type FilterSource,
   type Space,
   SpaceState,
   type QueryOptions,
-  type Query,
+  type Live,
+  Expando,
 } from '@dxos/client/echo';
-import type { BaseObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -54,23 +54,20 @@ const actionWeights = {
 };
 
 // TODO(wittjosiah): Factor out.
-const memoizeQuery = <T extends BaseObject>(
-  spaceOrEcho?: Space | Echo,
-  filter?: FilterSource<T>,
+const memoizeQuery = <Q extends Query.Any>(
+  spaceOrEcho: Space | Echo | undefined,
+  query: Q,
   options?: QueryOptions,
-): T[] => {
+): Live<Query.Type<Q>>[] => {
   const key = isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined;
-  const query = memoize(
-    () =>
-      isSpace(spaceOrEcho)
-        ? spaceOrEcho.db.query(filter, options)
-        : (spaceOrEcho?.query(filter, options) as Query<T> | undefined),
+  const queryResult = memoize(
+    () => (isSpace(spaceOrEcho) ? spaceOrEcho.db.query(query, options) : spaceOrEcho?.query(query, options)),
     key,
   );
-  const unsubscribe = memoize(() => query?.subscribe(), key);
+  const unsubscribe = memoize(() => queryResult?.subscribe(), key);
   cleanup(() => unsubscribe?.());
 
-  return query?.objects ?? EMPTY_ARRAY;
+  return queryResult?.objects ?? EMPTY_ARRAY;
 };
 
 const createGraph = async (client: Client): Promise<Graph> => {
@@ -101,7 +98,7 @@ const createGraph = async (client: Client): Promise<Graph> => {
     id: 'object',
     filter: (node): node is Node<Space> => isSpace(node.data),
     connector: ({ node }) => {
-      const objects = memoizeQuery(node.data, { type: 'test' });
+      const objects = memoizeQuery(node.data, Query.type(Expando, { type: 'test' }));
       return objects.map((object) => ({
         id: object.id,
         type: 'dxos.org/type/test',
