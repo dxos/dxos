@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+import { Type } from '@dxos/echo';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
@@ -16,7 +17,7 @@ export namespace InboxAction {
 
   export class CreateMailbox extends Schema.TaggedClass<CreateMailbox>()(`${INBOX_ACTION}/create-mailbox`, {
     input: Schema.Struct({
-      spaceId: Schema.String,
+      spaceId: Type.SpaceIdSchema,
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
