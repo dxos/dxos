@@ -7,8 +7,8 @@ import type { AccompanyingSeries, ColorsPhysicalLayer, Gamut, HelicalArcSeries, 
 import { type PhysicalPalette } from './types';
 
 const reflectiveRelation = {
-  initial: 1000,
-  slope: -1000,
+  initial: 1_000,
+  slope: -1_000,
   method: 'floor',
 } satisfies AccompanyingSeries;
 
@@ -16,6 +16,17 @@ const gamuts: (Gamut & string)[] = ['srgb', 'p3', 'rec2020'];
 
 const DEG_RAD = Math.PI / 180;
 
+/**
+ * Creates a color palette configuration for a given hue value.
+ *
+ * @param hue - A number from 0-16 representing different hue angles
+ * @returns A PhysicalPalette configuration with:
+ * - keyPoint: [lightness, chroma, hue] in LCH color space
+ *   - lightness: Fixed at 0.5 (50%)
+ *   - chroma: Varies sinusoidally around 0.13 based on hue angle
+ *   - hue: Calculated by mapping input 0-16 to 26-386 degrees
+ * - Control points and torsion for color interpolation
+ */
 const hueKeyPoint = (hue: number): PhysicalPalette => {
   const hueDeg = (360 * (hue / 17) + 26) % 360;
   return {
