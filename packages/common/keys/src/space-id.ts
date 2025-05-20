@@ -4,11 +4,11 @@
 
 import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
+import { Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
 import { randomBytes } from './random-bytes';
-import { Schema } from 'effect';
 
 /**
  * Denotes RFC4648 base-32 format.

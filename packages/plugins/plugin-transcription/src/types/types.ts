@@ -7,8 +7,8 @@ import { Schema } from 'effect';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { isLiveObject, SpaceId } from '@dxos/react-client/echo';
 
-import { TRANSCRIPTION_PLUGIN } from '../meta';
 import { TranscriptType } from './schema';
+import { TRANSCRIPTION_PLUGIN } from '../meta';
 
 // TODO(burdon): Move to separate proto.
 
