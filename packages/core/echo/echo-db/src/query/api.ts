@@ -24,7 +24,7 @@ import type { Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import type * as AST from './ast';
+import { QueryAST } from '@dxos/echo-protocol';
 import type { FilterSource } from './deprecated';
 import { type QueryResult } from './query-result';
 

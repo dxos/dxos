@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './api';
-import * as QueryAST from './ast';
+import { QueryAST } from '@dxos/echo-protocol';
 
 // TODO(dmaretskyi): Move those out.
 const Type = {

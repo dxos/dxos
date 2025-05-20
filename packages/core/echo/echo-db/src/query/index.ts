@@ -7,4 +7,3 @@ export * from './deprecated';
 export * from './query-result';
 export * from './subscription';
 export * from './api';
-export * as QueryAST from './ast';
