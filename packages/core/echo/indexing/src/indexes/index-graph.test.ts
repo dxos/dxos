@@ -4,6 +4,8 @@ import { TestData } from '../testing';
 import { objectPointerCodec, ObjectPointerEncoded } from '@dxos/protocols';
 import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/keys';
+import type { FindResult } from '../types';
+import type { ObjectId } from '@dxos/echo-schema';
 
 const spaceKey = PublicKey.random();
 
@@ -16,10 +18,10 @@ describe('IndexGraph', () => {
       await index.update(objectPointerCodec.encode({ spaceKey: spaceKey.toHex(), documentId: id, objectId: id }), doc);
     }
 
-    log.info('index', {
-      index: JSON.parse(await index.serialize()),
-      testData: TestData.OBJECTS,
-    });
+    // log.info('index', {
+    //   index: JSON.parse(await index.serialize()),
+    //   testData: TestData.OBJECTS,
+    // });
 
     {
       const result = await index.find({
@@ -30,7 +32,39 @@ describe('IndexGraph', () => {
         },
         typenames: [],
       });
-      expect(result.map((r) => objectPointerCodec.decode(r.id).objectId)).toEqual([TestData.TASKS.task1.id]);
+      assertResult(result, [TestData.TASKS.task1.id]);
+    }
+
+    {
+      const result = await index.find({
+        graph: {
+          kind: 'relation-source',
+          property: null,
+          anchors: [TestData.CONTACTS.sarah.id],
+        },
+        typenames: [],
+      });
+      assertResult(result, [TestData.WORKS_FOR.sarahAtCyberdyne.id]);
+    }
+
+    {
+      const result = await index.find({
+        graph: {
+          kind: 'relation-target',
+          property: null,
+          anchors: [TestData.ORGS.cyberdyne.id],
+        },
+        typenames: [],
+      });
+      assertResult(result, [
+        TestData.WORKS_FOR.johnAtCyberdyne.id,
+        TestData.WORKS_FOR.sarahAtCyberdyne.id,
+        TestData.WORKS_FOR.emmaAtCyberdyne.id,
+      ]);
     }
   });
 });
+
+const assertResult = (result: FindResult[], expected: ObjectId[]) => {
+  expect(result.map((r) => objectPointerCodec.decode(r.id).objectId).sort()).toEqual(expected.sort());
+};
