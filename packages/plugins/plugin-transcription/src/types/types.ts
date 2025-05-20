@@ -4,11 +4,11 @@
 
 import { Schema } from 'effect';
 
-import { SpaceIdSchema, isInstanceOf } from '@dxos/echo-schema';
-import { isLiveObject } from '@dxos/react-client/echo';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { isLiveObject, SpaceId } from '@dxos/react-client/echo';
 
-import { TranscriptType } from './schema';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
+import { TranscriptType } from './schema';
 
 // TODO(burdon): Move to separate proto.
 
@@ -24,7 +24,7 @@ export namespace TranscriptionAction {
   export class Create extends Schema.TaggedClass<Create>()(`${TRANSCRIPTION_ACTION}/create`, {
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
-      spaceId: SpaceIdSchema,
+      spaceId: SpaceId,
     }),
     output: Schema.Struct({
       object: TranscriptType,

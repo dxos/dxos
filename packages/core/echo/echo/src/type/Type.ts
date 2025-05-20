@@ -17,7 +17,6 @@ import {
   type JsonSchemaType,
   ObjectId as ObjectId$,
   Ref as Ref$,
-  SpaceIdSchema as SpaceIdSchema$,
   type StoredSchema,
   type TypeMeta,
   getTypeAnnotation,
@@ -44,7 +43,10 @@ import { live as live$ } from '@dxos/live-object';
 // Keys
 //
 
-export const SpaceIdSchema = SpaceIdSchema$; // TODO(burdon): Reconcile with SpaceId as with ObjectId.
+/**
+ * @deprecated Use {@link SpaceId} as it is an instance of effect schema.
+ */
+export const SpaceIdSchema = SpaceId$; // TODO(burdon): Reconcile with SpaceId as with ObjectId.
 export const SpaceId = SpaceId$;
 export type SpaceId = SpaceId$;
 

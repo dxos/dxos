@@ -4,9 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { SpaceIdSchema } from '@dxos/echo-schema';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
-import { EchoObjectSchema } from '@dxos/react-client/echo';
+import { EchoObjectSchema, SpaceId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { THREAD_PLUGIN } from './meta';
@@ -16,7 +15,7 @@ export namespace ThreadAction {
 
   export class CreateChannel extends Schema.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
     input: Schema.Struct({
-      spaceId: SpaceIdSchema,
+      spaceId: SpaceId,
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
