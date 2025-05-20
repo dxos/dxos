@@ -8,6 +8,7 @@ import { type Plugin, UserConfig as ViteConfig } from 'vite';
 import { defineConfig, type UserConfig as VitestConfig } from 'vitest/config';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
@@ -16,6 +17,10 @@ const targetProject = String(process.env.NX_TASK_TARGET_PROJECT);
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const shouldCreateXmlReport = Boolean(process.env.VITEST_XML_REPORT);
+
+console.log({
+  proj: new URL('./tsconfig.paths.json', import.meta.url).pathname,
+});
 
 const createNodeConfig = (cwd: string) =>
   defineConfig({
@@ -32,10 +37,15 @@ const createNodeConfig = (cwd: string) =>
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
     },
-    // Shows build trace
-    // VITE_INSPECT=1 pnpm vitest --ui
-    // http://localhost:51204/__inspect/#/
-    plugins: [process.env.VITE_INSPECT && Inspect()],
+    plugins: [
+      tsconfigPaths({
+        projects: [new URL('./tsconfig.paths.json', import.meta.url).pathname],
+      }),
+      // Shows build trace
+      // VITE_INSPECT=1 pnpm vitest --ui
+      // http://localhost:51204/__inspect/#/
+      process.env.VITE_INSPECT && Inspect(),
+    ],
   });
 
 type BrowserOptions = {
