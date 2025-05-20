@@ -38,7 +38,7 @@ import {
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
-  indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }],
+  indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }, { kind: IndexKind.Kind.GRAPH }],
 };
 
 export type EchoHostParams = {
