@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { ulid } from 'ulidx';
 
-import { SpaceId } from '@dxos/keys';
+import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 
 // TODO(dmaretskyi): Make brand.
 // export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
@@ -36,3 +36,7 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
 };
 
 export const SpaceIdSchema: Schema.Schema<SpaceId, string> = Schema.String.pipe(Schema.filter(SpaceId.isValid));
+
+// TODO(burdon): Move to @dxos/keys once ObjectId is moved there.
+export const createQueueDxn = (spaceId = SpaceId.random(), queueId = ObjectId.random()) =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, queueId]);
