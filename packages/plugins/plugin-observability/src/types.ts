@@ -4,6 +4,8 @@
 
 import { Schema } from 'effect';
 
+import { Type } from '@dxos/echo';
+
 import { OBSERVABILITY_PLUGIN } from './meta';
 
 const nonEmpty = <S extends Schema.Schema.Any>(field: string) =>
@@ -84,31 +86,31 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('space.create'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.join'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.limit'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.lock'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.migrate'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           targetVersion: Schema.optional(Schema.String),
           version: Schema.optional(Schema.String),
         }),
@@ -116,7 +118,7 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('space.object.add'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           objectId: Schema.String,
           typename: Schema.optional(Schema.String),
         }),
@@ -124,33 +126,33 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('space.share'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('space.unlock'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('threads.create'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           threadId: Schema.String,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('threads.delete'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           threadId: Schema.String,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('threads.message.add'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           threadId: Schema.String,
           threadLength: Schema.Number,
           messageId: Schema.String,
@@ -160,7 +162,7 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('threads.message.delete'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           threadId: Schema.String,
           messageId: Schema.String,
         }),
@@ -168,7 +170,7 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('threads.message.undo-delete'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           threadId: Schema.String,
           messageId: Schema.String,
         }),
@@ -176,7 +178,7 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('threads.message.update'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           messageId: Schema.String,
           messageLength: Schema.Number,
         }),
@@ -184,14 +186,14 @@ export namespace ObservabilityAction {
       Schema.Struct({
         name: Schema.Literal('threads.toggle-resolved'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           threadId: Schema.String,
         }),
       }),
       Schema.Struct({
         name: Schema.Literal('threads.undo-delete'),
         properties: Schema.Struct({
-          spaceId: Schema.String,
+          spaceId: Type.SpaceIdSchema,
           threadId: Schema.String,
         }),
       }),

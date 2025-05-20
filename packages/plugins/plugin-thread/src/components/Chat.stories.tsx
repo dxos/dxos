@@ -9,8 +9,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { refFromDXN } from '@dxos/live-object';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
@@ -39,7 +38,7 @@ const Story = () => {
         const space = await client.spaces.create();
         const channel = space.db.add(
           live(ChannelType, {
-            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()])),
+            queue: refFromDXN(createQueueDxn(space.id)),
           }),
         );
         setSpace(space);

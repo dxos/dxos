@@ -142,7 +142,7 @@ export type CreateSpaceRequest = {
 
 export type CreateSpaceResponseBody = {
   spaceKey: string;
-  spaceId: string;
+  spaceId: string; // TODO(burdon): Use SpaceId.
   automergeRoot: string;
 };
 
@@ -163,7 +163,7 @@ export enum OAuthProvider {
 
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   provider: Schema.Enums(OAuthProvider),
-  spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)),
+  spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
   accessTokenId: Schema.String,
   scopes: Schema.mutable(Schema.Array(Schema.String)),
 });
