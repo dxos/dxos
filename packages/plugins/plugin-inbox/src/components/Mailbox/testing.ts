@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { createQueueDxn } from '@dxos/echo-schema';
 import { makeRef, refFromDXN } from '@dxos/live-object';
 import { faker } from '@dxos/random';
-import { createQueueDxn, live, type Space } from '@dxos/react-client/echo';
+import { live, type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { MailboxType } from '../../types';

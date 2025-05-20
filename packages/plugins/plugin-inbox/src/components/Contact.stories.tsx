@@ -9,6 +9,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { createIntent, IntentPlugin, LayoutAction, SettingsPlugin, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { refFromDXN } from '@dxos/live-object';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';

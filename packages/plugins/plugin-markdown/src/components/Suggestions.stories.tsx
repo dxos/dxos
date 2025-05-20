@@ -20,8 +20,8 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message } from '@dxos/artifact';
-import { Type, createQueueDxn } from '@dxos/echo';
-import { create, type Expando } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { create, createQueueDxn, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live, makeRef, refFromDXN } from '@dxos/live-object';

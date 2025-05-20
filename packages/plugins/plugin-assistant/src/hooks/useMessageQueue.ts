@@ -5,7 +5,8 @@
 import { useMemo } from 'react';
 
 import { type Message } from '@dxos/artifact';
-import { createQueueDxn, getSpace, useQueue } from '@dxos/react-client/echo';
+import { createQueueDxn } from '@dxos/echo-schema';
+import { getSpace, useQueue } from '@dxos/react-client/echo';
 
 import { type AIChatType } from '../types';
 

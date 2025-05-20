@@ -9,11 +9,12 @@ import React, { useEffect, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { refFromDXN } from '@dxos/live-object';
 import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { createQueueDxn, live, type Space } from '@dxos/react-client/echo';
+import { live, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Thread } from '@dxos/react-ui-thread';

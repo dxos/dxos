@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { live, refFromDXN } from '@dxos/live-object';
 
 import { AssistantAction, AIChatType, TemplateType } from '../types';

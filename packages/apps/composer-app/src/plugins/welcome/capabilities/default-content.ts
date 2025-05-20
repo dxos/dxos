@@ -4,13 +4,12 @@
 
 import { createIntent, LayoutAction } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
-import { createQueueDxn } from '@dxos/echo';
 import { SPACES } from '@dxos/plugin-space';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 
 export default async (context: PluginsContext) => {
-  const { fullyQualifiedId, live, Ref } = await import('@dxos/react-client/echo');
+  const { createQueueDxn, fullyQualifiedId, live, Ref } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { DocumentType } = await import('@dxos/plugin-markdown/types');
   const { CollectionType } = await import('@dxos/plugin-space/types');
@@ -42,7 +41,12 @@ export default async (context: PluginsContext) => {
   const defaultSpaceNode = await graph.waitForNode(defaultSpace.id);
   await graph.expand(defaultSpaceNode);
 
-  await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: defaultSpace.id }));
+  await dispatch(
+    createIntent(LayoutAction.SwitchWorkspace, {
+      part: 'workspace',
+      subject: defaultSpace.id,
+    }),
+  );
   await dispatch(
     createIntent(LayoutAction.SetLayoutMode, {
       part: 'mode',
