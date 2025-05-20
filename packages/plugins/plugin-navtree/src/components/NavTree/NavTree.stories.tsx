@@ -39,7 +39,6 @@ faker.seed(1234);
 
 const StoryState = defineCapability<{ tab: string }>('story-state');
 
-// TODO(burdon): How to adjust existing surfaces for this test?
 // TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
 // TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
 
@@ -57,7 +56,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
-        classNames={mx('is-[--rail-action] bs-[--rail-action]')}
+        classNames='is-[--rail-action] bs-[--rail-action]'
       />
       <StackItem.ResizeHandle />
     </div>
@@ -72,11 +71,11 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
       item={{ id: attendableId }}
       {...attentionAttrs}
       classNames='bg-baseSurface border-ie border-separator'
-      size={20}
+      size={30}
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
-        <Toolbar.Root>
+        <Toolbar.Root classNames='border-b border-separator'>
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 
