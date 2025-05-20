@@ -67,6 +67,7 @@ export const huePalettes = {
  * https://colorsublime.github.io
  * https://github.com/microsoft/vscode-docs/blob/main/api/extension-guides/color-theme.md#create-a-new-color-theme
  * https://raw.githubusercontent.com/microsoft/vscode/main/src/vs/workbench/services/themes/common/colorThemeSchema.ts
+ * https://tailwindcss.com/docs/colors
  */
 const systemPalettes = {
   neutral: {
@@ -74,18 +75,19 @@ const systemPalettes = {
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,
-    // Values used directly which were found in the audit.
+    // Values used directly.
+    // TODO(burdon): Audit.
     values: [25, 75, 100, 150, 250, 300, 500, 700, 750, 800, 850, 900],
   } satisfies PhysicalPalette,
 
+  // https://oklch.com/#0.5,0.2,260,100 (#0559d2)
   primary: {
-    // https://oklch.com/#0.5,0.2,260,100 (#0559d2)
     keyPoint: [0.5, 0.2, 260],
-    // keyPoint: [0.5262, 0.196, 260],
     lowerCp: 0.86,
     upperCp: 1,
     torsion: -30,
-    // Values used directly which were found in the audit.
+    // Values used directly.
+    // TODO(burdon): Audit.
     values: [100, 150, 200, 350, 400, 450, 500, 750, 800, 850],
   } satisfies PhysicalPalette,
 };
