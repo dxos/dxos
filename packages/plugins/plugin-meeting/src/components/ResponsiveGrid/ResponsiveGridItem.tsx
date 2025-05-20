@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, type PropsWithChildren } from 'react';
+import React, { useEffect, useState, type CSSProperties, type PropsWithChildren } from 'react';
 
 import { Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { Waveform } from '@dxos/react-ui-sfx';
@@ -60,12 +60,25 @@ export const ResponsiveGridItem = <T extends object = any>({
 
   const props = wave && !pinned ? iconProps.wave : mute ? iconProps.mute : speaking ? iconProps.speaking : undefined;
 
+  // Debounce speaking indicator.
+  const [speakingIndicator, setSpeakingIndicator] = useState(speaking);
+  useEffect(() => {
+    if (speaking) {
+      setSpeakingIndicator(true);
+    } else {
+      const timeout = setTimeout(() => {
+        setSpeakingIndicator(false);
+      }, 2_000);
+      return () => clearTimeout(timeout);
+    }
+  }, [speaking]);
+
   return (
     <div
       className={mx(
         'relative w-full h-full group',
         'rounded-md outline outline-2 outline-neutral-900 transition-[outline-color] duration-500',
-        speaking ? 'outline-green-500' : !video && 'outline-separator',
+        speakingIndicator ? 'outline-green-500' : !video && 'outline-separator',
         classNames,
       )}
       style={style}
@@ -89,7 +102,8 @@ export const ResponsiveGridItem = <T extends object = any>({
       {/* Name. */}
       {name && (
         <div className='z-10 absolute bottom-1 left-8 right-1 flex justify-end gap-1 items-center'>
-          {self && <Icon icon='ph--asterisk--regular' size={pinned ? 5 : 4} />}
+          {/* TODO(burdon): Replace with avatar for everyone. */}
+          {/* {self && <Icon icon='ph--asterisk--regular' size={pinned ? 5 : 4} />} */}
           {screenshare && <Icon icon='ph--broadcast--regular' size={pinned ? 5 : 4} />}
           <div
             className={mx('bg-neutral-800 text-neutral-100 py-0.5 truncate rounded', pinned ? 'px-2' : 'px-1 text-xs')}
