@@ -5,13 +5,13 @@
 import * as A from '@dxos/automerge/automerge';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
-import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
+import { SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type IdToHeads, type ObjectSnapshot } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ObjectPointerVersion, objectPointerCodec } from '@dxos/protocols';
 
-import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
+import { type AutomergeHost } from '../automerge';
 
 const LOG_VIEW_OPERATION_THRESHOLD = 300;
 
@@ -61,7 +61,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
         // Upgrade V0 object pointers to V1.
         let newId = id;
         if (objectPointerCodec.getVersion(id) === ObjectPointerVersion.V0) {
-          const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
+          const spaceKey = SpaceDoc.getSpaceKey(doc) ?? undefined;
           newId = objectPointerCodec.encode({ documentId, objectId, spaceKey });
         }
 

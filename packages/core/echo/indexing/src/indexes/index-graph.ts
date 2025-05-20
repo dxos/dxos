@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { type ObjectStructure } from '@dxos/echo-protocol';
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectStructure } from '@dxos/echo-protocol';
+import { EntityKind, ObjectId } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -22,6 +22,7 @@ import {
   staticImplements,
 } from '../types';
 import { entries } from '@dxos/util';
+import { log } from '@dxos/log';
 
 /**
  * Indexes graph relationships between objects.
@@ -61,6 +62,18 @@ export class IndexGraph extends Resource implements Index {
 
   @trace.span({ showInBrowserTimeline: true })
   async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean> {
+    const kind = ObjectStructure.getEntityKind(object);
+    switch (kind) {
+      case EntityKind.Object: {
+        break;
+      }
+      case EntityKind.Relation: {
+        break;
+      }
+      default:
+        log.warn('unknown entity kind', { kind });
+    }
+
     throw new Error('Not implemented');
 
     //   if (this._refs.get(getTypeFromObject(object))?.has(id)) {

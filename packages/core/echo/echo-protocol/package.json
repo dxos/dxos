@@ -26,6 +26,7 @@
   ],
   "dependencies": {
     "@dxos/crypto": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*"

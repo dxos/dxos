@@ -9,11 +9,10 @@ import {
   type DocHandle,
   type DocumentId,
 } from '@dxos/automerge/automerge-repo';
-import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
+import { SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
-import { getSpaceKeyFromDoc } from '../automerge';
 
 export class DatabaseRoot {
   static mapLinks(doc: DocHandle<SpaceDoc>, mapping: Record<DocumentId, DocumentId>): void {
@@ -67,7 +66,7 @@ export class DatabaseRoot {
       return null;
     }
 
-    return getSpaceKeyFromDoc(doc);
+    return SpaceDoc.getSpaceKey(doc);
   }
 
   getInlineObjectCount(): number | null {

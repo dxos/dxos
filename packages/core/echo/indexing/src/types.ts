@@ -48,7 +48,7 @@ export type IndexQuery = {
 
 export type ObjectSnapshot = {
   /**
-   * Index ID.
+   * Object ID in the indexer format.
    */
   id: ObjectPointerEncoded;
   object: Partial<ObjectStructure>;

@@ -4,7 +4,7 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { createIdFromSpaceKey, type SpaceDoc } from '@dxos/echo-protocol';
+import { createIdFromSpaceKey, SpaceDoc } from '@dxos/echo-protocol';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -14,7 +14,7 @@ import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
 
-import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
+import { type AutomergeHost } from '../automerge';
 
 type QueryStateParams = {
   indexer: Indexer;
@@ -122,7 +122,7 @@ export class QueryState extends Resource {
             if (this._ctx.disposed) {
               return;
             }
-            spaceKey = getSpaceKeyFromDoc(handle.docSync()!);
+            spaceKey = SpaceDoc.getSpaceKey(handle.docSync()!);
           }
 
           if (!spaceKey) {

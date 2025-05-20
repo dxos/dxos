@@ -7,7 +7,7 @@ import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDoc } from '@dxos/echo-protocol';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
@@ -20,8 +20,8 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
+import { type AutomergeHost } from '../automerge';
 import { QueryState } from './query-state';
-import { getSpaceKeyFromDoc, type AutomergeHost } from '../automerge';
 
 export type QueryServiceParams = {
   indexer: Indexer;
@@ -168,7 +168,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
       }
       const doc = handle.docSync()!;
 
-      const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
+      const spaceKey = SpaceDoc.getSpaceKey(doc) ?? undefined;
 
       if (doc.objects) {
         yield Object.entries(doc.objects as { [key: string]: any }).map(([objectId, object]) => {

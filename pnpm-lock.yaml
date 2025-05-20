@@ -2691,6 +2691,9 @@ importers:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys

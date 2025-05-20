@@ -26,7 +26,7 @@ import {
   interpretAsDocumentId,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
-import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDoc, type CollectionId } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -344,7 +344,7 @@ export class AutomergeHost extends Resource {
     const heads = getHeads(doc);
     this._headsStore.setHeads(handle.documentId, heads, batch);
 
-    const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
+    const spaceKey = SpaceDoc.getSpaceKey(doc) ?? undefined;
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
       objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
@@ -395,7 +395,7 @@ export class AutomergeHost extends Resource {
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
     const doc = this._repo.handles[documentId as any]?.docSync();
     if (doc) {
-      const spaceKeyHex = getSpaceKeyFromDoc(doc);
+      const spaceKeyHex = SpaceDoc.getSpaceKey(doc);
       if (spaceKeyHex) {
         return PublicKey.from(spaceKeyHex);
       }
@@ -575,16 +575,6 @@ export class AutomergeHost extends Resource {
     }
   }
 }
-
-export const getSpaceKeyFromDoc = (doc: Doc<SpaceDoc>): string | null => {
-  // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
-  const rawSpaceKey = doc.access?.spaceKey ?? (doc as any).experimental_spaceKey;
-  if (rawSpaceKey == null) {
-    return null;
-  }
-
-  return String(rawSpaceKey);
-};
 
 const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
   const unavailableHeads = new Set(heads);
