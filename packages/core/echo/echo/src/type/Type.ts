@@ -43,10 +43,6 @@ import { live as live$ } from '@dxos/live-object';
 // Keys
 //
 
-/**
- * @deprecated Use {@link SpaceId} as it is an instance of effect schema.
- */
-export const SpaceIdSchema = SpaceId$; // TODO(burdon): Reconcile with SpaceId as with ObjectId.
 export const SpaceId = SpaceId$;
 export type SpaceId = SpaceId$;
 
