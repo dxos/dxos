@@ -4,14 +4,16 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { ObjectStructure } from '@dxos/echo-protocol';
+import { decodeReference, ObjectStructure } from '@dxos/echo-protocol';
 import { EntityKind, ObjectId } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
-import { Schema } from 'effect';
+import { log } from '@dxos/log';
+import { defaultMap, entries } from '@dxos/util';
+import { pipe, Schema } from 'effect';
 import {
   EscapedPropPath,
   type FindResult,
@@ -21,9 +23,6 @@ import {
   type LoadParams,
   staticImplements,
 } from '../types';
-import { entries } from '@dxos/util';
-import { log } from '@dxos/log';
-import { invariant } from '@dxos/invariant';
 
 /**
  * Indexes graph relationships between objects.
@@ -57,6 +56,14 @@ export class IndexGraph extends Resource implements Index {
    */
   private readonly _relationSources = new Map<ObjectId, Set<ObjectPointerEncoded>>();
 
+  /**
+   * Mapping from the object to the list of reference targets.
+   * We need this because on index update we don't know what the previous version of the object was.
+   * This mapping is used to remove the old relations on update.
+   */
+  // TODO(dmaretskyi): Index should have access to the previous state on update.
+  private readonly _objectToTargets = new Map<ObjectPointerEncoded, Set<ObjectId>>();
+
   get identifier() {
     return this._identifier;
   }
@@ -66,31 +73,89 @@ export class IndexGraph extends Resource implements Index {
     const kind = ObjectStructure.getEntityKind(object);
     switch (kind) {
       case EntityKind.Object: {
+        // Clear old links.
+        this._removeReferencesFrom(id);
+        this._trackOutgoingReferences(id, object);
+
         break;
       }
       case EntityKind.Relation: {
+        this._removeReferencesFrom(id);
+        this._trackOutgoingReferences(id, object);
+
+        const targetMapping = defaultMap(this._objectToTargets, id, () => new Set());
+        const source = ObjectStructure.getRelationSource(object);
+        const target = ObjectStructure.getRelationTarget(object);
+        if (source) {
+          const sourceObject = decodeReference(source).toDXN().asEchoDXN()?.echoId;
+          if (sourceObject) {
+            defaultMap(this._relationSources, sourceObject, () => new Set()).add(id);
+            targetMapping.add(sourceObject);
+          }
+        } else {
+          log.warn('relation has no source', { id });
+        }
+        if (target) {
+          const targetObject = decodeReference(target).toDXN().asEchoDXN()?.echoId;
+          if (targetObject) {
+            defaultMap(this._relationTargets, targetObject, () => new Set()).add(id);
+            targetMapping.add(targetObject);
+          }
+        } else {
+          log.warn('relation has no target', { id });
+        }
         break;
       }
-      default:
+      default: {
         log.warn('unknown entity kind', { kind });
+        break;
+      }
     }
 
-    throw new Error('Not implemented');
-
-    //   if (this._refs.get(getTypeFromObject(object))?.has(id)) {
-    //     return false;
-    //   }
-    //   defaultMap(this._refs, getTypeFromObject(object), new Set()).add(id);
-    //   return true;
+    return true; // TODO(dmaretskyi): Actually check if anything changed. This will cause the index to be saved on every object change batch.
   }
+
   async remove(id: ObjectPointerEncoded) {
-    throw new Error('Not implemented');
-    // for (const [_, ids] of this._refs.entries()) {
-    //   if (ids.has(id)) {
-    //     ids.delete(id);
-    //     return;
-    //   }
-    // }
+    this._removeReferencesFrom(id);
+  }
+
+  private _removeReferencesFrom(id: ObjectPointerEncoded) {
+    for (const target of this._objectToTargets.get(id) ?? []) {
+      const perField = this._inboundReferences.get(target);
+      if (!perField) {
+        continue;
+      }
+      // TODO(dmaretskyi): Not efficient, but unlikely to cause issues.
+      for (const field of perField.keys()) {
+        perField.get(field)?.delete(id);
+      }
+
+      // TODO(dmaretskyi): Technically relation endpoints cannot change, but we still track them here for safety.
+      this._relationTargets.get(target)?.delete(id);
+      this._relationSources.get(target)?.delete(id);
+    }
+
+    this._objectToTargets.get(id)?.clear();
+  }
+
+  private _trackOutgoingReferences(id: ObjectPointerEncoded, object: ObjectStructure) {
+    const targetMapping = defaultMap(this._objectToTargets, id, () => new Set());
+
+    const references = ObjectStructure.getAllOutgoingReferences(object);
+    for (const { path, reference } of references) {
+      const targetObject = decodeReference(reference).toDXN().asEchoDXN()?.echoId;
+      if (!targetObject) {
+        continue;
+      }
+      const escapedPath = EscapedPropPath.escape(path);
+      pipe(
+        this._inboundReferences,
+        (map) => defaultMap(map, targetObject, () => new Map()),
+        (map) => defaultMap(map, escapedPath, () => new Set()),
+      ).add(id);
+
+      targetMapping.add(targetObject);
+    }
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -145,6 +210,9 @@ export class IndexGraph extends Resource implements Index {
         }
         return results;
       }
+      default: {
+        throw new TypeError('Unknown graph query kind');
+      }
     }
   }
 
@@ -162,6 +230,9 @@ export class IndexGraph extends Resource implements Index {
       ),
       relationSources: Object.fromEntries(
         [...this._relationSources.entries()].map(([target, sources]) => [target, Array.from(sources)]),
+      ),
+      objectToTargets: Object.fromEntries(
+        [...this._objectToTargets.entries()].map(([target, sources]) => [target, Array.from(sources)]),
       ),
     };
     return JSON.stringify(data);
@@ -181,6 +252,7 @@ export class IndexGraph extends Resource implements Index {
     this._inboundReferences.clear();
     this._relationTargets.clear();
     this._relationSources.clear();
+    this._objectToTargets.clear();
 
     for (const [target, perProp] of entries(data.inboundReferences)) {
       const propMap = new Map<string, Set<ObjectPointerEncoded>>();
@@ -188,6 +260,18 @@ export class IndexGraph extends Resource implements Index {
       for (const [prop, sources] of entries(perProp)) {
         propMap.set(prop, new Set(sources));
       }
+    }
+
+    for (const [target, sources] of entries(data.relationTargets)) {
+      this._relationTargets.set(target, new Set(sources));
+    }
+
+    for (const [target, sources] of entries(data.relationSources)) {
+      this._relationSources.set(target, new Set(sources));
+    }
+
+    for (const [target, sources] of entries(data.objectToTargets)) {
+      this._objectToTargets.set(target, new Set(sources));
     }
   }
 }
@@ -207,6 +291,10 @@ const GraphIndexData = Schema.Struct({
   relationSources: Schema.Record({
     key: ObjectId,
     value: Schema.Array(ObjectPointerEncoded),
+  }),
+  objectToTargets: Schema.Record({
+    key: ObjectPointerEncoded,
+    value: Schema.Array(ObjectId),
   }),
 });
 interface GraphIndexData extends Schema.Schema.Type<typeof GraphIndexData> {}

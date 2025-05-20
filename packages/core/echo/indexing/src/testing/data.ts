@@ -10,7 +10,7 @@ export const TYPES = {
   worksFor: DXN.fromTypenameAndVersion('example.org/relation/WorksFor', '0.1.0').toString(),
 };
 
-const createDocument = (title: string, content: string): { id: ObjectId; doc: ObjectStructure } => {
+const createArticle = (title: string, content: string): { id: ObjectId; doc: ObjectStructure } => {
   return {
     id: ObjectId.random(),
     doc: {
@@ -96,14 +96,14 @@ const createWorksFor = (source: ObjectId, target: ObjectId, since: string): { id
   };
 };
 
-export const DOCUMENTS = {
-  marineLife: createDocument(
+export const ARTICLES = {
+  marineLife: createArticle(
     'Marine Life',
     `
       Many marine animals migrate between foraging areas and reproductive sites, often timing the return migration with extreme precision. In theory, the decision to return should reflect energy acquisition at foraging areas, energetic costs associated with transit, and timing arrival for successful reproduction. For long-distance migrations to be successful, animals must integrate ‘map’ information to assess where they are relative to their reproductive site as well as ‘calendar’ information to know when to initiate the return migration given their distance from home1. Elephant seals, Mirounga angustirostris, migrate thousands of kilometers from reproductive sites to open ocean foraging areas (Figure 1A), yet return within a narrow window of time to specific beaches2. Each year, pregnant female elephant seals undertake a ∼240-day, 10,000 km foraging migration across the Northeast Pacific Ocean before returning to their breeding beaches, where they give birth 5 days after arriving2. We found that the seals’ abilities to adjust the timing of their return migration is based on the perception of space and time, which further elucidates the mechanisms behind their astonishing navigational feats3.
     `,
   ),
-  warsawWeather: createDocument(
+  warsawWeather: createArticle(
     'Warsaw Weather',
     `
   Warsaw Weather Forecast. Providing a local hourly Warsaw weather forecast of rain, sun, wind, humidity and temperature.
@@ -111,7 +111,7 @@ export const DOCUMENTS = {
   Warsaw is 78 m above sea level and located at 52.25° N 21.04° E. Warsaw has a population of 1702139. Local time in Warsaw is 1:57:03 PM CEST.
 `,
   ),
-  developmentsInBiomedicine: createDocument(
+  developmentsInBiomedicine: createArticle(
     'Developments in Biomedicine',
     `
       Since the completion of the groundbreaking Human Genome Project, massive strides have been made in our understanding of biology, science, and the human body.
@@ -150,7 +150,7 @@ export const WORKS_FOR = {
 };
 
 export const OBJECTS = [
-  ...Object.values(DOCUMENTS),
+  ...Object.values(ARTICLES),
   ...Object.values(ORGS),
   ...Object.values(CONTACTS),
   ...Object.values(TASKS),

@@ -4,7 +4,7 @@
 
 import { type Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
-import { type ObjectStructure } from '@dxos/echo-protocol';
+import { type ObjectPropPath, type ObjectStructure } from '@dxos/echo-protocol';
 import type { ObjectId } from '@dxos/echo-schema';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -56,7 +56,7 @@ export type ObjectSnapshot = {
 };
 
 export type IdToHeads = Map<ObjectPointerEncoded, Heads>;
-export type FindResult = { id: string; rank: number };
+export type FindResult = { id: ObjectPointerEncoded; rank: number };
 
 export interface Index {
   identifier: string;
@@ -109,13 +109,13 @@ export const staticImplements =
  * - contact with .
  */
 export const EscapedPropPath: SchemaClass<string, string> & {
-  escape: (path: string[]) => EscapedPropPath;
-  unescape: (path: EscapedPropPath) => string[];
+  escape: (path: ObjectPropPath) => EscapedPropPath;
+  unescape: (path: EscapedPropPath) => ObjectPropPath;
 } = class extends Schema.String.annotations({ title: 'EscapedPropPath' }) {
-  static escape(path: string[]): EscapedPropPath {
-    return path.map((p) => p.replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
+  static escape(path: ObjectPropPath): EscapedPropPath {
+    return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
   }
-  static unescape(path: EscapedPropPath): string[] {
+  static unescape(path: EscapedPropPath): ObjectPropPath {
     return path.split(/(?<!\\)\./).map((p) => p.replaceAll('\\\\', '\\').replaceAll('\\.', '.'));
   }
 };

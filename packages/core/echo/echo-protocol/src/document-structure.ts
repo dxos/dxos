@@ -15,6 +15,12 @@ export type SpaceState = {
 };
 
 /**
+ * Array indexes get converted to strings.
+ */
+export type ObjectProp = string;
+export type ObjectPropPath = ObjectProp[];
+
+/**
  * Link to all documents that hold objects in the space.
  */
 export interface DatabaseDirectory {
@@ -106,16 +112,16 @@ export const ObjectStructure = Object.freeze({
   /**
    * @returns All references in the data section of the object.
    */
-  getAllOutgoingReferences: (object: ObjectStructure): EncodedReference[] => {
-    const references: EncodedReference[] = [];
-    const visit = (value: unknown, key: string | number) => {
+  getAllOutgoingReferences: (object: ObjectStructure): { path: ObjectPropPath; reference: EncodedReference }[] => {
+    const references: { path: ObjectPropPath; reference: EncodedReference }[] = [];
+    const visit = (path: ObjectPropPath, value: unknown) => {
       if (isEncodedReference(value)) {
-        references.push(value);
+        references.push({ path, reference: value });
       } else {
-        visitValues(value, visit);
+        visitValues(value, (value, key) => visit([...path, String(key)], value));
       }
     };
-    visitValues(object.data, visit);
+    visitValues(object.data, (value, key) => visit([String(key)], value));
     return references;
   },
 });
