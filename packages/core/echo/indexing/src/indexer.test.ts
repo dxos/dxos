@@ -18,16 +18,22 @@ describe('Indexer', () => {
   const setup = async () => {
     const schemaURI = '@example.org/schema/Contact';
 
-    const objects: Partial<ObjectStructure>[] = [
+    const objects: ObjectStructure[] = [
       {
         data: { name: 'John' },
         // TODO(dmaretskyi): Fix references
         system: { type: encodeReference(Reference.localObjectReference(schemaURI)) },
+        meta: {
+          keys: [],
+        },
       },
       {
         data: { title: 'first document' },
         // TODO(dmaretskyi): Fix references
         system: { type: encodeReference(Reference.localObjectReference('@example.org/schema/Document')) },
+        meta: {
+          keys: [],
+        },
       },
     ];
     const documents: ObjectSnapshot[] = objects.map((object, index) => ({

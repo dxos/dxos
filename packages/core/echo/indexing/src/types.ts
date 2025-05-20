@@ -51,7 +51,7 @@ export type ObjectSnapshot = {
    * Object ID in the indexer format.
    */
   id: ObjectPointerEncoded;
-  object: Partial<ObjectStructure>;
+  object: ObjectStructure;
   heads: Heads;
 };
 
@@ -67,9 +67,14 @@ export interface Index {
   close(): Promise<Index>;
 
   /**
-   * @returns {Promise<boolean>} true if the object was updated, false otherwise.
+   * Add an object to the index.
+   * @returns {Promise<boolean>} true if the index was updated, false otherwise.
    */
-  update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean>;
+  update(id: ObjectPointerEncoded, object: ObjectStructure): Promise<boolean>;
+
+  /**
+   * Remove an object from the index.
+   */
   remove(id: ObjectPointerEncoded): Promise<void>;
 
   // TODO(dmaretskyi): Remove from interface -- Each index has its own query api.

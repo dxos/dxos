@@ -95,6 +95,9 @@ describe('IndexStore', () => {
         data: { name: 'John' },
         // TODO(dmaretskyi): Fix references
         system: { type: encodeReference(Reference.localObjectReference(schemaURI)) },
+        meta: {
+          keys: [],
+        },
       });
       await store.save(loadedIndex);
     }

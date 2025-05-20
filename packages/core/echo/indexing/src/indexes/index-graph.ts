@@ -23,6 +23,7 @@ import {
 } from '../types';
 import { entries } from '@dxos/util';
 import { log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
 
 /**
  * Indexes graph relationships between objects.
@@ -61,7 +62,7 @@ export class IndexGraph extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean> {
+  async update(id: ObjectPointerEncoded, object: ObjectStructure): Promise<boolean> {
     const kind = ObjectStructure.getEntityKind(object);
     switch (kind) {
       case EntityKind.Object: {
