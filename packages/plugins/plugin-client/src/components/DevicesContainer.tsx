@@ -29,11 +29,11 @@ import { hexToEmoji } from '@dxos/util';
 import { CLIENT_PLUGIN } from '../meta';
 import { ClientAction } from '../types';
 
-export const DevicesContainer = ({
-  createInvitationUrl,
-}: {
-  createInvitationUrl: (invitationCode: string) => string;
-}) => {
+export type DevicesContainerProps = {
+  createInvitationUrl?: (invitationCode: string) => string;
+};
+
+export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps) => {
   const { t } = useTranslation('os');
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const devices = useDevices();
@@ -73,9 +73,11 @@ export const DevicesContainer = ({
                   })}
                 </List>
               </ControlFrameItem>
-              <ControlFrameItem title='Add device'>
-                <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-              </ControlFrameItem>
+              {createInvitationUrl && (
+                <ControlFrameItem title='Add device'>
+                  <DeviceInvitation createInvitationUrl={createInvitationUrl} />
+                </ControlFrameItem>
+              )}
             </ControlFrame>
           </ControlSection>
           <ControlSection
@@ -256,11 +258,16 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <span id={qrLabel} className='sr-only'>
           {t('qr label')}
         </span>
-        <Clipboard.Button value={url ?? 'never'} />
       </div>
-      <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
-      </Button>
+      {/* TODO(burdon): Factor out button bar */}
+      <div className='flex justify-center'>
+        <div className='flex gap-2'>
+          <Clipboard.Button value={url ?? 'never'} />
+          <Button variant='ghost' onClick={onCancel}>
+            {t('cancel label')}
+          </Button>
+        </div>
+      </div>
     </>
   );
 };

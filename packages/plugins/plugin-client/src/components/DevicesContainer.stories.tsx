@@ -42,4 +42,8 @@ export default meta;
 
 type Story = StoryObj<typeof DevicesContainer>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    createInvitationUrl: () => 'https://example.com',
+  },
+};

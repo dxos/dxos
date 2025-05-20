@@ -47,28 +47,35 @@ export const huePalettes = {
 };
 
 /**
+ *  #F0F0F1
+ * #F0F0F1
+ */
+
+/**
  * The keyPoint represents the LCH value (Lightness: 0-1, Chroma: 0-1, Hue: 0-360 [0=Red, 120=Green, 240=Blue]).
- * https://oklch.com/#47,0,86.52,100
  *
  * NOTE: Rebuild the theme and restart the dev server to see changes.
  *
- * Theme references
+ * Theme references:
+ * https://oklch.com
  * https://colorsublime.github.io
  * https://github.com/microsoft/vscode-docs/blob/main/api/extension-guides/color-theme.md#create-a-new-color-theme
  * https://raw.githubusercontent.com/microsoft/vscode/main/src/vs/workbench/services/themes/common/colorThemeSchema.ts
  */
 const systemPalettes = {
   neutral: {
-    keyPoint: [0, 0.01, 259.99], // Cold
-    // keyPoint: [0.47, 0.004, 86.52], // Warm
+    keyPoint: [0, 0.01, 260],
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,
     // Values used directly which were found in the audit.
     values: [25, 75, 100, 150, 250, 300, 500, 700, 750, 800, 850, 900],
   } satisfies PhysicalPalette,
+
   primary: {
-    keyPoint: [0.5262, 0.196, 259.99],
+    // https://oklch.com/#0.5,0.2,260,100 (#0559d2)
+    keyPoint: [0.5, 0.2, 260],
+    // keyPoint: [0.5262, 0.196, 260],
     lowerCp: 0.86,
     upperCp: 1,
     torsion: -30,

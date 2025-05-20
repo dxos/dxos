@@ -219,7 +219,7 @@ type Alias =
 
 const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName }> = {
   baseSurface: { root: 'surface-20', attention: 'surface-0' },
-  groupSurface: { root: 'surface-60', attention: 'surface-40' },
+  groupSurface: { root: 'surface-50', attention: 'surface-40' },
   sidebarSurface: { root: 'surface-30' },
   modalSurface: { root: 'surface-50' },
   headerSurface: { root: 'surface-30', attention: 'surface-20' },
