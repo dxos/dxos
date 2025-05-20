@@ -98,7 +98,7 @@ describe('Embeddings', () => {
 });
 
 const TEST_ARTICLES = {
-  marineLife: TestData.DOCUMENTS.marineLife.doc.data.content,
-  warsawWeather: TestData.DOCUMENTS.warsawWeather.doc.data.content,
-  developmentsInBiomedicine: TestData.DOCUMENTS.developmentsInBiomedicine.doc.data.content,
+  marineLife: TestData.ARTICLES.marineLife.doc.data.content,
+  warsawWeather: TestData.ARTICLES.warsawWeather.doc.data.content,
+  developmentsInBiomedicine: TestData.ARTICLES.developmentsInBiomedicine.doc.data.content,
 };

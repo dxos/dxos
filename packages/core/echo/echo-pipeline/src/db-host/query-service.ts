@@ -119,8 +119,8 @@ export class QueryServiceImpl extends Resource implements QueryService {
           if (changed) {
             query.sendResults(query.state.getResults());
           }
-        } catch (error) {
-          log.catch(error);
+        } catch (error: any) {
+          close(error);
         }
       });
 

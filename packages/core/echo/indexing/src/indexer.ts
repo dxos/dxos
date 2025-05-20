@@ -9,13 +9,15 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
 import { IndexConstructors } from './indexes';
 import { IndexingEngine } from './indexing-engine';
 import { type IndexMetadataStore, type IndexStore } from './store';
 import { type FindResult, type IdToHeads, type IndexQuery, type ObjectSnapshot } from './types';
+import { raise } from '@dxos/debug';
+import { InternalError } from '@dxos/errors';
 
 const DEFAULT_INDEX_UPDATE_BATCH_SIZE = 100;
 
@@ -166,13 +168,28 @@ export class Indexer extends Resource {
     log.catch(err);
   }
 
+  // TODO(dmaretskyi): Allow consumers to get specific index instances and query them directly.
   @synchronized
   async execQuery(filter: IndexQuery): Promise<FindResult[]> {
     if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
       throw new Error('Indexer is not initialized or not enabled');
     }
-    const arraysOfIds = await Promise.all(this._engine.indexes.map((index) => index.find(filter)));
-    return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
+
+    if (filter.graph) {
+      const graphIndex = this._engine.getIndex({ kind: IndexKind.Kind.GRAPH });
+      if (!graphIndex) {
+        // TODO(dmaretskyi): This shouldn't be the default?
+        return [];
+      }
+      return graphIndex.find(filter);
+    } else {
+      const typenameIndex = this._engine.getIndex({ kind: IndexKind.Kind.SCHEMA_MATCH });
+      if (!typenameIndex) {
+        // TODO(dmaretskyi): This shouldn't be the default?
+        return [];
+      }
+      return typenameIndex.find(filter);
+    }
   }
 
   @trace.span({ showInBrowserTimeline: true })
