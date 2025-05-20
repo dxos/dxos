@@ -6,6 +6,7 @@ import * as Orama from '@orama/orama';
 import { describe, expect, test } from 'vitest';
 
 describe('Orama', () => {
+  // TODO(dmaretskyi): Get those from the test data.
   const typename = '@example.org/schema/product';
   const objects = [
     {
@@ -171,5 +172,35 @@ describe('Orama', () => {
     expect(result.hits.length).to.equal(objects.length);
   });
 
-  // TODO(dmaretskyi): Add a test to serialize the index, then deserialize and update it.
+  test('reload orama', async () => {
+    const orama = await Orama.create({
+      schema: {
+        title: 'string',
+      },
+    });
+    await Orama.insert(orama, {
+      title: 'Oranges',
+    });
+    await Orama.insert(orama, {
+      title: 'Apples',
+    });
+    expect((await Orama.search(orama, { term: 'Oranges' })).count).to.equal(1);
+    expect((await Orama.search(orama, { term: 'Apples' })).count).to.equal(1);
+
+    const serialized = await Orama.save(orama);
+    {
+      const orama = await Orama.create({
+        schema: {
+          title: 'string',
+        },
+      });
+      await Orama.load(orama, serialized);
+      await Orama.insert(orama, {
+        title: 'Bananas',
+      });
+      expect((await Orama.search(orama, { term: 'Oranges' })).count).to.equal(1);
+      expect((await Orama.search(orama, { term: 'Apples' })).count).to.equal(1);
+      expect((await Orama.search(orama, { term: 'Bananas' })).count).to.equal(1);
+    }
+  });
 });
