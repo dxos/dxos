@@ -38,7 +38,7 @@ import {
   createIdFromSpaceKey,
   encodeReference,
   type ObjectStructure,
-  type SpaceDoc,
+  type DatabaseDirectory,
 } from '@dxos/echo-protocol';
 import { ObjectId, getTypeReference } from '@dxos/echo-schema';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
@@ -180,7 +180,7 @@ export class DataSpaceManager extends Resource {
         return Array.from(this._spaces.values()).map((space) => {
           const rootUrl = space.automergeSpaceState.rootUrl;
           const rootHandle = rootUrl ? this._echoHost.automergeRepo.find(rootUrl as AutomergeUrl) : undefined;
-          const rootDoc = rootHandle?.docSync() as Doc<SpaceDoc> | undefined;
+          const rootDoc = rootHandle?.docSync() as Doc<DatabaseDirectory> | undefined;
 
           const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
 
@@ -283,7 +283,7 @@ export class DataSpaceManager extends Resource {
     let root: DatabaseRoot;
     if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
-      const rootDocHandle = await this._echoHost.loadDoc<SpaceDoc>(Context.default(), newRootDocId);
+      const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), newRootDocId);
       DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
 
       root = await this._echoHost.openSpaceRoot(spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
@@ -350,7 +350,7 @@ export class DataSpaceManager extends Resource {
     };
 
     const propertiesId = ObjectId.random();
-    document.change((doc: SpaceDoc) => {
+    document.change((doc: DatabaseDirectory) => {
       setDeep(doc, ['objects', propertiesId], properties);
     });
 
@@ -358,10 +358,10 @@ export class DataSpaceManager extends Resource {
     return space;
   }
 
-  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<SpaceDoc>> {
+  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
+    const document = this._echoHost.automergeRepo.find<DatabaseDirectory>(automergeIndex as any);
     await document.whenReady();
     return document;
   }

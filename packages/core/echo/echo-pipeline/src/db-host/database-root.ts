@@ -9,13 +9,13 @@ import {
   type DocHandle,
   type DocumentId,
 } from '@dxos/automerge/automerge-repo';
-import { SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
+import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
 
 export class DatabaseRoot {
-  static mapLinks(doc: DocHandle<SpaceDoc>, mapping: Record<DocumentId, DocumentId>): void {
+  static mapLinks(doc: DocHandle<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {
     doc.change((d) => {
       if (!d.links) {
         return;
@@ -29,7 +29,7 @@ export class DatabaseRoot {
     });
   }
 
-  constructor(private readonly _rootHandle: DocHandle<SpaceDoc>) {}
+  constructor(private readonly _rootHandle: DocHandle<DatabaseDirectory>) {}
 
   get documentId(): DocumentId {
     return this._rootHandle.documentId;
@@ -43,11 +43,11 @@ export class DatabaseRoot {
     return !!this._rootHandle.docSync();
   }
 
-  get handle(): DocHandle<SpaceDoc> {
+  get handle(): DocHandle<DatabaseDirectory> {
     return this._rootHandle;
   }
 
-  docSync(): A.Doc<SpaceDoc> | null {
+  docSync(): A.Doc<DatabaseDirectory> | null {
     return this._rootHandle.docSync() ?? null;
   }
 
@@ -66,7 +66,7 @@ export class DatabaseRoot {
       return null;
     }
 
-    return SpaceDoc.getSpaceKey(doc);
+    return DatabaseDirectory.getSpaceKey(doc);
   }
 
   getInlineObjectCount(): number | null {

@@ -7,7 +7,7 @@ import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
-import { SpaceDoc } from '@dxos/echo-protocol';
+import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
@@ -162,13 +162,13 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
     /** visited automerge handles */
     const visited = new Set<string>();
 
-    async function* getObjectsFromHandle(handle: DocHandle<SpaceDoc>): AsyncGenerator<ObjectSnapshot[]> {
+    async function* getObjectsFromHandle(handle: DocHandle<DatabaseDirectory>): AsyncGenerator<ObjectSnapshot[]> {
       if (visited.has(handle.documentId)) {
         return;
       }
       const doc = handle.docSync()!;
 
-      const spaceKey = SpaceDoc.getSpaceKey(doc) ?? undefined;
+      const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
 
       if (doc.objects) {
         yield Object.entries(doc.objects as { [key: string]: any }).map(([objectId, object]) => {
@@ -186,7 +186,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           if (visited.has(urlString)) {
             continue;
           }
-          const linkHandle = await automergeHost.loadDoc<SpaceDoc>(Context.default(), urlString as DocumentId);
+          const linkHandle = await automergeHost.loadDoc<DatabaseDirectory>(Context.default(), urlString as DocumentId);
           for await (const result of getObjectsFromHandle(linkHandle)) {
             yield result;
           }

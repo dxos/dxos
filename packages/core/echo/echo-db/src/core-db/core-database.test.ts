@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
+import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Expando, ObjectId, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -103,7 +103,7 @@ describe('CoreDatabase', () => {
       const db = await createClientDbInSpaceWithObject(object, (handles) => {
         const textHandle = handles.linkedDocHandles[0]!;
         expect(getObjectCore(object).docHandle?.url).to.eq(textHandle.url);
-        handles.spaceRootHandle.change((newDocument: SpaceDoc) => {
+        handles.spaceRootHandle.change((newDocument: DatabaseDirectory) => {
           newDocument.objects = textHandle.docSync()?.objects;
         });
         textHandle.change((newDocument: any) => {
@@ -420,11 +420,11 @@ const createTextObject = (content: string = ''): AnyLiveObject<{ content: string
 };
 
 interface DocumentHandles {
-  spaceRootHandle: DocHandleProxy<SpaceDoc>;
-  linkedDocHandles: DocHandleProxy<SpaceDoc>[];
+  spaceRootHandle: DocHandleProxy<DatabaseDirectory>;
+  linkedDocHandles: DocHandleProxy<DatabaseDirectory>[];
 }
 
-const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleProxy<SpaceDoc>, object: T): T => {
+const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleProxy<DatabaseDirectory>, object: T): T => {
   const data: any = { ...object };
   delete data.id;
   docHandle.change((newDoc: any) => {
@@ -434,6 +434,6 @@ const addObjectToDoc = <T extends { id: string }>(docHandle: DocHandleProxy<Spac
   return object;
 };
 
-const createTestRootDoc = (repo: RepoProxy): DocHandleProxy<SpaceDoc> => {
-  return repo.create<SpaceDoc>({ version: SpaceDocVersion.CURRENT });
+const createTestRootDoc = (repo: RepoProxy): DocHandleProxy<DatabaseDirectory> => {
+  return repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
 };

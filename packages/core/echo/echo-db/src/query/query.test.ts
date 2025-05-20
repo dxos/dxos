@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFin
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -198,7 +198,7 @@ describe('Queries', () => {
 
       expect((await db.query().run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
-      rootDocHandle.change((doc: SpaceDoc) => {
+      rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
       await db.flush();
@@ -233,10 +233,10 @@ describe('Queries', () => {
       expect((await db.query().run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
-      anotherDocHandle.change((doc: SpaceDoc) => {
+      anotherDocHandle.change((doc: DatabaseDirectory) => {
         doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.docSync().objects![obj1.id];
       });
-      rootDocHandle.change((doc: SpaceDoc) => {
+      rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = anotherDocHandle.url;
       });
       await db.flush();

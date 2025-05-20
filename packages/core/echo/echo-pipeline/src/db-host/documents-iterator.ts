@@ -5,7 +5,7 @@
 import * as A from '@dxos/automerge/automerge';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
-import { SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
+import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { type IdToHeads, type ObjectSnapshot } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -27,7 +27,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
     for (const [id, heads] of objects.entries()) {
       try {
         const { documentId, objectId } = objectPointerCodec.decode(id);
-        const handle = await automergeHost.loadDoc<SpaceDoc>(Context.default(), documentId as DocumentId);
+        const handle = await automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId);
 
         let doc = handle.docSync();
         invariant(doc);
@@ -61,7 +61,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
         // Upgrade V0 object pointers to V1.
         let newId = id;
         if (objectPointerCodec.getVersion(id) === ObjectPointerVersion.V0) {
-          const spaceKey = SpaceDoc.getSpaceKey(doc) ?? undefined;
+          const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
           newId = objectPointerCodec.encode({ documentId, objectId, spaceKey });
         }
 

@@ -4,12 +4,12 @@
 
 import { type Patch, next as A } from '@dxos/automerge/automerge';
 import { isValidAutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 
 import { type DocumentChanges } from './automerge-doc-loader';
 import { type ChangeEvent } from '../client';
 
-export const getInlineAndLinkChanges = (event: ChangeEvent<SpaceDoc>) => {
+export const getInlineAndLinkChanges = (event: ChangeEvent<DatabaseDirectory>) => {
   const inlineChangedObjectIds = new Set<string>();
   const linkedDocuments: DocumentChanges['linkedDocuments'] = {};
   for (const { path, value } of event.patches as (Patch & { value: any })[]) {

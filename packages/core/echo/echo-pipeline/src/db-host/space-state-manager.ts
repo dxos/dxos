@@ -7,7 +7,7 @@ import isEqual from 'lodash.isequal';
 import { Event, UpdateScheduler } from '@dxos/async';
 import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource, Context } from '@dxos/context';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 
 import { DatabaseRoot } from './database-root';
@@ -39,7 +39,7 @@ export class SpaceStateManager extends Resource {
     return this._rootBySpace.get(spaceId);
   }
 
-  async assignRootToSpace(spaceId: SpaceId, handle: DocHandle<SpaceDoc>): Promise<DatabaseRoot> {
+  async assignRootToSpace(spaceId: SpaceId, handle: DocHandle<DatabaseDirectory>): Promise<DatabaseRoot> {
     let root: DatabaseRoot;
     if (this._roots.has(handle.documentId)) {
       root = this._roots.get(handle.documentId)!;

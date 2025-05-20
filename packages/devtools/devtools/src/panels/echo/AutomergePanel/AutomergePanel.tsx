@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo } from 'react';
 
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -40,7 +40,7 @@ const textFilter = (text?: string) => {
   };
 };
 
-const getStoredObject = (doc: SpaceDoc | undefined): any => {
+const getStoredObject = (doc: DatabaseDirectory | undefined): any => {
   const [[id, object]] = Object.entries(doc?.objects ?? {});
   return { id, object };
 };
@@ -51,7 +51,7 @@ const getStoredObjectType = (data: Data): string | undefined => {
 
 type Data = {
   documentId: string;
-  accessor: () => SpaceDoc;
+  accessor: () => DatabaseDirectory;
   id: string;
 };
 
@@ -108,6 +108,6 @@ export const AutomergePanel = (props: { space?: Space }) => {
   );
 };
 
-const isSpaceRoot = (accessor: SpaceDoc) => {
+const isSpaceRoot = (accessor: DatabaseDirectory) => {
   return Object.keys(accessor?.links ?? {}).length > 0;
 };

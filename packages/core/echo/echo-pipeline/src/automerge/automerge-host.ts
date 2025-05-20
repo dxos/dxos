@@ -26,7 +26,7 @@ import {
   interpretAsDocumentId,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
-import { SpaceDoc, type CollectionId } from '@dxos/echo-protocol';
+import { DatabaseDirectory, type CollectionId } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -279,7 +279,7 @@ export class AutomergeHost extends Resource {
     if (headsToWait.length > 0) {
       await Promise.all(
         headsToWait.map(async (entry, index) => {
-          const handle = await this.loadDoc<SpaceDoc>(Context.default(), entry.documentId as DocumentId);
+          const handle = await this.loadDoc<DatabaseDirectory>(Context.default(), entry.documentId as DocumentId);
           await waitForHeads(handle, entry.heads!);
         }),
       );
@@ -344,7 +344,7 @@ export class AutomergeHost extends Resource {
     const heads = getHeads(doc);
     this._headsStore.setHeads(handle.documentId, heads, batch);
 
-    const spaceKey = SpaceDoc.getSpaceKey(doc) ?? undefined;
+    const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
       objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
@@ -395,7 +395,7 @@ export class AutomergeHost extends Resource {
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
     const doc = this._repo.handles[documentId as any]?.docSync();
     if (doc) {
-      const spaceKeyHex = SpaceDoc.getSpaceKey(doc);
+      const spaceKeyHex = DatabaseDirectory.getSpaceKey(doc);
       if (spaceKeyHex) {
         return PublicKey.from(spaceKeyHex);
       }
@@ -576,11 +576,11 @@ export class AutomergeHost extends Resource {
   }
 }
 
-const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
+const waitForHeads = async (handle: DocHandle<DatabaseDirectory>, heads: Heads) => {
   const unavailableHeads = new Set(heads);
 
   await handle.whenReady();
-  await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
+  await Event.wrap<DocHandleChangePayload<DatabaseDirectory>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
       if (changeIsPresentInDoc(handle.docSync()!, changeHash)) {

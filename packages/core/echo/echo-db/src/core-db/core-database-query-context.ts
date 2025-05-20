@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { isEncodedReference, type SpaceDoc } from '@dxos/echo-protocol';
+import { isEncodedReference, type DatabaseDirectory } from '@dxos/echo-protocol';
 import { type AnyObjectData } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
@@ -139,7 +139,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
       } satisfies QueryResultEntry;
     } else if (!FORCE_DATA_SERVICE_FETCH && result.documentAutomerge) {
       // Return snapshot from automerge CRDT.
-      const doc = A.load(result.documentAutomerge) as SpaceDoc;
+      const doc = A.load(result.documentAutomerge) as DatabaseDirectory;
 
       const object = doc.objects?.[result.id];
       if (!object) {

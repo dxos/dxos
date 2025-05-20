@@ -9,28 +9,34 @@ import { type AnyDocumentId, type DocumentId } from '@dxos/automerge/automerge-r
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { ObjectCore, migrateDocument, type RepoProxy, type DocHandleProxy } from '@dxos/echo-db';
-import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc, Reference } from '@dxos/echo-protocol';
+import {
+  SpaceDocVersion,
+  encodeReference,
+  type ObjectStructure,
+  type DatabaseDirectory,
+  Reference,
+} from '@dxos/echo-protocol';
 import { requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
 export class MigrationBuilder {
   private readonly _repo: RepoProxy;
-  private readonly _rootDoc: Doc<SpaceDoc>;
+  private readonly _rootDoc: Doc<DatabaseDirectory>;
 
   // echoId -> automergeUrl
   private readonly _newLinks: Record<string, string> = {};
   private readonly _flushIds: DocumentId[] = [];
   private readonly _deleteObjects: string[] = [];
 
-  private _newRoot?: DocHandleProxy<SpaceDoc> = undefined;
+  private _newRoot?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   constructor(private readonly _space: Space) {
     this._repo = this._space.db.coreDatabase._repo;
     // TODO(wittjosiah): Accessing private API.
     this._rootDoc = (this._space.db.coreDatabase as any)._automergeDocLoader
       .getSpaceRootDocHandle()
-      .docSync() as Doc<SpaceDoc>;
+      .docSync() as Doc<DatabaseDirectory>;
   }
 
   async findObject(id: string): Promise<ObjectStructure | undefined> {
@@ -41,7 +47,7 @@ export class MigrationBuilder {
     }
 
     await docHandle.whenReady();
-    const doc = docHandle.docSync() as Doc<SpaceDoc>;
+    const doc = docHandle.docSync() as Doc<DatabaseDirectory>;
     return doc.objects?.[id];
   }
 
@@ -59,7 +65,7 @@ export class MigrationBuilder {
     const oldHandle = await this._findObjectContainingHandle(id);
     invariant(oldHandle);
 
-    const newState: SpaceDoc = {
+    const newState: DatabaseDirectory = {
       version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
@@ -76,8 +82,8 @@ export class MigrationBuilder {
         },
       },
     };
-    const migratedDoc = migrateDocument(oldHandle.docSync() as Doc<SpaceDoc>, newState);
-    const newHandle = this._repo.import<SpaceDoc>(am.save(migratedDoc));
+    const migratedDoc = migrateDocument(oldHandle.docSync() as Doc<DatabaseDirectory>, newState);
+    const newHandle = this._repo.import<DatabaseDirectory>(am.save(migratedDoc));
     this._newLinks[id] = newHandle.url;
     this._addHandleToFlushList(newHandle);
   }
@@ -101,7 +107,7 @@ export class MigrationBuilder {
     }
     invariant(this._newRoot, 'New root not created');
 
-    this._newRoot.change((doc: SpaceDoc) => {
+    this._newRoot.change((doc: DatabaseDirectory) => {
       const propertiesStructure = doc.objects?.[this._space.properties.id];
       propertiesStructure && changeFn(propertiesStructure);
     });
@@ -126,7 +132,7 @@ export class MigrationBuilder {
     });
   }
 
-  private async _findObjectContainingHandle(id: string): Promise<DocHandleProxy<SpaceDoc> | undefined> {
+  private async _findObjectContainingHandle(id: string): Promise<DocHandleProxy<DatabaseDirectory> | undefined> {
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
@@ -147,7 +153,7 @@ export class MigrationBuilder {
       links[id] = new am.RawString(url);
     }
 
-    this._newRoot = this._repo.create<SpaceDoc>({
+    this._newRoot = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
@@ -166,7 +172,7 @@ export class MigrationBuilder {
 
     core.initNewObject(props);
     core.setType(requireTypeReference(schema));
-    const newHandle = this._repo.create<SpaceDoc>({
+    const newHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),

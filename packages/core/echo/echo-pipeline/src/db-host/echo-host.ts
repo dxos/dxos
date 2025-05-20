@@ -11,7 +11,7 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource, type Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
+import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -224,7 +224,7 @@ export class EchoHost extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
-    const automergeRoot = this._automergeHost.createDoc<SpaceDoc>({
+    const automergeRoot = this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: spaceKey.toHex() },
 
@@ -241,7 +241,7 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = this._automergeHost.repo.find<SpaceDoc>(automergeUrl);
+    const handle = this._automergeHost.repo.find<DatabaseDirectory>(automergeUrl);
 
     return this._spaceStateManager.assignRootToSpace(spaceId, handle);
   }

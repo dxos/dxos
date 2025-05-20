@@ -15,7 +15,7 @@ export type SpaceState = {
 };
 
 // TODO(dmaretskyi): Rename DatabaseRootDoc.
-export interface SpaceDoc {
+export interface DatabaseDirectory {
   version?: SpaceDocVersion;
 
   access?: {
@@ -41,11 +41,11 @@ export interface SpaceDoc {
   experimental_spaceKey?: string;
 }
 
-export const SpaceDoc = Object.freeze({
+export const DatabaseDirectory = Object.freeze({
   /**
    * @returns Space key in hex of the space that owns the document. In hex format. Without 0x prefix.
    */
-  getSpaceKey: (doc: SpaceDoc): string | null => {
+  getSpaceKey: (doc: DatabaseDirectory): string | null => {
     // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
     const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
     if (rawSpaceKey == null) {
