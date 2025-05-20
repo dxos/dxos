@@ -138,7 +138,6 @@ export class IndexingEngine extends Resource {
     this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
     this._newIndexes.length = 0; // Clear new indexes.
     await this._saveIndexes();
-    // this.updated.emit();
   }
 
   /**

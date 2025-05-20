@@ -60,7 +60,7 @@ export class IndexGraph extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async update(id: string, object: Partial<ObjectStructure>): Promise<boolean> {
+  async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean> {
     throw new Error('Not implemented');
 
     //   if (this._refs.get(getTypeFromObject(object))?.has(id)) {
@@ -69,7 +69,7 @@ export class IndexGraph extends Resource implements Index {
     //   defaultMap(this._refs, getTypeFromObject(object), new Set()).add(id);
     //   return true;
   }
-  async remove(id: string) {
+  async remove(id: ObjectPointerEncoded) {
     throw new Error('Not implemented');
     // for (const [_, ids] of this._refs.entries()) {
     //   if (ids.has(id)) {

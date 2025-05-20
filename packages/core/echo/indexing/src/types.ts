@@ -69,8 +69,8 @@ export interface Index {
   /**
    * @returns {Promise<boolean>} true if the object was updated, false otherwise.
    */
-  update(id: string, object: Partial<ObjectStructure>): Promise<boolean>;
-  remove(id: string): Promise<void>;
+  update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean>;
+  remove(id: ObjectPointerEncoded): Promise<void>;
 
   // TODO(dmaretskyi): Remove from interface -- Each index has its own query api.
   find(filter: IndexQuery): Promise<FindResult[]>;

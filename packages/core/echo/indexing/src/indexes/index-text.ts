@@ -20,6 +20,7 @@ import {
   type LoadParams,
   type FindResult,
 } from '../types';
+import type { ObjectPointerEncoded } from '@dxos/protocols';
 
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;
@@ -54,11 +55,11 @@ export class IndexText extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async update(id: string, object: Partial<ObjectStructure>): Promise<boolean> {
+  async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
 
-  async remove(id: string) {
+  async remove(id: ObjectPointerEncoded) {
     invariant(this._orama, 'Index is not initialized');
     await Orama.remove(this._orama, id);
   }
