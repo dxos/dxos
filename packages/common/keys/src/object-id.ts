@@ -14,6 +14,7 @@ export type ObjectId = typeof ObjectIdSchema.Type;
 
 export interface ObjectIdClass extends Schema.SchemaClass<ObjectId, string> {
   isValid(id: string): id is ObjectId;
+  make(id: string): ObjectId;
   random(): ObjectId;
 }
 

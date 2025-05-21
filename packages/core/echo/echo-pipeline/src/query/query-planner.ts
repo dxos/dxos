@@ -37,7 +37,7 @@ export class QueryPlanner {
     return plan;
   }
 
-  _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
+  private _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
     switch (query.type) {
       case 'options':
         return this._generateOptionsClause(query, context);
