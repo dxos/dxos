@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "effect": "3.14.21",
     "@dxos/crypto": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

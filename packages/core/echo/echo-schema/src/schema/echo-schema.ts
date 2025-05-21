@@ -2,10 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
+import { ObjectId } from '@dxos/keys';
+import {
+  getTypeAnnotation,
+  SchemaMetaSymbol,
+  schemaVariance,
+  type JsonSchemaType,
+  type SchemaMeta,
+  type TypeAnnotation,
+} from '../ast';
+import { toEffectSchema, toJsonSchema } from '../json';
+import { type TypedObject, type TypedObjectPrototype } from '../object';
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
@@ -15,16 +26,6 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import {
-  getTypeAnnotation,
-  schemaVariance,
-  type JsonSchemaType,
-  type TypeAnnotation,
-  type SchemaMeta,
-  SchemaMetaSymbol,
-} from '../ast';
-import { toEffectSchema, toJsonSchema } from '../json';
-import { type ObjectId, type TypedObject, type TypedObjectPrototype } from '../object';
 
 /**
  * Base schema type.
