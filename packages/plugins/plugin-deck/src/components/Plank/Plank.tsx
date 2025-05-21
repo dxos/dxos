@@ -76,17 +76,18 @@ const PlankComponent = memo(
     const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
     const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
+    const rootElement = useRef<HTMLDivElement | null>(null);
+
     const { variant } = parseEntryId(id);
     const sizeKey = `${id.split('+')[0]}${variant ? `${ATTENDABLE_PATH_SEPARATOR}${variant}` : ''}`;
     const size = deck.plankSizing[sizeKey] as number | undefined;
-    const setSize = useCallback(
+
+    const handleSizeChange = useCallback(
       debounce((nextSize: number) => {
         return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: sizeKey, size: nextSize }));
       }, 200),
       [dispatch, sizeKey],
     );
-
-    const rootElement = useRef<HTMLDivElement | null>(null);
 
     // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -129,7 +130,7 @@ const PlankComponent = memo(
     const placeholder = useMemo(() => <PlankLoading />, []);
 
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
-    const className = mx(
+    const classNames = mx(
       'attention-surface relative',
       isSolo && mainIntrinsicSize,
       isSolo && railGridHorizontal,
@@ -148,12 +149,12 @@ const PlankComponent = memo(
         data-testid='deck.plank'
         tabIndex={0}
         {...(part.startsWith('solo')
-          ? ({ ...sizeAttrs, className } as any)
+          ? ({ ...sizeAttrs, className: classNames } as any)
           : {
               item: { id },
               size,
-              onSizeChange: setSize,
-              classNames: className,
+              onSizeChange: handleSizeChange,
+              classNames,
               order,
               role: 'article',
             })}
@@ -198,14 +199,14 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
   companionId?: string;
 };
 
-export const Plank = ({ id = UNKNOWN_ID, ...props }: PlankProps) => {
+export const Plank = ({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
-  const currentCompanion = companions.find(({ id }) => id === props.companionId);
+  const currentCompanion = companions.find(({ id }) => id === companionId);
 
   // TODO(burdon): Causes unmount when switching between solo and split.
-  if (props.companionId && currentCompanion) {
+  if (companionId && currentCompanion) {
     const Root = props.part === 'solo' ? SplitFrame : Fragment;
     return (
       <Root>
@@ -217,13 +218,13 @@ export const Plank = ({ id = UNKNOWN_ID, ...props }: PlankProps) => {
           {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
         />
         <PlankComponent
-          id={props.companionId}
+          id={companionId}
           node={currentCompanion}
           primary={node}
           companions={companions}
           companioned='companion'
           {...props}
-          {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: props.order! + 1 })}
+          {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
         />
       </Root>
     );
