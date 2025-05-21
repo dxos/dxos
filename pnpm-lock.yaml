@@ -1663,6 +1663,12 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
+      ulidx:
+        specifier: ^2.3.0
+        version: 2.3.0
     devDependencies:
       base32-decode:
         specifier: ^1.0.0
@@ -2758,9 +2764,6 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
-      ulidx:
-        specifier: ^2.3.0
-        version: 2.3.0
 
   packages/core/echo/echo-signals:
     dependencies:
@@ -2895,9 +2898,6 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
-      ulidx:
-        specifier: ^2.3.0
-        version: 2.3.0
 
   packages/core/functions:
     dependencies:
@@ -4722,9 +4722,6 @@ importers:
       parsimmon:
         specifier: ^1.18.1
         version: 1.18.1
-      ulidx:
-        specifier: ^2.3.0
-        version: 2.3.0
     devDependencies:
       '@types/parsimmon':
         specifier: ^1.10.9

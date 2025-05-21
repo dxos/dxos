@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, JSONSchema, Option, Schema, type Types } from 'effect';
+import { JSONSchema, Option, Schema, SchemaAST, type Types } from 'effect';
 import type { Mutable } from 'effect/Types';
 
 import { raise } from '@dxos/debug';
@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { clearUndefined, orderKeys } from '@dxos/util';
 
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
+import { ObjectId } from '@dxos/keys';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
@@ -26,8 +26,9 @@ import {
   type JsonSchemaType,
   type TypeAnnotation,
 } from '../ast';
-import { Expando, ObjectId } from '../object';
+import { Expando } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 
 /**
  * Create object jsonSchema.

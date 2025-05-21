@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { DXN, ForeignKeySchema, ObjectId } from '@dxos/echo-schema';
+import { DXN, ForeignKeySchema } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/keys';
 
 const TypenameSpecifier = Schema.Union(DXN, Schema.Null).annotations({
   description: 'DXN or null. Null means any type will match',
