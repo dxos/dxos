@@ -400,9 +400,12 @@ export class AutomergeHost extends Resource {
   }
 
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
-    const doc = this._repo.handles[documentId as any]?.doc();
-    if (doc) {
-      const spaceKeyHex = getSpaceKeyFromDoc(doc);
+    const handle = this._repo.handles[documentId as any];
+    if (handle.state === 'loading') {
+      await handle.whenReady();
+    }
+    if (handle && handle.isReady() && handle.doc()) {
+      const spaceKeyHex = getSpaceKeyFromDoc(handle.doc());
       if (spaceKeyHex) {
         return PublicKey.from(spaceKeyHex);
       }
