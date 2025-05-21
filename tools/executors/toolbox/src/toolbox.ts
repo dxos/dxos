@@ -384,7 +384,8 @@ export class Toolbox {
     );
 
     if (this.config.tsconfig?.pathMapping?.roots) {
-      const roots = this.config.tsconfig.pathMapping.roots;
+      // Each included package is also a root since the paths are used to run tests with vitest.
+      const roots = [...this.config.tsconfig.pathMapping.roots, ...includedPackages.map((p) => p.name)];
       if (!roots.every((root) => this.graph.hasPackage(root))) {
         throw new Error('Missing packages');
       }

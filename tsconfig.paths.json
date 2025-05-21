@@ -4,6 +4,18 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dxos/graph": [
+        "packages/common/graph/src/index.ts"
+      ],
+      "@dxos/local-storage": [
+        "packages/common/local-storage/src/index.ts"
+      ],
+      "@dxos/storybook-utils": [
+        "packages/common/storybook-utils/src/index.ts"
+      ],
+      "@dxos/agent": [
+        "packages/core/agent/src/index.ts"
+      ],
       "@dxos/compute": [
         "packages/core/compute/src/index.ts"
       ],
@@ -16,6 +28,57 @@
       "@dxos/conductor/testing": [
         "packages/core/conductor/src/testing/index.ts"
       ],
+      "@dxos/echo": [
+        "packages/core/echo/echo/src/index.ts"
+      ],
+      "@dxos/echo-db": [
+        "packages/core/echo/echo-db/src/index.ts"
+      ],
+      "@dxos/echo-db/testing": [
+        "packages/core/echo/echo-db/src/testing/index.ts"
+      ],
+      "@dxos/echo-generator": [
+        "packages/core/echo/echo-generator/src/index.ts"
+      ],
+      "@dxos/echo-pipeline": [
+        "packages/core/echo/echo-pipeline/src/index.ts"
+      ],
+      "@dxos/echo-pipeline/testing": [
+        "packages/core/echo/echo-pipeline/src/testing/index.ts"
+      ],
+      "@dxos/echo-protocol": [
+        "packages/core/echo/echo-protocol/src/index.ts"
+      ],
+      "@dxos/echo-query": [
+        "packages/core/echo/echo-query/src/index.ts"
+      ],
+      "@dxos/echo-schema": [
+        "packages/core/echo/echo-schema/src/index.ts"
+      ],
+      "@dxos/echo-schema/testing": [
+        "packages/core/echo/echo-schema/src/testing/index.ts"
+      ],
+      "@dxos/echo-signals/core": [
+        "packages/core/echo/echo-signals/src/core.ts"
+      ],
+      "@dxos/echo-signals": [
+        "packages/core/echo/echo-signals/src/index.ts"
+      ],
+      "@dxos/echo-signals/react": [
+        "packages/core/echo/echo-signals/src/react.ts"
+      ],
+      "@dxos/echo-signals/runtime": [
+        "packages/core/echo/echo-signals/src/runtime/index.ts"
+      ],
+      "@dxos/indexing": [
+        "packages/core/echo/indexing/src/index.ts"
+      ],
+      "@dxos/live-object": [
+        "packages/core/echo/live-object/src/index.ts"
+      ],
+      "@dxos/live-object/testing": [
+        "packages/core/echo/live-object/src/testing/index.ts"
+      ],
       "@dxos/functions/bundler": [
         "packages/core/functions/src/bundler/index.ts"
       ],
@@ -27,6 +90,12 @@
       ],
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
+      ],
+      "@dxos/artifact": [
+        "packages/experimental/artifact/src/index.ts"
+      ],
+      "@dxos/artifact/testing": [
+        "packages/experimental/artifact/src/testing/index.ts"
       ],
       "@dxos/artifact-testing": [
         "packages/experimental/artifact-testing/src/index.ts"
@@ -274,8 +343,86 @@
       "@dxos/app-graph": [
         "packages/sdk/app-graph/src/index.ts"
       ],
+      "@dxos/client/devtools": [
+        "packages/sdk/client/src/devtools/index.ts"
+      ],
+      "@dxos/client/echo": [
+        "packages/sdk/client/src/echo/index.ts"
+      ],
+      "@dxos/client/edge": [
+        "packages/sdk/client/src/edge/index.ts"
+      ],
+      "@dxos/client/halo": [
+        "packages/sdk/client/src/halo/index.ts"
+      ],
+      "@dxos/client": [
+        "packages/sdk/client/src/index.ts"
+      ],
+      "@dxos/client/invitations": [
+        "packages/sdk/client/src/invitations/index.ts"
+      ],
+      "@dxos/client/mesh": [
+        "packages/sdk/client/src/mesh/index.ts"
+      ],
+      "@dxos/client/testing": [
+        "packages/sdk/client/src/testing/index.ts"
+      ],
+      "@dxos/client/worker": [
+        "packages/sdk/client/src/worker/index.ts"
+      ],
+      "@dxos/client-protocol": [
+        "packages/sdk/client-protocol/src/index.ts"
+      ],
+      "@dxos/client-services": [
+        "packages/sdk/client-services/src/index.ts"
+      ],
+      "@dxos/client-services/testing": [
+        "packages/sdk/client-services/src/testing/index.ts"
+      ],
       "@dxos/migrations": [
         "packages/sdk/migrations/src/index.ts"
+      ],
+      "@dxos/observability": [
+        "packages/sdk/observability/src/index.ts"
+      ],
+      "@dxos/observability/segment": [
+        "packages/sdk/observability/src/segment/index.ts"
+      ],
+      "@dxos/observability/sentry": [
+        "packages/sdk/observability/src/sentry/index.ts"
+      ],
+      "@dxos/react-client/devtools": [
+        "packages/sdk/react-client/src/devtools/index.ts"
+      ],
+      "@dxos/react-client/echo": [
+        "packages/sdk/react-client/src/echo/index.ts"
+      ],
+      "@dxos/react-client/halo": [
+        "packages/sdk/react-client/src/halo/index.ts"
+      ],
+      "@dxos/react-client": [
+        "packages/sdk/react-client/src/index.ts"
+      ],
+      "@dxos/react-client/invitations": [
+        "packages/sdk/react-client/src/invitations/index.ts"
+      ],
+      "@dxos/react-client/mesh": [
+        "packages/sdk/react-client/src/mesh/index.ts"
+      ],
+      "@dxos/react-client/testing": [
+        "packages/sdk/react-client/src/testing/index.ts"
+      ],
+      "@dxos/react-client/worker": [
+        "packages/sdk/react-client/src/worker.ts"
+      ],
+      "@dxos/react-edge-client": [
+        "packages/sdk/react-edge-client/src/index.ts"
+      ],
+      "@dxos/schema": [
+        "packages/sdk/schema/src/index.ts"
+      ],
+      "@dxos/schema/testing": [
+        "packages/sdk/schema/src/testing/index.ts"
       ],
       "@dxos/shell/react": [
         "packages/sdk/shell/src/react.ts"

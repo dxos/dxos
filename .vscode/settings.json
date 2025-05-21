@@ -53,6 +53,7 @@
   "debug.javascript.terminalOptions": {},
   "circleci.persistedProjectSelection": [],
   "vitest.disableWorkspaceWarning": true,
+  "vitest.rootConfig": "vitest.all.config.ts",
   "typescript.preferences.autoImportSpecifierExcludeRegexes": [
     "^.*/src/.*$",
     "node:console",
