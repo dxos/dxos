@@ -43,15 +43,17 @@ CallAudio.displayName = 'CallAudio';
 // Room
 //
 
-type CallGridProps = {};
+type CallGridProps = {
+  fullscreen?: boolean;
+};
 
-const CallGrid: FC<CallGridProps> = () => {
+const CallGrid: FC<CallGridProps> = ({ fullscreen }) => {
   const debug = useDebugMode();
   const call = useCapability(MeetingCapabilities.CallManager);
 
   return (
     <div className='grid grow p-4 dark:bg-neutral-900'>
-      <ParticipantGrid self={call.self} users={call.users} debug={debug} />
+      <ParticipantGrid self={call.self} users={call.users} debug={debug} fullscreen={fullscreen} />
     </div>
   );
 };

@@ -68,7 +68,7 @@ export const ResponsiveGridItem = <T extends object = any>({
     } else {
       const timeout = setTimeout(() => {
         setSpeakingIndicator(false);
-      }, 2_000);
+      }, 1_000);
       return () => clearTimeout(timeout);
     }
   }, [speaking]);

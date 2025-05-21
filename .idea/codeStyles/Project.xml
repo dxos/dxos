@@ -32,9 +32,6 @@
       <option name="IMPORT_SORT_MODULE_NAME" value="true" />
       <option name="BLACKLIST_IMPORTS" value="rxjs/Rx,node_modules/**,**/node_modules/**,@angular/material,@angular/material/typings/**,**/src/**" />
     </TypeScriptCodeStyleSettings>
-    <editorconfig>
-      <option name="ENABLED" value="false" />
-    </editorconfig>
     <codeStyleSettings language="CSS">
       <indentOptions>
         <option name="INDENT_SIZE" value="2" />
