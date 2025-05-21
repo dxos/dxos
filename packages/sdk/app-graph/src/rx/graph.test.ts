@@ -269,6 +269,49 @@ describe('RxGraph', () => {
     });
   });
 
+  test('subscribe to json', () => {
+    const registry = Registry.make();
+    const graph = new Graph({ registry });
+
+    graph.addNode({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test' },
+        { id: 'test2', type: 'test' },
+      ],
+    });
+    graph.addEdge({ source: 'test1', target: 'test2' });
+
+    let json: any;
+    const cancel = registry.subscribe(graph.json(), (_) => {
+      json = _;
+    });
+    onTestFinished(() => cancel());
+
+    registry.get(graph.json());
+    expect(json).to.deep.equal({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
+        { id: 'test2', type: 'test' },
+      ],
+    });
+
+    graph.addNode({ id: 'test3', type: 'test' });
+    graph.addEdge({ source: 'root', target: 'test3' });
+    expect(json).to.deep.equal({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      nodes: [
+        { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
+        { id: 'test2', type: 'test' },
+        { id: 'test3', type: 'test' },
+      ],
+    });
+  });
+
   test('get path', () => {
     const graph = new Graph();
     graph.addNode({

@@ -9,11 +9,11 @@ import { Capabilities, contributes, createIntent, type PluginContext } from '@dx
 import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
+import { createExtension, ROOT_ID, rxFromObservable } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { COMPOSER_SPACE_LOCK, rxFromQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
-import { Query, type QueryResult, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
+import { Query, type QueryResult, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
@@ -144,11 +144,14 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) =>
-              isInstanceOf(MeetingType, node.data) && !getSpace(node.data)?.properties[COMPOSER_SPACE_LOCK]
-                ? Option.some(node.data)
-                : Option.none(),
-            ),
+            Option.flatMap((node) => (isInstanceOf(MeetingType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((meeting) => {
+              const space = getSpace(meeting);
+              const state = space && get(rxFromObservable(space.state));
+              return space && state === SpaceState.SPACE_READY && !space.properties[COMPOSER_SPACE_LOCK]
+                ? Option.some(meeting)
+                : Option.none();
+            }),
             Option.map((meeting) => [
               {
                 id: `${fullyQualifiedId(meeting)}/action/share-meeting-link`,

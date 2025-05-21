@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Record } from 'effect';
+import { Option, Record } from 'effect';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { flattenExtensions, GraphBuilder, type ReadableGraph, ROOT_ID } from '@dxos/app-graph';
@@ -28,8 +28,14 @@ export default async (context: PluginContext) => {
   // TODO(wittjosiah): This is currently required to initialize the above subscription.
   registry.get(context.capabilities(Capabilities.AppGraphBuilder));
 
+  // TODO(wittjosiah): Stop expanding the graph eagerly.
+  builder.graph.onNodeChanged.on(({ id, node }) => {
+    if (Option.isSome(node)) {
+      builder.graph.expand(id);
+    }
+  });
   // await builder.initialize();
-  await builder.graph.expand(ROOT_ID);
+  builder.graph.expand(ROOT_ID);
 
   setupDevtools(builder.graph);
 

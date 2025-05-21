@@ -5,7 +5,6 @@
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { untracked } from '@preact/signals-core';
-import { Array, pipe } from 'effect';
 import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
 import {
@@ -56,11 +55,7 @@ const filterItems = (node: Node, disposition?: string) => {
 };
 
 const getItems = (graph: ReadableGraph, node?: Node, disposition?: string) => {
-  return pipe(
-    node?.id ?? ROOT_ID,
-    graph.getConnections,
-    Array.filter((node) => filterItems(node, disposition)),
-  );
+  return graph.getConnections(node?.id ?? ROOT_ID, 'outbound').filter((node) => filterItems(node, disposition));
 };
 
 const useItems = (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
@@ -105,22 +100,24 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [graph],
   );
 
-  const loadDescendents = useCallback(
-    (node: Node) => {
-      graph.expand(node.id, 'outbound');
-      // Load one level deeper, which resolves some juddering observed on open/close.
-      graph.getConnections(node.id, 'outbound').forEach((child) => {
-        graph.expand(child.id, 'outbound');
-      });
-    },
-    [graph],
-  );
+  // TODO(wittjosiah): Graph is currently expanded eagerly. See graph plugin.
+  // const loadDescendents = useCallback(
+  //   (node: Node) => {
+  //     graph.expand(node.id, 'outbound');
+  //     // Load one level deeper, which resolves some juddering observed on open/close.
+  //     graph.getConnections(node.id, 'outbound').forEach((child) => {
+  //       graph.expand(child.id, 'outbound');
+  //     });
+  //   },
+  //   [graph],
+  // );
 
   const handleOpenChange = useCallback(
     ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
       // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
       setItem(path, 'open', open);
-      graph.expand(id, 'outbound');
+      // TODO(wittjosiah): Graph is currently expanded eagerly. See graph plugin.
+      // graph.expand(id, 'outbound');
     },
     [graph],
   );
@@ -287,7 +284,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       useItems,
       tab,
       getActions,
-      loadDescendents,
+      // loadDescendents,
       renderItemEnd,
       popoverAnchorId,
       topbar,
@@ -305,7 +302,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [
       tab,
       getActions,
-      loadDescendents,
+      // loadDescendents,
       renderItemEnd,
       popoverAnchorId,
       topbar,

@@ -103,9 +103,10 @@ export default (context: PluginContext) =>
             Option.map((meeting) => {
               const client = context.getCapability(ClientCapabilities.Client);
               const state = context.getCapability(TranscriptionCapabilities.MeetingTranscriptionState);
-              const settings = context
-                .getCapability(Capabilities.SettingsStore)
-                .getStore<TranscriptionSettingsProps>(TRANSCRIPTION_PLUGIN)!.value;
+              const settingsStore = get(context.capabilities(Capabilities.SettingsStore))[0];
+              const settings = get(
+                rxFromSignal(() => settingsStore?.getStore<TranscriptionSettingsProps>(TRANSCRIPTION_PLUGIN)!.value),
+              );
 
               // TODO(dmaretskyi): Request via capability.
               const aiClient: AIServiceClient | undefined = new AIServiceEdgeClient({

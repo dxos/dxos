@@ -8,6 +8,7 @@ import { Option, pipe } from 'effect';
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension } from '@dxos/plugin-graph';
+import { isLiveObject } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 
@@ -21,9 +22,7 @@ export default (context: PluginContext) =>
             get(node),
             Option.flatMap((node) =>
               // TODO(wittjosiah): Support comments on any object.
-              !!node.data && typeof node.data === 'object' && 'threads' in node.data && Array.isArray(node)
-                ? Option.some(node)
-                : Option.none(),
+              isLiveObject(node.data) && Array.isArray(node.data.threads) ? Option.some(node) : Option.none(),
             ),
             Option.map((node) => [
               {

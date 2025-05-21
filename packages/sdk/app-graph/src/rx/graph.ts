@@ -75,7 +75,9 @@ export interface ReadableGraph {
   /**
    * Convert the graph to a JSON object.
    */
-  toJSON(options?: { id?: string; maxLength?: number }): object;
+  toJSON(id?: string): object;
+
+  json(id?: string): Rx.Rx<any>;
 
   /**
    * Get the rx key for the node with the given id.
@@ -278,6 +280,34 @@ export class Graph implements WritableGraph {
     }).pipe(Rx.withLabel(`graph:actions:${id}`));
   });
 
+  private readonly _json = Rx.family<string, Rx.Rx<any>>((id) => {
+    return Rx.make((get) => {
+      const toJSON = (node: Node, seen: string[] = []): any => {
+        const nodes = get(this.connections(node.id));
+        const obj: Record<string, any> = {
+          id: node.id.length > 32 ? `${node.id.slice(0, 32)}...` : node.id,
+          type: node.type,
+        };
+        if (node.properties.label) {
+          obj.label = node.properties.label;
+        }
+        if (nodes.length) {
+          obj.nodes = nodes
+            .map((n) => {
+              // Break cycles.
+              const nextSeen = [...seen, node.id];
+              return nextSeen.includes(n.id) ? undefined : toJSON(n, nextSeen);
+            })
+            .filter(isNonNullable);
+        }
+        return obj;
+      };
+
+      const root = get(this.nodeOrThrow(id));
+      return toJSON(root);
+    }).pipe(Rx.withLabel(`graph:json:${id}`));
+  });
+
   constructor({ registry, nodes, edges, onExpand, onInitialize, onRemoveNode }: GraphParams = {}) {
     this._registry = registry ?? Registry.make();
     this._onExpand = onExpand;
@@ -297,30 +327,12 @@ export class Graph implements WritableGraph {
     }
   }
 
-  toJSON({ id = ROOT_ID, maxLength = 32 }: { id?: string; maxLength?: number } = {}) {
-    const toJSON = (node: Node, seen: string[] = []): any => {
-      const nodes = this.getConnections(node.id);
-      const obj: Record<string, any> = {
-        id: node.id.length > maxLength ? `${node.id.slice(0, maxLength - 3)}...` : node.id,
-        type: node.type,
-      };
-      if (node.properties.label) {
-        obj.label = node.properties.label;
-      }
-      if (nodes.length) {
-        obj.nodes = nodes
-          .map((n) => {
-            // Break cycles.
-            const nextSeen = [...seen, node.id];
-            return nextSeen.includes(n.id) ? undefined : toJSON(n, nextSeen);
-          })
-          .filter(isNonNullable);
-      }
-      return obj;
-    };
+  toJSON(id = ROOT_ID) {
+    return this._registry.get(this._json(id));
+  }
 
-    const root = this.getNodeOrThrow(id);
-    return toJSON(root);
+  json(id = ROOT_ID) {
+    return this._json(id);
   }
 
   node(id: string): Rx.Rx<Option.Option<Node>> {
@@ -387,7 +399,9 @@ export class Graph implements WritableGraph {
   }
 
   addNodes(nodes: NodeArg<any, Record<string, any>>[]) {
-    Rx.batch(() => nodes.map((node) => this.addNode(node)));
+    // Rx.batch(() => {
+    nodes.map((node) => this.addNode(node));
+    // });
   }
 
   addNode({ nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>) {
@@ -416,11 +430,11 @@ export class Graph implements WritableGraph {
     });
 
     if (nodes) {
-      Rx.batch(() => {
-        this.addNodes(nodes);
-        const _edges = nodes.map((node) => ({ source: id, target: node.id }));
-        this.addEdges(_edges);
-      });
+      // Rx.batch(() => {
+      this.addNodes(nodes);
+      const _edges = nodes.map((node) => ({ source: id, target: node.id }));
+      this.addEdges(_edges);
+      // });
     }
 
     if (edges) {
@@ -429,7 +443,9 @@ export class Graph implements WritableGraph {
   }
 
   removeNodes(ids: string[], edges = false) {
-    Rx.batch(() => ids.map((id) => this.removeNode(id, edges)));
+    // Rx.batch(() => {
+    ids.map((id) => this.removeNode(id, edges));
+    // });
   }
 
   removeNode(id: string, edges = false) {
@@ -452,7 +468,9 @@ export class Graph implements WritableGraph {
   }
 
   addEdges(edges: Edge[]) {
-    Rx.batch(() => edges.map((edge) => this.addEdge(edge)));
+    // Rx.batch(() => {
+    edges.map((edge) => this.addEdge(edge));
+    // });
   }
 
   addEdge(edgeArg: Edge) {
@@ -472,7 +490,9 @@ export class Graph implements WritableGraph {
   }
 
   removeEdges(edges: Edge[], removeOrphans = false) {
-    Rx.batch(() => edges.map((edge) => this.removeEdge(edge, removeOrphans)));
+    // Rx.batch(() => {
+    edges.map((edge) => this.removeEdge(edge, removeOrphans));
+    // });
   }
 
   removeEdge(edgeArg: Edge, removeOrphans = false) {

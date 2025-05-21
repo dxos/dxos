@@ -6,8 +6,16 @@ import { Rx } from '@effect-rx/rx-react';
 import { Array, Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { Expando, Filter, getSpace, isEchoObject, SpaceState, type Space, isSpace } from '@dxos/client/echo';
-import { getSnapshot } from '@dxos/live-object';
+import {
+  Expando,
+  Filter,
+  getSpace,
+  isEchoObject,
+  SpaceState,
+  type Space,
+  isSpace,
+  type QueryResult,
+} from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -23,6 +31,7 @@ import {
   constructSpaceActions,
   constructSpaceNode,
   createObjectNode,
+  rxFromQuery,
   SHARED,
   SPACES,
 } from '../util';
@@ -165,8 +174,9 @@ export default (context: PluginContext) => {
     // Create space nodes.
     createExtension({
       id: SPACES,
-      connector: (node) =>
-        Rx.make((get) =>
+      connector: (node) => {
+        let query: QueryResult<Expando> | undefined;
+        return Rx.make((get) =>
           pipe(
             get(node),
             Option.flatMap((node) => (node.id === SPACES ? Option.some(node) : Option.none())),
@@ -189,32 +199,42 @@ export default (context: PluginContext) => {
 
               // TODO(wittjosiah): During client reset, accessing default space throws.
               try {
-                // const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
-                const order: string[] = []; // spacesOrder?.order ?? [];
-                const orderMap = new Map(order.map((id, index) => [id, index]));
-                return [
-                  ...spaces
-                    .filter((space) => orderMap.has(space.id))
-                    .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
-                  ...spaces.filter((space) => !orderMap.has(space.id)),
-                ]
-                  .filter((space) => (settings?.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE))
-                  .map((space) =>
-                    constructSpaceNode({
-                      space,
-                      navigable: state.navigableCollections,
-                      personal: space === client.spaces.default,
-                      namesCache: state.spaceNames,
-                      resolve,
-                    }),
-                  );
+                if (!query) {
+                  query = client.spaces.default.db.query(Filter.type(Expando, { key: SHARED }));
+                }
+                const [spacesOrder] = get(rxFromQuery(query));
+                return get(
+                  rxFromSignal(() => {
+                    const order: string[] = spacesOrder?.order ?? [];
+                    const orderMap = new Map(order.map((id, index) => [id, index]));
+                    return [
+                      ...spaces
+                        .filter((space) => orderMap.has(space.id))
+                        .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
+                      ...spaces.filter((space) => !orderMap.has(space.id)),
+                    ]
+                      .filter((space) =>
+                        settings?.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE,
+                      )
+                      .map((space) =>
+                        constructSpaceNode({
+                          space,
+                          navigable: state.navigableCollections,
+                          personal: space === client.spaces.default,
+                          namesCache: state.spaceNames,
+                          resolve,
+                        }),
+                      );
+                  }),
+                );
               } catch {
                 return [];
               }
             }),
             Option.getOrElse(() => []),
           ),
-        ),
+        );
+      },
       // resolver: ({ id }) => {
       //   if (id.length !== SPACE_ID_LENGTH) {
       //     return;
@@ -267,17 +287,23 @@ export default (context: PluginContext) => {
             Option.flatMap((node) =>
               node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
             ),
-            Option.map((space) => {
-              const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-              const client = context.getCapability(ClientCapabilities.Client);
-              const state = context.getCapability(SpaceCapabilities.State);
-              return constructSpaceActions({
-                space,
-                dispatch,
-                personal: space === client.spaces.default,
-                migrating: state.sdkMigrationRunning[space.id],
-              });
+            Option.flatMap((space) => {
+              const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
+              const [client] = get(context.capabilities(ClientCapabilities.Client));
+              const [state] = get(context.capabilities(SpaceCapabilities.State));
+
+              if (!dispatcher || !client || !state) {
+                return Option.none();
+              } else {
+                return Option.some({
+                  space,
+                  dispatch: dispatcher.dispatchPromise,
+                  personal: space === client.spaces.default,
+                  migrating: state.sdkMigrationRunning[space.id],
+                });
+              }
             }),
+            Option.map((params) => constructSpaceActions(params)),
             Option.getOrElse(() => []),
           ),
         ),
@@ -308,25 +334,23 @@ export default (context: PluginContext) => {
                 return [];
               }
 
-              return pipe(
-                rxFromSignal(() => collection.objects.map((object) => object.target)),
-                get,
-                Array.filter(isNonNullable),
-                Array.map((object) =>
-                  createObjectNode({
-                    object: get(
-                      rxFromSignal(() => {
-                        // Subscribe to the object.
-                        const _ = getSnapshot(object);
-                        return object;
+              return get(
+                rxFromSignal(() =>
+                  pipe(
+                    collection.objects,
+                    Array.map((object) => object.target),
+                    Array.filter(isNonNullable),
+                    Array.map((object) =>
+                      createObjectNode({
+                        object,
+                        space,
+                        resolve,
+                        navigable: state.navigableCollections,
                       }),
                     ),
-                    space,
-                    resolve,
-                    navigable: state.navigableCollections,
-                  }),
+                    Array.filter(isNonNullable),
+                  ),
                 ),
-                Array.filter(isNonNullable),
               );
             }),
             Option.getOrElse(() => []),
@@ -344,15 +368,21 @@ export default (context: PluginContext) => {
             Option.flatMap((node) => (node.data instanceof CollectionType ? Option.some(node.data) : Option.none())),
             Option.map((collection) => {
               const state = context.getCapability(SpaceCapabilities.State);
-              const navigable = get(rxFromSignal(() => state.navigableCollections));
               const space = getSpace(collection);
 
-              return pipe(
-                rxFromSignal(() => collection.objects.map((object) => object.target)),
-                get,
-                Array.filter(isNonNullable),
-                Array.map((object) => space && createObjectNode({ object, space, resolve, navigable })),
-                Array.filter(isNonNullable),
+              return get(
+                rxFromSignal(() =>
+                  pipe(
+                    collection.objects,
+                    Array.map((object) => object.target),
+                    Array.filter(isNonNullable),
+                    Array.map(
+                      (object) =>
+                        space && createObjectNode({ object, space, resolve, navigable: state.navigableCollections }),
+                    ),
+                    Array.filter(isNonNullable),
+                  ),
+                ),
               );
             }),
             Option.getOrElse(() => []),
@@ -405,13 +435,23 @@ export default (context: PluginContext) => {
           pipe(
             get(node),
             Option.flatMap((node) => (isEchoObject(node.data) ? Option.some(node.data) : Option.none())),
-            Option.map((object) => {
-              const { graph } = context.getCapability(Capabilities.AppGraph);
-              const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-              const state = context.getCapability(SpaceCapabilities.State);
-              const navigable = get(rxFromSignal(() => state.navigableCollections));
-              return constructObjectActions({ object, graph, dispatch, navigable });
+            Option.flatMap((object) => {
+              const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
+              const [appGraph] = get(context.capabilities(Capabilities.AppGraph));
+              const [state] = get(context.capabilities(SpaceCapabilities.State));
+
+              if (!dispatcher || !appGraph || !state) {
+                return Option.none();
+              } else {
+                return Option.some({
+                  object,
+                  graph: appGraph.graph,
+                  dispatch: dispatcher.dispatchPromise,
+                  navigable: get(rxFromSignal(() => state.navigableCollections)),
+                });
+              }
             }),
+            Option.map((params) => constructObjectActions(params)),
             Option.getOrElse(() => []),
           ),
         ),

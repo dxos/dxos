@@ -56,8 +56,8 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               const client = context.getCapability(ClientCapabilities.Client);
-              const identity = client.halo.identity.get();
-              const status = rxFromObservable(client.mesh.networkStatus);
+              const identity = get(rxFromObservable(client.halo.identity));
+              const status = get(rxFromObservable(client.mesh.networkStatus));
 
               return [
                 {
@@ -71,7 +71,7 @@ export default (context: PluginContext) =>
                     userId: identity?.identityKey.toHex(),
                     hue: identity?.profile?.data?.hue,
                     emoji: identity?.profile?.data?.emoji,
-                    status: get(status).swarm === ConnectionState.OFFLINE ? 'error' : 'active',
+                    status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
                   },
                   nodes: [
                     {

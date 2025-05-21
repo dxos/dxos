@@ -73,6 +73,14 @@ const RawTreeItem = <T extends HasId = any>({
   onSelect,
   levelOffset = 2,
 }: TreeItemProps<T>) => {
+  const rowRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const openRef = useRef(false);
+  const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
+  const [_state, setState] = useState<TreeItemState>('idle');
+  const [instruction, setInstruction] = useState<Instruction | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const { useItems, getProps, isOpen, isCurrent } = useTree();
   const items = useItems(item);
   const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = getProps(item, _path);
@@ -82,14 +90,6 @@ const RawTreeItem = <T extends HasId = any>({
   const level = path.length - levelOffset;
   const isBranch = !!parentOf;
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
-
-  const rowRef = useRef<HTMLDivElement | null>(null);
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const openRef = useRef(false);
-  const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
-  const [_state, setState] = useState<TreeItemState>('idle');
-  const [instruction, setInstruction] = useState<Instruction | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const cancelExpand = useCallback(() => {
     if (cancelExpandRef.current) {

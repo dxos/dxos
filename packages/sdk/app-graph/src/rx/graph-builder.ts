@@ -8,7 +8,7 @@ import { Array, type Option, pipe, Record } from 'effect';
 
 import { type MulticastObservable, type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
-import { byPosition, isNode, isNonNullable, type MaybePromise, type Position } from '@dxos/util';
+import { byPosition, getDebugName, isNode, isNonNullable, type MaybePromise, type Position } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams, type ExpandableGraph } from './graph';
 import { actionGroupSymbol, type ActionData, type Node, type NodeArg, type Relation } from '../node';
@@ -272,7 +272,7 @@ export class GraphBuilder {
   });
 
   private _onExpand(id: string, relation: Relation) {
-    log('onExpand', { id, relation });
+    log('onExpand', { id, relation, registry: getDebugName(this._registry) });
     const connectors = this._connectors(`${id}+${relation}`);
 
     let previous: string[] = [];
@@ -282,18 +282,23 @@ export class GraphBuilder {
       previous = ids;
 
       log('update', { id, relation, ids, removed });
-      Rx.batch(() => {
-        this._graph.removeEdges(
-          removed.map((target) => ({ source: id, target })),
-          true,
-        );
-        this._graph.addNodes(nodes);
-        this._graph.addEdges(
-          nodes.map((node) =>
-            relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
-          ),
-        );
-      });
+      // Rx.batch(() => {
+      this._graph.removeEdges(
+        removed.map((target) => ({ source: id, target })),
+        true,
+      );
+      this._graph.addNodes(nodes);
+      this._graph.addEdges(
+        nodes.map((node) =>
+          relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
+        ),
+      );
+      this._graph.sortEdges(
+        id,
+        relation,
+        nodes.map(({ id }) => id),
+      );
+      // });
     });
     // Trigger subscription.
     this._registry.get(connectors);
