@@ -27,5 +27,7 @@ export const byPosition = <T extends { position?: Position }>(
     return -1;
   } else if (b === 'hoist' || a === 'fallback') {
     return 1;
+  } else {
+    return 0;
   }
 };
