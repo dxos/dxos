@@ -5,8 +5,7 @@
 // TODO(burdon): This shouldn't be in this low-level util?
 
 /**
- * Determines priority order.
- *
+ * Determines priority order:
  * - `static` - Remain in natural order.
  * - `hoist` - Placed before `static`.
  * - `fallback` - Placed after `static`.
