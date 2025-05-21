@@ -87,7 +87,7 @@ export const ParticipantGrid = ({ classNames, self, users, fullscreen, debug }: 
       getId={getId}
       items={sortedUsers}
       pinned={pinned}
-      // hideGallery={fullscreen}
+      hideGallery={fullscreen}
       onPinnedChange={setPinned}
     />
   );
