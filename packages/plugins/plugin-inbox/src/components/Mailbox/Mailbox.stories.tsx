@@ -35,8 +35,6 @@ const DefaultStory = () => {
   return <Mailbox id='story' messages={messages} ignoreAttention />;
 };
 
-export const Default = {};
-
 const WithCompanionStory = () => {
   const space = useSpace();
   const [mailbox] = useQuery(space, Filter.type(MailboxType));
@@ -61,6 +59,17 @@ const WithCompanionStory = () => {
     </div>
   );
 };
+
+const meta: Meta = {
+  title: 'plugins/plugin-inbox/Mailbox',
+  component: Mailbox,
+  render: DefaultStory,
+  decorators: [withLayout({ fullscreen: true }), withAttention],
+};
+
+export default meta;
+
+export const Default = {};
 
 export const WithCompanion = {
   render: WithCompanionStory,
@@ -88,12 +97,3 @@ export const WithCompanion = {
     }),
   ],
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-inbox/Mailbox',
-  component: Mailbox,
-  render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withAttention],
-};
-
-export default meta;

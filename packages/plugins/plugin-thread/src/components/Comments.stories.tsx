@@ -54,14 +54,20 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   );
 };
 
-export const Default = {};
-
 const meta: Meta = {
   title: 'plugins/plugin-thread/Comments',
   // TODO(wittjosiah): Use decorator.
   render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, DataType.Message]} />,
-  decorators: [withTheme, withLayout({ fullscreen: true }), withPluginManager({ plugins: [IntentPlugin()] })],
+  decorators: [
+    withTheme,
+    withLayout({ fullscreen: true }),
+    withPluginManager({
+      plugins: [IntentPlugin()],
+    }),
+  ],
   parameters: { translations },
 };
 
 export default meta;
+
+export const Default = {};

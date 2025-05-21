@@ -57,8 +57,8 @@ const meta: Meta<typeof Toolbox> = {
     withLayout(),
   ],
   parameters: {
-    translations,
     layout: 'centered',
+    translations,
   },
 };
 

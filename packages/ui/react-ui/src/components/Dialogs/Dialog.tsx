@@ -78,7 +78,7 @@ type DialogCloseProps = DialogClosePrimitiveProps;
 
 const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
 
-type OverlayLayoutContextValue = { descriptionId?: string; inOverlayLayout?: boolean };
+type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
 const DIALOG_OVERLAY_NAME = 'DialogOverlay';
 const DIALOG_CONTENT_NAME = 'DialogContent';
 const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(
@@ -86,10 +86,7 @@ const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLa
   {},
 );
 
-type DialogOverlayProps = ThemedClassName<
-  DialogOverlayPrimitiveProps &
-    Pick<OverlayLayoutContextValue, 'descriptionId'> & { blockAlign?: 'center' | 'start' | 'end' }
->;
+type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps & { blockAlign?: 'center' | 'start' | 'end' }>;
 
 const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ classNames, children, blockAlign, ...props }, forwardedRef) => {
@@ -115,12 +112,14 @@ type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps> & { inOve
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
   ({ classNames, children, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { inOverlayLayout, descriptionId } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
+    const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
     return (
       <DialogContentPrimitive
         // NOTE: Radix warning unless set.
-        aria-describedby={descriptionId ?? 'unknown'}
+        // https://www.radix-ui.com/primitives/docs/components/dialog#description
+        // TODO(burdon): This doesn't seem to resolve the issue.
+        aria-describedby={undefined}
         {...props}
         className={tx(
           'dialog.content',
