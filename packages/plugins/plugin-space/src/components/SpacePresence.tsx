@@ -28,6 +28,7 @@ import { AttentionGlyph, useAttended, useAttention, type AttentionGlyphProps } f
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SpaceCapabilities } from '../capabilities';
+import { usePath } from '../hooks';
 import { SPACE_PLUGIN } from '../meta';
 import type { ObjectViewerProps } from '../types';
 
@@ -216,7 +217,7 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
   const { graph } = useAppGraph();
   const attended = useAttended();
   const startOfAttention = attended.at(-1);
-  const path = Option.some([] as string[]); // usePath(graph, startOfAttention);
+  const path = usePath(graph, startOfAttention);
   const containsAttended = !open && !isAttended && id && Option.isSome(path) ? path.value.includes(id) : false;
 
   const getActiveViewers = (viewers: ComplexMap<PublicKey, ObjectViewerProps>): ObjectViewerProps[] => {

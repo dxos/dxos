@@ -49,6 +49,7 @@ import {
   ObjectSettingsContainer,
   SpaceSettingsContainer,
   SchemaContainer,
+  InlineSyncStatus,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
@@ -235,12 +236,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
     }),
     // TODO(wittjosiah): Broken?
-    // createSurface({
-    //   id: `${SPACE_PLUGIN}/navtree-sync-status`,
-    //   role: 'navtree-item-end',
-    //   filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
-    //   component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
-    // }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/navtree-sync-status`,
+      role: 'navtree-item-end',
+      filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
+      component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
+    }),
     createSurface({
       id: `${SPACE_PLUGIN}/navbar-presence`,
       role: 'navbar-end',

@@ -16,7 +16,7 @@ export default (context: PluginContext) => {
 
   const unsubscribe = effect(() => {
     const id = Array.from(attention.current)[0];
-    const path = id && graph.getPath({ target: id }).pipe(Option.getOrUndefined);
+    const path = id && graph.getPath({ target: id }).pipe(Option.getOrNull);
     if (path) {
       Keyboard.singleton.setCurrentContext(path.join('/'));
     }
