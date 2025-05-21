@@ -10,17 +10,12 @@ import { Schema } from 'effect';
 import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
-import { type QueryAST } from '@dxos/echo-protocol';
-import {
-  getTypeReference,
-  ObjectId,
-  Ref,
-  type ForeignKey,
-  type RelationSource,
-  type RelationTarget,
-} from '@dxos/echo-schema';
+import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
+import { Ref } from '../ref';
+import { getTypeReference } from '../types';
+import type { RelationSource, RelationTarget } from '../object';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
