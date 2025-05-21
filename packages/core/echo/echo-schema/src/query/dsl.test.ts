@@ -10,7 +10,7 @@ import { create, EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Filter, Query } from './api';
+import { Filter, Query } from './dsl';
 
 // TODO(dmaretskyi): Move those out.
 const Type = {
