@@ -3,7 +3,13 @@
 //
 
 import { type Doc } from '@automerge/automerge';
-import { interpretAsDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import {
+  type HandleState,
+  interpretAsDocumentId,
+  type AutomergeUrl,
+  type DocHandle,
+  type DocumentId,
+} from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
@@ -361,7 +367,9 @@ export class DataSpaceManager extends Resource {
   private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<SpaceDoc>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
+    const document = await this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any, {
+      allowableStates: ['ready', 'requesting'] satisfies HandleState[],
+    });
     await document.whenReady();
     return document;
   }
