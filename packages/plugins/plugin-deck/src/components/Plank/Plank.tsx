@@ -45,6 +45,7 @@ type PlankComponentProps = {
   path?: string[];
   order?: number;
   active?: string[];
+  // TODO(burdon): Change to role?
   companioned?: 'primary' | 'companion';
   node?: Node;
   primary?: Node;
@@ -188,6 +189,7 @@ const PlankComponent = memo(
         ) : (
           <PlankError id={id} part={part} />
         )}
+
         {canResize && <StackItem.ResizeHandle />}
       </Root>
     );
@@ -199,26 +201,26 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
   companionId?: string;
 };
 
+// TODO(burdon): Factor out conditional rendering.
+//   Remove this wrapper component and render the entire set of planks in the deck with conditional visibility
+//   to obviate mounting and unmounting when switching between solo and companion mode?
 export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
   const currentCompanion = companions.find(({ id }) => id === companionId);
 
-  // TODO(burdon): Switches from deck to solo.
-  // TODO(burdon): Causes unmount when switching between solo and split.
-  console.log('===', props.part, id, companionId, currentCompanion?.id);
-  if (companionId && currentCompanion) {
-    const Root = props.part === 'solo' ? SplitFrame : Fragment;
-    return (
-      <Root>
-        <PlankComponent
-          id={id}
-          node={node}
-          companioned='primary'
-          {...props}
-          {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
-        />
+  return (
+    <Container solo={props.part === 'solo'} companion={!!companionId && !!currentCompanion}>
+      <PlankComponent
+        id={id}
+        node={node}
+        companioned={companionId ? 'primary' : undefined}
+        companions={companionId ? [] : companions}
+        {...props}
+        {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
+      />
+      {companionId && currentCompanion && (
         <PlankComponent
           id={companionId}
           node={currentCompanion}
@@ -228,19 +230,22 @@ export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProp
           {...props}
           {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
         />
-      </Root>
-    );
-  } else {
-    return <PlankComponent id={id} node={node} companions={companions} {...props} />;
-  }
+      )}
+    </Container>
+  );
 });
 
-const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
+const Container = ({ children, solo, companion }: PropsWithChildren<{ solo: boolean; companion: boolean }>) => {
   const sizeAttrs = useMainSize();
+  if (!solo) {
+    return <Fragment>{children}</Fragment>;
+  }
+
+  // TODO(burdon): Make resizable.
   return (
     <div
       role='none'
-      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0', railGridHorizontal, mainIntrinsicSize)}
+      className={mx('absolute inset-0 grid', companion && 'grid-cols-[1fr_1fr]', railGridHorizontal, mainIntrinsicSize)}
       {...sizeAttrs}
     >
       {children}
