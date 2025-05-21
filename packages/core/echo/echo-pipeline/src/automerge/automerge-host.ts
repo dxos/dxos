@@ -293,8 +293,7 @@ export class AutomergeHost extends Resource {
   async reIndexHeads(documentIds: DocumentId[]) {
     for (const documentId of documentIds) {
       log.info('re-indexing heads for document', { documentId });
-      const handle = await this._repo.find(documentId);
-      await handle.whenReady(['ready', 'requesting']);
+      const handle = await this._repo.find(documentId, { allowableStates: ['ready', 'requesting'] });
       if (handle.inState(['requesting'])) {
         log.warn('document is not available locally, skipping', { documentId });
         continue; // Handle not available locally.
@@ -432,9 +431,9 @@ export class AutomergeHost extends Resource {
     const storeRequestIds: DocumentId[] = [];
     const storeResultIndices: number[] = [];
     for (const documentId of documentIds) {
-      const doc = this._repo.handles[documentId]?.doc();
-      if (doc) {
-        result.push(getHeads(doc));
+      const handle = this._repo.handles[documentId];
+      if (handle && handle.isReady() && handle.doc()) {
+        result.push(getHeads(handle.doc()!));
       } else {
         storeRequestIds.push(documentId);
         storeResultIndices.push(result.length);
@@ -556,7 +555,7 @@ export class AutomergeHost extends Resource {
 
     // Load the documents so they will start syncing.
     for (const documentId of toReplicate) {
-      this._repo.find(documentId);
+      this._repo.findWithProgress(documentId);
     }
   }
 

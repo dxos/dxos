@@ -467,7 +467,9 @@ export class DataSpace {
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
-          handle = await this._echoHost.automergeRepo.find<SpaceDoc>(rootUrl as any);
+          handle = await this._echoHost.automergeRepo.find<SpaceDoc>(rootUrl as any, {
+            allowableStates: ['ready', 'requesting'],
+          });
           await cancelWithContext(this._ctx, handle.whenReady());
         });
         if (this._ctx.disposed) {

@@ -88,6 +88,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       return;
     }
     this._lifecycleState = LifecycleState.OPEN;
+    this._ready.wake();
   }
 
   @synchronized
@@ -101,6 +102,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     }
     this._replicators.clear();
 
+    this._ready.reset();
     this._lifecycleState = LifecycleState.CLOSED;
   }
 

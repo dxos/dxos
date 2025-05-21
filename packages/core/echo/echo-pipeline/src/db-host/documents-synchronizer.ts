@@ -89,7 +89,7 @@ export class DocumentsSynchronizer extends Resource {
   async update(updates: DocumentUpdate[]) {
     for (const { documentId, mutation, isNew } of updates) {
       if (isNew) {
-        const doc = await this._params.repo.find<SpaceDoc>(documentId as DocumentId);
+        const { handle: doc } = this._params.repo.findWithProgress<SpaceDoc>(documentId as DocumentId);
         doc.update((doc) => A.loadIncremental(doc, mutation));
         this._startSync(doc);
       } else {
