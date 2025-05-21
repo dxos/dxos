@@ -1,6 +1,5 @@
 import { QueryAST, type ObjectStructure } from '@dxos/echo-protocol';
 import type { ObjectId, SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 export type MatchedObject = {
   id: ObjectId;
@@ -11,68 +10,65 @@ export type MatchedObject = {
 /**
  * Matches an object against a filter AST.
  */
-export const filterMatchObject = log.func(
-  'filterMatchObject',
-  (filter: QueryAST.Filter, obj: MatchedObject): boolean => {
-    switch (filter.type) {
-      case 'object': {
-        // Check typename if specified
-        if (filter.typename !== null && obj.doc.system.type?.['/'] !== filter.typename) {
-          return false;
-        }
+export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): boolean => {
+  switch (filter.type) {
+    case 'object': {
+      // Check typename if specified
+      if (filter.typename !== null && obj.doc.system.type?.['/'] !== filter.typename) {
+        return false;
+      }
 
-        // Check IDs if specified
-        if (filter.id && filter.id.length > 0 && !filter.id.includes(obj.id)) {
-          return false;
-        }
+      // Check IDs if specified
+      if (filter.id && filter.id.length > 0 && !filter.id.includes(obj.id)) {
+        return false;
+      }
 
-        // Check properties
-        if (filter.props) {
-          for (const [key, valueFilter] of Object.entries(filter.props)) {
-            const value = obj.doc.data[key];
-            if (!filterMatchValue(valueFilter, value)) {
-              return false;
-            }
-          }
-        }
-
-        // Check foreign keys if specified
-        if (filter.foreignKeys && filter.foreignKeys.length > 0) {
-          const hasMatchingKey = filter.foreignKeys.some((filterKey) =>
-            obj.doc.meta.keys.some((objKey) => objKey.source === filterKey.source && objKey.id === filterKey.id),
-          );
-          if (!hasMatchingKey) {
+      // Check properties
+      if (filter.props) {
+        for (const [key, valueFilter] of Object.entries(filter.props)) {
+          const value = obj.doc.data[key];
+          if (!filterMatchValue(valueFilter, value)) {
             return false;
           }
         }
-
-        return true;
       }
 
-      case 'text-search': {
-        // TODO: Implement text search
-        return false;
+      // Check foreign keys if specified
+      if (filter.foreignKeys && filter.foreignKeys.length > 0) {
+        const hasMatchingKey = filter.foreignKeys.some((filterKey) =>
+          obj.doc.meta.keys.some((objKey) => objKey.source === filterKey.source && objKey.id === filterKey.id),
+        );
+        if (!hasMatchingKey) {
+          return false;
+        }
       }
 
-      case 'not': {
-        return !filterMatchObject(filter.filter, obj);
-      }
-
-      case 'and': {
-        return filter.filters.every((f) => filterMatchObject(f, obj));
-      }
-
-      case 'or': {
-        return filter.filters.some((f) => filterMatchObject(f, obj));
-      }
-
-      default:
-        return false;
+      return true;
     }
-  },
-);
 
-export const filterMatchValue = log.func('filterMatchValue', (filter: QueryAST.Filter, value: unknown): boolean => {
+    case 'text-search': {
+      // TODO: Implement text search
+      return false;
+    }
+
+    case 'not': {
+      return !filterMatchObject(filter.filter, obj);
+    }
+
+    case 'and': {
+      return filter.filters.every((f) => filterMatchObject(f, obj));
+    }
+
+    case 'or': {
+      return filter.filters.some((f) => filterMatchObject(f, obj));
+    }
+
+    default:
+      return false;
+  }
+};
+
+export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boolean => {
   switch (filter.type) {
     case 'compare': {
       const compareValue = filter.value as any;
@@ -109,4 +105,4 @@ export const filterMatchValue = log.func('filterMatchValue', (filter: QueryAST.F
     default:
       return false;
   }
-});
+};
