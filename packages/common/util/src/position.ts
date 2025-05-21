@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): This shouldn't be in this low-level util?
+// TODO(burdon): This shouldn't be in this low-level util? Move to app-framework?
 
 /**
  * Determines priority order:
