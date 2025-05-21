@@ -18,6 +18,7 @@ export type PlankCapabilities = {
   incrementEnd?: boolean;
   deck?: boolean;
   solo?: boolean;
+  fullscreen?: boolean;
   companion?: boolean;
 };
 
@@ -78,7 +79,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
     return (
       <ButtonGroup {...props} classNames={['app-no-drag', classNames]} ref={forwardedRef}>
-        {capabilities.deck && (
+        {capabilities.deck ? (
           <>
             {capabilities.solo && (
               <>
@@ -130,6 +131,15 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
               </>
             )}
           </>
+        ) : (
+          capabilities.fullscreen && (
+            <PlankControl
+              label={t(layoutMode === 'solo--fullscreen' ? 'exit fullscreen label' : 'show fullscreen plank label')}
+              classNames={buttonClassNames}
+              icon={layoutMode === 'solo--fullscreen' ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
+              onClick={() => onClick?.('solo--fullscreen')}
+            />
+          )
         )}
 
         {close && !layoutIsAnySolo && (
