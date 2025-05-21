@@ -35,6 +35,13 @@ export const SpaceId = Object.freeze({
     return typeof value === 'string' && value.startsWith(MULTIBASE_PREFIX) && value.length === ENCODED_LENGTH;
   },
 
+  make: (value: string): SpaceId => {
+    if (!SpaceId.isValid(value)) {
+      throw new Error('Invalid space id');
+    }
+    return value as SpaceId;
+  },
+
   random: (): SpaceId => {
     return SpaceId.encode(randomBytes(SpaceId.byteLength));
   },

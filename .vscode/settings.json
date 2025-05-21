@@ -24,6 +24,7 @@
     "Orama",
     "protobuf",
     "testutils",
+    "typenames",
     "wittjosiah"
   ],
   "files.associations": {

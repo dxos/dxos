@@ -18,6 +18,7 @@ const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
  *
  * Clauses are combined using logical AND.
  */
+
 const FilterObject_ = Schema.Struct({
   type: Schema.Literal('object'),
 
@@ -37,6 +38,8 @@ const FilterObject_ = Schema.Struct({
    * Objects that have any of the given foreign keys.
    */
   foreignKeys: Schema.optional(Schema.Array(ForeignKey)),
+
+  // NOTE: Make sure to update `FilterStep.isNoop` if you change this.
 });
 export interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
 export const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
@@ -46,23 +49,23 @@ const FilterCompare_ = Schema.Struct({
   operator: Schema.Literal('eq', 'neq', 'gt', 'gte', 'lt', 'lte'),
   value: Schema.Unknown,
 });
-interface FilterCompare extends Schema.Schema.Type<typeof FilterCompare_> {}
-const FilterCompare: Schema.Schema<FilterCompare> = FilterCompare_;
+export interface FilterCompare extends Schema.Schema.Type<typeof FilterCompare_> {}
+export const FilterCompare: Schema.Schema<FilterCompare> = FilterCompare_;
 
 const FilterIn_ = Schema.Struct({
   type: Schema.Literal('in'),
   values: Schema.Array(Schema.Any),
 });
-interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
-const FilterIn: Schema.Schema<FilterIn> = FilterIn_;
+export interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
+export const FilterIn: Schema.Schema<FilterIn> = FilterIn_;
 
 const FilterRange_ = Schema.Struct({
   type: Schema.Literal('range'),
   from: Schema.Any,
   to: Schema.Any,
 });
-interface FilterRange extends Schema.Schema.Type<typeof FilterRange_> {}
-const FilterRange: Schema.Schema<FilterRange> = FilterRange_;
+export interface FilterRange extends Schema.Schema.Type<typeof FilterRange_> {}
+export const FilterRange: Schema.Schema<FilterRange> = FilterRange_;
 
 const FilterTextSearch_ = Schema.Struct({
   type: Schema.Literal('text-search'),
@@ -70,29 +73,29 @@ const FilterTextSearch_ = Schema.Struct({
   text: Schema.String,
   searchKind: Schema.optional(Schema.Literal('full-text', 'vector')),
 });
-interface FilterTextSearch extends Schema.Schema.Type<typeof FilterTextSearch_> {}
-const FilterTextSearch: Schema.Schema<FilterTextSearch> = FilterTextSearch_;
+export interface FilterTextSearch extends Schema.Schema.Type<typeof FilterTextSearch_> {}
+export const FilterTextSearch: Schema.Schema<FilterTextSearch> = FilterTextSearch_;
 
 const FilterNot_ = Schema.Struct({
   type: Schema.Literal('not'),
   filter: Schema.suspend(() => Filter),
 });
-interface FilterNot extends Schema.Schema.Type<typeof FilterNot_> {}
-const FilterNot: Schema.Schema<FilterNot> = FilterNot_;
+export interface FilterNot extends Schema.Schema.Type<typeof FilterNot_> {}
+export const FilterNot: Schema.Schema<FilterNot> = FilterNot_;
 
 const FilterAnd_ = Schema.Struct({
   type: Schema.Literal('and'),
   filters: Schema.Array(Schema.suspend(() => Filter)),
 });
-interface FilterAnd extends Schema.Schema.Type<typeof FilterAnd_> {}
-const FilterAnd: Schema.Schema<FilterAnd> = FilterAnd_;
+export interface FilterAnd extends Schema.Schema.Type<typeof FilterAnd_> {}
+export const FilterAnd: Schema.Schema<FilterAnd> = FilterAnd_;
 
 const FilterOr_ = Schema.Struct({
   type: Schema.Literal('or'),
   filters: Schema.Array(Schema.suspend(() => Filter)),
 });
-interface FilterOr extends Schema.Schema.Type<typeof FilterOr_> {}
-const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
+export interface FilterOr extends Schema.Schema.Type<typeof FilterOr_> {}
+export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 
 export const Filter = Schema.Union(
   FilterObject,
@@ -113,8 +116,8 @@ const QuerySelectClause_ = Schema.Struct({
   type: Schema.Literal('select'),
   filter: Schema.suspend(() => Filter),
 });
-interface QuerySelectClause extends Schema.Schema.Type<typeof QuerySelectClause_> {}
-const QuerySelectClause: Schema.Schema<QuerySelectClause> = QuerySelectClause_;
+export interface QuerySelectClause extends Schema.Schema.Type<typeof QuerySelectClause_> {}
+export const QuerySelectClause: Schema.Schema<QuerySelectClause> = QuerySelectClause_;
 
 /**
  * Filter objects from selection.
@@ -124,8 +127,8 @@ const QueryFilterClause_ = Schema.Struct({
   selection: Schema.suspend(() => Query),
   filter: Schema.suspend(() => Filter),
 });
-interface QueryFilterClause extends Schema.Schema.Type<typeof QueryFilterClause_> {}
-const QueryFilterClause: Schema.Schema<QueryFilterClause> = QueryFilterClause_;
+export interface QueryFilterClause extends Schema.Schema.Type<typeof QueryFilterClause_> {}
+export const QueryFilterClause: Schema.Schema<QueryFilterClause> = QueryFilterClause_;
 
 /**
  * Traverse references from an anchor object.
@@ -133,10 +136,11 @@ const QueryFilterClause: Schema.Schema<QueryFilterClause> = QueryFilterClause_;
 const QueryReferenceTraversalClause_ = Schema.Struct({
   type: Schema.Literal('reference-traversal'),
   anchor: Schema.suspend(() => Query),
-  property: Schema.String,
+  property: Schema.String, // TODO(dmaretskyi): Change to EscapedPropPath.
 });
-interface QueryReferenceTraversalClause extends Schema.Schema.Type<typeof QueryReferenceTraversalClause_> {}
-const QueryReferenceTraversalClause: Schema.Schema<QueryReferenceTraversalClause> = QueryReferenceTraversalClause_;
+export interface QueryReferenceTraversalClause extends Schema.Schema.Type<typeof QueryReferenceTraversalClause_> {}
+export const QueryReferenceTraversalClause: Schema.Schema<QueryReferenceTraversalClause> =
+  QueryReferenceTraversalClause_;
 
 /**
  * Traverse incoming references to an anchor object.
@@ -147,8 +151,9 @@ const QueryIncomingReferencesClause_ = Schema.Struct({
   property: Schema.String,
   typename: TypenameSpecifier,
 });
-interface QueryIncomingReferencesClause extends Schema.Schema.Type<typeof QueryIncomingReferencesClause_> {}
-const QueryIncomingReferencesClause: Schema.Schema<QueryIncomingReferencesClause> = QueryIncomingReferencesClause_;
+export interface QueryIncomingReferencesClause extends Schema.Schema.Type<typeof QueryIncomingReferencesClause_> {}
+export const QueryIncomingReferencesClause: Schema.Schema<QueryIncomingReferencesClause> =
+  QueryIncomingReferencesClause_;
 
 /**
  * Traverse relations connecting to an anchor object.
@@ -156,11 +161,16 @@ const QueryIncomingReferencesClause: Schema.Schema<QueryIncomingReferencesClause
 const QueryRelationClause_ = Schema.Struct({
   type: Schema.Literal('relation'),
   anchor: Schema.suspend(() => Query),
+  /**
+   * outgoing: anchor is the source of the relation.
+   * incoming: anchor is the target of the relation.
+   * both: anchor is either the source or target of the relation.
+   */
   direction: Schema.Literal('outgoing', 'incoming', 'both'),
   filter: Schema.optional(Schema.suspend(() => Filter)),
 });
-interface QueryRelationClause extends Schema.Schema.Type<typeof QueryRelationClause_> {}
-const QueryRelationClause: Schema.Schema<QueryRelationClause> = QueryRelationClause_;
+export interface QueryRelationClause extends Schema.Schema.Type<typeof QueryRelationClause_> {}
+export const QueryRelationClause: Schema.Schema<QueryRelationClause> = QueryRelationClause_;
 
 /**
  * Traverse into the source or target of a relation.
@@ -170,8 +180,8 @@ const QueryRelationTraversalClause_ = Schema.Struct({
   anchor: Schema.suspend(() => Query),
   direction: Schema.Literal('source', 'target', 'both'),
 });
-interface QueryRelationTraversalClause extends Schema.Schema.Type<typeof QueryRelationTraversalClause_> {}
-const QueryRelationTraversalClause: Schema.Schema<QueryRelationTraversalClause> = QueryRelationTraversalClause_;
+export interface QueryRelationTraversalClause extends Schema.Schema.Type<typeof QueryRelationTraversalClause_> {}
+export const QueryRelationTraversalClause: Schema.Schema<QueryRelationTraversalClause> = QueryRelationTraversalClause_;
 
 /**
  * Union of multiple queries.
@@ -180,8 +190,8 @@ const QueryUnionClause_ = Schema.Struct({
   type: Schema.Literal('union'),
   queries: Schema.Array(Schema.suspend(() => Query)),
 });
-interface QueryUnionClause extends Schema.Schema.Type<typeof QueryUnionClause_> {}
-const QueryUnionClause: Schema.Schema<QueryUnionClause> = QueryUnionClause_;
+export interface QueryUnionClause extends Schema.Schema.Type<typeof QueryUnionClause_> {}
+export const QueryUnionClause: Schema.Schema<QueryUnionClause> = QueryUnionClause_;
 
 /**
  * Add options to a query.
@@ -191,8 +201,8 @@ const QueryOptionsClause_ = Schema.Struct({
   query: Schema.suspend(() => Query),
   options: Schema.suspend(() => QueryOptions),
 });
-interface QueryOptionsClause extends Schema.Schema.Type<typeof QueryOptionsClause_> {}
-const QueryOptionsClause: Schema.Schema<QueryOptionsClause> = QueryOptionsClause_;
+export interface QueryOptionsClause extends Schema.Schema.Type<typeof QueryOptionsClause_> {}
+export const QueryOptionsClause: Schema.Schema<QueryOptionsClause> = QueryOptionsClause_;
 
 const Query_ = Schema.Union(
   QuerySelectClause,

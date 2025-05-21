@@ -1,0 +1,441 @@
+import type { QueryAST } from '@dxos/echo-protocol';
+import { QueryPlan } from './plan';
+import type { DXN, SpaceId } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+
+export type QueryPlannerOptions = {
+  defaultTextSearchKind: QueryPlan.TextSearchKind;
+};
+
+const DEFAULT_OPTIONS: QueryPlannerOptions = {
+  defaultTextSearchKind: 'full-text',
+};
+
+export class QueryPlanner {
+  private readonly _options: QueryPlannerOptions;
+
+  constructor(options?: Partial<QueryPlannerOptions>) {
+    this._options = {
+      ...DEFAULT_OPTIONS,
+      ...options,
+    };
+  }
+
+  createPlan(query: QueryAST.Query): QueryPlan.Plan {
+    let plan = this._generate(query, DEFAULT_CONTEXT);
+    plan = this._optimizeEmptyFilters(plan);
+    plan = this._optimizeSoloUnions(plan);
+    return plan;
+  }
+
+  _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
+    switch (query.type) {
+      case 'options':
+        return this._generateOptionsClause(query, context);
+      case 'select':
+        return this._generateSelectClause(query, context);
+      case 'filter':
+        return this._generateFilterClause(query, context);
+      case 'incoming-references':
+        return this._generateIncomingReferencesClause(query, context);
+      case 'relation':
+        return this._generateRelationClause(query, context);
+      case 'relation-traversal':
+        return this._generateRelationTraversalClause(query, context);
+      case 'reference-traversal':
+        return this._generateReferenceTraversalClause(query, context);
+      case 'union':
+        return this._generateUnionClause(query, context);
+      default:
+        throw new Error(`Unsupported query type: ${(query as any).type}`);
+    }
+  }
+
+  private _generateOptionsClause(query: QueryAST.QueryOptionsClause, context: GenerationContext): QueryPlan.Plan {
+    const newContext = {
+      ...context,
+    };
+    if (query.options.spaceIds) {
+      newContext.selectionSpaces = query.options.spaceIds as readonly SpaceId[];
+    }
+    if (query.options.deleted) {
+      newContext.deletedHandling = query.options.deleted;
+    }
+    return this._generate(query.query, newContext);
+  }
+
+  private _generateSelectClause(query: QueryAST.QuerySelectClause, context: GenerationContext): QueryPlan.Plan {
+    return this._generateSelectionFromFilter(query.filter, context);
+  }
+
+  // TODO(dmaretskyi): This can be rewritten as a function of (filter) -> (selection ? undefined, rest: filter) that recurses onto itself.
+  private _generateSelectionFromFilter(filter: QueryAST.Filter, context: GenerationContext): QueryPlan.Plan {
+    switch (filter.type) {
+      case 'object': {
+        if (context.selectionInverted) {
+          throw new Error('Query too complex');
+        }
+
+        // Try to utilize indexes during selection, prioritizing selecting by id, then by typename.
+        // After selection, filter out using the remaining predicates.
+        if (filter.id && filter.id?.length > 0) {
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              fromSpaces: context.selectionSpaces,
+              selector: {
+                _tag: 'IdSelector',
+                objectIds: filter.id,
+              },
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { ...filter, id: undefined },
+            },
+          ]);
+        } else if (filter.typename) {
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              fromSpaces: context.selectionSpaces,
+              selector: {
+                _tag: 'TypeSelector',
+                typename: [filter.typename as DXN.String],
+                inverted: false,
+              },
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { ...filter, typename: null },
+            },
+          ]);
+        } else {
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              fromSpaces: context.selectionSpaces,
+              selector: {
+                _tag: 'EverythingSelector',
+              },
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { ...filter },
+            },
+          ]);
+        }
+      }
+      case 'text-search': {
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            fromSpaces: context.selectionSpaces,
+            selector: {
+              _tag: 'TextSearchSelector',
+              text: filter.text,
+              searchKind: filter.searchKind ?? this._options.defaultTextSearchKind,
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: {
+              type: 'object',
+              typename: filter.typename,
+              props: {},
+            },
+          },
+        ]);
+      }
+      case 'compare':
+        throw new Error('Query too complex');
+      case 'in':
+        throw new Error('Query too complex');
+      case 'range':
+        throw new Error('Query too complex');
+      case 'not':
+        return this._generateSelectionFromFilter(filter.filter, {
+          ...context,
+          selectionInverted: !context.selectionInverted,
+        });
+      case 'and':
+        throw new Error('Query too complex');
+      case 'or':
+        // Optimized case
+        if (filter.filters.every(isTrivialTypenameFilter)) {
+          const typenames = filter.filters.map((f) => {
+            invariant(f.type === 'object' && f.typename !== null);
+            return f.typename;
+          });
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              fromSpaces: context.selectionSpaces,
+              selector: {
+                _tag: 'TypeSelector',
+                typename: typenames as DXN.String[],
+                inverted: context.selectionInverted,
+              },
+            },
+            ...this._generateDeletedHandlingSteps(context),
+          ]);
+        } else {
+          throw new Error('Query too complex');
+        }
+
+      default:
+        throw new Error(`Unsupported filter type: ${(filter as any).type}`);
+    }
+  }
+
+  private _generateDeletedHandlingSteps(context: GenerationContext): QueryPlan.Step[] {
+    switch (context.deletedHandling) {
+      case 'include':
+        return [];
+      case 'exclude':
+        return [
+          {
+            _tag: 'FilterDeletedStep',
+            mode: 'only-non-deleted',
+          },
+        ];
+      case 'only':
+        return [
+          {
+            _tag: 'FilterDeletedStep',
+            mode: 'only-deleted',
+          },
+        ];
+    }
+  }
+
+  private _generateUnionClause(query: QueryAST.QueryUnionClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      {
+        _tag: 'UnionStep',
+        plans: query.queries.map((query) => this._generate(query, context)),
+      },
+    ]);
+  }
+
+  private _generateReferenceTraversalClause(
+    query: QueryAST.QueryReferenceTraversalClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.anchor, context).steps,
+      {
+        _tag: 'TraverseStep',
+        traversal: {
+          _tag: 'ReferenceTraversal',
+          direction: 'outgoing',
+          property: query.property,
+        },
+      },
+    ]);
+  }
+
+  private _generateRelationTraversalClause(
+    query: QueryAST.QueryRelationTraversalClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    switch (query.direction) {
+      case 'source': {
+        return QueryPlan.Plan.make([
+          ...this._generate(query.anchor, context).steps,
+          createRelationTraversalStep('relation-to-source'),
+          ...this._generateDeletedHandlingSteps(context),
+        ]);
+      }
+      case 'target': {
+        return QueryPlan.Plan.make([
+          ...this._generate(query.anchor, context).steps,
+          createRelationTraversalStep('relation-to-target'),
+          ...this._generateDeletedHandlingSteps(context),
+        ]);
+      }
+      case 'both': {
+        const anchorPlan = this._generate(query.anchor, context);
+        return QueryPlan.Plan.make([
+          ...anchorPlan.steps,
+          {
+            _tag: 'UnionStep',
+            plans: [
+              QueryPlan.Plan.make([createRelationTraversalStep('relation-to-source')]),
+              QueryPlan.Plan.make([createRelationTraversalStep('relation-to-target')]),
+            ],
+          },
+          ...this._generateDeletedHandlingSteps(context),
+        ]);
+      }
+    }
+  }
+
+  private _generateRelationClause(query: QueryAST.QueryRelationClause, context: GenerationContext): QueryPlan.Plan {
+    switch (query.direction) {
+      case 'outgoing': {
+        return QueryPlan.Plan.make([
+          ...this._generate(query.anchor, context).steps,
+          createRelationTraversalStep('source-to-relation'),
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: query.filter ?? NOOP_FILTER,
+          },
+        ]);
+      }
+      case 'incoming': {
+        return QueryPlan.Plan.make([
+          ...this._generate(query.anchor, context).steps,
+          createRelationTraversalStep('target-to-relation'),
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: query.filter ?? NOOP_FILTER,
+          },
+        ]);
+      }
+      case 'both': {
+        const anchorPlan = this._generate(query.anchor, context);
+        return QueryPlan.Plan.make([
+          ...anchorPlan.steps,
+          {
+            _tag: 'UnionStep',
+            plans: [
+              QueryPlan.Plan.make([createRelationTraversalStep('source-to-relation')]),
+              QueryPlan.Plan.make([createRelationTraversalStep('target-to-relation')]),
+            ],
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: query.filter ?? NOOP_FILTER,
+          },
+        ]);
+      }
+    }
+  }
+
+  private _generateIncomingReferencesClause(
+    query: QueryAST.QueryIncomingReferencesClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.anchor, context).steps,
+      {
+        _tag: 'TraverseStep',
+        traversal: {
+          _tag: 'ReferenceTraversal',
+          direction: 'incoming',
+          property: query.property,
+        },
+      },
+      {
+        _tag: 'FilterStep',
+        filter: {
+          type: 'object',
+          typename: query.typename,
+          props: {},
+        },
+      },
+    ]);
+  }
+
+  private _generateFilterClause(query: QueryAST.QueryFilterClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.selection, context).steps,
+      {
+        _tag: 'FilterStep',
+        filter: query.filter,
+      },
+    ]);
+  }
+
+  /**
+   * Removes filter steps that have no predicates.
+   */
+  private _optimizeEmptyFilters(plan: QueryPlan.Plan): QueryPlan.Plan {
+    return QueryPlan.Plan.make(
+      plan.steps
+        .filter((step) => {
+          if (step._tag === 'FilterStep') {
+            return !QueryPlan.FilterStep.isNoop(step);
+          } else {
+            return true;
+          }
+        })
+        .map((step) => {
+          if (step._tag === 'UnionStep') {
+            return {
+              _tag: 'UnionStep',
+              plans: step.plans.map((plan) => this._optimizeEmptyFilters(plan)),
+            };
+          } else {
+            return step;
+          }
+        }),
+    );
+  }
+
+  /**
+   * Removes union steps that have only one child.
+   */
+  private _optimizeSoloUnions(plan: QueryPlan.Plan): QueryPlan.Plan {
+    // TODO(dmaretskyi): Implement this.
+    return plan;
+  }
+}
+
+/**
+ * Context for query planning.
+ */
+type GenerationContext = {
+  /**
+   * Which spaces to select from.
+   */
+  selectionSpaces: readonly SpaceId[];
+
+  /**
+   * How to handle deleted objects.
+   */
+  deletedHandling: 'include' | 'exclude' | 'only';
+
+  /**
+   * When generating a selection clause, whether to invert the filter.
+   */
+  selectionInverted: boolean;
+};
+
+const DEFAULT_CONTEXT: GenerationContext = {
+  selectionSpaces: [],
+  deletedHandling: 'exclude',
+  selectionInverted: false,
+};
+
+const NOOP_FILTER: QueryAST.Filter = {
+  type: 'object',
+  typename: null,
+  id: [],
+  props: {},
+};
+
+const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['direction']): QueryPlan.Step => ({
+  _tag: 'TraverseStep',
+  traversal: {
+    _tag: 'RelationTraversal',
+    direction,
+  },
+});
+
+const isTrivialTypenameFilter = (filter: QueryAST.Filter): boolean => {
+  return (
+    filter.type === 'object' &&
+    filter.typename !== null &&
+    Object.keys(filter.props).length === 0 &&
+    (filter.id === undefined || filter.id.length === 0) &&
+    (filter.foreignKeys === undefined || filter.foreignKeys.length === 0)
+  );
+};
