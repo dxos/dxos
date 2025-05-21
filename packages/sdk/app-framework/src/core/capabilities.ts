@@ -3,8 +3,9 @@
 //
 
 import { type Registry, Rx } from '@effect-rx/rx-react';
-import { Effect, pipe, Option, Record } from 'effect';
+import { Effect } from 'effect';
 
+import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
@@ -99,28 +100,19 @@ export const lazy =
 export class PluginContext {
   private readonly _registry: Registry.Registry;
 
-  // TODO(wittjosiah): Remove?
-  private readonly _capabilityCache = Record.empty<string, Rx.Writable<CapabilityImpl<unknown>[]>>();
-  private readonly _capabilityImpls = Rx.family<string, Rx.Writable<CapabilityImpl<unknown>[]>>((id) => {
-    return pipe(
-      this._capabilityCache,
-      Record.get(id),
-      Option.match({
-        onSome: (value) => value,
-        onNone: () => Rx.make<CapabilityImpl<unknown>[]>([]).pipe(Rx.keepAlive),
-      }),
-    );
+  private readonly _capabilityImpls = Rx.family<string, Rx.Writable<CapabilityImpl<unknown>[]>>(() => {
+    return Rx.make<CapabilityImpl<unknown>[]>([]).pipe(Rx.keepAlive);
   });
 
   readonly _capabilities = Rx.family<string, Rx.Rx<unknown[]>>((id: string) => {
-    return Rx.readable((get) => {
+    return Rx.make((get) => {
       const current = get(this._capabilityImpls(id));
       return current.map((c) => c.implementation);
     }).pipe(Rx.keepAlive);
   });
 
   readonly _capability = Rx.family<string, Rx.Rx<unknown>>((id: string) => {
-    return Rx.readable((get) => {
+    return Rx.make((get) => {
       const current = get(this._capabilities(id));
       invariant(current.length > 0, `No capability found for ${id}`);
       return current[0];
@@ -229,6 +221,27 @@ export class PluginContext {
    */
   getCapability<T>(interfaceDef: InterfaceDef<T>): T {
     return this._registry.get(this.capability(interfaceDef));
+  }
+
+  /**
+   * Waits for a capability to be available.
+   * @returns The capability.
+   */
+  async waitForCapability<T>(interfaceDef: InterfaceDef<T>): Promise<T> {
+    const [capability] = this.getCapabilities(interfaceDef);
+    if (capability) {
+      return capability;
+    }
+
+    const trigger = new Trigger<T>();
+    const cancel = this._registry.subscribe(this.capabilities(interfaceDef), (capabilities) => {
+      if (capabilities.length > 0) {
+        trigger.wake(capabilities[0]);
+      }
+    });
+    const result = await trigger.wait();
+    cancel();
+    return result;
   }
 
   async activatePromise(event: ActivationEvent): Promise<boolean> {

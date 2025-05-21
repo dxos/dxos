@@ -3,7 +3,7 @@
 //
 
 import { batch } from '@preact/signals-core';
-import { Schema, Effect, pipe } from 'effect';
+import { Schema, Effect, pipe, Option } from 'effect';
 
 import {
   Capabilities,
@@ -11,7 +11,7 @@ import {
   contributes,
   IntentAction,
   LayoutAction,
-  type PluginsContext,
+  type PluginContext,
   createIntent,
   chain,
 } from '@dxos/app-framework';
@@ -20,7 +20,6 @@ import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
@@ -38,13 +37,13 @@ import {
 } from '../types';
 import { setActive } from '../util';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: IntentAction.ShowUndo,
       resolve: (data) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const { undoPromise: undo } = context.requestCapability(Capabilities.IntentDispatcher);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
+        const { undoPromise: undo } = context.getCapability(Capabilities.IntentDispatcher);
 
         // TODO(wittjosiah): Support undoing further back than the last action.
         if (layout.currentUndoId) {
@@ -72,7 +71,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateSidebar.fields.input> =>
         Schema.is(LayoutAction.UpdateSidebar.fields.input)(data),
       resolve: ({ options }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         const next = options?.state ?? layout.sidebarState;
         if (next !== layout.sidebarState) {
           layout.sidebarState = next;
@@ -86,7 +85,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateComplementary.fields.input> =>
         Schema.is(LayoutAction.UpdateComplementary.fields.input)(data),
       resolve: ({ subject, options }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
 
         if (layout.complementarySidebarPanel !== subject) {
           layout.complementarySidebarPanel = subject;
@@ -105,7 +104,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateDialog.fields.input> =>
         Schema.is(LayoutAction.UpdateDialog.fields.input)(data),
       resolve: ({ subject, options }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.dialogOpen = options.state ?? Boolean(subject);
         layout.dialogContent = subject ? { component: subject, props: options.props } : null;
         layout.dialogBlockAlign = options.blockAlign ?? 'center';
@@ -119,7 +118,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
         Schema.is(LayoutAction.UpdatePopover.fields.input)(data),
       resolve: ({ subject, options }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.popoverOpen = options.state ?? Boolean(subject);
         layout.popoverContent =
           typeof subject === 'string' ? { component: subject, props: options.props } : subject ? { subject } : null;
@@ -138,7 +137,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.AddToast.fields.input> =>
         Schema.is(LayoutAction.AddToast.fields.input)(data),
       resolve: ({ subject }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.toasts.push(subject);
       },
     }),
@@ -158,7 +157,7 @@ export default (context: PluginsContext) =>
         return true;
       },
       resolve: ({ subject, options }) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
 
         const setMode = (mode: LayoutMode) => {
           const deck = state.deck;
@@ -205,8 +204,8 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
         Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
       resolve: ({ subject }) => {
-        const { graph } = context.requestCapability(Capabilities.AppGraph);
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const { graph } = context.getCapability(Capabilities.AppGraph);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
         batch(() => {
           // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
           //  Ideally this should be worked into the data model in a generic way.
@@ -225,8 +224,7 @@ export default (context: PluginsContext) =>
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
         } else {
-          const node = graph.findNode(subject);
-          const [item] = node ? graph.nodes(node) : [];
+          const [item] = graph.getConnections(subject);
           if (item) {
             return {
               intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],
@@ -240,7 +238,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.RevertWorkspace.fields.input> =>
         Schema.is(LayoutAction.RevertWorkspace.fields.input)(data),
       resolve: () => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
         return {
           intents: [createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: state.previousDeck })],
         };
@@ -252,15 +250,15 @@ export default (context: PluginsContext) =>
         Schema.is(LayoutAction.Open.fields.input)(data),
       resolve: ({ subject, options }) =>
         Effect.gen(function* () {
-          const { graph } = context.requestCapability(Capabilities.AppGraph);
-          const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-          const attention = context.requestCapability(AttentionCapabilities.Attention);
+          const { graph } = context.getCapability(Capabilities.AppGraph);
+          const state = context.getCapability(DeckCapabilities.MutableDeckState);
+          const attention = context.getCapability(AttentionCapabilities.Attention);
           const settings = context
-            .requestCapabilities(Capabilities.SettingsStore)[0]
+            .getCapabilities(Capabilities.SettingsStore)[0]
             ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
           if (options?.workspace && state.activeDeck !== options?.workspace) {
-            const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
             yield* dispatch(
               createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: options.workspace }),
             );
@@ -294,8 +292,13 @@ export default (context: PluginsContext) =>
                 : []),
               createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
               ...newlyOpen.map((subjectId) => {
-                const active = graph?.findNode(subjectId)?.data;
-                const typename = isLiveObject(active) ? getTypename(active) : undefined;
+                const typename = Option.match(graph.getNode(subjectId), {
+                  onNone: () => undefined,
+                  onSome: (node) => {
+                    const active = node.data;
+                    return isLiveObject(active) ? getTypename(active) : undefined;
+                  },
+                });
                 return createIntent(ObservabilityAction.SendEvent, {
                   name: 'navigation.activate',
                   properties: {
@@ -313,8 +316,8 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Close.fields.input> =>
         Schema.is(LayoutAction.Close.fields.input)(data),
       resolve: ({ subject }) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
+        const attention = context.getCapability(AttentionCapabilities.Attention);
         const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
         const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
         const toAttend = setActive({ next, state, attention });
@@ -336,8 +339,8 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Set.fields.input> =>
         Schema.is(LayoutAction.Set.fields.input)(data),
       resolve: ({ subject }) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
+        const attention = context.getCapability(AttentionCapabilities.Attention);
         const toAttend = setActive({ next: subject as string[], state, attention });
         return {
           intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
@@ -349,21 +352,21 @@ export default (context: PluginsContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.ScrollIntoView.fields.input> =>
         Schema.is(LayoutAction.ScrollIntoView.fields.input)(data),
       resolve: ({ subject }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.scrollIntoView = subject;
       },
     }),
     createResolver({
       intent: DeckAction.UpdatePlankSize,
       resolve: (data) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
         state.deck.plankSizing[data.id] = data.size;
       },
     }),
     createResolver({
       intent: DeckAction.ChangeCompanion,
       resolve: (data) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
         // TODO(thure): Reactivity only works when creating a lexically new `activeCompanions`… Are these not proxy objects?
         if (data.companion === null) {
           const { [data.primary]: _, ...nextActiveCompanions } = state.deck.activeCompanions ?? {};
@@ -380,9 +383,9 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: DeckAction.Adjust,
       resolve: (adjustment) => {
-        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const { graph } = context.requestCapability(Capabilities.AppGraph);
+        const state = context.getCapability(DeckCapabilities.MutableDeckState);
+        const attention = context.getCapability(AttentionCapabilities.Attention);
+        const { graph } = context.getCapability(Capabilities.AppGraph);
 
         return batch(() => {
           if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
@@ -394,20 +397,25 @@ export default (context: PluginsContext) =>
           }
 
           if (adjustment.type === 'companion') {
-            const node = graph.findNode(adjustment.id);
-            const [companion] = node
-              ? graph
-                  .nodes(node, { filter: (n): n is Node<any> => n.type === PLANK_COMPANION_TYPE })
-                  .toSorted((a, b) => byPosition(a.properties, b.properties))
-              : [];
-            if (companion) {
-              return {
-                intents: [
-                  // TODO(wittjosiah): This should remember the previously selected companion.
-                  createIntent(DeckAction.ChangeCompanion, { primary: adjustment.id, companion: companion.id }),
-                ],
-              };
-            }
+            return pipe(
+              graph.getNode(adjustment.id),
+              Option.map((node) =>
+                graph
+                  .getConnections(node.id)
+                  .filter((n) => n.type === PLANK_COMPANION_TYPE)
+                  .toSorted((a, b) => byPosition(a.properties, b.properties)),
+              ),
+              Option.flatMap((companions) => (companions.length > 0 ? Option.some(companions[0]) : Option.none())),
+              Option.match({
+                onNone: () => ({}),
+                onSome: (companion) => ({
+                  intents: [
+                    // TODO(wittjosiah): This should remember the previously selected companion.
+                    createIntent(DeckAction.ChangeCompanion, { primary: adjustment.id, companion: companion.id }),
+                  ],
+                }),
+              }),
+            );
           }
 
           if (adjustment.type.startsWith('solo')) {

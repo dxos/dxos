@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { type PluginsContext } from '@dxos/app-framework';
+import { type PluginContext } from '@dxos/app-framework';
 import { type Client, PublicKey, type ClientOptions } from '@dxos/react-client';
 import { type MaybePromise } from '@dxos/util';
 
@@ -101,7 +101,7 @@ export type ClientPluginOptions = ClientOptions & {
   /**
    * Run after the client has been initialized.
    */
-  onClientInitialized?: (context: PluginsContext, client: Client) => MaybePromise<void>;
+  onClientInitialized?: (context: PluginContext, client: Client) => MaybePromise<void>;
 
   /**
    * Called when the client is reset.

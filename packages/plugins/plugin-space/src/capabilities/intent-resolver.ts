@@ -10,7 +10,7 @@ import {
   createIntent,
   createResolver,
   LayoutAction,
-  type PluginsContext,
+  type PluginContext,
 } from '@dxos/app-framework';
 import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -41,14 +41,14 @@ import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
 const SPACE_MAX_OBJECTS = 500;
 
 type IntentResolverOptions = {
-  context: PluginsContext;
+  context: PluginContext;
   createInvitationUrl: (invitationCode: string) => string;
   observability?: boolean;
 };
 
 export default ({ context, observability, createInvitationUrl }: IntentResolverOptions) => {
   const resolve = (typename: string) =>
-    context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+    context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
   return contributes(Capabilities.IntentResolver, [
     createResolver({
@@ -68,7 +68,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.Create,
       resolve: async ({ name, hue, icon, edgeReplication }) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         const space = await client.spaces.create({ name, hue, icon });
         if (edgeReplication) {
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
@@ -157,7 +157,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       intent: SpaceAction.GetShareLink,
       resolve: ({ space, target, copyToClipboard }) =>
         Effect.gen(function* () {
-          const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const invitation = yield* dispatch(
             createIntent(SpaceAction.Share, {
               space,
@@ -274,7 +274,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.Migrate,
       resolve: async ({ space, version: targetVersion }) => {
-        const state = context.requestCapability(SpaceCapabilities.MutableState);
+        const state = context.getCapability(SpaceCapabilities.MutableState);
 
         if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
           state.sdkMigrationRunning[space.id] = true;
@@ -305,7 +305,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.OpenCreateObject,
       resolve: ({ target, navigable = true }) => {
-        const state = context.requestCapability(SpaceCapabilities.State);
+        const state = context.getCapability(SpaceCapabilities.State);
 
         return {
           intents: [
@@ -405,7 +405,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.RemoveObjects,
       resolve: async ({ objects, target, deletionData }, undo) => {
-        const layout = context.requestCapability(Capabilities.Layout);
+        const layout = context.getCapability(Capabilities.Layout);
 
         // All objects must be a member of the same space.
         const space = getSpace(objects[0]);
@@ -534,7 +534,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: SpaceAction.WaitForObject,
       resolve: async ({ id }) => {
-        const state = context.requestCapability(SpaceCapabilities.MutableState);
+        const state = context.getCapability(SpaceCapabilities.MutableState);
         state.awaiting = id;
       },
     }),

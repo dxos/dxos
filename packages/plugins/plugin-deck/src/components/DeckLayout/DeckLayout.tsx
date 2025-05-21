@@ -26,9 +26,10 @@ import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 import { DeckCapabilities } from '../../capabilities';
+import { useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { type DeckSettingsProps, getMode } from '../../types';
-import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
+import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { Plank } from '../Plank';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
@@ -59,7 +60,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
     const attended = untracked(() => {
-      const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
+      const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
       return attention.current;
     });
     const firstId = solo ?? active[0];
@@ -78,7 +79,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     if (!isNotMobile && getMode(deck) === 'deck') {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
       const attended = untracked(() => {
-        const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
+        const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
         return attention.current;
       });
 

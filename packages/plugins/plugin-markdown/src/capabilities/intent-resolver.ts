@@ -7,7 +7,7 @@ import {
   CollaborationActions,
   contributes,
   createResolver,
-  type PluginsContext,
+  type PluginContext,
 } from '@dxos/app-framework';
 import { next as A } from '@dxos/automerge/automerge';
 import { isInstanceOf, ObjectId } from '@dxos/echo-schema';
@@ -22,7 +22,7 @@ import { DataType } from '@dxos/schema';
 import { MarkdownCapabilities } from './capabilities';
 import { DocumentType, MarkdownAction } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
@@ -40,7 +40,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: MarkdownAction.SetViewMode,
       resolve: ({ id, viewMode }) => {
-        const { state } = context.requestCapability(MarkdownCapabilities.State);
+        const { state } = context.getCapability(MarkdownCapabilities.State);
         state.viewMode[id] = viewMode;
       },
     }),
@@ -48,7 +48,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: CollaborationActions.InsertContent,
       resolve: async ({ spaceId, target: targetRef, object: objectRef, label }) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         const space = client.spaces.get(spaceId);
         const target = await resolveRef(client, targetRef.dxn, space);
         if (target && isInstanceOf(DocumentType, target)) {

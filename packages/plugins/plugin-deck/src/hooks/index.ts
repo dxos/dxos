@@ -2,6 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './useBreakpoints';
+export * from './useCompanions';
 export * from './useDeckCompanions';
-export * from './useNodeActionExpander';
+export * from './useHoistStatusbar';
 export * from './useMainSize';
+export * from './useNodeActionExpander';
+export * from './useNodeActionExpander';

@@ -90,7 +90,7 @@ export interface ReadableGraph {
   /**
    * Get the rx key for the connections of the node with the given id.
    */
-  connections(id: string, relation: Relation): Rx.Rx<Node[]>;
+  connections(id: string, relation?: Relation): Rx.Rx<Node[]>;
 
   /**
    * Get the rx key for the actions of the node with the given id.
@@ -122,7 +122,7 @@ export interface ReadableGraph {
   /**
    * Get all nodes connected to the node with the given id by the given relation from the graph's registry.
    */
-  getConnections(id: string, relation: Relation): Node[];
+  getConnections(id: string, relation?: Relation): Node[];
 
   /**
    * Get all actions connected to the node with the given id from the graph's registry.
@@ -141,7 +141,7 @@ export interface ReadableGraph {
    * @param options.relation The relation to traverse graph edges.
    * @param options.visitor A callback which is called for each node visited during traversal.
    */
-  traverse(options: GraphTraversalOptions, path: string[]): void;
+  traverse(options: GraphTraversalOptions, path?: string[]): void;
 
   /**
    * Get the path between two nodes in the graph.
@@ -157,7 +157,7 @@ export interface ReadableGraph {
   ): Promise<string[]>;
 }
 
-export interface WritableGraph extends ReadableGraph {
+export interface ExpandableGraph extends ReadableGraph {
   /**
    * Initialize a node in the graph.
    *
@@ -170,8 +170,15 @@ export interface WritableGraph extends ReadableGraph {
    *
    * Fires the `onExpand` callback to add connections to the node.
    */
-  expand(id: string, relation: Relation): void;
+  expand(id: string, relation?: Relation): void;
 
+  /**
+   * Sort the edges of the node with the given id.
+   */
+  sortEdges(id: string, relation: Relation, order: string[]): void;
+}
+
+export interface WritableGraph extends ExpandableGraph {
   /**
    * Add nodes to the graph.
    */
@@ -211,11 +218,6 @@ export interface WritableGraph extends ReadableGraph {
    * Remove an edge from the graph.
    */
   removeEdge(edge: Edge, removeOrphans?: boolean): void;
-
-  /**
-   * Sort the edges of the node with the given id.
-   */
-  sortEdges(id: string, relation: Relation, order: string[]): void;
 }
 
 /**
@@ -243,7 +245,7 @@ export class Graph implements WritableGraph {
   });
 
   private readonly _nodeOrThrow = Rx.family<string, Rx.Rx<Node>>((id) => {
-    return Rx.readable((get) => {
+    return Rx.make((get) => {
       const node = get(this._node(id));
       invariant(Option.isSome(node), `Node not available: ${id}`);
       return node.value;
@@ -258,7 +260,7 @@ export class Graph implements WritableGraph {
   // NOTE: Currently the argument to the family needs to be referentially stable for the rx to be referentially stable.
   // TODO(wittjosiah): Rx feature request, support for something akin to `ComplexMap` to allow for complex arguments.
   private readonly _connections = Rx.family<string, Rx.Rx<Node[]>>((key) => {
-    return Rx.readable((get) => {
+    return Rx.make((get) => {
       const [id, relation] = key.split('+');
       const edges = get(this._edges(id));
       return edges[relation as Relation]
@@ -269,7 +271,7 @@ export class Graph implements WritableGraph {
   });
 
   private readonly _actions = Rx.family<string, Rx.Rx<(Action | ActionGroup)[]>>((id) => {
-    return Rx.readable((get) => {
+    return Rx.make((get) => {
       return get(this._connections(`${id}+outbound`)).filter(
         (node) => node.type === ACTION_TYPE || node.type === ACTION_GROUP_TYPE,
       );

@@ -13,7 +13,8 @@ import {
   createSurface,
   LayoutAction,
   useCapability,
-  type PluginsContext,
+  useIntentDispatcher,
+  type PluginContext,
 } from '@dxos/app-framework';
 import {
   AutomergePanel,
@@ -91,7 +92,7 @@ const useCurrentSpace = () => {
   return space;
 };
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${DEBUG_PLUGIN}/plugin-settings`,
@@ -118,7 +119,7 @@ export default (context: PluginsContext) =>
               return;
             }
 
-            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
             objects.forEach((object) => {
               void dispatch(createIntent(SpaceAction.AddObject, { target: collection, object }));
             });
@@ -141,7 +142,7 @@ export default (context: PluginsContext) =>
       position: 'hoist',
       filter: (data): data is { subject: AnyLiveObject<any> } => {
         const settings = context
-          .requestCapability(Capabilities.SettingsStore)
+          .getCapability(Capabilities.SettingsStore)
           .getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
         return isEchoObject(data.subject) && !!settings.wireframe;
       },
@@ -233,7 +234,7 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Spaces,
       component: () => {
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const handleSelect = useCallback(
           () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Space] })),
           [dispatch],
@@ -247,7 +248,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is any => data.subject === Devtools.Echo.Space,
       component: () => {
         const space = useCurrentSpace();
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const handleSelect = useCallback(
           () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Feeds] })),
           [dispatch],
@@ -369,7 +370,7 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Testing,
       component: () => {
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const onSpaceCreate = useCallback(
           async (space: Space) => {
             await space.waitUntilReady();

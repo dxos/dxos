@@ -10,7 +10,7 @@ import { type MulticastObservable, type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { byPosition, isNode, isNonNullable, type MaybePromise, type Position } from '@dxos/util';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams } from './graph';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams, type ExpandableGraph } from './graph';
 import { actionGroupSymbol, type ActionData, type Node, type NodeArg, type Relation } from '../node';
 
 /**
@@ -95,7 +95,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           position,
           relation: 'outbound',
           connector: Rx.family((node) =>
-            Rx.readable((get) =>
+            Rx.make((get) =>
               get(actionGroups(node)).map((arg) => ({
                 ...arg,
                 data: actionGroupSymbol,
@@ -111,7 +111,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           position,
           relation: 'outbound',
           connector: Rx.family((node) =>
-            Rx.readable((get) => get(actions(node)).map((arg) => ({ ...arg, type: ACTION_TYPE }))).pipe(
+            Rx.make((get) => get(actions(node)).map((arg) => ({ ...arg, type: ACTION_TYPE }))).pipe(
               Rx.withLabel(`graph-builder:connector:actions:${id}`),
             ),
           ),
@@ -182,7 +182,7 @@ export class GraphBuilder {
     return new GraphBuilder({ nodes, edges, registry });
   }
 
-  get graph() {
+  get graph(): ExpandableGraph {
     return this._graph;
   }
 
@@ -316,7 +316,7 @@ export class GraphBuilder {
  * Will return a new rx instance each time.
  */
 export const rxFromSignal = <T>(cb: () => T): Rx.Rx<T> => {
-  return Rx.readable((get) => {
+  return Rx.make((get) => {
     const dispose = effect(() => {
       get.setSelf(cb());
     });
@@ -328,7 +328,7 @@ export const rxFromSignal = <T>(cb: () => T): Rx.Rx<T> => {
 };
 
 const observableFamily = Rx.family((observable: MulticastObservable<any>) => {
-  return Rx.readable((get) => {
+  return Rx.make((get) => {
     const subscription = observable.subscribe((value) => get.setSelf(value));
 
     get.addFinalizer(() => subscription.unsubscribe());

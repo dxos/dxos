@@ -4,7 +4,15 @@
 
 import { useEffect } from 'react';
 
-import { type Action, Graph, type NodeArg, ACTION_TYPE, ACTION_GROUP_TYPE, actionGroupSymbol } from '@dxos/app-graph';
+import {
+  type Action,
+  Graph,
+  type NodeArg,
+  ACTION_TYPE,
+  ACTION_GROUP_TYPE,
+  actionGroupSymbol,
+  ROOT_ID,
+} from '@dxos/app-graph';
 import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
@@ -76,19 +84,15 @@ export const createNestedActionsResolver = (groupParams?: CreateActionsParams, p
   const actionGroups = createActions({ type: ACTION_GROUP_TYPE, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
-    // TODO(thure): these methods exist on `graph` but are marked as `@internal`; how should consumers properly build
-    //  graph “islands” for the purposes of these components?
-    // @ts-ignore
-    graph._addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
-    // @ts-ignore
-    graph._addEdges([
+    graph.addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
+    graph.addEdges([
       { source: 'root', target: group.id },
       ...actions.map((action) => ({ source: group.id, target: action.id })),
     ]);
-    void graph.expand(group);
+    graph.expand(group.id);
   });
   const resolveGroupItems = (groupNode?: MenuItemGroup) =>
-    (graph.actions(groupNode ?? graph.root) || null) as MenuItem[] | null;
+    (graph.getActions(groupNode?.id ?? ROOT_ID) || null) as MenuItem[] | null;
   return { resolveGroupItems };
 };
 

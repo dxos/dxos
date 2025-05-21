@@ -5,6 +5,7 @@
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { untracked } from '@preact/signals-core';
+import { Array, pipe } from 'effect';
 import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
 import {
@@ -16,13 +17,14 @@ import {
   useIntentDispatcher,
   useLayout,
 } from '@dxos/app-framework';
-import { isAction, isActionLike, type Node } from '@dxos/app-graph';
+import { isAction, isActionLike, type ReadableGraph, ROOT_ID, type Node } from '@dxos/app-graph';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { useConnections } from '@dxos/plugin-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
-import { arrayMove } from '@dxos/util';
+import { arrayMove, byPosition } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree } from './NavTree';
 import { NavTreeContext } from './NavTreeContext';
@@ -30,15 +32,7 @@ import { type NavTreeContextValue } from './types';
 import { NavTreeCapabilities } from '../capabilities';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
-import {
-  expandActions,
-  expandChildren,
-  getActions as naturalGetActions,
-  getChildren,
-  getParent,
-  resolveMigrationOperation,
-  expandChildrenAndActions,
-} from '../util';
+import { getActions as naturalGetActions, getChildren, getParent, resolveMigrationOperation } from '../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -49,6 +43,33 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
 
 const getChildrenFilter = (node: Node): node is Node =>
   untracked(() => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE);
+
+const filterItems = (node: Node, disposition?: string) => {
+  if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
+    return false;
+  } else if (!disposition) {
+    const action = isAction(node);
+    return !action || node.properties.disposition === 'item';
+  } else {
+    return node.properties.disposition === disposition;
+  }
+};
+
+const getItems = (graph: ReadableGraph, node?: Node, disposition?: string) => {
+  return pipe(
+    node?.id ?? ROOT_ID,
+    graph.getConnections,
+    Array.filter((node) => filterItems(node, disposition)),
+  );
+};
+
+const useItems = (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
+  const { graph } = useAppGraph();
+  const connections = useConnections(graph, node?.id ?? ROOT_ID).filter((node) =>
+    filterItems(node, options?.disposition),
+  );
+  return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
+};
 
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
@@ -65,32 +86,9 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
-  const getItems = useCallback(
-    (node?: Node, disposition?: string) => {
-      return graph.nodes(node ?? graph.root, {
-        filter: (node): node is Node => {
-          return untracked(() => {
-            if (
-              !disposition &&
-              (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')
-            ) {
-              return false;
-            } else if (!disposition) {
-              const action = isAction(node);
-              return !action || node.properties.disposition === 'item';
-            } else {
-              return node.properties.disposition === disposition;
-            }
-          });
-        },
-      });
-    },
-    [graph],
-  );
-
   const getProps = useCallback(
     (node: Node, path: string[]): PropsFromTreeItem => {
-      const children = getChildren(graph, node, getChildrenFilter, path);
+      const children = getChildren(graph, node, path).filter(getChildrenFilter);
       const parentOf =
         children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
       return {
@@ -109,15 +107,11 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const loadDescendents = useCallback(
     (node: Node) => {
-      void expandActions(graph, node);
-      if (!isActionLike(node)) {
-        void expandChildren(graph, node).then(() =>
-          // Load one level deeper, which resolves some juddering observed on open/close.
-          Promise.all(
-            getChildren(graph, node).flatMap((child) => [expandActions(graph, child), expandChildren(graph, child)]),
-          ),
-        );
-      }
+      graph.expand(node.id, 'outbound');
+      // Load one level deeper, which resolves some juddering observed on open/close.
+      graph.getConnections(node.id, 'outbound').forEach((child) => {
+        graph.expand(child.id, 'outbound');
+      });
     },
     [graph],
   );
@@ -126,11 +120,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
       // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
       setItem(path, 'open', open);
-
-      if (graph) {
-        const node = graph.findNode(id);
-        return node && expandChildrenAndActions(graph, node as NavTreeItemGraphNode);
-      }
+      graph.expand(id, 'outbound');
     },
     [graph],
   );
@@ -157,7 +147,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
       // Open the first item if the workspace is empty.
       if (layout.active.length === 0) {
-        const [item] = getItems(node).filter((node) => !isActionLike(node));
+        const [item] = getItems(graph, node).filter((node) => !isActionLike(node));
         if (item && item.data) {
           await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] }));
         }
@@ -169,6 +159,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const canDrop = useCallback((source: TreeData, target: TreeData) => {
     const sourceNode = source.item as Node;
     const targetNode = target.item as Node;
+    // TODO(wittjosiah): This shouldn't depend directly on client, there should be a graph-level abstraction.
     if (isSpace(targetNode.data)) {
       // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
       return isEchoObject(sourceNode.data) || isSpace(sourceNode.data);
@@ -186,7 +177,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       }
 
       if (isAction(node)) {
-        const [parent] = graph.nodes(node, { relation: 'inbound' });
+        const [parent] = graph.getConnections(node.id, 'inbound');
         void (parent && node.data({ parent, caller: NAV_TREE_ITEM }));
         return;
       }
@@ -208,7 +199,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
         void dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: node.id }));
       }
 
-      const defaultAction = graph.actions(node).find((action) => action.properties?.disposition === 'default');
+      const defaultAction = graph.getActions(node.id).find((action) => action.properties?.disposition === 'default');
       if (isAction(defaultAction)) {
         void (defaultAction.data as () => void)();
       }
@@ -247,8 +238,8 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
               : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
           const sourceParent = getParent(graph, sourceNode, sourcePath);
           const targetParent = getParent(graph, targetNode, targetPath);
-          const sourceItems = getItems(sourceParent);
-          const targetItems = getItems(targetParent);
+          const sourceItems = getItems(graph, sourceParent);
+          const targetItems = getItems(graph, targetParent);
           const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
           const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
           const migrationIndex =
@@ -293,13 +284,13 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const navTreeContextValue = useMemo(
     () => ({
+      useItems,
       tab,
       getActions,
       loadDescendents,
       renderItemEnd,
       popoverAnchorId,
       topbar,
-      getItems,
       getProps,
       isCurrent,
       isOpen,
@@ -318,7 +309,6 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       renderItemEnd,
       popoverAnchorId,
       topbar,
-      getItems,
       getProps,
       isCurrent,
       isOpen,
@@ -334,7 +324,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   return (
     <NavTreeContext.Provider value={navTreeContextValue}>
-      <NavTree id={graph.root.id} root={graph.root} open={layout.sidebarOpen} />
+      <NavTree id={ROOT_ID} root={graph.root} open={layout.sidebarOpen} />
     </NavTreeContext.Provider>
   );
 });

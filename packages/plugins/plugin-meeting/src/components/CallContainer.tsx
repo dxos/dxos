@@ -8,7 +8,7 @@ import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { useNode } from '@dxos/plugin-graph';
+import { type Node, useConnections } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -27,7 +27,6 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
   const callManager = useCapability(MeetingCapabilities.CallManager);
   const roomId = meeting ? fullyQualifiedId(meeting) : _roomId;
   const { graph } = useAppGraph();
-  const node = useNode(graph, meeting && fullyQualifiedId(meeting));
   const joinSound = useSoundEffect('JoinCall');
   const leaveSound = useSoundEffect('LeaveCall');
 
@@ -38,7 +37,9 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
   }, [roomId, callManager.joined, callManager.roomId]);
 
   // TODO(thure): Should these be intents rather than callbacks?
-  const companions = node ? graph.nodes<any, MeetingCallProperties>(node, { type: PLANK_COMPANION_TYPE }) : [];
+  const companions = useConnections(graph, meeting && fullyQualifiedId(meeting)).filter(
+    ({ type }) => type === PLANK_COMPANION_TYPE,
+  ) as Node<any, MeetingCallProperties>[];
   useEffect(() => {
     const ctx = new Context();
     callManager.left.on(ctx, (roomId) => {

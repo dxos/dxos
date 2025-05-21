@@ -33,7 +33,6 @@ import {
   CREATE_SPACE_DIALOG,
   CreateObjectDialog,
   CreateSpaceDialog,
-  InlineSyncStatus,
   JOIN_DIALOG,
   JoinDialog,
   MenuFooter,
@@ -236,12 +235,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
     }),
     // TODO(wittjosiah): Broken?
-    createSurface({
-      id: `${SPACE_PLUGIN}/navtree-sync-status`,
-      role: 'navtree-item-end',
-      filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
-      component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
-    }),
+    // createSurface({
+    //   id: `${SPACE_PLUGIN}/navtree-sync-status`,
+    //   role: 'navtree-item-end',
+    //   filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
+    //   component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
+    // }),
     createSurface({
       id: `${SPACE_PLUGIN}/navbar-presence`,
       role: 'navbar-end',

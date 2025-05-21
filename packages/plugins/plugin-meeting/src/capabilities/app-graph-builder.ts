@@ -2,66 +2,89 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
+import { Rx } from '@effect-rx/rx-react';
+import { Option, pipe } from 'effect';
+
+import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, type Node } from '@dxos/plugin-graph';
+import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { COMPOSER_SPACE_LOCK, memoizeQuery } from '@dxos/plugin-space';
+import { COMPOSER_SPACE_LOCK, rxFromQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
-import { Query, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { Query, type QueryResult, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingAction, MeetingType } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${MEETING_PLUGIN}/active-meeting`,
-      filter: (node): node is Node<null> => node.id === 'root',
-      connector: ({ node }) => {
-        const call = context.requestCapability(MeetingCapabilities.CallManager);
-        if (!call.joined) {
-          return [];
-        }
-
-        return [
-          {
-            id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
-            type: DECK_COMPANION_TYPE,
-            data: null,
-            properties: {
-              label: ['meeting panel label', { ns: MEETING_PLUGIN }],
-              icon: 'ph--video-conference--regular',
-              position: 'hoist',
-              disposition: 'hidden',
-            },
-          },
-        ];
-      },
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.map((node) => {
+              const [call] = get(context.capabilities(MeetingCapabilities.CallManager));
+              return call?.joined
+                ? [
+                    {
+                      id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
+                      type: DECK_COMPANION_TYPE,
+                      data: null,
+                      properties: {
+                        label: ['meeting panel label', { ns: MEETING_PLUGIN }],
+                        icon: 'ph--video-conference--regular',
+                        position: 'hoist',
+                        disposition: 'hidden',
+                      },
+                    },
+                  ]
+                : [];
+            }),
+            Option.getOrElse(() => []),
+          ),
+        ),
     }),
 
     createExtension({
       id: `${MEETING_PLUGIN}/root`,
-      filter: (node): node is Node<Space> => node.type === SPACE_TYPE,
-      connector: ({ node }) => {
-        const meetings = memoizeQuery(node.data, Query.type(MeetingType));
-        return meetings.length > 0
-          ? [
-              {
-                id: `${node.id}-meetings`,
-                type: `${MEETING_PLUGIN}/meetings`,
-                data: null,
-                properties: {
-                  label: ['meetings label', { ns: MEETING_PLUGIN }],
-                  icon: 'ph--video-conference--regular',
-                  space: node.data,
-                },
-              },
-            ]
-          : [];
+      connector: (node) => {
+        let query: QueryResult<MeetingType> | undefined;
+        return Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) =>
+              node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
+            ),
+            Option.map((space) => {
+              if (!query) {
+                query = space.db.query(Query.type(MeetingType));
+              }
+
+              const meetings = get(rxFromQuery(query));
+              return meetings.length > 0
+                ? [
+                    {
+                      id: `${space.id}-meetings`,
+                      type: `${MEETING_PLUGIN}/meetings`,
+                      data: null,
+                      properties: {
+                        label: ['meetings label', { ns: MEETING_PLUGIN }],
+                        icon: 'ph--video-conference--regular',
+                        space,
+                      },
+                    },
+                  ]
+                : [];
+            }),
+            Option.getOrElse(() => []),
+          ),
+        );
       },
     }),
 
@@ -71,91 +94,134 @@ export default (context: PluginsContext) =>
     //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
     createExtension({
       id: `${MEETING_PLUGIN}/meetings`,
-      filter: (node): node is Node<null, { space: Space }> => node.type === `${MEETING_PLUGIN}/meetings`,
-      connector: ({ node }) => {
-        const { metadata } = context.requestCapability(
-          Capabilities.Metadata,
-          (capability): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
-            capability.id === MeetingType.typename,
+      connector: (node) => {
+        let query: QueryResult<MeetingType> | undefined;
+        return Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) =>
+              node.type === `${MEETING_PLUGIN}/meetings` && isSpace(node.properties.space)
+                ? Option.some(node.properties.space)
+                : Option.none(),
+            ),
+            Option.map((space) => {
+              if (!query) {
+                query = space.db.query(Query.type(MeetingType));
+              }
+
+              const [{ metadata }] = get(context.capabilities(Capabilities.Metadata)).filter(
+                (
+                  capability,
+                ): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
+                  capability.id === MeetingType.typename,
+              );
+
+              return get(rxFromQuery(query))
+                .toSorted((a, b) => {
+                  const nameA = a.name ?? '';
+                  const nameB = b.name ?? '';
+                  return nameA.localeCompare(nameB);
+                })
+                .map((meeting) => ({
+                  id: fullyQualifiedId(meeting),
+                  type: `${MEETING_PLUGIN}/meeting`,
+                  data: meeting,
+                  properties: {
+                    label: metadata.label(meeting) ?? ['meeting label', { ns: MEETING_PLUGIN }],
+                    icon: metadata.icon,
+                  },
+                }));
+            }),
+            Option.getOrElse(() => []),
+          ),
         );
-        const meetings = memoizeQuery(node.properties.space, Query.type(MeetingType));
-        return meetings
-          .toSorted((a, b) => {
-            const nameA = a.name ?? '';
-            const nameB = b.name ?? '';
-            return nameA.localeCompare(nameB);
-          })
-          .map((meeting) => ({
-            id: fullyQualifiedId(meeting),
-            type: `${MEETING_PLUGIN}/meeting`,
-            data: meeting,
-            properties: {
-              label: metadata.label(meeting) ?? ['meeting label', { ns: MEETING_PLUGIN }],
-              icon: metadata.icon,
-            },
-          }));
       },
     }),
 
     createExtension({
       id: `${MEETING_PLUGIN}/share-meeting-link`,
-      filter: (node): node is Node<MeetingType> =>
-        isInstanceOf(MeetingType, node.data) && !getSpace(node.data)?.properties[COMPOSER_SPACE_LOCK],
-      actions: ({ node }) => [
-        {
-          id: `${fullyQualifiedId(node.data)}/action/share-meeting-link`,
-          data: async () => {
-            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            const target = node.data;
-            const space = getSpace(target);
-            invariant(space);
-            await dispatch(
-              createIntent(SpaceAction.GetShareLink, {
-                space,
-                target: target && fullyQualifiedId(target),
-                copyToClipboard: true,
-              }),
-            );
-          },
-          properties: {
-            label: ['share meeting link label', { ns: MEETING_PLUGIN }],
-            icon: 'ph--share-network--regular',
-          },
-        },
-      ],
+      actions: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) =>
+              isInstanceOf(MeetingType, node.data) && !getSpace(node.data)?.properties[COMPOSER_SPACE_LOCK]
+                ? Option.some(node.data)
+                : Option.none(),
+            ),
+            Option.map((meeting) => [
+              {
+                id: `${fullyQualifiedId(meeting)}/action/share-meeting-link`,
+                data: async () => {
+                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+                  const space = getSpace(meeting);
+                  invariant(space);
+                  await dispatch(
+                    createIntent(SpaceAction.GetShareLink, {
+                      space,
+                      target: fullyQualifiedId(meeting),
+                      copyToClipboard: true,
+                    }),
+                  );
+                },
+                properties: {
+                  label: ['share meeting link label', { ns: MEETING_PLUGIN }],
+                  icon: 'ph--share-network--regular',
+                },
+              },
+            ]),
+            Option.getOrElse(() => []),
+          ),
+        ),
     }),
 
     createExtension({
       id: `${MEETING_PLUGIN}/meeting-summary`,
-      filter: (node): node is Node<MeetingType> => isInstanceOf(MeetingType, node.data),
       // TODO(wittjosiah): Only show the summarize action if the meeting plausibly completed.
-      actions: ({ node }) => [
-        {
-          id: `${fullyQualifiedId(node.data)}/action/summarize`,
-          data: async () => {
-            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            await dispatch(createIntent(MeetingAction.Summarize, { meeting: node.data }));
-          },
-          properties: {
-            label: ['summarize label', { ns: MEETING_PLUGIN }],
-            icon: 'ph--book-open-text--regular',
-          },
-        },
-      ],
+      actions: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (isInstanceOf(MeetingType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.map((meeting) => [
+              {
+                id: `${fullyQualifiedId(meeting)}/action/summarize`,
+                data: async () => {
+                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+                  await dispatch(createIntent(MeetingAction.Summarize, { meeting }));
+                },
+                properties: {
+                  label: ['summarize label', { ns: MEETING_PLUGIN }],
+                  icon: 'ph--book-open-text--regular',
+                },
+              },
+            ]),
+            Option.getOrElse(() => []),
+          ),
+        ),
       // TODO(wittjosiah): Only show the summary companion if the meeting plausibly completed.
-      connector: ({ node }) => [
-        {
-          id: `${fullyQualifiedId(node.data)}${ATTENDABLE_PATH_SEPARATOR}summary`,
-          type: PLANK_COMPANION_TYPE,
-          data: 'summary',
-          properties: {
-            label: ['meeting summary label', { ns: MEETING_PLUGIN }],
-            icon: 'ph--book-open-text--regular',
-            disposition: 'hidden',
-            schema: DocumentType,
-            getIntent: ({ meeting }: { meeting: MeetingType }) => createIntent(MeetingAction.Summarize, { meeting }),
-          },
-        },
-      ],
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (isInstanceOf(MeetingType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.map((meeting) => [
+              {
+                id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}summary`,
+                type: PLANK_COMPANION_TYPE,
+                data: 'summary',
+                properties: {
+                  label: ['meeting summary label', { ns: MEETING_PLUGIN }],
+                  icon: 'ph--book-open-text--regular',
+                  disposition: 'hidden',
+                  schema: DocumentType,
+                  getIntent: ({ meeting }: { meeting: MeetingType }) =>
+                    createIntent(MeetingAction.Summarize, { meeting }),
+                },
+              },
+            ]),
+            Option.getOrElse(() => []),
+          ),
+        ),
     }),
   ]);

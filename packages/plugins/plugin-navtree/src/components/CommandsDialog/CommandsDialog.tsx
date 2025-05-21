@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { createIntent, LayoutAction, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { type ActionLike, isActionGroup, isAction } from '@dxos/app-graph';
+import { type ActionLike, isAction, isActionGroup } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, Icon, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -28,7 +28,7 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
     const current = Keyboard.singleton.getCurrentContext();
     const actionMap = new Set<string>();
     const actions: ActionLike[] = [];
-    graph?.traverse({
+    graph.traverse({
       visitor: (node, path) => {
         if (
           (isAction(node) || isActionGroup(node)) &&
@@ -47,12 +47,11 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
         .localeCompare(toLocalizedString(b.properties.label, t)?.toLowerCase());
     });
 
-    // console.log(JSON.stringify(actions, undefined, 2));
     return actions;
   }, [graph]);
 
   const group = allActions.find(({ id }) => id === selected);
-  const actions = isActionGroup(group) ? graph.actions(group) : allActions;
+  const actions = isActionGroup(group) ? /* graph.actions(group) */ [] : allActions;
 
   return (
     <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden mbs-12']}>
@@ -84,7 +83,7 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
 
                   void dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
                   setTimeout(() => {
-                    const node = graph.nodes(group ?? action, { relation: 'inbound' })[0];
+                    const node = graph.getConnections(group?.id ?? action.id, 'inbound')[0];
                     void (node && isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
                   });
                 }}
