@@ -5,10 +5,9 @@
 import { Schema } from 'effect';
 
 import { type Space } from '@dxos/client-protocol';
-import { Type } from '@dxos/echo';
+import { type Type } from '@dxos/echo';
 import { type SpaceSyncState, type AnyLiveObject, getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { isLiveObject, type Live } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
@@ -114,7 +113,3 @@ export const getSyncSummary = (syncMap: SpaceSyncStateMap): PeerSyncState => {
     return summary;
   }, createEmptyEdgeSyncState());
 };
-
-// TODO(burdon): Move to @dxos/keys once ObjectId is moved there.
-export const createQueueDxn = (spaceId = Type.SpaceId.random(), queueId = Type.ObjectId.random()) =>
-  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, queueId]);

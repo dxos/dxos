@@ -85,6 +85,7 @@ export default (context: PluginsContext) =>
 
     createExtension({
       id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
+      // TODO(burdon): Add to all objects?
       filter: (node): node is Node<AIChatType> =>
         isLiveObject(node.data) && node.data.assistantChatQueue && node.data.type !== AIChatType.typename,
       connector: ({ node }) => [

@@ -8,10 +8,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { scheduleTaskInterval } from '@dxos/async';
-import { createQueueDxn, Filter, type Queue } from '@dxos/client/echo';
+import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Type } from '@dxos/echo';
-import { create, ObjectId } from '@dxos/echo-schema';
+import { create, createQueueDxn, ObjectId } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -22,7 +22,6 @@ import { Testing, seedTestData } from '@dxos/schema/testing';
 import { processTranscriptMessage } from '../entity-extraction';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
-
 export const TestItem = Schema.Struct({
   title: Schema.String.annotations({
     [SchemaAST.TitleAnnotationId]: 'Title',
