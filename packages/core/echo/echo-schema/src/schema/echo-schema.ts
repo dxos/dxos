@@ -5,8 +5,17 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { invariant } from '@dxos/invariant';
+import { type ObjectId } from '@dxos/keys';
 
-import { ObjectId } from '@dxos/keys';
+import {
+  addFieldsToSchema,
+  removeFieldsFromSchema,
+  setTypenameInSchema,
+  updateFieldNameInSchema,
+  updateFieldsInSchema,
+} from './manipulation';
+import { getSnapshot } from './snapshot';
+import { StoredSchema } from './stored-schema';
 import {
   getTypeAnnotation,
   SchemaMetaSymbol,
@@ -17,15 +26,6 @@ import {
 } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
-import {
-  addFieldsToSchema,
-  removeFieldsFromSchema,
-  setTypenameInSchema,
-  updateFieldNameInSchema,
-  updateFieldsInSchema,
-} from './manipulation';
-import { getSnapshot } from './snapshot';
-import { StoredSchema } from './stored-schema';
 
 /**
  * Base schema type.

@@ -6,9 +6,10 @@ import { Option, Schema, SchemaAST } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { findAnnotation, type JsonProp } from '@dxos/effect';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { ObjectId } from '@dxos/keys';
+import { toEffectSchema, toJsonSchema } from './json-schema';
 import {
   EchoObject,
   EntityKind,
@@ -27,7 +28,6 @@ import { TypedObject } from '../object';
 import { createSchemaReference, getSchemaReference, Ref } from '../ref';
 import { StoredSchema } from '../schema';
 import { prepareAstForCompare, Testing } from '../testing';
-import { toEffectSchema, toJsonSchema } from './json-schema';
 
 const EXAMPLE_NAMESPACE = '@example';
 

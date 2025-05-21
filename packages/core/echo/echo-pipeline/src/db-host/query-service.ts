@@ -20,8 +20,8 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
-import { type AutomergeHost } from '../automerge';
 import { QueryState } from './query-state';
+import { type AutomergeHost } from '../automerge';
 
 export type QueryServiceParams = {
   indexer: Indexer;

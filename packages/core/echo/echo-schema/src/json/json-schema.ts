@@ -8,10 +8,10 @@ import type { Mutable } from 'effect/Types';
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { clearUndefined, orderKeys } from '@dxos/util';
 
-import { ObjectId } from '@dxos/keys';
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
@@ -28,7 +28,6 @@ import {
 } from '../ast';
 import { Expando } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 
 /**
  * Create object jsonSchema.

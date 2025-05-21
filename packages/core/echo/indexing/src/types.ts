@@ -2,14 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+import type { SchemaClass } from 'effect/Schema';
+
 import { type Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
 import { type ObjectPropPath, type ObjectStructure } from '@dxos/echo-protocol';
 import type { ObjectId } from '@dxos/echo-schema';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { Schema } from 'effect';
-import type { SchemaClass } from 'effect/Schema';
 
 /**
  * @deprecated To be replaced by a specialized API for each index.
@@ -115,6 +116,7 @@ export const EscapedPropPath: SchemaClass<string, string> & {
   static escape(path: ObjectPropPath): EscapedPropPath {
     return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
   }
+
   static unescape(path: EscapedPropPath): ObjectPropPath {
     return path.split(/(?<!\\)\./).map((p) => p.replaceAll('\\\\', '\\').replaceAll('\\.', '.'));
   }

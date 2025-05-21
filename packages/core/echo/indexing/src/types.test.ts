@@ -1,4 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, expect, test } from 'vitest';
+
 import { EscapedPropPath } from './types';
 
 describe('EscapedPropPath', () => {

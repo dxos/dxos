@@ -1,6 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Orama from '@orama/orama';
 import { pipeline } from '@xenova/transformers';
 import { describe, test } from 'vitest';
-import * as Orama from '@orama/orama';
+
 import { TestData } from '../testing';
 
 // Associated research: https://chatgpt.com/share/6828c870-7f08-8012-b4d6-676f00545e79

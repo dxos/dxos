@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { DXN } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { visitValues } from '@dxos/util';
+
 import { type RawString } from './automerge';
+import type { ForeignKey } from './foreign-key';
 import { isEncodedReference, type EncodedReference } from './reference';
 import { type SpaceDocVersion } from './space-doc-version';
-import { invariant } from '@dxos/invariant';
-import { deepMapValues, visitValues } from '@dxos/util';
-import type { ForeignKey } from './foreign-key';
 
 export type SpaceState = {
   // Url of the root automerge document.

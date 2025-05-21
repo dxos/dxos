@@ -10,6 +10,7 @@ import { Schema } from 'effect';
 import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
+import { type QueryAST } from '@dxos/echo-protocol';
 import {
   getTypeReference,
   ObjectId,
@@ -24,7 +25,6 @@ import type { Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { QueryAST } from '@dxos/echo-protocol';
 import type { FilterSource } from './deprecated';
 import { type QueryResult } from './query-result';
 

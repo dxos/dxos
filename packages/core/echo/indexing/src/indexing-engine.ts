@@ -1,14 +1,18 @@
-import type { LevelDB } from '@dxos/kv-store';
-import type { IndexMetadataStore, IndexStore } from './store';
-import type { IdToHeads, Index } from './types';
-import type { ObjectSnapshot } from './types';
-import { Resource, type Context } from '@dxos/context';
-import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { ComplexMap } from '@dxos/util';
-import { trace } from '@dxos/tracing';
-import { log } from '@dxos/log';
-import { invariant } from '@dxos/invariant';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { synchronized } from '@dxos/async';
+import { Resource, type Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
+import type { LevelDB } from '@dxos/kv-store';
+import { log } from '@dxos/log';
+import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { trace } from '@dxos/tracing';
+import { ComplexMap } from '@dxos/util';
+
+import type { IndexMetadataStore, IndexStore } from './store';
+import type { IdToHeads, Index, ObjectSnapshot } from './types';
 
 /**
  * Loads documents by their ID and version.
@@ -147,8 +151,8 @@ export class IndexingEngine extends Resource {
    */
   @trace.span({ showInBrowserTimeline: true })
   async indexUpdatedObjects(options: IndexUpdatedObjectsOptions): Promise<{ completed: boolean; updated: boolean }> {
-    let completed = true,
-      updated = false;
+    let completed = true;
+    let updated = false;
 
     if (this._ctx.disposed) {
       return { completed, updated };

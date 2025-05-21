@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { EscapedPropPath } from '@dxos/indexing';
 import type { DXN, ObjectId, SpaceId } from '@dxos/keys';

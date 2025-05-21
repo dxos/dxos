@@ -7,6 +7,8 @@ import { render, Text, Box, useStdout, useInput } from 'ink';
 import { resolve } from 'node:path';
 import React, { useState, useEffect, type ReactNode } from 'react';
 
+import { entries, keys } from '@dxos/util';
+
 import { DependentList, PackageList, StatusBar, Input } from './components';
 import {
   findLockfile,
@@ -19,7 +21,6 @@ import {
   type VersionId,
   type VersionSpecifier,
 } from './lockfile';
-import { entries, keys } from '@dxos/util';
 
 const App = () => {
   const { stdout } = useStdout();

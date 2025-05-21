@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import type { inspect, InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import type { SpaceId } from './space-id';
-import { Schema } from 'effect';
 
 /**
  * Tags for ECHO DXNs that should resolve the object ID in the local space.

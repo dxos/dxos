@@ -1,12 +1,17 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, expect, test } from 'vitest';
+
+import { encodeReference, Reference } from '@dxos/echo-protocol';
+import type { ObjectId } from '@dxos/echo-schema';
+import { DXN, PublicKey } from '@dxos/keys';
+import { objectPointerCodec } from '@dxos/protocols';
+
 import { IndexGraph } from './index-graph';
 import { TestData } from '../testing';
-import { objectPointerCodec, ObjectPointerEncoded } from '@dxos/protocols';
-import { log } from '@dxos/log';
-import { DXN, PublicKey } from '@dxos/keys';
 import type { FindResult } from '../types';
-import type { ObjectId } from '@dxos/echo-schema';
-import { encodeReference, Reference } from '@dxos/echo-protocol';
 
 const spaceKey = PublicKey.random();
 

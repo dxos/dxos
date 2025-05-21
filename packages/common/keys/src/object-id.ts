@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema } from 'effect';
 import { ulid } from 'ulidx';
 

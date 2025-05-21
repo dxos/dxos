@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-
-import { SchemaAST } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 const ForeignKey_ = Schema.Struct({
   /**

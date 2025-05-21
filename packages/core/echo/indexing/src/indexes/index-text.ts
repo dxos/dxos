@@ -9,6 +9,7 @@ import { Resource } from '@dxos/context';
 import { type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import type { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
@@ -20,7 +21,6 @@ import {
   type LoadParams,
   type FindResult,
 } from '../types';
-import type { ObjectPointerEncoded } from '@dxos/protocols';
 
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;

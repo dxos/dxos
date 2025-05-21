@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ObjectId } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
-import { ObjectId } from '@dxos/keys';
-import type { BaseObject } from '../types';
 import { Ref } from './ref';
+import type { BaseObject } from '../types';
 
 /**
  * Helper functions for working with arrays of refs.

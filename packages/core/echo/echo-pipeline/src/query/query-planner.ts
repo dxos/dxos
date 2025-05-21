@@ -1,7 +1,12 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { QueryAST } from '@dxos/echo-protocol';
-import { QueryPlan } from './plan';
-import type { DXN, SpaceId } from '@dxos/keys';
 import { invariant } from '@dxos/invariant';
+import type { DXN, SpaceId } from '@dxos/keys';
+
+import { QueryPlan } from './plan';
 
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;

@@ -5,6 +5,7 @@
 import { Schema } from 'effect';
 
 import { DXN, ObjectId } from '@dxos/keys';
+
 import { ForeignKey } from '../foreign-key';
 
 const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({

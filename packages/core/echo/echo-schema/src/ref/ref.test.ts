@@ -5,13 +5,12 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 
-import { ObjectId } from '@dxos/keys';
+import { Ref } from './ref';
 import { EchoObject } from '../ast';
 import { create } from '../object';
 import { getDXN } from '../types';
-import { Ref } from './ref';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),

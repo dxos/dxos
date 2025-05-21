@@ -5,12 +5,12 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
+import { QueryAST } from '@dxos/echo-protocol';
 import { create, EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Filter, Query } from './api';
-import { QueryAST } from '@dxos/echo-protocol';
 
 // TODO(dmaretskyi): Move those out.
 const Type = {

@@ -1,9 +1,14 @@
-import { DXN, SpaceId } from '@dxos/keys';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, expect, test } from 'vitest';
-import { QueryAST } from '@dxos/echo-protocol';
-import { QueryPlanner } from './query-planner';
+
+import { type QueryAST } from '@dxos/echo-protocol';
+import { DXN, SpaceId } from '@dxos/keys';
+
 import type { QueryPlan } from './plan';
-import { log } from '@dxos/log';
+import { QueryPlanner } from './query-planner';
 
 // Type name constants
 const PERSON_TYPENAME = DXN.fromTypenameAndVersion('dxos.org/type/Person', '0.1.0').toString();

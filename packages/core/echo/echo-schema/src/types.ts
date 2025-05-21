@@ -6,9 +6,8 @@ import { SchemaAST, Schema } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
 import { splitJsonPath, type JsonPath } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
-import { ObjectId } from '@dxos/keys';
 
 import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation, type HasId } from './ast';
 import { getTypename, type ObjectMeta } from './object';

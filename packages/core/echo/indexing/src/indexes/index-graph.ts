@@ -2,18 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
+import { pipe, Schema } from 'effect';
+
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { decodeReference, ObjectStructure } from '@dxos/echo-protocol';
 import { EntityKind, ObjectId } from '@dxos/echo-schema';
+import { InternalError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
-
-import { log } from '@dxos/log';
 import { defaultMap, entries } from '@dxos/util';
-import { pipe, Schema } from 'effect';
+
 import {
   EscapedPropPath,
   type FindResult,
@@ -23,7 +25,6 @@ import {
   type LoadParams,
   staticImplements,
 } from '../types';
-import { InternalError } from '@dxos/errors';
 
 /**
  * Indexes graph relationships between objects.

@@ -16,8 +16,6 @@ import { IndexConstructors } from './indexes';
 import { IndexingEngine } from './indexing-engine';
 import { type IndexMetadataStore, type IndexStore } from './store';
 import { type FindResult, type IdToHeads, type IndexQuery, type ObjectSnapshot } from './types';
-import { raise } from '@dxos/debug';
-import { InternalError } from '@dxos/errors';
 
 const DEFAULT_INDEX_UPDATE_BATCH_SIZE = 100;
 
