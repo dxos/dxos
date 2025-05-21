@@ -11,8 +11,7 @@ import {
   createResolver,
   type PluginsContext,
 } from '@dxos/app-framework';
-import { isInstanceOf, ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { createQueueDxn, isInstanceOf } from '@dxos/echo-schema';
 import { makeRef, live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -31,7 +30,7 @@ export default (context: PluginsContext) =>
         const doc = live(DocumentType, {
           name,
           content: makeRef(live(DataType.Text, { content: content ?? '' })),
-          assistantChatQueue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+          assistantChatQueue: refFromDXN(createQueueDxn(spaceId)),
           threads: [],
         });
 
