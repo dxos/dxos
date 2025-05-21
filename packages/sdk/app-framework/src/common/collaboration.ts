@@ -5,6 +5,7 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { Expando, Ref } from '@dxos/echo-schema';
+// TODO(dmaretskyi): Import from @dxos/echo
 import { SpaceId } from '@dxos/keys';
 
 export namespace CollaborationActions {
