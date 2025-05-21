@@ -86,7 +86,7 @@ export class DocumentsSynchronizer extends Resource {
     this._syncStates.clear();
   }
 
-  async update(updates: DocumentUpdate[]) {
+  update(updates: DocumentUpdate[]) {
     for (const { documentId, mutation, isNew } of updates) {
       if (isNew) {
         const { handle: doc } = this._params.repo.findWithProgress<SpaceDoc>(documentId as DocumentId);

@@ -3,12 +3,7 @@
 //
 
 import { type Doc } from '@automerge/automerge';
-import {
-  interpretAsDocumentId,
-  type AutomergeUrl,
-  type DocHandle,
-  type DocumentId,
-} from '@automerge/automerge-repo';
+import { interpretAsDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
