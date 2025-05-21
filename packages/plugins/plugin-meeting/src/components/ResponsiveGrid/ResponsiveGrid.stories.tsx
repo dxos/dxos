@@ -130,6 +130,7 @@ export const Default: Story = {
 
 export const Fullscreen: Story = {
   args: {
+    random: true,
     autoHideGallery: true,
     items: Array.from({ length: 8 }, (_, i) => createItem('video')),
   },

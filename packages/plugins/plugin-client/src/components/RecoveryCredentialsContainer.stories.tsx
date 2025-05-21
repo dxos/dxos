@@ -20,12 +20,12 @@ const meta: Meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        IntentPlugin(),
         ClientPlugin({
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },
         }),
+        IntentPlugin(),
       ],
     }),
     withTheme,

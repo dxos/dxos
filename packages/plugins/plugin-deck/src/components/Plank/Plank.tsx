@@ -39,12 +39,13 @@ import { useCompanions } from '../../util';
 const UNKNOWN_ID = 'unknown_id';
 
 type PlankComponentProps = {
+  layoutMode: LayoutMode;
   id: string;
   part: ResolvedPart;
   path?: string[];
   order?: number;
   active?: string[];
-  layoutMode: LayoutMode;
+  // TODO(burdon): Change to role?
   companioned?: 'primary' | 'companion';
   node?: Node;
   primary?: Node;
@@ -54,12 +55,12 @@ type PlankComponentProps = {
 
 const PlankComponent = memo(
   ({
+    layoutMode,
     id,
     part,
     path,
     order,
     active,
-    layoutMode,
     companioned,
     node,
     primary,
@@ -68,9 +69,7 @@ const PlankComponent = memo(
   }: PlankComponentProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
-    const rootElement = useRef<HTMLDivElement | null>(null);
     const canResize = layoutMode === 'deck';
-    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
 
     const attendableAttrs = useAttendableAttributes(primary?.id ?? id);
     const index = active ? active.findIndex((entryId) => entryId === id) : 0;
@@ -78,10 +77,13 @@ const PlankComponent = memo(
     const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
     const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
+    const rootElement = useRef<HTMLDivElement | null>(null);
+
     const { variant } = parseEntryId(id);
     const sizeKey = `${id.split('+')[0]}${variant ? `${ATTENDABLE_PATH_SEPARATOR}${variant}` : ''}`;
     const size = deck.plankSizing[sizeKey] as number | undefined;
-    const setSize = useCallback(
+
+    const handleSizeChange = useCallback(
       debounce((nextSize: number) => {
         return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: sizeKey, size: nextSize }));
       }, 200),
@@ -128,7 +130,8 @@ const PlankComponent = memo(
     // TODO(wittjosiah): Change prop to accept a component.
     const placeholder = useMemo(() => <PlankLoading />, []);
 
-    const className = mx(
+    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
+    const classNames = mx(
       'attention-surface relative',
       isSolo && mainIntrinsicSize,
       isSolo && railGridHorizontal,
@@ -147,12 +150,12 @@ const PlankComponent = memo(
         data-testid='deck.plank'
         tabIndex={0}
         {...(part.startsWith('solo')
-          ? ({ ...sizeAttrs, className } as any)
+          ? ({ ...sizeAttrs, className: classNames } as any)
           : {
               item: { id },
               size,
-              onSizeChange: setSize,
-              classNames: className,
+              onSizeChange: handleSizeChange,
+              classNames,
               order,
               role: 'article',
             })}
@@ -186,56 +189,63 @@ const PlankComponent = memo(
         ) : (
           <PlankError id={id} part={part} />
         )}
+
         {canResize && <StackItem.ResizeHandle />}
       </Root>
     );
   },
 );
 
-export type PlankProps = Pick<PlankComponentProps, 'part' | 'path' | 'order' | 'active' | 'layoutMode' | 'settings'> & {
+export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
   id?: string;
   companionId?: string;
 };
 
-export const Plank = ({ id = UNKNOWN_ID, ...props }: PlankProps) => {
+// TODO(burdon): Factor out conditional rendering.
+//   Remove this wrapper component and render the entire set of planks in the deck with conditional visibility
+//   to obviate mounting and unmounting when switching between solo and companion mode?
+export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
-  const currentCompanion = companions.find(({ id }) => id === props.companionId);
+  const currentCompanion = companions.find(({ id }) => id === companionId);
 
-  if (props.companionId && currentCompanion) {
-    const Root = props.part === 'solo' ? SplitFrame : Fragment;
-    return (
-      <Root>
+  return (
+    <Container solo={props.part === 'solo'} companion={!!companionId && !!currentCompanion}>
+      <PlankComponent
+        id={id}
+        node={node}
+        companioned={companionId ? 'primary' : undefined}
+        companions={companionId ? [] : companions}
+        {...props}
+        {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
+      />
+      {companionId && currentCompanion && (
         <PlankComponent
-          id={id}
-          node={node}
-          companioned='primary'
-          {...props}
-          {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
-        />
-        <PlankComponent
-          id={props.companionId}
+          id={companionId}
           node={currentCompanion}
           primary={node}
           companions={companions}
           companioned='companion'
           {...props}
-          {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: props.order! + 1 })}
+          {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
         />
-      </Root>
-    );
-  } else {
-    return <PlankComponent id={id} node={node} companions={companions} {...props} />;
-  }
-};
+      )}
+    </Container>
+  );
+});
 
-const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
+const Container = ({ children, solo, companion }: PropsWithChildren<{ solo: boolean; companion: boolean }>) => {
   const sizeAttrs = useMainSize();
+  if (!solo) {
+    return <Fragment>{children}</Fragment>;
+  }
+
+  // TODO(burdon): Make resizable.
   return (
     <div
       role='none'
-      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0', railGridHorizontal, mainIntrinsicSize)}
+      className={mx('absolute inset-0 grid', companion && 'grid-cols-[1fr_1fr]', railGridHorizontal, mainIntrinsicSize)}
       {...sizeAttrs}
     >
       {children}

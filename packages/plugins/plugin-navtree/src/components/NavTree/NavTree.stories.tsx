@@ -33,6 +33,7 @@ import { withLayout } from '@dxos/storybook-utils';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
+import translations from '../../translations';
 import { NavTreeContainer } from '../NavTreeContainer';
 
 faker.seed(1234);
@@ -125,11 +126,12 @@ const meta: Meta<typeof NavTreeContainer> = {
         GraphPlugin(),
         IntentPlugin(),
         SettingsPlugin(),
-        NavTreePlugin(),
         AttentionPlugin(),
+        NavTreePlugin(),
       ],
       capabilities: (context) => [
         contributes(StoryState, live({ tab: 'space-0' })),
+        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
         contributes(Capabilities.IntentResolver, [
           createResolver({
             intent: LayoutAction.UpdateLayout,
@@ -141,13 +143,12 @@ const meta: Meta<typeof NavTreeContainer> = {
             },
           }),
         ]),
-        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders),
       ],
     }),
     withLayout({ fullscreen: true }),
   ],
   parameters: {
-    layout: 'fullscreen',
+    translations,
   },
 };
 
