@@ -1662,6 +1662,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
     devDependencies:
       base32-decode:
         specifier: ^1.0.0
@@ -10106,6 +10109,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
