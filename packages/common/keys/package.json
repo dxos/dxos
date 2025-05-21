@@ -29,7 +29,8 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/node-std": "workspace:*"
+    "@dxos/node-std": "workspace:*",
+    "effect": "3.14.21"
   },
   "devDependencies": {
     "base32-decode": "^1.0.0",
