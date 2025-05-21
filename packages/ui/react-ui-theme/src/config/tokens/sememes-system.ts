@@ -57,6 +57,10 @@ const surface: Record<string, Sememe> = {
     light: ['neutral', lightCadence(2.8)],
     dark: ['neutral', darkCadence(3)],
   },
+  '35': {
+    light: ['neutral', lightCadence(3.5)],
+    dark: ['neutral', darkCadence(3.5)],
+  },
   '40': {
     light: ['neutral', lightCadence(4)],
     dark: ['neutral', darkCadence(4)],
@@ -97,6 +101,7 @@ export const systemSememes = {
   'surface-10t': applyAlpha(surface['10'], 0.65),
   'surface-20': surface['20'],
   'surface-30': surface['30'],
+  'surface-35': surface['35'],
   'surface-40': surface['40'],
   'surface-50': surface['50'],
   'surface-60': surface['60'],
@@ -232,7 +237,7 @@ const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName 
   attention: { root: 'surface-10' },
   currentRelated: { root: 'accentSurface-300t' },
   hoverOverlay: { root: 'surface-450t' },
-  input: { root: 'surface-50', attention: 'surface-40' },
+  input: { root: 'surface-35', attention: 'surface-35' },
   separator: { root: 'surface-50' },
   subduedSeparator: { root: 'surface-30' },
   unAccent: { root: 'surface-400' },
