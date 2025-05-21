@@ -33,33 +33,39 @@ import { PlankLoading } from './PlankLoading';
 import { DeckCapabilities } from '../../capabilities';
 import { useMainSize } from '../../hooks';
 import { parseEntryId } from '../../layout';
-import { DeckAction, type LayoutMode, type Part, type ResolvedPart, type DeckSettingsProps } from '../../types';
+import { DeckAction, type LayoutMode, type ResolvedPart, type DeckSettingsProps } from '../../types';
 import { useCompanions } from '../../util';
 
 const UNKNOWN_ID = 'unknown_id';
 
-export type PlankProps = {
-  id?: string;
-  companionId?: string;
-  part: Part;
+type PlankComponentProps = {
+  id: string;
+  part: ResolvedPart;
   path?: string[];
   order?: number;
   active?: string[];
   layoutMode: LayoutMode;
+  companioned?: 'primary' | 'companion';
+  node?: Node;
+  primary?: Node;
+  companions?: Node[];
   settings?: DeckSettingsProps;
 };
 
-type PlankImplProps = Omit<PlankProps, 'id' | 'companionId' | 'part'> & {
-  id: string;
-  part: ResolvedPart;
-  node?: Node;
-  companioned?: 'primary' | 'companion';
-  primary?: Node;
-  companions?: Node[];
-};
-
-const PlankImpl = memo(
-  ({ id, node, part, path, order, active, layoutMode, companioned, primary, companions, settings }: PlankImplProps) => {
+const PlankComponent = memo(
+  ({
+    id,
+    part,
+    path,
+    order,
+    active,
+    layoutMode,
+    companioned,
+    node,
+    primary,
+    companions,
+    settings,
+  }: PlankComponentProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
     const rootElement = useRef<HTMLDivElement | null>(null);
@@ -186,17 +192,9 @@ const PlankImpl = memo(
   },
 );
 
-const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
-  const sizeAttrs = useMainSize();
-  return (
-    <div
-      role='none'
-      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0', railGridHorizontal, mainIntrinsicSize)}
-      {...sizeAttrs}
-    >
-      {children}
-    </div>
-  );
+export type PlankProps = Pick<PlankComponentProps, 'part' | 'path' | 'order' | 'active' | 'layoutMode' | 'settings'> & {
+  id?: string;
+  companionId?: string;
 };
 
 export const Plank = ({ id = UNKNOWN_ID, ...props }: PlankProps) => {
@@ -209,25 +207,38 @@ export const Plank = ({ id = UNKNOWN_ID, ...props }: PlankProps) => {
     const Root = props.part === 'solo' ? SplitFrame : Fragment;
     return (
       <Root>
-        <PlankImpl
+        <PlankComponent
           id={id}
           node={node}
           companioned='primary'
           {...props}
           {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
         />
-        <PlankImpl
+        <PlankComponent
           id={props.companionId}
           node={currentCompanion}
-          companioned='companion'
           primary={node}
           companions={companions}
+          companioned='companion'
           {...props}
           {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: props.order! + 1 })}
         />
       </Root>
     );
   } else {
-    return <PlankImpl id={id} node={node} companions={companions} {...props} />;
+    return <PlankComponent id={id} node={node} companions={companions} {...props} />;
   }
+};
+
+const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
+  const sizeAttrs = useMainSize();
+  return (
+    <div
+      role='none'
+      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0', railGridHorizontal, mainIntrinsicSize)}
+      {...sizeAttrs}
+    >
+      {children}
+    </div>
+  );
 };
