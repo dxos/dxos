@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -42,7 +43,9 @@ const meta: Meta = {
     withComputeGraphDecorator(),
     withTheme,
     withLayout({ fullscreen: true, classNames: 'grid' }),
-    withPluginManager(),
+    withPluginManager({
+      plugins: [IntentPlugin()],
+    }),
   ],
   parameters: { translations },
 };
