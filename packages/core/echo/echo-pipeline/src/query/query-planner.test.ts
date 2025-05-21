@@ -5,31 +5,74 @@
 import { describe, expect, test } from 'vitest';
 
 import { type QueryAST } from '@dxos/echo-protocol';
-import { DXN, SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 
-import type { QueryPlan } from './plan';
+import { EchoObject, EchoRelation, Filter, Query, Ref } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 import { QueryPlanner } from './query-planner';
 
 // Type name constants
-const PERSON_TYPENAME = DXN.fromTypenameAndVersion('dxos.org/type/Person', '0.1.0').toString();
-const ORGANIZATION_TYPENAME = DXN.fromTypenameAndVersion('dxos.org/type/Organization', '0.1.0').toString();
-const TASK_TYPENAME = DXN.fromTypenameAndVersion('dxos.org/type/Task', '0.1.0').toString();
-const WORK_FOR_TYPENAME = DXN.fromTypenameAndVersion('dxos.org/type/WorksFor', '0.1.0').toString();
+// TODO(dmaretskyi): Move those out.
+const Type = {
+  def: EchoObject,
+};
+const Relation = {
+  def: EchoRelation,
+};
+
+//
+// Example schema
+//
+
+// TODO(dmaretskyi): Need common set of test types.
+const Person = Schema.Struct({
+  name: Schema.String,
+  email: Schema.optional(Schema.String),
+  age: Schema.optional(Schema.Number),
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/Person',
+    version: '0.1.0',
+  }),
+);
+interface Person extends Schema.Schema.Type<typeof Person> {}
+
+const Organization = Schema.Struct({
+  name: Schema.String,
+}).pipe(
+  Type.def({
+    typename: 'dxos.org/type/Organization',
+    version: '0.1.0',
+  }),
+);
+interface Organization extends Schema.Schema.Type<typeof Organization> {}
+
+const WorksFor = Schema.Struct({
+  since: Schema.String,
+}).pipe(
+  Relation.def({
+    typename: 'dxos.org/type/WorksFor',
+    version: '0.1.0',
+    source: Person,
+    target: Organization,
+  }),
+);
+interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
+
+const Task = Schema.Struct({
+  title: Schema.String,
+  createdAt: Schema.String,
+  assignee: Ref(Person),
+}).pipe(Type.def({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
+interface Task extends Schema.Schema.Type<typeof Task> {}
 
 describe('QueryPlanner', () => {
   const planner = new QueryPlanner();
 
   test('get all people', () => {
-    const query: QueryAST.Query = {
-      type: 'select',
-      filter: {
-        type: 'object',
-        typename: PERSON_TYPENAME,
-        props: {},
-      },
-    };
+    const query = Query.select(Filter.type(Person));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -56,22 +99,9 @@ describe('QueryPlanner', () => {
   });
 
   test('get all people named Fred', () => {
-    const query: QueryAST.Query = {
-      type: 'select',
-      filter: {
-        type: 'object',
-        typename: PERSON_TYPENAME,
-        props: {
-          name: {
-            type: 'compare',
-            operator: 'eq',
-            value: 'Fred',
-          },
-        },
-      },
-    };
+    const query = Query.select(Filter.type(Person, { name: 'Fred' }));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -95,6 +125,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterStep",
             "filter": {
+              "id": undefined,
               "props": {
                 "name": {
                   "operator": "eq",
@@ -112,36 +143,11 @@ describe('QueryPlanner', () => {
   });
 
   test('get all orgs Fred worked for since 2020', () => {
-    const query: QueryAST.Query = {
-      type: 'relation-traversal',
-      anchor: {
-        type: 'relation',
-        anchor: {
-          type: 'select',
-          filter: {
-            type: 'object',
-            typename: PERSON_TYPENAME,
-            id: ['01JVS9YYT5VMVJW0GGTM1YHCCH'],
-            props: {},
-          },
-        },
-        direction: 'outgoing',
-        filter: {
-          type: 'object',
-          typename: WORK_FOR_TYPENAME,
-          props: {
-            since: {
-              type: 'compare',
-              operator: 'gt',
-              value: '2020',
-            },
-          },
-        },
-      },
-      direction: 'target',
-    };
+    const query = Query.select(Filter.type(Person, { id: '01JVS9YYT5VMVJW0GGTM1YHCCH' }))
+      .sourceOf(WorksFor, { since: Filter.gt('2020') })
+      .target();
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -184,6 +190,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterStep",
             "filter": {
+              "id": undefined,
               "props": {
                 "since": {
                   "operator": "gt",
@@ -212,22 +219,12 @@ describe('QueryPlanner', () => {
   });
 
   test('get all tasks for Fred', () => {
-    const query: QueryAST.Query = {
-      type: 'incoming-references',
-      anchor: {
-        type: 'select',
-        filter: {
-          type: 'object',
-          typename: PERSON_TYPENAME,
-          id: ['01JVS9YYT7H6A6DXRN56RSHT6Z'],
-          props: {},
-        },
-      },
-      property: 'assignee',
-      typename: TASK_TYPENAME,
-    };
+    const query = Query.select(Filter.type(Person, { id: '01JVS9YYT7H6A6DXRN56RSHT6Z' })).referencedBy(
+      Task,
+      'assignee',
+    );
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -278,40 +275,12 @@ describe('QueryPlanner', () => {
   });
 
   test('get all tasks for employees of Cyberdyne', () => {
-    const query: QueryAST.Query = {
-      type: 'incoming-references',
-      anchor: {
-        type: 'relation-traversal',
-        anchor: {
-          type: 'relation',
-          anchor: {
-            type: 'select',
-            filter: {
-              type: 'object',
-              typename: ORGANIZATION_TYPENAME,
-              props: {
-                name: {
-                  type: 'compare',
-                  operator: 'eq',
-                  value: 'Cyberdyne',
-                },
-              },
-            },
-          },
-          direction: 'incoming',
-          filter: {
-            type: 'object',
-            typename: WORK_FOR_TYPENAME,
-            props: {},
-          },
-        },
-        direction: 'source',
-      },
-      property: 'assignee',
-      typename: TASK_TYPENAME,
-    };
+    const query = Query.select(Filter.type(Organization, { name: 'Cyberdyne' }))
+      .targetOf(WorksFor)
+      .source()
+      .referencedBy(Task, 'assignee');
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -335,6 +304,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterStep",
             "filter": {
+              "id": undefined,
               "props": {
                 "name": {
                   "operator": "eq",
@@ -360,6 +330,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterStep",
             "filter": {
+              "id": undefined,
               "props": {},
               "type": "object",
               "typename": "dxn:type:dxos.org/type/WorksFor:0.1.0",
@@ -398,29 +369,9 @@ describe('QueryPlanner', () => {
   });
 
   test('get all people or orgs', () => {
-    const query: QueryAST.Query = {
-      type: 'union',
-      queries: [
-        {
-          type: 'select',
-          filter: {
-            type: 'object',
-            typename: PERSON_TYPENAME,
-            props: {},
-          },
-        },
-        {
-          type: 'select',
-          filter: {
-            type: 'object',
-            typename: ORGANIZATION_TYPENAME,
-            props: {},
-          },
-        },
-      ],
-    };
+    const query = Query.all(Query.select(Filter.type(Person)), Query.select(Filter.type(Organization)));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -477,26 +428,9 @@ describe('QueryPlanner', () => {
   });
 
   test('get assignees of all tasks created after 2020', () => {
-    const query: QueryAST.Query = {
-      type: 'reference-traversal',
-      anchor: {
-        type: 'select',
-        filter: {
-          type: 'object',
-          typename: TASK_TYPENAME,
-          props: {
-            createdAt: {
-              type: 'compare',
-              operator: 'gt',
-              value: '2020',
-            },
-          },
-        },
-      },
-      property: 'assignee',
-    };
+    const query = Query.select(Filter.type(Task, { createdAt: Filter.gt('2020') })).reference('assignee');
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -520,6 +454,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterStep",
             "filter": {
+              "id": undefined,
               "props": {
                 "createdAt": {
                   "operator": "gt",
@@ -545,16 +480,9 @@ describe('QueryPlanner', () => {
   });
 
   test('contact full-text search', () => {
-    const query: QueryAST.Query = {
-      type: 'select',
-      filter: {
-        type: 'text-search',
-        typename: PERSON_TYPENAME,
-        text: 'Bill',
-      },
-    };
+    const query = Query.select(Filter.text(Person, 'Bill'));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -587,26 +515,9 @@ describe('QueryPlanner', () => {
   });
 
   test('select multiple types', () => {
-    const query: QueryAST.Query = {
-      type: 'select',
-      filter: {
-        type: 'or',
-        filters: [
-          {
-            type: 'object',
-            typename: 'dxn:type:dxos.org/type/Organization:0.1.0',
-            props: {},
-          },
-          {
-            type: 'object',
-            typename: 'dxn:type:dxos.org/type/Person:0.1.0',
-            props: {},
-          },
-        ],
-      },
-    };
+    const query = Query.select(Filter.or(Filter.type(Organization), Filter.type(Person)));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -634,31 +545,9 @@ describe('QueryPlanner', () => {
   });
 
   test('select excluding multiple types', () => {
-    const query: QueryAST.Query = {
-      type: 'select',
-      filter: {
-        type: 'not',
-        filter: {
-          type: 'or',
-          filters: [
-            {
-              id: undefined,
-              props: {},
-              type: 'object',
-              typename: 'dxn:type:dxos.org/type/Organization:0.1.0',
-            },
-            {
-              id: undefined,
-              props: {},
-              type: 'object',
-              typename: 'dxn:type:dxos.org/type/Person:0.1.0',
-            },
-          ],
-        },
-      },
-    };
+    const query = Query.select(Filter.not(Filter.or(Filter.type(Organization), Filter.type(Person))));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -686,23 +575,9 @@ describe('QueryPlanner', () => {
   });
 
   test('select deleted tasks', () => {
-    const query: QueryAST.Query = {
-      options: {
-        deleted: 'only',
-      },
-      query: {
-        filter: {
-          id: undefined,
-          props: {},
-          type: 'object',
-          typename: 'dxn:type:dxos.org/type/Task:0.1.0',
-        },
-        type: 'select',
-      },
-      type: 'options',
-    };
+    const query = Query.select(Filter.type(Task)).options({ deleted: 'only' });
 
-    const plan = planner.createPlan(withSpaceIdOptions(query));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -738,7 +613,3 @@ const withSpaceIdOptions = (query: QueryAST.Query): QueryAST.Query => ({
     spaceIds: [SPACE_ID],
   },
 });
-
-const expectSteps = (plan: QueryPlan.Plan, expectedSteps: QueryPlan.Step['_tag'][]) => {
-  expect(plan.steps.map((step) => step._tag)).toEqual(expectedSteps);
-};

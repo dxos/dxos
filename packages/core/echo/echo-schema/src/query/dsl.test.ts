@@ -26,6 +26,7 @@ const Relation = {
 // Example schema
 //
 
+// TODO(dmaretskyi): Need common set of test types.
 const Person = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
