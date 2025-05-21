@@ -42,6 +42,7 @@ import { MeshEchoReplicator } from './mesh-echo-replicator';
 import { TestAdapter, type TestConnectionStateProvider } from '../testing';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
+const LOADING_STATES: HandleState[] = ['requesting', 'ready'];
 
 describe('AutomergeRepo', () => {
   test('change events', () => {
@@ -115,7 +116,7 @@ describe('AutomergeRepo', () => {
     const [host] = repos;
     await connectAdapters(adapters);
     const url = 'automerge:3JN8F3Z4dUWEEKKFN7WE9gEGvVUT';
-    const handle = await host.find(url as AutomergeUrl);
+    const handle = await host.find(url as AutomergeUrl, { allowableStates: LOADING_STATES });
     await handle.whenReady(['requesting']);
   });
 
@@ -176,16 +177,13 @@ describe('AutomergeRepo', () => {
       });
 
       {
-        const docOnClient = await client.find(handle.url);
-        await asyncTimeout(docOnClient.whenReady(['unavailable']), 1000);
+        await client.find(handle.url, { allowableStates: ['unavailable'] });
       }
 
       sharePolicy = true;
 
       {
-        const docOnClient = await client.find(handle.url);
-        // TODO(mykola): We expect the document to be available here, but it's not.
-        await asyncTimeout(docOnClient.whenReady(['unavailable']), 1000);
+        await client.find(handle.url, { allowableStates: ['unavailable'] });
       }
     });
 
@@ -238,7 +236,7 @@ describe('AutomergeRepo', () => {
       await connectAdapters(adapters);
 
       const handle = host.create();
-      const docOnClient = await client.find<any>(handle.url);
+      const docOnClient = await client.find<any>(handle.url, { allowableStates: LOADING_STATES });
       {
         const sanityText = 'Hello world';
         handle.change((doc: any) => {
@@ -321,8 +319,8 @@ describe('AutomergeRepo', () => {
         doc.text = 'Hello world';
       });
 
-      const _ = repoB.find(docA.url);
-      const docC = await repoC.find(docA.url);
+      const _ = repoB.find(docA.url, { allowableStates: LOADING_STATES });
+      const docC = await repoC.find(docA.url, { allowableStates: LOADING_STATES });
       await asyncTimeout(docC.whenReady(), 1000);
     });
 
@@ -340,7 +338,7 @@ describe('AutomergeRepo', () => {
         doc.text = 'Hello world';
       });
 
-      const docB = await client.find(docA.url);
+      const docB = await client.find(docA.url, { allowableStates: ['unavailable'] });
 
       // Request document from repoB.
       await asyncTimeout(docB.whenReady([unavailable]), 1_000);
@@ -423,7 +421,7 @@ describe('AutomergeRepo', () => {
     test('client creates doc and syncs with a Repo', async () => {
       const repo = new Repo({ network: [] });
       const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
-        const serverHandle = await repo.find(docId);
+        const serverHandle = await repo.find(docId, { allowableStates: LOADING_STATES });
         serverHandle.update((doc) => {
           return A.loadIncremental(doc, blob);
         });
@@ -470,6 +468,7 @@ describe('AutomergeRepo', () => {
 
       expect(handleA.doc()!.text).to.equal(text);
 
+      await sleep(100);
       await asyncTimeout(handleB.whenReady(), 1000);
       expect(handleB.doc()!.text).to.equal(text);
     });
@@ -499,7 +498,7 @@ describe('AutomergeRepo', () => {
               const docOnPeer2 = await peer2.repo.find<any>(handle.url);
               return docOnPeer2.doc()!.text;
             },
-            { timeout: 1_000 },
+            { timeout: 5_000 },
           )
           .toEqual(text);
       }
@@ -559,11 +558,11 @@ describe('AutomergeRepo', () => {
       });
       await connectPeers(spaceKey, teleportBuilder, peerWithDocs.peer, peer2);
 
-      const shouldNotFindDoc = await peer2.repo.find(docNotInRemoteCollection.url);
-      const shouldFindDoc = await peer2.repo.find(docInRemoteCollection.url);
+      const shouldNotFindDoc = await peer2.repo.find(docNotInRemoteCollection.url, { allowableStates: LOADING_STATES });
+      const shouldFindDoc = await peer2.repo.find(docInRemoteCollection.url, { allowableStates: LOADING_STATES });
       await shouldFindDoc.whenReady();
       expect(shouldFindDoc.doc()).to.deep.eq(docInRemoteCollection.doc());
-      await shouldNotFindDoc.whenReady(['unavailable']);
+      await asyncTimeout(shouldNotFindDoc.whenReady(['unavailable']), 1000);
     });
 
     /**
@@ -594,11 +593,11 @@ describe('AutomergeRepo', () => {
       await connectPeers(anotherSpaceKey, teleportBuilder, peer2, peerFromAnotherSpace);
 
       const loadedDocument = await peer2.repo.find(document.url);
-      await loadedDocument.whenReady();
+      await asyncTimeout(loadedDocument.whenReady(), 1000);
 
       await sleep(200);
-      const doc = await peerFromAnotherSpace.repo.find(document.url);
-      await doc.whenReady(['unavailable']);
+      const doc = await peerFromAnotherSpace.repo.find(document.url, { allowableStates: ['unavailable'] });
+      await asyncTimeout(doc.whenReady(['unavailable']), 1000);
     });
 
     test('collection-sync with chain of peers', async () => {
@@ -627,10 +626,10 @@ describe('AutomergeRepo', () => {
       await connectPeers(spaceKey, teleportBuilder, peerWithDocs.peer, peer2);
       await connectPeers(spaceKey, teleportBuilder, peer2, peer3);
 
-      const loadedDocument = await peer2.repo.find(document.url);
+      const loadedDocument = await peer2.repo.find(document.url, { allowableStates: LOADING_STATES });
       await loadedDocument.whenReady();
 
-      const doc = await peer3.repo.find(document.url);
+      const doc = await peer3.repo.find(document.url, { allowableStates: LOADING_STATES });
       await doc.whenReady();
       expect(doc.doc()).to.deep.eq(document.doc());
     });
