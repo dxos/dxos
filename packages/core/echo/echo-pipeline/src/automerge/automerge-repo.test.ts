@@ -36,13 +36,13 @@ import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/
 import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable, range } from '@dxos/util';
 
+import { FIND_PARAMS } from './automerge-host';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
 import { TestAdapter, type TestConnectionStateProvider } from '../testing';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
-const LOADING_STATES: HandleState[] = ['requesting', 'ready'];
 
 describe('AutomergeRepo', () => {
   test('change events', () => {
@@ -116,7 +116,7 @@ describe('AutomergeRepo', () => {
     const [host] = repos;
     await connectAdapters(adapters);
     const url = 'automerge:3JN8F3Z4dUWEEKKFN7WE9gEGvVUT';
-    const handle = await host.find(url as AutomergeUrl, { allowableStates: LOADING_STATES });
+    const handle = await host.find(url as AutomergeUrl, FIND_PARAMS);
     await handle.whenReady(['requesting']);
   });
 
@@ -236,7 +236,7 @@ describe('AutomergeRepo', () => {
       await connectAdapters(adapters);
 
       const handle = host.create();
-      const docOnClient = await client.find<any>(handle.url, { allowableStates: LOADING_STATES });
+      const docOnClient = await client.find<any>(handle.url, FIND_PARAMS);
       {
         const sanityText = 'Hello world';
         handle.change((doc: any) => {
@@ -319,8 +319,8 @@ describe('AutomergeRepo', () => {
         doc.text = 'Hello world';
       });
 
-      const _ = repoB.find(docA.url, { allowableStates: LOADING_STATES });
-      const docC = await repoC.find(docA.url, { allowableStates: LOADING_STATES });
+      const _ = repoB.find(docA.url, FIND_PARAMS);
+      const docC = await repoC.find(docA.url, FIND_PARAMS);
       await asyncTimeout(docC.whenReady(), 1000);
     });
 
@@ -421,7 +421,7 @@ describe('AutomergeRepo', () => {
     test('client creates doc and syncs with a Repo', async () => {
       const repo = new Repo({ network: [] });
       const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
-        const serverHandle = await repo.find(docId, { allowableStates: LOADING_STATES });
+        const serverHandle = await repo.find(docId, FIND_PARAMS);
         serverHandle.update((doc) => {
           return A.loadIncremental(doc, blob);
         });
@@ -558,8 +558,8 @@ describe('AutomergeRepo', () => {
       });
       await connectPeers(spaceKey, teleportBuilder, peerWithDocs.peer, peer2);
 
-      const shouldNotFindDoc = await peer2.repo.find(docNotInRemoteCollection.url, { allowableStates: LOADING_STATES });
-      const shouldFindDoc = await peer2.repo.find(docInRemoteCollection.url, { allowableStates: LOADING_STATES });
+      const shouldNotFindDoc = await peer2.repo.find(docNotInRemoteCollection.url, FIND_PARAMS);
+      const shouldFindDoc = await peer2.repo.find(docInRemoteCollection.url, FIND_PARAMS);
       await shouldFindDoc.whenReady();
       expect(shouldFindDoc.doc()).to.deep.eq(docInRemoteCollection.doc());
       await asyncTimeout(shouldNotFindDoc.whenReady(['unavailable']), 1000);
@@ -626,10 +626,10 @@ describe('AutomergeRepo', () => {
       await connectPeers(spaceKey, teleportBuilder, peerWithDocs.peer, peer2);
       await connectPeers(spaceKey, teleportBuilder, peer2, peer3);
 
-      const loadedDocument = await peer2.repo.find(document.url, { allowableStates: LOADING_STATES });
+      const loadedDocument = await peer2.repo.find(document.url, FIND_PARAMS);
       await loadedDocument.whenReady();
 
-      const doc = await peer3.repo.find(document.url, { allowableStates: LOADING_STATES });
+      const doc = await peer3.repo.find(document.url, FIND_PARAMS);
       await doc.whenReady();
       expect(doc.doc()).to.deep.eq(document.doc());
     });

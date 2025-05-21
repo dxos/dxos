@@ -16,6 +16,7 @@ import {
   createMappedFeedWriter,
   type MetadataStore,
   type Space,
+  FIND_PARAMS,
 } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
@@ -467,9 +468,10 @@ export class DataSpace {
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
-          handle = await this._echoHost.automergeRepo.find<SpaceDoc>(rootUrl as any, {
-            allowableStates: ['ready', 'requesting'],
-          });
+          handle = await cancelWithContext(
+            this._ctx,
+            this._echoHost.automergeRepo.find<SpaceDoc>(rootUrl as any, FIND_PARAMS),
+          );
           await cancelWithContext(this._ctx, handle.whenReady());
         });
         if (this._ctx.disposed) {

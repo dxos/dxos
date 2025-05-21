@@ -27,6 +27,7 @@ import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
 import {
   AutomergeHost,
+  FIND_PARAMS,
   EchoDataMonitor,
   deriveCollectionIdFromSpaceId,
   type LoadDocOptions,
@@ -242,7 +243,8 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.repo.find<SpaceDoc>(automergeUrl);
+    const handle = await this._automergeHost.repo.find<SpaceDoc>(automergeUrl, FIND_PARAMS);
+    await handle.whenReady();
 
     return this._spaceStateManager.assignRootToSpace(spaceId, handle);
   }

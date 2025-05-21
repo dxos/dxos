@@ -23,6 +23,7 @@ import {
   type StorageAdapterInterface,
   type StorageKey,
   interpretAsDocumentId,
+  type HandleState,
 } from '@automerge/automerge-repo';
 
 import { Event, asyncTimeout } from '@dxos/async';
@@ -71,6 +72,10 @@ export type CreateDocOptions = {
    * Import the document together with its history.
    */
   preserveHistory?: boolean;
+};
+
+export const FIND_PARAMS = {
+  allowableStates: ['ready', 'requesting'] satisfies HandleState[],
 };
 
 /**
@@ -287,13 +292,15 @@ export class AutomergeHost extends Resource {
     }
 
     // Flush to disk handles loaded to memory also so that the indexer can pick up the changes.
-    await this._repo.flush(documentIds.filter((documentId) => !!this._repo.handles[documentId]));
+    await this._repo.flush(
+      documentIds.filter((documentId) => this._repo.handles[documentId] && this._repo.handles[documentId].isReady()),
+    );
   }
 
   async reIndexHeads(documentIds: DocumentId[]) {
     for (const documentId of documentIds) {
       log.info('re-indexing heads for document', { documentId });
-      const handle = await this._repo.find(documentId, { allowableStates: ['ready', 'requesting'] });
+      const handle = await this._repo.find(documentId, FIND_PARAMS);
       if (handle.inState(['requesting'])) {
         log.warn('document is not available locally, skipping', { documentId });
         continue; // Handle not available locally.

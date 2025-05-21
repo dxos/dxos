@@ -28,6 +28,7 @@ import { UntypedReactiveHandler } from './untyped-handler';
  */
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
+// TODO(dmaretskyi): Could mutate original object making it unusable.
 export const live: {
   <T extends BaseObject>(obj: T): Live<T>;
   <T extends BaseObject>(schema: Schema.Schema<T, any, never>, obj: NoInfer<ExcludeId<T>>, meta?: ObjectMeta): Live<T>;

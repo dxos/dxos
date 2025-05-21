@@ -4,7 +4,6 @@
 
 import { type Doc } from '@automerge/automerge';
 import {
-  type HandleState,
   interpretAsDocumentId,
   type AutomergeUrl,
   type DocHandle,
@@ -34,6 +33,7 @@ import {
   type SpaceManager,
   type SpaceProtocol,
   type SpaceProtocolSession,
+  FIND_PARAMS,
 } from '@dxos/echo-pipeline';
 import {
   SpaceDocVersion,
@@ -367,9 +367,7 @@ export class DataSpaceManager extends Resource {
   private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<SpaceDoc>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any, {
-      allowableStates: ['ready', 'requesting'] satisfies HandleState[],
-    });
+    const document = await this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any, FIND_PARAMS);
     await document.whenReady();
     return document;
   }

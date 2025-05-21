@@ -5092,6 +5092,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.0.0-beta.0
         version: 3.0.0-beta.0
+      '@automerge/automerge-repo':
+        specifier: 2.0.0
+        version: 2.0.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
