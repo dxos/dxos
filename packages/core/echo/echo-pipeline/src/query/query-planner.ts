@@ -11,6 +11,10 @@ const DEFAULT_OPTIONS: QueryPlannerOptions = {
   defaultTextSearchKind: 'full-text',
 };
 
+/**
+ * Constructs an optimized query plan.
+ */
+// TODO(dmaretskyi): Implement inefficient versions of complex queries.
 export class QueryPlanner {
   private readonly _options: QueryPlannerOptions;
 
