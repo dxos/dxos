@@ -17,7 +17,7 @@ export namespace InboxAction {
 
   export class CreateMailbox extends Schema.TaggedClass<CreateMailbox>()(`${INBOX_ACTION}/create-mailbox`, {
     input: Schema.Struct({
-      spaceId: Type.SpaceIdSchema,
+      spaceId: Type.SpaceId,
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
