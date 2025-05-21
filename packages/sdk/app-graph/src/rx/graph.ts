@@ -261,7 +261,7 @@ export class Graph implements WritableGraph {
   // TODO(wittjosiah): Rx feature request, support for something akin to `ComplexMap` to allow for complex arguments.
   private readonly _connections = Rx.family<string, Rx.Rx<Node[]>>((key) => {
     return Rx.make((get) => {
-      const [id, relation] = key.split('+');
+      const [id, relation] = key.split('$');
       const edges = get(this._edges(id));
       return edges[relation as Relation]
         .map((id) => get(this._node(id)))
@@ -272,7 +272,7 @@ export class Graph implements WritableGraph {
 
   private readonly _actions = Rx.family<string, Rx.Rx<(Action | ActionGroup)[]>>((id) => {
     return Rx.make((get) => {
-      return get(this._connections(`${id}+outbound`)).filter(
+      return get(this._connections(`${id}$outbound`)).filter(
         (node) => node.type === ACTION_TYPE || node.type === ACTION_GROUP_TYPE,
       );
     }).pipe(Rx.withLabel(`graph:actions:${id}`));
@@ -332,7 +332,7 @@ export class Graph implements WritableGraph {
   }
 
   connections(id: string, relation: Relation = 'outbound'): Rx.Rx<Node[]> {
-    return this._connections(`${id}+${relation}`);
+    return this._connections(`${id}$${relation}`);
   }
 
   actions(id: string) {
@@ -377,7 +377,7 @@ export class Graph implements WritableGraph {
   }
 
   expand(id: string, relation: Relation = 'outbound') {
-    const key = `${id}+${relation}`;
+    const key = `${id}$${relation}`;
     const expanded = Record.get(this._expanded, key).pipe(Option.getOrElse(() => false));
     log('expand', { key, expanded });
     if (!expanded) {
