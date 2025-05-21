@@ -25,12 +25,12 @@
     "src"
   ],
   "dependencies": {
-    "effect": "3.14.21",
     "@dxos/crypto": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "effect": "3.14.21"
   },
   "publishConfig": {
     "access": "public"

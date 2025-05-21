@@ -138,7 +138,7 @@ export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };
 
-  ast: AST.Query;
+  ast: QueryAST.Query;
 
   /**
    * Filter the current selection based on a filter.
@@ -204,7 +204,7 @@ export interface Query<T> {
   /**
    * Add options to a query.
    */
-  options(options: AST.QueryOptions): Query<T>;
+  options(options: QueryAST.QueryOptions): Query<T>;
 }
 
 interface QueryAPI {
@@ -253,7 +253,7 @@ export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Filter': { value: T };
 
-  ast: AST.Filter;
+  ast: QueryAST.Filter;
 }
 
 type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
@@ -582,7 +582,7 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  private constructor(public readonly ast: AST.Filter) {}
+  private constructor(public readonly ast: QueryAST.Filter) {}
 
   '~Filter' = FilterClass.variance;
 }
@@ -594,7 +594,7 @@ export const Filter: FilterAPI = FilterClass;
  */
 type RefPropKey<T> = { [K in keyof T]: T[K] extends Ref<infer _U> ? K : never }[keyof T] & string;
 
-const propsFilterToAst = (predicates: Filter.Props<any>): Pick<AST.FilterObject, 'id' | 'props'> => {
+const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
   let idFilter: readonly ObjectId[] | undefined;
   if ('id' in predicates) {
     assertArgument(typeof predicates.id === 'string' || Array.isArray(predicates.id), 'invalid id filter');
@@ -608,7 +608,7 @@ const propsFilterToAst = (predicates: Filter.Props<any>): Pick<AST.FilterObject,
       Object.entries(predicates)
         .filter(([prop, _value]) => prop !== 'id')
         .map(([prop, predicate]) => [prop, Filter.is(predicate) ? predicate.ast : Filter.eq(predicate).ast]),
-    ) as Record<string, AST.Filter>,
+    ) as Record<string, QueryAST.Filter>,
   };
 };
 
@@ -645,7 +645,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  constructor(public readonly ast: AST.Query) {}
+  constructor(public readonly ast: QueryAST.Query) {}
 
   '~Query' = QueryClass.variance;
 
@@ -717,7 +717,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  options(options: AST.QueryOptions): Query<any> {
+  options(options: QueryAST.QueryOptions): Query<any> {
     return new QueryClass({
       type: 'options',
       query: this.ast,

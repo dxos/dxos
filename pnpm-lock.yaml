@@ -2709,6 +2709,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
 
   packages/core/echo/echo-query:
     dependencies:
@@ -13813,6 +13816,9 @@ importers:
 
   tools/lockfile-explorer:
     dependencies:
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../packages/common/util
       fuzzy:
         specifier: ^0.1.3
         version: 0.1.3

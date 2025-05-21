@@ -23,3 +23,4 @@ export * from './schema/stored-schema';
 
 // TODO(dmaretskyi): Remove.
 export { ObjectId } from '@dxos/keys';
+export { ForeignKey } from '@dxos/echo-protocol';

@@ -19,7 +19,7 @@ import {
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { mapValues } from '@dxos/util';
 
-import type { QueryAST } from '..';
+import type { QueryAST } from '@dxos/echo-protocol';
 import { getReferenceWithSpaceKey } from '../../echo-handler';
 
 // TODO(dmaretskyi): Rename `hasInstanceOf`.

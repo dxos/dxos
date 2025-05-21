@@ -8,7 +8,7 @@ import { dirname, join, resolve } from 'node:path';
 import * as yaml from 'yaml';
 
 import type { PackageName, VersionId, VersionSpecifier, PackageId, PackageIndex, Lockfile } from './types';
-import { entries } from '../util';
+import { entries } from '@dxos/util';
 
 export const findLockfile = (path: string): string => {
   if (path.endsWith('pnpm-lock.yaml') && existsSync(path)) {

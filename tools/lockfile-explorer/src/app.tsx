@@ -19,7 +19,7 @@ import {
   type VersionId,
   type VersionSpecifier,
 } from './lockfile';
-import { entries, keys } from './util/object';
+import { entries, keys } from '@dxos/util';
 
 const App = () => {
   const { stdout } = useStdout();
