@@ -39,12 +39,12 @@ import { useCompanions } from '../../util';
 const UNKNOWN_ID = 'unknown_id';
 
 type PlankComponentProps = {
+  layoutMode: LayoutMode;
   id: string;
   part: ResolvedPart;
   path?: string[];
   order?: number;
   active?: string[];
-  layoutMode: LayoutMode;
   companioned?: 'primary' | 'companion';
   node?: Node;
   primary?: Node;
@@ -54,12 +54,12 @@ type PlankComponentProps = {
 
 const PlankComponent = memo(
   ({
+    layoutMode,
     id,
     part,
     path,
     order,
     active,
-    layoutMode,
     companioned,
     node,
     primary,
@@ -67,10 +67,8 @@ const PlankComponent = memo(
     settings,
   }: PlankComponentProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
-    const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
-    const rootElement = useRef<HTMLDivElement | null>(null);
+    const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState); // TODO(burdon): ???
     const canResize = layoutMode === 'deck';
-    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
 
     const attendableAttrs = useAttendableAttributes(primary?.id ?? id);
     const index = active ? active.findIndex((entryId) => entryId === id) : 0;
@@ -87,6 +85,8 @@ const PlankComponent = memo(
       }, 200),
       [dispatch, sizeKey],
     );
+
+    const rootElement = useRef<HTMLDivElement | null>(null);
 
     // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -128,6 +128,7 @@ const PlankComponent = memo(
     // TODO(wittjosiah): Change prop to accept a component.
     const placeholder = useMemo(() => <PlankLoading />, []);
 
+    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const className = mx(
       'attention-surface relative',
       isSolo && mainIntrinsicSize,
@@ -192,7 +193,7 @@ const PlankComponent = memo(
   },
 );
 
-export type PlankProps = Pick<PlankComponentProps, 'part' | 'path' | 'order' | 'active' | 'layoutMode' | 'settings'> & {
+export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
   id?: string;
   companionId?: string;
 };
@@ -203,6 +204,7 @@ export const Plank = ({ id = UNKNOWN_ID, ...props }: PlankProps) => {
   const companions = useCompanions(id);
   const currentCompanion = companions.find(({ id }) => id === props.companionId);
 
+  // TODO(burdon): Causes unmount when switching between solo and split.
   if (props.companionId && currentCompanion) {
     const Root = props.part === 'solo' ? SplitFrame : Fragment;
     return (
