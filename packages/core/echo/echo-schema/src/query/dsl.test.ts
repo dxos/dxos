@@ -6,10 +6,12 @@ import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { create, EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { EchoObject, EchoRelation } from '../ast';
+import { create } from '../object';
+import { Ref } from '../ref';
 import { Filter, Query } from './dsl';
 
 // TODO(dmaretskyi): Move those out.
