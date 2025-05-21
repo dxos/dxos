@@ -203,7 +203,7 @@ export const PreviewPlugin = () =>
                 <Form
                   schema={schema}
                   values={data.subject}
-                  readonly
+                  readonly={role === 'popover'}
                   {...(role === 'card--kanban' && { classNames: kanbanCardWithoutPoster })}
                 />
               );
