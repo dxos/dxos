@@ -8,7 +8,7 @@ import { Option, pipe } from 'effect';
 import { Capabilities, contributes, createIntent } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension } from '@dxos/plugin-graph';
+import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { MeetingType } from '@dxos/plugin-meeting/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
@@ -28,7 +28,7 @@ export default () =>
               {
                 id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}${OutlineType.typename}`,
                 type: PLANK_COMPANION_TYPE,
-                data: meeting.artifacts[OutlineType.typename]?.target,
+                data: get(rxFromSignal(() => meeting.artifacts[OutlineType.typename]?.target)),
                 properties: {
                   label: ['meeting notes label', { ns: OUTLINER_PLUGIN }],
                   icon: 'ph--note--regular',

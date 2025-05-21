@@ -118,7 +118,7 @@ export default (context: PluginContext) =>
                 {
                   id: `${fullyQualifiedId(meeting)}${ATTENDABLE_PATH_SEPARATOR}${getSchemaTypename(TranscriptType)}`,
                   type: PLANK_COMPANION_TYPE,
-                  data: meeting.artifacts[getSchemaTypename(TranscriptType)!]?.target,
+                  data: get(rxFromSignal(() => meeting.artifacts[getSchemaTypename(TranscriptType)!]?.target)),
                   properties: {
                     label: ['transcript companion label', { ns: TRANSCRIPTION_PLUGIN }],
                     icon: 'ph--subtitles--regular',
