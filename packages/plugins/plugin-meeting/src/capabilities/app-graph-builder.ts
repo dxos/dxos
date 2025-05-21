@@ -9,7 +9,7 @@ import { Capabilities, contributes, createIntent, type PluginContext } from '@dx
 import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, ROOT_ID, rxFromObservable } from '@dxos/plugin-graph';
+import { createExtension, ROOT_ID, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { COMPOSER_SPACE_LOCK, rxFromQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
@@ -30,21 +30,25 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
               const [call] = get(context.capabilities(MeetingCapabilities.CallManager));
-              return call?.joined
-                ? [
-                    {
-                      id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
-                      type: DECK_COMPANION_TYPE,
-                      data: null,
-                      properties: {
-                        label: ['meeting panel label', { ns: MEETING_PLUGIN }],
-                        icon: 'ph--video-conference--regular',
-                        position: 'hoist',
-                        disposition: 'hidden',
-                      },
-                    },
-                  ]
-                : [];
+              return get(
+                rxFromSignal(() =>
+                  call?.joined
+                    ? [
+                        {
+                          id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
+                          type: DECK_COMPANION_TYPE,
+                          data: null,
+                          properties: {
+                            label: ['meeting panel label', { ns: MEETING_PLUGIN }],
+                            icon: 'ph--video-conference--regular',
+                            position: 'hoist',
+                            disposition: 'hidden',
+                          },
+                        },
+                      ]
+                    : [],
+                ),
+              );
             }),
             Option.getOrElse(() => []),
           ),
