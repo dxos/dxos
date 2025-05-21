@@ -40,7 +40,7 @@ export type ResponsiveGridProps<T extends object = any> = ThemedClassName<{
   pinned?: string;
 
   /** Whether to hide the gallery (unpinned items) when an item is pinned. */
-  hideGallery?: boolean;
+  autoHideGallery?: boolean;
 
   /** Whether the divider is resizable. */
   resizable?: boolean;
@@ -65,7 +65,7 @@ export const ResponsiveGrid = <T extends object = any>({
   getId = defaultGetId,
   items,
   pinned,
-  hideGallery = false,
+  autoHideGallery = false,
   debug,
   onPinnedChange,
 }: ResponsiveGridProps<T>) => {
@@ -84,6 +84,7 @@ export const ResponsiveGrid = <T extends object = any>({
 
   const pinnedItem = useMemo(() => items.find((item) => getId(item) === pinned), [items, pinned]);
   const mainItems = useMemo(() => items.filter((item) => getId(item) !== pinned), [items, pinned]);
+  const hideGallery = autoHideGallery && pinnedItem !== undefined;
 
   //
   // Recalculate optimal layout when container size or items change.
@@ -97,14 +98,17 @@ export const ResponsiveGrid = <T extends object = any>({
     }
   }, [containerHeight, width, height, mainItems.length, gap, pinned]);
 
-  // Calculate absolutely positioned items.
+  //
+  // We use the browser to layout invisible divs and then calculate the absolute position of these items,
+  // which are animated into position.
+  //
   const [bounds, setBounds] = useState<[T, DOMRectBounds][]>([]);
   useLayoutEffect(() => {
-    if (!gridContainerRef.current || !containerHeight) {
+    if ((!hideGallery && !gridContainerRef.current) || !containerHeight) {
       return;
     }
 
-    // TODO(burdon): Consider directly setting bounds on DOM elementsinstead of state update.
+    // TODO(burdon): Consider directly setting bounds on DOM elementsinstead of state update?
     const t = setTimeout(() => {
       setBounds(
         items
@@ -124,7 +128,7 @@ export const ResponsiveGrid = <T extends object = any>({
     });
 
     return () => clearTimeout(t);
-  }, [items, hideGallery, pinnedItem, time]);
+  }, [containerHeight, items, pinnedItem, hideGallery, time]);
 
   const handleClick = useCallback(
     (item: T) => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item)),
@@ -133,6 +137,7 @@ export const ResponsiveGrid = <T extends object = any>({
 
   return (
     <div ref={containerRef} className={mx('relative w-full h-full', classNames)}>
+      {/* Placeholder elements to calculate layout. */}
       <div className='absolute inset-0 flex flex-col grow gap-2'>
         {/* Pinned item. */}
         {pinnedItem && (
@@ -144,43 +149,45 @@ export const ResponsiveGrid = <T extends object = any>({
           </div>
         )}
 
-        {/* Placeholder grid used to calculate layout. */}
-        <div
-          ref={gridContainerRef}
-          className={mx(hideGallery ? 'hidden' : 'flex grow-[1] overflow-hidden justify-center items-center')}
-          style={hideGallery ? {} : { minHeight: MIN_GALLERY_HEIGHT }}
-        >
-          {mainItems.length === 1 && (
-            <div style={{ width: cellWidth }} className='flex h-full'>
-              <SoloItem id={getId(mainItems[0])} debug={debug} />
-            </div>
-          )}
+        {/* Gallery. */}
+        {!hideGallery && (
+          <div
+            ref={gridContainerRef}
+            className='flex grow-[1] overflow-hidden justify-center items-center'
+            style={hideGallery ? {} : { minHeight: MIN_GALLERY_HEIGHT }}
+          >
+            {mainItems.length === 1 && (
+              <div style={{ width: cellWidth }} className='flex h-full'>
+                <SoloItem id={getId(mainItems[0])} debug={debug} />
+              </div>
+            )}
 
-          {mainItems.length > 1 && columns > 0 && (
-            <div
-              role='grid'
-              style={{
-                display: 'grid',
-                gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
-                gap: `${gap}px`,
-              }}
-            >
-              {mainItems.map((item) => (
-                <div
-                  key={getId(item)}
-                  {...{ 'data-grid-item': getId(item) }}
-                  className={mx(
-                    'aspect-video max-h-full max-w-full w-auto h-auto',
-                    debug && 'border border-primary-500',
-                  )}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+            {mainItems.length > 1 && columns > 0 && (
+              <div
+                role='grid'
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
+                  gap: `${gap}px`,
+                }}
+              >
+                {mainItems.map((item) => (
+                  <div
+                    key={getId(item)}
+                    {...{ 'data-grid-item': getId(item) }}
+                    className={mx(
+                      'aspect-video max-h-full max-w-full w-auto h-auto',
+                      debug && 'border border-primary-500',
+                    )}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Absolutely positioned items for participants gallery. */}
+      {/* Absolutely positioned items. */}
       <div className={mx(debug && 'opacity-10')}>
         {bounds.map(([item, bounds]) => (
           <Cell
