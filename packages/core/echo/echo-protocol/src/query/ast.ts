@@ -4,10 +4,10 @@
 
 import { Schema } from 'effect';
 
-import { DXN, ForeignKeySchema } from '@dxos/echo-schema';
-import { ObjectId } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
+import { ForeignKey } from '../foreign-key';
 
-const TypenameSpecifier = Schema.Union(DXN, Schema.Null).annotations({
+const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
   description: 'DXN or null. Null means any type will match',
 });
 
@@ -36,7 +36,7 @@ const FilterObject_ = Schema.Struct({
   /**
    * Objects that have any of the given foreign keys.
    */
-  foreignKeys: Schema.optional(Schema.Array(ForeignKeySchema)),
+  foreignKeys: Schema.optional(Schema.Array(ForeignKey)),
 });
 export interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
 export const FilterObject: Schema.Schema<FilterObject> = FilterObject_;

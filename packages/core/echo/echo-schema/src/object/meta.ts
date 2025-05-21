@@ -8,21 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
 import type { BaseObject } from '../types';
-
-//
-// ForeignKey
-//
-
-const _ForeignKeySchema = Schema.Struct({
-  source: Schema.String,
-  // TODO(wittjosiah): This annotation is currently used to ensure id field shows up in forms.
-  id: Schema.String.annotations({ [SchemaAST.IdentifierAnnotationId]: false }),
-});
-
-export type ForeignKey = Schema.Schema.Type<typeof _ForeignKeySchema>;
-
-// TODO(dmaretskyi): Rename to ForeignKey
-export const ForeignKeySchema: Schema.Schema<ForeignKey> = _ForeignKeySchema;
+import { ForeignKey } from '@dxos/echo-protocol';
 
 //
 // ObjectMeta
@@ -30,7 +16,7 @@ export const ForeignKeySchema: Schema.Schema<ForeignKey> = _ForeignKeySchema;
 
 // TODO(dmaretskyi): Rename to ObjectMeta
 export const ObjectMetaSchema = Schema.Struct({
-  keys: Schema.mutable(Schema.Array(ForeignKeySchema)),
+  keys: Schema.mutable(Schema.Array(ForeignKey)),
 });
 
 export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;

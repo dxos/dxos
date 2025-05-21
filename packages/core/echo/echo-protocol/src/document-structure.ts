@@ -8,6 +8,7 @@ import { isEncodedReference, type EncodedReference } from './reference';
 import { type SpaceDocVersion } from './space-doc-version';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, visitValues } from '@dxos/util';
+import type { ForeignKey } from './foreign-key';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -134,22 +135,6 @@ export type ObjectMeta = {
    * Foreign keys.
    */
   keys: ForeignKey[];
-};
-
-/**
- * Reference to an object in a foreign database.
- */
-export type ForeignKey = {
-  /**
-   * Name of the foreign database/system.
-   * E.g., `github.com`.
-   */
-  readonly source: string;
-
-  /**
-   * Id within the foreign database.
-   */
-  readonly id: string;
 };
 
 /**
