@@ -140,7 +140,7 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
           themeMode,
           slots: {
             editor: {
-              className: '!border-lb !border-transparent [&>.cm-scroller]:scrollbar-none tabular-nums',
+              className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
             },
             content: {
               className:
