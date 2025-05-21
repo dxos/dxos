@@ -269,6 +269,7 @@ export class DxGrid extends LitElement {
             cellIndex,
             cellBox: this.focusedCellBox(),
             cellElement: this.focusedCellElement(),
+            initialContent,
           }),
         );
       });
