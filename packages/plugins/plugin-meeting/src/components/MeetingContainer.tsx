@@ -4,6 +4,9 @@
 
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 
+import { useCapability } from '@dxos/app-framework';
+import { DeckCapabilities } from '@dxos/plugin-deck';
+import { getMode } from '@dxos/plugin-deck/types';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, useTranslation } from '@dxos/react-ui';
@@ -16,10 +19,16 @@ import { type MeetingType } from '../types';
 
 export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
   const identity = useIdentity();
+  const { deck } = useCapability(DeckCapabilities.MutableDeckState);
+  const isFullscreen = getMode(deck) === 'solo--fullscreen';
 
   return (
     <StackItem.Content>
-      {identity?.profile?.displayName ? <CallContainer meeting={meeting} /> : <DisplayNameMissing />}
+      {identity?.profile?.displayName ? (
+        <CallContainer meeting={meeting} fullscreen={isFullscreen} />
+      ) : (
+        <DisplayNameMissing />
+      )}
     </StackItem.Content>
   );
 };
