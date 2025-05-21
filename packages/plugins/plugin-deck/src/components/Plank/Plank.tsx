@@ -67,7 +67,7 @@ const PlankComponent = memo(
     settings,
   }: PlankComponentProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
-    const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState); // TODO(burdon): ???
+    const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
     const canResize = layoutMode === 'deck';
 
     const attendableAttrs = useAttendableAttributes(primary?.id ?? id);
@@ -199,13 +199,15 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
   companionId?: string;
 };
 
-export const Plank = ({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) => {
+export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
   const currentCompanion = companions.find(({ id }) => id === companionId);
 
+  // TODO(burdon): Switches from deck to solo.
   // TODO(burdon): Causes unmount when switching between solo and split.
+  console.log('===', props.part, id, companionId, currentCompanion?.id);
   if (companionId && currentCompanion) {
     const Root = props.part === 'solo' ? SplitFrame : Fragment;
     return (
@@ -231,7 +233,7 @@ export const Plank = ({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) =>
   } else {
     return <PlankComponent id={id} node={node} companions={companions} {...props} />;
   }
-};
+});
 
 const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
   const sizeAttrs = useMainSize();
