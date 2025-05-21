@@ -16,7 +16,6 @@ import { Plank, type PlankProps } from './Plank';
 import { DeckPlugin } from '../../DeckPlugin';
 import translations from '../../translations';
 
-// TODO(burdon): invariant violation: No capability found for dxos.org/plugin/deck/capability/state
 const meta: Meta<PlankProps> = {
   title: 'plugins/plugin-deck/Plank',
   component: Plank,
