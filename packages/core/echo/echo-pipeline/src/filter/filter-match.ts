@@ -21,22 +21,8 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
         const actualDXN = DXN.parse(obj.doc.system.type['/']);
         const expectedDXN = DXN.parse(filter.typename);
 
-        const expectedTypeDXN = expectedDXN.asTypeDXN();
-        if (expectedTypeDXN) {
-          const actualTypeDXN = actualDXN.asTypeDXN();
-          if (!actualTypeDXN) {
-            return false;
-          }
-          if (
-            actualTypeDXN.type !== expectedTypeDXN.type ||
-            (expectedTypeDXN.version !== undefined && actualTypeDXN.version !== expectedTypeDXN.version)
-          ) {
-            return false;
-          }
-        } else {
-          if (!DXN.equals(actualDXN, expectedDXN)) {
-            return false;
-          }
+        if (!compareTypename(expectedDXN, actualDXN)) {
+          return false;
         }
       }
 
@@ -127,4 +113,25 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
     default:
       return false;
   }
+};
+
+const compareTypename = (expectedDXN: DXN, actualDXN: DXN): boolean => {
+  const expectedTypeDXN = expectedDXN.asTypeDXN();
+  if (expectedTypeDXN) {
+    const actualTypeDXN = actualDXN.asTypeDXN();
+    if (!actualTypeDXN) {
+      return false;
+    }
+    if (
+      actualTypeDXN.type !== expectedTypeDXN.type ||
+      (expectedTypeDXN.version !== undefined && actualTypeDXN.version !== expectedTypeDXN.version)
+    ) {
+      return false;
+    }
+  } else {
+    if (!DXN.equals(actualDXN, expectedDXN)) {
+      return false;
+    }
+  }
+  return true;
 };
