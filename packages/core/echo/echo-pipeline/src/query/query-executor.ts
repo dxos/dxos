@@ -16,6 +16,7 @@ import { QueryPlanner } from './query-planner';
 import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import { filterMatchObject } from '../filter';
+import { realpath } from 'node:fs';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -169,7 +170,7 @@ export class QueryExecutor extends Resource {
     //   changed,
     //   trace: ExecutionTrace.format(trace),
     // });
-    // console.log(ExecutionTrace.format(trace));
+    console.log(ExecutionTrace.format(trace));
 
     return {
       changed,
@@ -317,6 +318,7 @@ export class QueryExecutor extends Resource {
     };
   }
 
+  // TODO(dmaretskyi): This needs to be completed.
   private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: Item[]): Promise<StepExecutionResult> {
     const _trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
@@ -325,6 +327,62 @@ export class QueryExecutor extends Resource {
     };
 
     const _newWorkingSet: Item[] = [];
+
+    switch (step.traversal._tag) {
+      case 'ReferenceTraversal': {
+        switch (step.traversal.direction) {
+          case 'outgoing': {
+            // TODO(dmaretskyi): Map workingSet to pick the referenced values
+            // newWorkingSet = workingSet.map(item => pick(item, step.traversal.property)).map(ref => loadObject(ref))
+            break;
+          }
+          case 'incoming': {
+            const _indexHits = await this._indexer.execQuery({
+              typenames: [],
+              inverted: false,
+              graph: {
+                kind: 'inbound-reference',
+                property: step.traversal.property,
+                anchors: workingSet.map((item) => item.objectId),
+              },
+            });
+
+            // TODO(dmaretskyi): Load the objects.
+            break;
+          }
+        }
+        break;
+      }
+      case 'RelationTraversal': {
+        switch (step.traversal.direction) {
+          case 'relation-to-source':
+          case 'relation-to-target': {
+            // TODO(dmaretskyi): Map workingSet to pick the referenced values
+            // newWorkingSet = workingSet.map(relation => relation.source ... relation.target).map(ref => loadObject(ref))
+            break;
+          }
+
+          case 'source-to-relation':
+          case 'target-to-relation': {
+            const _indexHits = await this._indexer.execQuery({
+              typenames: [],
+              inverted: false,
+              graph: {
+                kind: step.traversal.direction === 'source-to-relation' ? 'relation-source' : 'relation-target',
+                anchors: workingSet.map((item) => item.objectId),
+                property: null,
+              },
+            });
+
+            // TODO(dmaretskyi): Load the objects.
+            break;
+          }
+        }
+        break;
+      }
+      default:
+        throw new Error(`Unknown traversal type: ${(step.traversal as any)._tag}`);
+    }
 
     throw new Error('Not implemented');
   }
