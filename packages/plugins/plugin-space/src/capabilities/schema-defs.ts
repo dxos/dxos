@@ -14,15 +14,17 @@ export default (context: PluginContext) => {
 
   // TODO(wittjosiah): Unregister schemas when they are disabled.
   let previous: ObjectForm[] = [];
-  const cancel = registry.subscribe(context.capabilities(SpaceCapabilities.ObjectForm), (_forms) => {
-    const forms = Array.from(new Set(_forms));
-    // TODO(wittjosiah): Filter out schemas which the client has already registered.
-    const newSchemas = forms.filter((form) => !previous.includes(form)).map((form) => form.objectSchema);
-    previous = forms;
-    client.addTypes(newSchemas);
-  });
-  // TODO(wittjosiah): This is currently required to initialize the above subscription.
-  registry.get(context.capabilities(SpaceCapabilities.ObjectForm));
+  const cancel = registry.subscribe(
+    context.capabilities(SpaceCapabilities.ObjectForm),
+    (_forms) => {
+      const forms = Array.from(new Set(_forms));
+      // TODO(wittjosiah): Filter out schemas which the client has already registered.
+      const newSchemas = forms.filter((form) => !previous.includes(form)).map((form) => form.objectSchema);
+      previous = forms;
+      client.addTypes(newSchemas);
+    },
+    { immediate: true },
+  );
 
   return contributes(Capabilities.Null, null, () => cancel());
 };

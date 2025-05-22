@@ -16,7 +16,7 @@ const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'dxos.org/type/example';
 
-describe('RxGraphBuilder', () => {
+describe('GraphBuilder', () => {
   describe('connector', () => {
     test('works', () => {
       const registry = Registry.make();

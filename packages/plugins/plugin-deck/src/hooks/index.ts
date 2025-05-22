@@ -8,4 +8,3 @@ export * from './useDeckCompanions';
 export * from './useHoistStatusbar';
 export * from './useMainSize';
 export * from './useNodeActionExpander';
-export * from './useNodeActionExpander';

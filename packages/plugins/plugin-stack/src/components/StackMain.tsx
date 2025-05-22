@@ -67,6 +67,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
           collapsed: collapsedSections[fullyQualifiedId(object)],
           title:
             (object as any)?.title ??
+            // TODO(wittjosiah): `getNode` is not reactive.
             toLocalizedString(graph.getNode(fullyQualifiedId(object)).pipe(Option.getOrNull)?.properties.label, t),
         } as StackSectionView;
         return { id: fullyQualifiedId(object), object, metadata, view } satisfies StackSectionItem;

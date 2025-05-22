@@ -8,23 +8,26 @@ import { Capabilities } from '../common';
 import { contributes, type PluginContext } from '../core';
 
 export default (context: PluginContext) => {
+  // TODO(wittjosiah): Replace with rx?
   const settingsStore = new RootSettingsStore();
 
   let previous: Capabilities.Settings[] = [];
   const registry = context.getCapability(Capabilities.RxRegistry);
-  const cancel = registry.subscribe(context.capabilities(Capabilities.Settings), (allSettings) => {
-    const added = allSettings.filter((setting) => !previous.includes(setting));
-    const removed = previous.filter((setting) => !allSettings.includes(setting));
-    previous = allSettings;
-    added.forEach((setting) => {
-      settingsStore.createStore(setting as any);
-    });
-    removed.forEach((setting) => {
-      settingsStore.removeStore(setting.prefix);
-    });
-  });
-  // TODO(wittjosiah): This is currently required to initialize the above subscription.
-  registry.get(context.capabilities(Capabilities.Settings));
+  const cancel = registry.subscribe(
+    context.capabilities(Capabilities.Settings),
+    (allSettings) => {
+      const added = allSettings.filter((setting) => !previous.includes(setting));
+      const removed = previous.filter((setting) => !allSettings.includes(setting));
+      previous = allSettings;
+      added.forEach((setting) => {
+        settingsStore.createStore(setting as any);
+      });
+      removed.forEach((setting) => {
+        settingsStore.removeStore(setting.prefix);
+      });
+    },
+    { immediate: true },
+  );
 
   return contributes(Capabilities.SettingsStore, settingsStore, () => cancel());
 };

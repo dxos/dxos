@@ -11,13 +11,15 @@ export default (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
 
   // NOTE: Migrations are currently unidirectional and idempotent.
-  const cancel = registry.subscribe(context.capabilities(ClientCapabilities.Migration), (_migrations) => {
-    const migrations = Array.from(new Set(_migrations.flat()));
-    const spaces = client.spaces.get();
-    void Promise.all(spaces.map((space) => space.db.runMigrations(migrations)));
-  });
-  // TODO(wittjosiah): This is currently required to initialize the above subscription.
-  registry.get(context.capabilities(ClientCapabilities.Migration));
+  const cancel = registry.subscribe(
+    context.capabilities(ClientCapabilities.Migration),
+    (_migrations) => {
+      const migrations = Array.from(new Set(_migrations.flat()));
+      const spaces = client.spaces.get();
+      void Promise.all(spaces.map((space) => space.db.runMigrations(migrations)));
+    },
+    { immediate: true },
+  );
 
   return contributes(Capabilities.Null, null, () => cancel());
 };

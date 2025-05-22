@@ -5,7 +5,7 @@
 import { Option, Record } from 'effect';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { flattenExtensions, GraphBuilder, type ReadableGraph, ROOT_ID } from '@dxos/app-graph';
+import { flattenExtensions, GraphBuilder, type ExpandableGraph, ROOT_ID } from '@dxos/app-graph';
 
 // import { GRAPH_PLUGIN } from './meta';
 
@@ -18,15 +18,17 @@ export default async (context: PluginContext) => {
   //   localStorage.setItem(KEY, builder.graph.pickle());
   // }, 5_000);
 
-  const unsubscribe = registry.subscribe(context.capabilities(Capabilities.AppGraphBuilder), (extensions) => {
-    const next = flattenExtensions(extensions);
-    const current = Record.values(registry.get(builder.extensions));
-    const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));
-    removed.forEach((extension) => builder.removeExtension(extension.id));
-    next.forEach((extension) => builder.addExtension(extension));
-  });
-  // TODO(wittjosiah): This is currently required to initialize the above subscription.
-  registry.get(context.capabilities(Capabilities.AppGraphBuilder));
+  const unsubscribe = registry.subscribe(
+    context.capabilities(Capabilities.AppGraphBuilder),
+    (extensions) => {
+      const next = flattenExtensions(extensions);
+      const current = Record.values(registry.get(builder.extensions));
+      const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));
+      removed.forEach((extension) => builder.removeExtension(extension.id));
+      next.forEach((extension) => builder.addExtension(extension));
+    },
+    { immediate: true },
+  );
 
   // TODO(wittjosiah): Stop expanding the graph eagerly.
   builder.graph.onNodeChanged.on(({ id, node }) => {
@@ -46,7 +48,7 @@ export default async (context: PluginContext) => {
 };
 
 // Expose the graph to the window for debugging.
-const setupDevtools = (graph: ReadableGraph) => {
+const setupDevtools = (graph: ExpandableGraph) => {
   (globalThis as any).composer ??= {};
   (globalThis as any).composer.graph = graph;
 };

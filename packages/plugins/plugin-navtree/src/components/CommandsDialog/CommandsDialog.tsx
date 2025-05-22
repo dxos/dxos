@@ -7,6 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { createIntent, LayoutAction, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { type ActionLike, isAction, isActionGroup } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
+import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, Icon, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
@@ -51,7 +52,8 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
   }, [graph]);
 
   const group = allActions.find(({ id }) => id === selected);
-  const actions = isActionGroup(group) ? /* graph.actions(group) */ [] : allActions;
+  const groupActions = useActions(graph, group?.id);
+  const actions = isActionGroup(group) ? groupActions : allActions;
 
   return (
     <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden mbs-12']}>

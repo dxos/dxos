@@ -108,7 +108,7 @@ export class PluginContext {
     return Rx.make((get) => {
       const current = get(this._capabilityImpls(id));
       return current.map((c) => c.implementation);
-    }).pipe(Rx.keepAlive);
+    });
   });
 
   readonly _capability = Rx.family<string, Rx.Rx<unknown>>((id: string) => {
@@ -116,7 +116,7 @@ export class PluginContext {
       const current = get(this._capabilities(id));
       invariant(current.length > 0, `No capability found for ${id}`);
       return current[0];
-    }).pipe(Rx.keepAlive);
+    });
   });
 
   /**

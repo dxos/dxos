@@ -119,7 +119,7 @@ export default (context: PluginContext) =>
               return;
             }
 
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = useIntentDispatcher();
             objects.forEach((object) => {
               void dispatch(createIntent(SpaceAction.AddObject, { target: collection, object }));
             });

@@ -6,7 +6,6 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, LayoutAction, type PluginContext } from '@dxos/app-framework';
-import { getSnapshot } from '@dxos/live-object';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
 
@@ -25,7 +24,6 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               const state = context.getCapability(DeckCapabilities.MutableDeckState);
-              const rxState = get(rxFromSignal(() => getSnapshot(state)));
 
               // NOTE(Zan): This is currently disabled.
               // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
@@ -111,9 +109,13 @@ export default (context: PluginContext) =>
                 },
                 properties: {
                   label: [
-                    rxState.sidebarState === 'expanded'
-                      ? 'collapse navigation sidebar label'
-                      : 'open navigation sidebar label',
+                    get(
+                      rxFromSignal(() =>
+                        state.sidebarState === 'expanded'
+                          ? 'collapse navigation sidebar label'
+                          : 'open navigation sidebar label',
+                      ),
+                    ),
                     { ns: DECK_PLUGIN },
                   ],
                   icon: 'ph--sidebar--regular',
@@ -126,7 +128,11 @@ export default (context: PluginContext) =>
                 },
               };
 
-              return !rxState.deck.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
+              return get(
+                rxFromSignal(() =>
+                  !state.deck.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar],
+                ),
+              );
             }),
             Option.getOrElse(() => []),
           ),

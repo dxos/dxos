@@ -13,7 +13,7 @@ const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'dxos.org/type/example';
 
-describe('RxGraph', () => {
+describe('Graph', () => {
   test('getGraph', () => {
     const registry = Registry.make();
     const graph = new Graph({ registry });
