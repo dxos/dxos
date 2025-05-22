@@ -4,7 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { type Live, live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
@@ -33,8 +33,8 @@ const getInitialState = () => {
   } catch {}
 };
 
-export default (context: PluginsContext) => {
-  const layout = context.requestCapability(Capabilities.Layout);
+export default (context: PluginContext) => {
+  const layout = context.getCapability(Capabilities.Layout);
 
   // TODO(wittjosiah): This currently needs to be not a Live at the root.
   //   If it is a Live then React errors when initializing new paths because of state change during render.

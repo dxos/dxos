@@ -17,25 +17,20 @@ const [MenuContextProvider, useMenu] = createMenuContext<MenuContextValue>(MENU_
 
 export const menuContextDefaults: MenuContextValue = {
   iconSize: 5,
-  resolveGroupItems: () => null,
+  useGroupItems: () => null,
 };
 
 const useMenuScope = createMenuScope();
 
 const MenuProvider = ({
   children,
-  resolveGroupItems = menuContextDefaults.resolveGroupItems,
+  useGroupItems = menuContextDefaults.useGroupItems,
   iconSize = menuContextDefaults.iconSize,
   attendableId,
 }: PropsWithChildren<Partial<MenuContextValue>>) => {
   const { scope } = useMenuScope(undefined);
   return (
-    <MenuContextProvider
-      resolveGroupItems={resolveGroupItems}
-      iconSize={iconSize}
-      attendableId={attendableId}
-      scope={scope}
-    >
+    <MenuContextProvider useGroupItems={useGroupItems} iconSize={iconSize} attendableId={attendableId} scope={scope}>
       {children}
     </MenuContextProvider>
   );
@@ -47,8 +42,9 @@ export const useMenuItems = (
   consumerName: string = 'useMenuItemConsumer',
   __menuScope?: Scope,
 ) => {
-  const { resolveGroupItems } = useMenu(consumerName, __menuScope);
-  return useMemo(() => propsItems ?? resolveGroupItems?.(group) ?? undefined, [propsItems, group, resolveGroupItems]);
+  const { useGroupItems } = useMenu(consumerName, __menuScope);
+  const groupItems = useGroupItems(group);
+  return useMemo(() => propsItems ?? groupItems ?? undefined, [propsItems, groupItems]);
 };
 
 export { useMenu, createMenuScope, MenuProvider };

@@ -46,7 +46,7 @@ export type MenuItem = MenuSeparator | MenuAction | MenuItemGroup;
 export type MenuItemsResolver = (group?: MenuItemGroup) => MenuItem[] | null;
 
 export type MenuContextValue = {
-  resolveGroupItems: MenuItemsResolver;
+  useGroupItems: MenuItemsResolver;
   iconSize: IconButtonProps['size'];
   attendableId?: string;
 };

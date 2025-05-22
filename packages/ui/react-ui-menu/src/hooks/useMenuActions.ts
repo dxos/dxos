@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext, useRxValue } from '@effect-rx/rx-react';
 import { useSignalEffect } from '@preact/signals-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 
-import { Graph, type NodeArg, type Node } from '@dxos/app-graph';
+import { type Edge, type Edges, Graph, type NodeArg, type Node, ROOT_ID } from '@dxos/app-graph';
 
 import { type MenuItem, type MenuItemGroup } from '../types';
 
-type Edge = { source: string; target: string };
-
-const edgesArrayToRecord = (edges: { source: string; target: string }[]): Record<string, string[]> => {
+const edgesArrayToRecord = (edges: Edge[]): Record<string, Edges> => {
   return Object.fromEntries(
     Object.entries(
       edges.reduce((acc: Record<string, { inbound: string[]; outbound: string[] }>, { source, target }) => {
@@ -34,7 +33,7 @@ const edgesArrayToRecord = (edges: { source: string; target: string }[]): Record
 
         return acc;
       }, {}),
-    ).map(([id, { outbound }]): [string, string[]] => [id, outbound]),
+    ),
   );
 };
 
@@ -43,30 +42,31 @@ export type ActionGraphEdges = Edge[];
 export type ActionGraphProps = { nodes: ActionGraphNodes; edges: ActionGraphEdges };
 
 export const useMenuActions = (actionCreator: () => ActionGraphProps) => {
+  const registry = useContext(RegistryContext);
   const initialMenuGraphProps = actionCreator();
 
   const [graph] = useState(
-    new Graph({ nodes: initialMenuGraphProps.nodes as Node[], edges: edgesArrayToRecord(initialMenuGraphProps.edges) }),
+    new Graph({
+      registry,
+      nodes: initialMenuGraphProps.nodes as Node[],
+      edges: edgesArrayToRecord(initialMenuGraphProps.edges),
+    }),
   );
 
+  // TODO(wittjosiah): Remove dependence on signals.
   useSignalEffect(() => {
     const menuGraphProps = actionCreator();
-    // @ts-ignore
-    graph._addNodes(menuGraphProps.nodes);
-    // @ts-ignore
-    graph._addEdges(menuGraphProps.edges);
+    graph.addNodes(menuGraphProps.nodes);
+    graph.addEdges(menuGraphProps.edges);
   });
 
-  const resolveGroupItems = useCallback(
-    (sourceNode: MenuItemGroup = graph.root as MenuItemGroup) => {
-      if (graph) {
-        return (graph.nodes(sourceNode, { filter: (n): n is any => true }) || null) as MenuItem[] | null;
-      } else {
-        return null;
-      }
+  const useGroupItems = useCallback(
+    (sourceNode?: MenuItemGroup) => {
+      const items = useRxValue(graph.connections(sourceNode?.id || ROOT_ID)) as MenuItem[];
+      return items;
     },
     [graph],
   );
 
-  return { resolveGroupItems };
+  return { useGroupItems };
 };

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Registry } from '@effect-rx/rx-react';
 import { untracked } from '@preact/signals-core';
 import { Array as A, Effect, Either, Match, pipe } from 'effect';
 
@@ -10,7 +11,7 @@ import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
-import { type AnyCapability, PluginsContext } from './capabilities';
+import { type AnyCapability, PluginContext } from './capabilities';
 import { type ActivationEvent, eventKey, getEvents, isAllOf } from './events';
 import { type PluginModule, type Plugin } from './plugin';
 
@@ -24,6 +25,7 @@ export type PluginManagerOptions = {
   plugins?: Plugin[];
   core?: string[];
   enabled?: string[];
+  registry?: Registry.Registry;
 };
 
 type PluginManagerState = {
@@ -43,12 +45,10 @@ type PluginManagerState = {
 
 export class PluginManager {
   readonly activation = new Event<{ event: string; state: 'activating' | 'activated' | 'error'; error?: any }>();
+  readonly context: PluginContext;
+  readonly registry: Registry.Registry;
 
-  readonly context = new PluginsContext({
-    activate: (event) => this._activate(event),
-    reset: (id) => this._reset(id),
-  });
-
+  // TODO(wittjosiah): Replace with Rx.
   private readonly _state: Live<PluginManagerState>;
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, AnyCapability[]>();
@@ -58,7 +58,15 @@ export class PluginManager {
     plugins = [],
     core = plugins.map(({ meta }) => meta.id),
     enabled = [],
+    registry,
   }: PluginManagerOptions) {
+    this.registry = registry ?? Registry.make();
+    this.context = new PluginContext({
+      registry: this.registry,
+      activate: (event) => this._activate(event),
+      reset: (id) => this._reset(id),
+    });
+
     this._pluginLoader = pluginLoader;
     this._state = live({
       plugins,

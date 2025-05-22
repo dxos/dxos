@@ -8,9 +8,10 @@ import { Surface, useCapability } from '@dxos/app-framework';
 import { type Label, Main } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
+import { useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { getMode } from '../../types';
-import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
+import { layoutAppliesTopbar } from '../../util';
 
 const label = ['sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
 

@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
 
 import { MapCapabilities } from './capabilities';
 import { MapAction } from '../types';
 import { initializeMap } from '../util';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MapAction.Create,
@@ -28,7 +28,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: MapAction.Toggle,
       resolve: () => {
-        const state = context.requestCapability(MapCapabilities.MutableState);
+        const state = context.getCapability(MapCapabilities.MutableState);
         state.type = state.type === 'globe' ? 'map' : 'globe';
       },
     }),

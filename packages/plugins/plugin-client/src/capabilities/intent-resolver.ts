@@ -11,7 +11,7 @@ import {
   createIntent,
   createResolver,
   LayoutAction,
-  type PluginsContext,
+  type PluginContext,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
@@ -24,7 +24,7 @@ import { ClientEvents } from '../events';
 import { Account, ClientAction } from '../types';
 
 type IntentResolverOptions = {
-  context: PluginsContext;
+  context: PluginContext;
   appName?: string;
 };
 
@@ -35,8 +35,8 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
     createResolver({
       intent: ClientAction.CreateIdentity,
       resolve: async () => {
-        const manager = context.requestCapability(Capabilities.PluginManager);
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const manager = context.getCapability(Capabilities.PluginManager);
+        const client = context.getCapability(ClientCapabilities.Client);
         const data = await client.halo.createIdentity();
         await manager.activate(ClientEvents.IdentityCreated);
         return {
@@ -132,7 +132,7 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
     createResolver({
       intent: ClientAction.CreateAgent,
       resolve: async () => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
         await client.services.services.EdgeAgentService.createAgent(null as any, { timeout: 10_000 });
       },
@@ -140,7 +140,7 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
     createResolver({
       intent: ClientAction.CreateRecoveryCode,
       resolve: async () => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         invariant(client.services.services.IdentityService, 'IdentityService not available');
         // TODO(wittjosiah): This needs a proper api.
         const { recoveryCode } = await client.services.services.IdentityService.createRecoveryCredential({});
@@ -162,7 +162,7 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
     createResolver({
       intent: ClientAction.CreatePasskey,
       resolve: async () => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         const identity = client.halo.identity.get();
         invariant(identity, 'Identity not available');
 
@@ -207,7 +207,7 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
     createResolver({
       intent: ClientAction.RedeemPasskey,
       resolve: async () => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         // TODO(wittjosiah): This needs a proper api.
         invariant(client.services.services.IdentityService, 'IdentityService not available');
         const { deviceKey, controlFeedKey, challenge } =
@@ -238,7 +238,7 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
     createResolver({
       intent: ClientAction.RedeemToken,
       resolve: async (data) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         // TODO(wittjosiah): This needs a proper api.
         invariant(client.services.services.IdentityService, 'IdentityService not available');
         await client.services.services.IdentityService.recoverIdentity(

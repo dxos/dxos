@@ -12,10 +12,10 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
+import { useBreakpoints } from '../../hooks';
 import { parseEntryId } from '../../layout';
 import { DECK_PLUGIN } from '../../meta';
 import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart, type LayoutMode } from '../../types';
-import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 const MAX_COMPANIONS = 5;
@@ -66,7 +66,7 @@ export const PlankHeading = memo(
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
         // Load actions for the node.
-        node && graph.actions(node);
+        node && graph.expand(node.id);
       });
 
       return () => cancelAnimationFrame(frame);
@@ -92,7 +92,7 @@ export const PlankHeading = memo(
       } else if (variant) {
         return [];
       } else {
-        return [actions, graph.actions(node)].filter((a) => a.length > 0);
+        return [actions, graph.getActions(node.id)].filter((a) => a.length > 0);
       }
     }, [actions, node, variant, graph]);
 
