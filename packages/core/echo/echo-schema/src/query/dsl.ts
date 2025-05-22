@@ -387,6 +387,10 @@ class FilterClass implements Filter<any> {
   }
 
   static eq<T>(value: T): Filter<T> {
+    if (!Ref.isRef(value) && typeof value === 'object' && value !== null) {
+      throw new TypeError('Cannot use object as a value for eq filter');
+    }
+
     return new FilterClass({
       type: 'compare',
       operator: 'eq',
