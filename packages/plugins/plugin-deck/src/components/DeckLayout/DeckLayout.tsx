@@ -91,14 +91,15 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     }
   }, [isNotMobile, deck, dispatch]);
 
-  // If deck is disabled in settings, ensure that the layout is in solo mode.
+  // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
+  // TODO(thure): Applying this as an effect should be avoided over emitting the intent only when the setting changes.
   useEffect(() => {
-    if (!settings.enableDeck) {
+    if (!settings.enableDeck && layoutMode === 'deck') {
       void dispatch(
         createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
       );
     }
-  }, [settings.enableDeck, dispatch, active]);
+  }, [settings.enableDeck, dispatch, active, layoutMode]);
 
   /**
    * Clear scroll restoration state if the window is resized

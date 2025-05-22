@@ -131,7 +131,10 @@ const PlankComponent = memo(
     const placeholder = useMemo(() => <PlankLoading />, []);
 
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
-    const classNames = mx(
+
+    // NOTE(thure): The result of any `mx` call is always `className` without the ‘s’ to signal its compatibility with
+    //   HTML primitives.
+    const className = mx(
       'attention-surface relative',
       isSolo && mainIntrinsicSize,
       isSolo && railGridHorizontal,
@@ -140,8 +143,6 @@ const PlankComponent = memo(
       part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
       part.startsWith('solo-') && 'row-span-2 grid-rows-subgrid min-is-0',
       part === 'solo-companion' && '!border-separator border-is',
-      layoutMode === 'solo--fullscreen' &&
-        '!transition-[margin-block-start,inline-size] -mbs-[--rail-action] has-[[data-plank-heading]:hover]:mbs-0',
     );
 
     return (
@@ -150,12 +151,12 @@ const PlankComponent = memo(
         data-testid='deck.plank'
         tabIndex={0}
         {...(part.startsWith('solo')
-          ? ({ ...sizeAttrs, className: classNames } as any)
+          ? ({ ...sizeAttrs, className } as any)
           : {
               item: { id },
               size,
               onSizeChange: handleSizeChange,
-              classNames,
+              classNames: className,
               order,
               role: 'article',
             })}
@@ -204,6 +205,16 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
 // TODO(burdon): Factor out conditional rendering.
 //   Remove this wrapper component and render the entire set of planks in the deck with conditional visibility
 //   to obviate mounting and unmounting when switching between solo and companion mode?
+// NOTE(thure, in reply): Whether any surface should be rendered and hidden is a performance matter — remember that
+//  article surfaces contain full experiences, so being able to unmount them will yield relatively large performance
+//  benefits. I think where we anticipate users will definitely want to quickly switch between showing and hiding entire
+//  articles, over the (again probably large) performance benefit that unmounting them would confer, we can mount and
+//  hide them, but I think that scenario in its most unambiguous form is probably rare. You could extrapolate
+//  the scenario to include all “potential” planks such as companions, which we could keep mounted and hidden, but I
+//  don’t think the resulting performance would be acceptable. I think the real issue is “perceived performance” which
+//  has mitigations that are in between mounting and un-mounting since both of those have tradeoffs; we may need one or more
+//  “partially-mounted” experiences, like loading skeletons at the simple end, or screenshots of “sleeping” planks at
+//  the advanced end.
 export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
@@ -238,7 +249,7 @@ export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProp
 const Container = ({ children, solo, companion }: PropsWithChildren<{ solo: boolean; companion: boolean }>) => {
   const sizeAttrs = useMainSize();
   if (!solo) {
-    return <Fragment>{children}</Fragment>;
+    return children;
   }
 
   // TODO(burdon): Make resizable.
