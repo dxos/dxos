@@ -10,4 +10,5 @@ export * from './formatting';
 export * from './highlight';
 export * from './image';
 export * from './link';
+export * from './outliner';
 export * from './table';

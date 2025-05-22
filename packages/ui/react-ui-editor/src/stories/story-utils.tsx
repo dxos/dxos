@@ -17,21 +17,19 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { editorContent, editorGutter } from '../defaults';
 import {
-  type EditorSelectionState,
   type DebugNode,
-  decorateMarkdown,
-  formattingKeymap,
-  linkTooltip,
-  image,
-  table,
-  folding,
-} from '../extensions';
-import {
+  type EditorSelectionState,
   createDataExtensions,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
   debugTree,
+  folding,
+  formattingKeymap,
+  image,
+  linkTooltip,
+  table,
 } from '../extensions';
 import { useTextEditor, type UseTextEditorProps } from '../hooks';
 import { createRenderer } from '../util';
