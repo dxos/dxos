@@ -41,6 +41,7 @@ import {
 } from './query';
 import { getTargetSpacesForQuery, isTrivialSelectionQuery } from './query/util';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
+import { isNotUndefined } from 'effect/Predicate';
 
 /**
  * Manages cross-space database interactions.
@@ -498,7 +499,6 @@ class SpaceQuerySource implements QuerySource {
     prohibitSignalActions(() => {
       // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
       const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
-        const echoObject = this._database.getObjectById(objectId);
         const core = this._database.coreDatabase.getObjectCoreById(objectId, { load: false });
 
         const trivial = isTrivialSelectionQuery(this._query!);
@@ -511,13 +511,7 @@ class SpaceQuerySource implements QuerySource {
         return (
           !this._results ||
           this._results.find((result) => result.id === objectId) ||
-          (core &&
-            !core.isDeleted() &&
-            filterMatchObject(filter, {
-              id: core.id,
-              doc: core.getObjectStructure(),
-              spaceId: this.spaceId,
-            }))
+          (core && this._filterCore(core, filter, options))
         );
       });
 
@@ -543,30 +537,10 @@ class SpaceQuerySource implements QuerySource {
     let results: QueryResultEntry<AnyLiveObject<any>>[] = [];
 
     if (isObjectIdFilter(filter)) {
-      const cores = (
-        await this._database._coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[])
-      ).filter((x) => x !== undefined);
       results.push(
-        ...cores
-          .filter((core) => {
-            const doc = core.getObjectStructure();
-            return filterMatchObject(filter, {
-              id: core.id,
-              doc,
-              spaceId: this.spaceId,
-            });
-          })
-          .filter((core) => {
-            switch (options?.deleted) {
-              case undefined:
-              case 'exclude':
-                return !core.isDeleted();
-              case 'include':
-                return true;
-              case 'only':
-                return core.isDeleted();
-            }
-          })
+        ...(await this._database._coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
+          .filter(isNotUndefined)
+          .filter((core) => this._filterCore(core, filter, options))
           .map((core) => this._mapCoreToResult(core)),
       );
     }
@@ -631,39 +605,9 @@ class SpaceQuerySource implements QuerySource {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
           .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
-          .filter((core) => core !== undefined)
-          .filter((core) => {
-            switch (options?.deleted) {
-              case undefined:
-              case 'exclude':
-                return !core.isDeleted();
-              case 'include':
-                return true;
-              case 'only':
-                return core.isDeleted();
-            }
-          })
-      : this._database.coreDatabase
-          .allObjectCores()
-          // TODO(dmaretskyi): Cleanup proxy <-> core.
-          .filter((core) =>
-            filterMatchObject(filter, {
-              id: core.id,
-              doc: core.getObjectStructure(),
-              spaceId: this.spaceId,
-            }),
-          )
-          .filter((core) => {
-            switch (options?.deleted) {
-              case undefined:
-              case 'exclude':
-                return !core.isDeleted();
-              case 'include':
-                return true;
-              case 'only':
-                return core.isDeleted();
-            }
-          });
+          .filter(isNotUndefined)
+          .filter((core) => this._filterCore(core, filter, options))
+      : this._database.coreDatabase.allObjectCores().filter((core) => this._filterCore(core, filter, options));
 
     return filteredCores.map((core) => this._mapCoreToResult(core));
   }
@@ -689,6 +633,17 @@ class SpaceQuerySource implements QuerySource {
         time: 0,
       },
     };
+  }
+
+  private _filterCore(core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
+    return (
+      filterCoreByDeletedFlag(core, options) &&
+      filterMatchObject(filter, {
+        id: core.id,
+        doc: core.getObjectStructure(),
+        spaceId: this.spaceId,
+      })
+    );
   }
 }
 
@@ -720,4 +675,16 @@ trace.diagnostic({
 
 const isObjectIdFilter = (filter: QueryAST.Filter) => {
   return filter.type === 'object' && filter.id !== undefined && filter.id.length > 0;
+};
+
+const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOptions | undefined): boolean => {
+  switch (options?.deleted) {
+    case undefined:
+    case 'exclude':
+      return !core.isDeleted();
+    case 'include':
+      return true;
+    case 'only':
+      return core.isDeleted();
+  }
 };
