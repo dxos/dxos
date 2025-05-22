@@ -222,7 +222,7 @@ export const TaskList = {
 export const Outliner = {
   render: () => (
     <DefaultStory
-      text={str(...content.tasks.split('\n').filter((line) => line.trim().startsWith('-')), content.footer)}
+      text={str(...content.tasks.split('\n').filter((line) => line.trim().startsWith('-')))}
       extensions={[decorateMarkdown(), outliner()]}
       debug='raw+tree'
     />

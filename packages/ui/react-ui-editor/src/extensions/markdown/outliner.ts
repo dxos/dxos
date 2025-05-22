@@ -6,25 +6,30 @@ import { type ChangeSpec, EditorState, type Extension } from '@codemirror/state'
 
 // TODO(burdon): Toggle list/task mode.
 // TODO(burdon): Convert to task object and insert link.
-// TOOD(burdon): Can we support continuation lines and rich formatting?
+// TOOD(burdon): Continuation lines and rich formatting?
+
+const indentLevel = 2;
+const matchTaskMarker = /^\s*- (\[ \]|\[x\])? /;
 
 /**
  * Outliner extension.
  */
 export const outliner = (): Extension =>
   EditorState.transactionFilter.of((tr) => {
-    const indentLevel = 2;
-
     // Don't allow cursor before marker.
     if (!tr.docChanged) {
       const pos = tr.selection?.ranges[tr.selection?.mainIndex]?.from;
       if (pos != null) {
         const line = tr.startState.doc.lineAt(pos);
-        if (pos === line.from) {
-          // TODO(burdon): Check if nav from previous line.
-          return []; // Skip.
+        const match = line.text.match(matchTaskMarker);
+        const start = match?.[0]?.length ?? 0;
+        const col = pos - line.from;
+        if (col < start) {
+          const pos = line.from + start;
+          return [{ selection: { anchor: pos, head: pos } }];
         }
       }
+
       return tr;
     }
 
@@ -37,7 +42,7 @@ export const outliner = (): Extension =>
       //   - [ ] <- backspace here deletes the task marker.
 
       const line = tr.startState.doc.lineAt(fromA);
-      const isTaskMarker = line.text.match(/^\s*- (\[ \]|\[x\])? /);
+      const isTaskMarker = line.text.match(matchTaskMarker);
       if (isTaskMarker) {
         // Detect replacement of task marker with continuation.
         if (fromB === line.from && toB === line.to) {
@@ -77,7 +82,6 @@ export const outliner = (): Extension =>
         }
 
         // TODO(burdon): Detect pressing ENTER on empty line that is indented.
-        // TOOD(burdon): Error if start with link (e.g., `[]()`).
       }
     });
 
