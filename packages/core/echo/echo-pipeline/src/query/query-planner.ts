@@ -81,6 +81,20 @@ export class QueryPlanner {
   private _generateSelectionFromFilter(filter: QueryAST.Filter, context: GenerationContext): QueryPlan.Plan {
     switch (filter.type) {
       case 'object': {
+        if (
+          context.selectionInverted &&
+          filter.id === undefined &&
+          filter.typename === null &&
+          Object.keys(filter.props).length === 0
+        ) {
+          // filter of nothing -> clear working set.
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'ClearWorkingSetStep',
+            },
+            ...this._generateDeletedHandlingSteps(context),
+          ]);
+        }
         if (context.selectionInverted) {
           throw new Error('Query too complex');
         }
