@@ -12,6 +12,7 @@ import { objectPointerCodec } from '@dxos/protocols';
 import { raise } from '@dxos/debug';
 import { createIdFromSpaceKey } from '../common';
 import { isNonNullable } from '@dxos/util';
+import { log } from '@dxos/log';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -48,21 +49,23 @@ export type ExecutionTrace = {
 
   objectCount: number;
   documentsLoaded: number;
+  indexHits: number;
   indexQueryTime: number;
   documentLoadTime: number;
 
   children: ExecutionTrace[];
 };
 
-const EMPTY_EXECUTION_TRACE: ExecutionTrace = {
+const makeEmptyExecutionTrace = (): ExecutionTrace => ({
   name: 'Empty',
   details: '',
   objectCount: 0,
   documentsLoaded: 0,
+  indexHits: 0,
   indexQueryTime: 0,
   documentLoadTime: 0,
   children: [],
-};
+});
 
 type StepExecutionResult = {
   workingSet: Item[];
@@ -82,7 +85,7 @@ export class QueryExecutor extends Resource {
   private readonly _reactivity: QueryReactivity;
 
   private _plan: QueryPlan.Plan;
-  private _trace: ExecutionTrace = EMPTY_EXECUTION_TRACE;
+  private _trace: ExecutionTrace = makeEmptyExecutionTrace();
   private _lastResultSet: Item[] = [];
 
   constructor(options: QueryExecutorOptions) {
@@ -146,13 +149,18 @@ export class QueryExecutor extends Resource {
           workingSet[index].documentId !== item.documentId,
       );
 
+    log.info('Query execution result', {
+      changed,
+      trace,
+    });
+
     return {
       changed,
     };
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: Item[]): Promise<StepExecutionResult> {
-    const trace = EMPTY_EXECUTION_TRACE;
+    const trace = makeEmptyExecutionTrace();
     for (const step of plan.steps) {
       const result = await this._execStep(step, workingSet);
       workingSet = result.workingSet;
@@ -163,12 +171,12 @@ export class QueryExecutor extends Resource {
 
   private async _execStep(step: QueryPlan.Step, workingSet: Item[]): Promise<StepExecutionResult> {
     if (this._ctx.disposed) {
-      return { workingSet, trace: EMPTY_EXECUTION_TRACE };
+      return { workingSet, trace: makeEmptyExecutionTrace() };
     }
 
     switch (step._tag) {
       case 'ClearWorkingSetStep':
-        return { workingSet: [], trace: EMPTY_EXECUTION_TRACE };
+        return { workingSet: [], trace: makeEmptyExecutionTrace() };
       case 'SelectStep':
         return this._execSelectStep(step, workingSet);
       case 'FilterStep':
@@ -188,15 +196,33 @@ export class QueryExecutor extends Resource {
     workingSet = [...workingSet];
 
     const trace: ExecutionTrace = {
-      ...EMPTY_EXECUTION_TRACE,
+      ...makeEmptyExecutionTrace(),
       name: 'Select',
       details: JSON.stringify(step.selector),
     };
 
     switch (step.selector._tag) {
       case 'EverythingSelector':
-        // Return nothing and have the SpaceQuerySource handle it.
-        // TODO(dmaretskyi): Implement this properly.
+        const beginIndexQuery = performance.now();
+        const indexHits = await this._indexer.execQuery({
+          typenames: [],
+          inverted: false,
+        });
+        trace.indexHits = +indexHits.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        const documentLoadStart = performance.now();
+        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+        trace.documentsLoaded += results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable));
+        trace.objectCount = workingSet.length;
+
         break;
       case 'IdSelector':
         // For object id filters, we select nothing as those are handled by the SpaceQuerySource.
@@ -208,6 +234,7 @@ export class QueryExecutor extends Resource {
           typenames: step.selector.typename,
           inverted: step.selector.inverted,
         });
+        trace.indexHits = +indexHits.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
         if (this._ctx.disposed) {
@@ -245,7 +272,7 @@ export class QueryExecutor extends Resource {
     return {
       workingSet: result,
       trace: {
-        ...EMPTY_EXECUTION_TRACE,
+        ...makeEmptyExecutionTrace(),
         name: 'Filter',
         details: JSON.stringify(step.filter),
         objectCount: result.length,
@@ -262,7 +289,7 @@ export class QueryExecutor extends Resource {
     return {
       workingSet: result,
       trace: {
-        ...EMPTY_EXECUTION_TRACE,
+        ...makeEmptyExecutionTrace(),
         name: 'FilterDeleted',
         details: step.mode,
         objectCount: result.length,
@@ -272,7 +299,7 @@ export class QueryExecutor extends Resource {
 
   private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: Item[]): Promise<StepExecutionResult> {
     const trace: ExecutionTrace = {
-      ...EMPTY_EXECUTION_TRACE,
+      ...makeEmptyExecutionTrace(),
       name: 'Traverse',
       details: JSON.stringify(step.traversal),
     };
@@ -288,7 +315,7 @@ export class QueryExecutor extends Resource {
     const resultSets = await Promise.all(step.plans.map((plan) => this._execPlan(plan, [...workingSet])));
 
     const trace: ExecutionTrace = {
-      ...EMPTY_EXECUTION_TRACE,
+      ...makeEmptyExecutionTrace(),
       name: 'Union',
     };
 
