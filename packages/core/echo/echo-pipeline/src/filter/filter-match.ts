@@ -1,4 +1,4 @@
-import { QueryAST, type ObjectStructure } from '@dxos/echo-protocol';
+import { decodeReference, isEncodedReference, QueryAST, type ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
@@ -82,6 +82,12 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
       const compareValue = filter.value as any;
       switch (filter.operator) {
         case 'eq':
+          if (isEncodedReference(compareValue)) {
+            return (
+              isEncodedReference(value) &&
+              DXN.equals(decodeReference(value).toDXN(), decodeReference(compareValue).toDXN())
+            );
+          }
           return value === compareValue;
         case 'neq':
           return value !== compareValue;
