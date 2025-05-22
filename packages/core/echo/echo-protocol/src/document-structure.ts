@@ -9,6 +9,7 @@ import { type RawString } from './automerge';
 import type { ForeignKey } from './foreign-key';
 import { isEncodedReference, type EncodedReference } from './reference';
 import { type SpaceDocVersion } from './space-doc-version';
+import type { ObjectId } from '@dxos/keys';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -64,6 +65,10 @@ export const DatabaseDirectory = Object.freeze({
     const rawKey = String(rawSpaceKey);
     invariant(!rawKey.startsWith('0x'), 'Space key must not start with 0x');
     return rawKey;
+  },
+
+  getInlineObject: (doc: DatabaseDirectory, id: ObjectId): ObjectStructure | undefined => {
+    return doc.objects?.[id];
   },
 });
 
