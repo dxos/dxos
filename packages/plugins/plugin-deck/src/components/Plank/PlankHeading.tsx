@@ -79,8 +79,8 @@ export const PlankHeading = memo(
         solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
-        fullscreen: !isCompanionNode && !companioned,
-        companion: !isCompanionNode && companions && companions.length > 0 && layoutMode !== 'solo--fullscreen',
+        fullscreen: !isCompanionNode,
+        companion: !isCompanionNode && companions && companions.length > 0,
       }),
       [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
     );
