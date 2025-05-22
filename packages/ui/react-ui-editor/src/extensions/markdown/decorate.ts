@@ -129,8 +129,8 @@ class TextWidget extends WidgetType {
 }
 
 const hide = Decoration.replace({});
-const blockQuote = Decoration.line({ class: mx('cm-blockquote') });
-const fencedCodeLine = Decoration.line({ class: mx('cm-code cm-codeblock-line') });
+const blockQuote = Decoration.line({ class: 'cm-blockquote' });
+const fencedCodeLine = Decoration.line({ class: 'cm-code cm-codeblock-line' });
 const fencedCodeLineFirst = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-first') });
 const fencedCodeLineLast = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-last') });
 const commentBlockLine = fencedCodeLine;
@@ -277,7 +277,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         // Set indentation.
         const list = getCurrentListLevel();
         const width = list.type === 'OrderedList' ? orderedListIndentationWidth : bulletListIndentationWidth;
-        const offset = ((list.level ?? 0) + 1) * width;
+        const offset = (options?.listPaddingLeft ?? 0) + ((list.level ?? 0) + 1) * width;
         if (node.from === line.to - 1) {
           // Abort if only the hyphen is typed.
           return false;
@@ -405,7 +405,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           }
 
           const first = block.from <= node.from;
-          const last = block.to >= node.to && /^(\s>)*```$/.test(state.doc.sliceString(block.from, block.to));
+          const last = block.to >= node.to && /```$/.test(state.doc.sliceString(block.from, block.to));
           deco.add(block.from, block.from, first ? fencedCodeLineFirst : last ? fencedCodeLineLast : fencedCodeLine);
 
           const editing = editingRange(state, node, focus);
@@ -520,6 +520,8 @@ export interface DecorateOptions {
   selectionChangeDelay?: number;
   numberedHeadings?: { from: number; to?: number };
   renderLinkButton?: RenderCallback<{ url: string }>;
+  // TODO(burdon): Additional padding for each line.
+  listPaddingLeft?: number;
 }
 
 export const decorateMarkdown = (options: DecorateOptions = {}) => {

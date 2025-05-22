@@ -222,8 +222,21 @@ export const TaskList = {
 export const Outliner = {
   render: () => (
     <DefaultStory
-      text={str(...content.tasks.split('\n').filter((line) => line.trim().startsWith('-')))}
-      extensions={[decorateMarkdown(), outliner()]}
+      // text={str(...content.tasks.split('\n').filter((line) => line.trim().startsWith('-')))}
+      text={str(
+        //
+        '- [ ] A',
+        '- [ ] B',
+        // Continuation lines.
+        '  ## Example',
+        '  Continuation line belonging to B.',
+        '  ```ts',
+        '  const x = 100',
+        '  ```',
+        '- [ ] C',
+        '- D Items can have links [like this](https://example.com).',
+      )}
+      extensions={[decorateMarkdown({ listPaddingLeft: 8 }), outliner()]}
       debug='raw+tree'
     />
   ),
