@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
+import { encodeReference, ObjectStructure, Reference } from '@dxos/echo-protocol';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { openAndClose } from '@dxos/test-utils';
@@ -19,22 +19,18 @@ describe('Indexer', () => {
     const schemaURI = '@example.org/schema/Contact';
 
     const objects: ObjectStructure[] = [
-      {
+      ObjectStructure.makeObject({
+        // TODO(dmaretskyi): Fix references
+        type: Reference.localObjectReference(schemaURI).toDXN().toString(),
+        keys: [],
         data: { name: 'John' },
+      }),
+      ObjectStructure.makeObject({
         // TODO(dmaretskyi): Fix references
-        system: { type: encodeReference(Reference.localObjectReference(schemaURI)) },
-        meta: {
-          keys: [],
-        },
-      },
-      {
+        type: Reference.localObjectReference('@example.org/schema/Document').toDXN().toString(),
+        keys: [],
         data: { title: 'first document' },
-        // TODO(dmaretskyi): Fix references
-        system: { type: encodeReference(Reference.localObjectReference('@example.org/schema/Document')) },
-        meta: {
-          keys: [],
-        },
-      },
+      }),
     ];
     const documents: ObjectSnapshot[] = objects.map((object, index) => ({
       id: String(index),

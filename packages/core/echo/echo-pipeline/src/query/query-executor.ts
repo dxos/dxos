@@ -73,8 +73,12 @@ export class QueryExecutor extends Resource {
   private readonly _indexer: Indexer;
   private readonly _automergeHost: AutomergeHost;
 
+  /**
+   * Id of this query.
+   */
   private readonly _id: string;
   private readonly _query: QueryAST.Query;
+  // TODO(dmaretskyi): Might be used in the future.
   private readonly _reactivity: QueryReactivity;
 
   private _plan: QueryPlan.Plan;

@@ -2,6 +2,7 @@ import { Expando, EXPANDO_TYPENAME, Filter } from '@dxos/echo-schema';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { describe, expect, test } from 'vitest';
 import { filterMatchObject, type MatchedObject } from './filter-match';
+import { ObjectStructure } from '@dxos/echo-protocol';
 
 describe('filterMatch', () => {
   test('properties', () => {
@@ -61,24 +62,18 @@ describe('filterMatch', () => {
 const OBJECT_1: MatchedObject = {
   id: ObjectId.make('01JVS9YYT5VMVJW0GGTM1YHCCH'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
-  doc: {
-    system: {
-      type: { '/': DXN.fromTypenameAndVersion(EXPANDO_TYPENAME, '0.1.0').toString() },
-    },
-    meta: { keys: [] },
+  doc: ObjectStructure.makeObject({
+    type: DXN.fromTypenameAndVersion(EXPANDO_TYPENAME, '0.1.0').toString(),
     data: { title: 'test', value: 100, complete: true },
-  },
+  }),
 };
 
 const OBJECT_2: MatchedObject = {
   id: ObjectId.make('01JT5TD6K9FFJ3VNM5FGMS5C0Q'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
-  doc: {
-    system: {
-      type: { '/': DXN.fromTypenameAndVersion(EXPANDO_TYPENAME, '0.1.0').toString() },
-      deleted: true,
-    },
-    meta: { keys: [] },
+  doc: ObjectStructure.makeObject({
+    type: DXN.fromTypenameAndVersion(EXPANDO_TYPENAME, '0.1.0').toString(),
     data: { title: 'test', value: 100, complete: true },
-  },
+    deleted: true,
+  }),
 };

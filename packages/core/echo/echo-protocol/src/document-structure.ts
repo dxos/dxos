@@ -3,13 +3,13 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { visitValues } from '@dxos/util';
+import { mapValues, visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';
 import type { ForeignKey } from './foreign-key';
 import { isEncodedReference, type EncodedReference } from './reference';
 import { type SpaceDocVersion } from './space-doc-version';
-import type { ObjectId } from '@dxos/keys';
+import type { DXN, ObjectId } from '@dxos/keys';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -70,6 +70,24 @@ export const DatabaseDirectory = Object.freeze({
   getInlineObject: (doc: DatabaseDirectory, id: ObjectId): ObjectStructure | undefined => {
     return doc.objects?.[id];
   },
+
+  make({
+    spaceKey,
+    objects,
+    links,
+  }: {
+    spaceKey: string;
+    objects?: Record<string, ObjectStructure>;
+    links?: Record<string, RawString>;
+  }): DatabaseDirectory {
+    return {
+      access: {
+        spaceKey,
+      },
+      objects: objects ?? {},
+      links: links ?? {},
+    };
+  },
 });
 
 /**
@@ -129,6 +147,58 @@ export const ObjectStructure = Object.freeze({
     };
     visitValues(object.data, (value, key) => visit([String(key)], value));
     return references;
+  },
+
+  makeObject: ({
+    type,
+    data,
+    keys,
+  }: {
+    type: DXN.String;
+    deleted?: boolean;
+    keys?: ForeignKey[];
+    data?: unknown;
+  }): ObjectStructure => {
+    return {
+      system: {
+        kind: 'object',
+        type: { '/': type },
+      },
+      meta: {
+        keys: keys ?? [],
+      },
+      data: data ?? {},
+    };
+  },
+
+  makeRelation: ({
+    type,
+    source,
+    target,
+    deleted,
+    keys,
+    data,
+  }: {
+    type: DXN.String;
+    source: EncodedReference;
+    target: EncodedReference;
+    deleted?: boolean;
+    keys?: ForeignKey[];
+    data?: unknown;
+  }): ObjectStructure => {
+    return {
+      system: {
+        kind: 'relation',
+        type: { '/': type },
+        source,
+        target,
+        deleted: deleted ?? false,
+      },
+      meta: {
+        keys: keys ?? [],
+      },
+      data: data ?? {},
+    };
   },
 });
 
