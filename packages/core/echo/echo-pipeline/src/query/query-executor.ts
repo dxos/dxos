@@ -204,7 +204,7 @@ export class QueryExecutor extends Resource {
     switch (step.selector._tag) {
       case 'EverythingSelector':
         const beginIndexQuery = performance.now();
-        const indexHits = await this._indexer.execQuery({
+        let indexHits = await this._indexer.execQuery({
           typenames: [],
           inverted: false,
         });
@@ -220,7 +220,7 @@ export class QueryExecutor extends Resource {
         trace.documentsLoaded += results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
-        workingSet.push(...results.filter(isNonNullable));
+        workingSet.push(...results.filter(isNonNullable).filter((item) => step.fromSpaces.includes(item.spaceId)));
         trace.objectCount = workingSet.length;
 
         break;
@@ -246,7 +246,7 @@ export class QueryExecutor extends Resource {
         trace.documentsLoaded += results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
-        workingSet.push(...results.filter(isNonNullable));
+        workingSet.push(...results.filter(isNonNullable).filter((item) => step.fromSpaces.includes(item.spaceId)));
         trace.objectCount = workingSet.length;
 
         break;
