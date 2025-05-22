@@ -16,7 +16,6 @@ import { QueryPlanner } from './query-planner';
 import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import { filterMatchObject } from '../filter';
-import { realpath } from 'node:fs';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
