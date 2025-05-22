@@ -1,4 +1,5 @@
 import { decodeReference, isEncodedReference, QueryAST, type ObjectStructure } from '@dxos/echo-protocol';
+import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
@@ -15,14 +16,20 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     case 'object': {
       // Check typename if specified
       if (filter.typename !== null) {
-        if (!obj.doc.system.type?.['/']) {
-          return false;
-        }
-        const actualDXN = DXN.parse(obj.doc.system.type['/']);
-        const expectedDXN = DXN.parse(filter.typename);
+        // TODO(dmaretskyi): `system` is missing in some cases.
+        if (!obj.doc.system?.type?.['/']) {
+          // Objects with no type are considered to be expando objects
+          const expectedDXN = DXN.parse(filter.typename).asTypeDXN();
+          if (expectedDXN?.type !== EXPANDO_TYPENAME) {
+            return false;
+          }
+        } else {
+          const actualDXN = DXN.parse(obj.doc.system.type['/']);
+          const expectedDXN = DXN.parse(filter.typename);
 
-        if (!compareTypename(expectedDXN, actualDXN)) {
-          return false;
+          if (!compareTypename(expectedDXN, actualDXN)) {
+            return false;
+          }
         }
       }
 
@@ -83,10 +90,10 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
       switch (filter.operator) {
         case 'eq':
           if (isEncodedReference(compareValue)) {
-            return (
-              isEncodedReference(value) &&
-              DXN.equals(decodeReference(value).toDXN(), decodeReference(compareValue).toDXN())
-            );
+            if (!isEncodedReference(value)) {
+              return false;
+            }
+            return DXN.equals(decodeReference(value).toDXN(), decodeReference(compareValue).toDXN());
           }
           return value === compareValue;
         case 'neq':

@@ -425,7 +425,17 @@ export class GraphQueryContext implements QueryContext {
   }
 
   async run(query: QueryAST.Query, { timeout = 30_000 }: QueryRunOptions = {}): Promise<QueryResultEntry[]> {
-    const runTasks = [...this._sources.values()].map((s) => asyncTimeout<QueryResultEntry[]>(s.run(query), timeout));
+    const runTasks = [...this._sources.values()].map(async (s) => {
+      try {
+        log('run query', { resolver: Object.getPrototypeOf(s).constructor.name });
+        const results = await asyncTimeout<QueryResultEntry[]>(s.run(query), timeout);
+        log('run query results', { resolver: Object.getPrototypeOf(s).constructor.name, count: results.length });
+        return results;
+      } catch (err) {
+        log('run query error', { resolver: Object.getPrototypeOf(s).constructor.name, error: err });
+        throw err;
+      }
+    });
     if (runTasks.length === 0) {
       return [];
     }
@@ -533,10 +543,9 @@ class SpaceQuerySource implements QuerySource {
     let results: QueryResultEntry<AnyLiveObject<any>>[] = [];
 
     if (isObjectIdFilter(filter)) {
-      log.info('id filter', { ids: filter.id });
-      const cores = (await this._database._coreDatabase.batchLoadObjectCores(filter.id as ObjectId[])).filter(
-        (x) => x !== undefined,
-      );
+      const cores = (
+        await this._database._coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[])
+      ).filter((x) => x !== undefined);
       results.push(
         ...cores
           .filter((core) => {
@@ -547,6 +556,17 @@ class SpaceQuerySource implements QuerySource {
               spaceId: this.spaceId,
             });
           })
+          .filter((core) => {
+            switch (options?.deleted) {
+              case undefined:
+              case 'exclude':
+                return !core.isDeleted();
+              case 'include':
+                return true;
+              case 'only':
+                return core.isDeleted();
+            }
+          })
           .map((core) => this._mapCoreToResult(core)),
       );
     }
@@ -554,7 +574,14 @@ class SpaceQuerySource implements QuerySource {
     prohibitSignalActions(() => {
       results.push(...this._queryWorkingSet(filter, options));
     });
-    return results;
+
+    // Dedup
+    const map = new Map<string, QueryResultEntry<AnyLiveObject<any>>>();
+    for (const result of results) {
+      map.set(result.id, result);
+    }
+
+    return [...map.values()];
   }
 
   getResults(): QueryResultEntry<AnyLiveObject<any>>[] {
@@ -605,6 +632,17 @@ class SpaceQuerySource implements QuerySource {
       ? (filter as QueryAST.FilterObject)
           .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
           .filter((core) => core !== undefined)
+          .filter((core) => {
+            switch (options?.deleted) {
+              case undefined:
+              case 'exclude':
+                return !core.isDeleted();
+              case 'include':
+                return true;
+              case 'only':
+                return core.isDeleted();
+            }
+          })
       : this._database.coreDatabase
           .allObjectCores()
           // TODO(dmaretskyi): Cleanup proxy <-> core.
