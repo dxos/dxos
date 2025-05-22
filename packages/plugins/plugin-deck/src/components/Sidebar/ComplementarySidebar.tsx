@@ -18,10 +18,10 @@ import { Tabs } from '@dxos/react-ui-tabs';
 
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
-import { type DeckCompanion, getCompanionId, useDeckCompanions } from '../../hooks';
+import { type DeckCompanion, getCompanionId, useDeckCompanions, useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { getMode } from '../../types';
-import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
+import { layoutAppliesTopbar } from '../../util';
 import { PlankContentError, PlankLoading } from '../Plank';
 
 const label = ['complementary sidebar title', { ns: DECK_PLUGIN }] satisfies Label;

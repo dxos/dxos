@@ -16,7 +16,7 @@ import {
   defineModule,
   definePlugin,
   PluginManager,
-  type PluginsContext,
+  type PluginContext,
 } from '../core';
 
 // TODO(burdon): Factor out (use consistently in plugin framework?)
@@ -56,7 +56,7 @@ export const setupPluginManager = ({
 };
 
 export type WithPluginManagerOptions = CreateAppOptions & {
-  capabilities?: ProviderOrValue<PluginsContext, AnyCapability[]>;
+  capabilities?: ProviderOrValue<PluginContext, AnyCapability[]>;
   fireEvents?: (ActivationEvent | string)[];
 };
 

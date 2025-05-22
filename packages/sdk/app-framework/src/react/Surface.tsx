@@ -10,7 +10,7 @@ import { byPosition } from '@dxos/util';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useCapabilities } from './useCapabilities';
 import { Capabilities, type SurfaceDefinition, type SurfaceProps } from '../common';
-import { type PluginsContext } from '../core';
+import { type PluginContext } from '../core';
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
 
@@ -34,8 +34,8 @@ const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<Surf
 /**
  * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
  */
-export const isSurfaceAvailable = (context: PluginsContext, { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
-  const surfaces = context.requestCapabilities(Capabilities.ReactSurface);
+export const isSurfaceAvailable = (context: PluginContext, { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
+  const surfaces = context.getCapabilities(Capabilities.ReactSurface);
   const candidates = findCandidates(surfaces.flat(), { role, data });
   return candidates.length > 0;
 };

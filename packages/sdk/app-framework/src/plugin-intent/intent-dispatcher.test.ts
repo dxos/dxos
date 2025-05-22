@@ -134,25 +134,6 @@ describe('Intent dispatcher', () => {
     await Effect.runPromise(program);
   });
 
-  test('filter resolvers by plugin', async () => {
-    const otherComputeResolver = createResolver({
-      intent: Compute,
-      resolve: async (data) => ({ data: { value: data?.value * 3 } }),
-    });
-    const { dispatch } = createDispatcher((module) => (module === 'test' ? [computeResolver] : [otherComputeResolver]));
-    const program = Effect.gen(function* () {
-      const a = yield* dispatch(createIntent(Compute, { value: 1 }));
-
-      expect(a.value).toBe(3);
-
-      const b = yield* dispatch(createIntent(Compute, { value: 1 }, { module: 'test' }));
-
-      expect(b.value).toBe(2);
-    });
-
-    await Effect.runPromise(program);
-  });
-
   test('filter resolvers by predicate', async () => {
     const conditionalComputeResolver = createResolver({
       intent: Compute,

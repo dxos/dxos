@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
@@ -12,12 +12,12 @@ import { KANBAN_PLUGIN } from '../meta';
 import { initializeKanban } from '../testing';
 import { KanbanAction } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: KanbanAction.Create,
       resolve: async ({ space, name, typename, initialPivotColumn }) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         const { kanban } = await initializeKanban({ client, space, name, typename, initialPivotColumn });
         return { data: { object: kanban } };
       },

@@ -46,7 +46,7 @@ export const CreateObjectDialog = ({
 
   const resolve = useCallback(
     (typename: string) =>
-      manager.context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
+      manager.context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
     [manager],
   );
 

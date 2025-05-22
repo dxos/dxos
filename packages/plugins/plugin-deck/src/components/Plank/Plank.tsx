@@ -31,10 +31,9 @@ import { PlankContentError, PlankError } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 import { DeckCapabilities } from '../../capabilities';
-import { useMainSize } from '../../hooks';
+import { useMainSize, useCompanions } from '../../hooks';
 import { parseEntryId } from '../../layout';
 import { DeckAction, type LayoutMode, type ResolvedPart, type DeckSettingsProps } from '../../types';
-import { useCompanions } from '../../util';
 
 const UNKNOWN_ID = 'unknown_id';
 

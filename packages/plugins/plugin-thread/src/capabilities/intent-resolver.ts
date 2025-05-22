@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { createQueueDxn, Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { refFromDXN } from '@dxos/live-object';
@@ -17,7 +17,7 @@ import { ThreadCapabilities } from './capabilities';
 import { THREAD_PLUGIN } from '../meta';
 import { ThreadAction } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ThreadAction.CreateChannel,
@@ -44,7 +44,7 @@ export default (context: PluginsContext) =>
           }
         }
 
-        const { state } = context.requestCapability(ThreadCapabilities.MutableState);
+        const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const thread = live(ThreadType, { name, anchor: cursor, messages: [], status: 'staged' });
         const draft = state.drafts[subjectId];
@@ -69,7 +69,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: ThreadAction.Select,
       resolve: ({ current }) => {
-        const { state } = context.requestCapability(ThreadCapabilities.MutableState);
+        const { state } = context.getCapability(ThreadCapabilities.MutableState);
         state.current = current;
       },
     }),
@@ -102,7 +102,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: ThreadAction.Delete,
       resolve: ({ subject, thread }, undo) => {
-        const { state } = context.requestCapability(ThreadCapabilities.MutableState);
+        const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const draft = state.drafts[subjectId];
         if (draft) {
@@ -165,7 +165,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: ThreadAction.AddMessage,
       resolve: ({ thread, subject, sender, text }) => {
-        const { state } = context.requestCapability(ThreadCapabilities.MutableState);
+        const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
         invariant(space, 'Space not found');

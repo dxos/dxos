@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
-import { useNode } from '@dxos/plugin-graph';
+import { useNode, useActions } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
   Icon,
@@ -45,7 +45,7 @@ export const Toolbar = ({
 
   // Meeting app graph node.
   const node = useNode(graph, meeting && fullyQualifiedId(meeting));
-  const actions = node ? graph.actions(node).filter((action) => action.properties.disposition === 'toolbar') : [];
+  const actions = useActions(graph, node?.id).filter((action) => action.properties.disposition === 'toolbar');
 
   // Screen sharing.
   const isScreensharing = call.media.screenshareTrack !== undefined;
