@@ -3,9 +3,8 @@
 //
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { ObjectId, Ref } from '@dxos/echo-schema';
+import { createQueueDxn, Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -26,7 +25,7 @@ export default (context: PluginContext) =>
         data: {
           object: live(ChannelType, {
             name,
-            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+            queue: refFromDXN(createQueueDxn(spaceId)),
           }),
         },
       }),

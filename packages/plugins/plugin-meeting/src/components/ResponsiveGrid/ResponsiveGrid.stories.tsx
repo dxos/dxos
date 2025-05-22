@@ -54,7 +54,7 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
   );
 };
 
-type StoryProps = ResponsiveGridProps<TestItem> & { random?: boolean };
+type StoryProps = ResponsiveGridProps<TestItem> & { random?: boolean; autoHideGallery?: boolean };
 
 const meta: Meta<StoryProps> = {
   title: 'plugins/plugin-meeting/ResponsiveGrid',
@@ -119,9 +119,19 @@ export default meta;
 
 type Story = StoryObj<StoryProps>;
 
+// TODO(burdon): Story to join/leave repeatedly to test stable position.
+
 export const Default: Story = {
   args: {
     random: true,
+    items: Array.from({ length: 8 }, (_, i) => createItem('video')),
+  },
+};
+
+export const Fullscreen: Story = {
+  args: {
+    random: true,
+    autoHideGallery: true,
     items: Array.from({ length: 8 }, (_, i) => createItem('video')),
   },
 };
@@ -144,5 +154,3 @@ export const TwoUp: Story = {
     items: Array.from({ length: 2 }, (_, i) => createItem('image')),
   },
 };
-
-// TODO(burdon): Story to join/leave repeatedly to test stable position.

@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+import { Type } from '@dxos/echo';
 // TODO(wittjosiah): This pulls in UI code into the types entrypoint.
 import { type Extension, EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
 
@@ -15,7 +16,7 @@ const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 export namespace MarkdownAction {
   export class Create extends Schema.TaggedClass<Create>()(MARKDOWN_ACTION, {
     input: Schema.Struct({
-      spaceId: Schema.String,
+      spaceId: Type.SpaceId,
       name: Schema.optional(Schema.String),
       content: Schema.optional(Schema.String),
     }),

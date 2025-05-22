@@ -15,10 +15,11 @@ const getId = (user: UserState): string => user.id!;
 export type ParticipantGridProps = ThemedClassName<{
   self: UserState;
   users: UserState[];
-  debug: boolean;
+  fullscreen?: boolean;
+  debug?: boolean;
 }>;
 
-export const ParticipantGrid = ({ classNames, self, users, debug }: ParticipantGridProps) => {
+export const ParticipantGrid = ({ classNames, self, users, fullscreen, debug }: ParticipantGridProps) => {
   const [pinned, setPinned] = useState<string | undefined>();
   const currentPinned = useDynamicRef(pinned);
 
@@ -86,6 +87,7 @@ export const ParticipantGrid = ({ classNames, self, users, debug }: ParticipantG
       getId={getId}
       items={sortedUsers}
       pinned={pinned}
+      autoHideGallery={fullscreen}
       onPinnedChange={setPinned}
     />
   );

@@ -4,14 +4,12 @@
 
 import { createIntent, LayoutAction } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { SPACES } from '@dxos/plugin-space';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 
 export default async (context: PluginContext) => {
-  const { fullyQualifiedId, live, Ref } = await import('@dxos/react-client/echo');
+  const { createQueueDxn, fullyQualifiedId, live, Ref } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { DocumentType } = await import('@dxos/plugin-markdown/types');
   const { CollectionType } = await import('@dxos/plugin-space/types');
@@ -29,9 +27,7 @@ export default async (context: PluginContext) => {
         content: INITIAL_CONTENT.join('\n\n'),
       }),
     ),
-    assistantChatQueue: Ref.fromDXN(
-      new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, defaultSpace.id, Type.ObjectId.random()]),
-    ),
+    assistantChatQueue: Ref.fromDXN(createQueueDxn(defaultSpace.id)),
     threads: [],
   });
 
@@ -43,7 +39,12 @@ export default async (context: PluginContext) => {
   graph.expand(SPACES);
   graph.expand(defaultSpace.id);
 
-  await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: defaultSpace.id }));
+  await dispatch(
+    createIntent(LayoutAction.SwitchWorkspace, {
+      part: 'workspace',
+      subject: defaultSpace.id,
+    }),
+  );
   await dispatch(
     createIntent(LayoutAction.SetLayoutMode, {
       part: 'mode',

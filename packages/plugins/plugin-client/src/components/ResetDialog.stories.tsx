@@ -29,7 +29,13 @@ const meta: Meta<ResetDialogProps> = {
   title: 'plugins/plugin-client/ResetDialog',
   component: ResetDialog,
   render: Render,
-  decorators: [withPluginManager({ plugins: [IntentPlugin()] }), withTheme, withLayout()],
+  decorators: [
+    withPluginManager({
+      plugins: [IntentPlugin()],
+    }),
+    withTheme,
+    withLayout(),
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,

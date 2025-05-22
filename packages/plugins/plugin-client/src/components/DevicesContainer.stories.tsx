@@ -21,12 +21,12 @@ const meta: Meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        IntentPlugin(),
         ClientPlugin({
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },
         }),
+        IntentPlugin(),
       ],
     }),
     withTheme,
@@ -42,4 +42,8 @@ export default meta;
 
 type Story = StoryObj<typeof DevicesContainer>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    createInvitationUrl: () => 'https://example.com',
+  },
+};

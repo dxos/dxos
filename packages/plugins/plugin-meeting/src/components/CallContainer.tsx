@@ -21,9 +21,10 @@ import { type MeetingType, type MeetingCallProperties } from '../types';
 export type CallContainerProps = {
   meeting?: MeetingType;
   roomId?: string;
+  fullscreen?: boolean;
 };
 
-export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId }) => {
+export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId, fullscreen }) => {
   const callManager = useCapability(MeetingCapabilities.CallManager);
   const roomId = meeting ? fullyQualifiedId(meeting) : _roomId;
   const { graph } = useAppGraph();
@@ -117,7 +118,7 @@ export const CallContainer: FC<CallContainerProps> = ({ meeting, roomId: _roomId
     <StackItem.Content classNames='h-full'>
       {callManager.joined && callManager.roomId === roomId ? (
         <Call.Root>
-          <Call.Grid />
+          <Call.Grid fullscreen={fullscreen} />
           <Call.Toolbar meeting={meeting} onLeave={handleLeave} />
         </Call.Root>
       ) : (

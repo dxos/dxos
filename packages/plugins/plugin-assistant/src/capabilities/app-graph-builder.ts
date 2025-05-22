@@ -104,6 +104,7 @@ export default (context: PluginContext) =>
 
     createExtension({
       id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
+      // TODO(burdon): Add to all objects?
       connector: (node) =>
         Rx.make((get) =>
           pipe(

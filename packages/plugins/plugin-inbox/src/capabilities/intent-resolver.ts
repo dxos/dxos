@@ -12,8 +12,7 @@ import {
   createIntent,
   chain,
 } from '@dxos/app-framework';
-import { ObjectId } from '@dxos/echo-schema';
-import { QueueSubspaceTags, DXN } from '@dxos/keys';
+import { createQueueDxn } from '@dxos/echo-schema';
 import { live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -33,7 +32,7 @@ export default (context: PluginContext) =>
         data: {
           object: live(MailboxType, {
             name,
-            queue: refFromDXN(new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()])),
+            queue: refFromDXN(createQueueDxn(spaceId)),
           }),
         },
       }),
