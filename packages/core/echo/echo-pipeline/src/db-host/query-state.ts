@@ -1,3 +1,5 @@
+// TODO(dmaretskyi): Remove this file
+// @ts-nocheck
 //
 // Copyright 2024 DXOS.org
 //
@@ -6,8 +8,8 @@ import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { createIdFromSpaceKey, DatabaseDirectory } from '@dxos/echo-protocol';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
-import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';

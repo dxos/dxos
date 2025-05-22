@@ -15,6 +15,7 @@ import { isNonNullable } from '@dxos/util';
 import { type Query } from './api';
 import { type DeprecatedFilter, deprecatedFilterFromQueryAST } from './deprecated';
 import { prohibitSignalActions } from '../guarded-scope';
+import type { QueryAST } from '@dxos/echo-protocol';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;
@@ -70,12 +71,12 @@ export interface QueryContext<T extends BaseObject = any> {
   /**
    * One-shot query.
    */
-  run(filter: DeprecatedFilter, opts?: QueryRunOptions): Promise<QueryResultEntry[]>;
+  run(query: QueryAST.Query, opts?: QueryRunOptions): Promise<QueryResultEntry[]>;
 
   /**
    * Set the filter and trigger continuous updates.
    */
-  update(filter: DeprecatedFilter): void;
+  update(query: QueryAST.Query): void;
 
   /**
    * Start creating query sources and firing events.
@@ -134,7 +135,7 @@ export class QueryResult<T extends BaseObject = any> {
         this._signal.notifyWrite();
       });
     });
-    this._queryContext.update(deprecatedFilterFromQueryAST(query.ast));
+    this._queryContext.update(query.ast);
 
     this._diagnostic = {
       isActive: this._isActive,
@@ -169,7 +170,7 @@ export class QueryResult<T extends BaseObject = any> {
    * Does not subscribe to updates.
    */
   async run(timeout: { timeout?: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
-    const filteredResults = await this._queryContext.run(deprecatedFilterFromQueryAST(this._query.ast), {
+    const filteredResults = await this._queryContext.run(this._query.ast, {
       timeout: timeout.timeout,
     });
     return {

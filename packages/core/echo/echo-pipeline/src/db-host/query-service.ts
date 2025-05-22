@@ -7,7 +7,7 @@ import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
-import { DatabaseDirectory } from '@dxos/echo-protocol';
+import { DatabaseDirectory, QueryAST } from '@dxos/echo-protocol';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
@@ -22,6 +22,9 @@ import { trace } from '@dxos/tracing';
 
 import { QueryState } from './query-state';
 import { type AutomergeHost } from '../automerge';
+import { QueryExecutor } from '../query';
+import { Schema } from 'effect';
+import { raise } from '@dxos/debug';
 
 export type QueryServiceParams = {
   indexer: Indexer;
@@ -32,7 +35,7 @@ export type QueryServiceParams = {
  * Represents an active query (stream and query state connected to that stream).
  */
 type ActiveQuery = {
-  state: QueryState;
+  executor: QueryExecutor;
   sendResults: (results: QueryResult[]) => void;
   close: () => Promise<void>;
 };
@@ -44,9 +47,9 @@ export class QueryServiceImpl extends Resource implements QueryService {
     await Promise.all(
       Array.from(this._queries).map(async (query) => {
         try {
-          const { changed } = await query.state.execQuery();
+          const { changed } = await query.executor.execQuery();
           if (changed) {
-            query.sendResults(query.state.getResults());
+            query.sendResults(query.executor.getResults());
           }
         } catch (err) {
           log.catch(err);
@@ -65,8 +68,9 @@ export class QueryServiceImpl extends Resource implements QueryService {
       fetch: () => {
         return Array.from(this._queries).map((query) => {
           return {
-            filter: JSON.stringify(query.state.filter),
-            metrics: query.state.metrics,
+            query: JSON.stringify(query.executor.query),
+            plan: JSON.stringify(query.executor.plan),
+            trace: JSON.stringify(query.executor.trace),
           };
         });
       },
@@ -91,11 +95,15 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
   execQuery(request: QueryRequest): Stream<QueryResponse> {
     return new Stream<QueryResponse>(({ next, close, ctx }) => {
-      const query: ActiveQuery = {
-        state: new QueryState({
+      const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
+
+      const queryEntry: ActiveQuery = {
+        executor: new QueryExecutor({
           indexer: this._params.indexer,
           automergeHost: this._params.automergeHost,
-          request,
+          queryId: request.queryId ?? raise(new Error('query id required')),
+          query: parsedQuery,
+          reactivity: request.reactivity,
         }),
         sendResults: (results) => {
           if (ctx.disposed) {
@@ -105,26 +113,26 @@ export class QueryServiceImpl extends Resource implements QueryService {
         },
         close: async () => {
           close();
-          await query.state.close();
-          this._queries.delete(query);
+          await queryEntry.executor.close();
+          this._queries.delete(queryEntry);
         },
       };
-      this._queries.add(query);
+      this._queries.add(queryEntry);
 
       queueMicrotask(async () => {
-        await query.state.open();
+        await queryEntry.executor.open();
 
         try {
-          const { changed } = await query.state.execQuery();
+          const { changed } = await queryEntry.executor.execQuery();
           if (changed) {
-            query.sendResults(query.state.getResults());
+            queryEntry.sendResults(queryEntry.executor.getResults());
           }
         } catch (error: any) {
           close(error);
         }
       });
 
-      return query.close;
+      return queryEntry.close;
     });
   }
 

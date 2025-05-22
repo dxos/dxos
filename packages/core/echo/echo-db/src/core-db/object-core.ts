@@ -140,6 +140,10 @@ export class ObjectCore {
     return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
   }
 
+  getObjectStructure(): ObjectStructure {
+    return getDeep(this.getDoc(), this.mountPath) as ObjectStructure;
+  }
+
   /**
    * Do not take into account mountPath.
    */

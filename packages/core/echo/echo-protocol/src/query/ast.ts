@@ -224,3 +224,32 @@ export const QueryOptions = Schema.Struct({
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
 });
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
+
+export const visit = (query: Query, visitor: (node: Query) => void) => {
+  switch (query.type) {
+    case 'select':
+      visitor(query);
+      break;
+    case 'filter':
+      visit(query.selection, visitor);
+      break;
+    case 'reference-traversal':
+      visit(query.anchor, visitor);
+      break;
+    case 'incoming-references':
+      visit(query.anchor, visitor);
+      break;
+    case 'relation':
+      visit(query.anchor, visitor);
+      break;
+    case 'options':
+      visit(query.query, visitor);
+      break;
+    case 'relation-traversal':
+      visit(query.anchor, visitor);
+      break;
+    case 'union':
+      query.queries.forEach((q) => visit(q, visitor));
+      break;
+  }
+};

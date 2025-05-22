@@ -83,6 +83,7 @@ export class QueryExecutor extends Resource {
 
   private _plan: QueryPlan.Plan;
   private _trace: ExecutionTrace = EMPTY_EXECUTION_TRACE;
+  private _lastResultSet: Item[] = [];
 
   constructor(options: QueryExecutorOptions) {
     super();
@@ -98,17 +99,55 @@ export class QueryExecutor extends Resource {
     this._plan = queryPlanner.createPlan(this._query);
   }
 
+  get query(): QueryAST.Query {
+    return this._query;
+  }
+
+  get plan(): QueryPlan.Plan {
+    return this._plan;
+  }
+
+  get trace(): ExecutionTrace {
+    return this._trace;
+  }
+
   protected override async _open(ctx: Context) {}
 
   protected override async _close(ctx: Context) {}
 
   getResults(): QueryResult[] {
-    return [];
+    return this._lastResultSet.map(
+      (item): QueryResult => ({
+        id: item.objectId,
+        documentId: item.documentId,
+        spaceId: item.spaceId,
+
+        // TODO(dmaretskyi): Plumb through the rank.
+        rank: 0,
+      }),
+    );
   }
 
   async execQuery(): Promise<QueryExecutionResult> {
+    const prevResultSet = this._lastResultSet;
+
+    const { workingSet, trace } = await this._execPlan(this._plan, this._lastResultSet);
+    this._lastResultSet = workingSet;
+    trace.name = 'Root';
+    trace.details = JSON.stringify({ id: this._id });
+    this._trace = trace;
+
+    const changed =
+      prevResultSet.length !== workingSet.length ||
+      prevResultSet.some(
+        (item, index) =>
+          workingSet[index].objectId !== item.objectId ||
+          workingSet[index].spaceId !== item.spaceId ||
+          workingSet[index].documentId !== item.documentId,
+      );
+
     return {
-      changed: false,
+      changed,
     };
   }
 
