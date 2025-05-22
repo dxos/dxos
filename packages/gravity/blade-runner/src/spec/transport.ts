@@ -9,7 +9,8 @@ import { TransportKind } from '@dxos/network-manager';
 import { defaultMap, range } from '@dxos/util';
 
 import { type LogReader, type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
-import { type ReplicantsSummary, type TestParams, type TestPlan, type SchedulerEnvImpl } from '../plan';
+import { type SchedulerEnvImpl } from '../env';
+import { type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
 import { TransportReplicant } from '../replicants/transport-replicant';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
@@ -42,7 +43,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec> {
       replicants: 4,
       swarmsPerReplicant: 10,
       duration: 60_000,
-      transport: TransportKind.SIMPLE_PEER,
+      transport: TransportKind.WEB_RTC,
       targetSwarmTimeout: 10_000,
       fullSwarmTimeout: 60_000,
       iterationDelay: 1_000,

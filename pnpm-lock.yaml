@@ -5098,6 +5098,12 @@ importers:
       '@automerge/automerge-repo':
         specifier: 2.0.0
         version: 2.0.0
+      '@automerge/automerge-repo-network-websocket':
+        specifier: 2.0.0
+        version: 2.0.0
+      '@automerge/automerge-repo-storage-indexeddb':
+        specifier: 2.0.0
+        version: 2.0.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -14355,6 +14361,12 @@ packages:
 
   '@automerge/automerge-repo-network-broadcastchannel@2.0.0':
     resolution: {integrity: sha512-jVgDiywmrMAtD77JFxH7ZyCiS8DT5t6C0Ya9G3v+UyRID+3sK8WJHr+LHKX/Tkim9y3mazpHE1Arknrmb/YIiA==}
+
+  '@automerge/automerge-repo-network-websocket@2.0.0':
+    resolution: {integrity: sha512-Hd1FMMxezhlywzika5dgBsNN0ETZ4xjxVSCHuX2yI3vtdmDCOICBHKiY/t2ymnDPw+TKyBm0jXMQai2UVuSIMQ==}
+
+  '@automerge/automerge-repo-storage-indexeddb@2.0.0':
+    resolution: {integrity: sha512-Dka8WnVWWgK7+kSxwizrXGoUtvOPvFVJlGMpXAkvWC9z/9NEHKazkdjFkaMO+uiTGwp+w51xEeZ2gIqB3wgWoA==}
 
   '@automerge/automerge-repo@2.0.0':
     resolution: {integrity: sha512-c1VDrR6s8BE36m6xDcSC8f4ECccPcaK1E6q3vIlBHOEyyLvLQbFmlmFIZulaV//S0B0HW2lLSrK/2cFwQblQ+A==}
@@ -35181,6 +35193,25 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@automerge/automerge-repo-network-websocket@2.0.0':
+    dependencies:
+      '@automerge/automerge-repo': 2.0.0
+      cbor-x: 1.5.4
+      debug: 4.4.0(supports-color@5.5.0)
+      eventemitter3: 5.0.1
+      isomorphic-ws: 5.0.0(ws@8.18.2)
+      ws: 8.18.2
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  '@automerge/automerge-repo-storage-indexeddb@2.0.0':
+    dependencies:
+      '@automerge/automerge-repo': 2.0.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@automerge/automerge-repo@2.0.0':
     dependencies:
       '@automerge/automerge': 2.2.9
@@ -38973,7 +39004,7 @@ snapshots:
       '@vladfrangu/async_event_emitter': 2.2.4
       discord-api-types: 0.37.61
       tslib: 2.8.0
-      ws: 8.18.0
+      ws: 8.18.2
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -53369,6 +53400,10 @@ snapshots:
     dependencies:
       ws: 8.18.0
 
+  isomorphic-ws@5.0.0(ws@8.18.2):
+    dependencies:
+      ws: 8.18.2
+
   isomorphic.js@0.2.5: {}
 
   istanbul-lib-coverage@3.2.0: {}
@@ -55360,7 +55395,7 @@ snapshots:
       stoppable: 1.1.0
       undici: 5.28.4
       workerd: 1.20240925.0
-      ws: 8.18.0
+      ws: 8.18.2
       youch: 3.3.3
       zod: 3.22.4
     transitivePeerDependencies:
