@@ -1,394 +1,411 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-import { batch, signal } from '@preact/signals-core';
-import { describe, expect, test } from 'vitest';
+import { Registry, Rx } from '@effect-rx/rx-react';
+import { Option, pipe } from 'effect';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { updateCounter } from '@dxos/echo-schema/testing';
+import { Trigger } from '@dxos/async';
 
-import { ACTION_TYPE, ROOT_ID, ROOT_TYPE } from './graph';
-import { GraphBuilder, createExtension, memoize } from './graph-builder';
+import { ROOT_ID } from './graph';
+import { createExtension, GraphBuilder } from './graph-builder';
 import { type Node } from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'dxos.org/type/example';
 
-describe('GraphBuilder', () => {
-  describe('resolver', () => {
-    test('works', async () => {
-      const builder = new GraphBuilder();
-      const graph = builder.graph;
-
-      {
-        const node = graph.findNode(EXAMPLE_ID);
-        expect(node).to.be.undefined;
-      }
-
-      builder.addExtension(
-        createExtension({ id: 'resolver', resolver: () => ({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: 1 }) }),
-      );
-
-      {
-        const node = await graph.waitForNode(EXAMPLE_ID);
-        expect(node?.id).to.equal(EXAMPLE_ID);
-        expect(node?.type).to.equal(EXAMPLE_TYPE);
-        expect(node?.data).to.equal(1);
-      }
-    });
-
-    test('updates', async () => {
-      const builder = new GraphBuilder();
-      const name = signal('default');
-      builder.addExtension(
-        createExtension({ id: 'resolver', resolver: () => ({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name.value }) }),
-      );
-      const graph = builder.graph;
-
-      const node = await graph.waitForNode(EXAMPLE_ID);
-      expect(node?.data).to.equal('default');
-
-      name.value = 'updated';
-      expect(node?.data).to.equal('updated');
-    });
-
-    test('memoize', async () => {
-      const builder = new GraphBuilder();
-      const name = signal('default');
-      let count = 0;
-      let memoizedCount = 0;
-      builder.addExtension(
-        createExtension({
-          id: 'resolver',
-          resolver: () => {
-            count++;
-            memoize(() => {
-              memoizedCount++;
-            });
-
-            return { id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name.value };
-          },
-        }),
-      );
-      const graph = builder.graph;
-
-      const node = await graph.waitForNode(EXAMPLE_ID);
-      expect(node?.data).to.equal('default');
-      expect(count).to.equal(1);
-      expect(memoizedCount).to.equal(1);
-
-      name!.value = 'one';
-      name!.value = 'two';
-      name!.value = 'three';
-
-      expect(node?.data).to.equal('three');
-      expect(count).to.equal(4);
-      expect(memoizedCount).to.equal(1);
-    });
-
-    test('resolving pickled graph', async () => {
-      const pickle =
-        '{"nodes":[{"id":"root","type":"dxos.org/type/GraphRoot","properties":{}},{"id":"test1","type":"test","properties":{"value":1}},{"id":"test2","type":"test","properties":{"value":2}}],"edges":{"root":["test1","test2"],"test1":["test2"],"test2":[]}}';
-      const builder = GraphBuilder.from(pickle);
-      const graph = builder.graph;
-
-      builder.addExtension(
-        createExtension({
-          id: 'resolver',
-          resolver: ({ id }) => {
-            if (id === ROOT_ID) {
-              return { id: ROOT_ID, type: ROOT_TYPE };
-            } else {
-              return { id, type: EXAMPLE_TYPE, data: id, properties: { value: parseInt(id.replace('test', '')) } };
-            }
-          },
-        }),
-      );
-
-      {
-        expect(graph.findNode('test1', false)).toBeDefined();
-        expect(graph.findNode('test1', false)?.data).to.equal(null);
-        expect(graph.findNode('test1', false)?.properties.value).to.equal(1);
-        expect(graph.findNode('test2', false)).toBeDefined();
-        expect(graph.findNode('test2', false)?.data).to.equal(null);
-        expect(graph.findNode('test2', false)?.properties.value).to.equal(2);
-      }
-
-      await builder.initialize();
-
-      {
-        expect(graph.findNode('test1', false)?.data).to.equal('test1');
-        expect(graph.findNode('test1', false)?.properties.value).to.equal(1);
-        expect(graph.findNode('test2', false)?.data).to.equal('test2');
-        expect(graph.findNode('test2', false)?.properties.value).to.equal(2);
-      }
-    });
-  });
-
+describe('RxGraphBuilder', () => {
   describe('connector', () => {
-    test('works', async () => {
-      const builder = new GraphBuilder();
+    test('works', () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
       builder.addExtension(
         createExtension({
           id: 'outbound-connector',
-          connector: () => [{ id: 'child', type: EXAMPLE_TYPE, data: 2 }],
+          connector: () => Rx.make([{ id: 'child', type: EXAMPLE_TYPE, data: 2 }]),
         }),
       );
       builder.addExtension(
         createExtension({
           id: 'inbound-connector',
           relation: 'inbound',
-          connector: () => [{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }],
+          connector: () => Rx.make([{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }]),
         }),
       );
 
       const graph = builder.graph;
-      await graph.expand(graph.root);
-      await graph.expand(graph.root, 'inbound');
+      graph.expand(ROOT_ID);
+      graph.expand(ROOT_ID, 'inbound');
 
-      const outbound = graph.nodes(graph.root);
-      const inbound = graph.nodes(graph.root, { relation: 'inbound' });
+      const outbound = registry.get(graph.connections(ROOT_ID));
+      const inbound = registry.get(graph.connections(ROOT_ID, 'inbound'));
 
       expect(outbound).has.length(1);
-      expect(outbound?.[0].id).to.equal('child');
-      expect(outbound?.[0].data).to.equal(2);
+      expect(outbound[0].id).to.equal('child');
+      expect(outbound[0].data).to.equal(2);
       expect(inbound).has.length(1);
-      expect(inbound?.[0].id).to.equal('parent');
-      expect(inbound?.[0].data).to.equal(0);
+      expect(inbound[0].id).to.equal('parent');
+      expect(inbound[0].data).to.equal(0);
     });
 
-    test('updates', async () => {
-      const name = signal('default');
-      const builder = new GraphBuilder();
+    test('updates', () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
+      const state = Rx.make(0);
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: () => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name, properties: { label: name.value } }],
+          connector: () => Rx.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
       );
       const graph = builder.graph;
-      await graph.expand(graph.root);
+      graph.expand(ROOT_ID);
 
-      const [node] = graph.nodes(graph.root);
-      expect(node.properties.label).to.equal('default');
+      {
+        const [node] = registry.get(graph.connections(ROOT_ID));
+        expect(node.data).to.equal(0);
+      }
 
-      name.value = 'updated';
-      expect(node.properties.label).to.equal('updated');
+      {
+        registry.set(state, 1);
+        const [node] = registry.get(graph.connections(ROOT_ID));
+        expect(node.data).to.equal(1);
+      }
     });
 
-    test('updates with new extensions', async () => {
-      const name = signal('default');
-      const builder = new GraphBuilder();
+    test('subscribes to updates', () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
+      const state = Rx.make(0);
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: () => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name, properties: { label: name.value } }],
+          connector: () => Rx.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
       );
       const graph = builder.graph;
-      await graph.expand(graph.root);
+
+      let count = 0;
+      const cancel = registry.subscribe(graph.connections(ROOT_ID), (_) => {
+        count++;
+      });
+      onTestFinished(() => cancel());
+
+      expect(count).to.equal(0);
+      expect(registry.get(graph.connections(ROOT_ID))).to.have.length(0);
+      expect(count).to.equal(1);
+
+      graph.expand(ROOT_ID);
+      expect(count).to.equal(2);
+      registry.set(state, 1);
+      expect(count).to.equal(3);
+    });
+
+    test('updates with new extensions', () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
+      builder.addExtension(
+        createExtension({
+          id: 'connector',
+          connector: () => Rx.make([{ id: EXAMPLE_ID, type: EXAMPLE_TYPE }]),
+        }),
+      );
+      const graph = builder.graph;
+      graph.expand(ROOT_ID);
 
       let nodes: Node[] = [];
-      using updates = updateCounter(() => {
-        nodes = graph.nodes(graph.root);
+      let count = 0;
+      const cancel = registry.subscribe(graph.connections(ROOT_ID), (_nodes) => {
+        count++;
+        nodes = _nodes;
       });
+      onTestFinished(() => cancel());
 
-      expect(updates.count).to.equal(0);
+      expect(nodes).has.length(0);
+      expect(count).to.equal(0);
+      registry.get(graph.connections(ROOT_ID));
       expect(nodes).has.length(1);
-      expect(nodes[0].id).to.equal(EXAMPLE_ID);
+      expect(count).to.equal(1);
 
       builder.addExtension(
         createExtension({
           id: 'connector-2',
-          connector: () => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: 0 }],
+          connector: () => Rx.make([{ id: exampleId(2), type: EXAMPLE_TYPE }]),
         }),
       );
-
-      expect(updates.count).to.equal(1);
       expect(nodes).has.length(2);
-      expect(nodes[0].id).to.equal(EXAMPLE_ID);
-      expect(nodes[1].id).to.equal(exampleId(2));
+      expect(count).to.equal(2);
     });
 
-    test('removes', async () => {
-      const nodes = signal([
+    test('removes', () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
+      const nodes = Rx.make([
+        { id: exampleId(1), type: EXAMPLE_TYPE },
+        { id: exampleId(2), type: EXAMPLE_TYPE },
+      ]);
+      builder.addExtension(
+        createExtension({
+          id: 'connector',
+          connector: () => Rx.make((get) => get(nodes)),
+        }),
+      );
+      const graph = builder.graph;
+      graph.expand(ROOT_ID);
+
+      {
+        const nodes = registry.get(graph.connections(ROOT_ID));
+        expect(nodes).has.length(2);
+        expect(nodes[0].id).to.equal(exampleId(1));
+        expect(nodes[1].id).to.equal(exampleId(2));
+      }
+
+      registry.set(nodes, [{ id: exampleId(3), type: EXAMPLE_TYPE }]);
+
+      {
+        const nodes = registry.get(graph.connections(ROOT_ID));
+        expect(nodes).has.length(1);
+        expect(nodes[0].id).to.equal(exampleId(3));
+      }
+    });
+
+    test('nodes are updated when removed', () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
+      const name = Rx.make('removed');
+
+      builder.addExtension([
+        createExtension({
+          id: 'root',
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
+                Option.filter((name) => name !== 'removed'),
+                Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+      ]);
+
+      const graph = builder.graph;
+
+      let count = 0;
+      let exists = false;
+      const cancel = registry.subscribe(graph.node(EXAMPLE_ID), (node) => {
+        count++;
+        exists = Option.isSome(node);
+      });
+      onTestFinished(() => cancel());
+
+      graph.expand(ROOT_ID);
+      expect(count).to.equal(0);
+      expect(exists).to.be.false;
+
+      registry.set(name, 'default');
+      // TODO(wittjosiah): Should be 1 but batching is disabled.
+      expect(count).to.equal(2);
+      expect(exists).to.be.true;
+
+      registry.set(name, 'removed');
+      expect(count).to.equal(3);
+      expect(exists).to.be.false;
+
+      registry.set(name, 'added');
+      expect(count).to.equal(4);
+      expect(exists).to.be.true;
+    });
+
+    // TODO(wittjosiah): Failing.
+    test.skip('sort edges', () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
+      const nodes = Rx.make([
+        { id: exampleId(1), type: EXAMPLE_TYPE, data: 1 },
+        { id: exampleId(2), type: EXAMPLE_TYPE, data: 2 },
+        { id: exampleId(3), type: EXAMPLE_TYPE, data: 3 },
+      ]);
+      builder.addExtension(
+        createExtension({
+          id: 'connector',
+          connector: () => Rx.make((get) => get(nodes)),
+        }),
+      );
+      const graph = builder.graph;
+      graph.expand(ROOT_ID);
+
+      {
+        const nodes = registry.get(graph.connections(ROOT_ID));
+        expect(nodes).has.length(3);
+        expect(nodes[0].id).to.equal(exampleId(1));
+        expect(nodes[1].id).to.equal(exampleId(2));
+        expect(nodes[2].id).to.equal(exampleId(3));
+      }
+
+      registry.set(nodes, [
+        { id: exampleId(3), type: EXAMPLE_TYPE, data: 3 },
         { id: exampleId(1), type: EXAMPLE_TYPE, data: 1 },
         { id: exampleId(2), type: EXAMPLE_TYPE, data: 2 },
       ]);
 
-      const builder = new GraphBuilder();
-      builder.addExtension(
-        createExtension({
-          id: 'connector',
-          connector: () => nodes.value,
-        }),
-      );
-      const graph = builder.graph;
-      await graph.expand(graph.root);
-
       {
-        const nodes = graph.nodes(graph.root);
-        expect(nodes).has.length(2);
-        expect(nodes[0].id).to.equal(exampleId(1));
-      }
-
-      nodes.value = [{ id: exampleId(3), type: EXAMPLE_TYPE, data: 3 }];
-
-      {
-        const nodes = graph.nodes(graph.root);
-        expect(nodes).has.length(1);
+        const nodes = registry.get(graph.connections(ROOT_ID));
+        expect(nodes).has.length(3);
         expect(nodes[0].id).to.equal(exampleId(3));
-        expect(graph.findNode(exampleId(1))).to.be.undefined;
+        expect(nodes[1].id).to.equal(exampleId(1));
+        expect(nodes[2].id).to.equal(exampleId(2));
       }
     });
 
-    test('unsubscribes', async () => {
-      let count = 0;
-      const name = signal('default');
-      const sub = signal('default');
-      const builder = new GraphBuilder();
+    test('updates are constrained', () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
+      const name = Rx.make('default');
+      const sub = Rx.make('default');
+
       builder.addExtension([
         createExtension({
           id: 'root',
-          filter: (node): node is Node<null> => node.id === 'root',
-          connector: () =>
-            name.value === 'removed'
-              ? []
-              : [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name, properties: { label: name.value } }],
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
+                Option.filter((name) => name !== 'removed'),
+                Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
         }),
         createExtension({
-          id: 'connector',
-          filter: (node): node is Node<string> => node.id === EXAMPLE_ID,
-          connector: () => {
-            count++;
-            sub.value;
-
-            return [];
-          },
+          id: 'connector1',
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none())),
+                Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+        createExtension({
+          id: 'connector2',
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(node.data) : Option.none())),
+                Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
         }),
       ]);
 
-      // Count should not increment until the node is expanded.
       const graph = builder.graph;
-      await graph.expand(graph.root);
-      expect(count).to.equal(0);
 
-      // Count should increment when the node is expanded.
-      const [node] = graph.nodes(graph.root);
-      await graph.expand(node!);
-      expect(count).to.equal(1);
-
-      // Count should increment when the parent changes.
-      name.value = 'updated';
-      expect(count).to.equal(2);
-
-      // Count should increment when the signal changes.
-      sub.value = 'updated';
-      expect(count).to.equal(3);
-
-      // Count will still increment if the node is removed in a batch.
-      batch(() => {
-        name.value = 'removed';
-        sub.value = 'batch';
+      let parentCount = 0;
+      const parentCancel = registry.subscribe(graph.node(EXAMPLE_ID), (_) => {
+        parentCount++;
       });
-      expect(count).to.equal(4);
+      onTestFinished(() => parentCancel());
 
-      // Count should not increment after the node is removed.
-      sub.value = 'removed';
-      expect(count).to.equal(4);
+      let independentCount = 0;
+      const independentCancel = registry.subscribe(graph.node(exampleId(2)), (_) => {
+        independentCount++;
+      });
+      onTestFinished(() => independentCancel());
 
-      // Count will not increment when node is added back.
-      name.value = 'added';
-      expect(count).to.equal(4);
+      let dependentCount = 0;
+      const dependentCancel = registry.subscribe(graph.node(exampleId(3)), (_) => {
+        dependentCount++;
+      });
+      onTestFinished(() => dependentCancel());
 
-      // Count should increment when the node is expanded again.
-      await graph.expand(node!);
-      expect(count).to.equal(5);
+      // Counts should not increment until the node is expanded.
+      graph.expand(ROOT_ID);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(0);
+      expect(dependentCount).to.equal(0);
 
-      // Count should increment when signal changes again.
-      sub.value = 'added';
-      expect(count).to.equal(6);
+      // Counts should increment when the node is expanded.
+      graph.expand(EXAMPLE_ID);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(2);
+      expect(dependentCount).to.equal(2);
+
+      // Only dependent count should increment when the parent changes.
+      registry.set(name, 'updated');
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(2);
+      expect(dependentCount).to.equal(3);
+
+      // Only independent count should increment when its state changes.
+      registry.set(sub, 'updated');
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(3);
+      expect(dependentCount).to.equal(3);
+
+      // Independent count should update if its state changes even if the parent is removed.
+      Rx.batch(() => {
+        registry.set(name, 'removed');
+        registry.set(sub, 'batch');
+      });
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(4);
+      expect(dependentCount).to.equal(3);
+
+      // Dependent count should increment when the node is added back.
+      registry.set(name, 'added');
+      expect(parentCount).to.equal(4);
+      expect(independentCount).to.equal(4);
+      expect(dependentCount).to.equal(4);
+
+      // Counts should not increment when the node is expanded again.
+      graph.expand(EXAMPLE_ID);
+      expect(parentCount).to.equal(4);
+      expect(independentCount).to.equal(4);
+      expect(dependentCount).to.equal(4);
     });
 
-    test('filters by type', async () => {
-      const builder = new GraphBuilder();
-      builder.addExtension(
-        createExtension({
-          id: 'actions',
-          connector: () => [{ id: 'not-action', type: EXAMPLE_TYPE, data: 1 }],
-          actions: () => [{ id: 'action', data: () => {} }],
-        }),
-      );
-      const graph = builder.graph;
-
-      await graph.expand(graph.root, 'outbound', ACTION_TYPE);
-      const actions = graph.actions(graph.root);
-      expect(actions).has.length(1);
-      expect(actions?.[0].id).to.equal('action');
-      expect(actions?.[0].type).to.equal(ACTION_TYPE);
-
-      await expect(graph.waitForNode('not-action', 10)).rejects.toBeInstanceOf(Error);
-
-      await graph.expand(graph.root);
-      const nodes = graph.nodes(graph.root);
-      expect(nodes).has.length(1);
-      expect(nodes?.[0].id).to.equal('not-action');
-      expect(nodes?.[0].data).to.equal(1);
-    });
-
-    test('filters by callback', async () => {
-      const builder = new GraphBuilder();
-      builder.addExtension(
-        createExtension({
-          id: 'filtered-connector',
-          filter: (node): node is Node<null> => node.id === 'root',
-          connector: () => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: 1 }],
-        }),
-      );
-      const graph = builder.graph;
-      await graph.expand(graph.root);
-
-      const [node1] = graph.nodes(graph.root);
-      expect(node1?.id).to.equal(EXAMPLE_ID);
-
-      const nodes = graph.nodes(node1);
-      expect(nodes).has.length(0);
-    });
-
-    test('memoize', async () => {
-      const builder = new GraphBuilder();
-      const name = signal('default');
-      let count = 0;
-      let memoizedCount = 0;
+    test('eager graph expansion', async () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: () => {
-            count++;
-            memoize(() => {
-              memoizedCount++;
-            });
-
-            return [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name, properties: { label: name.value } }];
+          connector: (node) => {
+            return Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.map((node) => (node.data ? node.data + 1 : 1)),
+                Option.filter((data) => data <= 5),
+                Option.map((data) => [{ id: `node-${data}`, type: EXAMPLE_TYPE, data }]),
+                Option.getOrElse(() => []),
+              ),
+            );
           },
         }),
       );
-      const graph = builder.graph;
-      await graph.expand(graph.root);
 
-      const [node] = graph.nodes(graph.root);
-      expect(node.properties.label).to.equal('default');
-      expect(count).to.equal(1);
-      expect(memoizedCount).to.equal(1);
+      let count = 0;
+      const trigger = new Trigger();
+      builder.graph.onNodeChanged.on(({ id }) => {
+        builder.graph.expand(id);
+        count++;
+        if (count === 5) {
+          trigger.wake();
+        }
+      });
 
-      name!.value = 'one';
-      name!.value = 'two';
-      name!.value = 'three';
-
-      expect(node.properties.label).to.equal('three');
-      expect(count).to.equal(4);
-      expect(memoizedCount).to.equal(1);
+      builder.graph.expand(ROOT_ID);
+      await trigger.wait();
+      expect(count).to.equal(5);
     });
   });
 
@@ -398,62 +415,27 @@ describe('GraphBuilder', () => {
       builder.addExtension(
         createExtension({
           id: 'connector',
-          connector: ({ node }) => {
-            const data = node.data ? node.data + 1 : 1;
-            return data > 5 ? [] : [{ id: `node-${data}`, type: EXAMPLE_TYPE, data }];
-          },
+          connector: (node) =>
+            Rx.make((get) =>
+              pipe(
+                get(node),
+                Option.map((node) => (node.data ? node.data + 1 : 1)),
+                Option.filter((data) => data <= 5),
+                Option.map((data) => [{ id: `node-${data}`, type: EXAMPLE_TYPE, data }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
         }),
       );
-      const graph = builder.graph;
 
       let count = 0;
       await builder.explore({
-        node: graph.root,
         visitor: () => {
           count++;
         },
       });
 
       expect(count).to.equal(6);
-    });
-  });
-
-  describe('multiples', () => {
-    test('one of each with multiple memos', async () => {
-      const name = signal('default');
-      const builder = new GraphBuilder();
-      builder.addExtension(
-        createExtension({
-          id: 'extension',
-          resolver: () => {
-            const data = memoize(() => Math.random());
-            return { id: EXAMPLE_ID, type: EXAMPLE_TYPE, data, properties: { name: name.value } };
-          },
-          connector: () => {
-            const a = memoize(() => Math.random());
-            const b = memoize(() => Math.random());
-            const c = Math.random();
-            return [{ id: `${EXAMPLE_ID}-child`, type: EXAMPLE_TYPE, data: { a, b, c } }];
-          },
-        }),
-      );
-      const graph = builder.graph;
-
-      const one = await graph.waitForNode(EXAMPLE_ID);
-      const initialData = one!.data;
-      await graph.expand(one!);
-      const two = graph.nodes(one!)[0];
-      const initialA = two?.data.a;
-      const initialB = two?.data.b;
-      const initialC = two?.data.c;
-
-      name.value = 'updated';
-
-      expect(one?.properties.name).to.equal('updated');
-      expect(one?.data).to.equal(initialData);
-      expect(two?.data.a).to.equal(initialA);
-      expect(two?.data.b).to.equal(initialB);
-      expect(two?.data.c).not.to.equal(initialC);
     });
   });
 });

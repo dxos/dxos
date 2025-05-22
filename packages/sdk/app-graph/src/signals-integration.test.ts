@@ -15,7 +15,7 @@ import { live } from '@dxos/live-object';
 
 import { ROOT_ID } from './graph';
 import { createExtension, GraphBuilder, rxFromSignal } from './graph-builder';
-import { rxFromQuery } from '../testing';
+import { rxFromQuery } from './testing';
 
 registerSignalsRuntime();
 

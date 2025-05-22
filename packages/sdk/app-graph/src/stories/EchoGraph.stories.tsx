@@ -19,7 +19,8 @@ import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
 
 import { Tree } from './Tree';
-import { GraphBuilder, createExtension, ROOT_ID, rxFromObservable, rxFromSignal, type ExpandableGraph } from '../rx';
+import { type ExpandableGraph, ROOT_ID } from '../graph';
+import { GraphBuilder, createExtension, rxFromObservable, rxFromSignal } from '../graph-builder';
 import { rxFromQuery } from '../testing';
 
 const DEFAULT_PERIOD = 500;

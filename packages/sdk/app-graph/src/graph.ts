@@ -2,20 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch, effect, untracked } from '@preact/signals-core';
+import { Registry, Rx } from '@effect-rx/rx-react';
+import { Option, pipe, Record } from 'effect';
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
+import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { type MakeOptional, isNonNullable, pick } from '@dxos/util';
+import { isNonNullable, type MakeOptional } from '@dxos/util';
 
-import { type Node, type NodeArg, type NodeFilter, type Relation, actionGroupSymbol, isActionLike } from './node';
+import { type NodeArg, type Node, type Relation, type Action, type ActionGroup } from './node';
 
 const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
 type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: Graph };
 
+/**
+ * Get the Graph a Node is currently associated with.
+ */
 export const getGraph = (node: Node): Graph => {
   const graph = (node as NodeInternal)[graphSymbol];
   invariant(graph, 'Node is not associated with a graph.');
@@ -26,16 +30,6 @@ export const ROOT_ID = 'root';
 export const ROOT_TYPE = 'dxos.org/type/GraphRoot';
 export const ACTION_TYPE = 'dxos.org/type/GraphAction';
 export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
-
-export type NodesOptions<TData = any, TProperties extends Record<string, any> = Record<string, any>> = {
-  relation?: Relation;
-  filter?: NodeFilter<TData, TProperties>;
-  expansion?: boolean;
-  type?: string;
-};
-
-// TODO(wittjosiah): Consider having default be undefined. This is current default for backwards compatibility.
-const DEFAULT_FILTER = (node: Node) => untracked(() => !isActionLike(node));
 
 export type GraphTraversalOptions = {
   /**
@@ -48,9 +42,9 @@ export type GraphTraversalOptions = {
   /**
    * The node to start traversing from.
    *
-   * @default root
+   * @default ROOT_ID
    */
-  node?: Node;
+  source?: string;
 
   /**
    * The relation to traverse graph edges.
@@ -58,223 +52,89 @@ export type GraphTraversalOptions = {
    * @default 'outbound'
    */
   relation?: Relation;
-
-  /**
-   * Allow traversal to trigger expansion of the graph via `onInitialNodes`.
-   */
-  expansion?: boolean;
 };
 
 export type GraphParams = {
+  registry?: Registry.Registry;
   nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
-  edges?: Record<string, string[]>;
-  onInitialNode?: Graph['_onInitialNode'];
-  onInitialNodes?: Graph['_onInitialNodes'];
+  edges?: Record<string, Edges>;
+  onExpand?: Graph['_onExpand'];
+  onInitialize?: Graph['_onInitialize'];
   onRemoveNode?: Graph['_onRemoveNode'];
 };
 
-/**
- * The Graph represents the structure of the application constructed via plugins.
- */
-export class Graph {
-  private readonly _onInitialNode?: (id: string) => Promise<void>;
-  private readonly _onInitialNodes?: (node: Node, relation: Relation, type?: string) => Promise<void>;
-  private readonly _onRemoveNode?: (id: string) => Promise<void>;
+export type Edge = { source: string; target: string };
+export type Edges = { inbound: string[]; outbound: string[] };
 
-  private readonly _waitingForNodes: Record<string, Trigger<Node>> = {};
-  private readonly _initialized: Record<string, boolean> = {};
-
+export interface ReadableGraph {
   /**
-   * @internal
+   * Event emitted when a node is changed.
    */
-  readonly _nodes: Record<string, Live<NodeInternal>> = {};
-
-  /**
-   * @internal
-   */
-  readonly _edges: Record<string, Live<{ inbound: string[]; outbound: string[] }>> = {};
-
-  constructor({ nodes, edges, onInitialNode, onInitialNodes, onRemoveNode }: GraphParams = {}) {
-    this._onInitialNode = onInitialNode;
-    this._onInitialNodes = onInitialNodes;
-    this._onRemoveNode = onRemoveNode;
-
-    this._nodes[ROOT_ID] = this._constructNode({
-      id: ROOT_ID,
-      type: ROOT_TYPE,
-      cacheable: [],
-      properties: {},
-      data: null,
-    });
-    if (nodes) {
-      nodes.forEach((node) => {
-        const cacheable = Object.keys(node.properties ?? {});
-        if (node.type === ACTION_TYPE) {
-          this._addNode({ cacheable, data: () => log.warn('Pickled action invocation'), ...node });
-        } else if (node.type === ACTION_GROUP_TYPE) {
-          this._addNode({ cacheable, data: actionGroupSymbol, ...node });
-        } else {
-          this._addNode({ cacheable, ...node });
-        }
-      });
-    }
-
-    this._edges[ROOT_ID] = live({ inbound: [], outbound: [] });
-    if (edges) {
-      Object.entries(edges).forEach(([source, edges]) => {
-        edges.forEach((target) => {
-          this._addEdge({ source, target });
-        });
-        this._sortEdges(source, 'outbound', edges);
-      });
-    }
-  }
-
-  static from(pickle: string, options: Omit<GraphParams, 'nodes' | 'edges'> = {}) {
-    const { nodes, edges } = JSON.parse(pickle);
-    return new Graph({ nodes, edges, ...options });
-  }
-
-  /**
-   * Alias for `findNode('root')`.
-   */
-  get root() {
-    return this.findNode(ROOT_ID)!;
-  }
+  onNodeChanged: Event<{ id: string; node: Option.Option<Node> }>;
 
   /**
    * Convert the graph to a JSON object.
    */
-  toJSON({ id = ROOT_ID, maxLength = 32 }: { id?: string; maxLength?: number } = {}) {
-    const toJSON = (node: Node, seen: string[] = []): any => {
-      const nodes = this.nodes(node);
-      const obj: Record<string, any> = {
-        id: node.id.length > maxLength ? `${node.id.slice(0, maxLength - 3)}...` : node.id,
-        type: node.type,
-      };
-      if (node.properties.label) {
-        obj.label = node.properties.label;
-      }
-      if (nodes.length) {
-        obj.nodes = nodes
-          .map((n) => {
-            // Break cycles.
-            const nextSeen = [...seen, node.id];
-            return nextSeen.includes(n.id) ? undefined : toJSON(n, nextSeen);
-          })
-          .filter(isNonNullable);
-      }
-      return obj;
-    };
+  toJSON(id?: string): object;
 
-    const root = this.findNode(id);
-    invariant(root, `Node not found: ${id}`);
-    return toJSON(root);
-  }
-
-  pickle() {
-    const nodes = Object.values(this._nodes)
-      .filter((node) => !!node.cacheable)
-      .map((node) => {
-        return {
-          id: node.id,
-          type: node.type,
-          properties: pick(node.properties, node.cacheable!),
-        };
-      });
-
-    const cacheable = new Set(nodes.map((node) => node.id));
-
-    const edges = Object.fromEntries(
-      Object.entries(this._edges)
-        .filter(([id]) => cacheable.has(id))
-        .map(([id, { outbound }]): [string, string[]] => [id, outbound.filter((nodeId) => cacheable.has(nodeId))])
-        // TODO(wittjosiah): Why sort?
-        .toSorted(([a], [b]) => a.localeCompare(b)),
-    );
-
-    return JSON.stringify({ nodes, edges });
-  }
+  json(id?: string): Rx.Rx<any>;
 
   /**
-   * Find the node with the given id in the graph.
+   * Get the rx key for the node with the given id.
+   */
+  node(id: string): Rx.Rx<Option.Option<Node>>;
+
+  /**
+   * Get the rx key for the node with the given id.
+   */
+  nodeOrThrow(id: string): Rx.Rx<Node>;
+
+  /**
+   * Get the rx key for the connections of the node with the given id.
+   */
+  connections(id: string, relation?: Relation): Rx.Rx<Node[]>;
+
+  /**
+   * Get the rx key for the actions of the node with the given id.
+   */
+  actions(id: string): Rx.Rx<(Action | ActionGroup)[]>;
+
+  /**
+   * Get the rx key for the edges of the node with the given id.
+   */
+  edges(id: string): Rx.Rx<Edges>;
+
+  /**
+   * Alias for `getNodeOrThrow(ROOT_ID)`.
+   */
+  get root(): Node;
+
+  /**
+   * Get the node with the given id from the graph's registry.
+   */
+  getNode(id: string): Option.Option<Node>;
+
+  /**
+   * Get the node with the given id from the graph's registry.
    *
-   * If a node is not found within the graph and an `onInitialNode` callback is provided,
-   * it is called with the id and type of the node, potentially initializing the node.
+   * @throws If the node is Option.none().
    */
-  findNode(id: string, expansion = true): Node | undefined {
-    const existingNode = this._nodes[id];
-    if (!existingNode && expansion) {
-      void this._onInitialNode?.(id);
-    }
-
-    return existingNode;
-  }
+  getNodeOrThrow(id: string): Node;
 
   /**
-   * Wait for a node to be added to the graph.
-   *
-   * If the node is already present in the graph, the promise resolves immediately.
-   *
-   * @param id The id of the node to wait for.
-   * @param timeout The time in milliseconds to wait for the node to be added.
+   * Get all nodes connected to the node with the given id by the given relation from the graph's registry.
    */
-  async waitForNode(id: string, timeout?: number): Promise<Node> {
-    const trigger = this._waitingForNodes[id] ?? (this._waitingForNodes[id] = new Trigger<Node>());
-    const node = this.findNode(id);
-    if (node) {
-      delete this._waitingForNodes[id];
-      return node;
-    }
-
-    if (timeout === undefined) {
-      return trigger.wait();
-    } else {
-      return asyncTimeout(trigger.wait(), timeout, `Node not found: ${id}`);
-    }
-  }
+  getConnections(id: string, relation?: Relation): Node[];
 
   /**
-   * Nodes that this node is connected to in default order.
+   * Get all actions connected to the node with the given id from the graph's registry.
    */
-  nodes<TData = any, TProperties extends Record<string, any> = Record<string, any>>(
-    node: Node,
-    options: NodesOptions<TData, TProperties> = {},
-  ) {
-    const { relation, expansion, filter = DEFAULT_FILTER, type } = options;
-    const nodes = this._getNodes({ node, relation, expansion, type });
-    return nodes.filter((n) => filter(n, node));
-  }
+  getActions(id: string): Node[];
 
   /**
-   * Edges that this node is connected to in default order.
+   * Get the edges from the node with the given id from the graph's registry.
    */
-  edges(node: Node, { relation = 'outbound' }: { relation?: Relation } = {}) {
-    return this._edges[node.id]?.[relation] ?? [];
-  }
-
-  /**
-   * Actions or action groups that this node is connected to in default order.
-   */
-  actions(node: Node, { expansion }: { expansion?: boolean } = {}) {
-    return [
-      ...this._getNodes({ node, expansion, type: ACTION_GROUP_TYPE }),
-      ...this._getNodes({ node, expansion, type: ACTION_TYPE }),
-    ];
-  }
-
-  async expand(node: Node, relation: Relation = 'outbound', type?: string) {
-    const key = this._key(node, relation, type);
-    const initialized = this._initialized[key];
-    if (!initialized && this._onInitialNodes) {
-      await this._onInitialNodes(node, relation, type);
-      this._initialized[key] = true;
-    }
-  }
-
-  private _key(node: Node, relation: Relation, type?: string) {
-    return `${node.id}-${relation}-${type}`;
-  }
+  getEdges(id: string): Edges;
 
   /**
    * Recursive depth-first traversal of the graph.
@@ -283,327 +143,460 @@ export class Graph {
    * @param options.relation The relation to traverse graph edges.
    * @param options.visitor A callback which is called for each node visited during traversal.
    */
-  traverse(
-    { visitor, node = this.root, relation = 'outbound', expansion }: GraphTraversalOptions,
-    path: string[] = [],
-  ): void {
-    // Break cycles.
-    if (path.includes(node.id)) {
-      return;
-    }
-
-    const shouldContinue = visitor(node, [...path, node.id]);
-    if (shouldContinue === false) {
-      return;
-    }
-
-    Object.values(this._getNodes({ node, relation, expansion })).forEach((child) =>
-      this.traverse({ node: child, relation, visitor, expansion }, [...path, node.id]),
-    );
-  }
-
-  /**
-   * Recursive depth-first traversal of the graph wrapping each visitor call in an effect.
-   *
-   * @param options.node The node to start traversing from.
-   * @param options.relation The relation to traverse graph edges.
-   * @param options.visitor A callback which is called for each node visited during traversal.
-   */
-  subscribeTraverse(
-    { visitor, node = this.root, relation = 'outbound', expansion }: GraphTraversalOptions,
-    currentPath: string[] = [],
-  ) {
-    return effect(() => {
-      const path = [...currentPath, node.id];
-      const result = visitor(node, path);
-      if (result === false) {
-        return;
-      }
-
-      const nodes = this._getNodes({ node, relation, expansion });
-      const nodeSubscriptions = nodes.map((n) => this.subscribeTraverse({ node: n, visitor, expansion }, path));
-      return () => {
-        nodeSubscriptions.forEach((unsubscribe) => unsubscribe());
-      };
-    });
-  }
+  traverse(options: GraphTraversalOptions, path?: string[]): void;
 
   /**
    * Get the path between two nodes in the graph.
    */
-  getPath({ source = 'root', target }: { source?: string; target: string }): string[] | undefined {
-    const start = this.findNode(source);
-    if (!start) {
-      return undefined;
-    }
-
-    let found: string[] | undefined;
-    this.traverse({
-      node: start,
-      visitor: (node, path) => {
-        if (found) {
-          return false;
-        }
-
-        if (node.id === target) {
-          found = path;
-        }
-      },
-    });
-
-    return found;
-  }
+  getPath(params: { source?: string; target: string }): Option.Option<string[]>;
 
   /**
    * Wait for the path between two nodes in the graph to be established.
    */
+  waitForPath(
+    params: { source?: string; target: string },
+    options?: { timeout?: number; interval?: number },
+  ): Promise<string[]>;
+}
+
+export interface ExpandableGraph extends ReadableGraph {
+  /**
+   * Initialize a node in the graph.
+   *
+   * Fires the `onInitialize` callback to provide initial data for a node.
+   */
+  initialize(id: string): Promise<void>;
+
+  /**
+   * Expand a node in the graph.
+   *
+   * Fires the `onExpand` callback to add connections to the node.
+   */
+  expand(id: string, relation?: Relation): void;
+
+  /**
+   * Sort the edges of the node with the given id.
+   */
+  sortEdges(id: string, relation: Relation, order: string[]): void;
+}
+
+export interface WritableGraph extends ExpandableGraph {
+  /**
+   * Add nodes to the graph.
+   */
+  addNodes(nodes: NodeArg<any, Record<string, any>>[]): void;
+
+  /**
+   * Add a node to the graph.
+   */
+  addNode(node: NodeArg<any, Record<string, any>>): void;
+
+  /**
+   * Remove nodes from the graph.
+   */
+  removeNodes(ids: string[], edges?: boolean): void;
+
+  /**
+   * Remove a node from the graph.
+   */
+  removeNode(id: string, edges?: boolean): void;
+
+  /**
+   * Add edges to the graph.
+   */
+  addEdges(edges: Edge[]): void;
+
+  /**
+   * Add an edge to the graph.
+   */
+  addEdge(edge: Edge): void;
+
+  /**
+   * Remove edges from the graph.
+   */
+  removeEdges(edges: Edge[], removeOrphans?: boolean): void;
+
+  /**
+   * Remove an edge from the graph.
+   */
+  removeEdge(edge: Edge, removeOrphans?: boolean): void;
+}
+
+/**
+ * The Graph represents the user interface information architecture of the application constructed via plugins.
+ */
+export class Graph implements WritableGraph {
+  readonly onNodeChanged = new Event<{ id: string; node: Option.Option<Node> }>();
+
+  private readonly _onExpand?: (id: string, relation: Relation) => void;
+  private readonly _onInitialize?: (id: string) => void;
+  private readonly _onRemoveNode?: (id: string) => void;
+
+  private readonly _registry: Registry.Registry;
+  private readonly _expanded = Record.empty<string, boolean>();
+  private readonly _initialized = Record.empty<string, boolean>();
+  private readonly _initialEdges = Record.empty<string, Edges>();
+  private readonly _initialNodes = Record.fromEntries([
+    [ROOT_ID, this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, data: null, properties: {} })],
+  ]);
+
+  /** @internal */
+  readonly _node = Rx.family<string, Rx.Writable<Option.Option<Node>>>((id) => {
+    const initial = Option.flatten(Record.get(this._initialNodes, id));
+    return Rx.make<Option.Option<Node>>(initial).pipe(Rx.keepAlive, Rx.withLabel(`graph:node:${id}`));
+  });
+
+  private readonly _nodeOrThrow = Rx.family<string, Rx.Rx<Node>>((id) => {
+    return Rx.make((get) => {
+      const node = get(this._node(id));
+      invariant(Option.isSome(node), `Node not available: ${id}`);
+      return node.value;
+    });
+  });
+
+  private readonly _edges = Rx.family<string, Rx.Writable<Edges>>((id) => {
+    const initial = Record.get(this._initialEdges, id).pipe(Option.getOrElse(() => ({ inbound: [], outbound: [] })));
+    return Rx.make<Edges>(initial).pipe(Rx.keepAlive, Rx.withLabel(`graph:edges:${id}`));
+  });
+
+  // NOTE: Currently the argument to the family needs to be referentially stable for the rx to be referentially stable.
+  // TODO(wittjosiah): Rx feature request, support for something akin to `ComplexMap` to allow for complex arguments.
+  private readonly _connections = Rx.family<string, Rx.Rx<Node[]>>((key) => {
+    return Rx.make((get) => {
+      const [id, relation] = key.split('$');
+      const edges = get(this._edges(id));
+      return edges[relation as Relation]
+        .map((id) => get(this._node(id)))
+        .filter(Option.isSome)
+        .map((o) => o.value);
+    }).pipe(Rx.withLabel(`graph:connections:${key}`));
+  });
+
+  private readonly _actions = Rx.family<string, Rx.Rx<(Action | ActionGroup)[]>>((id) => {
+    return Rx.make((get) => {
+      return get(this._connections(`${id}$outbound`)).filter(
+        (node) => node.type === ACTION_TYPE || node.type === ACTION_GROUP_TYPE,
+      );
+    }).pipe(Rx.withLabel(`graph:actions:${id}`));
+  });
+
+  private readonly _json = Rx.family<string, Rx.Rx<any>>((id) => {
+    return Rx.make((get) => {
+      const toJSON = (node: Node, seen: string[] = []): any => {
+        const nodes = get(this.connections(node.id));
+        const obj: Record<string, any> = {
+          id: node.id.length > 32 ? `${node.id.slice(0, 32)}...` : node.id,
+          type: node.type,
+        };
+        if (node.properties.label) {
+          obj.label = node.properties.label;
+        }
+        if (nodes.length) {
+          obj.nodes = nodes
+            .map((n) => {
+              // Break cycles.
+              const nextSeen = [...seen, node.id];
+              return nextSeen.includes(n.id) ? undefined : toJSON(n, nextSeen);
+            })
+            .filter(isNonNullable);
+        }
+        return obj;
+      };
+
+      const root = get(this.nodeOrThrow(id));
+      return toJSON(root);
+    }).pipe(Rx.withLabel(`graph:json:${id}`));
+  });
+
+  constructor({ registry, nodes, edges, onExpand, onInitialize, onRemoveNode }: GraphParams = {}) {
+    this._registry = registry ?? Registry.make();
+    this._onExpand = onExpand;
+    this._onInitialize = onInitialize;
+    this._onRemoveNode = onRemoveNode;
+
+    if (nodes) {
+      nodes.forEach((node) => {
+        Record.set(this._initialNodes, node.id, this._constructNode(node));
+      });
+    }
+
+    if (edges) {
+      Object.entries(edges).forEach(([source, edges]) => {
+        Record.set(this._initialEdges, source, edges);
+      });
+    }
+  }
+
+  toJSON(id = ROOT_ID) {
+    return this._registry.get(this._json(id));
+  }
+
+  json(id = ROOT_ID) {
+    return this._json(id);
+  }
+
+  node(id: string): Rx.Rx<Option.Option<Node>> {
+    return this._node(id);
+  }
+
+  nodeOrThrow(id: string): Rx.Rx<Node> {
+    return this._nodeOrThrow(id);
+  }
+
+  connections(id: string, relation: Relation = 'outbound'): Rx.Rx<Node[]> {
+    return this._connections(`${id}$${relation}`);
+  }
+
+  actions(id: string) {
+    return this._actions(id);
+  }
+
+  edges(id: string): Rx.Rx<Edges> {
+    return this._edges(id);
+  }
+
+  get root() {
+    return this.getNodeOrThrow(ROOT_ID);
+  }
+
+  getNode(id: string): Option.Option<Node> {
+    return this._registry.get(this.node(id));
+  }
+
+  getNodeOrThrow(id: string): Node {
+    return this._registry.get(this.nodeOrThrow(id));
+  }
+
+  getConnections(id: string, relation: Relation = 'outbound'): Node[] {
+    return this._registry.get(this.connections(id, relation));
+  }
+
+  getActions(id: string): Node[] {
+    return this._registry.get(this.actions(id));
+  }
+
+  getEdges(id: string): Edges {
+    return this._registry.get(this.edges(id));
+  }
+
+  async initialize(id: string) {
+    const initialized = Record.get(this._initialized, id).pipe(Option.getOrElse(() => false));
+    log('initialize', { id, initialized });
+    if (!initialized) {
+      await this._onInitialize?.(id);
+      Record.set(this._initialized, id, true);
+    }
+  }
+
+  expand(id: string, relation: Relation = 'outbound') {
+    const key = `${id}$${relation}`;
+    const expanded = Record.get(this._expanded, key).pipe(Option.getOrElse(() => false));
+    log('expand', { key, expanded });
+    if (!expanded) {
+      this._onExpand?.(id, relation);
+      Record.set(this._expanded, key, true);
+    }
+  }
+
+  addNodes(nodes: NodeArg<any, Record<string, any>>[]) {
+    // Rx.batch(() => {
+    nodes.map((node) => this.addNode(node));
+    // });
+  }
+
+  addNode({ nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>) {
+    const { id, type, data = null, properties = {} } = nodeArg;
+    const nodeRx = this._node(id);
+    const node = this._registry.get(nodeRx);
+    Option.match(node, {
+      onSome: (node) => {
+        const typeChanged = node.type !== type;
+        const dataChanged = node.data !== data;
+        const propertiesChanged = Object.keys(properties).some((key) => node.properties[key] !== properties[key]);
+        log('existing node', { typeChanged, dataChanged, propertiesChanged });
+        if (typeChanged || dataChanged || propertiesChanged) {
+          log('updating node', { id, type, data, properties });
+          const newNode = Option.some({ ...node, type, data, properties: { ...node.properties, ...properties } });
+          this._registry.set(nodeRx, newNode);
+          this.onNodeChanged.emit({ id, node: newNode });
+        }
+      },
+      onNone: () => {
+        log('new node', { id, type, data, properties });
+        const newNode = this._constructNode({ id, type, data, properties });
+        this._registry.set(nodeRx, newNode);
+        this.onNodeChanged.emit({ id, node: newNode });
+      },
+    });
+
+    if (nodes) {
+      // Rx.batch(() => {
+      this.addNodes(nodes);
+      const _edges = nodes.map((node) => ({ source: id, target: node.id }));
+      this.addEdges(_edges);
+      // });
+    }
+
+    if (edges) {
+      todo();
+    }
+  }
+
+  removeNodes(ids: string[], edges = false) {
+    // Rx.batch(() => {
+    ids.map((id) => this.removeNode(id, edges));
+    // });
+  }
+
+  removeNode(id: string, edges = false) {
+    const nodeRx = this._node(id);
+    // TODO(wittjosiah): Is there a way to mark these rx values for garbage collection?
+    this._registry.set(nodeRx, Option.none());
+    this.onNodeChanged.emit({ id, node: Option.none() });
+    // TODO(wittjosiah): Reset expanded and initialized flags?
+
+    if (edges) {
+      const { inbound, outbound } = this._registry.get(this._edges(id));
+      const edges = [
+        ...inbound.map((source) => ({ source, target: id })),
+        ...outbound.map((target) => ({ source: id, target })),
+      ];
+      this.removeEdges(edges);
+    }
+
+    this._onRemoveNode?.(id);
+  }
+
+  addEdges(edges: Edge[]) {
+    // Rx.batch(() => {
+    edges.map((edge) => this.addEdge(edge));
+    // });
+  }
+
+  addEdge(edgeArg: Edge) {
+    const sourceRx = this._edges(edgeArg.source);
+    const source = this._registry.get(sourceRx);
+    if (!source.outbound.includes(edgeArg.target)) {
+      log('add outbound edge', { source: edgeArg.source, target: edgeArg.target });
+      this._registry.set(sourceRx, { inbound: source.inbound, outbound: [...source.outbound, edgeArg.target] });
+    }
+
+    const targetRx = this._edges(edgeArg.target);
+    const target = this._registry.get(targetRx);
+    if (!target.inbound.includes(edgeArg.source)) {
+      log('add inbound edge', { source: edgeArg.source, target: edgeArg.target });
+      this._registry.set(targetRx, { inbound: [...target.inbound, edgeArg.source], outbound: target.outbound });
+    }
+  }
+
+  removeEdges(edges: Edge[], removeOrphans = false) {
+    // Rx.batch(() => {
+    edges.map((edge) => this.removeEdge(edge, removeOrphans));
+    // });
+  }
+
+  removeEdge(edgeArg: Edge, removeOrphans = false) {
+    const sourceRx = this._edges(edgeArg.source);
+    const source = this._registry.get(sourceRx);
+    if (source.outbound.includes(edgeArg.target)) {
+      this._registry.set(sourceRx, {
+        inbound: source.inbound,
+        outbound: source.outbound.filter((id) => id !== edgeArg.target),
+      });
+    }
+
+    const targetRx = this._edges(edgeArg.target);
+    const target = this._registry.get(targetRx);
+    if (target.inbound.includes(edgeArg.source)) {
+      this._registry.set(targetRx, {
+        inbound: target.inbound.filter((id) => id !== edgeArg.source),
+        outbound: target.outbound,
+      });
+    }
+
+    if (removeOrphans) {
+      const source = this._registry.get(sourceRx);
+      const target = this._registry.get(targetRx);
+      if (source.outbound.length === 0 && source.inbound.length === 0 && edgeArg.source !== ROOT_ID) {
+        this.removeNodes([edgeArg.source]);
+      }
+      if (target.outbound.length === 0 && target.inbound.length === 0 && edgeArg.target !== ROOT_ID) {
+        this.removeNodes([edgeArg.target]);
+      }
+    }
+  }
+
+  sortEdges(id: string, relation: Relation, order: string[]) {
+    const edgesRx = this._edges(id);
+    const edges = this._registry.get(edgesRx);
+    const unsorted = edges[relation].filter((id) => !order.includes(id)) ?? [];
+    const sorted = order.filter((id) => edges[relation].includes(id)) ?? [];
+    edges[relation].splice(0, edges[relation].length, ...[...sorted, ...unsorted]);
+    this._registry.set(edgesRx, edges);
+  }
+
+  traverse({ visitor, source = ROOT_ID, relation = 'outbound' }: GraphTraversalOptions, path: string[] = []): void {
+    // Break cycles.
+    if (path.includes(source)) {
+      return;
+    }
+
+    const node = this.getNodeOrThrow(source);
+    const shouldContinue = visitor(node, [...path, source]);
+    if (shouldContinue === false) {
+      return;
+    }
+
+    Object.values(this.getConnections(source, relation)).forEach((child) =>
+      this.traverse({ source: child.id, relation, visitor }, [...path, source]),
+    );
+  }
+
+  getPath({ source = 'root', target }: { source?: string; target: string }): Option.Option<string[]> {
+    return pipe(
+      this.getNode(source),
+      Option.flatMap((node) => {
+        let found: Option.Option<string[]> = Option.none();
+        this.traverse({
+          source: node.id,
+          visitor: (node, path) => {
+            if (Option.isSome(found)) {
+              return false;
+            }
+
+            if (node.id === target) {
+              found = Option.some(path);
+            }
+          },
+        });
+
+        return found;
+      }),
+    );
+  }
+
   async waitForPath(
     params: { source?: string; target: string },
     { timeout = 5_000, interval = 500 }: { timeout?: number; interval?: number } = {},
   ) {
     const path = this.getPath(params);
-    if (path) {
-      return path;
+    if (Option.isSome(path)) {
+      return path.value;
     }
 
     const trigger = new Trigger<string[]>();
     const i = setInterval(() => {
       const path = this.getPath(params);
-      if (path) {
-        trigger.wake(path);
+      if (Option.isSome(path)) {
+        trigger.wake(path.value);
       }
     }, interval);
 
     return trigger.wait({ timeout }).finally(() => clearInterval(i));
   }
 
-  /**
-   * Add nodes to the graph.
-   *
-   * @internal
-   */
-  _addNodes<TData = null, TProperties extends Record<string, any> = Record<string, any>>(
-    nodes: NodeArg<TData, TProperties>[],
-  ): Node<TData, TProperties>[] {
-    return batch(() => nodes.map((node) => this._addNode(node)));
-  }
-
-  private _addNode<TData, TProperties extends Record<string, any> = Record<string, any>>({
-    nodes,
-    edges,
-    ..._node
-  }: NodeArg<TData, TProperties>): Node<TData, TProperties> {
-    return untracked(() => {
-      const existingNode = this._nodes[_node.id];
-      const node = existingNode ?? this._constructNode({ data: null, properties: {}, ..._node });
-      if (existingNode) {
-        const { data = null, properties, type } = _node;
-        if (data !== node.data) {
-          node.data = data;
-        }
-
-        if (type !== node.type) {
-          node.type = type;
-        }
-
-        for (const key in properties) {
-          if (properties[key] !== node.properties[key]) {
-            node.properties[key] = properties[key];
-          }
-        }
-      } else {
-        this._nodes[node.id] = node;
-        this._edges[node.id] = live({ inbound: [], outbound: [] });
-      }
-
-      const trigger = this._waitingForNodes[node.id];
-      if (trigger) {
-        trigger.wake(node);
-        delete this._waitingForNodes[node.id];
-      }
-
-      if (nodes) {
-        nodes.forEach((subNode) => {
-          this._addNode(subNode);
-          this._addEdge({ source: node.id, target: subNode.id });
-        });
-      }
-
-      if (edges) {
-        edges.forEach(([id, relation]) =>
-          relation === 'outbound'
-            ? this._addEdge({ source: node.id, target: id })
-            : this._addEdge({ source: id, target: node.id }),
-        );
-      }
-
-      return node as unknown as Node<TData, TProperties>;
-    });
-  }
-
-  /**
-   * Remove nodes from the graph.
-   *
-   * @param ids The id of the node to remove.
-   * @param edges Whether to remove edges connected to the node from the graph as well.
-   * @internal
-   */
-  _removeNodes(ids: string[], edges = false) {
-    batch(() => ids.forEach((id) => this._removeNode(id, edges)));
-  }
-
-  private _removeNode(id: string, edges = false) {
-    untracked(() => {
-      const node = this.findNode(id, false);
-      if (!node) {
-        return;
-      }
-
-      if (edges) {
-        // Remove edges from connected nodes.
-        this._getNodes({ node }).forEach((node) => {
-          this._removeEdge({ source: id, target: node.id });
-        });
-        this._getNodes({ node, relation: 'inbound' }).forEach((node) => {
-          this._removeEdge({ source: node.id, target: id });
-        });
-
-        // Remove edges from node.
-        delete this._edges[id];
-      }
-
-      // Remove node.
-      delete this._nodes[id];
-      Object.keys(this._initialized)
-        .filter((key) => key.startsWith(id))
-        .forEach((key) => {
-          delete this._initialized[key];
-        });
-      void this._onRemoveNode?.(id);
-    });
-  }
-
-  /**
-   * Add edges to the graph.
-   *
-   * @internal
-   */
-  _addEdges(edges: { source: string; target: string }[]) {
-    batch(() => edges.forEach((edge) => this._addEdge(edge)));
-  }
-
-  private _addEdge({ source, target }: { source: string; target: string }) {
-    untracked(() => {
-      if (!this._edges[source]) {
-        this._edges[source] = live({ inbound: [], outbound: [] });
-      }
-      if (!this._edges[target]) {
-        this._edges[target] = live({ inbound: [], outbound: [] });
-      }
-
-      const sourceEdges = this._edges[source];
-      if (!sourceEdges.outbound.includes(target)) {
-        sourceEdges.outbound.push(target);
-      }
-
-      const targetEdges = this._edges[target];
-      if (!targetEdges.inbound.includes(source)) {
-        targetEdges.inbound.push(source);
-      }
-    });
-  }
-
-  /**
-   * Remove edges from the graph.
-   * @internal
-   */
-  _removeEdges(edges: { source: string; target: string }[], removeOrphans = false) {
-    batch(() => edges.forEach((edge) => this._removeEdge(edge, removeOrphans)));
-  }
-
-  private _removeEdge({ source, target }: { source: string; target: string }, removeOrphans = false) {
-    untracked(() => {
-      batch(() => {
-        const outboundIndex = this._edges[source]?.outbound.findIndex((id) => id === target);
-        if (outboundIndex !== undefined && outboundIndex !== -1) {
-          this._edges[source].outbound.splice(outboundIndex, 1);
-        }
-
-        const inboundIndex = this._edges[target]?.inbound.findIndex((id) => id === source);
-        if (inboundIndex !== undefined && inboundIndex !== -1) {
-          this._edges[target].inbound.splice(inboundIndex, 1);
-        }
-
-        if (removeOrphans) {
-          if (
-            this._edges[source]?.outbound.length === 0 &&
-            this._edges[source]?.inbound.length === 0 &&
-            source !== ROOT_ID
-          ) {
-            this._removeNode(source, true);
-          }
-          if (
-            this._edges[target]?.outbound.length === 0 &&
-            this._edges[target]?.inbound.length === 0 &&
-            target !== ROOT_ID
-          ) {
-            this._removeNode(target, true);
-          }
-        }
-      });
-    });
-  }
-
-  /**
-   * Sort edges for a node.
-   *
-   * Edges not included in the sorted list are appended to the end of the list.
-   *
-   * @param nodeId The id of the node to sort edges for.
-   * @param relation The relation of the edges from the node to sort.
-   * @param edges The ordered list of edges.
-   * @ignore
-   */
-  _sortEdges(nodeId: string, relation: Relation, edges: string[]) {
-    untracked(() => {
-      batch(() => {
-        const current = this._edges[nodeId];
-        if (current) {
-          const unsorted = current[relation].filter((id) => !edges.includes(id)) ?? [];
-          const sorted = edges.filter((id) => current[relation].includes(id)) ?? [];
-          current[relation].splice(0, current[relation].length, ...[...sorted, ...unsorted]);
-        }
-      });
-    });
-  }
-
-  private _constructNode = (node: Omit<Node, typeof graphSymbol>) => {
-    return live<NodeInternal>({ ...node, [graphSymbol]: this });
-  };
-
-  private _getNodes({
-    node,
-    relation = 'outbound',
-    type,
-    expansion,
-  }: {
-    node: Node;
-    relation?: Relation;
-    type?: string;
-    expansion?: boolean;
-  }): Node[] {
-    if (expansion) {
-      void this.expand(node, relation, type);
-    }
-
-    const edges = this._edges[node.id];
-    if (!edges) {
-      return [];
-    } else {
-      return edges[relation]
-        .map((id) => this._nodes[id])
-        .filter(isNonNullable)
-        .filter((n) => !type || n.type === type);
-    }
+  /** @internal */
+  _constructNode(node: NodeArg<any>): Option.Option<Node> {
+    return Option.some({ [graphSymbol]: this, data: null, properties: {}, ...node });
   }
 }
