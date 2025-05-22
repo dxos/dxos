@@ -5,13 +5,13 @@
 import { snippet } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
 import {
-  type Extension,
-  type StateCommand,
-  type EditorState,
   type ChangeSpec,
-  type Text,
   EditorSelection,
+  type Extension,
+  type EditorState,
   type Line,
+  type StateCommand,
+  type Text,
 } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';

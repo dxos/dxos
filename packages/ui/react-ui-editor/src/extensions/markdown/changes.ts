@@ -56,8 +56,9 @@ export const adjustChanges = () => {
                 // Check for URL.
                 const url = getValidUrl(update.view.state.sliceDoc(fromB, toB));
                 if (url) {
+                  // Check if pasting inside existing link.
                   const node = tree.resolveInner(fromA, -1);
-                  const invalidPositions = new Set(['Link', 'LinkMark', 'Code', 'CodeText', 'FencedCode', 'URL']);
+                  const invalidPositions = new Set(['Code', 'CodeText', 'FencedCode', 'Link', 'LinkMark', 'URL']);
                   if (!invalidPositions.has(node?.name)) {
                     const replacedText = tr.startState.sliceDoc(fromA, toA);
                     adjustments.push({ from: fromA, to: toB, insert: createLink(url, replacedText) });
@@ -84,7 +85,7 @@ export const adjustChanges = () => {
           }
         }
 
-        // TODO(burdon): Is this the right way to augment changes?
+        // TODO(burdon): Is this the right way to augment changes? Alt: EditorState.transactionFilter
         if (adjustments.length) {
           setTimeout(() => {
             update.view.dispatch(
