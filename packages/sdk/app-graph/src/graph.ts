@@ -59,7 +59,8 @@ export type GraphParams = {
   nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
   onExpand?: Graph['_onExpand'];
-  onInitialize?: Graph['_onInitialize'];
+  // TODO(wittjosiah): On initialize to restore state from cache.
+  // onInitialize?: Graph['_onInitialize'];
   onRemoveNode?: Graph['_onRemoveNode'];
 };
 
@@ -165,7 +166,7 @@ export interface ExpandableGraph extends ReadableGraph {
    *
    * Fires the `onInitialize` callback to provide initial data for a node.
    */
-  initialize(id: string): Promise<void>;
+  // initialize(id: string): Promise<void>;
 
   /**
    * Expand a node in the graph.
@@ -229,7 +230,7 @@ export class Graph implements WritableGraph {
   readonly onNodeChanged = new Event<{ id: string; node: Option.Option<Node> }>();
 
   private readonly _onExpand?: (id: string, relation: Relation) => void;
-  private readonly _onInitialize?: (id: string) => void;
+  // private readonly _onInitialize?: (id: string) => Promise<void>;
   private readonly _onRemoveNode?: (id: string) => void;
 
   private readonly _registry: Registry.Registry;
@@ -308,10 +309,9 @@ export class Graph implements WritableGraph {
     }).pipe(Rx.withLabel(`graph:json:${id}`));
   });
 
-  constructor({ registry, nodes, edges, onExpand, onInitialize, onRemoveNode }: GraphParams = {}) {
+  constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphParams = {}) {
     this._registry = registry ?? Registry.make();
     this._onExpand = onExpand;
-    this._onInitialize = onInitialize;
     this._onRemoveNode = onRemoveNode;
 
     if (nodes) {
@@ -379,14 +379,15 @@ export class Graph implements WritableGraph {
     return this._registry.get(this.edges(id));
   }
 
-  async initialize(id: string) {
-    const initialized = Record.get(this._initialized, id).pipe(Option.getOrElse(() => false));
-    log('initialize', { id, initialized });
-    if (!initialized) {
-      await this._onInitialize?.(id);
-      Record.set(this._initialized, id, true);
-    }
-  }
+  // TODO(wittjosiah): On initialize to restore state from cache.
+  // async initialize(id: string) {
+  //   const initialized = Record.get(this._initialized, id).pipe(Option.getOrElse(() => false));
+  //   log('initialize', { id, initialized });
+  //   if (!initialized) {
+  //     await this._onInitialize?.(id);
+  //     Record.set(this._initialized, id, true);
+  //   }
+  // }
 
   expand(id: string, relation: Relation = 'outbound') {
     const key = `${id}$${relation}`;
@@ -399,9 +400,9 @@ export class Graph implements WritableGraph {
   }
 
   addNodes(nodes: NodeArg<any, Record<string, any>>[]) {
-    // Rx.batch(() => {
-    nodes.map((node) => this.addNode(node));
-    // });
+    Rx.batch(() => {
+      nodes.map((node) => this.addNode(node));
+    });
   }
 
   addNode({ nodes, edges, ...nodeArg }: NodeArg<any, Record<string, any>>) {
@@ -443,9 +444,9 @@ export class Graph implements WritableGraph {
   }
 
   removeNodes(ids: string[], edges = false) {
-    // Rx.batch(() => {
-    ids.map((id) => this.removeNode(id, edges));
-    // });
+    Rx.batch(() => {
+      ids.map((id) => this.removeNode(id, edges));
+    });
   }
 
   removeNode(id: string, edges = false) {
@@ -468,9 +469,9 @@ export class Graph implements WritableGraph {
   }
 
   addEdges(edges: Edge[]) {
-    // Rx.batch(() => {
-    edges.map((edge) => this.addEdge(edge));
-    // });
+    Rx.batch(() => {
+      edges.map((edge) => this.addEdge(edge));
+    });
   }
 
   addEdge(edgeArg: Edge) {
@@ -490,9 +491,9 @@ export class Graph implements WritableGraph {
   }
 
   removeEdges(edges: Edge[], removeOrphans = false) {
-    // Rx.batch(() => {
-    edges.map((edge) => this.removeEdge(edge, removeOrphans));
-    // });
+    Rx.batch(() => {
+      edges.map((edge) => this.removeEdge(edge, removeOrphans));
+    });
   }
 
   removeEdge(edgeArg: Edge, removeOrphans = false) {

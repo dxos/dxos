@@ -49,6 +49,7 @@ export type CreateExtensionOptions = {
   id: string;
   relation?: Relation;
   position?: Position;
+  // TODO(wittjosiah): On initialize to restore state from cache.
   // resolver?: ResolverExtension;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
@@ -168,7 +169,7 @@ export class GraphBuilder {
       ...params,
       registry: this._registry,
       onExpand: (id, relation) => this._onExpand(id, relation),
-      onInitialize: (id) => this._onInitialize(id),
+      // onInitialize: (id) => this._onInitialize(id),
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
   }
@@ -276,39 +277,42 @@ export class GraphBuilder {
     const connectors = this._connectors(`${id}+${relation}`);
 
     let previous: string[] = [];
-    const cancel = this._registry.subscribe(connectors, (nodes) => {
-      const ids = nodes.map((n) => n.id);
-      const removed = previous.filter((id) => !ids.includes(id));
-      previous = ids;
+    const cancel = this._registry.subscribe(
+      connectors,
+      (nodes) => {
+        const ids = nodes.map((n) => n.id);
+        const removed = previous.filter((id) => !ids.includes(id));
+        previous = ids;
 
-      log('update', { id, relation, ids, removed });
-      // Rx.batch(() => {
-      this._graph.removeEdges(
-        removed.map((target) => ({ source: id, target })),
-        true,
-      );
-      this._graph.addNodes(nodes);
-      this._graph.addEdges(
-        nodes.map((node) =>
-          relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
-        ),
-      );
-      this._graph.sortEdges(
-        id,
-        relation,
-        nodes.map(({ id }) => id),
-      );
-      // });
-    });
-    // Trigger subscription.
-    this._registry.get(connectors);
+        log('update', { id, relation, ids, removed });
+        Rx.batch(() => {
+          this._graph.removeEdges(
+            removed.map((target) => ({ source: id, target })),
+            true,
+          );
+          this._graph.addNodes(nodes);
+          this._graph.addEdges(
+            nodes.map((node) =>
+              relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
+            ),
+          );
+          this._graph.sortEdges(
+            id,
+            relation,
+            nodes.map(({ id }) => id),
+          );
+        });
+      },
+      { immediate: true },
+    );
 
     this._connectorSubscriptions.set(id, cancel);
   }
 
-  private async _onInitialize(id: string) {
-    log('onInitialize', { id });
-  }
+  // TODO(wittjosiah): On initialize to restore state from cache.
+  // private async _onInitialize(id: string) {
+  //   log('onInitialize', { id });
+  // }
 
   private _onRemoveNode(id: string) {
     this._connectorSubscriptions.get(id)?.();

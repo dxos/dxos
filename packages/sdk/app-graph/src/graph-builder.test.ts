@@ -6,7 +6,7 @@ import { Registry, Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger } from '@dxos/async';
+import { sleep, Trigger } from '@dxos/async';
 
 import { ROOT_ID } from './graph';
 import { createExtension, GraphBuilder } from './graph-builder';
@@ -207,21 +207,19 @@ describe('RxGraphBuilder', () => {
       expect(exists).to.be.false;
 
       registry.set(name, 'default');
-      // TODO(wittjosiah): Should be 1 but batching is disabled.
-      expect(count).to.equal(2);
+      expect(count).to.equal(1);
       expect(exists).to.be.true;
 
       registry.set(name, 'removed');
-      expect(count).to.equal(3);
+      expect(count).to.equal(2);
       expect(exists).to.be.false;
 
       registry.set(name, 'added');
-      expect(count).to.equal(4);
+      expect(count).to.equal(3);
       expect(exists).to.be.true;
     });
 
-    // TODO(wittjosiah): Failing.
-    test.skip('sort edges', () => {
+    test('sort edges', async () => {
       const registry = Registry.make();
       const builder = new GraphBuilder({ registry });
       const nodes = Rx.make([
@@ -251,6 +249,9 @@ describe('RxGraphBuilder', () => {
         { id: exampleId(1), type: EXAMPLE_TYPE, data: 1 },
         { id: exampleId(2), type: EXAMPLE_TYPE, data: 2 },
       ]);
+
+      // TODO(wittjosiah): Why is this needed for the following conditions to pass?
+      await sleep(0);
 
       {
         const nodes = registry.get(graph.connections(ROOT_ID));
@@ -329,48 +330,48 @@ describe('RxGraphBuilder', () => {
 
       // Counts should not increment until the node is expanded.
       graph.expand(ROOT_ID);
-      expect(parentCount).to.equal(2);
+      expect(parentCount).to.equal(1);
       expect(independentCount).to.equal(0);
       expect(dependentCount).to.equal(0);
 
       // Counts should increment when the node is expanded.
       graph.expand(EXAMPLE_ID);
-      expect(parentCount).to.equal(2);
-      expect(independentCount).to.equal(2);
-      expect(dependentCount).to.equal(2);
+      expect(parentCount).to.equal(1);
+      expect(independentCount).to.equal(1);
+      expect(dependentCount).to.equal(1);
 
       // Only dependent count should increment when the parent changes.
       registry.set(name, 'updated');
-      expect(parentCount).to.equal(3);
-      expect(independentCount).to.equal(2);
-      expect(dependentCount).to.equal(3);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(1);
+      expect(dependentCount).to.equal(2);
 
       // Only independent count should increment when its state changes.
       registry.set(sub, 'updated');
-      expect(parentCount).to.equal(3);
-      expect(independentCount).to.equal(3);
-      expect(dependentCount).to.equal(3);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(2);
+      expect(dependentCount).to.equal(2);
 
       // Independent count should update if its state changes even if the parent is removed.
       Rx.batch(() => {
         registry.set(name, 'removed');
         registry.set(sub, 'batch');
       });
-      expect(parentCount).to.equal(3);
-      expect(independentCount).to.equal(4);
-      expect(dependentCount).to.equal(3);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(3);
+      expect(dependentCount).to.equal(2);
 
       // Dependent count should increment when the node is added back.
       registry.set(name, 'added');
-      expect(parentCount).to.equal(4);
-      expect(independentCount).to.equal(4);
-      expect(dependentCount).to.equal(4);
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(3);
+      expect(dependentCount).to.equal(3);
 
       // Counts should not increment when the node is expanded again.
       graph.expand(EXAMPLE_ID);
-      expect(parentCount).to.equal(4);
-      expect(independentCount).to.equal(4);
-      expect(dependentCount).to.equal(4);
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(3);
+      expect(dependentCount).to.equal(3);
     });
 
     test('eager graph expansion', async () => {
