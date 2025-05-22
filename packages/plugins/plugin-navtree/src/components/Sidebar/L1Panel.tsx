@@ -9,7 +9,6 @@ import { Button, type ButtonProps, Icon, IconButton, toLocalizedString, useTrans
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
-import { byPosition } from '@dxos/util';
 
 import { useLoadDescendents } from '../../hooks';
 import { NAVTREE_PLUGIN } from '../../meta';
@@ -45,18 +44,14 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
   // TODO(wittjosiah): Support multiple alternate trees.
-  const alternateTree = navTreeContext.getItems(item, 'alternate-tree')[0];
+  const alternateTree = navTreeContext.useItems(item, { disposition: 'alternate-tree' })[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
-  const alternateGetItems = useCallback(
-    (node?: Node, disposition?: string) => {
-      const items = navTreeContext.getItems(node, disposition);
-      if (node === alternateTree) {
-        // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
-        return items.toSorted((a, b) => byPosition(a.properties, b.properties));
-      }
-      return items;
+  const useAlternateItems = useCallback(
+    (node?: Node, { disposition }: { disposition?: string } = {}) => {
+      // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
+      return navTreeContext.useItems(node, { disposition, sort: node?.id === alternateTree.id });
     },
     [navTreeContext, alternateTree],
   );
@@ -113,7 +108,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
             {isAlternate ? (
               <Tree
                 {...navTreeContext}
-                getItems={alternateGetItems}
+                useItems={useAlternateItems}
                 id={alternateTree.id}
                 root={alternateTree}
                 path={alternatePath}
@@ -141,9 +136,9 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
 };
 
 const L1PanelCollection = ({ item, path, ...props }: L1PanelProps) => {
-  const { getItems } = useNavTreeContext();
+  const { useItems } = useNavTreeContext();
   useLoadDescendents(item);
-  const collectionItems = getItems(item);
+  const collectionItems = useItems(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
   return (
     <>

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-rx/rx-react';
 import { effect } from '@preact/signals-core';
 import React, { useEffect, useState, type FC, type PropsWithChildren } from 'react';
 
@@ -98,6 +99,12 @@ export const createApp = ({
     module: 'dxos.org/app-framework/plugin-manager',
   });
 
+  manager.context.contributeCapability({
+    interface: Capabilities.RxRegistry,
+    implementation: manager.registry,
+    module: 'dxos.org/app-framework/rx-registry',
+  });
+
   setupDevtools(manager);
 
   // TODO(wittjosiah): Factor out such that this could be called per surface role when attempting to render.
@@ -107,7 +114,9 @@ export const createApp = ({
   return () => (
     <ErrorBoundary fallback={fallback}>
       <PluginManagerProvider value={manager}>
-        <App placeholder={placeholder} state={state} />
+        <RegistryContext.Provider value={manager.registry}>
+          <App placeholder={placeholder} state={state} />
+        </RegistryContext.Provider>
       </PluginManagerProvider>
     </ErrorBoundary>
   );

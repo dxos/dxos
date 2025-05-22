@@ -6,6 +6,7 @@ export { SpaceCapabilities, ThreadCapabilities } from './capabilities';
 export { SpaceEvents, ThreadEvents } from './events';
 
 export * from './components';
+export * from './hooks';
 export * from './meta';
 export * from './SpacePlugin';
 export * from './util';
