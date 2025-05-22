@@ -532,7 +532,8 @@ class SpaceQuerySource implements QuerySource {
 
     let results: QueryResultEntry<AnyLiveObject<any>>[] = [];
 
-    if (filter.type === 'object' && filter.id !== undefined && filter.id.length > 0) {
+    if (isObjectIdFilter(filter)) {
+      log.info('id filter', { ids: filter.id });
       const cores = (await this._database._coreDatabase.batchLoadObjectCores(filter.id as ObjectId[])).filter(
         (x) => x !== undefined,
       );
@@ -600,27 +601,31 @@ class SpaceQuerySource implements QuerySource {
     filter: QueryAST.Filter,
     options: QueryAST.QueryOptions | undefined,
   ): QueryResultEntry<AnyLiveObject<any>>[] {
-    const filteredCores = this._database.coreDatabase
-      .allObjectCores()
-      // TODO(dmaretskyi): Cleanup proxy <-> core.
-      .filter((core) =>
-        filterMatchObject(filter, {
-          id: core.id,
-          doc: core.getObjectStructure(),
-          spaceId: this.spaceId,
-        }),
-      )
-      .filter((core) => {
-        switch (options?.deleted) {
-          case undefined:
-          case 'exclude':
-            return !core.isDeleted();
-          case 'include':
-            return true;
-          case 'only':
-            return core.isDeleted();
-        }
-      });
+    const filteredCores = isObjectIdFilter(filter)
+      ? (filter as QueryAST.FilterObject)
+          .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
+          .filter((core) => core !== undefined)
+      : this._database.coreDatabase
+          .allObjectCores()
+          // TODO(dmaretskyi): Cleanup proxy <-> core.
+          .filter((core) =>
+            filterMatchObject(filter, {
+              id: core.id,
+              doc: core.getObjectStructure(),
+              spaceId: this.spaceId,
+            }),
+          )
+          .filter((core) => {
+            switch (options?.deleted) {
+              case undefined:
+              case 'exclude':
+                return !core.isDeleted();
+              case 'include':
+                return true;
+              case 'only':
+                return core.isDeleted();
+            }
+          });
 
     return filteredCores.map((core) => this._mapCoreToResult(core));
   }
@@ -674,3 +679,7 @@ trace.diagnostic({
     });
   },
 });
+
+const isObjectIdFilter = (filter: QueryAST.Filter) => {
+  return filter.type === 'object' && filter.id !== undefined && filter.id.length > 0;
+};
