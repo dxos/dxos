@@ -39,13 +39,6 @@ export type Intent<Tag extends string, Fields extends IntentParams> = {
   data: IntentData<Fields>;
 
   /**
-   * Module ID.
-   * If specified, the intent will be sent explicitly to the plugin module.
-   * Otherwise, the intent will be sent to all plugins, in order and the first to resolve a non-null value will be used.
-   */
-  module?: string;
-
-  /**
    * Whether or not the intent is being undone.
    */
   undo?: boolean;
@@ -80,7 +73,7 @@ export type AnyIntentChain = IntentChain<any, any, any, any>;
 export const createIntent = <Tag extends string, Fields extends IntentParams>(
   schema: IntentSchema<Tag, Fields>,
   data: IntentData<Fields> = {},
-  params: Pick<AnyIntent, 'module' | 'undo'> = {},
+  params: Pick<AnyIntent, 'undo'> = {},
 ): IntentChain<Tag, Tag, Fields, Fields> => {
   // The output of validateSync breaks proxy objects so this is just used for validation.
   // TODO(wittjosiah): Is there a better way to make theses types align?
@@ -116,7 +109,7 @@ export const chain =
   >(
     schema: IntentSchema<NextTag, NextFields>,
     data: Omit<IntentData<NextFields>, keyof IntentResultData<LastFields>> = {},
-    params: Pick<AnyIntent, 'module' | 'undo'> = {},
+    params: Pick<AnyIntent, 'undo'> = {},
   ) =>
   (
     intent: IntentChain<FirstTag, any, FirstFields, LastFields>,

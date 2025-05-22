@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { WelcomeCapabilities } from './capabilities';
 import { OnboardingManager } from '../onboarding-manager';
 
-export default async (context: PluginsContext) => {
-  const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-  const client = context.requestCapability(ClientCapabilities.Client);
+export default async (context: PluginContext) => {
+  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  const client = context.getCapability(ClientCapabilities.Client);
   const searchParams = new URLSearchParams(window.location.search);
   const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
 

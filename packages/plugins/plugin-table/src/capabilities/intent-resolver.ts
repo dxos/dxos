@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -13,12 +13,12 @@ import { ViewProjection } from '@dxos/schema';
 import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         const table = live(TableType, { name, threads: [] });
         await initializeTable({ client, space, table, typename });
         return { data: { object: table } };

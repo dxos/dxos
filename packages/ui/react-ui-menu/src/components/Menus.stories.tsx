@@ -10,7 +10,7 @@ import { IconButton } from '@dxos/react-ui';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { DropdownMenu as NaturalDropdownMenu, ToolbarMenu, MenuProvider } from '../components';
-import { useMenuActions } from '../hooks/useMenuActions';
+import { useMenuActions } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
 import translations from '../translations';
 import { type MenuAction } from '../types';
@@ -31,7 +31,7 @@ export const DropdownMenu = {
     useMutateActions(menuActions);
 
     return (
-      <MenuProvider resolveGroupItems={resolveGroupItems}>
+      <MenuProvider useGroupItems={resolveGroupItems}>
         <NaturalDropdownMenu.Root>
           <NaturalDropdownMenu.Trigger asChild>
             <IconButton icon='ph--list-checks--regular' size={5} label='Options' />

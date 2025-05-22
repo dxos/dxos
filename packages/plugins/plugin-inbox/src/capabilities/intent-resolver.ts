@@ -8,7 +8,7 @@ import {
   contributes,
   Capabilities,
   createResolver,
-  type PluginsContext,
+  type PluginContext,
   createIntent,
   chain,
 } from '@dxos/app-framework';
@@ -24,7 +24,7 @@ import { DataType } from '@dxos/schema';
 import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: InboxAction.CreateMailbox,
@@ -46,7 +46,7 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: InboxAction.SelectMessage,
       resolve: ({ mailboxId, message }) => {
-        const state = context.requestCapability(InboxCapabilities.MutableMailboxState);
+        const state = context.getCapability(InboxCapabilities.MutableMailboxState);
         if (message) {
           // TODO(wittjosiah): Static to live object fails.
           //  Needs to be a live object because graph is live and the current message is included in the companion.

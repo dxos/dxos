@@ -9,7 +9,7 @@ import {
   createResolver,
   type SerializedNode,
   SettingsAction,
-  type PluginsContext,
+  type PluginContext,
 } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -28,12 +28,12 @@ import {
   legacyFileToLocalFile,
 } from '../util';
 
-export default (context: PluginsContext) => {
+export default (context: PluginContext) => {
   const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
   const directoryNameCounter: Record<string, Record<string, number>> = {};
 
   const exportFile = async ({ node, path, serialized }: { node: Node; path: string[]; serialized: SerializedNode }) => {
-    const state = context.requestCapability(FileCapabilities.MutableState);
+    const state = context.getCapability(FileCapabilities.MutableState);
     if (!state.rootHandle) {
       return;
     }
@@ -87,7 +87,7 @@ export default (context: PluginsContext) => {
     createResolver({
       intent: LocalFilesAction.SelectRoot,
       resolve: async () => {
-        const state = context.requestCapability(FileCapabilities.MutableState);
+        const state = context.getCapability(FileCapabilities.MutableState);
         const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
         if (rootDir) {
           state.rootHandle = rootDir;
@@ -97,13 +97,13 @@ export default (context: PluginsContext) => {
     createResolver({
       intent: LocalFilesAction.Export,
       resolve: async () => {
-        const { explore } = context.requestCapability(Capabilities.AppGraph);
-        const state = context.requestCapability(FileCapabilities.MutableState);
+        const { explore } = context.getCapability(Capabilities.AppGraph);
+        const state = context.getCapability(FileCapabilities.MutableState);
         if (!state.rootHandle) {
           return { intents: [createIntent(SettingsAction.Open, { plugin: FILES_PLUGIN })] };
         }
 
-        const serializers = context.requestCapabilities(Capabilities.AppGraphSerializer).flat();
+        const serializers = context.getCapabilities(Capabilities.AppGraphSerializer).flat();
 
         // TODO(wittjosiah): Export needs to include order of nodes as well.
         //   Without this order is not guaranteed to be preserved on import.
@@ -139,7 +139,7 @@ export default (context: PluginsContext) => {
           return;
         }
 
-        const serializers = context.requestCapabilities(Capabilities.AppGraphSerializer).flat();
+        const serializers = context.getCapabilities(Capabilities.AppGraphSerializer).flat();
 
         const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
           const [name, ...extension] = handle.name.split('.');
@@ -173,7 +173,7 @@ export default (context: PluginsContext) => {
     createResolver({
       intent: LocalFilesAction.OpenFile,
       resolve: async () => {
-        const state = context.requestCapability(FileCapabilities.MutableState);
+        const state = context.getCapability(FileCapabilities.MutableState);
 
         if ('showOpenFilePicker' in window) {
           const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
@@ -211,7 +211,7 @@ export default (context: PluginsContext) => {
     createResolver({
       intent: LocalFilesAction.OpenDirectory,
       resolve: async () => {
-        const state = context.requestCapability(FileCapabilities.MutableState);
+        const state = context.getCapability(FileCapabilities.MutableState);
         const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
         const directory = await handleToLocalDirectory(handle);
         state.files.push(directory);
@@ -221,7 +221,7 @@ export default (context: PluginsContext) => {
     createResolver({
       intent: LocalFilesAction.Reconnect,
       resolve: async (data) => {
-        const state = context.requestCapability(FileCapabilities.MutableState);
+        const state = context.getCapability(FileCapabilities.MutableState);
         const entity = state.files.find((entity) => entity.id === data.id);
         if (!entity) {
           return;
@@ -246,7 +246,7 @@ export default (context: PluginsContext) => {
     createResolver({
       intent: LocalFilesAction.Save,
       resolve: async (data) => {
-        const state = context.requestCapability(FileCapabilities.MutableState);
+        const state = context.getCapability(FileCapabilities.MutableState);
         const file = findFile(state.files, [data.id]);
         if (file) {
           await handleSave(file);
@@ -256,7 +256,7 @@ export default (context: PluginsContext) => {
     createResolver({
       intent: LocalFilesAction.Close,
       resolve: async (data) => {
-        const state = context.requestCapability(FileCapabilities.MutableState);
+        const state = context.getCapability(FileCapabilities.MutableState);
         const index = state.files.findIndex((f) => f.id === data.id);
         if (index >= 0) {
           state.files.splice(index, 1);
