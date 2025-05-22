@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useRxValue } from '@effect-rx/rx-react';
+import { Option } from 'effect';
 
-import { type Graph, type Node } from '@dxos/app-graph';
+import { type ReadableGraph, type Node, type Relation } from '@dxos/app-graph';
 
 /**
  * React hook to get a node from the graph.
@@ -14,33 +15,15 @@ import { type Graph, type Node } from '@dxos/app-graph';
  * @param timeout Optional timeout in milliseconds to wait for the node to be found.
  * @returns Node if found, undefined otherwise.
  */
-// TODO(wittjosiah): Factor out?
-export const useNode = <T = any>(graph: Graph, id?: string, timeout?: number): Node<T> | undefined => {
-  const [nodeState, setNodeState] = useState<Node<T> | undefined>(id ? graph.findNode(id, false) : undefined);
+// TODO(wittjosiah): Factor out to @dxos/app-graph/react.
+export const useNode = <T = any>(graph: ReadableGraph, id?: string): Node<T> | undefined => {
+  return Option.getOrElse(useRxValue(graph.node(id ?? '')), () => undefined);
+};
 
-  useEffect(() => {
-    if (!id && nodeState) {
-      setNodeState(undefined);
-    }
+export const useConnections = (graph: ReadableGraph, id?: string, relation?: Relation): Node[] => {
+  return useRxValue(graph.connections(id ?? '', relation));
+};
 
-    if (nodeState?.id === id || !id) {
-      return;
-    }
-
-    // Set timeout did not seem to effectively not block the UI thread.
-    const frame = requestAnimationFrame(async () => {
-      try {
-        const node = await graph.waitForNode(id, timeout);
-        if (node) {
-          setNodeState(node);
-        }
-      } catch {
-        // TODO(ZaymonFC): This leaves the resolved node in an invalid state in the case of a timeout.
-      }
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [graph, id, timeout, nodeState?.id]);
-
-  return nodeState;
+export const useActions = (graph: ReadableGraph, id?: string): Node[] => {
+  return useRxValue(graph.actions(id ?? ''));
 };

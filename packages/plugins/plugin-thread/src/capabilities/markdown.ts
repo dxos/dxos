@@ -2,17 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 
 import { ThreadCapabilities } from './capabilities';
 import { threads } from '../extensions';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(MarkdownCapabilities.Extensions, [
     ({ document: doc }) => {
-      const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-      const { state } = context.requestCapability(ThreadCapabilities.MutableState);
+      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+      const { state } = context.getCapability(ThreadCapabilities.MutableState);
       return threads(state, doc, dispatch);
     },
   ]);

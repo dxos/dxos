@@ -6,7 +6,7 @@ import {
   contributes,
   Capabilities,
   createResolver,
-  type PluginsContext,
+  type PluginContext,
   createIntent,
   LayoutAction,
 } from '@dxos/app-framework';
@@ -20,7 +20,7 @@ import { Filter } from '@dxos/react-client/echo';
 
 import { AutomationAction } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,

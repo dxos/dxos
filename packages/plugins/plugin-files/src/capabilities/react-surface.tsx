@@ -3,7 +3,7 @@
 //
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useCapability, type PluginContext } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 
 import { FileCapabilities } from './capabilities';
@@ -12,7 +12,7 @@ import { FILES_PLUGIN } from '../meta';
 import { type FilesSettingsProps, type LocalFile } from '../types';
 import { isLocalFile } from '../util';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${FILES_PLUGIN}/article`,
@@ -35,7 +35,7 @@ export default (context: PluginsContext) =>
       role: 'status',
       filter: (data): data is any => {
         const settings = context
-          .requestCapability(Capabilities.SettingsStore)
+          .getCapability(Capabilities.SettingsStore)
           .getStore<FilesSettingsProps>(FILES_PLUGIN)!.value;
         return settings.autoExport;
       },

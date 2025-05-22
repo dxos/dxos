@@ -9,12 +9,13 @@ import { type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
+import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
+import { useBreakpoints } from '../../hooks';
 import { parseEntryId } from '../../layout';
 import { DECK_PLUGIN } from '../../meta';
 import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart, type LayoutMode } from '../../types';
-import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 const MAX_COMPANIONS = 5;
@@ -65,7 +66,7 @@ export const PlankHeading = memo(
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
         // Load actions for the node.
-        node && graph.actions(node);
+        node && graph.expand(node.id);
       });
 
       return () => cancelAnimationFrame(frame);
@@ -78,6 +79,7 @@ export const PlankHeading = memo(
         solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
+        fullscreen: !isCompanionNode,
         companion: !isCompanionNode && companions && companions.length > 0,
       }),
       [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
@@ -90,7 +92,7 @@ export const PlankHeading = memo(
       } else if (variant) {
         return [];
       } else {
-        return [actions, graph.actions(node)].filter((a) => a.length > 0);
+        return [actions, graph.getActions(node.id)].filter((a) => a.length > 0);
       }
     }, [actions, node, variant, graph]);
 
@@ -148,12 +150,17 @@ export const PlankHeading = memo(
         classNames={[
           'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout',
           part === 'solo' ? soloInlinePadding : 'pli-1',
-          layoutMode === 'solo--fullscreen' &&
-            'opacity-0 border-transparent hover:border-separator hover:opacity-100 transition-[border-color,opacity]',
+          ...(layoutMode === 'solo--fullscreen'
+            ? [
+                hoverableControls,
+                hoverableFocusedWithinControls,
+                '[&>*]:transition-opacity [&>*]:opacity-[--controls-opacity] bg-transparent border-transparent transition-[background-color,border-color] hover-hover:hover:bg-headerSurface focus-within:bg-headerSurface hover-hover:hover:border-separator focus-within:border-separator',
+              ]
+            : []),
         ]}
         data-plank-heading
       >
-        {companions && isCompanionNode ? (
+        {companions && isCompanionNode /* TODO(thure): This is a tablist, it should be implemented as such. */ ? (
           <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-thin flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton

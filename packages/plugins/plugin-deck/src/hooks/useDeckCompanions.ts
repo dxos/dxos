@@ -3,7 +3,7 @@
 //
 
 import { type Label, useAppGraph } from '@dxos/app-framework';
-import { type Node } from '@dxos/plugin-graph';
+import { ROOT_ID, useConnections, type Node } from '@dxos/plugin-graph';
 import { byPosition, type Position } from '@dxos/util';
 
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '../types';
@@ -27,6 +27,7 @@ export type DeckCompanion = Node<
 
 export const useDeckCompanions = (): DeckCompanion[] => {
   const { graph } = useAppGraph();
-  const companions = graph.nodes(graph.root, { type: DECK_COMPANION_TYPE }) as DeckCompanion[];
+  const connections = useConnections(graph, ROOT_ID);
+  const companions = connections.filter((node) => node.type === DECK_COMPANION_TYPE) as DeckCompanion[];
   return companions.toSorted((a, b) => byPosition(a.properties, b.properties));
 };
