@@ -101,7 +101,7 @@ describe('Queries', () => {
       const objB = db.add(live(Expando, { label: 'obj b', ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
-      const { objects } = await db.query(Filter.type(Expando, { ref: objA })).run();
+      const { objects } = await db.query(Filter.type(Expando, { ref: Ref.make(objA) })).run();
       expect(objects).toEqual([objB]);
     });
 
