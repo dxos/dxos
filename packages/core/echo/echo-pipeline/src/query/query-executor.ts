@@ -2,7 +2,7 @@ import type { DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
 import { DatabaseDirectory, ObjectStructure, QueryAST } from '@dxos/echo-protocol';
 import type { FindResult, Indexer } from '@dxos/indexing';
-import { PublicKey, type ObjectId, type SpaceId } from '@dxos/keys';
+import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import type { AutomergeHost } from '../automerge';
 import type { QueryPlan } from './plan';
@@ -56,15 +56,28 @@ export type ExecutionTrace = {
   children: ExecutionTrace[];
 };
 
-const makeEmptyExecutionTrace = (): ExecutionTrace => ({
-  name: 'Empty',
-  details: '',
-  objectCount: 0,
-  documentsLoaded: 0,
-  indexHits: 0,
-  indexQueryTime: 0,
-  documentLoadTime: 0,
-  children: [],
+export const ExecutionTrace = Object.freeze({
+  makeEmpty: (): ExecutionTrace => ({
+    name: 'Empty',
+    details: '',
+    objectCount: 0,
+    documentsLoaded: 0,
+    indexHits: 0,
+    indexQueryTime: 0,
+    documentLoadTime: 0,
+    children: [],
+  }),
+  format: (trace: ExecutionTrace): string => {
+    const go = (trace: ExecutionTrace, indent: number): string => {
+      return [
+        `${' '.repeat(indent)} - ${trace.name}(${trace.details})`,
+        `${' '.repeat(indent)}   objects: ${trace.objectCount}  docs: ${trace.documentsLoaded}  index hits: ${trace.indexHits}  index query time: ${trace.indexQueryTime.toFixed(0)}ms  document load time: ${trace.documentLoadTime.toFixed(0)}ms`,
+        '',
+        ...trace.children.map((child) => go(child, indent + 2)),
+      ].join('\n');
+    };
+    return go(trace, 0);
+  },
 });
 
 type StepExecutionResult = {
@@ -85,7 +98,7 @@ export class QueryExecutor extends Resource {
   private readonly _reactivity: QueryReactivity;
 
   private _plan: QueryPlan.Plan;
-  private _trace: ExecutionTrace = makeEmptyExecutionTrace();
+  private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: Item[] = [];
 
   constructor(options: QueryExecutorOptions) {
@@ -149,10 +162,11 @@ export class QueryExecutor extends Resource {
           workingSet[index].documentId !== item.documentId,
       );
 
-    log.info('Query execution result', {
-      changed,
-      trace,
-    });
+    // log.info('Query execution result', {
+    //   changed,
+    //   trace: ExecutionTrace.format(trace),
+    // });
+    console.log(ExecutionTrace.format(trace));
 
     return {
       changed,
@@ -160,7 +174,7 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: Item[]): Promise<StepExecutionResult> {
-    const trace = makeEmptyExecutionTrace();
+    const trace = ExecutionTrace.makeEmpty();
     for (const step of plan.steps) {
       const result = await this._execStep(step, workingSet);
       workingSet = result.workingSet;
@@ -171,12 +185,12 @@ export class QueryExecutor extends Resource {
 
   private async _execStep(step: QueryPlan.Step, workingSet: Item[]): Promise<StepExecutionResult> {
     if (this._ctx.disposed) {
-      return { workingSet, trace: makeEmptyExecutionTrace() };
+      return { workingSet, trace: ExecutionTrace.makeEmpty() };
     }
 
     switch (step._tag) {
       case 'ClearWorkingSetStep':
-        return { workingSet: [], trace: makeEmptyExecutionTrace() };
+        return { workingSet: [], trace: ExecutionTrace.makeEmpty() };
       case 'SelectStep':
         return this._execSelectStep(step, workingSet);
       case 'FilterStep':
@@ -196,7 +210,7 @@ export class QueryExecutor extends Resource {
     workingSet = [...workingSet];
 
     const trace: ExecutionTrace = {
-      ...makeEmptyExecutionTrace(),
+      ...ExecutionTrace.makeEmpty(),
       name: 'Select',
       details: JSON.stringify(step.selector),
     };
@@ -272,7 +286,7 @@ export class QueryExecutor extends Resource {
     return {
       workingSet: result,
       trace: {
-        ...makeEmptyExecutionTrace(),
+        ...ExecutionTrace.makeEmpty(),
         name: 'Filter',
         details: JSON.stringify(step.filter),
         objectCount: result.length,
@@ -289,7 +303,7 @@ export class QueryExecutor extends Resource {
     return {
       workingSet: result,
       trace: {
-        ...makeEmptyExecutionTrace(),
+        ...ExecutionTrace.makeEmpty(),
         name: 'FilterDeleted',
         details: step.mode,
         objectCount: result.length,
@@ -299,7 +313,7 @@ export class QueryExecutor extends Resource {
 
   private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: Item[]): Promise<StepExecutionResult> {
     const trace: ExecutionTrace = {
-      ...makeEmptyExecutionTrace(),
+      ...ExecutionTrace.makeEmpty(),
       name: 'Traverse',
       details: JSON.stringify(step.traversal),
     };
@@ -315,7 +329,7 @@ export class QueryExecutor extends Resource {
     const resultSets = await Promise.all(step.plans.map((plan) => this._execPlan(plan, [...workingSet])));
 
     const trace: ExecutionTrace = {
-      ...makeEmptyExecutionTrace(),
+      ...ExecutionTrace.makeEmpty(),
       name: 'Union',
     };
 
