@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
+import { type ChangeSet, EditorState, type Extension } from '@codemirror/state';
 import React from 'react';
 
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
@@ -188,19 +189,76 @@ export const Lists = {
   ),
 };
 
+//
+// Bullet List
+//
+
 export const BulletList = {
   render: () => <DefaultStory text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
 };
+
+//
+// Ordered List
+//
 
 export const OrderedList = {
   render: () => <DefaultStory text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
+//
+// Task List
+// TODO(burdon): Mode where each line must start with `- [ ]`; prevent backspace. Menu to add links.
+//
+
+const taskListBackspace: Extension = EditorState.transactionFilter.of((tr) => {
+  if (!tr.docChanged) {
+    return tr;
+  }
+
+  const changes = tr.changes;
+
+  const additionalChanges: ChangeSet[] = [];
+  changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+    // console.log(fromA, toA, fromB, toB);
+  });
+
+  if (additionalChanges.length > 0) {
+    return [tr, { changes: additionalChanges }];
+  }
+
+  // Check if we're deleting a task marker
+  // const from = changes.from;
+  // const doc = tr.startState.doc;
+  // const line = doc.lineAt(from);
+  // const lineText = line.text;
+
+  // if (lineText.match(/^- \[ \]/) && from >= line.from && from <= line.from + 6) {
+  //   // Delete the entire line
+  //   return [
+  //     tr,
+  //     {
+  //       changes: { from: line.from, to: line.to + 1 },
+  //     },
+  //   ];
+  // }
+
+  return tr;
+});
+
 export const TaskList = {
   render: () => (
-    <DefaultStory text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />
+    <DefaultStory
+      text={str('- [ ] A\n  - [ ] B')}
+      // text={str(content.tasks, content.footer)}
+      extensions={[decorateMarkdown(), taskListBackspace]}
+      debug='raw+tree'
+    />
   ),
 };
+
+//
+// Table
+//
 
 export const Table = {
   render: () => <DefaultStory text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
