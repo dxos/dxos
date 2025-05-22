@@ -164,7 +164,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
     const visited = new Set<string>();
 
     async function* getObjectsFromHandle(handle: DocHandle<SpaceDoc>): AsyncGenerator<ObjectSnapshot[]> {
-      if (visited.has(handle.documentId)) {
+      if (visited.has(handle.documentId) || !handle.isReady()) {
         return;
       }
       const doc = handle.doc()!;

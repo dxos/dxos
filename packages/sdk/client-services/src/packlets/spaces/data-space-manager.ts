@@ -178,8 +178,9 @@ export class DataSpaceManager extends Resource {
           Array.from(this._spaces.values()).map(async (space) => {
             const rootUrl = space.automergeSpaceState.rootUrl;
             const rootHandle = rootUrl
-              ? await this._echoHost.automergeRepo.find<Doc<SpaceDoc>>(rootUrl as AutomergeUrl)
+              ? await this._echoHost.automergeRepo.find<Doc<SpaceDoc>>(rootUrl as AutomergeUrl, FIND_PARAMS)
               : undefined;
+            await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
 
             const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
@@ -320,6 +321,10 @@ export class DataSpaceManager extends Resource {
     }
     switch (space.databaseRoot.getVersion()) {
       case SpaceDocVersion.CURRENT: {
+        if (!space.databaseRoot.handle.isReady()) {
+          log.warn('waiting for space root to be ready', { spaceId: space.id });
+          await space.databaseRoot.handle.whenReady();
+        }
         const [_, properties] = findInlineObjectOfType(space.databaseRoot.doc()!, TYPE_PROPERTIES) ?? [];
         return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
       }

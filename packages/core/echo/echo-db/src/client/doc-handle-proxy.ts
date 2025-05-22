@@ -3,13 +3,7 @@
 //
 
 import { next as A, type Doc } from '@automerge/automerge';
-import {
-  stringifyAutomergeUrl,
-  type UrlHeads,
-  type DocHandleOptions,
-  type DocumentId,
-  encodeHeads,
-} from '@automerge/automerge-repo';
+import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@automerge/automerge-repo';
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
@@ -102,7 +96,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     });
   }
 
-  changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): UrlHeads | undefined {
+  changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
     invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -115,7 +109,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       patches: newHeads ? A.diff(this._doc, headsBefore, newHeads) : [],
       patchInfo: { before, after: this._doc, source: 'change' },
     });
-    return newHeads ? encodeHeads(newHeads) : undefined;
+    return newHeads ?? undefined;
   }
 
   update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {

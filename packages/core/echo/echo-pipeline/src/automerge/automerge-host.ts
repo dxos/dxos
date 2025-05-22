@@ -221,7 +221,7 @@ export class AutomergeHost extends Resource {
       handle = this._repo.handles[documentId as DocumentId];
     }
     if (!handle) {
-      handle = await this._repo.find(documentId as DocumentId);
+      handle = await this._repo.find(documentId as DocumentId, FIND_PARAMS);
     }
 
     // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
@@ -301,15 +301,12 @@ export class AutomergeHost extends Resource {
     for (const documentId of documentIds) {
       log.info('re-indexing heads for document', { documentId });
       const handle = await this._repo.find(documentId, FIND_PARAMS);
-      if (handle.inState(['requesting'])) {
+      if (!handle.isReady()) {
         log.warn('document is not available locally, skipping', { documentId });
         continue; // Handle not available locally.
       }
 
-      const doc = handle.doc();
-      invariant(doc);
-
-      const heads = getHeads(doc);
+      const heads = handle.heads();
       const batch = this._db.batch();
       this._headsStore.setHeads(documentId, heads, batch);
       await batch.write();
@@ -340,7 +337,7 @@ export class AutomergeHost extends Resource {
 
   private async _beforeSave({ path, batch }: BeforeSaveParams) {
     const handle = this._repo.handles[path[0] as DocumentId];
-    if (!handle) {
+    if (!handle || !handle.isReady()) {
       return;
     }
     const doc = handle.doc();

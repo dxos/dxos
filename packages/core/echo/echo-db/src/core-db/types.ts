@@ -46,7 +46,7 @@ export type KeyPath = readonly (string | number)[];
 export interface IDocHandle<T = any> {
   doc(): Doc<T> | undefined;
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
-  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): UrlHeads | undefined;
+  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined;
   addListener(event: 'change', listener: () => void): void;
   removeListener(event: 'change', listener: () => void): void;
 }

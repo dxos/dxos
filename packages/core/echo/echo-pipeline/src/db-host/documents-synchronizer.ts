@@ -142,10 +142,11 @@ export class DocumentsSynchronizer extends Resource {
   private _getPendingChanges(documentId: DocumentId): Uint8Array | void {
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
-    const doc = syncState.handle.doc();
-    if (!doc) {
+    const handle = syncState.handle;
+    if (!handle || !handle.isReady() || !handle.doc()) {
       return;
     }
+    const doc = handle.doc();
     const mutation = syncState.lastSentHead ? A.saveSince(doc, syncState.lastSentHead) : A.save(doc);
     if (mutation.length === 0) {
       return;

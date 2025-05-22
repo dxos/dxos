@@ -37,7 +37,7 @@ export class DatabaseRoot {
   }
 
   get isLoaded(): boolean {
-    return !!this._rootHandle.doc();
+    return this._rootHandle.isReady();
   }
 
   get handle(): DocHandle<SpaceDoc> {
@@ -45,7 +45,7 @@ export class DatabaseRoot {
   }
 
   doc(): A.Doc<SpaceDoc> | null {
-    return this._rootHandle.doc() ?? null;
+    return this._rootHandle.isReady() ? this._rootHandle.doc() : null;
   }
 
   getVersion(): SpaceDocVersion | null {
