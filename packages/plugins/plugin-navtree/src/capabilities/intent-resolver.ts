@@ -17,11 +17,11 @@ export default (context: PluginContext) =>
       filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Expose.fields.input> =>
         Schema.is(LayoutAction.Expose.fields.input)(data),
       resolve: async ({ subject }) => {
-        // const { graph } = context.getCapability(Capabilities.AppGraph);
+        const { graph } = context.getCapability(Capabilities.AppGraph);
         const { getItem, setItem } = context.getCapability(NavTreeCapabilities.State);
 
         try {
-          const path: string[] = []; // await graph.waitForPath({ target: subject }, { timeout: 1_000 });
+          const path = await graph.waitForPath({ target: subject }, { timeout: 1_000 });
           [...Array(path.length)].forEach((_, index) => {
             const subpath = path.slice(0, index);
             const value = getItem(subpath);
