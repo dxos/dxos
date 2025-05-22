@@ -16,7 +16,7 @@ const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 export namespace MarkdownAction {
   export class Create extends Schema.TaggedClass<Create>()(MARKDOWN_ACTION, {
     input: Schema.Struct({
-      spaceId: Type.SpaceIdSchema,
+      spaceId: Type.SpaceId,
       name: Schema.optional(Schema.String),
       content: Schema.optional(Schema.String),
     }),

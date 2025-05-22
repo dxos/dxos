@@ -39,12 +39,13 @@ import { useCompanions } from '../../util';
 const UNKNOWN_ID = 'unknown_id';
 
 type PlankComponentProps = {
+  layoutMode: LayoutMode;
   id: string;
   part: ResolvedPart;
   path?: string[];
   order?: number;
   active?: string[];
-  layoutMode: LayoutMode;
+  // TODO(burdon): Change to role?
   companioned?: 'primary' | 'companion';
   node?: Node;
   primary?: Node;
@@ -54,12 +55,12 @@ type PlankComponentProps = {
 
 const PlankComponent = memo(
   ({
+    layoutMode,
     id,
     part,
     path,
     order,
     active,
-    layoutMode,
     companioned,
     node,
     primary,
@@ -68,9 +69,7 @@ const PlankComponent = memo(
   }: PlankComponentProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
-    const rootElement = useRef<HTMLDivElement | null>(null);
     const canResize = layoutMode === 'deck';
-    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
 
     const attendableAttrs = useAttendableAttributes(primary?.id ?? id);
     const index = active ? active.findIndex((entryId) => entryId === id) : 0;
@@ -78,10 +77,13 @@ const PlankComponent = memo(
     const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
     const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
+    const rootElement = useRef<HTMLDivElement | null>(null);
+
     const { variant } = parseEntryId(id);
     const sizeKey = `${id.split('+')[0]}${variant ? `${ATTENDABLE_PATH_SEPARATOR}${variant}` : ''}`;
     const size = deck.plankSizing[sizeKey] as number | undefined;
-    const setSize = useCallback(
+
+    const handleSizeChange = useCallback(
       debounce((nextSize: number) => {
         return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: sizeKey, size: nextSize }));
       }, 200),
@@ -128,6 +130,10 @@ const PlankComponent = memo(
     // TODO(wittjosiah): Change prop to accept a component.
     const placeholder = useMemo(() => <PlankLoading />, []);
 
+    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
+
+    // NOTE(thure): The result of any `mx` call is always `className` without the ‘s’ to signal its compatibility with
+    //   HTML primitives.
     const className = mx(
       'attention-surface relative',
       isSolo && mainIntrinsicSize,
@@ -137,8 +143,6 @@ const PlankComponent = memo(
       part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
       part.startsWith('solo-') && 'row-span-2 grid-rows-subgrid min-is-0',
       part === 'solo-companion' && '!border-separator border-is',
-      layoutMode === 'solo--fullscreen' &&
-        '!transition-[margin-block-start,inline-size] -mbs-[--rail-action] has-[[data-plank-heading]:hover]:mbs-0',
     );
 
     return (
@@ -151,7 +155,7 @@ const PlankComponent = memo(
           : {
               item: { id },
               size,
-              onSizeChange: setSize,
+              onSizeChange: handleSizeChange,
               classNames: className,
               order,
               role: 'article',
@@ -186,56 +190,73 @@ const PlankComponent = memo(
         ) : (
           <PlankError id={id} part={part} />
         )}
+
         {canResize && <StackItem.ResizeHandle />}
       </Root>
     );
   },
 );
 
-export type PlankProps = Pick<PlankComponentProps, 'part' | 'path' | 'order' | 'active' | 'layoutMode' | 'settings'> & {
+export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
   id?: string;
   companionId?: string;
 };
 
-export const Plank = ({ id = UNKNOWN_ID, ...props }: PlankProps) => {
+// TODO(burdon): Factor out conditional rendering.
+//   Remove this wrapper component and render the entire set of planks in the deck with conditional visibility
+//   to obviate mounting and unmounting when switching between solo and companion mode?
+// NOTE(thure, in reply): Whether any surface should be rendered and hidden is a performance matter — remember that
+//  article surfaces contain full experiences, so being able to unmount them will yield relatively large performance
+//  benefits. I think where we anticipate users will definitely want to quickly switch between showing and hiding entire
+//  articles, over the (again probably large) performance benefit that unmounting them would confer, we can mount and
+//  hide them, but I think that scenario in its most unambiguous form is probably rare. You could extrapolate
+//  the scenario to include all “potential” planks such as companions, which we could keep mounted and hidden, but I
+//  don’t think the resulting performance would be acceptable. I think the real issue is “perceived performance” which
+//  has mitigations that are in between mounting and un-mounting since both of those have tradeoffs; we may need one or more
+//  “partially-mounted” experiences, like loading skeletons at the simple end, or screenshots of “sleeping” planks at
+//  the advanced end.
+export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
-  const currentCompanion = companions.find(({ id }) => id === props.companionId);
+  const currentCompanion = companions.find(({ id }) => id === companionId);
 
-  if (props.companionId && currentCompanion) {
-    const Root = props.part === 'solo' ? SplitFrame : Fragment;
-    return (
-      <Root>
+  return (
+    <Container solo={props.part === 'solo'} companion={!!companionId && !!currentCompanion}>
+      <PlankComponent
+        id={id}
+        node={node}
+        companioned={companionId ? 'primary' : undefined}
+        companions={companionId ? [] : companions}
+        {...props}
+        {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
+      />
+      {companionId && currentCompanion && (
         <PlankComponent
-          id={id}
-          node={node}
-          companioned='primary'
-          {...props}
-          {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
-        />
-        <PlankComponent
-          id={props.companionId}
+          id={companionId}
           node={currentCompanion}
           primary={node}
           companions={companions}
           companioned='companion'
           {...props}
-          {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: props.order! + 1 })}
+          {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
         />
-      </Root>
-    );
-  } else {
-    return <PlankComponent id={id} node={node} companions={companions} {...props} />;
-  }
-};
+      )}
+    </Container>
+  );
+});
 
-const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
+const Container = ({ children, solo, companion }: PropsWithChildren<{ solo: boolean; companion: boolean }>) => {
   const sizeAttrs = useMainSize();
+  if (!solo) {
+    return children;
+  }
+
+  // TODO(burdon): Make resizable.
   return (
     <div
       role='none'
-      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0', railGridHorizontal, mainIntrinsicSize)}
+      className={mx('absolute inset-0 grid', companion && 'grid-cols-[1fr_1fr]', railGridHorizontal, mainIntrinsicSize)}
       {...sizeAttrs}
     >
       {children}
