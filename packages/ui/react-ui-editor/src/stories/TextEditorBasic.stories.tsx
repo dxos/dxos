@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import { openSearchPanel } from '@codemirror/search';
-import { type ChangeSet, EditorState, type Extension } from '@codemirror/state';
+import { type ChangeSpec, EditorState, type Extension } from '@codemirror/state';
 import React from 'react';
 
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
@@ -207,40 +207,59 @@ export const OrderedList = {
 
 //
 // Task List
-// TODO(burdon): Mode where each line must start with `- [ ]`; prevent backspace. Menu to add links.
 //
 
-const taskListBackspace: Extension = EditorState.transactionFilter.of((tr) => {
+/**
+ * NOTE: Task markers are atomic so will be deleted when backspace is pressed.
+ */
+// TODO(burdon): Toggle list/task mode.
+// TODO(burdon): Convert to task object and insert link.
+// TOOD(burdon): Can we support continuation lines and rich formatting?
+const strictList: Extension = EditorState.transactionFilter.of((tr) => {
+  // TODO(burdon): Don't allow cursor before marker.
   if (!tr.docChanged) {
+    console.log(tr.selection);
     return tr;
   }
 
-  const changes = tr.changes;
+  const changes: ChangeSpec[] = [];
+  tr.changes.iterChanges((fromA, toA, fromB, toB, insert) => {
+    const line = tr.startState.doc.lineAt(fromA);
 
-  const additionalChanges: ChangeSet[] = [];
-  changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
-    // console.log(fromA, toA, fromB, toB);
+    // NOTE: CM inserts 2 or 6 spaces when deleting a list or task marker to create a continuation.
+    // - [ ] <- backspace here deletes the task marker.
+    // - [ ] <- backspace here inserts 6 spaces (creates continuation).
+    //   - [ ] <- backspace here deletes the task marker.
+
+    const isTaskMarker = line.text.match(/^\s*- (\[ \]|\[x\])? /);
+    if (isTaskMarker) {
+      // Detect replacement of task marker with continuation.
+      if (fromB === line.from && toB === line.to) {
+        changes.push({ from: line.from - 1, to: toA });
+        return;
+      }
+
+      // Detect deletion of marker; or pressing ENTER on empty line.
+      if (fromB === toB) {
+        if (toA === line.to) {
+          const line = tr.state.doc.lineAt(fromA);
+          if (line.text.match(/^\s*$/)) {
+            if (line.from === 0) {
+              // Don't delete first line.
+              changes.push({ from: 0, to: 0 });
+            } else {
+              // Delete indent and marker.
+              changes.push({ from: line.from - 1, to: toA });
+            }
+          }
+        }
+      }
+    }
   });
 
-  if (additionalChanges.length > 0) {
-    return [tr, { changes: additionalChanges }];
+  if (changes.length > 0) {
+    return [{ changes }];
   }
-
-  // Check if we're deleting a task marker
-  // const from = changes.from;
-  // const doc = tr.startState.doc;
-  // const line = doc.lineAt(from);
-  // const lineText = line.text;
-
-  // if (lineText.match(/^- \[ \]/) && from >= line.from && from <= line.from + 6) {
-  //   // Delete the entire line
-  //   return [
-  //     tr,
-  //     {
-  //       changes: { from: line.from, to: line.to + 1 },
-  //     },
-  //   ];
-  // }
 
   return tr;
 });
@@ -248,9 +267,10 @@ const taskListBackspace: Extension = EditorState.transactionFilter.of((tr) => {
 export const TaskList = {
   render: () => (
     <DefaultStory
-      text={str('- [ ] A\n  - [ ] B')}
+      text={str('- [ ] A\n- [x] B')}
+      // text={str('- A\n- B')}
       // text={str(content.tasks, content.footer)}
-      extensions={[decorateMarkdown(), taskListBackspace]}
+      extensions={[decorateMarkdown(), strictList]}
       debug='raw+tree'
     />
   ),

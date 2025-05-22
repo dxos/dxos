@@ -285,7 +285,6 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
         // Add line decoration for the continuation indent.
         // TODO(burdon): Bug if indentation is more than one indentation unit (e.g., 4 spaces) from the previous line.
-
         deco.add(
           line.from,
           line.from,
