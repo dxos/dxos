@@ -116,9 +116,8 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
 
     return (
       <DialogContentPrimitive
-        // NOTE: Radix warning unless set.
+        // NOTE: Radix warning unless set to undefined.
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
-        // TODO(burdon): This doesn't seem to resolve the issue.
         aria-describedby={undefined}
         {...props}
         className={tx(
