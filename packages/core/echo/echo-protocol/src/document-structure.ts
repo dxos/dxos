@@ -94,7 +94,9 @@ export const DatabaseDirectory = Object.freeze({
  * Representation of an ECHO object in an AM document.
  */
 export type ObjectStructure = {
+  // TODO(dmaretskyi): Missing in some cases.
   system: ObjectSystem;
+  
   meta: ObjectMeta;
   /**
    * User-defined data.
