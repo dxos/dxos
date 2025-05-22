@@ -18,7 +18,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
-import { filterMatchObject } from '@dxos/echo-pipeline';
+import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { isTrivialSelectionQuery, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';

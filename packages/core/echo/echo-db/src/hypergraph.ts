@@ -40,7 +40,7 @@ import {
   normalizeQuery,
 } from './query';
 import { getTargetSpacesForQuery, isTrivialSelectionQuery } from './query/util';
-import { filterMatchObject } from '@dxos/echo-pipeline';
+import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 
 /**
  * Manages cross-space database interactions.

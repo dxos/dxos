@@ -7,7 +7,7 @@ import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dx
 import type { AutomergeHost } from '../automerge';
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
-import { filterMatchObject } from './filter-match';
+import { filterMatchObject } from '../filter';
 import { objectPointerCodec } from '@dxos/protocols';
 import { raise } from '@dxos/debug';
 import { createIdFromSpaceKey } from '../common';
