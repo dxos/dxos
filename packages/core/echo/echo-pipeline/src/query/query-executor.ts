@@ -256,7 +256,8 @@ export class QueryExecutor extends Resource {
     // NOTE: Doing insertion after execution to ensure deterministic results. Probably not needed.
     for (const resultSet of resultSets) {
       for (const item of resultSet.workingSet) {
-        results.set(item.objectId, item);
+        // Could be duplicate object ids in different spaces or in different epochs of the same space.
+        results.set(`${item.spaceId}:${item.documentId}:${item.objectId}`, item);
       }
       trace.children.push(resultSet.trace);
     }
