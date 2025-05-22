@@ -78,7 +78,10 @@ export class IndexSchema extends Resource implements Index {
 
     const results: FindResult[] = [];
     for (const typename of filter.typenames) {
-      if (typename === EXPANDO_TYPENAME) {
+      if (
+        typename === EXPANDO_TYPENAME ||
+        (DXN.isDXNString(typename) && DXN.parse(typename).asTypeDXN()?.type === EXPANDO_TYPENAME)
+      ) {
         results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 0 })));
       } else if (DXN.isDXNString(typename)) {
         const dxn = DXN.parse(typename);
