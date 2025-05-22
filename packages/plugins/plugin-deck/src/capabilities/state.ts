@@ -10,7 +10,7 @@ import { type SidebarState } from '@dxos/react-ui';
 
 import { DeckCapabilities } from './capabilities';
 import { DECK_PLUGIN } from '../meta';
-import { getMode, type DeckState, type DeckPluginState, defaultDeck } from '../types';
+import { getMode, type DeckPluginState, defaultDeck, type DeckState } from '../types';
 
 const boolean = /true|false/;
 
@@ -29,7 +29,7 @@ const migrateSidebarState = () => {
   });
 };
 
-export default () => {
+const DeckStateFactory = () => {
   migrateSidebarState();
 
   const state = new LocalStorageStore<DeckPluginState>(DECK_PLUGIN, {
@@ -100,3 +100,5 @@ export default () => {
     contributes(Capabilities.Layout, layout),
   ];
 };
+
+export default DeckStateFactory;
