@@ -712,8 +712,8 @@ importers:
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-icons
       '@effect/platform':
-        specifier: 0.75.1
-        version: 0.75.1(effect@3.14.21)
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -2330,8 +2330,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.75.1
-        version: 0.75.1(effect@3.14.21)
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       effect:
         specifier: 3.14.21
         version: 3.14.21
@@ -4197,8 +4197,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.75.1
-        version: 0.75.1(effect@3.14.21)
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -5476,9 +5476,6 @@ importers:
       '@xiechao/codemirror-lang-handlebars':
         specifier: 1.0.4
         version: 1.0.4
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1
@@ -5513,6 +5510,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -5522,6 +5525,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       openapi-types:
         specifier: ^12.1.3
         version: 12.1.3
@@ -5610,9 +5616,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-script':
-        specifier: workspace:*
-        version: link:../plugin-script
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -5637,9 +5640,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -5650,12 +5650,21 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -5826,6 +5835,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6073,9 +6088,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -6098,6 +6110,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6110,6 +6128,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6216,6 +6237,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6536,9 +6563,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -6552,6 +6576,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6561,6 +6591,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6585,9 +6618,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
     devDependencies:
       '@dxos/react-client':
         specifier: workspace:*
@@ -6595,6 +6625,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6655,9 +6691,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: ^9.24.2
         version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -6677,6 +6710,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6689,6 +6728,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6812,9 +6854,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      effect:
-        specifier: ^3.13.3
-        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -6840,6 +6879,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6852,6 +6897,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7033,9 +7081,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7049,12 +7094,21 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7348,6 +7402,12 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       effect:
         specifier: ^3.13.3
         version: 3.14.21
@@ -7507,9 +7567,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
@@ -7586,6 +7643,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7674,6 +7737,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7758,9 +7827,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      effect:
-        specifier: ^3.13.3
-        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -7777,6 +7843,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7789,6 +7861,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7852,9 +7927,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      effect:
-        specifier: ^3.13.3
-        version: 3.14.21
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
@@ -7898,6 +7970,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7913,6 +7991,9 @@ importers:
       '@types/reveal.js':
         specifier: ^5.0.3
         version: 5.0.3
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8074,9 +8155,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      effect:
-        specifier: ^3.13.3
-        version: 3.14.21
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -8090,6 +8168,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8099,6 +8183,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8282,9 +8369,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      effect:
-        specifier: ^3.13.3
-        version: 3.14.21
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -8313,6 +8397,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8325,6 +8415,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8397,9 +8490,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
@@ -8419,6 +8509,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8428,6 +8524,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8593,9 +8692,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      effect:
-        specifier: ^3.13.3
-        version: 3.14.21
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8633,6 +8729,12 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@lezer/generator':
         specifier: ^1.7.1
         version: 1.7.1
@@ -8651,6 +8753,9 @@ importers:
       '@types/react-window':
         specifier: ^1.8.8
         version: 1.8.8
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8947,6 +9052,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9247,9 +9358,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      effect:
-        specifier: ^3.13.3
-        version: 3.14.21
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -9260,12 +9368,21 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9418,9 +9535,6 @@ importers:
       '@types/lodash.debounce':
         specifier: ^4.0.9
         version: 4.0.9
-      effect:
-        specifier: ^3.13.3
-        version: 3.14.21
       lodash.debounce:
         specifier: ^4.0.8
         version: 4.0.8
@@ -9434,12 +9548,21 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: ^3.13.3
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9548,9 +9671,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -9567,6 +9687,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9579,6 +9705,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9636,9 +9765,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      effect:
-        specifier: 3.14.21
-        version: 3.14.21
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -9655,12 +9781,21 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9821,6 +9956,12 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       effect:
         specifier: ^3.13.3
         version: 3.14.21
@@ -10146,6 +10287,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10195,6 +10342,9 @@ importers:
         specifier: ^14.1.1
         version: 14.2.0
     devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -10210,6 +10360,12 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10219,6 +10375,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -11739,8 +11898,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.75.1
-        version: 0.75.1(effect@3.14.21)
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       chess.js:
         specifier: ^1.0.0
         version: 1.2.0
@@ -11768,7 +11927,7 @@ importers:
         version: link:../../common/storybook-utils
       '@effect/ai':
         specifier: 0.8.0
-        version: 0.8.0(@effect/platform@0.75.1(effect@3.14.21))(effect@3.14.21)
+        version: 0.8.0(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -12834,12 +12993,21 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@effect-rx/rx-react':
+        specifier: ^0.34.1
+        version: 0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.80.12
+        version: 0.80.12(effect@3.14.21)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -16157,16 +16325,29 @@ packages:
     peerDependencies:
       react: ~18.2.0
 
+  '@effect-rx/rx-react@0.34.2':
+    resolution: {integrity: sha512-0dUJtv5kxPRs6UDRhRPQBE6dpKux5/eM7V9Ezq13mDk/SdjctgAxb0Eio0Hh3jxhICKQqh3ZKNwY/GG4xPLJ0Q==}
+    peerDependencies:
+      effect: ^3.14.12
+      react: ~18.2.0
+      scheduler: '*'
+
+  '@effect-rx/rx@0.39.2':
+    resolution: {integrity: sha512-iydBfHKbkuXF2hqD+2ZwYvDe+3zawD+kv/tACnO6l5dvqJksVVq41MWfbvCzehv5We9OipafNC/GWzarMDWSKw==}
+    peerDependencies:
+      '@effect/platform': ^0.82.0
+      effect: ^3.15.0
+
   '@effect/ai@0.8.0':
     resolution: {integrity: sha512-IqlMIL5gurllSvQNMBFIhWAJDs/W5qt98nbM+80QQDnvhCz34PmIKyaq5GaLwLk/RBTBALXSnQpTBSme38qigg==}
     peerDependencies:
       '@effect/platform': ^0.75.0
       effect: ^3.12.6
 
-  '@effect/platform@0.75.1':
-    resolution: {integrity: sha512-YIrlMiRm4dGDaMtCwiLOwDK5AqtVIWGx4MkqBmYhQTqnthDdyg4j7rxbPvzaedsnn6EEaE7kIIKJVolBQsf3qw==}
+  '@effect/platform@0.80.12':
+    resolution: {integrity: sha512-JeQSGeUyLrVrgS4vYwLTshFYlU+rsXXKJOzr1tnj6i62qGPz2nIaLxTMhJNmr4Vo9vCzIphyvGr0hy0gtwNKQg==}
     peerDependencies:
-      effect: ^3.12.7
+      effect: ^3.14.12
 
   '@effect/schema@0.75.5':
     resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
@@ -17745,6 +17926,36 @@ packages:
     resolution: {integrity: sha512-ireqJg7cw0tUn/JePDG8rAL7RyXgUKSDbjYdiygkrnye1WuKGLAWDBwF/ICwCwJ9iZBAF5caU8gSu+c34HLGdQ==}
     peerDependencies:
       three: '>= 0.159.0'
+
+  '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
+    resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@msgpackr-extract/msgpackr-extract-darwin-x64@3.0.3':
+    resolution: {integrity: sha512-mdzd3AVzYKuUmiWOQ8GNhl64/IoFGol569zNRdkLReh6LRLHOXxU4U8eq0JwaD8iFHdVGqSy4IjFL4reoWCDFw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@msgpackr-extract/msgpackr-extract-linux-arm64@3.0.3':
+    resolution: {integrity: sha512-YxQL+ax0XqBJDZiKimS2XQaf+2wDGVa1enVRGzEvLLVFeqa5kx2bWbtcSXgsxjQB7nRqqIGFIcLteF/sHeVtQg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@msgpackr-extract/msgpackr-extract-linux-arm@3.0.3':
+    resolution: {integrity: sha512-fg0uy/dG/nZEXfYilKoRe7yALaNmHoYeIoJuJ7KJ+YyU2bvY8vPv27f7UKhGRpY6euFYqEVhxCFZgAUNQBM3nw==}
+    cpu: [arm]
+    os: [linux]
+
+  '@msgpackr-extract/msgpackr-extract-linux-x64@3.0.3':
+    resolution: {integrity: sha512-cvwNfbP07pKUfq1uH+S6KJ7dT9K8WOE4ZiAcsrSes+UY55E/0jLYc+vq+DO7jlmqRb5zAggExKm0H7O/CBaesg==}
+    cpu: [x64]
+    os: [linux]
+
+  '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.3':
+    resolution: {integrity: sha512-x0fWaQtYp4E6sktbsdAqnehxDgEc/VwM7uLsRCYWaiGu0ykYdZPiS8zCWdnjHwyiumousxfBm4SO31eXqwEZhQ==}
+    cpu: [x64]
+    os: [win32]
 
   '@multiformats/dns@1.0.6':
     resolution: {integrity: sha512-nt/5UqjMPtyvkG9BQYdJ4GfLK3nMqGpFZOzf4hAmIa0sJh2LlS9YKXZ4FgwBDsaHvzZqR/rUFIywIc7pkHNNuw==}
@@ -29256,6 +29467,13 @@ packages:
     resolution: {integrity: sha512-kh8ARjh8rMN7Du2igDRO9QJnqCb2xYTJxyQYK7vJJS4TvLLmsbyhiKpSW+t+y26gyOyMd0riphX0GeWKU3ky5g==}
     engines: {node: '>=12.13'}
 
+  msgpackr-extract@3.0.3:
+    resolution: {integrity: sha512-P0efT1C9jIdVRefqjzOQ9Xml57zpOXnIuS+csaB4MdZbTdmGDLo8XhzBG1N7aO11gKDDkJvBLULeFTo46wwreA==}
+    hasBin: true
+
+  msgpackr@1.11.4:
+    resolution: {integrity: sha512-uaff7RG9VIC4jacFW9xzL3jc0iM32DNHe4jYVycBcjUePT/Klnfj7pqtWJt9khvDFizmjN2TlYniYmSS2LIaZg==}
+
   multi-buffer-data-view@6.0.20:
     resolution: {integrity: sha512-I2TzuoyHtcgnfR4O3ukFJdw9XXkisLMM42Dx+m29aB9oeaJAqLkbNOs47xx7evvdPFqzVCYl8fCbyNTBJgwvow==}
     engines: {node: '>=18.2.0'}
@@ -29476,6 +29694,10 @@ packages:
 
   node-gyp-build-optional-packages@5.1.1:
     resolution: {integrity: sha512-+P72GAjVAbTxjjwUmwjVrqrdZROD4nf8KgpBoDxqXXTiYZZt/ud60dE5yvCSr9lRO8e8yv6kgJIC0K0PfZFVQw==}
+    hasBin: true
+
+  node-gyp-build-optional-packages@5.2.2:
+    resolution: {integrity: sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw==}
     hasBin: true
 
   node-gyp-build@4.5.0:
@@ -38789,15 +39011,30 @@ snapshots:
       react: 18.2.0
       tslib: 2.6.2
 
-  '@effect/ai@0.8.0(@effect/platform@0.75.1(effect@3.14.21))(effect@3.14.21)':
+  '@effect-rx/rx-react@0.34.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)(react@18.2.0)(scheduler@0.23.2)':
     dependencies:
-      '@effect/platform': 0.75.1(effect@3.14.21)
+      '@effect-rx/rx': 0.39.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)
+      effect: 3.14.21
+      react: 18.2.0
+      scheduler: 0.23.2
+    transitivePeerDependencies:
+      - '@effect/platform'
+
+  '@effect-rx/rx@0.39.2(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/platform': 0.80.12(effect@3.14.21)
       effect: 3.14.21
 
-  '@effect/platform@0.75.1(effect@3.14.21)':
+  '@effect/ai@0.8.0(@effect/platform@0.80.12(effect@3.14.21))(effect@3.14.21)':
+    dependencies:
+      '@effect/platform': 0.80.12(effect@3.14.21)
+      effect: 3.14.21
+
+  '@effect/platform@0.80.12(effect@3.14.21)':
     dependencies:
       effect: 3.14.21
       find-my-way-ts: 0.1.5
+      msgpackr: 1.11.4
       multipasta: 0.2.5
 
   '@effect/schema@0.75.5(effect@3.14.21)':
@@ -40259,6 +40496,24 @@ snapshots:
     dependencies:
       promise-worker-transferable: 1.0.4
       three: 0.165.0
+
+  '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
+    optional: true
+
+  '@msgpackr-extract/msgpackr-extract-darwin-x64@3.0.3':
+    optional: true
+
+  '@msgpackr-extract/msgpackr-extract-linux-arm64@3.0.3':
+    optional: true
+
+  '@msgpackr-extract/msgpackr-extract-linux-arm@3.0.3':
+    optional: true
+
+  '@msgpackr-extract/msgpackr-extract-linux-x64@3.0.3':
+    optional: true
+
+  '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.3':
+    optional: true
 
   '@multiformats/dns@1.0.6':
     dependencies:
@@ -55278,6 +55533,22 @@ snapshots:
 
   ms@3.0.0-canary.1: {}
 
+  msgpackr-extract@3.0.3:
+    dependencies:
+      node-gyp-build-optional-packages: 5.2.2
+    optionalDependencies:
+      '@msgpackr-extract/msgpackr-extract-darwin-arm64': 3.0.3
+      '@msgpackr-extract/msgpackr-extract-darwin-x64': 3.0.3
+      '@msgpackr-extract/msgpackr-extract-linux-arm': 3.0.3
+      '@msgpackr-extract/msgpackr-extract-linux-arm64': 3.0.3
+      '@msgpackr-extract/msgpackr-extract-linux-x64': 3.0.3
+      '@msgpackr-extract/msgpackr-extract-win32-x64': 3.0.3
+    optional: true
+
+  msgpackr@1.11.4:
+    optionalDependencies:
+      msgpackr-extract: 3.0.3
+
   multi-buffer-data-view@6.0.20:
     dependencies:
       '@babel/runtime': 7.27.1
@@ -55480,6 +55751,11 @@ snapshots:
   node-forge@1.3.1: {}
 
   node-gyp-build-optional-packages@5.1.1:
+    dependencies:
+      detect-libc: 2.0.3
+    optional: true
+
+  node-gyp-build-optional-packages@5.2.2:
     dependencies:
       detect-libc: 2.0.3
     optional: true
