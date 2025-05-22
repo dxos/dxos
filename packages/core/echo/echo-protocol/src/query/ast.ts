@@ -227,9 +227,6 @@ export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
 export const visit = (query: Query, visitor: (node: Query) => void) => {
   switch (query.type) {
-    case 'select':
-      visitor(query);
-      break;
     case 'filter':
       visit(query.selection, visitor);
       break;
