@@ -166,7 +166,7 @@ export class QueryExecutor extends Resource {
     //   changed,
     //   trace: ExecutionTrace.format(trace),
     // });
-    console.log(ExecutionTrace.format(trace));
+    // console.log(ExecutionTrace.format(trace));
 
     return {
       changed,
