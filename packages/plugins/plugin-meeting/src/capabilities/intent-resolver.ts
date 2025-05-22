@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver, type PluginContext } from '@dxos/app-framework';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { getSchemaTypename, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 import { getMeetingContent, summarizeTranscript } from '../summarize';
 import { MeetingAction, MeetingType } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MeetingAction.Create,
@@ -32,13 +32,13 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: MeetingAction.Summarize,
       resolve: async ({ meeting }) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const client = context.getCapability(ClientCapabilities.Client);
         const endpoint = client.config.values.runtime?.services?.ai?.server;
         invariant(endpoint, 'AI service not configured.');
         // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
         const ai = new AIServiceEdgeClient({ endpoint });
         const resolve = (typename: string) =>
-          context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+          context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
         const typename = getSchemaTypename(DocumentType)!;
         let doc = (await meeting.artifacts[typename]?.load()) as DocumentType;

@@ -138,7 +138,7 @@ const meta: Meta<typeof NavTreeContainer> = {
             filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
               Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
             resolve: ({ subject }) => {
-              const state = context.requestCapability(StoryState);
+              const state = context.getCapability(StoryState);
               state.tab = subject;
             },
           }),

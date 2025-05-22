@@ -258,7 +258,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
 const L0Collection = ({ item, path }: L0ItemProps) => {
   const navTreeContext = useNavTreeContext();
   useLoadDescendents(item);
-  const collectionItems = navTreeContext.getItems(item);
+  const collectionItems = navTreeContext.useItems(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
   const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(

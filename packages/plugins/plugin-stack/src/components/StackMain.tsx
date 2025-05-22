@@ -3,6 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
+import { Option } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -65,7 +66,9 @@ const StackMain = ({ id, collection }: StackMainProps) => {
           ...stack.sections[object.id],
           collapsed: collapsedSections[fullyQualifiedId(object)],
           title:
-            (object as any)?.title ?? toLocalizedString(graph.findNode(fullyQualifiedId(object))?.properties.label, t),
+            (object as any)?.title ??
+            // TODO(wittjosiah): `getNode` is not reactive.
+            toLocalizedString(graph.getNode(fullyQualifiedId(object)).pipe(Option.getOrNull)?.properties.label, t),
         } as StackSectionView;
         return { id: fullyQualifiedId(object), object, metadata, view } satisfies StackSectionItem;
       }) ?? [];

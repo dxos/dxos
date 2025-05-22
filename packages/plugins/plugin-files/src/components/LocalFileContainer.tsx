@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Option } from 'effect';
 import React, { type FC, useMemo } from 'react';
 
 import { useAppGraph, Surface } from '@dxos/app-framework';
@@ -33,9 +34,9 @@ const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
 const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);
   const { graph } = useAppGraph();
-  const node = graph.findNode(entity.id);
+  const node = graph.getNode(entity.id).pipe(Option.getOrNull);
   const action =
-    node && graph.actions(node).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
+    node && graph.getActions(node.id).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
 
   return (
     <StackItem.Content>

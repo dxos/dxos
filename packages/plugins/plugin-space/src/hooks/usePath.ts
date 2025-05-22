@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Option } from 'effect';
 import { useEffect, useState } from 'react';
 
-import { type Graph } from '@dxos/plugin-graph';
+import { type ReadableGraph } from '@dxos/plugin-graph';
 
 /**
  * React hook to get a path from the graph.
@@ -15,15 +16,17 @@ import { type Graph } from '@dxos/plugin-graph';
  * @returns Path if found, undefined otherwise.
  */
 // TODO(wittjosiah): Factor out.
-export const usePath = (graph: Graph, id?: string, timeout?: number): string[] | undefined => {
-  const [pathState, setPathState] = useState<string[] | undefined>(id ? graph.getPath({ target: id }) : undefined);
+export const usePath = (graph: ReadableGraph, id?: string, timeout?: number): Option.Option<string[]> => {
+  const [pathState, setPathState] = useState<Option.Option<string[]>>(
+    id ? graph.getPath({ target: id }) : Option.none(),
+  );
 
   useEffect(() => {
     if (!id && pathState) {
-      setPathState(undefined);
+      setPathState(Option.none());
     }
 
-    if (pathState?.at(-1) === id || !id) {
+    if ((Option.isSome(pathState) && pathState.value.at(-1) === id) || !id) {
       return;
     }
 
@@ -32,7 +35,7 @@ export const usePath = (graph: Graph, id?: string, timeout?: number): string[] |
       try {
         const path = await graph.waitForPath({ target: id }, { timeout });
         if (path) {
-          setPathState(path);
+          setPathState(Option.some(path));
         }
       } catch {}
     });

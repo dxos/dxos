@@ -13,6 +13,7 @@ import {
 import { Schema } from 'effect';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState, type FC, type KeyboardEvent } from 'react';
 
+import { type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Treegrid, TreeItem as NaturalTreeItem } from '@dxos/react-ui';
 import {
@@ -43,7 +44,7 @@ export type TreeData = Schema.Schema.Type<typeof TreeDataSchema>;
 
 export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDataSchema)(data);
 
-export type TreeItemProps<T = any> = {
+export type TreeItemProps<T extends HasId = any> = {
   item: T;
   path: string[];
   levelOffset?: number;
@@ -61,7 +62,7 @@ export type TreeItemProps<T = any> = {
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
 };
 
-export const RawTreeItem = <T = any,>({
+const RawTreeItem = <T extends HasId = any>({
   item,
   path: _path,
   last,
@@ -72,17 +73,6 @@ export const RawTreeItem = <T = any,>({
   onSelect,
   levelOffset = 2,
 }: TreeItemProps<T>) => {
-  const { getItems, getProps, isOpen, isCurrent } = useTree();
-  const items = getItems(item);
-  const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = getProps(item, _path);
-  const path = useMemo(() => [..._path, id], [_path, id]);
-  const open = isOpen(path, item);
-  const current = isCurrent(path, item);
-  const level = path.length - levelOffset;
-  const isBranch = !!parentOf;
-  const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
-  const data = useMemo(() => ({ id, path, item }) satisfies TreeData, [id, path, item]);
-
   const rowRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const openRef = useRef(false);
@@ -90,6 +80,16 @@ export const RawTreeItem = <T = any,>({
   const [_state, setState] = useState<TreeItemState>('idle');
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const { useItems, getProps, isOpen, isCurrent } = useTree();
+  const items = useItems(item);
+  const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = getProps(item, _path);
+  const path = useMemo(() => [..._path, id], [_path, id]);
+  const open = isOpen(path, item);
+  const current = isCurrent(path, item);
+  const level = path.length - levelOffset;
+  const isBranch = !!parentOf;
+  const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
 
   const cancelExpand = useCallback(() => {
     if (cancelExpandRef.current) {
@@ -104,6 +104,8 @@ export const RawTreeItem = <T = any,>({
     }
 
     invariant(buttonRef.current);
+
+    const data = { id, path, item } satisfies TreeData;
 
     // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/about
     return combine(

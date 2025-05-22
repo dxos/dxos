@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver, type PluginContext } from '@dxos/app-framework';
 import { createQueueDxn } from '@dxos/echo-schema';
 import { type SpaceId } from '@dxos/keys';
 import { live, refFromDXN } from '@dxos/live-object';
@@ -10,7 +10,7 @@ import { live, refFromDXN } from '@dxos/live-object';
 import { TranscriptionAction, TranscriptType } from '../types';
 import { getTimeStr } from '../util';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: TranscriptionAction.Create,

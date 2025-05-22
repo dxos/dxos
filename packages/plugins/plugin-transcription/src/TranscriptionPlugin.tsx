@@ -44,7 +44,7 @@ export const TranscriptionPlugin = () =>
             icon: 'ph--subtitles--regular',
             // TODO(wittjosiah): Factor out. Artifact? Separate capability?
             getTextContent: async (transcript: TranscriptType) => {
-              const client = context.requestCapability(ClientCapabilities.Client);
+              const client = context.getCapability(ClientCapabilities.Client);
               const space = getSpace(transcript);
               const members = space?.members.get().map((member) => member.identity) ?? [];
               const queue = new QueueImpl(client.edge, transcript.queue.dxn);
