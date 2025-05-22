@@ -9,10 +9,10 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { Filter, Query } from './dsl';
 import { EchoObject, EchoRelation } from '../ast';
 import { create } from '../object';
 import { Ref } from '../ref';
-import { Filter, Query } from './dsl';
 
 // TODO(dmaretskyi): Move those out.
 const Type = {

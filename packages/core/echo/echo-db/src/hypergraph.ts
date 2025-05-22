@@ -2,9 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { isNotUndefined } from 'effect/Predicate';
+
 import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
+import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { Reference, type QueryAST } from '@dxos/echo-protocol';
 import {
   type BaseSchema,
@@ -18,17 +21,14 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId, DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, entry, getDeep } from '@dxos/util';
+import { ComplexMap, entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from './core-db';
-import { type AnyLiveObject, getObjectCore } from './echo-handler';
+import { type AnyLiveObject } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
-  type DeprecatedFilter,
-  filterMatch,
   type FilterSource,
   QueryResult,
   type QueryContext,
@@ -40,8 +40,6 @@ import {
   normalizeQuery,
 } from './query';
 import { getTargetSpacesForQuery, isTrivialSelectionQuery } from './query/util';
-import { filterMatchObject } from '@dxos/echo-pipeline/filter';
-import { isNotUndefined } from 'effect/Predicate';
 
 /**
  * Manages cross-space database interactions.
@@ -255,7 +253,7 @@ export class Hypergraph {
     if (!OBJECT_DIAGNOSTICS.has(objectId)) {
       OBJECT_DIAGNOSTICS.set(objectId, {
         objectId,
-        spaceId: spaceId,
+        spaceId,
         loadReason: 'reference access',
         loadedStack: new StackTrace(),
       });
@@ -534,7 +532,7 @@ class SpaceQuerySource implements QuerySource {
 
     const { filter, options } = trivial;
 
-    let results: QueryResultEntry<AnyLiveObject<any>>[] = [];
+    const results: QueryResultEntry<AnyLiveObject<any>>[] = [];
 
     if (isObjectIdFilter(filter)) {
       results.push(

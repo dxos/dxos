@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 
@@ -5,7 +9,7 @@ import { SpaceId } from '@dxos/keys';
  * Lists spaces this query will select from.
  */
 export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
-  let spaces = new Set<SpaceId>();
+  const spaces = new Set<SpaceId>();
 
   const visitor = (node: QueryAST.Query) => {
     if (node.type === 'options') {

@@ -3,13 +3,13 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { mapValues, visitValues } from '@dxos/util';
+import type { DXN, ObjectId } from '@dxos/keys';
+import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';
 import type { ForeignKey } from './foreign-key';
 import { isEncodedReference, type EncodedReference } from './reference';
 import { type SpaceDocVersion } from './space-doc-version';
-import type { DXN, ObjectId } from '@dxos/keys';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -71,7 +71,7 @@ export const DatabaseDirectory = Object.freeze({
     return doc.objects?.[id];
   },
 
-  make({
+  make: ({
     spaceKey,
     objects,
     links,
@@ -79,15 +79,13 @@ export const DatabaseDirectory = Object.freeze({
     spaceKey: string;
     objects?: Record<string, ObjectStructure>;
     links?: Record<string, RawString>;
-  }): DatabaseDirectory {
-    return {
-      access: {
-        spaceKey,
-      },
-      objects: objects ?? {},
-      links: links ?? {},
-    };
-  },
+  }): DatabaseDirectory => ({
+    access: {
+      spaceKey,
+    },
+    objects: objects ?? {},
+    links: links ?? {},
+  }),
 });
 
 /**
@@ -96,7 +94,7 @@ export const DatabaseDirectory = Object.freeze({
 export type ObjectStructure = {
   // TODO(dmaretskyi): Missing in some cases.
   system: ObjectSystem;
-  
+
   meta: ObjectMeta;
   /**
    * User-defined data.

@@ -1,18 +1,21 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
-import { DatabaseDirectory, ObjectStructure, QueryAST } from '@dxos/echo-protocol';
+import { DatabaseDirectory, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
 import type { FindResult, Indexer } from '@dxos/indexing';
-import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
+import { type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
+import { objectPointerCodec } from '@dxos/protocols';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
-import type { AutomergeHost } from '../automerge';
+import { isNonNullable } from '@dxos/util';
+
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
-import { filterMatchObject } from '../filter';
-import { objectPointerCodec } from '@dxos/protocols';
-import { raise } from '@dxos/debug';
+import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
-import { isNonNullable } from '@dxos/util';
-import { log } from '@dxos/log';
+import { filterMatchObject } from '../filter';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -216,9 +219,9 @@ export class QueryExecutor extends Resource {
     };
 
     switch (step.selector._tag) {
-      case 'EverythingSelector':
+      case 'EverythingSelector': {
         const beginIndexQuery = performance.now();
-        let indexHits = await this._indexer.execQuery({
+        const indexHits = await this._indexer.execQuery({
           typenames: [],
           inverted: false,
         });
@@ -238,10 +241,12 @@ export class QueryExecutor extends Resource {
         trace.objectCount = workingSet.length;
 
         break;
-      case 'IdSelector':
+      }
+      case 'IdSelector': {
         // For object id filters, we select nothing as those are handled by the SpaceQuerySource.
         // TODO(dmaretskyi): Implement this properly.
         break;
+      }
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
         const indexHits = await this._indexer.execQuery({
@@ -265,9 +270,10 @@ export class QueryExecutor extends Resource {
 
         break;
       }
-      case 'TextSearchSelector':
+      case 'TextSearchSelector': {
         // TODO(dmaretskyi): Implement this properly.
         break;
+      }
       default:
         throw new Error(`Unknown selector type: ${(step.selector as any)._tag}`);
     }
@@ -298,7 +304,7 @@ export class QueryExecutor extends Resource {
     step: QueryPlan.FilterDeletedStep,
     workingSet: Item[],
   ): Promise<StepExecutionResult> {
-    const expected = step.mode === 'only-deleted' ? true : false;
+    const expected = step.mode === 'only-deleted';
     const result = workingSet.filter((item) => ObjectStructure.isDeleted(item.doc) === expected);
     return {
       workingSet: result,
@@ -312,13 +318,13 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: Item[]): Promise<StepExecutionResult> {
-    const trace: ExecutionTrace = {
+    const _trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
       name: 'Traverse',
       details: JSON.stringify(step.traversal),
     };
 
-    const newWorkingSet: Item[] = [];
+    const _newWorkingSet: Item[] = [];
 
     throw new Error('Not implemented');
   }

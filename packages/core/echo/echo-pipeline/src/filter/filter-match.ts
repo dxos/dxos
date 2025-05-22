@@ -1,4 +1,8 @@
-import { decodeReference, isEncodedReference, QueryAST, type ObjectStructure } from '@dxos/echo-protocol';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { decodeReference, isEncodedReference, type QueryAST, type ObjectStructure } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
@@ -107,6 +111,7 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
         case 'lte':
           return (value as any) <= compareValue;
       }
+      break;
     }
     case 'in': {
       return filter.values.includes(value);

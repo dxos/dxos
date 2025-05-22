@@ -2,11 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { DeferredTask } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
+import { raise } from '@dxos/debug';
 import { DatabaseDirectory, QueryAST } from '@dxos/echo-protocol';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
@@ -20,11 +23,8 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
-import { QueryState } from './query-state';
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
-import { Schema } from 'effect';
-import { raise } from '@dxos/debug';
 
 export type QueryServiceParams = {
   indexer: Indexer;

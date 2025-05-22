@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
+import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { isEncodedReference, type DatabaseDirectory, type QueryAST } from '@dxos/echo-protocol';
 import { type AnyObjectData } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -18,16 +19,16 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
-import { filterMatchObject } from '@dxos/echo-pipeline/filter';
-import { isTrivialSelectionQuery, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';
+import { isTrivialSelectionQuery, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
 /**
  * Services plain data queries from the CoreDatabase class
  */
+// TODO(dmaretskyi): Restructure client-side query sub-systems: working-set query, host query (via service), remote agent/edge query
 export class CoreDatabaseQueryContext implements QueryContext {
   private _lastResult: QueryResultEntry<any>[] = [];
 
@@ -60,7 +61,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     if (!trivial) {
       return [];
     }
-    const { filter, options } = trivial;
+    const { filter, options: _options } = trivial;
 
     if (filter.type === 'object' && filter.id?.length === 1) {
       const core = await this._coreDatabase.loadObjectCoreById(filter.id[0]);
@@ -92,7 +93,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     const processedResults = await Promise.all(
       (response.results ?? []).map((result) => this._filterMapResult(ctx, filter, start, result)),
     );
-    let results = processedResults.filter(isNonNullable);
+    const results = processedResults.filter(isNonNullable);
 
     // TODO(dmaretskyi): Merge in results from local working set.
 
@@ -235,15 +236,6 @@ export class CoreDatabaseQueryContext implements QueryContext {
     return newData;
   }
 }
-
-const validateJoinSpec = (joinSpec: QueryJoinSpec) => {
-  try {
-    // This will throw if the join spec is a recursive object.
-    JSON.stringify(joinSpec);
-  } catch {
-    throw new Error('Invalid join spec');
-  }
-};
 
 /**
  * Used for logging.

@@ -158,7 +158,7 @@ export class Indexer extends Resource {
   protected override async _close(ctx: Context): Promise<void> {
     await this._run.join();
 
-    this._engine.close(ctx);
+    await this._engine.close(ctx);
   }
 
   protected override async _catch(err: Error): Promise<void> {

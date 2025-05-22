@@ -1,8 +1,12 @@
-import { DXN, ObjectId, PublicKey } from '@dxos/keys';
-import * as TestSchema from './test-schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
 import { getSchemaDXN } from '@dxos/echo-schema';
-import { entries, keys } from '@dxos/util';
+import { DXN, ObjectId, PublicKey } from '@dxos/keys';
+
+import * as TestSchema from './test-schema';
 
 const spaceKey = PublicKey.random();
 

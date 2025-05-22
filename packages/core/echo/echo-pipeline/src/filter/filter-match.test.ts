@@ -1,8 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
+import { ObjectStructure } from '@dxos/echo-protocol';
 import { Expando, EXPANDO_TYPENAME, Filter, Ref } from '@dxos/echo-schema';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
-import { describe, expect, test } from 'vitest';
+
 import { filterMatchObject, type MatchedObject } from './filter-match';
-import { ObjectStructure } from '@dxos/echo-protocol';
 
 describe('filterMatch', () => {
   test('properties', () => {

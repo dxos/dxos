@@ -4,6 +4,7 @@
 
 import { Event, type CleanupFn } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
+import type { QueryAST } from '@dxos/echo-protocol';
 import { type BaseObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -13,9 +14,7 @@ import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
 
 import { type Query } from './api';
-import { type DeprecatedFilter, deprecatedFilterFromQueryAST } from './deprecated';
 import { prohibitSignalActions } from '../guarded-scope';
-import type { QueryAST } from '@dxos/echo-protocol';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;

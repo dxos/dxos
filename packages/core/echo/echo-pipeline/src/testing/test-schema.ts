@@ -1,5 +1,10 @@
-import { EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema } from 'effect';
+
+import { EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
 
 // TODO(dmaretskyi): Move those out.
 const Type = {

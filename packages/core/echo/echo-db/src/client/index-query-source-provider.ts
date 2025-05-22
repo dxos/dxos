@@ -5,11 +5,11 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
+import type { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
   QueryReactivity,
   type QueryResponse,
@@ -21,8 +21,7 @@ import { isNonNullable } from '@dxos/util';
 import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
-import { type DeprecatedFilter, type QueryResultEntry } from '../query';
-import type { QueryAST } from '@dxos/echo-protocol';
+import { type QueryResultEntry } from '../query';
 import { getTargetSpacesForQuery } from '../query/util';
 
 export type LoadObjectParams = {

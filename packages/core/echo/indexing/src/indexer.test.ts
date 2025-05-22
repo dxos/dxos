@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { encodeReference, ObjectStructure, Reference } from '@dxos/echo-protocol';
+import { ObjectStructure, Reference } from '@dxos/echo-protocol';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { openAndClose } from '@dxos/test-utils';

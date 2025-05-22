@@ -112,7 +112,7 @@ export const ARTICLES = {
     `
   Warsaw Weather Forecast. Providing a local hourly Warsaw weather forecast of rain, sun, wind, humidity and temperature.
   The Long-range 12 day forecast also includes detail for Warsaw weather today. Live weather reports from Warsaw weather stations and weather warnings that include risk of thunder, high UV index and forecast gales. See the links below the 12-day Warsaw weather forecast table for other cities and towns nearby along with weather conditions for local outdoor activities.
-  Warsaw is 78 m above sea level and located at 52.25° N 21.04° E. Warsaw has a population of 1702139. Local time in Warsaw is 1:57:03 PM CEST.
+  Warsaw is 78 m above sea level and located at 52.25° N 21.04° E. Warsaw has a population of 1702139. Local time in Warsaw is 1:57:03 PM CEST.
 `,
   ),
   developmentsInBiomedicine: createArticle(
