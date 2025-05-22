@@ -85,8 +85,8 @@ export class IndexSchema extends Resource implements Index {
         if (dxn.isLocalObjectId()) {
           const objectId = dxn.parts[1];
           results.push(...Array.from(this._index.get(objectId) ?? []).map((id) => ({ id, rank: 0 })));
-        } else if (dxn.parts[0] === DXN.kind.TYPE) {
-          const typename = dxn.parts[1];
+        } else if (dxn.kind === DXN.kind.TYPE) {
+          const typename = dxn.parts[0];
           results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
         } else {
           log.warn('Unsupported DXN', { dxn });
