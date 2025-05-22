@@ -209,28 +209,46 @@ export const OrderedList = {
 // Task List
 //
 
+export const TaskList = {
+  render: () => (
+    <DefaultStory text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />
+  ),
+};
+
+//
+// Outliner
+//
+
 /**
  * NOTE: Task markers are atomic so will be deleted when backspace is pressed.
  */
 // TODO(burdon): Toggle list/task mode.
 // TODO(burdon): Convert to task object and insert link.
 // TOOD(burdon): Can we support continuation lines and rich formatting?
-const strictList: Extension = EditorState.transactionFilter.of((tr) => {
-  // TODO(burdon): Don't allow cursor before marker.
+const outliner: Extension = EditorState.transactionFilter.of((tr) => {
+  const indentLevel = 2;
+
+  // Don't allow cursor before marker.
   if (!tr.docChanged) {
-    console.log(tr.selection);
+    const pos = tr.selection?.ranges[tr.selection?.mainIndex]?.from;
+    if (pos != null) {
+      const line = tr.startState.doc.lineAt(pos);
+      if (pos === line.from) {
+        // TODO(burdon): Check if nav from previous line.
+        return []; // Skip.
+      }
+    }
     return tr;
   }
 
   const changes: ChangeSpec[] = [];
   tr.changes.iterChanges((fromA, toA, fromB, toB, insert) => {
-    const line = tr.startState.doc.lineAt(fromA);
-
     // NOTE: CM inserts 2 or 6 spaces when deleting a list or task marker to create a continuation.
     // - [ ] <- backspace here deletes the task marker.
     // - [ ] <- backspace here inserts 6 spaces (creates continuation).
     //   - [ ] <- backspace here deletes the task marker.
 
+    const line = tr.startState.doc.lineAt(fromA);
     const isTaskMarker = line.text.match(/^\s*- (\[ \]|\[x\])? /);
     if (isTaskMarker) {
       // Detect replacement of task marker with continuation.
@@ -253,7 +271,25 @@ const strictList: Extension = EditorState.transactionFilter.of((tr) => {
             }
           }
         }
+        return;
       }
+
+      // Check appropriate indentation relative to previous line.
+      if (insert.length === indentLevel) {
+        if (line.number === 1) {
+          changes.push({ from: 0, to: 0 });
+        } else {
+          const getIndent = (text: string) => (text.match(/^\s*/)?.[0]?.length ?? 0) / indentLevel;
+          const currentIndent = getIndent(line.text);
+          const indentPrevious = getIndent(tr.state.doc.lineAt(fromA - 1).text);
+          if (currentIndent > indentPrevious) {
+            changes.push({ from: 0, to: 0 });
+          }
+        }
+      }
+
+      // TODO(burdon): Detect pressing ENTER on empty line that is indented.
+      // TOOD(burdon): Error if start with link (e.g., `[]()`).
     }
   });
 
@@ -264,13 +300,16 @@ const strictList: Extension = EditorState.transactionFilter.of((tr) => {
   return tr;
 });
 
-export const TaskList = {
+export const Outliner = {
   render: () => (
     <DefaultStory
-      text={str('- [ ] A\n- [x] B')}
-      // text={str('- A\n- B')}
-      // text={str(content.tasks, content.footer)}
-      extensions={[decorateMarkdown(), strictList]}
+      text={str(
+        //
+        '- [ ] A',
+        '- [x] B',
+        '- C',
+      )}
+      extensions={[decorateMarkdown(), outliner]}
       debug='raw+tree'
     />
   ),
