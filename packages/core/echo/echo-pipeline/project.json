@@ -1,7 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "echo-pipeline",
-  "tags": ["scope:echo"],
+  "tags": [
+    "scope:echo"
+  ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
@@ -9,8 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
           "{projectRoot}/src/filter/index.ts",
+          "{projectRoot}/src/index.ts",
           "{projectRoot}/src/testing/index.ts"
         ],
         "injectGlobals": true
@@ -20,5 +22,8 @@
     "pack": {},
     "test": {}
   },
-  "implicitDependencies": ["esbuild", "node-std"]
+  "implicitDependencies": [
+    "esbuild",
+    "node-std"
+  ]
 }

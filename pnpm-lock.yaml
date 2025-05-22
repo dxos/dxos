@@ -2672,6 +2672,9 @@ importers:
       crc-32:
         specifier: ^1.2.2
         version: 1.2.2
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1

@@ -40,7 +40,6 @@
     "src"
   ],
   "dependencies": {
-    "effect": "3.14.21",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -74,6 +73,7 @@
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "crc-32": "^1.2.2",
+    "effect": "3.14.21",
     "level-transcoder": "^1.0.1",
     "lodash.isequal": "^4.5.0"
   },
