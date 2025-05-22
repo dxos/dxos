@@ -20,6 +20,7 @@ import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { isActionLike } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
@@ -224,7 +225,7 @@ export default (context: PluginContext) =>
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
         } else {
-          const [item] = graph.getConnections(subject);
+          const [item] = graph.getConnections(subject).filter((node) => !isActionLike(node));
           if (item) {
             return {
               intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],
