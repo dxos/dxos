@@ -123,10 +123,9 @@ export class QueryServiceImpl extends Resource implements QueryService {
         await queryEntry.executor.open();
 
         try {
-          const { changed } = await queryEntry.executor.execQuery();
-          if (changed) {
-            queryEntry.sendResults(queryEntry.executor.getResults());
-          }
+          await queryEntry.executor.execQuery();
+          // Always send first result set.
+          queryEntry.sendResults(queryEntry.executor.getResults());
         } catch (error: any) {
           close(error);
         }
