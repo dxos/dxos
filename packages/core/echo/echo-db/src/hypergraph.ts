@@ -451,12 +451,6 @@ export class GraphQueryContext implements QueryContext {
       querySource.update(this._query);
     }
   }
-
-  private _filterResults(filter: DeprecatedFilter, results: QueryResultEntry[]): QueryResultEntry[] {
-    return results.filter(
-      (result) => result.object && filterMatch(filter, getObjectCore(result.object), result.object),
-    );
-  }
 }
 
 /**
@@ -557,7 +551,7 @@ class SpaceQuerySource implements QuerySource {
     }
 
     prohibitSignalActions(() => {
-      results.push(...this._queryWorkingSet(filter));
+      results.push(...this._queryWorkingSet(filter, options));
     });
     return results;
   }
@@ -576,7 +570,7 @@ class SpaceQuerySource implements QuerySource {
 
     if (!this._results) {
       prohibitSignalActions(() => {
-        this._results = this._queryWorkingSet(filter);
+        this._results = this._queryWorkingSet(filter, options);
       });
     }
 
@@ -602,7 +596,10 @@ class SpaceQuerySource implements QuerySource {
   /**
    * Queries from already loaded objects.
    */
-  private _queryWorkingSet(filter: QueryAST.Filter): QueryResultEntry<AnyLiveObject<any>>[] {
+  private _queryWorkingSet(
+    filter: QueryAST.Filter,
+    options: QueryAST.QueryOptions | undefined,
+  ): QueryResultEntry<AnyLiveObject<any>>[] {
     const filteredCores = this._database.coreDatabase
       .allObjectCores()
       // TODO(dmaretskyi): Cleanup proxy <-> core.
@@ -612,7 +609,18 @@ class SpaceQuerySource implements QuerySource {
           doc: core.getObjectStructure(),
           spaceId: this.spaceId,
         }),
-      );
+      )
+      .filter((core) => {
+        switch (options?.deleted) {
+          case undefined:
+          case 'exclude':
+            return !core.isDeleted();
+          case 'include':
+            return true;
+          case 'only':
+            return core.isDeleted();
+        }
+      });
 
     return filteredCores.map((core) => this._mapCoreToResult(core));
   }
