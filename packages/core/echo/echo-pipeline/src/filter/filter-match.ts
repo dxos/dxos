@@ -1,5 +1,5 @@
 import { QueryAST, type ObjectStructure } from '@dxos/echo-protocol';
-import type { ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
   id: ObjectId;
@@ -14,8 +14,30 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
   switch (filter.type) {
     case 'object': {
       // Check typename if specified
-      if (filter.typename !== null && obj.doc.system.type?.['/'] !== filter.typename) {
-        return false;
+      if (filter.typename !== null) {
+        if (!obj.doc.system.type?.['/']) {
+          return false;
+        }
+        const actualDXN = DXN.parse(obj.doc.system.type['/']);
+        const expectedDXN = DXN.parse(filter.typename);
+
+        const expectedTypeDXN = expectedDXN.asTypeDXN();
+        if (expectedTypeDXN) {
+          const actualTypeDXN = actualDXN.asTypeDXN();
+          if (!actualTypeDXN) {
+            return false;
+          }
+          if (
+            actualTypeDXN.type !== expectedTypeDXN.type ||
+            (expectedTypeDXN.version !== undefined && actualTypeDXN.version !== expectedTypeDXN.version)
+          ) {
+            return false;
+          }
+        } else {
+          if (!DXN.equals(actualDXN, expectedDXN)) {
+            return false;
+          }
+        }
       }
 
       // Check IDs if specified
