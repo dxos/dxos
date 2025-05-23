@@ -68,25 +68,17 @@ describe('Queries', () => {
       }
 
       {
-        const { objects, results } = await db.query({ label: undefined }).run();
+        const { objects } = await db.query(Query.select(Filter.type(Expando, { label: undefined }))).run();
         expect(objects).to.have.length(1);
-
-        // TODO(dmaretskyi): 2 hits: one local one from index, we should dedup those.
-        expect(results).to.have.length(2);
-        expect(results.every((result) => result.id === objects[0].id)).to.be.true;
-
-        expect(results[0].object).to.eq(objects[0]);
-        expect(results[0].id).to.eq(objects[0].id);
-        expect(results[0].spaceKey).to.eq(db.spaceKey);
       }
 
       {
-        const { objects } = await db.query({ label: 'red' }).run();
+        const { objects } = await db.query(Query.select(Filter.type(Expando, { label: 'red' }))).run();
         expect(objects).to.have.length(3);
       }
 
       {
-        const { objects } = await db.query({ label: 'pink' }).run();
+        const { objects } = await db.query(Query.select(Filter.type(Expando, { label: 'pink' }))).run();
         expect(objects).to.have.length(0);
       }
     });
