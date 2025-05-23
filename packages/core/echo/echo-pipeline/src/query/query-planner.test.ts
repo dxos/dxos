@@ -207,6 +207,10 @@ describe('QueryPlanner', () => {
             },
           },
           {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
             "_tag": "FilterStep",
             "filter": {
               "props": {},
@@ -299,6 +303,10 @@ describe('QueryPlanner', () => {
               "direction": "incoming",
               "property": "assignee",
             },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
           },
           {
             "_tag": "FilterStep",
@@ -421,6 +429,10 @@ describe('QueryPlanner', () => {
               "direction": "outgoing",
               "property": "assignee",
             },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
           },
         ],
       }
