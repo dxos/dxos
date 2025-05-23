@@ -120,7 +120,7 @@ export const ObjectStructure = Object.freeze({
    * @throws On invalid object structure.
    */
   getEntityKind: (object: ObjectStructure): 'object' | 'relation' => {
-    const kind = object.system.kind;
+    const kind = object.system.kind ?? 'object';
     invariant(kind === 'object' || kind === 'relation', 'Invalid kind');
     return kind;
   },
