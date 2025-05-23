@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { getHeads } from '@automerge/automerge';
+import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
+
 import {
   asyncTimeout,
   Event,
@@ -13,8 +16,6 @@ import {
   type ReadOnlyEvent,
   type CleanupFn,
 } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
-import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -170,7 +171,7 @@ export class CoreDatabase {
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
       const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.docSync();
+      const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
@@ -249,7 +250,7 @@ export class CoreDatabase {
     if (!hasLoadedHandles) {
       return [];
     }
-    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
+    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().doc();
     if (!rootDoc) {
       return [];
     }
@@ -258,11 +259,11 @@ export class CoreDatabase {
   }
 
   getNumberOfInlineObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.objects ?? {}).length;
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().doc()?.objects ?? {}).length;
   }
 
   getNumberOfLinkedObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().docSync()?.links ?? {}).length;
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().doc()?.links ?? {}).length;
   }
 
   getTotalNumberOfObjects(): number {
@@ -514,7 +515,7 @@ export class CoreDatabase {
   unlinkObjects(objectIds: string[]) {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
     for (const objectId of objectIds) {
-      if (!root.docSync().links?.[objectId]) {
+      if (!root.doc().links?.[objectId]) {
         throw new Error(`Link not found: ${objectId}`);
       }
     }
@@ -596,7 +597,7 @@ export class CoreDatabase {
    */
   async getDocumentHeads(): Promise<SpaceDocumentHeads> {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
-    const doc = root.docSync();
+    const doc = root.doc();
     if (!doc) {
       return { heads: {} };
     }
@@ -646,7 +647,7 @@ export class CoreDatabase {
    */
   async reIndexHeads(): Promise<void> {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
-    const doc = root.docSync();
+    const doc = root.doc();
     invariant(doc);
 
     await this._dataService.reIndexHeads(
@@ -698,7 +699,7 @@ export class CoreDatabase {
     spaceRootDocHandle: DocHandleProxy<DatabaseDirectory>,
     objectsToLoad: string[],
   ) {
-    const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.docSync();
+    const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
@@ -725,7 +726,8 @@ export class CoreDatabase {
           continue;
         }
         const newDocHandle = this._repoProxy.find(newObjectDocUrl as DocumentId);
-        await newDocHandle.doc();
+        await newDocHandle.whenReady();
+        newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl.toString(), { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);

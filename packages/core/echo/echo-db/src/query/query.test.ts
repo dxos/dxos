@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
@@ -227,7 +227,7 @@ describe('Queries', () => {
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       anotherDocHandle.change((doc: DatabaseDirectory) => {
-        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.docSync().objects![obj1.id];
+        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.doc().objects![obj1.id];
       });
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = anotherDocHandle.url;

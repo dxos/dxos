@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Patch, next as A } from '@dxos/automerge/automerge';
-import { isValidAutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { type Patch, next as A } from '@automerge/automerge';
+import { isValidAutomergeUrl } from '@automerge/automerge-repo';
+
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 
 import { type DocumentChanges } from './automerge-doc-loader';

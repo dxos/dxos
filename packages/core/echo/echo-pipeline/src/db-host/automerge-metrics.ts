@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as A from '@dxos/automerge/automerge';
+import * as A from '@automerge/automerge';
+
 import { log } from '@dxos/log';
 
 export type DocMetrics = {

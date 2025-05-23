@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Heads } from '@dxos/automerge/automerge';
-import type { DocumentId } from '@dxos/automerge/automerge-repo';
+import type { Heads } from '@automerge/automerge';
+import type { DocumentId } from '@automerge/automerge-repo';
+
 import { headsEncoding } from '@dxos/indexing';
 import type { BatchLevel, SublevelDB } from '@dxos/kv-store';
 

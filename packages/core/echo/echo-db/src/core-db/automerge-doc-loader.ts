@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+
 import { Event } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
-import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { type SpaceState, type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -101,7 +102,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     }
 
     const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
-    const doc = existingDocHandle.docSync();
+    const doc = existingDocHandle.doc();
     invariant(doc);
     invariant(doc.version === SpaceDocVersion.CURRENT);
     if (doc.access == null) {
@@ -135,7 +136,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   public getObjectDocumentId(objectId: string): string | undefined {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
-    const spaceRootDoc = this._spaceRootDocHandle.docSync();
+    const spaceRootDoc = this._spaceRootDocHandle.doc();
     invariant(spaceRootDoc);
     if (spaceRootDoc.objects?.[objectId]) {
       return this._spaceRootDocHandle.documentId;
@@ -186,7 +187,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   private _getLinkedDocumentUrl(objectId: string): AutomergeUrl | undefined {
-    const spaceRootDoc = this._spaceRootDocHandle?.docSync();
+    const spaceRootDoc = this._spaceRootDocHandle?.doc();
     invariant(spaceRootDoc);
     return (spaceRootDoc.links ?? {})[objectId]?.toString() as AutomergeUrl;
   }

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { Schema } from 'effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { next as A } from '@dxos/automerge/automerge';
 import { Client } from '@dxos/client';
 import { getObjectCore } from '@dxos/echo-db';
 import { TypedObject } from '@dxos/echo-schema';
@@ -81,14 +81,14 @@ describe('TestObjectGenerator', () => {
     const document = await generator.createObject({ types: [TestSchemaType.document] });
     expect(getType(document)).to.exist;
 
-    const beforeChangesCount = A.getAllChanges(getObjectCore(document).docHandle!.docSync()).length;
+    const beforeChangesCount = A.getAllChanges(getObjectCore(document).docHandle!.doc()).length;
 
     // Mutate the document.
     const mutationsCount = 10;
     await generator.mutateObject(document, { count: mutationsCount, maxContentLength: 1000, mutationSize: 10 });
     await space.db.flush();
 
-    const changesCount = A.getAllChanges(getObjectCore(document).docHandle!.docSync()).length;
+    const changesCount = A.getAllChanges(getObjectCore(document).docHandle!.doc()).length;
     expect(changesCount - beforeChangesCount).to.be.eq(mutationsCount);
   });
 

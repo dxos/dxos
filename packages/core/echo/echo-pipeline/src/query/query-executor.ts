@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { AutomergeUrl, DocumentId } from '@dxos/automerge/automerge-repo';
+import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';

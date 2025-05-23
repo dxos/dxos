@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Doc, next as am } from '@automerge/automerge';
+import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import { type Schema } from 'effect';
 
-import { type Doc, next as am } from '@dxos/automerge/automerge';
-import { type AnyDocumentId, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { ObjectCore, migrateDocument, type RepoProxy, type DocHandleProxy } from '@dxos/echo-db';
@@ -36,7 +36,7 @@ export class MigrationBuilder {
     // TODO(wittjosiah): Accessing private API.
     this._rootDoc = (this._space.db.coreDatabase as any)._automergeDocLoader
       .getSpaceRootDocHandle()
-      .docSync() as Doc<DatabaseDirectory>;
+      .doc() as Doc<DatabaseDirectory>;
   }
 
   async findObject(id: string): Promise<ObjectStructure | undefined> {
@@ -47,7 +47,7 @@ export class MigrationBuilder {
     }
 
     await docHandle.whenReady();
-    const doc = docHandle.docSync() as Doc<DatabaseDirectory>;
+    const doc = docHandle.doc() as Doc<DatabaseDirectory>;
     return doc.objects?.[id];
   }
 
@@ -82,7 +82,7 @@ export class MigrationBuilder {
         },
       },
     };
-    const migratedDoc = migrateDocument(oldHandle.docSync() as Doc<DatabaseDirectory>, newState);
+    const migratedDoc = migrateDocument(oldHandle.doc() as Doc<DatabaseDirectory>, newState);
     const newHandle = this._repo.import<DatabaseDirectory>(am.save(migratedDoc));
     this._newLinks[id] = newHandle.url;
     this._addHandleToFlushList(newHandle);

@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as am, type Doc, type Heads, type State } from '@dxos/automerge/automerge';
+import { next as am, type Doc, type Heads, type State } from '@automerge/automerge';
+
 import { ECHO_ATTR_META, ECHO_ATTR_TYPE, type BaseObject } from '@dxos/echo-schema';
 import { assertParameter } from '@dxos/protocols';
 

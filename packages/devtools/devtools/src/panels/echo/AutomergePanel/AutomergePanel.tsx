@@ -82,7 +82,7 @@ export const AutomergePanel = (props: { space?: Space }) => {
   const data = useMemo(() => {
     return handles
       .map((handle) => {
-        const doc = handle.docSync();
+        const doc = handle.doc();
         return {
           id: handle.documentId,
           documentId: handle.documentId,

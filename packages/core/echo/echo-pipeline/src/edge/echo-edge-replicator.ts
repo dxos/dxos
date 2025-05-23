@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { cbor } from '@automerge/automerge-repo';
+
 import { Mutex, scheduleTask, scheduleMicroTask } from '@dxos/async';
-import { cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';

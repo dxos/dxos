@@ -104,7 +104,7 @@ export const useStats = (): [Stats, () => void] => {
       // TODO(burdon): Reconcile with diagnostics.
       const objects = TRACE_PROCESSOR.findResourcesByClassName('RepoProxy')
         .flatMap((r) => Object.values(r.instance.deref()?.handles ?? {}))
-        .map((handle: any) => handle.docSync())
+        .map((handle: any) => handle.doc())
         .filter(Boolean);
 
       const database: DatabaseInfo = {

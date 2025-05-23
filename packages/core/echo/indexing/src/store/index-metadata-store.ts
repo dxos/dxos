@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Heads } from '@automerge/automerge';
 import { type MixedEncoding } from 'level-transcoder';
 
 import { Event } from '@dxos/async';
-import { type Heads } from '@dxos/automerge/automerge';
 import type { ProtoCodec } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { type SublevelDB, type BatchLevel } from '@dxos/kv-store';

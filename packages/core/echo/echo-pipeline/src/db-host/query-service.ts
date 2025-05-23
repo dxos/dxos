@@ -3,10 +3,10 @@
 //
 
 import { Schema } from 'effect';
+import { getHeads } from '@automerge/automerge';
+import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 
 import { DeferredTask } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
-import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -173,10 +173,10 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
     const visited = new Set<string>();
 
     async function* getObjectsFromHandle(handle: DocHandle<DatabaseDirectory>): AsyncGenerator<ObjectSnapshot[]> {
-      if (visited.has(handle.documentId)) {
+      if (visited.has(handle.documentId) || !handle.isReady()) {
         return;
       }
-      const doc = handle.docSync()!;
+      const doc = handle.doc()!;
 
       const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
 
