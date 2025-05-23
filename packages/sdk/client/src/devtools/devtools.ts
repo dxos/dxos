@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { next as am } from '@dxos/automerge/automerge';
-import { cbor } from '@dxos/automerge/automerge-repo';
+import { next as am } from '@automerge/automerge';
+import { cbor } from '@automerge/automerge-repo';
+
 import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';

@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A, type Doc } from '@automerge/automerge';
+import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@automerge/automerge-repo';
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
-import { next as A, type Heads, type Doc } from '@dxos/automerge/automerge';
-import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 
 import { type IDocHandle } from '../core-db';
@@ -71,12 +71,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return this._ready.state === TriggerState.RESOLVED ? 'ready' : 'pending';
   }
 
-  docSync(): A.Doc<T> {
-    return this._doc;
-  }
-
-  async doc(): Promise<A.Doc<T>> {
-    await this._ready.wait();
+  doc(): A.Doc<T> {
     return this._doc;
   }
 
@@ -101,7 +96,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     });
   }
 
-  changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): Heads | undefined {
+  changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
     invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -114,7 +109,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       patches: newHeads ? A.diff(this._doc, headsBefore, newHeads) : [],
       patchInfo: { before, after: this._doc, source: 'change' },
     });
-    return newHeads || undefined;
+    return newHeads ?? undefined;
   }
 
   update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {

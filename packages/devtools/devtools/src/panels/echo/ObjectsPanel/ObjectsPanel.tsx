@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import type { State as AmState } from '@dxos/automerge/automerge';
 import { checkoutVersion, Filter, getEditHistory, Query, type AnyLiveObject } from '@dxos/echo-db';
 import { FormatEnum, getDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';

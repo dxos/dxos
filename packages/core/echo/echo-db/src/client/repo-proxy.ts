@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, UpdateScheduler } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
+import { next as A } from '@automerge/automerge';
 import {
   type DocumentId,
   generateAutomergeUrl,
   parseAutomergeUrl,
   interpretAsDocumentId,
   type AnyDocumentId,
-} from '@dxos/automerge/automerge-repo';
+} from '@automerge/automerge-repo';
+
+import { Event, UpdateScheduler } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';

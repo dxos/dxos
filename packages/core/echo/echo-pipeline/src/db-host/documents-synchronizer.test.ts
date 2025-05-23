@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
-import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
 import { openAndClose } from '@dxos/test-utils';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
