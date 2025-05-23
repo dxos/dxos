@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { AutomergeUrl } from '@automerge/automerge-repo';
 import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
-import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type Context, Resource } from '@dxos/context';
 import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';

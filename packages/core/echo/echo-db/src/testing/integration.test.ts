@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   brokenAutomergeReplicatorFactory,
@@ -285,7 +285,7 @@ describe('Integration tests', () => {
     await db1.flush();
     const heads = await db1.coreDatabase.getDocumentHeads();
 
-    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await using db2 = await asyncTimeout(peer2.openDatabase(spaceKey, db1.rootUrl!), 1_000);
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
     await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240

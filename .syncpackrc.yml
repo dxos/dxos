@@ -36,11 +36,6 @@ versionGroups:
     dependencies:
       - '@dxos/*'
   - packages:
-      - '@dxos/automerge'
-    dependencies:
-      - 'xstate'
-      - '@automerge/automerge-wasm'
-  - packages:
       - '@dxos/cf-labs'
     dependencies:
       - '@vitest/*'

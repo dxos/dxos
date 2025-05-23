@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DocumentId } from '@dxos/automerge/automerge-repo';
+import { type DocumentId } from '@automerge/automerge-repo';
+
 import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';

@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { cbor } from '@automerge/automerge-repo';
 import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { cbor } from '@dxos/automerge/automerge-repo';
 import { createEphemeralEdgeIdentity, EdgeClient, MessageSchema } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';

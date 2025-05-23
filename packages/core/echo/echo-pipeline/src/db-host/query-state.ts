@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DocumentId } from '@dxos/automerge/automerge-repo';
+import { type DocumentId } from '@automerge/automerge-repo';
+
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { createIdFromSpaceKey, type SpaceDoc } from '@dxos/echo-protocol';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
@@ -122,7 +123,7 @@ export class QueryState extends Resource {
             if (this._ctx.disposed) {
               return;
             }
-            spaceKey = getSpaceKeyFromDoc(handle.docSync()!);
+            spaceKey = getSpaceKeyFromDoc(handle.doc()!);
           }
 
           if (!spaceKey) {

@@ -3,7 +3,7 @@
 //
 
 import { type Plugin } from 'esbuild';
-import wasm from 'esbuild-plugin-wasm';
+import { wasmLoader } from 'esbuild-plugin-wasm';
 
 import { FixGracefulFsPlugin, NodeGlobalsPolyfillPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
@@ -22,12 +22,35 @@ export const buildBrowserBundle = async (outfile: string) => {
       FixGracefulFsPlugin(),
       NodeGlobalsPolyfillPlugin(),
       NodeModulesPlugin(),
+      signalStubPlugin(),
       wasmCompat(),
-      wasm({ mode: 'embedded' }),
+      wasmLoader({ mode: 'embedded' }),
     ],
   });
   return result;
 };
+
+const signalStubPlugin = (): Plugin => ({
+  name: 'signal-stub',
+  setup: (build) => {
+    build.onResolve({ filter: /^@dxos\/signal$/ }, (args) => {
+      return { path: args.path, namespace: 'signal-stub' };
+    });
+
+    build.onLoad({ filter: /.*/, namespace: 'signal-stub' }, () => {
+      return {
+        contents: `
+          export class SignalServerRunner {
+            constructor() {}
+            async start() {}
+            async stop() {}
+          }
+          export {}; // For any other exports
+        `,
+      };
+    });
+  },
+});
 
 const wasmCompat = (): Plugin => ({
   name: 'wasm-compat',

@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as am } from '@automerge/automerge';
+import type { DocumentId, PeerId } from '@automerge/automerge-repo';
+
 import { asyncReturn, Event, scheduleTask, scheduleTaskInterval } from '@dxos/async';
-import { next as am } from '@dxos/automerge/automerge';
-import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';

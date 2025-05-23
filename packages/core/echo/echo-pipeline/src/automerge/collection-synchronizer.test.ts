@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { PeerId } from '@automerge/automerge-repo';
 import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import type { PeerId } from '@dxos/automerge/automerge-repo';
 
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 
