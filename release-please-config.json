@@ -229,11 +229,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/automerge/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/echo/echo/package.json",
           "jsonpath": "$.version"
         },

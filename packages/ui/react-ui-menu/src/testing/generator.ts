@@ -89,7 +89,7 @@ export const createNestedActionsResolver = (groupParams?: CreateActionsParams, p
       { source: 'root', target: group.id },
       ...actions.map((action) => ({ source: group.id, target: action.id })),
     ]);
-    graph.expand(group.id);
+    void graph.expand(group.id);
   });
   const resolveGroupItems = (groupNode?: MenuItemGroup) =>
     (graph.getActions(groupNode?.id ?? ROOT_ID) || null) as MenuItem[] | null;

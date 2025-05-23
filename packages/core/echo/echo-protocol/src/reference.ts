@@ -136,15 +136,20 @@ export const encodeReference = (reference: Reference): EncodedReference => ({
 });
 
 export const decodeReference = (value: any) => {
+  if (typeof value !== 'object' || value === null || typeof value['/'] !== 'string') {
+    throw new Error('Invalid reference');
+  }
+  const dxnString = value['/'];
+
   if (
-    value.length % 2 === 0 &&
-    value.slice(0, value.length / 2) === value.slice(value.length / 2) &&
-    value.includes('dxn:echo')
+    dxnString.length % 2 === 0 &&
+    dxnString.slice(0, dxnString.length / 2) === dxnString.slice(dxnString.length / 2) &&
+    dxnString.includes('dxn:echo')
   ) {
     throw new Error('Automerge bug detected!');
   }
 
-  return Reference.fromDXN(DXN.parse(value['/']));
+  return Reference.fromDXN(DXN.parse(dxnString));
 };
 
 export const isEncodedReference = (value: any): value is EncodedReference =>

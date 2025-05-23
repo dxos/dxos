@@ -32,6 +32,7 @@
     "vitest-ui": "vitest --ui"
   },
   "dependencies": {
+    "@automerge/automerge": "3.0.0-beta.0",
     "@codemirror/autocomplete": "^6.18.1",
     "@codemirror/commands": "^6.6.2",
     "@codemirror/lang-javascript": "^6.2.2",
@@ -45,7 +46,6 @@
     "@codemirror/view": "^6.34.1",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/automerge": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
@@ -77,7 +77,9 @@
     "style-mod": "^4.1.0"
   },
   "devDependencies": {
-    "@dxos/automerge": "workspace:*",
+    "@automerge/automerge": "3.0.0-beta.0",
+    "@automerge/automerge-repo": "2.0.0",
+    "@automerge/automerge-repo-network-broadcastchannel": "2.0.0",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/keyboard": "workspace:*",

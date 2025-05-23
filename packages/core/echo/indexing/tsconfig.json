@@ -20,6 +20,12 @@
       "path": "../../../common/context"
     },
     {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/errors"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -48,9 +54,6 @@
     },
     {
       "path": "../../protocols"
-    },
-    {
-      "path": "../automerge"
     },
     {
       "path": "../echo-protocol"

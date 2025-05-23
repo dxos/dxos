@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { DocumentId } from '@dxos/automerge/automerge-repo';
+import type { DocumentId } from '@automerge/automerge-repo';
+
 import { assertArgument, failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SpaceArchiveFileStructure, type SpaceArchiveMetadata } from '@dxos/protocols';

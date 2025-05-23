@@ -4,10 +4,10 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
+import { next as A } from '@automerge/automerge';
 import { StateField, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { next as A } from '@dxos/automerge/automerge';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
 import { cursorConverter } from './cursor';
@@ -19,7 +19,7 @@ export const automerge = (accessor: DocAccessor): Extension => {
   const syncState = StateField.define<State>({
     create: () => ({
       path: accessor.path.slice(),
-      lastHeads: A.getHeads(accessor.handle.docSync()!),
+      lastHeads: A.getHeads(accessor.handle.doc()!),
       unreconciledTransactions: [],
     }),
 

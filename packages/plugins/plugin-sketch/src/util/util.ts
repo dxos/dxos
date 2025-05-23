@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as A } from '@dxos/automerge/automerge';
+import { next as A } from '@automerge/automerge';
+
 import { isNonNullable } from '@dxos/util';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.

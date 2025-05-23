@@ -8,10 +8,11 @@ import {
   type DocHandle,
   type DocumentId,
   type Repo,
-} from '@dxos/automerge/automerge-repo';
+} from '@automerge/automerge-repo';
+
 import { LifecycleState, Resource, type Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
+import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -26,6 +27,7 @@ import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
 import {
   AutomergeHost,
+  FIND_PARAMS,
   EchoDataMonitor,
   deriveCollectionIdFromSpaceId,
   type LoadDocOptions,
@@ -38,7 +40,7 @@ import {
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
-  indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }],
+  indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }, { kind: IndexKind.Kind.GRAPH }],
 };
 
 export type EchoHostParams = {
@@ -89,6 +91,7 @@ export class EchoHost extends Resource {
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
       indexer: this._indexer,
+      spaceStateManager: this._spaceStateManager,
     });
 
     this._dataService = new DataServiceImpl({
@@ -179,8 +182,8 @@ export class EchoHost extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    await this._spaceStateManager.close();
     await this._queryService.close(ctx);
+    await this._spaceStateManager.close(ctx);
     await this._indexer.close(ctx);
     await this._automergeHost.close();
   }
@@ -224,7 +227,7 @@ export class EchoHost extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
-    const automergeRoot = this._automergeHost.createDoc<SpaceDoc>({
+    const automergeRoot = this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: spaceKey.toHex() },
 
@@ -241,7 +244,8 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = this._automergeHost.repo.find<SpaceDoc>(automergeUrl);
+    const handle = await this._automergeHost.repo.find<DatabaseDirectory>(automergeUrl, FIND_PARAMS);
+    await handle.whenReady();
 
     return this._spaceStateManager.assignRootToSpace(spaceId, handle);
   }

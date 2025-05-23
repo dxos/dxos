@@ -2,9 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Heads } from '@automerge/automerge';
+import { Schema } from 'effect';
+import type { SchemaClass } from 'effect/Schema';
+
 import { type Event } from '@dxos/async';
-import { type Heads } from '@dxos/automerge/automerge';
-import { type ObjectStructure } from '@dxos/echo-protocol';
+import { type ObjectPropPath, type ObjectStructure } from '@dxos/echo-protocol';
+import type { ObjectId } from '@dxos/echo-schema';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
@@ -20,19 +24,40 @@ export type IndexQuery = {
 
   // TODO(burdon): Hack to exclude.
   inverted?: boolean;
+
+  /**
+   * Graph-based search.
+   */
+  graph?: {
+    /**
+     * Relation kind.
+     */
+    kind: 'inbound-reference' | 'relation-source' | 'relation-target';
+
+    /**
+     * anchor objects to search from.
+     */
+    anchors: ObjectId[];
+
+    /**
+     * Filter by property name.
+     * Only when kind is 'inbound-reference'.
+     */
+    property: EscapedPropPath | null;
+  };
 };
 
 export type ObjectSnapshot = {
   /**
-   * Index ID.
+   * Object ID in the indexer format.
    */
   id: ObjectPointerEncoded;
-  object: Partial<ObjectStructure>;
+  object: ObjectStructure;
   heads: Heads;
 };
 
 export type IdToHeads = Map<ObjectPointerEncoded, Heads>;
-export type FindResult = { id: string; rank: number };
+export type FindResult = { id: ObjectPointerEncoded; rank: number };
 
 export interface Index {
   identifier: string;
@@ -43,10 +68,15 @@ export interface Index {
   close(): Promise<Index>;
 
   /**
-   * @returns {Promise<boolean>} true if the object was updated, false otherwise.
+   * Add an object to the index.
+   * @returns {Promise<boolean>} true if the index was updated, false otherwise.
    */
-  update(id: string, object: Partial<ObjectStructure>): Promise<boolean>;
-  remove(id: string): Promise<void>;
+  update(id: ObjectPointerEncoded, object: ObjectStructure): Promise<boolean>;
+
+  /**
+   * Remove an object from the index.
+   */
+  remove(id: ObjectPointerEncoded): Promise<void>;
 
   // TODO(dmaretskyi): Remove from interface -- Each index has its own query api.
   find(filter: IndexQuery): Promise<FindResult[]>;
@@ -61,9 +91,34 @@ export interface IndexStaticProps {
   load(params: LoadParams): Promise<Index>;
 }
 
-/* class decorator */
+/**
+ * Type-only annotation to assert that a class-constructor implements an interface T (with it's static methods).
+ */
 export const staticImplements =
   <T>() =>
   <U extends T>(constructor: U) => {
     return constructor;
   };
+
+/**
+ * Escaped property path within an object.
+ *
+ * Escaping rules:
+ *
+ * - '.' -> '\.'
+ * - '\' -> '\\'
+ * - contact with .
+ */
+export const EscapedPropPath: SchemaClass<string, string> & {
+  escape: (path: ObjectPropPath) => EscapedPropPath;
+  unescape: (path: EscapedPropPath) => ObjectPropPath;
+} = class extends Schema.String.annotations({ title: 'EscapedPropPath' }) {
+  static escape(path: ObjectPropPath): EscapedPropPath {
+    return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
+  }
+
+  static unescape(path: EscapedPropPath): ObjectPropPath {
+    return path.split(/(?<!\\)\./).map((p) => p.replaceAll('\\\\', '\\').replaceAll('\\.', '.'));
+  }
+};
+export type EscapedPropPath = Schema.Schema.Type<typeof EscapedPropPath>;

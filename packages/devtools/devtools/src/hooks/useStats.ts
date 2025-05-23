@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
 import { type FilterParams } from '@dxos/echo-db';
-import { type EchoStatsDiagnostic, type EchoDataStats, type QueryMetrics } from '@dxos/echo-pipeline';
+import { type EchoStatsDiagnostic, type EchoDataStats } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
@@ -38,7 +38,7 @@ export type MemoryInfo = {
  */
 export type QueryInfo = {
   filter: FilterParams;
-  metrics: QueryMetrics;
+  metrics: any;
   active: boolean;
 };
 
@@ -104,7 +104,7 @@ export const useStats = (): [Stats, () => void] => {
       // TODO(burdon): Reconcile with diagnostics.
       const objects = TRACE_PROCESSOR.findResourcesByClassName('RepoProxy')
         .flatMap((r) => Object.values(r.instance.deref()?.handles ?? {}))
-        .map((handle: any) => handle.docSync())
+        .map((handle: any) => handle.doc())
         .filter(Boolean);
 
       const database: DatabaseInfo = {

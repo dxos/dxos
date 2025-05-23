@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as A from '@automerge/automerge';
 import { Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
-import type * as A from '@dxos/automerge/automerge';
 import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
 import {
