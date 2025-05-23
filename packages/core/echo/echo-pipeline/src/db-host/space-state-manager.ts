@@ -6,11 +6,13 @@ import isEqual from 'lodash.isequal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
-import { Resource, Context } from '@dxos/context';
+import { Resource, Context, LifecycleState } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 
 import { DatabaseRoot } from './database-root';
+import { log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
 
 export class SpaceStateManager extends Resource {
   private readonly _roots = new Map<DocumentId, DatabaseRoot>();
@@ -21,6 +23,7 @@ export class SpaceStateManager extends Resource {
   public readonly spaceDocumentListUpdated = new Event<SpaceDocumentListUpdatedEvent>();
 
   protected override async _close(ctx: Context): Promise<void> {
+    log.info('close');
     for (const [_, rootCtx] of this._perRootContext) {
       await rootCtx.dispose();
     }
@@ -40,6 +43,7 @@ export class SpaceStateManager extends Resource {
   }
 
   getRootBySpaceId(spaceId: SpaceId): DatabaseRoot | undefined {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
     const documentId = this._rootBySpace.get(spaceId);
     if (!documentId) {
       return undefined;

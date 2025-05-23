@@ -434,9 +434,6 @@ describe('Queries', () => {
     });
 
     test('traverse outbound references', async () => {
-      // TODO(dmaretskyi): There's a race condition on initializing space state in echo-host.
-      await sleep(100);
-
       const { objects } = await db
         .query(Query.select(Filter.type(Testing.Task, { title: 'Task 1' })).reference('assignee'))
         .run();
