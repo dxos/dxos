@@ -32,7 +32,7 @@ export const useStoreAdapter = (object?: AnyLiveObject<DiagramType>) => {
       try {
         // OTF migration from old path.
         const accessor = createDocAccessor(object, ['content']);
-        const oldData = getDeep(accessor.handle.docSync(), accessor.path);
+        const oldData = getDeep(accessor.handle.doc(), accessor.path);
         if (Object.keys(oldData ?? {}).length) {
           object.canvas.target!.content = oldData;
           accessor.handle.change((object) => setDeep(object, accessor.path, {}));

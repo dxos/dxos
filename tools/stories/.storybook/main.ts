@@ -80,13 +80,6 @@ export const config = (
             },
           },
         },
-        resolve: {
-          alias: {
-            // Some packages depend on automerge-repo. We alias them to point to our pre-bundled version.
-            // `resolve` assumes that CWD is at the repo root.
-            '@automerge/automerge-repo': resolve('packages/core/echo/automerge/dist/lib/browser/automerge-repo.js'),
-          },
-        },
         // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
         server: {
           headers: {

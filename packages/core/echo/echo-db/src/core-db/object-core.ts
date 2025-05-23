@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@automerge/automerge';
+import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import type { InspectOptionsStylized, inspect } from 'util';
 
 import { Event } from '@dxos/async';
-import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@dxos/automerge/automerge';
-import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { inspectCustom } from '@dxos/debug';
 import {
   decodeReference,
@@ -137,7 +137,7 @@ export class ObjectCore {
   }
 
   getDoc() {
-    return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
+    return this.doc ?? this.docHandle?.doc() ?? failedInvariant('Invalid state');
   }
 
   /**
@@ -166,7 +166,7 @@ export class ObjectCore {
   /**
    * Do not take into account mountPath.
    */
-  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): string[] | undefined {
+  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -198,7 +198,7 @@ export class ObjectCore {
     const self = this;
     return {
       handle: {
-        docSync: () => this.getDoc(),
+        doc: () => this.getDoc(),
         change: (callback, options) => {
           this.change(callback, options);
         },

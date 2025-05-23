@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { cbor } from '@dxos/automerge/automerge-repo';
+import { cbor } from '@automerge/automerge-repo';
+
 import { invariant } from '@dxos/invariant';
 import type { LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';

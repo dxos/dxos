@@ -2,26 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
 import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
-import { next as A } from '@dxos/automerge/automerge';
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
 import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
-import { EchoTestPeer, TestReplicator, TestReplicatorConnection } from '@dxos/echo-db/testing';
-import { live, type Live, TypedObject } from '@dxos/echo-schema';
+import { EchoTestPeer } from '@dxos/echo-db/testing';
+import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
+import { TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis';
 
-export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', version: '0.1.0' })({
+export class Text extends TypedObject({ typename: 'dxos.org/blade-runner/Text', version: '0.1.0' })({
   content: Schema.String,
 }) {}
 

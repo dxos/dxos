@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { next as Automerge } from '@dxos/automerge/automerge';
+import { next as Automerge } from '@automerge/automerge';
+
 import type { Live } from '@dxos/live-object';
 
 import { createDocAccessor } from '../core-db';
@@ -23,7 +24,7 @@ export const ObjectVersion = Object.freeze({
  */
 export const getVersion = (obj: Live<any>): ObjectVersion => {
   const docAccessor = createDocAccessor(obj, []);
-  const doc = docAccessor.handle.docSync();
+  const doc = docAccessor.handle.doc();
   if (!doc) {
     return { heads: [] };
   }

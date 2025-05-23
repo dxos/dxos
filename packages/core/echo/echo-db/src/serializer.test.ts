@@ -90,7 +90,7 @@ describe('Serializer', () => {
       {
         const { db } = await builder.createDatabase();
         const preserved = db.add(live(objValue));
-        const deleted = db.add(live({ value: objValue.value + 1 }));
+        const deleted = db.add(live({ value: preserved.value + 1 }));
         db.remove(deleted);
         await db.flush();
 

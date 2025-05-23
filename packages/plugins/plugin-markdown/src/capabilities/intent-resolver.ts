@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+
 import {
   Capabilities,
   CollaborationActions,
@@ -9,7 +11,6 @@ import {
   createResolver,
   type PluginContext,
 } from '@dxos/app-framework';
-import { next as A } from '@dxos/automerge/automerge';
 import { createQueueDxn, isInstanceOf } from '@dxos/echo-schema';
 import { makeRef, live, refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';

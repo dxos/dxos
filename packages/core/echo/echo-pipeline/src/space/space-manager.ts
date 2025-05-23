@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+
 import { synchronized, trackLeaks, Trigger } from '@dxos/async';
-import { type AutomergeUrl, parseAutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { getCredentialAssertion, type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';

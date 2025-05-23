@@ -50,9 +50,6 @@
       "path": "../../protocols"
     },
     {
-      "path": "../automerge"
-    },
-    {
       "path": "../echo-protocol"
     },
     {

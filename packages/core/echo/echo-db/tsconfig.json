@@ -58,9 +58,6 @@
       "path": "../../protocols"
     },
     {
-      "path": "../automerge"
-    },
-    {
       "path": "../echo-pipeline"
     },
     {
