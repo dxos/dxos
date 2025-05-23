@@ -23,9 +23,6 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -33,6 +30,9 @@ describe('QueryPlanner', () => {
                 "dxn:type:dxos.org/type/Person:0.1.0",
               ],
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
@@ -52,9 +52,6 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -62,6 +59,9 @@ describe('QueryPlanner', () => {
                 "dxn:type:dxos.org/type/Person:0.1.0",
               ],
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
@@ -98,15 +98,15 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "IdSelector",
               "objectIds": [
                 "01JVS9YYT5VMVJW0GGTM1YHCCH",
               ],
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
@@ -175,15 +175,15 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "IdSelector",
               "objectIds": [
                 "01JVS9YYT7H6A6DXRN56RSHT6Z",
               ],
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
@@ -235,9 +235,6 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -245,6 +242,9 @@ describe('QueryPlanner', () => {
                 "dxn:type:dxos.org/type/Organization:0.1.0",
               ],
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
@@ -338,9 +338,6 @@ describe('QueryPlanner', () => {
                 "steps": [
                   {
                     "_tag": "SelectStep",
-                    "fromSpaces": [
-                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-                    ],
                     "selector": {
                       "_tag": "TypeSelector",
                       "inverted": false,
@@ -348,6 +345,9 @@ describe('QueryPlanner', () => {
                         "dxn:type:dxos.org/type/Person:0.1.0",
                       ],
                     },
+                    "spaces": [
+                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                    ],
                   },
                   {
                     "_tag": "FilterDeletedStep",
@@ -359,9 +359,6 @@ describe('QueryPlanner', () => {
                 "steps": [
                   {
                     "_tag": "SelectStep",
-                    "fromSpaces": [
-                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-                    ],
                     "selector": {
                       "_tag": "TypeSelector",
                       "inverted": false,
@@ -369,6 +366,9 @@ describe('QueryPlanner', () => {
                         "dxn:type:dxos.org/type/Organization:0.1.0",
                       ],
                     },
+                    "spaces": [
+                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                    ],
                   },
                   {
                     "_tag": "FilterDeletedStep",
@@ -392,9 +392,6 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -402,6 +399,9 @@ describe('QueryPlanner', () => {
                 "dxn:type:dxos.org/type/Task:0.1.0",
               ],
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
@@ -448,14 +448,14 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "TextSelector",
               "searchKind": "full-text",
               "text": "Bill",
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
@@ -483,9 +483,6 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -494,6 +491,9 @@ describe('QueryPlanner', () => {
                 "dxn:type:dxos.org/type/Person:0.1.0",
               ],
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
@@ -515,9 +515,6 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": true,
@@ -526,6 +523,9 @@ describe('QueryPlanner', () => {
                 "dxn:type:dxos.org/type/Person:0.1.0",
               ],
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
@@ -545,9 +545,6 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "fromSpaces": [
-              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -555,6 +552,9 @@ describe('QueryPlanner', () => {
                 "dxn:type:dxos.org/type/Task:0.1.0",
               ],
             },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
           },
           {
             "_tag": "FilterDeletedStep",
