@@ -223,6 +223,9 @@ export class IndexingEngine extends Resource {
         case IndexKind.Kind.SCHEMA_MATCH:
           updates.push(...(await updateIndexWithObjects(index, documents)));
           break;
+        case IndexKind.Kind.GRAPH:
+          updates.push(...(await updateIndexWithObjects(index, documents)));
+          break;
       }
     }
     return updates;
