@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
 import { getHeads } from '@automerge/automerge';
 import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import { Schema } from 'effect';
 
 import { DeferredTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';

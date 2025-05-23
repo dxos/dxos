@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Heads } from '@automerge/automerge';
 import { Schema } from 'effect';
 import type { SchemaClass } from 'effect/Schema';
+
 import { type Event } from '@dxos/async';
-import { type Heads } from '@automerge/automerge';
 import { type ObjectPropPath, type ObjectStructure } from '@dxos/echo-protocol';
 import type { ObjectId } from '@dxos/echo-schema';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
