@@ -11,15 +11,15 @@ import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { DefaultStory, str, content, longText } from './story-utils';
+import { EditorStory, str, content, longText } from './story-utils';
 import { annotations, comments, createExternalCommentSync } from '../extensions';
 import { type Comment } from '../types';
 import { createRenderer } from '../util';
 
-const meta: Meta<typeof DefaultStory> = {
+const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: DefaultStory,
+  render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 
@@ -33,7 +33,7 @@ export const Comments = {
   render: () => {
     const _comments = useSignal<Comment[]>([]);
     return (
-      <DefaultStory
+      <EditorStory
         text={str('# Comments', '', content.paragraphs, content.footer)}
         extensions={[
           createExternalCommentSync(
@@ -94,6 +94,6 @@ const CommentTooltip: FC<{ shortcut: string }> = ({ shortcut }) => {
 
 export const Annotations = {
   render: () => (
-    <DefaultStory text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />
+    <EditorStory text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />
   ),
 };

@@ -12,7 +12,7 @@ import React from 'react';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
 import {
-  DefaultStory,
+  EditorStory,
   defaultExtensions,
   allExtensions,
   text,
@@ -41,10 +41,10 @@ import {
   outliner,
 } from '../extensions';
 
-const meta: Meta<typeof DefaultStory> = {
+const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: DefaultStory,
+  render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 
@@ -55,7 +55,7 @@ export default meta;
 //
 
 export const Default = {
-  render: () => <DefaultStory text={text} extensions={defaultExtensions} />,
+  render: () => <EditorStory text={text} extensions={defaultExtensions} />,
 };
 
 //
@@ -63,7 +63,7 @@ export const Default = {
 //
 
 export const Everything = {
-  render: () => <DefaultStory text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
+  render: () => <EditorStory text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
 //
@@ -71,7 +71,7 @@ export const Everything = {
 //
 
 export const Empty = {
-  render: () => <DefaultStory extensions={defaultExtensions} />,
+  render: () => <EditorStory extensions={defaultExtensions} />,
 };
 
 //
@@ -79,7 +79,7 @@ export const Empty = {
 //
 
 export const Readonly = {
-  render: () => <DefaultStory text={text} extensions={defaultExtensions} readOnly />,
+  render: () => <EditorStory text={text} extensions={defaultExtensions} readOnly />,
 };
 
 //
@@ -87,7 +87,7 @@ export const Readonly = {
 //
 
 export const NoExtensions = {
-  render: () => <DefaultStory text={text} />,
+  render: () => <EditorStory text={text} />,
 };
 
 //
@@ -96,7 +96,7 @@ export const NoExtensions = {
 
 export const Vim = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
       extensions={[defaultExtensions, InputModeExtensions.vim]}
     />
@@ -108,12 +108,12 @@ export const Vim = {
 //
 
 export const Folding = {
-  render: () => <DefaultStory text={text} extensions={[folding()]} />,
+  render: () => <EditorStory text={text} extensions={[folding()]} />,
 };
 
 export const Scrolling = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# Large Document', '', longText)}
       extensions={selectionState({
         setState: (id, state) => global.set(id, state),
@@ -125,7 +125,7 @@ export const Scrolling = {
 
 export const ScrollingWithImages = {
   render: () => (
-    <DefaultStory text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
+    <EditorStory text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
   ),
 };
 
@@ -136,7 +136,7 @@ export const ScrollTo = {
     const text = str('# Scroll To', longText, '', word, '', longText);
     const idx = text.indexOf(word);
     return (
-      <DefaultStory
+      <EditorStory
         text={text}
         extensions={defaultExtensions}
         scrollTo={idx}
@@ -152,7 +152,7 @@ export const ScrollTo = {
 
 export const Blockquote = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('> Blockquote', 'continuation', content.footer)}
       extensions={decorateMarkdown()}
       debug='raw'
@@ -161,28 +161,24 @@ export const Blockquote = {
 };
 
 export const Headings = {
-  render: () => (
-    <DefaultStory text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />
-  ),
+  render: () => <EditorStory text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
 };
 
 export const Links = {
-  render: () => (
-    <DefaultStory text={str(content.links, content.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />
-  ),
+  render: () => <EditorStory text={str(content.links, content.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />,
 };
 
 export const Image = {
-  render: () => <DefaultStory text={str(content.image, content.footer)} extensions={[image()]} />,
+  render: () => <EditorStory text={str(content.image, content.footer)} extensions={[image()]} />,
 };
 
 export const Code = {
-  render: () => <DefaultStory text={str(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <EditorStory text={str(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 export const Lists = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str(content.tasks, '', content.bullets, '', content.numbered, content.footer)}
       extensions={[decorateMarkdown()]}
     />
@@ -194,7 +190,7 @@ export const Lists = {
 //
 
 export const BulletList = {
-  render: () => <DefaultStory text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <EditorStory text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 //
@@ -202,7 +198,7 @@ export const BulletList = {
 //
 
 export const OrderedList = {
-  render: () => <DefaultStory text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
+  render: () => <EditorStory text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 //
@@ -211,7 +207,7 @@ export const OrderedList = {
 
 export const TaskList = {
   render: () => (
-    <DefaultStory text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />
+    <EditorStory text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />
   ),
 };
 
@@ -221,18 +217,18 @@ export const TaskList = {
 
 export const Outliner = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       // text={str(...content.tasks.split('\n').filter((line) => line.trim().startsWith('-')))}
       text={str(
         //
         '- [ ] A',
         '- [ ] B',
         // Continuation lines.
-        '  ## Example',
-        '  Continuation line belonging to B.',
-        '  ```ts',
-        '  const x = 100',
-        '  ```',
+        // '  ## Example',
+        // '  Continuation line belonging to B.',
+        // '  ```ts',
+        // '  const x = 100',
+        // '  ```',
         '  - [ ] C',
         '    - D Items can have links [like this](https://example.com).',
       )}
@@ -247,7 +243,7 @@ export const Outliner = {
 //
 
 export const Table = {
-  render: () => <DefaultStory text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
+  render: () => <EditorStory text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
 };
 
 //
@@ -256,7 +252,7 @@ export const Table = {
 
 export const CommentedOut = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# Commented out', '', content.comment, content.footer)}
       extensions={[
         decorateMarkdown(),
@@ -273,7 +269,7 @@ export const CommentedOut = {
 
 export const Typescript = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={content.typescript}
       lineNumbers
       extensions={[editorMonospace, javascript({ typescript: true })]}
@@ -287,7 +283,7 @@ export const Typescript = {
 
 export const Autocomplete = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
       extensions={[
         decorateMarkdown({ renderLinkButton }),
@@ -307,7 +303,7 @@ export const Autocomplete = {
 
 export const Mention = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# Mention', '', 'Type @...', content.footer)}
       extensions={[
         mention({
@@ -324,7 +320,7 @@ export const Mention = {
 
 export const Search = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# Search', text)}
       extensions={defaultExtensions}
       onReady={(view) => openSearchPanel(view)}
