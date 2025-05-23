@@ -8,6 +8,7 @@ import { mean, std } from 'mathjs';
 import { type SchedulerEnvImpl } from '../env';
 import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan } from '../plan';
 import { AutomergeReplicant, type StorageAdaptorKind } from '../replicants/automerge-replicant';
+import { PublicKey } from '@dxos/keys';
 
 export type AutomergeTestSpec = {
   platform: Platform;
@@ -32,9 +33,9 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeT
       platform: 'chromium',
       loadCycle: 10,
       clientStorage: 'idb',
-      docsCount: 1000,
-      mutationsCount: 10,
-      mutationSize: 100,
+      docsCount: 10_000,
+      mutationsCount: 0,
+      mutationSize: 10,
       maximumDocSize: 1000,
     };
   }
@@ -43,7 +44,8 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeT
     env: SchedulerEnvImpl<AutomergeTestSpec>,
     params: TestParams<AutomergeTestSpec>,
   ): Promise<AutomergeTestResult> {
-    const replicant = await env.spawn(AutomergeReplicant, { platform: params.spec.platform });
+    const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;
+    const replicant = await env.spawn(AutomergeReplicant, { platform: params.spec.platform, userDataDir });
     await replicant.brain.openRepo({ storageAdaptor: params.spec.clientStorage });
 
     const results: AutomergeTestResult = {
@@ -60,12 +62,11 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeT
     });
     results.saveDuration = createResults.duration;
     results.docsAmount = createResults.docsCount;
+    replicant.kill()
 
     for (let i = 0; i < params.spec.loadCycle; i++) {
-      // Unload documents from memory.
-      await replicant.brain.closeRepo();
-
       // Load documents from memory.
+      const replicant = await env.spawn(AutomergeReplicant, { platform: params.spec.platform, userDataDir });
       await replicant.brain.openRepo({ storageAdaptor: params.spec.clientStorage });
       const loadResult = await replicant.brain.loadDocuments({
         docIds: Object.keys(createResults.docsCreated) as DocumentId[],
@@ -87,8 +88,8 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeT
   }> {
     return {
       loadDurations: result.loadDurations,
-      loadStd: std(result.loadDurations) as number[],
       loadMean: mean(result.loadDurations),
+      loadStd: std(result.loadDurations) as number[],
     };
   }
 }
