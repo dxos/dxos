@@ -22,7 +22,7 @@ const doc = str(
   '- [ ] 3',
 );
 
-describe('outliner', () => {
+describe('tree', () => {
   const state = EditorState.create({
     doc,
     extensions: [createMarkdownExtensions(), outlinerTree()],

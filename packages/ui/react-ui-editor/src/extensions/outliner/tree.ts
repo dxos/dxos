@@ -135,6 +135,10 @@ export const traverse = <T = any>(root: Item, cb: (item: Item, level: number) =>
   return t(root, root.type === 'root' ? -1 : 0);
 };
 
+export const getListItemContent = (state: EditorState, item: Item): string => {
+  return state.doc.sliceString(item.contentRange.from, item.contentRange.to);
+};
+
 export const listItemToString = (item: Item, level = 0) => {
   const indent = '  '.repeat(level);
   const data = {

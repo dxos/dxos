@@ -4,15 +4,31 @@
 
 import { indentMore } from '@codemirror/commands';
 import { getIndentUnit } from '@codemirror/language';
-import { type ChangeSpec, EditorState, type Extension, Prec, type Range } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import {
+  type ChangeSpec,
+  EditorSelection,
+  EditorState,
+  type Extension,
+  Prec,
+  type Range,
+  type SelectionRange,
+} from '@codemirror/state';
+import {
+  type Command,
+  Decoration,
+  type DecorationSet,
+  EditorView,
+  keymap,
+  ViewPlugin,
+  type ViewUpdate,
+} from '@codemirror/view';
 
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
 import { outlinerTree, treeFacet } from './tree';
 
-// TODO(burdon): Move items (by key).
+// TODO(burdon): Cursor up/down.
 // TODO(burdon): Alt+ENTER to create a continuation line.
 // TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): Menu option to toggle list/task mode
@@ -23,6 +39,114 @@ import { outlinerTree, treeFacet } from './tree';
 // TODO(burdon): What if a different editor "breaks" the layout?
 
 const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
+
+const getSelection = (view: EditorView): SelectionRange => view.state.selection.ranges[view.state.selection.mainIndex];
+
+//
+// Indentation comnmands.
+//
+
+export const indentItemMore: Command = (view: EditorView) => {
+  const pos = getSelection(view).from;
+  const tree = view.state.facet(treeFacet);
+  const current = tree.find(pos);
+  if (current) {
+    const previous = tree.prev(current);
+    if (previous && current.level <= previous.level) {
+      // TODO(burdon): Indent descendants?
+      indentMore(view);
+    }
+  }
+
+  return true;
+};
+
+export const indentItemLess: Command = (view: EditorView) => {
+  const pos = getSelection(view).from;
+  const tree = view.state.facet(treeFacet);
+  const current = tree.find(pos);
+  if (current) {
+    if (current.level > 0) {
+      // Unindent current line and all descendants.
+      // NOTE: The markdown extension doesn't provide an indentation service.
+      const indentUnit = getIndentUnit(view.state);
+      const changes: ChangeSpec[] = [];
+      tree.traverse(current, (item) => {
+        const line = view.state.doc.lineAt(item.docRange.from);
+        changes.push({ from: line.from, to: line.from + indentUnit });
+      });
+
+      if (changes.length > 0) {
+        view.dispatch({ changes });
+      }
+    }
+  }
+
+  return true;
+};
+
+//
+// Moving commands.
+// TODO(burdon): Should moving affect indentation (of current and target rows)?
+//
+
+export const moveItemDown: Command = (view: EditorView) => {
+  const pos = getSelection(view)?.from;
+  const tree = view.state.facet(treeFacet);
+  const current = tree.find(pos);
+  if (current) {
+    const next = tree.next(current);
+    if (next) {
+      const currentContent = view.state.doc.sliceString(current.docRange.from, current.docRange.to + 1);
+      const nextContent = view.state.doc.sliceString(
+        next.docRange.from,
+        Math.min(view.state.doc.length, next.docRange.to + 1),
+      );
+      const eol = nextContent.endsWith('\n') ? '' : '\n';
+      const changes: ChangeSpec[] = [
+        { from: current.docRange.from, to: current.docRange.from + currentContent.length, insert: nextContent + eol },
+        { from: next.docRange.from, to: next.docRange.from + nextContent.length, insert: currentContent },
+      ];
+
+      view.dispatch({
+        changes,
+        selection: EditorSelection.cursor(next.docRange.from),
+        scrollIntoView: true,
+      });
+    }
+  }
+
+  return true;
+};
+
+export const moveItemUp: Command = (view: EditorView) => {
+  const pos = getSelection(view)?.from;
+  const tree = view.state.facet(treeFacet);
+  const current = tree.find(pos);
+  if (current) {
+    const prev = tree.prev(current);
+    if (prev) {
+      const prevContent = view.state.doc.sliceString(prev.docRange.from, prev.docRange.to + 1);
+      const currentContent = view.state.doc.sliceString(
+        current.docRange.from,
+        Math.min(view.state.doc.length, current.docRange.to + 1),
+      );
+      const eol = currentContent.endsWith('\n') ? '' : '\n';
+      const changes: ChangeSpec[] = [
+        { from: prev.docRange.from, to: prev.docRange.from + prevContent.length, insert: currentContent + eol },
+        { from: current.docRange.from, to: current.docRange.from + currentContent.length, insert: prevContent },
+      ];
+
+      view.dispatch({
+        changes,
+        selection: EditorSelection.cursor(prev.docRange.from),
+        scrollIntoView: true,
+      });
+    }
+  }
+
+  return true;
+};
 
 /**
  * Outliner extension.
@@ -37,29 +161,29 @@ export const outliner = (): Extension => [
   outlinerTree(),
   EditorState.transactionFilter.of((tr) => {
     const tree = tr.state.facet(treeFacet);
-    const pos = tr.selection?.ranges[tr.selection?.mainIndex]?.from;
-    const item = pos != null ? tree.find(pos) : undefined;
 
     // Check cursor is in a valid position.
     if (!tr.docChanged) {
       const prev = tr.startState.selection.ranges[tr.startState.selection.mainIndex]?.from;
+      const pos = tr.selection?.ranges[tr.selection?.mainIndex]?.from;
+      const item = pos != null ? tree.find(pos) : undefined;
       if (pos != null) {
         if (item) {
           if (pos < item.contentRange.from || pos > item.contentRange.to) {
             if (pos - prev < 0) {
               const prev = tree.prev(item);
               if (prev) {
-                return [{ selection: { anchor: prev.contentRange.to } }];
+                return [{ selection: EditorSelection.cursor(prev.contentRange.to) }];
               } else {
                 const first = tree.next(tree.root);
                 if (first) {
-                  return [{ selection: { anchor: first.contentRange.from } }];
+                  return [{ selection: EditorSelection.cursor(first.contentRange.from) }];
                 }
 
                 return [];
               }
             } else {
-              return [{ selection: { anchor: item.contentRange.from } }];
+              return [{ selection: EditorSelection.cursor(item.contentRange.from) }];
             }
           }
         }
@@ -68,6 +192,7 @@ export const outliner = (): Extension => [
       return tr;
     }
 
+    let cancel = false;
     const changes: ChangeSpec[] = [];
     tr.changes.iterChanges((fromA, toA, fromB, toB, insert) => {
       const line = tr.startState.doc.lineAt(fromA);
@@ -83,7 +208,6 @@ export const outliner = (): Extension => [
         //   - [ ] <- backspace here deletes the task marker.
         const replace = start === toA && toA - fromA === insert.length;
         if (replace) {
-          log.info('delete line');
           changes.push({ from: line.from - 1, to: toA });
           return;
         }
@@ -95,12 +219,10 @@ export const outliner = (): Extension => [
             if (line.text.match(/^\s*$/)) {
               if (line.from === 0) {
                 // Don't delete first line.
-                log.info('skip');
-                changes.push({ from: 0, to: 0 });
+                cancel = true;
                 return;
               } else {
                 // Delete indent and marker.
-                log.info('delete line');
                 changes.push({ from: line.from - 1, to: toA });
                 return;
               }
@@ -109,10 +231,17 @@ export const outliner = (): Extension => [
           return;
         }
 
-        // TODO(burdon): Prevent newline if line is empty.
+        // Prevent newline if line is empty.
+        const item = tree.find(fromA);
+        if (item?.contentRange.from === item?.contentRange.to && fromA === toA) {
+          cancel = true;
+          return;
+        }
+
         // TODO(burdon): Handle backspace at start of line (or empty line).
 
-        log.info('change', {
+        log('change', {
+          item,
           line: { from: line.from, to: line.to },
           a: [fromA, toA],
           b: [fromB, toB],
@@ -122,7 +251,11 @@ export const outliner = (): Extension => [
     });
 
     if (changes.length > 0) {
+      log('modified,', { changes });
       return [{ changes }];
+    } else if (cancel) {
+      log('cancel');
+      return [];
     }
 
     return tr;
@@ -185,45 +318,20 @@ export const outliner = (): Extension => [
   Prec.highest(
     keymap.of([
       {
-        // Indentation.
         key: 'Tab',
-        run: (view) => {
-          const pos = view.state.selection.ranges[view.state.selection.mainIndex]?.from;
-          const tree = view.state.facet(treeFacet);
-          const current = tree.find(pos);
-          if (current) {
-            const previous = tree.prev(current);
-            if (previous && current.level <= previous.level) {
-              // TODO(burdon): Indent descendants?
-              indentMore(view);
-            }
-          }
-
-          return true;
-        },
-        shift: (view) => {
-          const pos = view.state.selection.ranges[view.state.selection.mainIndex]?.from;
-          const tree = view.state.facet(treeFacet);
-          const current = tree.find(pos);
-          if (current) {
-            if (current.level > 0) {
-              // Unindent current line and all descendants.
-              // NOTE: The markdown extension doesn't provide an indentation service.
-              const indentUnit = getIndentUnit(view.state);
-              const changes: ChangeSpec[] = [];
-              tree.traverse(current, (item) => {
-                const line = view.state.doc.lineAt(item.docRange.from);
-                changes.push({ from: line.from, to: line.from + indentUnit });
-              });
-
-              if (changes.length > 0) {
-                view.dispatch({ changes });
-              }
-            }
-          }
-
-          return true;
-        },
+        preventDefault: true,
+        run: indentItemMore,
+        shift: indentItemLess,
+      },
+      {
+        key: 'Alt-ArrowDown',
+        preventDefault: true,
+        run: moveItemDown,
+      },
+      {
+        key: 'Alt-ArrowUp',
+        preventDefault: true,
+        run: moveItemUp,
       },
     ]),
   ),
