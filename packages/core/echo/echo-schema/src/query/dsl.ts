@@ -49,6 +49,7 @@ export interface Query<T> {
    * @returns Query for the referencing objects.
    */
   // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
+  // TODO(dmaretskyi): Ability to go through arrays of references.
   referencedBy<S extends Schema.Schema.All>(
     target: S,
     key: RefPropKey<Schema.Schema.Type<S>>,
@@ -485,7 +486,8 @@ export const Filter: FilterAPI = FilterClass;
 /**
  * All property paths inside T that are references.
  */
-type RefPropKey<T> = { [K in keyof T]: T[K] extends Ref<infer _U> ? K : never }[keyof T] & string;
+// TODO(dmaretskyi): Filter only properties that are references (or optional references, or unions that include references).
+type RefPropKey<T> = keyof T & string;
 
 const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
   let idFilter: readonly ObjectId[] | undefined;

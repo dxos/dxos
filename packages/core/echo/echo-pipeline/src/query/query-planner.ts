@@ -258,6 +258,33 @@ export class QueryPlanner {
           property: query.property,
         },
       },
+      ...this._generateDeletedHandlingSteps(context),
+    ]);
+  }
+
+  private _generateIncomingReferencesClause(
+    query: QueryAST.QueryIncomingReferencesClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.anchor, context).steps,
+      {
+        _tag: 'TraverseStep',
+        traversal: {
+          _tag: 'ReferenceTraversal',
+          direction: 'incoming',
+          property: query.property,
+        },
+      },
+      ...this._generateDeletedHandlingSteps(context),
+      {
+        _tag: 'FilterStep',
+        filter: {
+          type: 'object',
+          typename: query.typename,
+          props: {},
+        },
+      },
     ]);
   }
 
@@ -340,31 +367,6 @@ export class QueryPlanner {
         ]);
       }
     }
-  }
-
-  private _generateIncomingReferencesClause(
-    query: QueryAST.QueryIncomingReferencesClause,
-    context: GenerationContext,
-  ): QueryPlan.Plan {
-    return QueryPlan.Plan.make([
-      ...this._generate(query.anchor, context).steps,
-      {
-        _tag: 'TraverseStep',
-        traversal: {
-          _tag: 'ReferenceTraversal',
-          direction: 'incoming',
-          property: query.property,
-        },
-      },
-      {
-        _tag: 'FilterStep',
-        filter: {
-          type: 'object',
-          typename: query.typename,
-          props: {},
-        },
-      },
-    ]);
   }
 
   private _generateFilterClause(query: QueryAST.QueryFilterClause, context: GenerationContext): QueryPlan.Plan {

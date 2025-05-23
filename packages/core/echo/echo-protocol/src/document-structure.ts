@@ -71,6 +71,10 @@ export const DatabaseDirectory = Object.freeze({
     return doc.objects?.[id];
   },
 
+  getLink: (doc: DatabaseDirectory, id: ObjectId): string | undefined => {
+    return doc.links?.[id]?.toString();
+  },
+
   make: ({
     spaceKey,
     objects,

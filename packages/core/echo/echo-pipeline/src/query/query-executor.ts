@@ -2,24 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { DocumentId } from '@dxos/automerge/automerge-repo';
+import type { AutomergeUrl, DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
-import { DatabaseDirectory, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
-import type { FindResult, Indexer } from '@dxos/indexing';
-import { type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
+import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
+import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
+import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
-import { isNonNullable } from '@dxos/util';
+import { getDeep, isNonNullable } from '@dxos/util';
 
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import { filterMatchObject } from '../filter';
+import { getDXN } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
+import type { SpaceStateManager } from '../db-host';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
   automergeHost: AutomergeHost;
+  spaceStateManager: SpaceStateManager;
 
   queryId: string;
   query: QueryAST.Query;
@@ -53,6 +57,8 @@ export type ExecutionTrace = {
   objectCount: number;
   documentsLoaded: number;
   indexHits: number;
+
+  executionTime: number;
   indexQueryTime: number;
   documentLoadTime: number;
 
@@ -68,13 +74,14 @@ export const ExecutionTrace = Object.freeze({
     indexHits: 0,
     indexQueryTime: 0,
     documentLoadTime: 0,
+    executionTime: 0,
     children: [],
   }),
   format: (trace: ExecutionTrace): string => {
     const go = (trace: ExecutionTrace, indent: number): string => {
       return [
         `${' '.repeat(indent)} - ${trace.name}(${trace.details})`,
-        `${' '.repeat(indent)}   objects: ${trace.objectCount}  docs: ${trace.documentsLoaded}  index hits: ${trace.indexHits}  index query time: ${trace.indexQueryTime.toFixed(0)}ms  document load time: ${trace.documentLoadTime.toFixed(0)}ms`,
+        `${' '.repeat(indent)}   objects: ${trace.objectCount}  docs: ${trace.documentsLoaded}  index hits: ${trace.indexHits} | total: ${trace.executionTime.toFixed(0)}ms  index: ${trace.indexQueryTime.toFixed(0)}ms  load: ${trace.documentLoadTime.toFixed(0)}ms`,
         '',
         ...trace.children.map((child) => go(child, indent + 2)),
       ].join('\n');
@@ -91,7 +98,7 @@ type StepExecutionResult = {
 export class QueryExecutor extends Resource {
   private readonly _indexer: Indexer;
   private readonly _automergeHost: AutomergeHost;
-
+  private readonly _spaceStateManager: SpaceStateManager;
   /**
    * Id of this query.
    */
@@ -109,6 +116,7 @@ export class QueryExecutor extends Resource {
 
     this._indexer = options.indexer;
     this._automergeHost = options.automergeHost;
+    this._spaceStateManager = options.spaceStateManager;
 
     this._id = options.queryId;
     this._query = options.query;
@@ -190,23 +198,35 @@ export class QueryExecutor extends Resource {
     if (this._ctx.disposed) {
       return { workingSet, trace: ExecutionTrace.makeEmpty() };
     }
+    let newWorkingSet: Item[], trace: ExecutionTrace;
 
+    const begin = performance.now();
     switch (step._tag) {
       case 'ClearWorkingSetStep':
-        return { workingSet: [], trace: ExecutionTrace.makeEmpty() };
+        newWorkingSet = [];
+        trace = ExecutionTrace.makeEmpty();
+        break;
       case 'SelectStep':
-        return this._execSelectStep(step, workingSet);
+        ({ workingSet: newWorkingSet, trace } = await this._execSelectStep(step, workingSet));
+        break;
       case 'FilterStep':
-        return this._execFilterStep(step, workingSet);
+        ({ workingSet: newWorkingSet, trace } = await this._execFilterStep(step, workingSet));
+        break;
       case 'FilterDeletedStep':
-        return this._execFilterDeletedStep(step, workingSet);
+        ({ workingSet: newWorkingSet, trace } = await this._execFilterDeletedStep(step, workingSet));
+        break;
       case 'UnionStep':
-        return this._execUnionStep(step, workingSet);
+        ({ workingSet: newWorkingSet, trace } = await this._execUnionStep(step, workingSet));
+        break;
       case 'TraverseStep':
-        return this._execTraverseStep(step, workingSet);
+        ({ workingSet: newWorkingSet, trace } = await this._execTraverseStep(step, workingSet));
+        break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
     }
+    trace.executionTime = performance.now() - begin;
+
+    return { workingSet: newWorkingSet, trace };
   }
 
   private async _execSelectStep(step: QueryPlan.SelectStep, workingSet: Item[]): Promise<StepExecutionResult> {
@@ -319,24 +339,52 @@ export class QueryExecutor extends Resource {
 
   // TODO(dmaretskyi): This needs to be completed.
   private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: Item[]): Promise<StepExecutionResult> {
-    const _trace: ExecutionTrace = {
+    const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
       name: 'Traverse',
       details: JSON.stringify(step.traversal),
     };
 
-    const _newWorkingSet: Item[] = [];
+    const newWorkingSet: Item[] = [];
 
     switch (step.traversal._tag) {
       case 'ReferenceTraversal': {
         switch (step.traversal.direction) {
           case 'outgoing': {
-            // TODO(dmaretskyi): Map workingSet to pick the referenced values
-            // newWorkingSet = workingSet.map(item => pick(item, step.traversal.property)).map(ref => loadObject(ref))
+            const property = EscapedPropPath.unescape(step.traversal.property);
+
+            const refs = workingSet
+              .map((item) => {
+                const ref = getDeep(item.doc.data, property);
+                if (!isEncodedReference(ref)) {
+                  return null;
+                }
+
+                try {
+                  return {
+                    ref: DXN.parse(ref['/']),
+                    spaceId: item.spaceId,
+                  };
+                } catch {
+                  log.warn('Invalid reference', { ref: ref['/'] });
+                  return null;
+                }
+              })
+              .filter(isNonNullable);
+
+            const beginLoad = performance.now();
+            const items = await Promise.all(
+              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+            );
+            trace.documentLoadTime += performance.now() - beginLoad;
+
+            newWorkingSet.push(...items.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
+
             break;
           }
           case 'incoming': {
-            const _indexHits = await this._indexer.execQuery({
+            const indexHits = await this._indexer.execQuery({
               typenames: [],
               inverted: false,
               graph: {
@@ -345,8 +393,16 @@ export class QueryExecutor extends Resource {
                 anchors: workingSet.map((item) => item.objectId),
               },
             });
+            trace.indexHits += indexHits.length;
 
-            // TODO(dmaretskyi): Load the objects.
+            const documentLoadStart = performance.now();
+            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+            trace.documentsLoaded += results.length;
+            trace.documentLoadTime += performance.now() - documentLoadStart;
+
+            newWorkingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
+
             break;
           }
         }
@@ -356,14 +412,43 @@ export class QueryExecutor extends Resource {
         switch (step.traversal.direction) {
           case 'relation-to-source':
           case 'relation-to-target': {
-            // TODO(dmaretskyi): Map workingSet to pick the referenced values
-            // newWorkingSet = workingSet.map(relation => relation.source ... relation.target).map(ref => loadObject(ref))
+            const refs = workingSet
+              .map((item) => {
+                const ref =
+                  step.traversal.direction === 'relation-to-source'
+                    ? ObjectStructure.getRelationSource(item.doc)
+                    : ObjectStructure.getRelationTarget(item.doc);
+
+                if (!isEncodedReference(ref)) {
+                  return null;
+                }
+                try {
+                  return {
+                    ref: DXN.parse(ref['/']),
+                    spaceId: item.spaceId,
+                  };
+                } catch {
+                  log.warn('Invalid reference', { ref: ref['/'] });
+                  return null;
+                }
+              })
+              .filter(isNonNullable);
+
+            const beginLoad = performance.now();
+            const items = await Promise.all(
+              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+            );
+            trace.documentLoadTime += performance.now() - beginLoad;
+
+            newWorkingSet.push(...items.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
+
             break;
           }
 
           case 'source-to-relation':
           case 'target-to-relation': {
-            const _indexHits = await this._indexer.execQuery({
+            const indexHits = await this._indexer.execQuery({
               typenames: [],
               inverted: false,
               graph: {
@@ -373,7 +458,16 @@ export class QueryExecutor extends Resource {
               },
             });
 
-            // TODO(dmaretskyi): Load the objects.
+            trace.indexHits += indexHits.length;
+
+            const documentLoadStart = performance.now();
+            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+            trace.documentsLoaded += results.length;
+            trace.documentLoadTime += performance.now() - documentLoadStart;
+
+            newWorkingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
+
             break;
           }
         }
@@ -383,7 +477,7 @@ export class QueryExecutor extends Resource {
         throw new Error(`Unknown traversal type: ${(step.traversal as any)._tag}`);
     }
 
-    throw new Error('Not implemented');
+    return { workingSet: newWorkingSet, trace };
   }
 
   private async _execUnionStep(step: QueryPlan.UnionStep, workingSet: Item[]): Promise<StepExecutionResult> {
@@ -414,34 +508,89 @@ export class QueryExecutor extends Resource {
   private async _loadDocumentsAfterIndexQuery(indexHits: FindResult[]): Promise<(Item | null)[]> {
     return Promise.all(
       indexHits.map(async (hit): Promise<Item | null> => {
-        const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(hit.id);
-
-        const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(
-          Context.default(),
-          documentId as DocumentId,
-        );
-        const doc = handle.docSync();
-        if (!doc) {
-          return null;
-        }
-
-        const spaceKey = spaceKeyInIndex ?? DatabaseDirectory.getSpaceKey(doc);
-        if (!spaceKey) {
-          return null;
-        }
-
-        const object = DatabaseDirectory.getInlineObject(doc, objectId);
-        if (!object) {
-          return null;
-        }
-
-        return {
-          objectId,
-          documentId: documentId as DocumentId,
-          spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
-          doc: object,
-        };
+        return this._loadFromIndexHit(hit);
       }),
     );
+  }
+
+  private async _loadFromIndexHit(hit: FindResult): Promise<Item | null> {
+    const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(hit.id);
+
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId);
+    const doc = handle.docSync();
+    if (!doc) {
+      return null;
+    }
+
+    const spaceKey = spaceKeyInIndex ?? DatabaseDirectory.getSpaceKey(doc);
+    if (!spaceKey) {
+      return null;
+    }
+
+    const object = DatabaseDirectory.getInlineObject(doc, objectId);
+    if (!object) {
+      return null;
+    }
+
+    return {
+      objectId,
+      documentId: documentId as DocumentId,
+      spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
+      doc: object,
+    };
+  }
+
+  private async _loadFromDXN(dxn: DXN, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<Item | null> {
+    const echoDxn = dxn.asEchoDXN();
+    if (!echoDxn) {
+      log.warn('unable to resolve DXN', { dxn });
+      return null;
+    }
+
+    const spaceId = echoDxn.spaceId ?? sourceSpaceId;
+
+    const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
+    if (!spaceRoot) {
+      log.warn('no space state found for', { spaceId });
+      return null;
+    }
+    const dbDirectory = spaceRoot.docSync();
+    if (!dbDirectory) {
+      log.warn('no space state found for', { spaceId });
+      return null;
+    }
+
+    const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, echoDxn.echoId);
+    if (inlineObject) {
+      return {
+        objectId: echoDxn.echoId,
+        documentId: spaceRoot.documentId,
+        spaceId,
+        doc: inlineObject,
+      };
+    }
+
+    const link = DatabaseDirectory.getLink(dbDirectory, echoDxn.echoId);
+    if (!link) {
+      return null;
+    }
+
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl);
+    const doc = handle.docSync();
+    if (!doc) {
+      return null;
+    }
+
+    const object = DatabaseDirectory.getInlineObject(doc, echoDxn.echoId);
+    if (!object) {
+      return null;
+    }
+
+    return {
+      objectId: echoDxn.echoId,
+      documentId: handle.documentId,
+      spaceId,
+      doc: object,
+    };
   }
 }

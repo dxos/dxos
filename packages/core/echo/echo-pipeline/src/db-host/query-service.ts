@@ -25,10 +25,12 @@ import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
+import type { SpaceStateManager } from './space-state-manager';
 
 export type QueryServiceParams = {
   indexer: Indexer;
   automergeHost: AutomergeHost;
+  spaceStateManager: SpaceStateManager;
 };
 
 /**
@@ -104,6 +106,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
           queryId: request.queryId ?? raise(new Error('query id required')),
           query: parsedQuery,
           reactivity: request.reactivity,
+          spaceStateManager: this._params.spaceStateManager,
         }),
         sendResults: (results) => {
           if (ctx.disposed) {

@@ -9,7 +9,7 @@ import {
   type DocHandle,
   type DocumentId,
 } from '@dxos/automerge/automerge-repo';
-import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+import { DatabaseDirectory, SpaceDocVersion, type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';

@@ -357,11 +357,41 @@ describe('Queries', () => {
     expect(objects).toEqual([b]);
   });
 
-  describe('Relations', () => {
-    test('query by type', async () => {
-      const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
+  test('query relation by type', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
 
+    const alice = db.add(
+      live(Testing.Contact, {
+        name: 'Alice',
+      }),
+    );
+    const bob = db.add(
+      live(Testing.Contact, {
+        name: 'Bob',
+      }),
+    );
+    const hasManager = db.add(
+      live(Testing.HasManager, {
+        [RelationSourceId]: bob,
+        [RelationTargetId]: alice,
+        since: '2022',
+      }),
+    );
+
+    const { objects } = await db.query(Filter.type(Testing.HasManager)).run();
+    expect(objects).toEqual([hasManager]);
+  });
+
+  describe('traversals', () => {
+    let db: EchoDatabase;
+
+    beforeEach(async () => {
+      const { db: db1, graph } = await builder.createDatabase();
+      db = db1;
+      graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager, Testing.Task]);
+
+      // TODO(dmaretskyi): Better test data.
       const alice = db.add(
         live(Testing.Contact, {
           name: 'Alice',
@@ -380,8 +410,58 @@ describe('Queries', () => {
         }),
       );
 
-      const { objects } = await db.query(Filter.type(Testing.HasManager)).run();
-      expect(objects).toEqual([hasManager]);
+      const task1 = db.add(live(Testing.Task, { title: 'Task 1', assignee: Ref.make(alice) }));
+      const task2 = db.add(live(Testing.Task, { title: 'Task 2', assignee: Ref.make(alice) }));
+      const task3 = db.add(live(Testing.Task, { title: 'Task 3', assignee: Ref.make(bob) }));
+
+      await db.flush({ indexes: true });
+    });
+
+    test('traverse relation source to target', async () => {
+      const { objects } = await db
+        .query(
+          Query.select(Filter.type(Testing.Contact, { name: 'Bob' }))
+            .sourceOf(Testing.HasManager)
+            .target(),
+        )
+        .run();
+
+      expect(objects).toMatchObject([{ name: 'Alice' }]);
+    });
+
+    test('traverse relation target to source', async () => {
+      const { objects } = await db
+        .query(
+          Query.select(Filter.type(Testing.Contact, { name: 'Alice' }))
+            .targetOf(Testing.HasManager)
+            .source(),
+        )
+        .run();
+
+      expect(objects).toMatchObject([{ name: 'Bob' }]);
+    });
+
+    test('traverse outbound references', async () => {
+      // TODO(dmaretskyi): There's a race condition on initializing space state in echo-host.
+      await sleep(100);
+
+      const { objects } = await db
+        .query(Query.select(Filter.type(Testing.Task, { title: 'Task 1' })).reference('assignee'))
+        .run();
+
+      expect(objects).toMatchObject([{ name: 'Alice' }]);
+    });
+
+    test('traverse inbound references', async () => {
+      const { objects } = await db
+        .query(Query.select(Filter.type(Testing.Contact, { name: 'Alice' })).referencedBy(Testing.Task, 'assignee'))
+        .run();
+
+      // TODO(dmaretskyi): Sort in query result.
+      expect(objects.sort((a, b) => a.title!.localeCompare(b.title!))).toMatchObject([
+        { title: 'Task 1' },
+        { title: 'Task 2' },
+      ]);
     });
   });
 });

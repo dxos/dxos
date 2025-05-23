@@ -119,7 +119,7 @@ export namespace Testing {
     {
       title: Schema.optional(Schema.String),
       completed: Schema.optional(Schema.Boolean),
-      assignee: Schema.optional(Contact),
+      assignee: Schema.optional(Ref(Contact)),
       previous: Schema.optional(Schema.suspend((): Ref$<Task> => Ref(Task))),
       subTasks: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend((): Ref$<Task> => Ref(Task))))),
       description: Schema.optional(Schema.String),

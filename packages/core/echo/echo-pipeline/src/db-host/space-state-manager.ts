@@ -11,6 +11,7 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 
 import { DatabaseRoot } from './database-root';
+import { log } from '@dxos/log';
 
 export class SpaceStateManager extends Resource {
   private readonly _roots = new Map<DocumentId, DatabaseRoot>();
@@ -37,6 +38,14 @@ export class SpaceStateManager extends Resource {
 
   getSpaceRootDocumentId(spaceId: SpaceId): DocumentId | undefined {
     return this._rootBySpace.get(spaceId);
+  }
+
+  getRootBySpaceId(spaceId: SpaceId): DatabaseRoot | undefined {
+    const documentId = this._rootBySpace.get(spaceId);
+    if (!documentId) {
+      return undefined;
+    }
+    return this._roots.get(documentId);
   }
 
   async assignRootToSpace(spaceId: SpaceId, handle: DocHandle<DatabaseDirectory>): Promise<DatabaseRoot> {

@@ -89,6 +89,7 @@ export class EchoHost extends Resource {
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
       indexer: this._indexer,
+      spaceStateManager: this._spaceStateManager,
     });
 
     this._dataService = new DataServiceImpl({
