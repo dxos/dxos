@@ -3,7 +3,7 @@
 //
 
 import type { AutomergeUrl, DocumentId } from '@dxos/automerge/automerge-repo';
-import { Context, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
@@ -18,6 +18,7 @@ import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject } from '../filter';
+import { invariant } from '@dxos/invariant';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -155,6 +156,7 @@ export class QueryExecutor extends Resource {
   }
 
   async execQuery(): Promise<QueryExecutionResult> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
     const prevResultSet = this._lastResultSet;
 
     const { workingSet, trace } = await this._execPlan(this._plan, this._lastResultSet);

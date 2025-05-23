@@ -23,7 +23,6 @@ export class SpaceStateManager extends Resource {
   public readonly spaceDocumentListUpdated = new Event<SpaceDocumentListUpdatedEvent>();
 
   protected override async _close(ctx: Context): Promise<void> {
-    log.info('close');
     for (const [_, rootCtx] of this._perRootContext) {
       await rootCtx.dispose();
     }

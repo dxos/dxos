@@ -180,8 +180,8 @@ export class EchoHost extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    await this._spaceStateManager.close();
     await this._queryService.close(ctx);
+    await this._spaceStateManager.close(ctx);
     await this._indexer.close(ctx);
     await this._automergeHost.close();
   }

@@ -21,6 +21,7 @@ import { Filter, Query } from './api';
 import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
+import { log } from '@dxos/log';
 
 const createTestObject = (idx: number, label?: string) => {
   return live(Expando, { idx, title: `Task ${idx}`, label });
@@ -439,6 +440,7 @@ describe('Queries', () => {
         .run();
 
       expect(objects).toMatchObject([{ name: 'Alice' }]);
+      log.info('done testing');
     });
 
     test('traverse inbound references', async () => {
