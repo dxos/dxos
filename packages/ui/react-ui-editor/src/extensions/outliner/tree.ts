@@ -18,8 +18,9 @@ export type Range = {
  * Represents a single item in the tree.
  */
 export type Item = {
-  type: 'root' | 'bullet' | 'task'; // TODO(burdon): Numbered?
+  type: 'root' | 'bullet' | 'task' | 'unknown'; // TODO(burdon): Numbered?
   node: SyntaxNode;
+  level: number;
   parent?: Item;
   nextSibling?: Item;
   prevSibling?: Item;
@@ -29,39 +30,61 @@ export type Item = {
    * Starts at the start of the line containing the item and ends at the end of the line before the
    * first child or next sibling.
    */
-  range: Range;
+  docRange: Range;
+  /**
+   * Range of the editable content.
+   * This doesn't include the list or task marker or indentation.
+   */
+  contentRange: Range;
 };
 
 /**
- * Tree assumes the entire document is a single contiguous hierarchy of markdown LiteItem nodes.
+ * Tree assumes the entire document is a single contiguous well-formed hierarchy of markdown LiteItem nodes.
  */
+// TOOD(burdon): Cancel any mutation that breaks the tree?
 export class Tree implements Item {
   type: Item['type'] = 'root';
   node: Item['node'];
-  range: Item['range'];
+  level: number = -1;
+  docRange: Item['docRange'];
+  contentRange: Item['contentRange'];
   children: Item['children'] = [];
 
   constructor(node: SyntaxNode) {
     this.node = node;
-    this.range = { from: node.from, to: node.to };
+    this.docRange = { from: node.from, to: node.to };
+    this.contentRange = this.docRange;
   }
 
-  traverse<T = any>(cb: (item: Item, level: number) => T | void): T | undefined {
-    return traverse<T>(this, cb);
+  get root(): Item {
+    return this;
+  }
+
+  traverse<T = any>(cb: (item: Item, level: number) => T | void): T | undefined;
+  traverse<T = any>(item: Item, cb: (item: Item, level: number) => T | void): T | undefined;
+  traverse<T = any>(
+    itemOrCb: Item | ((item: Item, level: number) => T | void),
+    maybeCb?: (item: Item, level: number) => T | void,
+  ): T | undefined {
+    if (typeof itemOrCb === 'function') {
+      return traverse<T>(this, itemOrCb);
+    } else {
+      return traverse<T>(itemOrCb, maybeCb!);
+    }
   }
 
   /**
    * Return the closest item.
    */
   find(pos: number): Item | undefined {
-    return this.traverse((item) => (item.range.from <= pos && item.range.to >= pos ? item : undefined));
+    return this.traverse((item) => (item.docRange.from <= pos && item.docRange.to >= pos ? item : undefined));
   }
 
   /**
    * Return the first child, next sibling, or parent's next sibling.
    */
-  next(item: Item): Item | undefined {
-    if (item.children.length > 0) {
+  next(item: Item, enter = true): Item | undefined {
+    if (enter && item.children.length > 0) {
       return item.children[0];
     }
 
@@ -70,7 +93,7 @@ export class Tree implements Item {
     }
 
     if (item.parent) {
-      return this.next(item.parent);
+      return this.next(item.parent, false);
     }
 
     return undefined;
@@ -84,7 +107,7 @@ export class Tree implements Item {
       return item.prevSibling;
     }
 
-    return item.parent;
+    return item.parent?.type === 'root' ? undefined : item.parent;
   }
 }
 
@@ -112,8 +135,16 @@ export const traverse = <T = any>(root: Item, cb: (item: Item, level: number) =>
   return t(root, root.type === 'root' ? -1 : 0);
 };
 
-export const listItemToString = (item: Item, level = 0) =>
-  `${'  '.repeat(level)}${item.type}(${item.range.from}:${item.range.to})`;
+export const listItemToString = (item: Item, level = 0) => {
+  const indent = '  '.repeat(level);
+  const data = {
+    l: item.level,
+    n: [item.node.from, item.node.to],
+    d: [item.docRange.from, item.docRange.to],
+    c: [item.contentRange.from, item.contentRange.to],
+  };
+  return `${indent}${item.type}(${JSON.stringify(data).replaceAll('"', '')})`;
+};
 
 export const treeFacet = Facet.define<Tree, Tree>({
   combine: (values) => values[0],
@@ -132,7 +163,7 @@ export const outlinerTree = (): Extension => {
     syntaxTree(state).iterate({
       enter: (node) => {
         switch (node.name) {
-          case 'BulletList':
+          case 'BulletList': {
             if (tree == null) {
               tree = new Tree(node.node);
               current = tree;
@@ -140,32 +171,50 @@ export const outlinerTree = (): Extension => {
             parent = current;
             prevSibling = undefined;
             if (current) {
-              current.range.to = current.node.from;
+              current.docRange.to = current.node.from;
             }
             break;
-          case 'ListItem':
+          }
+          case 'ListItem': {
+            invariant(parent);
+            const docRange: Range = { from: state.doc.lineAt(node.from).from, to: node.to };
             current = {
-              type: 'bullet',
+              type: 'unknown',
               node: node.node,
-              range: { from: state.doc.lineAt(node.from).from, to: node.to },
+              level: parent.level + 1,
+              docRange,
+              contentRange: { ...docRange },
               parent,
               prevSibling,
               children: [],
             };
-            invariant(parent);
             parent.children.push(current);
-            if (parent.range.to === parent.node.from) {
-              parent.range.to = current.range.from - 1;
+            if (parent.docRange.to === parent.node.from) {
+              parent.docRange.to = current.docRange.from - 1;
+              parent.contentRange.to = parent.docRange.to;
             }
             if (prevSibling) {
               prevSibling.nextSibling = current;
             }
             prevSibling = current;
             break;
-          case 'Task':
+          }
+          case 'ListMark': {
+            invariant(current);
+            current.type = 'bullet';
+            current.contentRange.from = node.from + '- '.length;
+            break;
+          }
+          case 'Task': {
             invariant(current);
             current.type = 'task';
             break;
+          }
+          case 'TaskMarker': {
+            invariant(current);
+            current.contentRange.from = node.from + '[ ] '.length;
+            break;
+          }
         }
       },
       leave: (node) => {

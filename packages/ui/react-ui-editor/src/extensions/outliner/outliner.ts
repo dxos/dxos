@@ -2,52 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { indentLess, indentMore } from '@codemirror/commands';
-import { syntaxTree } from '@codemirror/language';
-import {
-  type ChangeSpec,
-  EditorState,
-  type Extension,
-  type Line,
-  Prec,
-  type Range,
-  StateField,
-  type Transaction,
-} from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, keymap } from '@codemirror/view';
-import { type SyntaxNode, type Tree } from '@lezer/common';
+import { indentMore } from '@codemirror/commands';
+import { getIndentUnit } from '@codemirror/language';
+import { type ChangeSpec, EditorState, type Extension, Prec, type Range } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Traversal (e.g., indenting).
-// TODO(burdon): State field for current range of active lines (and decoration).
+import { outlinerTree, treeFacet } from './tree';
+
 // TODO(burdon): Move items (by key).
-
-// TODO(burdon): Cut-and-paste.
-// TODO(burdon): Toggle list/task mode (in gutter?)
+// TODO(burdon): Alt+ENTER to create a continuation line.
+// TODO(burdon): Smart Cut-and-paste.
+// TODO(burdon): Menu option to toggle list/task mode
 // TODO(burdon): Convert to task object and insert link (menu button).
-// TOOD(burdon): Continuation lines and rich formatting?
-// TODO(burdon): Menu.
+// TODO(burdon): Rendered cursor is not fullheight if there is not text on the task line.
+// TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
 // TODO(burdon): DND.
+// TODO(burdon): What if a different editor "breaks" the layout?
 
-const indentLevel = 2;
-
-const getIndent = (text: string) => (text.match(/^\s*/)?.[0]?.length ?? 0) / indentLevel;
-
-const matchTaskMarker = /^\s*- (\[ \]|\[x\])? /;
-
-/**
- * Get the starting position of text on the given line.
- */
-const getLineInfo = (line: Line) => {
-  const match = line.text.match(matchTaskMarker);
-  const start = line.from + (match?.[0]?.length ?? 0);
-  return {
-    match, // TODO(burdon): Indicate task or list marker.
-    start,
-  };
-};
+const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
 
 /**
  * Outliner extension.
@@ -59,37 +34,53 @@ const getLineInfo = (line: Line) => {
  * - Drag/drop lines or move them via shortcuts.
  */
 export const outliner = (): Extension => [
+  outlinerTree(),
   EditorState.transactionFilter.of((tr) => {
-    // TODO(burdon): Determine direction of travel.
-    // Don't allow cursor before marker.
-    // if (!tr.docChanged) {
-    //   const pos = tr.selection?.ranges[tr.selection?.mainIndex]?.from;
-    //   if (pos != null) {
-    //     const { match, start } = getLineInfo(tr.startState.doc.lineAt(pos));
-    //     if (match) {
-    //       if (pos < start) {
-    //         return [{ selection: { anchor: start, head: start } }];
-    //       }
-    //     }
-    //   }
+    const tree = tr.state.facet(treeFacet);
+    const pos = tr.selection?.ranges[tr.selection?.mainIndex]?.from;
+    const item = pos != null ? tree.find(pos) : undefined;
 
-    //   return tr;
-    // }
+    // Check cursor is in a valid position.
+    if (!tr.docChanged) {
+      const prev = tr.startState.selection.ranges[tr.startState.selection.mainIndex]?.from;
+      if (pos != null) {
+        if (item) {
+          if (pos < item.contentRange.from || pos > item.contentRange.to) {
+            if (pos - prev < 0) {
+              const prev = tree.prev(item);
+              if (prev) {
+                return [{ selection: { anchor: prev.contentRange.to } }];
+              } else {
+                const first = tree.next(tree.root);
+                if (first) {
+                  return [{ selection: { anchor: first.contentRange.from } }];
+                }
+
+                return [];
+              }
+            } else {
+              return [{ selection: { anchor: item.contentRange.from } }];
+            }
+          }
+        }
+      }
+
+      return tr;
+    }
 
     const changes: ChangeSpec[] = [];
     tr.changes.iterChanges((fromA, toA, fromB, toB, insert) => {
-      // NOTE: Task markers are atomic so will be deleted when backspace is pressed.
-      // NOTE: CM inserts 2 or 6 spaces when deleting a list or task marker to create a continuation.
-      // - [ ] <- backspace here deletes the task marker.
-      // - [ ] <- backspace here inserts 6 spaces (creates continuation).
-      //   - [ ] <- backspace here deletes the task marker.
-
       const line = tr.startState.doc.lineAt(fromA);
-      const isTaskMarker = line.text.match(matchTaskMarker);
-      if (isTaskMarker) {
-        const { start } = getLineInfo(line);
+      const match = line.text.match(listItemRegex);
+      if (match) {
+        const start = line.from + (match?.[0]?.length ?? 0);
 
         // Detect and cancel replacement of task marker with continuation indent.
+        // Task markers are atomic so will be deleted when backspace is pressed.
+        // The markdown extension inserts 2 or 6 spaces when deleting a list or task marker in order to create a continuation.
+        // - [ ] <- backspace here deletes the task marker.
+        // - [ ] <- backspace here inserts 6 spaces (creates continuation).
+        //   - [ ] <- backspace here deletes the task marker.
         const replace = start === toA && toA - fromA === insert.length;
         if (replace) {
           log.info('delete line');
@@ -118,19 +109,11 @@ export const outliner = (): Extension => [
           return;
         }
 
-        // TODO(burdon): Intercept tab to manage indentation.
-
-        // TODO(burdon): Detect pressing ENTER on empty line that is indented.
-        // Don't allow empty line.
-        // if (start === line.to && insert.toString() === '\n') {
-        //   log.info('skip');
-        //   changes.push({ from: 0, to: 0 });
-        //   return;
-        // }
+        // TODO(burdon): Prevent newline if line is empty.
+        // TODO(burdon): Handle backspace at start of line (or empty line).
 
         log.info('change', {
           line: { from: line.from, to: line.to },
-          start,
           a: [fromA, toA],
           b: [fromB, toB],
           insert: { text: insert.toString(), length: insert.length },
@@ -148,23 +131,53 @@ export const outliner = (): Extension => [
   /**
    * Line decorations (for border and selection).
    */
-  // TODO(burdon): Maintain state field for each item, indent, pos, etc?
-  StateField.define<DecorationSet>({
-    create: (state) => {
-      return Decoration.set(buildDecorations(0, state.doc.length, state));
+  // TODO(burdon): Create widget decorations to make indent uneditable.
+  ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet = Decoration.none;
+      constructor(view: EditorView) {
+        this.updateDecorations(view.state, view);
+      }
+
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.viewportChanged || update.selectionSet) {
+          this.updateDecorations(update.state, update.view);
+        }
+      }
+
+      private updateDecorations(state: EditorState, { viewport: { from, to } }: EditorView) {
+        const tree = state.facet(treeFacet);
+        const current = tree.find(state.selection.ranges[state.selection.mainIndex]?.from);
+        const doc = state.doc;
+
+        const decorations: Range<Decoration>[] = [];
+        for (let lineNum = doc.lineAt(from).number; lineNum <= doc.lineAt(to).number; lineNum++) {
+          const line = doc.line(lineNum);
+          const item = tree.find(line.from);
+          if (item) {
+            const lineFrom = doc.lineAt(item.contentRange.from);
+            const lineTo = doc.lineAt(item.contentRange.to);
+
+            decorations.push(
+              Decoration.line({
+                class: mx(
+                  'cm-list-item',
+                  lineFrom.number === line.number && 'cm-list-item-start',
+                  lineTo.number === line.number && 'cm-list-item-end',
+                  item === current && 'cm-list-item-selected',
+                ),
+              }).range(line.from, line.from),
+            );
+          }
+        }
+
+        this.decorations = Decoration.set(decorations);
+      }
     },
-    update: (value: DecorationSet, tr: Transaction) => {
-      const from = 0;
-      const to = tr.state.doc.length;
-      return value.map(tr.changes).update({
-        filterFrom: 0,
-        filterTo: tr.state.doc.length,
-        filter: () => false,
-        add: buildDecorations(from, to, tr.state),
-      });
+    {
+      decorations: (v) => v.decorations,
     },
-    provide: (field) => EditorView.decorations.from(field),
-  }),
+  ),
 
   /**
    * Key bindings.
@@ -175,164 +188,74 @@ export const outliner = (): Extension => [
         // Indentation.
         key: 'Tab',
         run: (view) => {
-          const node = findNode(syntaxTree(view.state), view.state.selection.main.from, 'ListItem');
-          if (node) {
-            const previous = findPreviousNode(node.node, 'ListItem');
-            if (previous) {
-              const currentIndent = getIndent(view.state.doc.lineAt(node.from).text);
-              const previousIndent = getIndent(view.state.doc.lineAt(previous.from).text);
-              if (currentIndent <= previousIndent) {
-                indentMore(view);
-              }
+          const pos = view.state.selection.ranges[view.state.selection.mainIndex]?.from;
+          const tree = view.state.facet(treeFacet);
+          const current = tree.find(pos);
+          if (current) {
+            const previous = tree.prev(current);
+            if (previous && current.level <= previous.level) {
+              // TODO(burdon): Indent descendants?
+              indentMore(view);
             }
           }
+
           return true;
         },
         shift: (view) => {
-          const node = findNode(syntaxTree(view.state), view.state.selection.main.from, 'ListItem');
-          if (node) {
-            const previous = findPreviousNode(node.node, 'ListItem');
-            if (previous) {
-              const currentIndent = getIndent(view.state.doc.lineAt(node.from).text);
-              if (currentIndent > 0) {
-                indentLess(view);
-                // TODO(burdon): Unindent descendents.
+          const pos = view.state.selection.ranges[view.state.selection.mainIndex]?.from;
+          const tree = view.state.facet(treeFacet);
+          const current = tree.find(pos);
+          if (current) {
+            if (current.level > 0) {
+              // Unindent current line and all descendants.
+              // NOTE: The markdown extension doesn't provide an indentation service.
+              const indentUnit = getIndentUnit(view.state);
+              const changes: ChangeSpec[] = [];
+              tree.traverse(current, (item) => {
+                const line = view.state.doc.lineAt(item.docRange.from);
+                changes.push({ from: line.from, to: line.from + indentUnit });
+              });
+
+              if (changes.length > 0) {
+                view.dispatch({ changes });
               }
             }
           }
+
           return true;
         },
       },
     ]),
   ),
 
-  // TODO(burdon): Increase indent padding by configuring decorate extension.
-  // TODO(burdon): Hover to select entire group.
   EditorView.theme({
-    '.cm-list-item-start': {
-      borderTop: '1px solid var(--dx-separator)',
+    '.cm-list-item': {
       borderLeft: '1px solid var(--dx-separator)',
       borderRight: '1px solid var(--dx-separator)',
+
+      // TODO(burdon): Increase indent padding by configuring decorate extension.
+      paddingLeft: '24px',
+    },
+    '.cm-list-item.cm-codeblock-start': {
+      borderRadius: '0',
+    },
+
+    '.cm-list-item-start': {
+      borderTop: '1px solid var(--dx-separator)',
       borderTopLeftRadius: '4px',
       borderTopRightRadius: '4px',
       paddingTop: '4px',
       marginTop: '8px',
     },
     '.cm-list-item-end': {
-      borderLeft: '1px solid var(--dx-separator)',
-      borderRight: '1px solid var(--dx-separator)',
       borderBottom: '1px solid var(--dx-separator)',
       borderBottomLeftRadius: '4px',
       borderBottomRightRadius: '4px',
       paddingBottom: '4px',
       marginBottom: '8px',
     },
-    '.cm-list-item-continuation': {
-      borderLeft: '1px solid var(--dx-separator)',
-      borderRight: '1px solid var(--dx-separator)',
-
-      // TODO(burdon): Should match parent indentation.
-      paddingLeft: '24px',
-    },
     '.cm-list-item-selected': {
       borderColor: 'var(--dx-cmSeparator)',
     },
-
-    // TODO(burdon): Set via options to decorate extension.
-    '.cm-list-item-continuation.cm-codeblock-start': {
-      borderRadius: '0',
-    },
   }),
 ];
-
-/**
- * Add line decorations.
- */
-const buildDecorations = (from: number, to: number, state: EditorState) => {
-  const decorations: Range<Decoration>[] = [];
-  const pos = state.selection.ranges[state.selection.mainIndex]?.from;
-  syntaxTree(state).iterate({
-    enter: (node) => {
-      if (node.name === 'ListItem') {
-        const next = findNextNode(node.node, 'ListItem');
-        const lineStart = state.doc.lineAt(node.from);
-        const lineEnd = next ? state.doc.lineAt(state.doc.lineAt(next.from).from - 1) : state.doc.lineAt(node.to);
-
-        // TODO(burdon): Get parent.
-        const selected = pos != null && pos >= lineStart.from && pos <= lineEnd.from;
-
-        decorations.push(
-          Decoration.line({
-            class: mx(
-              'cm-list-item-start',
-              lineStart.number === lineEnd.number && 'cm-list-item-end',
-              selected && 'cm-list-item-selected',
-            ),
-          }).range(lineStart.from, lineStart.from),
-        );
-
-        // TODO(burdon): Hide continuation indentation so that it can't be deleted.
-        for (let i = lineStart.from + 1; i < lineEnd.from; i++) {
-          decorations.push(
-            Decoration.line({ class: mx('cm-list-item-continuation', selected && 'cm-list-item-selected') }).range(
-              i,
-              i,
-            ),
-          );
-        }
-
-        // TODO(burdon): Need to sort.
-        if (lineStart.number !== lineEnd.number) {
-          decorations.push(
-            Decoration.line({ class: mx('cm-list-item-end', selected && 'cm-list-item-selected') }).range(
-              lineEnd.from,
-              lineEnd.from,
-            ),
-          );
-        }
-      }
-    },
-  });
-
-  return decorations;
-};
-
-//
-// TODO(burdon): Factor out tree traversal utils.
-//
-
-export const findNode = (tree: Tree, pos: number, type: string): SyntaxNode | undefined => {
-  const cursor = tree.cursor();
-  cursor.moveTo(pos, -1);
-  return findNextNode(cursor.node, type);
-};
-
-export const findNextNode = (node: SyntaxNode, type: string): SyntaxNode | undefined => {
-  const cursor = node.cursor();
-  while (cursor.next()) {
-    if (cursor.node.name === type) {
-      return cursor.node;
-    }
-  }
-
-  return undefined;
-};
-
-export const findPreviousNode = (node: SyntaxNode, type: string): SyntaxNode | undefined => {
-  const cursor = node.cursor();
-  do {
-    if (!cursor.prevSibling()) {
-      if (!cursor.parent()) {
-        break;
-      }
-    }
-  } while (cursor.node);
-
-  // while (cursor.prevSibling() || cursor.parent()) {
-  //   if (cursor.node.name === type) {
-  //     return cursor.node;
-  //   }
-  // }
-
-  return undefined;
-};

@@ -32,8 +32,8 @@ describe('outliner', () => {
     const tree = state.facet(treeFacet);
     let count = 0;
     tree.traverse((item, level) => {
-      count++;
       console.log(listItemToString(item, level));
+      count++;
     });
     expect(count).toBe(9);
   });
@@ -42,7 +42,7 @@ describe('outliner', () => {
     const tree = state.facet(treeFacet);
     const ranges: Range[] = [];
     tree.traverse((item) => {
-      ranges.push(item.range);
+      ranges.push(item.docRange);
     });
 
     // Check no gaps between ranges.
@@ -70,6 +70,9 @@ describe('outliner', () => {
     tree.traverse((item) => {
       items.push(item);
     });
+
+    expect(tree.prev(items[0])).not.to.exist;
+    expect(tree.next(items[items.length - 1])).not.to.exist;
 
     for (let i = 0; i < items.length - 1; i++) {
       const current = items[i];

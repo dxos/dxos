@@ -223,14 +223,16 @@ export const Outliner = {
         //
         '- [ ] A',
         '- [ ] B',
-        // Continuation lines.
-        '  ## Example',
-        '  Continuation line belonging to B.',
-        '  ```ts',
-        '  const x = 100',
-        '  ```',
-        '  - [ ] C',
-        '    - D Items can have links [like this](https://example.com).',
+        '- [ ] C',
+        '- [ ] D',
+        '- [ ] E',
+        // '  Continuation line belonging to B.',
+        // '  ```ts',
+        // '  const x = 100',
+        // '  ```',
+        // '  - [ ] C',
+        // '  Another continuation line.',
+        // '    - D Items can have links [like this](https://example.com).',
       )}
       extensions={[decorateMarkdown({ listPaddingLeft: 8 }), outliner()]}
       debug='raw+tree'
