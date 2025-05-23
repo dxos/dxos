@@ -142,12 +142,14 @@ export const getListItemContent = (state: EditorState, item: Item): string => {
 export const listItemToString = (item: Item, level = 0) => {
   const indent = '  '.repeat(level);
   const data = {
-    l: item.level,
-    n: [item.node.from, item.node.to],
-    d: [item.docRange.from, item.docRange.to],
-    c: [item.contentRange.from, item.contentRange.to],
+    level: item.level,
+    node: [item.node.from, item.node.to],
+    doc: [item.docRange.from, item.docRange.to],
+    content: [item.contentRange.from, item.contentRange.to],
   };
-  return `${indent}${item.type}(${JSON.stringify(data).replaceAll('"', '')})`;
+  return `${indent}${item.type}(${Object.entries(data)
+    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+    .join(', ')})`;
 };
 
 export const treeFacet = Facet.define<Tree, Tree>({

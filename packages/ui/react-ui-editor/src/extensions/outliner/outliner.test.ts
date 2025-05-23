@@ -7,7 +7,7 @@ import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './outliner';
-import { listItemToString, outlinerTree, treeFacet } from './tree';
+import { getListItemContent, listItemToString, outlinerTree, treeFacet } from './tree';
 import { str } from '../../stories';
 import { createMarkdownExtensions } from '../markdown';
 
@@ -79,44 +79,30 @@ describe('outliner', () => {
   });
 
   test('move down', ({ expect }) => {
+    const tree = state.facet(treeFacet);
     const view = new EditorView({ state });
-    const pos = 8; // Line 2.
 
-    {
-      const tree = view.state.facet(treeFacet);
-      const item = tree.find(pos);
-      expect(item?.level).toBe(0);
-    }
+    const line1 = getListItemContent(view.state, tree.find(0)!);
+    const line2 = getListItemContent(view.state, tree.find(8)!);
 
-    view.dispatch({ selection: EditorSelection.cursor(pos) });
+    view.dispatch({ selection: EditorSelection.cursor(0) });
     moveItemDown(view);
 
-    {
-      const tree = view.state.facet(treeFacet);
-      tree.traverse((item, level) => {
-        console.log(listItemToString(item, level));
-      });
-    }
+    expect(getListItemContent(view.state, tree.find(0)!)).toBe(line2);
+    expect(getListItemContent(view.state, tree.find(8)!)).toBe(line1);
   });
 
   test('move up', ({ expect }) => {
+    const tree = state.facet(treeFacet);
     const view = new EditorView({ state });
-    const pos = 8; // Line 2.
 
-    {
-      const tree = view.state.facet(treeFacet);
-      const item = tree.find(pos);
-      expect(item?.level).toBe(0);
-    }
+    const line1 = getListItemContent(view.state, tree.find(0)!);
+    const line2 = getListItemContent(view.state, tree.find(8)!);
 
-    view.dispatch({ selection: EditorSelection.cursor(pos) });
+    view.dispatch({ selection: EditorSelection.cursor(8) });
     moveItemUp(view);
 
-    {
-      const tree = view.state.facet(treeFacet);
-      tree.traverse((item, level) => {
-        console.log(listItemToString(item, level));
-      });
-    }
+    expect(getListItemContent(view.state, tree.find(0)!)).toBe(line2);
+    expect(getListItemContent(view.state, tree.find(8)!)).toBe(line1);
   });
 });
