@@ -42,7 +42,6 @@ export namespace QueryPlan {
     _tag: 'SelectStep';
 
     fromSpaces: readonly SpaceId[];
-
     selector: Selector;
   };
 
@@ -58,6 +57,7 @@ export namespace QueryPlan {
 
   export type IdSelector = {
     _tag: 'IdSelector';
+
     objectIds: readonly ObjectId[];
   };
 
@@ -80,6 +80,7 @@ export namespace QueryPlan {
    */
   export type TextSearchSelector = {
     _tag: 'TextSearchSelector';
+
     text: string;
     searchKind: TextSearchKind;
   };
@@ -89,6 +90,7 @@ export namespace QueryPlan {
    */
   export type FilterStep = {
     _tag: 'FilterStep';
+
     filter: QueryAST.Filter;
   };
 
@@ -115,6 +117,7 @@ export namespace QueryPlan {
    */
   export type FilterDeletedStep = {
     _tag: 'FilterDeletedStep';
+
     mode: 'only-deleted' | 'only-non-deleted';
   };
 
@@ -170,6 +173,7 @@ export namespace QueryPlan {
    */
   export type UnionStep = {
     _tag: 'UnionStep';
+
     plans: Plan[];
   };
 }
