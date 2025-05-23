@@ -6,16 +6,16 @@ import { indentLess, indentMore } from '@codemirror/commands';
 import { syntaxTree } from '@codemirror/language';
 import {
   type ChangeSpec,
+  EditorState,
   type Extension,
   type Line,
+  Prec,
+  type Range,
   StateField,
   type Transaction,
-  EditorState,
-  type Range,
-  Prec,
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, keymap } from '@codemirror/view';
-import { type Tree, type SyntaxNode } from '@lezer/common';
+import { type SyntaxNode, type Tree } from '@lezer/common';
 
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
@@ -273,22 +273,13 @@ const buildDecorations = (from: number, to: number, state: EditorState) => {
 // TODO(burdon): Factor out tree traversal utils.
 //
 
-// TODO(burdon): Use TreeCursor.moveTo?
-const findNode = (tree: Tree, pos: number, type: string): SyntaxNode | undefined => {
-  let found: SyntaxNode | undefined;
-  tree.iterate({
-    enter: (node) => {},
-    leave: (node) => {
-      if (!found && node.from <= pos && node.to >= pos && node.name === type) {
-        found = node.node;
-      }
-    },
-  });
-
-  return found;
+export const findNode = (tree: Tree, pos: number, type: string): SyntaxNode | undefined => {
+  const cursor = tree.cursor();
+  cursor.moveTo(pos, -1);
+  return findNextNode(cursor.node, type);
 };
 
-const findNextNode = (node: SyntaxNode, type: string): SyntaxNode | undefined => {
+export const findNextNode = (node: SyntaxNode, type: string): SyntaxNode | undefined => {
   const cursor = node.cursor();
   while (cursor.next()) {
     if (cursor.node.name === type) {
@@ -299,14 +290,21 @@ const findNextNode = (node: SyntaxNode, type: string): SyntaxNode | undefined =>
   return undefined;
 };
 
-// TODO(burdon): This is complex.
-const findPreviousNode = (node: SyntaxNode, type: string): SyntaxNode | undefined => {
+export const findPreviousNode = (node: SyntaxNode, type: string): SyntaxNode | undefined => {
   const cursor = node.cursor();
-  while (cursor.prevSibling() || cursor.parent()) {
-    if (cursor.node.name === type) {
-      return cursor.node;
+  do {
+    if (!cursor.prevSibling()) {
+      if (!cursor.parent()) {
+        break;
+      }
     }
-  }
+  } while (cursor.node);
+
+  // while (cursor.prevSibling() || cursor.parent()) {
+  //   if (cursor.node.name === type) {
+  //     return cursor.node;
+  //   }
+  // }
 
   return undefined;
 };
