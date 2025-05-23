@@ -3,7 +3,7 @@
 //
 
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@automerge/automerge';
-import { type UrlHeads, type DocHandleChangePayload } from '@automerge/automerge-repo';
+import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import type { InspectOptionsStylized, inspect } from 'util';
 
 import { Event } from '@dxos/async';

@@ -3,7 +3,6 @@
 //
 
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
-import { type UrlHeads } from '@automerge/automerge-repo';
 import get from 'lodash.get';
 
 import { type Reference } from '@dxos/echo-protocol';
