@@ -5,10 +5,11 @@
 import { type DocumentId } from '@automerge/automerge-repo';
 import { mean, std } from 'mathjs';
 
+import { PublicKey } from '@dxos/keys';
+
 import { type SchedulerEnvImpl } from '../env';
 import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan } from '../plan';
 import { AutomergeReplicant, type StorageAdaptorKind } from '../replicants/automerge-replicant';
-import { PublicKey } from '@dxos/keys';
 
 export type AutomergeTestSpec = {
   platform: Platform;
@@ -62,7 +63,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeT
     });
     results.saveDuration = createResults.duration;
     results.docsAmount = createResults.docsCount;
-    replicant.kill()
+    replicant.kill();
 
     for (let i = 0; i < params.spec.loadCycle; i++) {
       // Load documents from memory.
@@ -72,6 +73,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeT
         docIds: Object.keys(createResults.docsCreated) as DocumentId[],
       });
       results.loadDurations.push(loadResult.duration);
+      replicant.kill();
     }
 
     return results;
