@@ -7,3 +7,5 @@ export * from './reference';
 export * from './space-doc-version';
 export * from './collection-sync';
 export * from './space-id';
+export * from './foreign-key';
+export * from './query';

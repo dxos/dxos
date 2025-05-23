@@ -6,8 +6,9 @@ import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@automer
 import isEqual from 'lodash.isequal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
-import { Resource, Context } from '@dxos/context';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { Resource, Context, LifecycleState } from '@dxos/context';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 
 import { DatabaseRoot } from './database-root';
@@ -39,7 +40,16 @@ export class SpaceStateManager extends Resource {
     return this._rootBySpace.get(spaceId);
   }
 
-  async assignRootToSpace(spaceId: SpaceId, handle: DocHandle<SpaceDoc>): Promise<DatabaseRoot> {
+  getRootBySpaceId(spaceId: SpaceId): DatabaseRoot | undefined {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+    const documentId = this._rootBySpace.get(spaceId);
+    if (!documentId) {
+      return undefined;
+    }
+    return this._roots.get(documentId);
+  }
+
+  async assignRootToSpace(spaceId: SpaceId, handle: DocHandle<DatabaseDirectory>): Promise<DatabaseRoot> {
     let root: DatabaseRoot;
     if (this._roots.has(handle.documentId)) {
       root = this._roots.get(handle.documentId)!;

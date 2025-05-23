@@ -5,14 +5,13 @@
 import type * as A from '@automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 
-import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
+import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
-import { getSpaceKeyFromDoc } from '../automerge';
 
 export class DatabaseRoot {
-  static mapLinks(doc: DocHandle<SpaceDoc>, mapping: Record<DocumentId, DocumentId>): void {
+  static mapLinks(doc: DocHandle<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {
     doc.change((d) => {
       if (!d.links) {
         return;
@@ -26,7 +25,7 @@ export class DatabaseRoot {
     });
   }
 
-  constructor(private readonly _rootHandle: DocHandle<SpaceDoc>) {}
+  constructor(private readonly _rootHandle: DocHandle<DatabaseDirectory>) {}
 
   get documentId(): DocumentId {
     return this._rootHandle.documentId;
@@ -40,11 +39,11 @@ export class DatabaseRoot {
     return this._rootHandle.isReady();
   }
 
-  get handle(): DocHandle<SpaceDoc> {
+  get handle(): DocHandle<DatabaseDirectory> {
     return this._rootHandle;
   }
 
-  doc(): A.Doc<SpaceDoc> | null {
+  doc(): A.Doc<DatabaseDirectory> | null {
     return this._rootHandle.isReady() ? this._rootHandle.doc() : null;
   }
 
@@ -63,7 +62,7 @@ export class DatabaseRoot {
       return null;
     }
 
-    return getSpaceKeyFromDoc(doc);
+    return DatabaseDirectory.getSpaceKey(doc);
   }
 
   getInlineObjectCount(): number | null {

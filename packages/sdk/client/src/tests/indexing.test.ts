@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Filter, type QueryResult, type AnyLiveObject } from '@dxos/echo-db';
+import { type AnyLiveObject, Filter, type QueryResult } from '@dxos/echo-db';
 import { Expando, Ref } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -81,7 +81,7 @@ describe('Index queries', () => {
     const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
-        const indexResults = query.results.filter((result) => result.resolution?.source === 'index');
+        const indexResults = query.results;
         log('Query results', {
           length: indexResults.length,
           results: indexResults.map(({ object, resolution }) => ({
@@ -304,15 +304,13 @@ describe('Index queries', () => {
     const queriedEverything = new Trigger();
     const receivedDeleteUpdate = new Trigger();
     const unsub = query.subscribe((query) => {
-      const indexedObjects = query.results
-        .filter((result) => result.resolution?.source === 'index')
-        .map(({ object }) => object);
-      if (indexedObjects.length === contacts.length + documents.length) {
+      const objects = query.objects;
+      if (objects.length === contacts.length + documents.length) {
         queriedEverything.wake();
       }
 
       if (
-        indexedObjects.length === contacts.length + documents.length - 1 &&
+        objects.length === contacts.length + documents.length - 1 &&
         queriedEverything.state === TriggerState.RESOLVED
       ) {
         receivedDeleteUpdate.wake();

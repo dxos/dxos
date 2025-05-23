@@ -7,12 +7,13 @@ import { Schema } from 'effect';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Expando, RelationSourceId, RelationTargetId, TypedObject, Ref } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live, getMeta } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -68,25 +69,17 @@ describe('Queries', () => {
       }
 
       {
-        const { objects, results } = await db.query({ label: undefined }).run();
+        const { objects } = await db.query(Query.select(Filter.type(Expando, { label: undefined }))).run();
         expect(objects).to.have.length(1);
-
-        // TODO(dmaretskyi): 2 hits: one local one from index, we should dedup those.
-        expect(results).to.have.length(2);
-        expect(results.every((result) => result.id === objects[0].id)).to.be.true;
-
-        expect(results[0].object).to.eq(objects[0]);
-        expect(results[0].id).to.eq(objects[0].id);
-        expect(results[0].spaceKey).to.eq(db.spaceKey);
       }
 
       {
-        const { objects } = await db.query({ label: 'red' }).run();
+        const { objects } = await db.query(Query.select(Filter.type(Expando, { label: 'red' }))).run();
         expect(objects).to.have.length(3);
       }
 
       {
-        const { objects } = await db.query({ label: 'pink' }).run();
+        const { objects } = await db.query(Query.select(Filter.type(Expando, { label: 'pink' }))).run();
         expect(objects).to.have.length(0);
       }
     });
@@ -101,7 +94,7 @@ describe('Queries', () => {
       const objB = db.add(live(Expando, { label: 'obj b', ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
-      const { objects } = await db.query(Filter.type(Expando, { ref: objA })).run();
+      const { objects } = await db.query(Filter.type(Expando, { ref: Ref.make(objA) })).run();
       expect(objects).toEqual([objB]);
     });
 
@@ -198,7 +191,7 @@ describe('Queries', () => {
 
       expect((await db.query().run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
-      rootDocHandle.change((doc: SpaceDoc) => {
+      rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
       await db.flush();
@@ -233,10 +226,10 @@ describe('Queries', () => {
       expect((await db.query().run()).objects.length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
-      anotherDocHandle.change((doc: SpaceDoc) => {
+      anotherDocHandle.change((doc: DatabaseDirectory) => {
         doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.doc().objects![obj1.id];
       });
-      rootDocHandle.change((doc: SpaceDoc) => {
+      rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = anotherDocHandle.url;
       });
       await db.flush();
@@ -357,11 +350,41 @@ describe('Queries', () => {
     expect(objects).toEqual([b]);
   });
 
-  describe('Relations', () => {
-    test('query by type', async () => {
-      const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
+  test('query relation by type', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
 
+    const alice = db.add(
+      live(Testing.Contact, {
+        name: 'Alice',
+      }),
+    );
+    const bob = db.add(
+      live(Testing.Contact, {
+        name: 'Bob',
+      }),
+    );
+    const hasManager = db.add(
+      live(Testing.HasManager, {
+        [RelationSourceId]: bob,
+        [RelationTargetId]: alice,
+        since: '2022',
+      }),
+    );
+
+    const { objects } = await db.query(Filter.type(Testing.HasManager)).run();
+    expect(objects).toEqual([hasManager]);
+  });
+
+  describe('traversals', () => {
+    let db: EchoDatabase;
+
+    beforeEach(async () => {
+      const { db: db1, graph } = await builder.createDatabase();
+      db = db1;
+      graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager, Testing.Task]);
+
+      // TODO(dmaretskyi): Better test data.
       const alice = db.add(
         live(Testing.Contact, {
           name: 'Alice',
@@ -372,7 +395,7 @@ describe('Queries', () => {
           name: 'Bob',
         }),
       );
-      const hasManager = db.add(
+      const _hasManager = db.add(
         live(Testing.HasManager, {
           [RelationSourceId]: bob,
           [RelationTargetId]: alice,
@@ -380,8 +403,56 @@ describe('Queries', () => {
         }),
       );
 
-      const { objects } = await db.query(Filter.type(Testing.HasManager)).run();
-      expect(objects).toEqual([hasManager]);
+      const _task1 = db.add(live(Testing.Task, { title: 'Task 1', assignee: Ref.make(alice) }));
+      const _task2 = db.add(live(Testing.Task, { title: 'Task 2', assignee: Ref.make(alice) }));
+      const _task3 = db.add(live(Testing.Task, { title: 'Task 3', assignee: Ref.make(bob) }));
+
+      await db.flush({ indexes: true });
+    });
+
+    test('traverse relation source to target', async () => {
+      const { objects } = await db
+        .query(
+          Query.select(Filter.type(Testing.Contact, { name: 'Bob' }))
+            .sourceOf(Testing.HasManager)
+            .target(),
+        )
+        .run();
+
+      expect(objects).toMatchObject([{ name: 'Alice' }]);
+    });
+
+    test('traverse relation target to source', async () => {
+      const { objects } = await db
+        .query(
+          Query.select(Filter.type(Testing.Contact, { name: 'Alice' }))
+            .targetOf(Testing.HasManager)
+            .source(),
+        )
+        .run();
+
+      expect(objects).toMatchObject([{ name: 'Bob' }]);
+    });
+
+    test('traverse outbound references', async () => {
+      const { objects } = await db
+        .query(Query.select(Filter.type(Testing.Task, { title: 'Task 1' })).reference('assignee'))
+        .run();
+
+      expect(objects).toMatchObject([{ name: 'Alice' }]);
+      log.info('done testing');
+    });
+
+    test('traverse inbound references', async () => {
+      const { objects } = await db
+        .query(Query.select(Filter.type(Testing.Contact, { name: 'Alice' })).referencedBy(Testing.Task, 'assignee'))
+        .run();
+
+      // TODO(dmaretskyi): Sort in query result.
+      expect(objects.sort((a, b) => a.title!.localeCompare(b.title!))).toMatchObject([
+        { title: 'Task 1' },
+        { title: 'Task 2' },
+      ]);
     });
   });
 });

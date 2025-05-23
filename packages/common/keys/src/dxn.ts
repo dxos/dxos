@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import type { inspect, InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
@@ -37,6 +38,18 @@ export const QueueSubspaceTags = Object.freeze({
  * ```
  */
 export class DXN {
+  // TODO(dmaretskyi): Should this be a transformation into the DXN type?
+  static Schema = Schema.NonEmptyString.pipe(
+    Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
+    // TODO(dmaretskyi): To set the format we need to move the annotation IDs out of the echo-schema package.
+    // FormatAnnotation.set(FormatEnum.DXN),
+    Schema.annotations({
+      title: 'DXN',
+      description: 'DXN URI',
+      examples: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
+    }),
+  );
+
   /**
    * Kind constants.
    */
