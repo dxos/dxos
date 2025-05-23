@@ -224,28 +224,13 @@ export const Outliner = {
         '- [ ] A',
         '- [ ] B',
         // Continuation lines.
-<<<<<<< HEAD
         '  ## Example',
         '  Continuation line belonging to B.',
         '  ```ts',
         '  const x = 100',
         '  ```',
-<<<<<<< HEAD
-        '- [ ] C',
-        '- D Items can have links [like this](https://example.com).',
-=======
         '  - [ ] C',
         '    - D Items can have links [like this](https://example.com).',
->>>>>>> origin/main
-=======
-        // '  ## Example',
-        // '  Continuation line belonging to B.',
-        // '  ```ts',
-        // '  const x = 100',
-        // '  ```',
-        '  - [ ] C',
-        '    - D Items can have links [like this](https://example.com).',
->>>>>>> f612157ad64479d866413cee41aff08147792761
       )}
       extensions={[decorateMarkdown({ listPaddingLeft: 8 }), outliner()]}
       debug='raw+tree'
@@ -269,11 +254,7 @@ export const CommentedOut = {
   render: () => (
     <EditorStory
       text={str('# Commented out', '', content.comment, content.footer)}
-      extensions={[
-        decorateMarkdown(),
-        markdown(),
-        // commentBlock()
-      ]}
+      extensions={[decorateMarkdown(), markdown(), commentBlock()]}
     />
   ),
 };
