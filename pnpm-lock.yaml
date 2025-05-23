@@ -5149,6 +5149,9 @@ importers:
       '@dxos/kv-store':
         specifier: workspace:*
         version: link:../../common/kv-store
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -5194,6 +5197,9 @@ importers:
       debug:
         specifier: ^4.3.4
         version: 4.3.4
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       esbuild:
         specifier: ^0.23.1
         version: 0.23.1
