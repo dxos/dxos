@@ -233,8 +233,13 @@ export const Outliner = {
         '  ```ts',
         '  const x = 100',
         '  ```',
+<<<<<<< HEAD
         '- [ ] C',
         '- D Items can have links [like this](https://example.com).',
+=======
+        '  - [ ] C',
+        '    - D Items can have links [like this](https://example.com).',
+>>>>>>> origin/main
       )}
       extensions={[decorateMarkdown({ listPaddingLeft: 8 }), outliner()]}
       debug='raw+tree'

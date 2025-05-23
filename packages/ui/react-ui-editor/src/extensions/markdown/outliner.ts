@@ -17,7 +17,7 @@ import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Cut and paste.
+// TODO(burdon): Cut-and-paste.
 // TODO(burdon): Toggle list/task mode (in gutter?)
 // TODO(burdon): Convert to task object and insert link (menu button).
 // TOOD(burdon): Continuation lines and rich formatting?
@@ -174,8 +174,17 @@ export const outliner = (): Extension => [
       borderRight: '1px solid var(--dx-separator)',
       borderTopLeftRadius: '4px',
       borderTopRightRadius: '4px',
-      paddingTop: '8px',
+      paddingTop: '4px',
       marginTop: '8px',
+    },
+    '.cm-list-item-end': {
+      borderLeft: '1px solid var(--dx-separator)',
+      borderRight: '1px solid var(--dx-separator)',
+      borderBottom: '1px solid var(--dx-separator)',
+      borderBottomLeftRadius: '4px',
+      borderBottomRightRadius: '4px',
+      paddingBottom: '4px',
+      marginBottom: '8px',
     },
     '.cm-list-item-continuation': {
       borderLeft: '1px solid var(--dx-separator)',
@@ -184,39 +193,37 @@ export const outliner = (): Extension => [
       // TODO(burdon): Should match parent indentation.
       paddingLeft: '24px',
     },
-    '.cm-list-item-end': {
-      borderLeft: '1px solid var(--dx-separator)',
-      borderRight: '1px solid var(--dx-separator)',
-      borderBottom: '1px solid var(--dx-separator)',
-      borderBottomLeftRadius: '4px',
-      borderBottomRightRadius: '4px',
-      paddingBottom: '8px',
-      marginBottom: '8px',
-    },
 
     // TODO(burdon): Set via options to decorate extension.
-    '.cm-codeblock-line': {
-      borderRadius: '0 !important',
+    '.cm-list-item-continuation.cm-codeblock-start': {
+      borderRadius: '0',
     },
   }),
 ];
 
+/**
+ * Add line decorations.
+ */
 const buildDecorations = (from: number, to: number, state: EditorState) => {
   const decorations: Range<Decoration>[] = [];
   syntaxTree(state).iterate({
     enter: (node) => {
       if (node.name === 'ListItem') {
+        const sub = node.node.getChild('BulletList');
         const lineStart = state.doc.lineAt(node.from);
-        // TODO(burdon): End OR next indented item.
-        const lineEnd = state.doc.lineAt(node.to);
+        const lineEnd = sub ? state.doc.lineAt(state.doc.lineAt(sub.from).from - 1) : state.doc.lineAt(node.to);
+
         decorations.push(
           Decoration.line({
             class: mx('cm-list-item-start', lineStart.number === lineEnd.number && 'cm-list-item-end'),
           }).range(lineStart.from, lineStart.from),
         );
+
         for (let i = lineStart.from + 1; i < lineEnd.from; i++) {
           decorations.push(Decoration.line({ class: mx('cm-list-item-continuation') }).range(i, i));
         }
+
+        // TODO(burdon): Need to sort.
         if (lineStart.number !== lineEnd.number) {
           decorations.push(Decoration.line({ class: mx('cm-list-item-end') }).range(lineEnd.from, lineEnd.from));
         }
