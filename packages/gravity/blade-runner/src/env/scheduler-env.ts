@@ -237,7 +237,9 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
         rpcRequests.disconnect();
         rpcResponses.disconnect();
         processHandle.kill(signal);
-        void tracingStream.cancel();
+        void tracingStream.cancel().catch(() => {
+          log.warn('Failed to cancel tracing stream');
+        });
         void rpcHandle[close]().catch((err) => log.catch(err));
       },
       params: replicantParams,
