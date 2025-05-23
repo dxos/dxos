@@ -11,7 +11,6 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 
 import { DatabaseRoot } from './database-root';
-import { log } from '@dxos/log';
 
 export class SpaceStateManager extends Resource {
   private readonly _roots = new Map<DocumentId, DatabaseRoot>();

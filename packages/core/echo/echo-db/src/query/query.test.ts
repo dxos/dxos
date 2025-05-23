@@ -402,7 +402,7 @@ describe('Queries', () => {
           name: 'Bob',
         }),
       );
-      const hasManager = db.add(
+      const _hasManager = db.add(
         live(Testing.HasManager, {
           [RelationSourceId]: bob,
           [RelationTargetId]: alice,
@@ -410,9 +410,9 @@ describe('Queries', () => {
         }),
       );
 
-      const task1 = db.add(live(Testing.Task, { title: 'Task 1', assignee: Ref.make(alice) }));
-      const task2 = db.add(live(Testing.Task, { title: 'Task 2', assignee: Ref.make(alice) }));
-      const task3 = db.add(live(Testing.Task, { title: 'Task 3', assignee: Ref.make(bob) }));
+      const _task1 = db.add(live(Testing.Task, { title: 'Task 1', assignee: Ref.make(alice) }));
+      const _task2 = db.add(live(Testing.Task, { title: 'Task 2', assignee: Ref.make(alice) }));
+      const _task3 = db.add(live(Testing.Task, { title: 'Task 3', assignee: Ref.make(bob) }));
 
       await db.flush({ indexes: true });
     });

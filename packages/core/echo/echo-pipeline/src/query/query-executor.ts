@@ -7,6 +7,7 @@ import { Context, Resource } from '@dxos/context';
 import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { getDeep, isNonNullable } from '@dxos/util';
@@ -15,10 +16,8 @@ import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
-import { filterMatchObject } from '../filter';
-import { getDXN } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import type { SpaceStateManager } from '../db-host';
+import { filterMatchObject } from '../filter';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -177,6 +176,7 @@ export class QueryExecutor extends Resource {
     //   changed,
     //   trace: ExecutionTrace.format(trace),
     // });
+    // eslint-disable-next-line no-console
     console.log(ExecutionTrace.format(trace));
 
     return {
