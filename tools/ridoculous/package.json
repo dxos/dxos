@@ -15,10 +15,10 @@
     "ridoculous": "./bin/ridoculous.js"
   },
   "scripts": {
-    "build": "rm -rf ./dist && tsc",
+    "build": "shx rm -rf ./dist && tsc",
     "info": "tsc --showConfig | jq",
     "update:docs": "ts-node --esm ./src/main.ts --files ./testing/docs/**/*.md --auto-number --dry-run",
-    "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose"
+    "update:test": "shx rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose"
   },
   "dependencies": {
     "@microsoft/tsdoc": "~0.14.1",
