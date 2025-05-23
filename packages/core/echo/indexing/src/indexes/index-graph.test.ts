@@ -120,7 +120,7 @@ const assertInitialStateQueries = async (index: IndexGraph) => {
       graph: {
         kind: 'relation-target',
         property: null,
-        anchors: [TestData.ORGS.cyberdyne.id],
+        anchors: [TestData.ORGANIZATIONS.cyberdyne.id],
       },
       typenames: [],
     });

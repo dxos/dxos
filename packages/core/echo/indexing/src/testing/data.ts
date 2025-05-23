@@ -31,7 +31,7 @@ const createArticle = (title: string, content: string): { id: ObjectId; doc: Obj
   };
 };
 
-const createOrg = (name: string, website?: string): { id: ObjectId; doc: ObjectStructure } => {
+const createOrganization = (name: string, website?: string): { id: ObjectId; doc: ObjectStructure } => {
   return {
     id: ObjectId.random(),
     doc: {
@@ -126,9 +126,9 @@ export const ARTICLES = {
   ),
 };
 
-export const ORGS = {
-  cyberdyne: createOrg('Cyberdyne Systems', 'https://cyberdyne.com'),
-  amco: createOrg('AMCO', 'https://amco.com'),
+export const ORGANIZATIONS = {
+  cyberdyne: createOrganization('Cyberdyne Systems', 'https://cyberdyne.com'),
+  amco: createOrganization('AMCO', 'https://amco.com'),
 };
 
 export const CONTACTS = {
@@ -146,16 +146,16 @@ export const TASKS = {
 };
 
 export const WORKS_FOR = {
-  johnAtCyberdyne: createWorksFor(CONTACTS.john.id, ORGS.cyberdyne.id, '2020'),
-  sarahAtCyberdyne: createWorksFor(CONTACTS.sarah.id, ORGS.cyberdyne.id, '2021'),
-  michaelAtAmco: createWorksFor(CONTACTS.michael.id, ORGS.amco.id, '2019'),
-  emmaAtCyberdyne: createWorksFor(CONTACTS.emma.id, ORGS.cyberdyne.id, '2022'),
-  davidAtAmco: createWorksFor(CONTACTS.david.id, ORGS.amco.id, '2018'),
+  johnAtCyberdyne: createWorksFor(CONTACTS.john.id, ORGANIZATIONS.cyberdyne.id, '2020'),
+  sarahAtCyberdyne: createWorksFor(CONTACTS.sarah.id, ORGANIZATIONS.cyberdyne.id, '2021'),
+  michaelAtAmco: createWorksFor(CONTACTS.michael.id, ORGANIZATIONS.amco.id, '2019'),
+  emmaAtCyberdyne: createWorksFor(CONTACTS.emma.id, ORGANIZATIONS.cyberdyne.id, '2022'),
+  davidAtAmco: createWorksFor(CONTACTS.david.id, ORGANIZATIONS.amco.id, '2018'),
 };
 
 export const OBJECTS = [
   ...Object.values(ARTICLES),
-  ...Object.values(ORGS),
+  ...Object.values(ORGANIZATIONS),
   ...Object.values(CONTACTS),
   ...Object.values(TASKS),
   ...Object.values(WORKS_FOR),

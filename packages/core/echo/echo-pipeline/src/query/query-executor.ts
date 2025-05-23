@@ -39,7 +39,7 @@ type QueryExecutionResult = {
 /**
  * Represents an item in the query working set during execution.
  */
-type Item = {
+type QueryItem = {
   objectId: ObjectId;
   documentId: DocumentId;
   spaceId: SpaceId;
@@ -90,7 +90,7 @@ export const ExecutionTrace = Object.freeze({
 });
 
 type StepExecutionResult = {
-  workingSet: Item[];
+  workingSet: QueryItem[];
   trace: ExecutionTrace;
 };
 
@@ -108,7 +108,7 @@ export class QueryExecutor extends Resource {
 
   private _plan: QueryPlan.Plan;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
-  private _lastResultSet: Item[] = [];
+  private _lastResultSet: QueryItem[] = [];
 
   constructor(options: QueryExecutorOptions) {
     super();
@@ -184,7 +184,7 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  private async _execPlan(plan: QueryPlan.Plan, workingSet: Item[]): Promise<StepExecutionResult> {
+  private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
     for (const step of plan.steps) {
       const result = await this._execStep(step, workingSet);
@@ -194,11 +194,11 @@ export class QueryExecutor extends Resource {
     return { workingSet, trace };
   }
 
-  private async _execStep(step: QueryPlan.Step, workingSet: Item[]): Promise<StepExecutionResult> {
+  private async _execStep(step: QueryPlan.Step, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     if (this._ctx.disposed) {
       return { workingSet, trace: ExecutionTrace.makeEmpty() };
     }
-    let newWorkingSet: Item[], trace: ExecutionTrace;
+    let newWorkingSet: QueryItem[], trace: ExecutionTrace;
 
     const begin = performance.now();
     switch (step._tag) {
@@ -229,7 +229,7 @@ export class QueryExecutor extends Resource {
     return { workingSet: newWorkingSet, trace };
   }
 
-  private async _execSelectStep(step: QueryPlan.SelectStep, workingSet: Item[]): Promise<StepExecutionResult> {
+  private async _execSelectStep(step: QueryPlan.SelectStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     workingSet = [...workingSet];
 
     const trace: ExecutionTrace = {
@@ -239,7 +239,7 @@ export class QueryExecutor extends Resource {
     };
 
     switch (step.selector._tag) {
-      case 'EverythingSelector': {
+      case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
         const indexHits = await this._indexer.execQuery({
           typenames: [],
@@ -257,7 +257,7 @@ export class QueryExecutor extends Resource {
         trace.documentsLoaded += results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
-        workingSet.push(...results.filter(isNonNullable).filter((item) => step.fromSpaces.includes(item.spaceId)));
+        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
         trace.objectCount = workingSet.length;
 
         break;
@@ -285,12 +285,12 @@ export class QueryExecutor extends Resource {
         trace.documentsLoaded += results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
-        workingSet.push(...results.filter(isNonNullable).filter((item) => step.fromSpaces.includes(item.spaceId)));
+        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
         trace.objectCount = workingSet.length;
 
         break;
       }
-      case 'TextSearchSelector': {
+      case 'TextSelector': {
         // TODO(dmaretskyi): Implement this properly.
         break;
       }
@@ -301,7 +301,7 @@ export class QueryExecutor extends Resource {
     return { workingSet, trace };
   }
 
-  private async _execFilterStep(step: QueryPlan.FilterStep, workingSet: Item[]): Promise<StepExecutionResult> {
+  private async _execFilterStep(step: QueryPlan.FilterStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const result = workingSet.filter((item) =>
       filterMatchObject(step.filter, {
         id: item.objectId,
@@ -322,7 +322,7 @@ export class QueryExecutor extends Resource {
 
   private async _execFilterDeletedStep(
     step: QueryPlan.FilterDeletedStep,
-    workingSet: Item[],
+    workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
     const expected = step.mode === 'only-deleted';
     const result = workingSet.filter((item) => ObjectStructure.isDeleted(item.doc) === expected);
@@ -338,14 +338,14 @@ export class QueryExecutor extends Resource {
   }
 
   // TODO(dmaretskyi): This needs to be completed.
-  private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: Item[]): Promise<StepExecutionResult> {
+  private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
       name: 'Traverse',
       details: JSON.stringify(step.traversal),
     };
 
-    const newWorkingSet: Item[] = [];
+    const newWorkingSet: QueryItem[] = [];
 
     switch (step.traversal._tag) {
       case 'ReferenceTraversal': {
@@ -480,8 +480,8 @@ export class QueryExecutor extends Resource {
     return { workingSet: newWorkingSet, trace };
   }
 
-  private async _execUnionStep(step: QueryPlan.UnionStep, workingSet: Item[]): Promise<StepExecutionResult> {
-    const results = new Map<ObjectId, Item>();
+  private async _execUnionStep(step: QueryPlan.UnionStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const results = new Map<ObjectId, QueryItem>();
 
     const resultSets = await Promise.all(step.plans.map((plan) => this._execPlan(plan, [...workingSet])));
 
@@ -505,15 +505,15 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  private async _loadDocumentsAfterIndexQuery(indexHits: FindResult[]): Promise<(Item | null)[]> {
+  private async _loadDocumentsAfterIndexQuery(indexHits: FindResult[]): Promise<(QueryItem | null)[]> {
     return Promise.all(
-      indexHits.map(async (hit): Promise<Item | null> => {
+      indexHits.map(async (hit): Promise<QueryItem | null> => {
         return this._loadFromIndexHit(hit);
       }),
     );
   }
 
-  private async _loadFromIndexHit(hit: FindResult): Promise<Item | null> {
+  private async _loadFromIndexHit(hit: FindResult): Promise<QueryItem | null> {
     const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(hit.id);
 
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId);
@@ -540,7 +540,7 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  private async _loadFromDXN(dxn: DXN, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<Item | null> {
+  private async _loadFromDXN(dxn: DXN, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
     const echoDxn = dxn.asEchoDXN();
     if (!echoDxn) {
       log.warn('unable to resolve DXN', { dxn });

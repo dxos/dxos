@@ -452,7 +452,7 @@ describe('QueryPlanner', () => {
               "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
             ],
             "selector": {
-              "_tag": "TextSearchSelector",
+              "_tag": "TextSelector",
               "searchKind": "full-text",
               "text": "Bill",
             },

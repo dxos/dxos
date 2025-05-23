@@ -41,7 +41,7 @@ export namespace QueryPlan {
   export type SelectStep = {
     _tag: 'SelectStep';
 
-    fromSpaces: readonly SpaceId[];
+    spaces: readonly SpaceId[];
     selector: Selector;
   };
 
@@ -49,10 +49,10 @@ export namespace QueryPlan {
    * Specifier to scan the database for objects.
    * Optimized to utilize database indexes.
    */
-  export type Selector = EverythingSelector | IdSelector | TypeSelector | TextSearchSelector;
+  export type Selector = WildcardSelector | IdSelector | TypeSelector | TextSelector;
 
-  export type EverythingSelector = {
-    _tag: 'EverythingSelector';
+  export type WildcardSelector = {
+    _tag: 'WildcardSelector';
   };
 
   export type IdSelector = {
@@ -78,8 +78,8 @@ export namespace QueryPlan {
   /**
    * Select objects by preforming a full-text or vector search.
    */
-  export type TextSearchSelector = {
-    _tag: 'TextSearchSelector';
+  export type TextSelector = {
+    _tag: 'TextSelector';
 
     text: string;
     searchKind: TextSearchKind;

@@ -105,7 +105,7 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
-              fromSpaces: context.selectionSpaces,
+              spaces: context.selectionSpaces,
               selector: {
                 _tag: 'IdSelector',
                 objectIds: filter.id,
@@ -121,7 +121,7 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
-              fromSpaces: context.selectionSpaces,
+              spaces: context.selectionSpaces,
               selector: {
                 _tag: 'TypeSelector',
                 typename: [filter.typename as DXN.String],
@@ -138,9 +138,9 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
-              fromSpaces: context.selectionSpaces,
+              spaces: context.selectionSpaces,
               selector: {
-                _tag: 'EverythingSelector',
+                _tag: 'WildcardSelector',
               },
             },
             ...this._generateDeletedHandlingSteps(context),
@@ -155,9 +155,9 @@ export class QueryPlanner {
         return QueryPlan.Plan.make([
           {
             _tag: 'SelectStep',
-            fromSpaces: context.selectionSpaces,
+            spaces: context.selectionSpaces,
             selector: {
-              _tag: 'TextSearchSelector',
+              _tag: 'TextSelector',
               text: filter.text,
               searchKind: filter.searchKind ?? this._options.defaultTextSearchKind,
             },
@@ -196,7 +196,7 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
-              fromSpaces: context.selectionSpaces,
+              spaces: context.selectionSpaces,
               selector: {
                 _tag: 'TypeSelector',
                 typename: typenames as DXN.String[],
