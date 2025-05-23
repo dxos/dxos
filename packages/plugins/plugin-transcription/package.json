@@ -72,7 +72,6 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",
-    "effect": "3.14.21",
     "extendable-media-recorder": "^9.2.19",
     "extendable-media-recorder-wav-encoder": "^7.0.123",
     "main-thread-scheduling": "^14.1.1",
@@ -92,7 +91,10 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
+    "@effect-rx/rx-react": "^0.34.1",
+    "@effect/platform": "0.80.12",
     "@types/react": "~18.2.0",
+    "effect": "3.14.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "tailwindcss": "~3.4.1"
@@ -100,6 +102,8 @@
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@effect-rx/rx-react": "^0.34.1",
+    "@effect/platform": "0.80.12",
     "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

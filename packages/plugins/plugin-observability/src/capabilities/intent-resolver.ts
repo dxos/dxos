@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, IntentAction, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver, IntentAction, type PluginContext } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 
@@ -11,7 +11,7 @@ import { type ObservabilitySettingsProps } from '../components';
 import { OBSERVABILITY_PLUGIN } from '../meta';
 import { ObservabilityAction } from '../types';
 
-export default ({ context, namespace }: { context: PluginsContext; namespace: string }) =>
+export default ({ context, namespace }: { context: PluginContext; namespace: string }) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: IntentAction.Track,
@@ -22,10 +22,10 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
     createResolver({
       intent: ObservabilityAction.Toggle,
       resolve: async ({ state }) => {
-        const client = context.requestCapability(ClientCapability);
-        const observability = context.requestCapability(ObservabilityCapabilities.Observability);
+        const client = context.getCapability(ClientCapability);
+        const observability = context.getCapability(ObservabilityCapabilities.Observability);
         const settings = context
-          .requestCapability(Capabilities.SettingsStore)
+          .getCapability(Capabilities.SettingsStore)
           .getStore<ObservabilitySettingsProps>(OBSERVABILITY_PLUGIN)!.value;
         settings.enabled = state ?? !settings.enabled;
         observability.track({
@@ -43,7 +43,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
     createResolver({
       intent: ObservabilityAction.SendEvent,
       resolve: (data) => {
-        const client = context.requestCapability(ClientCapability);
+        const client = context.getCapability(ClientCapability);
         const properties = 'properties' in data ? data.properties : {};
 
         // NOTE: This is to ensure that events fired before observability is ready are still sent.
@@ -61,7 +61,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
     createResolver({
       intent: ObservabilityAction.CaptureUserFeedback,
       resolve: async (data) => {
-        const observability = context.requestCapability(ObservabilityCapabilities.Observability);
+        const observability = context.getCapability(ObservabilityCapabilities.Observability);
         observability.captureUserFeedback(data.message);
       },
     }),

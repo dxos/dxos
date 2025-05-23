@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed } from '@preact/signals-core';
-import { useMemo } from 'react';
+import { useRxValue } from '@effect-rx/rx-react';
+
+import { invariant } from '@dxos/invariant';
 
 import { usePluginManager } from './PluginManagerProvider';
 import { type InterfaceDef } from '../core';
@@ -12,17 +13,9 @@ import { type InterfaceDef } from '../core';
  * Hook to request capabilities from the plugin context.
  * @returns An array of capabilities.
  */
-export const useCapabilities = <T, U extends T = T>(
-  interfaceDef: InterfaceDef<T>,
-  filter?: (capability: T, moduleId: string) => capability is U,
-) => {
+export const useCapabilities = <T>(interfaceDef: InterfaceDef<T>) => {
   const manager = usePluginManager();
-  const signal = useMemo(
-    () => computed(() => manager.context.requestCapabilities(interfaceDef, filter)),
-    [interfaceDef],
-  );
-
-  return signal.value;
+  return useRxValue(manager.context.capabilities(interfaceDef));
 };
 
 /**
@@ -30,11 +23,8 @@ export const useCapabilities = <T, U extends T = T>(
  * @returns The capability.
  * @throws If no capability is found.
  */
-export const useCapability = <T, U extends T = T>(
-  interfaceDef: InterfaceDef<T>,
-  filter?: (capability: T, moduleId: string) => capability is U,
-) => {
-  const manager = usePluginManager();
-  const signal = useMemo(() => computed(() => manager.context.requestCapability(interfaceDef, filter)), [interfaceDef]);
-  return signal.value;
+export const useCapability = <T>(interfaceDef: InterfaceDef<T>) => {
+  const capabilities = useCapabilities(interfaceDef);
+  invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
+  return capabilities[0];
 };

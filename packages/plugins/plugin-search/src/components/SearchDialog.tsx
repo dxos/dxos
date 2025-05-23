@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Option } from 'effect';
 import React, { forwardRef, useCallback, useState } from 'react';
 
 import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher, useLayout } from '@dxos/app-framework';
@@ -47,7 +48,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const { graph } = useAppGraph();
   const layout = useLayout();
   const closed = (Array.isArray(layout.inactive) ? layout.inactive : [layout.inactive])
-    .map((id) => graph?.findNode(id))
+    .map((id) => graph?.getNode(id))
     .filter(Boolean);
   const [queryString, setQueryString] = useState('');
   const client = useClient();
@@ -96,17 +97,17 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
           {queryString.length > 0 ? (
             resultObjects.length > 0 ? (
               resultObjects
-                .map((object) => graph?.findNode(fullyQualifiedId(object)))
-                .filter(Boolean)
-                .map((node) => <SearchListResult key={node!.id} node={node!} onSelect={handleSelect} />)
+                .map((object) => graph.getNode(fullyQualifiedId(object)))
+                .filter(Option.isSome)
+                .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
             ) : (
               <p className='pli-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
             )
           ) : (
             <>
               {closed.length > 0 && <h2 className={mx('mlb-1', descriptionText)}>{t('recently closed heading')}</h2>}
-              {closed.map((node) => (
-                <SearchListResult key={node!.id} node={node!} onSelect={handleSelect} />
+              {closed.filter(Option.isSome).map((node) => (
+                <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
               ))}
             </>
           )}
