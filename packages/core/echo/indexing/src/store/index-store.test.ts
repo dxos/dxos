@@ -8,8 +8,8 @@ import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-pro
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
-import { IndexSchema } from './index-schema';
 import { IndexStore } from './index-store';
+import { IndexSchema } from '../indexes';
 
 describe('IndexStore', () => {
   test('basic', async () => {
@@ -95,6 +95,9 @@ describe('IndexStore', () => {
         data: { name: 'John' },
         // TODO(dmaretskyi): Fix references
         system: { type: encodeReference(Reference.localObjectReference(schemaURI)) },
+        meta: {
+          keys: [],
+        },
       });
       await store.save(loadedIndex);
     }

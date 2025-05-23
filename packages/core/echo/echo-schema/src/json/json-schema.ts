@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, JSONSchema, Option, Schema, type Types } from 'effect';
+import { JSONSchema, Option, Schema, SchemaAST, type Types } from 'effect';
 import type { Mutable } from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { clearUndefined, orderKeys } from '@dxos/util';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
@@ -26,7 +26,7 @@ import {
   type JsonSchemaType,
   type TypeAnnotation,
 } from '../ast';
-import { Expando, ObjectId } from '../object';
+import { Expando } from '../object';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
 
 /**

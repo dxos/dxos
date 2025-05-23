@@ -5,11 +5,11 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
+import type { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
   QueryReactivity,
   type QueryResponse,
@@ -21,7 +21,8 @@ import { isNonNullable } from '@dxos/util';
 import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
-import { type DeprecatedFilter, type QueryResultEntry } from '../query';
+import { type QueryResultEntry } from '../query';
+import { getTargetSpacesForQuery } from '../query/util';
 
 export type LoadObjectParams = {
   spaceId: SpaceId;
@@ -61,7 +62,7 @@ export type IndexQuerySourceParams = {
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
-  private _filter?: DeprecatedFilter = undefined;
+  private _query?: QueryAST.Query = undefined;
   private _results?: QueryResultEntry[] = [];
   private _stream?: Stream<QueryResponse>;
 
@@ -78,31 +79,27 @@ export class IndexQuerySource implements QuerySource {
     return this._results ?? [];
   }
 
-  async run(filter: DeprecatedFilter): Promise<QueryResultEntry[]> {
-    this._filter = filter;
+  async run(query: QueryAST.Query): Promise<QueryResultEntry[]> {
+    this._query = query;
     return new Promise((resolve, reject) => {
-      this._queryIndex(filter, QueryReactivity.ONE_SHOT, resolve, reject);
+      this._queryIndex(query, QueryReactivity.ONE_SHOT, resolve, reject);
     });
   }
 
-  update(filter: DeprecatedFilter): void {
-    if (filter.options?.dataLocation === QueryOptions.DataLocation.LOCAL) {
-      return;
-    }
-
-    this._filter = filter;
+  update(query: QueryAST.Query): void {
+    this._query = query;
 
     this._closeStream();
     this._results = [];
     this.changed.emit();
-    this._queryIndex(filter, QueryReactivity.REACTIVE, (results) => {
+    this._queryIndex(query, QueryReactivity.REACTIVE, (results) => {
       this._results = results;
       this.changed.emit();
     });
   }
 
   private _queryIndex(
-    filter: DeprecatedFilter,
+    query: QueryAST.Query,
     queryType: QueryReactivity,
     onResult: (results: QueryResultEntry[]) => void,
     onError?: (error: Error) => void,
@@ -114,7 +111,7 @@ export class IndexQuerySource implements QuerySource {
     let currentCtx: Context;
 
     const stream = this._params.service.execQuery(
-      { filter: filter.toProto(), reactivity: queryType },
+      { query: JSON.stringify(query), queryId: String(queryId), reactivity: queryType },
       { timeout: QUERY_SERVICE_TIMEOUT },
     );
 
@@ -128,9 +125,10 @@ export class IndexQuerySource implements QuerySource {
     stream.subscribe(
       async (response) => {
         try {
-          if (filter.options?.spaceIds && filter.options?.spaceIds.length > 0) {
+          const targetSpaces = getTargetSpacesForQuery(query);
+          if (targetSpaces.length > 0) {
             invariant(
-              response.results?.every((r) => filter.options.spaceIds?.includes(r.spaceId)),
+              response.results?.every((r) => targetSpaces.includes(SpaceId.make(r.spaceId))),
               'Result spaceId mismatch',
             );
           }
@@ -195,9 +193,9 @@ export class IndexQuerySource implements QuerySource {
     if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {
         objectId: result.id,
-        spaceKey: result.spaceKey.toHex(),
+        spaceId: result.spaceId,
         loadReason: 'query',
-        query: JSON.stringify(this._filter?.toProto() ?? null),
+        query: JSON.stringify(this._query ?? null),
       });
     }
 

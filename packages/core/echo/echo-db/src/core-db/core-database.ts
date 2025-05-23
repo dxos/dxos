@@ -24,7 +24,7 @@ import {
   isEncodedReference,
   Reference,
   type ObjectStructure,
-  type SpaceDoc,
+  type DatabaseDirectory,
   type SpaceState,
 } from '@dxos/echo-protocol';
 import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
@@ -171,7 +171,7 @@ export class CoreDatabase {
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
       const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      const spaceRootDoc: SpaceDoc = spaceRootDocHandle.doc();
+      const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
@@ -477,7 +477,7 @@ export class CoreDatabase {
     invariant(!this._objects.has(core.id));
     this._objects.set(core.id, core);
 
-    let spaceDocHandle: DocHandleProxy<SpaceDoc>;
+    let spaceDocHandle: DocHandleProxy<DatabaseDirectory>;
     const placement = opts?.placeIn ?? 'linked-doc';
     switch (placement) {
       case 'linked-doc': {
@@ -695,12 +695,15 @@ export class CoreDatabase {
     return Object.values(this._repoProxy.handles);
   }
 
-  private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {
-    const spaceRootDoc: SpaceDoc = spaceRootDocHandle.doc();
+  private async _handleSpaceRootDocumentChange(
+    spaceRootDocHandle: DocHandleProxy<DatabaseDirectory>,
+    objectsToLoad: string[],
+  ) {
+    const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
-    const objectsToRebind = new Map<string, { handle: DocHandleProxy<SpaceDoc>; objectIds: string[] }>();
+    const objectsToRebind = new Map<string, { handle: DocHandleProxy<DatabaseDirectory>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
 
     const objectsToRemove: string[] = [];
@@ -763,7 +766,7 @@ export class CoreDatabase {
   /**
    * Keep as field to have a reference to pass for unsubscribing from handle changes.
    */
-  private readonly _onDocumentUpdate = (event: ChangeEvent<SpaceDoc>) => {
+  private readonly _onDocumentUpdate = (event: ChangeEvent<DatabaseDirectory>) => {
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
@@ -772,7 +775,7 @@ export class CoreDatabase {
     this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
   };
 
-  private _processDocumentUpdate(event: ChangeEvent<SpaceDoc>): DocumentChanges {
+  private _processDocumentUpdate(event: ChangeEvent<DatabaseDirectory>): DocumentChanges {
     const { inlineChangedObjects, linkedDocuments } = getInlineAndLinkChanges(event);
     const createdObjectIds: string[] = [];
     const objectsToRebind: string[] = [];
@@ -828,14 +831,14 @@ export class CoreDatabase {
   /**
    * Loads all objects on open and handles objects that are being created not by this client.
    */
-  private _createInlineObjects(docHandle: DocHandleProxy<SpaceDoc>, objectIds: string[]) {
+  private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]) {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       this._createObjectInDocument(docHandle, id);
     }
   }
 
-  private _createObjectInDocument(docHandle: DocHandleProxy<SpaceDoc>, objectId: string) {
+  private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string) {
     invariant(!this._objects.get(objectId));
     const core = new ObjectCore();
     core.id = objectId;
@@ -885,7 +888,7 @@ export class CoreDatabase {
     });
   }
 
-  private _rebindObjects(docHandle: DocHandleProxy<SpaceDoc>, objectIds: string[]) {
+  private _rebindObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]) {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);

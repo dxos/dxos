@@ -44,6 +44,8 @@ import { RPC_TIMEOUT } from '../common';
 import { type HaloProxy } from '../halo/halo-proxy';
 import { InvitationsProxy } from '../invitations';
 
+const ENABLE_AGENT_QUERY_SOURCE = false;
+
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
@@ -172,18 +174,20 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     });
     this._ctx.onDispose(() => spacesStream.close());
 
-    const subscription = this._isReady.subscribe(async (ready) => {
-      if (!ready) {
-        return;
-      }
+    if (ENABLE_AGENT_QUERY_SOURCE) {
+      const subscription = this._isReady.subscribe(async (ready) => {
+        if (!ready) {
+          return;
+        }
 
-      const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
-      await agentQuerySourceProvider.open();
-      this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
-      this._ctx.onDispose(() => agentQuerySourceProvider.close());
-      subscription.unsubscribe();
-    });
-    this._ctx.onDispose(() => subscription.unsubscribe());
+        const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
+        await agentQuerySourceProvider.open();
+        this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
+        this._ctx.onDispose(() => agentQuerySourceProvider.close());
+        subscription.unsubscribe();
+      });
+      this._ctx.onDispose(() => subscription.unsubscribe());
+    }
 
     // TODO(nf): implement/verify works
     // TODO(nf): trigger automatically? feedback on how many were resumed?

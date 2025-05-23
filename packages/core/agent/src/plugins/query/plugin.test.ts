@@ -9,7 +9,7 @@ import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { type AnyLiveObject, type Live } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { DeprecatedFilter, Filter, type QueryResult } from '@dxos/echo-db';
+import { Filter, Query, type QueryResult } from '@dxos/echo-db';
 import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
@@ -50,14 +50,14 @@ describe('QueryPlugin', () => {
     onTestFinished(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
-    let org: Live<any>;
+    let _org: Live<any>;
     {
       const space = await client1.spaces.create({ name: 'first space' });
       await space.waitUntilReady();
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
 
-      org = generator.createObject({ types: [TestSchemaType.organization] });
+      _org = generator.createObject({ types: [TestSchemaType.organization] });
       await space.db.flush();
     }
     const plugin = new QueryPlugin();
@@ -90,10 +90,9 @@ describe('QueryPlugin', () => {
     // Send search request.
     {
       const request: QueryRequest = {
-        filter: DeprecatedFilter.from(
-          { name: org.name },
-          { models: ['*'], spaces: client1.spaces.get().map((s) => s.key) },
-        ).toProto(),
+        query: JSON.stringify(
+          Query.select(Filter.everything()).options({ spaceIds: client1.spaces.get().map((s) => s.id) }).ast,
+        ),
         queryId: 'test-query-id',
         reactivity: QueryReactivity.ONE_SHOT,
       };

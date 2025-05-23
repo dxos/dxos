@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
-import { type EncodedReference, type ForeignKey, isEncodedReference } from '@dxos/echo-protocol';
+import { type EncodedReference, type ForeignKey, isEncodedReference, type QueryAST } from '@dxos/echo-protocol';
 import { type BaseObject, requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -19,7 +19,6 @@ import {
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { mapValues } from '@dxos/util';
 
-import type { QueryAST } from '..';
 import { getReferenceWithSpaceKey } from '../../echo-handler';
 
 // TODO(dmaretskyi): Rename `hasInstanceOf`.
