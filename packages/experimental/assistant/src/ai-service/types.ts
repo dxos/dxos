@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
-import { Tool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
+import { Tool, Message, type MessageContentBlock } from '@dxos/artifact';
+import { type ObjectId } from '@dxos/echo-schema';
 
-import { DEFAULT_EDGE_MODELS } from './defs';
+import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
 
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
-export const LLMModel = S.Literal(...DEFAULT_EDGE_MODELS);
+export const LLMModel = Schema.Literal(...DEFAULT_EDGE_MODELS, ...DEFAULT_OLLAMA_MODELS);
 
-export type LLMModel = S.Schema.Type<typeof LLMModel>;
+export type LLMModel = Schema.Schema.Type<typeof LLMModel>;
 
 export const ToolTypes = Object.freeze({
   // TODO(dmaretskyi): Not implemented yet.
@@ -24,38 +24,47 @@ export const ToolTypes = Object.freeze({
 /**
  * Client GPT request.
  */
-export const GenerateRequest = S.Struct({
-  spaceId: S.optional(SpaceIdSchema),
-  threadId: S.optional(ObjectId),
-
+export const GenerateRequest = Schema.Struct({
   /**
    * Preferred model or system default.
    */
-  model: S.optional(LLMModel),
+  model: Schema.optional(LLMModel),
 
   /**
    * Tools available for the LLM.
    */
-  tools: S.optional(S.Array(Tool).pipe(S.mutable)),
+  tools: Schema.optional(Schema.Array(Tool).pipe(Schema.mutable)),
 
   /**
    * System instructions to the LLM.
    */
-  systemPrompt: S.optional(S.String),
+  systemPrompt: Schema.optional(Schema.String),
 
   /**
    * History of messages to include in the context window.
    */
   // TODO(burdon): Rename messages.
-  history: S.optional(S.Array(Message)),
+  history: Schema.optional(Schema.Array(Message)),
 
   /**
    * Current request.
    */
-  prompt: S.optional(Message),
+  prompt: Schema.optional(Message),
 });
+export type GenerateRequest = Schema.Schema.Type<typeof GenerateRequest>;
 
-export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;
+/**
+ * Non-streaming response.
+ */
+export const GenerateResponse = Schema.Struct({
+  messages: Schema.Array(Message),
+
+  /**
+   * Number of tokens used in the response.
+   */
+  tokenCount: Schema.optional(Schema.Number),
+});
+export type GenerateResponse = Schema.Schema.Type<typeof GenerateResponse>;
 
 /**
  * Server-Sent Events (SSE) stream from the AI service.

@@ -6,7 +6,7 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { ECHO_ATTR_TYPE, TYPENAME_SYMBOL } from './typename';
-import { type Ref } from '../ast';
+import { type Ref } from '../ref';
 
 type DeepReplaceRef<T> =
   T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
@@ -21,6 +21,9 @@ export const serializeStatic = <T extends { id: string }>(obj: T): SerializedSta
   return JSON.parse(JSON.stringify(obj));
 };
 
+/**
+ * @internal
+ */
 export const attachTypedJsonSerializer = (obj: any) => {
   const descriptor = Object.getOwnPropertyDescriptor(obj, 'toJSON');
   if (descriptor) {

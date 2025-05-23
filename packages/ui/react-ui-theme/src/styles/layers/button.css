@@ -42,7 +42,7 @@
       }
       /* Variants */
       &[data-variant='primary'] {
-        @apply text-inverse bg-accentSurface;
+        @apply text-accentSurfaceText bg-accentSurface;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
@@ -50,11 +50,11 @@
         }
       }
       &[data-variant='destructive'] {
-        @apply text-inverse bg-rose-550;
+        @apply text-accentSurfaceText bg-roseFill;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-rose-500;
+          @apply bg-roseFill;
         }
       }
     }

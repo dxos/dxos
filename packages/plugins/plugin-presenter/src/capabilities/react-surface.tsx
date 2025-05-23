@@ -4,46 +4,38 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
 
-import { PresenterCapabilities } from './capabilities';
-import { MarkdownSlide, PresenterSettings, PresenterMain, RevealMain } from '../components';
+import {
+  MarkdownSlide,
+  PresenterSettings,
+  DocumentPresenterContainer,
+  CollectionPresenterContainer,
+} from '../components';
 import { PRESENTER_PLUGIN } from '../meta';
-import { PresenterContext, type PresenterSettingsProps } from '../types';
+import { type PresenterSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${PRESENTER_PLUGIN}/document`,
-      role: 'main',
+      role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
-      component: ({ data }) => <RevealMain document={data.subject} />,
+      filter: (data): data is { subject: DocumentType; variant: 'presenter' } =>
+        isInstanceOf(DocumentType, data.subject) && data.variant === 'presenter',
+      component: ({ data }) => <DocumentPresenterContainer document={data.subject} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/collection`,
-      role: 'main',
+      role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
-      component: ({ data }) => {
-        const state = useCapability(PresenterCapabilities.MutableState);
-
-        return (
-          <PresenterContext.Provider
-            value={{
-              running: state.presenting,
-              start: () => (state.presenting = true),
-              stop: () => (state.presenting = false),
-            }}
-          >
-            <PresenterMain collection={data.subject} />
-          </PresenterContext.Provider>
-        );
-      },
+      filter: (data): data is { subject: CollectionType; variant: 'presenter' } =>
+        isInstanceOf(CollectionType, data.subject) && data.variant === 'presenter',
+      component: ({ data }) => <CollectionPresenterContainer collection={data.subject} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,
@@ -52,7 +44,7 @@ export default () =>
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
     createSurface({
-      id: `${PRESENTER_PLUGIN}/settings`,
+      id: `${PRESENTER_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<PresenterSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === PRESENTER_PLUGIN,

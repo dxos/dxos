@@ -1,0 +1,24 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "experimentalDecorators": true,
+    "types": [
+      "node"
+    ],
+    "useDefineForClassFields": false
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/test-utils"
+    },
+    {
+      "path": "../primitives/react-hooks"
+    }
+  ]
+}

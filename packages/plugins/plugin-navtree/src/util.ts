@@ -2,31 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  type Action,
-  type Node,
-  type NodeFilter,
-  type Graph,
-  ACTION_TYPE,
-  ACTION_GROUP_TYPE,
-  isAction,
-  isActionLike,
-} from '@dxos/app-graph';
+import { type Action, type Node, type ReadableGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { type FlattenedActions, type NavTreeItemGraphNode } from './types';
 
 export const getParent = (
-  graph: Graph,
+  graph: ReadableGraph,
   node: NavTreeItemGraphNode,
   path: string[],
 ): NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return graph.nodes(node, { relation: 'inbound' }).find((n) => n.id === parentId) as NavTreeItemGraphNode | undefined;
+  return graph.getConnections(node.id, 'inbound').find((n) => n.id === parentId) as NavTreeItemGraphNode | undefined;
 };
 
 export const getPersistenceParent = (
-  graph: Graph,
+  graph: ReadableGraph,
   node: NavTreeItemGraphNode,
   path: string[],
   persistenceClass: string,
@@ -40,7 +31,7 @@ export const getPersistenceParent = (
 };
 
 export const resolveMigrationOperation = (
-  graph: Graph,
+  graph: ReadableGraph,
   activeNode: NavTreeItemGraphNode,
   destinationPath: string[],
   destinationRelatedNode?: NavTreeItemGraphNode,
@@ -75,7 +66,7 @@ export const sortActions = (actions: Action[]): Action[] =>
       return 0;
     }
 
-    if (a.properties.disposition === 'toolbar') {
+    if (a.properties.disposition === 'list-item-primary') {
       return -1;
     }
 
@@ -83,13 +74,12 @@ export const sortActions = (actions: Action[]): Action[] =>
   });
 
 export const getChildren = (
-  graph: Graph,
+  graph: ReadableGraph,
   node: NavTreeItemGraphNode,
-  filter?: NodeFilter,
   path: readonly string[] = [],
 ): NavTreeItemGraphNode[] => {
   return graph
-    .nodes(node, { relation: 'outbound', filter })
+    .getConnections(node.id, 'outbound')
     .map((n) => {
       // Break cycles.
       const nextPath = [...path, node.id];
@@ -98,8 +88,8 @@ export const getChildren = (
     .filter(isNonNullable) as NavTreeItemGraphNode[];
 };
 
-export const getActions = (graph: Graph, node: Node): FlattenedActions => {
-  return graph.actions(node).reduce(
+export const getActions = (graph: ReadableGraph, node: Node): FlattenedActions => {
+  return graph.getActions(node.id).reduce(
     (acc: FlattenedActions, arg) => {
       if (arg.properties.disposition === 'item') {
         return acc;
@@ -107,25 +97,13 @@ export const getActions = (graph: Graph, node: Node): FlattenedActions => {
 
       acc.actions.push(arg);
       if (!isAction(arg)) {
-        const actionGroup = graph.actions(arg);
+        const actionGroup = graph.getActions(arg.id);
         acc.groupedActions[arg.id] = actionGroup;
       }
       return acc;
     },
     { actions: [], groupedActions: {} },
   );
-};
-
-export const expandChildrenAndActions = (graph: Graph, node: Node) => {
-  return Promise.all([expandChildren(graph, node), expandActions(graph, node)]);
-};
-
-export const expandChildren = (graph: Graph, node: Node) => {
-  return graph.expand(node, 'outbound');
-};
-
-export const expandActions = (graph: Graph, node: Node) => {
-  return Promise.all([graph.expand(node, 'outbound', ACTION_TYPE), graph.expand(node, 'outbound', ACTION_GROUP_TYPE)]);
 };
 
 export const l0ItemType = (item: Node<any>) => {
@@ -138,45 +116,4 @@ export const l0ItemType = (item: Node<any>) => {
   } else {
     return 'tab';
   }
-};
-
-// Regular expression to match renderable characters
-// Excludes control characters, combining marks, and other non-renderable characters
-const renderableCharRegex =
-  /^(?![\p{Control}\p{Mark}\p{Separator}\p{Surrogate}\p{Unassigned}])[\p{L}\p{N}\p{P}\p{S}\p{Emoji}]$/u;
-
-/**
- * Returns the first two renderable characters from a string that are separated by non-word characters.
- * Handles Unicode characters correctly.
- *
- * @param {string} label - The input string to process
- * @returns {[string, string]} Array containing the two characters, or empty strings if not found
- */
-export const getFirstTwoRenderableChars = (label: string) => {
-  // Convert string to array of Unicode characters
-  const characters = Array.from(label);
-
-  // Keep track of found renderable characters
-  const result = ['', ''];
-  let foundFirst = false;
-
-  for (let i = 0; i < characters.length; i++) {
-    const char = characters[i];
-
-    if (renderableCharRegex.test(char)) {
-      if (!foundFirst) {
-        result[0] = char;
-        foundFirst = true;
-      } else {
-        // Check if there's at least one non-word character between the first and current char
-        const textBetween = characters.slice(result[0].length, i).join('');
-        if (/[^\p{L}\p{N}_]/u.test(textBetween)) {
-          result[1] = char;
-          break;
-        }
-      }
-    }
-  }
-
-  return result;
 };

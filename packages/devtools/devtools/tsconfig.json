@@ -2,9 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": [
-      "DOM"
-    ],
     "types": [
       "@dxos/typings",
       "node"
@@ -37,6 +34,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -50,9 +50,6 @@
     },
     {
       "path": "../../core/conductor"
-    },
-    {
-      "path": "../../core/echo/automerge"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -119,6 +116,9 @@
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/react-ui-theme"

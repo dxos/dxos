@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema as S } from 'effect';
+import { type Schema } from 'effect';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
@@ -48,7 +48,7 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: S.Schema.AnyNoContext[];
+  types?: Schema.Schema.AnyNoContext[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -95,7 +95,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
-  private readonly _echoClient = new EchoClient({});
+  private readonly _echoClient = new EchoClient();
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -214,6 +214,16 @@ export class Client {
   }
 
   /**
+   * EDGE client.
+   *
+   * This API is experimental and subject to change.
+   */
+  get edge(): EdgeHttpClient {
+    invariant(this._edgeClient, 'Client not initialized.');
+    return this._edgeClient;
+  }
+
+  /**
    *
    */
   get shell(): Shell {
@@ -233,7 +243,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: S.Schema.AnyNoContext[]) {
+  addTypes(types: Schema.Schema.AnyNoContext[]) {
     log('addTypes', { schema: types.map((type) => getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.

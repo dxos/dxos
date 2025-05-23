@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-rx/rx-react';
 import { effect } from '@preact/signals-core';
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { useEffect, useState, type FC, type PropsWithChildren } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { Capabilities, Events } from './common';
 import { PluginManager, type PluginManagerOptions, type Plugin } from './core';
@@ -21,9 +22,10 @@ export type CreateAppOptions = {
   plugins?: Plugin[];
   core?: string[];
   defaults?: string[];
-  placeholder?: ReactNode;
+  placeholder?: FC<{ stage: number }>;
   fallback?: ErrorBoundary['props']['fallback'];
   cacheEnabled?: boolean;
+  safeMode?: boolean;
 };
 
 /**
@@ -49,6 +51,7 @@ export type CreateAppOptions = {
  * @param params.placeholder Placeholder component to render during startup.
  * @param params.fallback Fallback component to render if an error occurs during startup.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
+ * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
  */
 export const createApp = ({
   pluginManager,
@@ -56,9 +59,10 @@ export const createApp = ({
   plugins = [],
   core = plugins.map(({ meta }) => meta.id),
   defaults = [],
-  placeholder = null,
+  placeholder,
   fallback = DefaultFallback,
   cacheEnabled = false,
+  safeMode = false,
 }: CreateAppOptions) => {
   // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader =
@@ -69,9 +73,9 @@ export const createApp = ({
       return plugin;
     });
 
-  const state = create({ ready: false, error: null });
+  const state = live({ ready: false, error: null });
   const cached: string[] = JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]');
-  const enabled = cacheEnabled && cached.length > 0 ? cached : defaults;
+  const enabled = safeMode ? [] : cacheEnabled && cached.length > 0 ? cached : defaults;
   const manager = pluginManager ?? new PluginManager({ pluginLoader, plugins, core, enabled });
 
   manager.activation.on(({ event, state: _state, error }) => {
@@ -95,6 +99,12 @@ export const createApp = ({
     module: 'dxos.org/app-framework/plugin-manager',
   });
 
+  manager.context.contributeCapability({
+    interface: Capabilities.RxRegistry,
+    implementation: manager.registry,
+    module: 'dxos.org/app-framework/rx-registry',
+  });
+
   setupDevtools(manager);
 
   // TODO(wittjosiah): Factor out such that this could be called per surface role when attempting to render.
@@ -104,28 +114,87 @@ export const createApp = ({
   return () => (
     <ErrorBoundary fallback={fallback}>
       <PluginManagerProvider value={manager}>
-        <App placeholder={placeholder} state={state} />
+        <RegistryContext.Provider value={manager.registry}>
+          <App placeholder={placeholder} state={state} />
+        </RegistryContext.Provider>
       </PluginManagerProvider>
     </ErrorBoundary>
   );
 };
 
-type AppProps = Required<Pick<CreateAppOptions, 'placeholder'>> & {
+const DELAY_PLACEHOLDER = 2_000;
+
+enum LoadingState {
+  Loading = 0,
+  FadeIn = 1,
+  FadeOut = 2,
+  Done = 3,
+}
+
+/**
+ * To avoid "flashing" the placeholder, we wait a period of time before starting the loading animation.
+ * If loading completes during this time the placehoder is not shown, otherwise is it displayed for a minimum period of time.
+ *
+ * States:
+ * 0: Loading   - Wait for a period of time before starting the loading animation.
+ * 1: Fade-in   - Display a loading animation.
+ * 2: Fade-out  - Fade out the loading animation.
+ * 3: Done      - Remove the placeholder.
+ */
+const useLoading = (state: AppProps['state']) => {
+  const [stage, setStage] = useState<LoadingState>(LoadingState.Loading);
+  useEffect(() => {
+    const i = setInterval(() => {
+      setStage((tick) => {
+        switch (tick) {
+          case LoadingState.Loading:
+            if (!state.ready) {
+              return LoadingState.FadeIn;
+            } else {
+              clearInterval(i);
+              return LoadingState.Done;
+            }
+          case LoadingState.FadeIn:
+            if (state.ready) {
+              return LoadingState.FadeOut;
+            }
+            break;
+          case LoadingState.FadeOut:
+            clearInterval(i);
+            return LoadingState.Done;
+        }
+
+        return tick;
+      });
+    }, DELAY_PLACEHOLDER);
+
+    return () => clearInterval(i);
+  }, []);
+
+  return stage;
+};
+
+type AppProps = Pick<CreateAppOptions, 'placeholder'> & {
   state: { ready: boolean; error: unknown };
 };
 
-const App = ({ placeholder, state }: AppProps) => {
+const App = ({ placeholder: Placeholder, state }: AppProps) => {
   const reactContexts = useCapabilities(Capabilities.ReactContext);
   const reactRoots = useCapabilities(Capabilities.ReactRoot);
+  const stage = useLoading(state);
 
   if (state.error) {
-    // This trigger the error boundary to provide UI feedback for the startup error.
+    // This triggers the error boundary to provide UI feedback for the startup error.
     throw state.error;
   }
 
   // TODO(wittjosiah): Consider using Suspense instead?
-  if (!state.ready) {
-    return <>{placeholder}</>;
+  if (stage < LoadingState.Done) {
+    if (!Placeholder) {
+      return null;
+    }
+
+    return <Placeholder stage={stage} />;
   }
 
   const ComposedContext = composeContexts(reactContexts);

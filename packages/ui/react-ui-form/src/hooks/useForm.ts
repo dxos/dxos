@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST as AST, type Schema as S } from 'effect';
+import { SchemaAST, type Schema } from 'effect';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
@@ -45,7 +45,7 @@ export interface FormOptions<T extends BaseObject> {
   /**
    * Effect schema (Type literal).
    */
-  schema: S.Schema<T>;
+  schema: Schema.Schema<T, any>;
 
   /**
    * Initial values (which may not pass validation).
@@ -90,9 +90,10 @@ export const useForm = <T extends BaseObject>({
   onValid,
   onSave,
 }: FormOptions<T>): FormHandler<T> => {
-  invariant(AST.isTypeLiteral(schema.ast));
+  invariant(SchemaAST.isTypeLiteral(schema.ast));
 
   const [values, setValues] = useState<Partial<T>>(initialValues);
+
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
@@ -176,12 +177,21 @@ export const useForm = <T extends BaseObject>({
           errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
       );
 
+      // Only show errors for touched fields.
+      const isTouched = touched[jsonPath as JsonPath];
+      if (!isTouched) {
+        return {
+          status: undefined,
+          error: undefined,
+        };
+      }
+
       return {
         status: matchingError ? 'error' : undefined,
         error: matchingError ? matchingError[1] : undefined,
       };
     },
-    [errors],
+    [errors, touched],
   );
 
   const getFormValue = useCallback<FormHandler<T>['getValue']>(

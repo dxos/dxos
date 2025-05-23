@@ -9,11 +9,12 @@ import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CommentsContainer } from './CommentsContainer';
@@ -25,7 +26,7 @@ faker.seed(1);
 const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
-  const threads = useQuery(space, Filter.schema(ThreadType));
+  const threads = useQuery(space, Filter.type(ThreadType));
   const [detached, setDetached] = useState<string[]>([]);
 
   useEffect(() => {
@@ -53,18 +54,20 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   );
 };
 
-export const Default = {};
-
 const meta: Meta = {
   title: 'plugins/plugin-thread/Comments',
   // TODO(wittjosiah): Use decorator.
-  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
+  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, DataType.Message]} />,
   decorators: [
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
-    withPluginManager({ plugins: [IntentPlugin()] }),
+    withLayout({ fullscreen: true }),
+    withPluginManager({
+      plugins: [IntentPlugin()],
+    }),
   ],
   parameters: { translations },
 };
 
 export default meta;
+
+export const Default = {};

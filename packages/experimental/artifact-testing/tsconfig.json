@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -24,13 +27,16 @@
       "path": "../../core/conductor"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

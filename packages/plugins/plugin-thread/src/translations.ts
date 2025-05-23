@@ -11,13 +11,11 @@ export default [
     'en-US': {
       [ChannelType.typename]: {
         'typename label': 'Channel',
+        'object name placeholder': 'New channel',
       },
       [THREAD_PLUGIN]: {
         'plugin name': 'Threads',
-        'channel name placeholder': 'New channel',
         'channel title label': 'Title',
-        'delete channel label': 'Delete channel',
-        'create channel label': 'Create channel',
         'message placeholder': 'Reply…',
         'activity message': 'Processing…',
         'anonymous label': 'Anonymous',
@@ -29,9 +27,9 @@ export default [
         'comments heading': 'Comments',
         'chat heading': 'Chat',
         'draft button': 'DRAFT',
-        'no comments title': 'No comments (yet)',
+        'no comments title': 'Comments',
         'no comments message':
-          'To start a comment thread, select a range of text in a document and click the <commentIcon></commentIcon> Create comment button in the toolbar.',
+          'Click on the <commentIcon></commentIcon> button in the document toolbar to create a comment thread on the selected text.',
         'toggle show resolved': 'Show resolved',
         'unnamed object threads label': 'Threads',
         'mark as resolved label': 'Mark as resolved',
@@ -40,7 +38,7 @@ export default [
         'edit message label': 'Edit',
         'delete message label': 'Delete message',
         'open comments panel label': 'Show Comments',
-        'comments panel label': 'Comments',
+        'comments label': 'Comments',
         'show all label': 'All comments',
         'show unresolved label': 'Unresolved only',
       },

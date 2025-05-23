@@ -2,27 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FormatEnum, S, AST, type EchoSchema } from '@dxos/echo-schema';
+import { FormatEnum, toJsonSchema, type EchoSchema } from '@dxos/echo-schema';
+import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 
 import { type MapType } from '../types';
 import { getLocationProperty, setLocationProperty } from '../util';
 
-export const MapSettingsSchema = S.Struct({
-  coordinateSource: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Coordinate source type' })),
-  coordinateColumn: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Coordinate column' })),
+export const MapSettingsSchema = Schema.Struct({
+  coordinateSource: Schema.optional(
+    Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Coordinate source type' }),
+  ),
+  coordinateColumn: Schema.optional(Schema.String.annotations({ [SchemaAST.TitleAnnotationId]: 'Coordinate column' })),
 });
 
 type MapViewEditorProps = { map: MapType };
 
 export const MapViewEditor = ({ map }: MapViewEditorProps) => {
+  const client = useClient();
   const space = getSpace(map);
   const currentTypename = useMemo(() => map?.view?.target?.query?.typename, [map?.view?.target?.query?.typename]);
   const currentCoordinateProperty = useMemo(() => getLocationProperty(map?.view?.target), [map?.view?.target]);
-  const currentSchema = useSchema(space, currentTypename);
+  const currentSchema = useSchema(client, space, currentTypename);
 
   const [allSchemata, setAllSchemata] = useState<EchoSchema[]>([]);
 
@@ -48,12 +53,13 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     }));
   }, [allSchemata]);
 
+  const jsonSchema = useMemo(() => (currentSchema ? toJsonSchema(currentSchema) : {}), [currentSchema]);
   const locationFields = useMemo(() => {
-    if (!currentSchema?.jsonSchema?.properties) {
+    if (!jsonSchema?.properties) {
       return [];
     }
 
-    const columns = Object.entries(currentSchema.jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
+    const columns = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
       if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
         acc.push(key);
       }
@@ -61,7 +67,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     }, []);
 
     return columns.map((column) => ({ value: column, label: column }));
-  }, [currentSchema?.jsonSchema]);
+  }, [jsonSchema]);
 
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {

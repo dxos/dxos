@@ -27,7 +27,7 @@ const icons = [
   'ph--github-logo--regular',
 ];
 
-const Render = ({ classNames }: ThemedClassName<{}>) => {
+const DefaultStory = ({ classNames }: ThemedClassName<{}>) => {
   const [plugins] = useState<Plugin[]>(
     faker.helpers.multiple(
       () =>
@@ -64,8 +64,8 @@ const Render = ({ classNames }: ThemedClassName<{}>) => {
 const meta: Meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
-  render: Render,
-  decorators: [withTheme, withLayout({ tooltips: true, fullscreen: true, classNames: 'justify-center' })],
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   parameters: {
     translations,
   },

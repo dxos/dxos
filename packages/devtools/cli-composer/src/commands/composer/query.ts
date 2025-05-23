@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { FLAG_SPACE_KEYS, stringify, table, type TableOptions } from '@dxos/cli-base';
 import { Filter, getMeta, getTypename } from '@dxos/client/echo';
 import { omit } from '@dxos/log';
-import { MessageType } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base.js';
 
@@ -26,13 +26,13 @@ export default class Query extends BaseCommand<typeof Query> {
   async run(): Promise<any> {
     return await this.execWithSpace(
       async ({ space }) => {
-        let filter: Filter | undefined;
+        let filter: Filter.Any | undefined;
         let printer: ObjectPrinter<any> | undefined;
         switch (this.flags.type) {
-          case MessageType.typename: {
-            filter = Filter.schema(MessageType);
-            printer = (data: MessageType) => {
-              return stringify({ from: data.sender.email, content: data.text.length });
+          case DataType.Message.typename: {
+            filter = Filter.type(DataType.Message);
+            printer = (data: DataType.Message) => {
+              return stringify({ from: data.sender.email, content: data.blocks.length });
             };
             break;
           }

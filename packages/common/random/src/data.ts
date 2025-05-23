@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-const airports = [
+export const airports = [
   { name: 'Atlanta', code: 'ATL', location: [-84.4277, 33.6407] },
   { name: 'Dubai', code: 'DXB', location: [55.3644, 25.2532] },
   { name: 'Dallas', code: 'DFW', location: [-97.0403, 32.8998] },
@@ -53,4 +53,53 @@ const airports = [
   { name: 'Dubai', code: 'DXB', location: [55.3644, 25.2532] },
 ];
 
-export const randAirport = () => airports[Math.floor(Math.random() * airports.length)];
+export const icons = [
+  'ph--air-traffic-control--regular',
+  'ph--asterisk--regular',
+  'ph--atom--regular',
+  'ph--basketball--regular',
+  'ph--butterfly--regular',
+  'ph--cactus--regular',
+  'ph--cake--regular',
+  'ph--calendar-dots--regular',
+  'ph--campfire--regular',
+  'ph--command--regular',
+  'ph--confetti--regular',
+  'ph--detective--regular',
+  'ph--disco-ball--regular',
+  'ph--dna--regular',
+  'ph--factory--regular',
+  'ph--flag-banner-fold--regular',
+  'ph--flask--regular',
+  'ph--flower-lotus--regular',
+  'ph--flying-saucer--regular',
+  'ph--game-controller--regular',
+  'ph--gavel--regular',
+  'ph--gift--regular',
+  'ph--guitar--regular',
+  'ph--hamburger--regular',
+  'ph--handshake--regular',
+  'ph--heart--regular',
+  'ph--lightbulb--regular',
+  'ph--lock--regular',
+  'ph--martini--regular',
+  'ph--medal-military--regular',
+  'ph--moped-front--regular',
+  'ph--office-chair--regular',
+  'ph--paint-brush-household--regular',
+  'ph--peace--regular',
+  'ph--person-simple-hike--regular',
+  'ph--piggy-bank--regular',
+  'ph--potted-plant--regular',
+  'ph--radioactive--regular',
+  'ph--rocket-launch--regular',
+  'ph--shield-star--regular',
+  'ph--shopping-cart--regular',
+  'ph--stethoscope--regular',
+  'ph--student--regular',
+  'ph--sun--regular',
+  'ph--tote--regular',
+  'ph--tree--regular',
+  'ph--users-three--regular',
+  'ph--yin-yang--regular',
+];

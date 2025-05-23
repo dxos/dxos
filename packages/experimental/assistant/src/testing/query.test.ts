@@ -14,10 +14,9 @@ import { AI_SERVICE_ENDPOINT } from './defs';
 import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData, seedTestData } from './test-data';
-import { Contact, Org, Project, Task } from './test-schema';
+import { Contact, Organization, Project, Task } from './test-schema';
 import { AIServiceEdgeClient, DEFAULT_EDGE_MODEL } from '../ai-service';
-import { runLLM } from '../conversation';
-import { EchoDataSource } from '../cypher';
+import { runLLM, EchoDataSource } from '../experimental';
 
 const client = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
@@ -25,20 +24,12 @@ const client = new AIServiceEdgeClient({
 
 test.skip('cypher query', async () => {
   const dataSource = createTestData();
-  const schemaTypes = [Org, Project, Task, Contact];
+  const schemaTypes = [Organization, Project, Task, Contact];
 
   const cypherTool = createCypherTool(dataSource);
 
   const spaceId = SpaceId.random();
   const threadId = ObjectId.random();
-
-  await client.appendMessages([
-    createUserMessage(
-      spaceId,
-      threadId,
-      'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
-    ),
-  ]);
 
   const result = await runLLM({
     model: DEFAULT_EDGE_MODEL,
@@ -46,18 +37,25 @@ test.skip('cypher query', async () => {
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
+    history: [
+      createUserMessage(
+        spaceId,
+        threadId,
+        'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
+      ),
+    ],
     client,
     logger: createLogger({ stream: false }),
   });
 
-  log.info('DONE', { result: result.result });
+  log('DONE', { result: result.result });
 });
 
 test.skip('query ECHO', async () => {
   await using builder = await new EchoTestBuilder().open();
   const { db, graph } = await builder.createDatabase();
 
-  const schemaTypes = [Org, Project, Task, Contact];
+  const schemaTypes = [Organization, Project, Task, Contact];
   graph.schemaRegistry.addSchema(schemaTypes);
 
   seedTestData(db);
@@ -69,14 +67,6 @@ test.skip('query ECHO', async () => {
   const spaceId = SpaceId.random();
   const threadId = ObjectId.random();
 
-  await client.appendMessages([
-    createUserMessage(
-      spaceId,
-      threadId,
-      'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
-    ),
-  ]);
-
   const result = await runLLM({
     model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
@@ -84,8 +74,15 @@ test.skip('query ECHO', async () => {
     threadId,
     system: createSystemPrompt(schemaTypes),
     client,
+    history: [
+      createUserMessage(
+        spaceId,
+        threadId,
+        'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
+      ),
+    ],
     logger: createLogger({ stream: false }),
   });
 
-  log.info('DONE', { result: result.result });
+  log('DONE', { result: result.result });
 });

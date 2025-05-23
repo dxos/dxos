@@ -2,59 +2,116 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useCallback } from 'react';
+import React, { type FC, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
-import { log } from '@dxos/log';
-import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useSoundEffect } from '@dxos/react-ui-sfx';
+import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { MeetingCapabilities } from '../../capabilities';
-import { MEETING_PLUGIN } from '../../meta';
-import { MediaButtons, VideoObject } from '../Media';
+import { meta } from '../../meta';
+import { VideoObject } from '../Media';
 import { ResponsiveContainer } from '../ResponsiveGrid';
+import { Toolbar, type ToolbarProps } from '../Toolbar';
 
-type LobbyProps = ThemedClassName & {
-  roomId: string;
+const SWARM_PEEK_INTERVAL = 1_000;
+
+//
+// Root
+//
+
+type LobbyRootProps = PropsWithChildren<ThemedClassName>;
+
+const LobbyRoot: FC<LobbyRootProps> = ({ children }) => {
+  return <div className='relative flex flex-col grow overflow-hidden group'>{children}</div>;
 };
 
-export const Lobby: FC<LobbyProps> = ({ classNames, roomId }) => {
-  const { t } = useTranslation(MEETING_PLUGIN);
-  const call = useCapability(MeetingCapabilities.CallManager);
-  // const sessionError = call.media.peer?.sessionError;
-  // TODO(mykola): Users number is not correct now, we are joining swarm on press of join button.
-  // So we can not scan users list before joining.
-  // const numUsers = call.users?.filter((user) => user.joined).length ?? 0;
+LobbyRoot.displayName = 'LobbyRoot';
 
-  const joinSound = useSoundEffect('JoinCall');
-  const handleJoin = useCallback(async () => {
-    try {
-      if (call.joined) {
-        await call.leave();
-      }
-      call.setRoomId(roomId);
-      await Promise.all([call.join(), joinSound.play()]);
-    } catch (err) {
-      log.catch(err);
+//
+// Preview
+//
+
+type LobbyPreviewProps = {};
+
+const LobbyPreview: FC<LobbyPreviewProps> = () => {
+  const { t } = useTranslation(meta.id);
+  const call = useCapability(MeetingCapabilities.CallManager);
+  const [classNames, setClassNames] = useState('');
+  useEffect(() => {
+    if (!call.media.videoEnabled) {
+      setClassNames('');
+      return;
     }
-  }, [joinSound, roomId, call.joined, call.leave, call.setRoomId, call.join]);
+
+    // Video element will expand once the stream is available.
+    const timeout = setTimeout(() => {
+      setClassNames('outline-neutral-900 opacity-100');
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [call.media.videoEnabled]);
 
   return (
-    <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
+    <div className='grid grow p-4'>
       <ResponsiveContainer>
-        <VideoObject flip muted videoStream={call.media.videoStream} />
+        {(call.media.videoEnabled && (
+          <VideoObject
+            videoStream={call.media.videoStream}
+            flip
+            muted
+            classNames={mx(
+              'rounded-md outline outline-2 outline-transparent opacity-0 transition-all duration-500',
+              classNames,
+            )}
+          />
+        )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera off label')}</div>}
       </ResponsiveContainer>
-
-      <Toolbar.Root classNames='justify-between'>
-        <IconButton variant='primary' label={t('join call')} onClick={handleJoin} icon='ph--phone-incoming--regular' />
-        {/* <div className='grow text-sm text-subdued'>
-          {sessionError ?? `${numUsers} ${numUsers === 1 ? t('lobby participant') : t('lobby participants')}`}
-        </div> */}
-        <MediaButtons />
-      </Toolbar.Root>
     </div>
   );
 };
 
-Lobby.displayName = 'Lobby';
+LobbyPreview.displayName = 'LobbyPreview';
+
+//
+// Toolbar
+//
+
+type LobbyToolbarProps = ThemedClassName<
+  {
+    roomId: string;
+  } & Pick<ToolbarProps, 'onJoin'>
+>;
+
+const LobbyToolbar: FC<LobbyToolbarProps> = ({ roomId, ...props }) => {
+  const call = useCapability(MeetingCapabilities.CallManager);
+  const [count, setCount] = useState<number>(0);
+
+  // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.
+  useEffect(() => {
+    void call.peek(roomId).then((count) => setCount(count));
+    const interval = setInterval(() => {
+      void call.peek(roomId).then((count) => setCount(count));
+    }, SWARM_PEEK_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [call, roomId]);
+
+  return (
+    <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
+      <Toolbar participants={count} {...props} />
+    </div>
+  );
+};
+
+LobbyToolbar.displayName = 'LobbyToolbar';
+
+//
+// Export
+//
+
+export const Lobby = {
+  Root: LobbyRoot,
+  Preview: LobbyPreview,
+  Toolbar: LobbyToolbar,
+};

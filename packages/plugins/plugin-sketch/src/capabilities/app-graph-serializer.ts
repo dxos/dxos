@@ -4,15 +4,14 @@
 
 import { pipe } from 'effect';
 
-import { Capabilities, chain, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, chain, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 
-import { SKETCH_PLUGIN } from '../meta';
 import translations from '../translations';
 import { SketchAction, DiagramType } from '../types';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
       inputType: DiagramType.typename,
@@ -22,8 +21,8 @@ export default (context: PluginsContext) =>
         const diagram = node.data;
         const canvas = await diagram.canvas.load();
         return {
-          name: diagram.name || translations[0]['en-US'][SKETCH_PLUGIN]['object title placeholder'],
-          data: JSON.stringify({ schema: canvas.schema, content: canvas.content }),
+          name: diagram.name || translations[0]['en-US'][DiagramType.typename]['object name placeholder'],
+          data: JSON.stringify({ schema: canvas.Schema, content: canvas.content }),
           type: 'application/tldraw',
         };
       },
@@ -38,7 +37,7 @@ export default (context: PluginsContext) =>
 
         const { schema, content } = JSON.parse(data.data);
 
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const result = await dispatch(
           pipe(
             createIntent(SketchAction.Create, { name: data.name, schema, content }),

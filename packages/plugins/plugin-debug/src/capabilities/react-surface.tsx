@@ -2,58 +2,72 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
 import React, { useCallback } from 'react';
 
 import {
   Capabilities,
+  chain,
   contributes,
   createIntent,
   createSurface,
   LayoutAction,
   useCapability,
-  type PluginsContext,
+  useIntentDispatcher,
+  type PluginContext,
 } from '@dxos/app-framework';
 import {
+  AutomergePanel,
   ConfigPanel,
   CredentialsPanel,
   DeviceListPanel,
   DiagnosticsPanel,
+  EdgeDashboardPanel,
   FeedsPanel,
   IdentityPanel,
+  InvocationTraceContainer,
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
   MetadataPanel,
   NetworkPanel,
   ObjectsPanel,
+  QueuesPanel,
+  SchemaPanel,
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
   StoragePanel,
   SwarmPanel,
+  TestingPanel,
   TracingPanel,
-  DashboardPanel,
-  EdgeDashboardPanel,
-  AutomergePanel,
   WorkflowPanel,
-  QueuesPanel,
-  InvocationTracePanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
+import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import {
   SpaceState,
   isSpace,
   isEchoObject,
-  type ReactiveEchoObject,
-  type ReactiveObject,
+  type AnyLiveObject,
+  type Live,
   type Space,
   parseId,
 } from '@dxos/react-client/echo';
 
-import { DebugApp, DebugObjectPanel, DebugSettings, DebugStatus, SpaceGenerator, Wireframe } from '../components';
+import {
+  DebugApp,
+  DebugObjectPanel,
+  DebugSettings,
+  DebugStatus,
+  DevtoolsOverviewContainer,
+  SpaceGenerator,
+  Wireframe,
+} from '../components';
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps, Devtools } from '../types';
 
@@ -78,10 +92,10 @@ const useCurrentSpace = () => {
   return space;
 };
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${DEBUG_PLUGIN}/settings`,
+      id: `${DEBUG_PLUGIN}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<DebugSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === DEBUG_PLUGIN,
@@ -93,7 +107,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
       component: ({ data }) => {
         const handleCreateObject = useCallback(
-          (objects: ReactiveObject<any>[]) => {
+          (objects: Live<any>[]) => {
             if (!isSpace(data.subject.space)) {
               return;
             }
@@ -105,7 +119,7 @@ export default (context: PluginsContext) =>
               return;
             }
 
-            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = useIntentDispatcher();
             objects.forEach((object) => {
               void dispatch(createIntent(SpaceAction.AddObject, { target: collection, object }));
             });
@@ -126,9 +140,9 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/wireframe`,
       role: ['article', 'section'],
       position: 'hoist',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => {
+      filter: (data): data is { subject: AnyLiveObject<any> } => {
         const settings = context
-          .requestCapability(Capabilities.SettingsStore)
+          .getCapability(Capabilities.SettingsStore)
           .getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
         return isEchoObject(data.subject) && !!settings.wireframe;
       },
@@ -137,10 +151,16 @@ export default (context: PluginsContext) =>
       ),
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/complementary`,
-      role: 'complementary--debug',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <DebugObjectPanel object={data.subject} />,
+      id: `${DEBUG_PLUGIN}/object-debug`,
+      role: 'article',
+      filter: (data): data is { companionTo: AnyLiveObject<any> } =>
+        data.subject === 'debug' && isEchoObject(data.companionTo),
+      component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/devtools-overview`,
+      role: 'deck-companion--devtools',
+      component: () => <DevtoolsOverviewContainer />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,
@@ -156,7 +176,7 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/client/config`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Config,
-      component: () => <ConfigPanel />,
+      component: () => <ConfigPanel vaultSelector={false} />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/client/storage`,
@@ -204,14 +224,17 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/halo/credentials`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Credentials,
-      component: () => <CredentialsPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <CredentialsPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/spaces`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Spaces,
       component: () => {
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const handleSelect = useCallback(
           () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Space] })),
           [dispatch],
@@ -225,7 +248,7 @@ export default (context: PluginsContext) =>
       filter: (data): data is any => data.subject === Devtools.Echo.Space,
       component: () => {
         const space = useCurrentSpace();
-        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const handleSelect = useCallback(
           () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Feeds] })),
           [dispatch],
@@ -237,7 +260,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/feeds`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Feeds,
-      component: () => <FeedsPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <FeedsPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/objects`,
@@ -249,10 +275,22 @@ export default (context: PluginsContext) =>
       },
     }),
     createSurface({
+      id: `${DEBUG_PLUGIN}/echo/schema`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Echo.Schema,
+      component: () => {
+        const space = useCurrentSpace();
+        return <SchemaPanel space={space} />;
+      },
+    }),
+    createSurface({
       id: `${DEBUG_PLUGIN}/echo/automerge`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
-      component: () => <AutomergePanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <AutomergePanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/queues`,
@@ -264,7 +302,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/members`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Members,
-      component: () => <MembersPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <MembersPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/metadata`,
@@ -288,14 +329,18 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/mesh/network`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Mesh.Network,
-      component: () => <NetworkPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <NetworkPanel space={space} />;
+      },
     }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/agent/dashboard`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
-      component: () => <DashboardPanel />,
-    }),
+    // TODO(wittjosiah): Remove?
+    // createSurface({
+    //   id: `${DEBUG_PLUGIN}/agent/dashboard`,
+    //   role: 'article',
+    //   filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
+    //   component: () => <DashboardPanel />,
+    // }),
     createSurface({
       id: `${DEBUG_PLUGIN}/edge/dashboard`,
       role: 'article',
@@ -306,7 +351,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/edge/workflows`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
-      component: () => <WorkflowPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <WorkflowPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/edge/traces`,
@@ -314,7 +362,37 @@ export default (context: PluginsContext) =>
       filter: (data): data is any => data.subject === Devtools.Edge.Traces,
       component: () => {
         const space = useCurrentSpace();
-        return <InvocationTracePanel space={space} />;
+        return <InvocationTraceContainer space={space} />;
+      },
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/edge/testing`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Edge.Testing,
+      component: () => {
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
+        const onSpaceCreate = useCallback(
+          async (space: Space) => {
+            await space.waitUntilReady();
+            await dispatch(createIntent(SpaceAction.Migrate, { space }));
+            await space.db.flush();
+          },
+          [dispatch],
+        );
+        const onScriptPluginOpen = useCallback(
+          async (space: Space) => {
+            await space.waitUntilReady();
+            const result = await dispatch(
+              pipe(createIntent(ScriptAction.Create, { space }), chain(SpaceAction.AddObject, { target: space })),
+            );
+            log.info('script created', { result });
+            await dispatch(
+              createIntent(LayoutAction.Open, { part: 'main', subject: [`${space.id}:${result.data?.object.id}`] }),
+            );
+          },
+          [dispatch],
+        );
+        return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
       },
     }),
   ]);

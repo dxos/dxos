@@ -1,6 +1,6 @@
 {
   "name": "@dxos/live-object",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Live objects for ECHO.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,6 +33,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
@@ -43,7 +44,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "effect": "3.13.3",
+    "effect": "3.14.21",
     "ulidx": "^2.3.0"
   },
   "publishConfig": {

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import { type MessageContentBlock, defineTool, type Tool, ToolResult } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
@@ -13,8 +13,8 @@ import { DEFAULT_OLLAMA_ENDPOINT } from './defs';
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AIServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
-import { ToolTypes, type GenerateRequest, type GenerationStreamEvent } from './types';
-import { isToolUse, runTools } from '../conversation';
+import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from './types';
+import { isToolUse, runTools } from '../session';
 
 export type OllamaClientParams = {
   endpoint?: string;
@@ -179,7 +179,7 @@ export class OllamaClient implements AIServiceClient {
       }
     }
 
-    log.info('generate request', { history: request.history, prompt: request.prompt, ollamaRequest });
+    log('generate request', { history: request.history, prompt: request.prompt, ollamaRequest });
 
     const response = await fetch(`${this._endpoint}/api/chat`, {
       method: 'POST',
@@ -241,7 +241,7 @@ export class OllamaClient implements AIServiceClient {
           break;
         }
 
-        log.info('ollama data', { data });
+        log('ollama data', { data });
 
         // Ollama sends chunks of text, we convert them to our event format.
         if (data.message?.content) {
@@ -300,7 +300,14 @@ export class OllamaClient implements AIServiceClient {
     }
   }
 
-  async exec(request: GenerateRequest): Promise<GenerationStream> {
+  /**
+   * Generate non-streaming response.
+   */
+  async exec(request: GenerateRequest): Promise<GenerateResponse> {
+    throw new Error('Not implemented');
+  }
+
+  async execStream(request: GenerateRequest): Promise<GenerationStream> {
     const controller = new AbortController();
 
     try {
@@ -381,8 +388,8 @@ const WELL_KNOWN_TOOLS: Record<string, Tool> = {
   [ToolTypes.TextToImage]: defineTool('system', {
     name: 'text-to-image',
     description: 'Generate an image from a text prompt',
-    schema: S.Struct({
-      prompt: S.String.annotations({ description: 'The text prompt describing the image to generate' }),
+    schema: Schema.Struct({
+      prompt: Schema.String.annotations({ description: 'The text prompt describing the image to generate' }),
     }),
     execute: async ({ prompt }) => {
       const image = await fetch(SAMPLE_IMAGE_URL).then(async (res) => Buffer.from(await res.arrayBuffer()));
@@ -460,15 +467,15 @@ class OllamaDecoderStream extends TransformStream<string, OllamaResponseData> {
   }
 }
 
-class ModelDoesNotSupportToolsError extends S.TaggedError<ModelDoesNotSupportToolsError>()(
+class ModelDoesNotSupportToolsError extends Schema.TaggedError<ModelDoesNotSupportToolsError>()(
   'ModelDoesNotSupportToolsError',
   {
-    model: S.String,
+    model: Schema.String,
   },
 ) {}
 
-class ModelNotFoundError extends S.TaggedError<ModelNotFoundError>()('ModelNotFoundError', {
-  model: S.String,
+class ModelNotFoundError extends Schema.TaggedError<ModelNotFoundError>()('ModelNotFoundError', {
+  model: Schema.String,
 }) {}
 
 const parseOllamaError = (error: string): Error => {

@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { getHeads } from '@automerge/automerge';
+import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+
 import { DeferredTask } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
-import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
@@ -86,7 +87,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
       log.warn('Indexer already initialized.');
       return;
     }
-    this._params.indexer.setConfig(config);
+    void this._params.indexer.setConfig(config);
   }
 
   execQuery(request: QueryRequest): Stream<QueryResponse> {
@@ -163,10 +164,10 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
     const visited = new Set<string>();
 
     async function* getObjectsFromHandle(handle: DocHandle<SpaceDoc>): AsyncGenerator<ObjectSnapshot[]> {
-      if (visited.has(handle.documentId)) {
+      if (visited.has(handle.documentId) || !handle.isReady()) {
         return;
       }
-      const doc = handle.docSync()!;
+      const doc = handle.doc()!;
 
       const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
 

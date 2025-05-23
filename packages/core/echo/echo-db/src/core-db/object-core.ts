@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@automerge/automerge';
+import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import type { InspectOptionsStylized, inspect } from 'util';
 
 import { Event } from '@dxos/async';
-import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@dxos/automerge/automerge';
-import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
 import { inspectCustom } from '@dxos/debug';
 import {
   decodeReference,
@@ -16,10 +16,10 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { createObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { isReactiveObject } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dxos/util';
 
@@ -59,7 +59,7 @@ export class ObjectCore {
   /**
    * Id of the ECHO object.
    */
-  public id = createObjectId();
+  public id = ObjectId.random();
 
   /**
    * Set if when the object is bound to a database.
@@ -137,7 +137,7 @@ export class ObjectCore {
   }
 
   getDoc() {
-    return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
+    return this.doc ?? this.docHandle?.doc() ?? failedInvariant('Invalid state');
   }
 
   /**
@@ -166,7 +166,7 @@ export class ObjectCore {
   /**
    * Do not take into account mountPath.
    */
-  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): string[] | undefined {
+  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -198,7 +198,7 @@ export class ObjectCore {
     const self = this;
     return {
       handle: {
-        docSync: () => this.getDoc(),
+        doc: () => this.getDoc(),
         change: (callback, options) => {
           this.change(callback, options);
         },
@@ -251,7 +251,7 @@ export class ObjectCore {
    * Encode a value to be stored in the Automerge document.
    */
   encode(value: DecodedAutomergePrimaryValue) {
-    if (isReactiveObject(value) as boolean) {
+    if (isLiveObject(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
 

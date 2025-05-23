@@ -3,19 +3,24 @@
 //
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 
 import { DECK_PLUGIN } from '../meta';
 import { DeckSettingsSchema, type DeckSettingsProps } from '../types';
 
 export default () => {
-  const settings = create<DeckSettingsProps>({
+  const settings = live<DeckSettingsProps>({
     showHints: false,
+    enableDeck: false,
+    enableStatusbar: false,
     enableNativeRedirect: false,
-    enableStatusbar: true,
     newPlankPositioning: 'start',
     overscroll: 'none',
   });
 
-  return contributes(Capabilities.Settings, { schema: DeckSettingsSchema, prefix: DECK_PLUGIN, value: settings });
+  return contributes(Capabilities.Settings, {
+    schema: DeckSettingsSchema,
+    prefix: DECK_PLUGIN,
+    value: settings,
+  });
 };

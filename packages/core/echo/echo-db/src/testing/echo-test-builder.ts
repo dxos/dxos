@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { AutomergeUrl } from '@automerge/automerge-repo';
 import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';
-import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type Context, Resource } from '@dxos/context';
 import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -16,8 +16,9 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
+import { Filter, Query } from '../query';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -74,7 +75,7 @@ export class EchoTestPeer extends Resource {
   private _initEcho() {
     this._echoHost = new EchoHost({ kv: this._kv });
     this._clients.delete(this._echoClient);
-    this._echoClient = new EchoClient({});
+    this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
   }
 
@@ -117,7 +118,7 @@ export class EchoTestPeer extends Resource {
   }
 
   async createClient() {
-    const client = new EchoClient({});
+    const client = new EchoClient();
     this._clients.add(client);
     client.connectToService({
       dataService: this._echoHost.dataService,
@@ -171,9 +172,9 @@ export const createDataAssertion = ({
   onlyObject = true,
   numObjects = 1,
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
-  let seedObjects: ReactiveEchoObject<any>[];
+  let seedObjects: AnyLiveObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
-    const { objects } = await db.query().run();
+    const { objects } = await db.query(Query.select(Filter.everything())).run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));
     return { objects, received };
   };
@@ -185,7 +186,11 @@ export const createDataAssertion = ({
     },
     waitForReplication: (db: EchoDatabase) => {
       return waitForCondition({
-        condition: async () => (await findSeedObject(db)).received.every((obj) => obj != null),
+        breakOnError: true,
+        condition: async () => {
+          const { received } = await findSeedObject(db);
+          return received.every((obj) => obj != null);
+        },
       });
     },
     verify: async (db: EchoDatabase) => {

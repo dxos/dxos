@@ -7,9 +7,9 @@ import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vit
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
-import { type ReactiveEchoObject, type ReactiveObject } from '@dxos/client/echo';
+import { type AnyLiveObject, type Live } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { Filter, type Query } from '@dxos/echo-db';
+import { DeprecatedFilter, Filter, type QueryResult } from '@dxos/echo-db';
 import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
@@ -50,7 +50,7 @@ describe('QueryPlugin', () => {
     onTestFinished(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
-    let org: ReactiveObject<any>;
+    let org: Live<any>;
     {
       const space = await client1.spaces.create({ name: 'first space' });
       await space.waitUntilReady();
@@ -90,7 +90,7 @@ describe('QueryPlugin', () => {
     // Send search request.
     {
       const request: QueryRequest = {
-        filter: Filter.from(
+        filter: DeprecatedFilter.from(
           { name: org.name },
           { models: ['*'], spaces: client1.spaces.get().map((s) => s.key) },
         ).toProto(),
@@ -180,8 +180,8 @@ describe('QueryPlugin', () => {
       await builder.destroy();
     });
 
-    const waitForQueryResults = async (query: Query) => {
-      const results = new Trigger<ReactiveEchoObject<any>[]>();
+    const waitForQueryResults = async (query: QueryResult) => {
+      const results = new Trigger<AnyLiveObject<any>[]>();
       query.subscribe((query) => {
         if (query.results.some((result) => result.resolution?.source === 'remote')) {
           results.wake(query.objects);

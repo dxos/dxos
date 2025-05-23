@@ -11,6 +11,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Tree } from './Tree';
 
 export default {
+  title: 'devtools/devtools/Tree',
   component: Tree,
   decorators: [withTheme],
   argTypes: {},

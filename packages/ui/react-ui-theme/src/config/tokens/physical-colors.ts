@@ -7,8 +7,8 @@ import type { AccompanyingSeries, ColorsPhysicalLayer, Gamut, HelicalArcSeries, 
 import { type PhysicalPalette } from './types';
 
 const reflectiveRelation = {
-  initial: 1000,
-  slope: -1000,
+  initial: 1_000,
+  slope: -1_000,
   method: 'floor',
 } satisfies AccompanyingSeries;
 
@@ -16,6 +16,17 @@ const gamuts: (Gamut & string)[] = ['srgb', 'p3', 'rec2020'];
 
 const DEG_RAD = Math.PI / 180;
 
+/**
+ * Creates a color palette configuration for a given hue value.
+ *
+ * @param hue - A number from 0-16 representing different hue angles
+ * @returns A PhysicalPalette configuration with:
+ * - keyPoint: [lightness, chroma, hue] in LCH color space
+ *   - lightness: Fixed at 0.5 (50%)
+ *   - chroma: Varies sinusoidally around 0.13 based on hue angle
+ *   - hue: Calculated by mapping input 0-16 to 26-386 degrees
+ * - Control points and torsion for color interpolation
+ */
 const hueKeyPoint = (hue: number): PhysicalPalette => {
   const hueDeg = (360 * (hue / 17) + 26) % 360;
   return {
@@ -48,31 +59,35 @@ export const huePalettes = {
 
 /**
  * The keyPoint represents the LCH value (Lightness: 0-1, Chroma: 0-1, Hue: 0-360 [0=Red, 120=Green, 240=Blue]).
- * https://oklch.com/#47,0,86.52,100
  *
  * NOTE: Rebuild the theme and restart the dev server to see changes.
  *
- * Theme references
+ * Theme references:
+ * https://oklch.com
  * https://colorsublime.github.io
  * https://github.com/microsoft/vscode-docs/blob/main/api/extension-guides/color-theme.md#create-a-new-color-theme
  * https://raw.githubusercontent.com/microsoft/vscode/main/src/vs/workbench/services/themes/common/colorThemeSchema.ts
+ * https://tailwindcss.com/docs/colors
  */
 const systemPalettes = {
   neutral: {
-    keyPoint: [0, 0.01, 259.99], // Cold
-    // keyPoint: [0.47, 0.004, 86.52], // Warm
+    keyPoint: [0, 0.01, 260],
     lowerCp: 0,
     upperCp: 0,
     torsion: 0,
-    // Values used directly which were found in the audit.
+    // Values used directly.
+    // TODO(burdon): Audit.
     values: [25, 75, 100, 150, 250, 300, 500, 700, 750, 800, 850, 900],
   } satisfies PhysicalPalette,
+
+  // https://oklch.com/#0.5,0.2,260,100 (#0559d2)
   primary: {
-    keyPoint: [0.5262, 0.196, 259.99],
+    keyPoint: [0.5, 0.2, 260],
     lowerCp: 0.86,
     upperCp: 1,
     torsion: -30,
-    // Values used directly which were found in the audit.
+    // Values used directly.
+    // TODO(burdon): Audit.
     values: [100, 150, 200, 350, 400, 450, 500, 750, 800, 850],
   } satisfies PhysicalPalette,
 };

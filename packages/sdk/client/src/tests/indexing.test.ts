@@ -7,11 +7,11 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { Filter, type Query, type ReactiveEchoObject } from '@dxos/echo-db';
-import { Expando } from '@dxos/echo-schema';
+import { Filter, type QueryResult, type AnyLiveObject } from '@dxos/echo-db';
+import { Expando, Ref } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, makeRef } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
@@ -21,41 +21,41 @@ import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
 describe('Index queries', () => {
   const createObjects = () => ({
     contacts: [
-      create(ContactType, {
+      live(ContactType, {
         name: 'Alice',
         identifiers: [],
       }),
-      create(ContactType, {
+      live(ContactType, {
         name: 'Bob',
         identifiers: [],
       }),
-      create(ContactType, {
+      live(ContactType, {
         name: 'Catherine',
         identifiers: [],
       }),
     ],
     documents: [
-      create(DocumentType, {
+      live(DocumentType, {
         title: 'DXOS Design Doc',
-        content: makeRef(
-          create(TextV0Type, {
+        content: Ref.make(
+          live(TextV0Type, {
             content: 'Very important design document',
           }),
         ),
       }),
-      create(DocumentType, {
+      live(DocumentType, {
         title: 'ECHO Architecture',
-        content: makeRef(
-          create(TextV0Type, {
+        content: Ref.make(
+          live(TextV0Type, {
             content: 'Very important architecture document',
           }),
         ),
       }),
     ],
     expandos: [
-      create(Expando, { org: 'DXOS' }), //
-      create(Expando, { name: 'Mykola' }),
-      create(Expando, { height: 185 }),
+      live(Expando, { org: 'DXOS' }), //
+      live(Expando, { name: 'Mykola' }),
+      live(Expando, { height: 185 }),
     ],
   });
 
@@ -67,7 +67,7 @@ describe('Index queries', () => {
     return client;
   };
 
-  const addObjects = async <T extends {}>(space: Space, objects: ReactiveEchoObject<T>[]) => {
+  const addObjects = async <T extends {}>(space: Space, objects: AnyLiveObject<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
       return space.db.add(object);
@@ -77,8 +77,8 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: Query, objects: ReactiveEchoObject<any>[]) => {
-    const receivedIndexedObject = new Trigger<ReactiveEchoObject<any>[]>();
+  const matchObjects = async (query: QueryResult, objects: AnyLiveObject<any>[]) => {
+    const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.results.filter((result) => result.resolution?.source === 'index');
@@ -119,7 +119,7 @@ describe('Index queries', () => {
 
     const { contacts } = createObjects();
     await addObjects(space, contacts);
-    await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
+    await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
   });
 
   test('indexes persists between client restarts', async () => {
@@ -139,7 +139,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
 
       await client.destroy();
     }
@@ -151,7 +151,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
 
-      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
     }
   });
 
@@ -170,7 +170,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
 
       await client.destroy();
     }
@@ -185,7 +185,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 
-      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
     }
   });
 
@@ -205,7 +205,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
 
       await client.destroy();
     }
@@ -222,7 +222,7 @@ describe('Index queries', () => {
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 
       await client.services.services.QueryService?.reindex();
-      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
     }
   });
 
@@ -236,19 +236,19 @@ describe('Index queries', () => {
 
     {
       await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
+      await matchObjects(space.db.query(Filter.type(ContactType)), contacts);
     }
 
     // TODO(burdon): Do we support text matching?
     {
-      const query = space.db.query(Filter.schema(DocumentType));
+      const query = space.db.query(Filter.type(DocumentType));
       await addObjects(space, documents);
       await matchObjects(query, documents);
       expect((await query.run()).objects.length).to.equal(2);
     }
 
     {
-      const query = space.db.query(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType)));
+      const query = space.db.query(Filter.or(Filter.type(ContactType), Filter.type(DocumentType)));
       await matchObjects(query, [...contacts, ...documents]);
       expect((await query.run()).objects.length).to.equal(5);
     }
@@ -256,23 +256,24 @@ describe('Index queries', () => {
 
   test('`not(or)` query', async () => {
     const builder = new TestBuilder();
+
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const { contacts, documents } = createObjects();
 
     const contactsInDatabase = await addObjects(space, contacts);
     const documentsInDatabase = await addObjects(space, documents);
-    const expectedIds = [...contactsInDatabase, ...documentsInDatabase].map(({ id }) => id);
+    const excludedIds = [...contactsInDatabase, ...documentsInDatabase].map(({ id }) => id);
 
     {
       const query = space.db.query(
-        Filter.not(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType), Filter.schema(PropertiesType))),
+        Filter.not(Filter.or(Filter.type(ContactType), Filter.type(DocumentType), Filter.type(PropertiesType))),
       );
       const ids = (await query.run()).objects.map(({ id }) => id);
-      expect(ids.every((id) => expectedIds.every((expectedId) => expectedId !== id))).to.be.true;
-      expect(expectedIds.every((expectedId) => ids.every((id) => expectedId !== id))).to.be.true;
+      expect(ids.every((id) => !excludedIds.includes(id))).to.be.true;
     }
   });
 
@@ -285,7 +286,7 @@ describe('Index queries', () => {
     const { expandos } = createObjects();
 
     await addObjects(space, expandos);
-    const query = space.db.query(Filter.schema(Expando));
+    const query = space.db.query(Filter.type(Expando));
     await matchObjects(query, expandos);
   });
 
@@ -299,7 +300,7 @@ describe('Index queries', () => {
     const echoContacts = await addObjects(space, contacts);
     await addObjects(space, documents);
 
-    const query = space.db.query(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType)));
+    const query = space.db.query(Filter.or(Filter.type(ContactType), Filter.type(DocumentType)));
     const queriedEverything = new Trigger();
     const receivedDeleteUpdate = new Trigger();
     const unsub = query.subscribe((query) => {

@@ -7,7 +7,7 @@ import React, { type FC, useMemo } from 'react';
 import { FormatEnum } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks';
 import { createTextBitbar } from '../../../util';
@@ -39,12 +39,12 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
       { name: 'feedKey', format: FormatEnum.DID },
-      { name: 'progress', format: FormatEnum.String, size: 420 },
+      { name: 'progress', format: FormatEnum.String, size: 600 },
     ],
     [],
   );
 
-  const tableData = useMemo(() => {
+  const rows = useMemo(() => {
     return feeds.map((feed) => ({
       id: feed.feedKey.toString(),
       feedKey: feed.feedKey.toString(),
@@ -53,15 +53,14 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
     }));
   }, [feeds, maxLength]);
 
-  const handleSelect = (selectedItems: string[]) => {
-    const selectedId = selectedItems[0];
-    const selected = selectedId ? tableData.find((data) => data.id === selectedId)?._original : undefined;
-
-    if (selected !== undefined) {
-      setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
-      onSelect?.(selected);
+  const handleRowClick = (row: any) => {
+    if (row?._original !== undefined) {
+      setContext((ctx) => ({ ...ctx, feedKey: row._original?.feedKey }));
+      onSelect?.(row._original);
     }
   };
 
-  return <DynamicTable properties={properties} data={tableData} onSelectionChanged={handleSelect} />;
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
+  return <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />;
 };

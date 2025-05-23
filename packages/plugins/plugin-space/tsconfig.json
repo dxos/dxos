@@ -27,6 +27,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -48,7 +51,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/automerge"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-schema"
@@ -94,6 +97,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-pickers"

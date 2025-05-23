@@ -10,12 +10,8 @@ import React from 'react';
 import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
 import { withTheme } from '../../testing';
 
-type StorybookToggleGroupProps = {
-  type: ToggleGroupProps['type'];
-};
-
-// TODO(burdon): ToggleGroup.Item.
-const StorybookToggleGroup = (props: StorybookToggleGroupProps) => {
+// TODO(burdon): Create Radix-style Root, Item, etc?
+const DefaultStory = (props: ToggleGroupProps) => {
   return (
     <ToggleGroup {...props}>
       <ToggleGroupItem value='textb'>
@@ -31,7 +27,7 @@ const StorybookToggleGroup = (props: StorybookToggleGroupProps) => {
 export default {
   title: 'ui/react-ui-core/ToggleGroup',
   component: ToggleGroup,
-  render: StorybookToggleGroup,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };

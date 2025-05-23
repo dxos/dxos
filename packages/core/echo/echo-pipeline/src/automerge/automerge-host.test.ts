@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { getHeads } from '@automerge/automerge';
+import type { DocumentId, Heads } from '@automerge/automerge-repo';
 import { onTestFinished, describe, expect, test } from 'vitest';
 
-import { getHeads } from '@dxos/automerge/automerge';
-import type { DocumentId, Heads } from '@dxos/automerge/automerge-repo';
 import { IndexMetadataStore } from '@dxos/indexing';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -24,7 +24,7 @@ describe('AutomergeHost', () => {
       doc.text = 'Hello world';
     });
     await host.repo.flush();
-    expect(handle.docSync()!.text).toEqual('Hello world');
+    expect(handle.doc()!.text).toEqual('Hello world');
   });
 
   test('changes are preserved in storage', async () => {
@@ -41,9 +41,9 @@ describe('AutomergeHost', () => {
     await host.close();
 
     const host2 = await setupAutomergeHost({ level });
-    const handle2 = host2.repo.find<any>(url);
+    const handle2 = await host2.repo.find<any>(url);
     await handle2.whenReady();
-    expect(handle2.docSync()!.text).toEqual('Hello world');
+    expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.repo.flush();
   });
 
@@ -52,7 +52,7 @@ describe('AutomergeHost', () => {
 
     const host = await setupAutomergeHost({ level });
     const handle = host.createDoc({ text: 'Hello world' });
-    const expectedHeads = getHeads(handle.docSync()!);
+    const expectedHeads = getHeads(handle.doc()!);
     await host.flush();
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
@@ -69,7 +69,7 @@ describe('AutomergeHost', () => {
 
     const host = await setupAutomergeHost({ level });
     const handles = range(2, () => host.createDoc({ text: 'Hello world' }));
-    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.docSync()!));
+    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
     await host.flush();
 
     const ids = handles.map((handle) => handle.documentId);

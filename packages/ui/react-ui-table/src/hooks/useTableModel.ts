@@ -5,29 +5,33 @@
 import { effect } from '@preact/signals-core';
 import { useEffect, useState } from 'react';
 
-import { fullyQualifiedId, getSpace, type ReactiveObject } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, type Live } from '@dxos/react-client/echo';
 import { useSelectionActions } from '@dxos/react-ui-attention';
 import { type ViewProjection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { type BaseTableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
+import { type TableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
 import { type TableType } from '../types';
 
-export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
+export type UseTableModelParams<T extends TableRow = TableRow> = {
   table?: TableType;
   projection?: ViewProjection;
-  objects?: ReactiveObject<T>[];
-  onSelectionChanged?: (selection: string[]) => void;
+  rows?: Live<T>[];
   rowActions?: TableRowAction[];
+  onSelectionChanged?: (selection: string[]) => void;
   onRowAction?: (actionId: string, data: T) => void;
-} & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
+} & Pick<
+  TableModelProps<T>,
+  'features' | 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChange'
+>;
 
-export const useTableModel = <T extends BaseTableRow = { id: string }>({
-  objects,
+export const useTableModel = <T extends TableRow = TableRow>({
   table,
   projection,
-  onSelectionChanged,
+  rows,
   rowActions,
+  features,
+  onSelectionChanged,
   onRowAction,
   ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
@@ -44,6 +48,7 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
         space: getSpace(table),
         view: table.view?.target,
         projection,
+        features,
         rowActions,
         onRowAction,
         ...props,
@@ -56,14 +61,14 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [table, projection, table?.view?.target, rowActions]); // TODO(burdon): Trigger if callbacks change?
+  }, [table, projection, table?.view?.target, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {
-    if (objects) {
-      model?.setRows(objects);
+    if (rows) {
+      model?.setRows(rows);
     }
-  }, [model, objects]);
+  }, [model, rows]);
 
   const { select, clear } = useSelectionActions([table?.id, table?.view?.target?.query.typename].filter(isNonNullable));
 

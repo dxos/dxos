@@ -23,6 +23,9 @@ type ScrollAreaVariant = 'coarse' | 'fine';
 
 type ScrollAreaRootProps = ThemedClassName<ScrollAreaPrimitiveRootProps>;
 
+/**
+ * @deprecated
+ */
 const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (

@@ -8,7 +8,7 @@ import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey, SpaceStateManager } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
-import { createObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo-schema';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -23,26 +23,25 @@ import { RepoProxy } from '../client';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();
-const randomId = () => createObjectId();
 
 describe('AutomergeDocumentLoader', () => {
   test('space access is set on root doc handle and it is accessible', async () => {
     const { loader, spaceRootDocHandle } = await setupTest();
     expect(loader.getSpaceRootDocHandle()).not.to.throw;
-    expect(spaceRootDocHandle.docSync()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
+    expect(spaceRootDocHandle.doc()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
   });
 
   test('new object document is linked with space and root document', async () => {
-    const objectId = randomId();
+    const objectId = ObjectId.random();
     const { loader, spaceRootDocHandle } = await setupTest();
     const objectDocHandle = loader.createDocumentForObject(objectId);
-    const handle = spaceRootDocHandle.docSync();
-    expect(objectDocHandle.docSync()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
+    const handle = spaceRootDocHandle.doc();
+    expect(objectDocHandle.doc()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
     expect(handle?.links?.[objectId].toString()).to.eq(objectDocHandle.url);
   });
 
   test('listener is invoked after a document is loaded', async () => {
-    const objectId = randomId();
+    const objectId = ObjectId.random();
     const { loader, repo } = await setupTest();
     const handle = repo.create<SpaceDoc>();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle });
@@ -52,7 +51,7 @@ describe('AutomergeDocumentLoader', () => {
   });
 
   test('listener is not invoked if an object was rebound during document loading', async () => {
-    const objectId = randomId();
+    const objectId = ObjectId.random();
     const { loader, repo } = await setupTest();
     const oldDocHandle = repo.create<SpaceDoc>();
     const newDocHandle = repo.create<SpaceDoc>();
@@ -64,7 +63,7 @@ describe('AutomergeDocumentLoader', () => {
   });
 
   test('document link is not loaded if object exists as inline object', async () => {
-    const objectId = randomId();
+    const objectId = ObjectId.random();
     const { loader, repo } = await setupTest();
     const existingHandle = repo.create<SpaceDoc>();
     loader.onObjectBoundToDocument(existingHandle, objectId);

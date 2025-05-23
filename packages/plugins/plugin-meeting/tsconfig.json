@@ -14,7 +14,8 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/*.ts"
+    "src/*.ts",
+    "typings/*.d.ts"
   ],
   "references": [
     {
@@ -57,6 +58,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -70,6 +74,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../devtools/devtools"
     },
     {
       "path": "../../experimental/artifact"
@@ -102,6 +109,9 @@
       "path": "../../ui/react-ui-dnd"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-sfx"
     },
     {
@@ -117,9 +127,6 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../experimental/plugin-transcription"
-    },
-    {
       "path": "../plugin-client"
     },
     {
@@ -133,9 +140,6 @@
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-thread"
     }
   ]
 }

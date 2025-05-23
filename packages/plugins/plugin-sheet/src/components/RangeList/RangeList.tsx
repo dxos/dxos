@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute';
-import { S } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover } from '@dxos/react-ui-theme';
@@ -32,7 +32,7 @@ export const RangeList = ({ sheet }: RangeListProps) => {
   return (
     <>
       <h2 className='p-2 text-sm font-semibold'>{t('range list heading')}</h2>
-      <List.Root<Range> items={sheet.ranges} isItem={S.is(Range)}>
+      <List.Root<Range> items={sheet.ranges} isItem={Schema.is(Range)}>
         {({ items: ranges }) =>
           ranges.map((range, i) => (
             <List.Item key={i} item={range} classNames={['p-2', ghostHover]}>

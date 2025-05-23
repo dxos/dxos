@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-chess",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Chess for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,6 +38,7 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/display-name": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -49,7 +50,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "chess.js": "^1.0.0",
-    "effect": "3.13.3"
+    "effect": "3.14.21"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

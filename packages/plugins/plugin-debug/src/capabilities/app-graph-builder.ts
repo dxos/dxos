@@ -2,431 +2,456 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, type PluginsContext } from '@dxos/app-framework';
-import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
-import { CollectionType } from '@dxos/plugin-space/types';
-import { SpaceState } from '@dxos/react-client/echo';
-import { isSpace, type Space } from '@dxos/react-client/echo';
+import { Rx } from '@effect-rx/rx-react';
+import { Option, pipe } from 'effect';
+
+import { contributes, Capabilities, type PluginContext } from '@dxos/app-framework';
+import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
+import { getActiveSpace, SPACE_PLUGIN } from '@dxos/plugin-space';
+import { isEchoObject } from '@dxos/react-client/echo';
 
 import { DEBUG_PLUGIN } from '../meta';
-import { type DebugSettingsProps, Devtools } from '../types';
+import { Devtools } from '../types';
 
 const DEVTOOLS_TYPE = 'dxos.org/plugin/debug/devtools';
 
-export default (context: PluginsContext) =>
+export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     // Devtools node.
     createExtension({
       id: 'dxos.org/plugin/debug/devtools',
-      filter: (node): node is Node<null> => node.id === 'root',
-      connector: () => [
-        {
-          id: Devtools.id,
-          data: null,
-          type: DEVTOOLS_TYPE,
-          properties: {
-            label: ['devtools label', { ns: DEBUG_PLUGIN }],
-            disposition: 'workspace',
-            icon: 'ph--hammer--regular',
-          },
-          nodes: [
-            {
-              id: Devtools.Client.id,
-              data: null,
-              type: DEVTOOLS_TYPE,
-              properties: {
-                label: ['client label', { ns: DEBUG_PLUGIN }],
-                icon: 'ph--users--regular',
-              },
-              nodes: [
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) =>
+              node.id === ROOT_ID || node.type === `${SPACE_PLUGIN}/settings` ? Option.some(node) : Option.none(),
+            ),
+            Option.map((node) => {
+              const space = get(rxFromSignal(() => getActiveSpace(context)));
+
+              return [
                 {
-                  id: Devtools.Client.Config,
-                  data: Devtools.Client.Config,
+                  id: `${Devtools.id}-${node.id}`,
+                  data: null,
                   type: DEVTOOLS_TYPE,
                   properties: {
-                    label: ['config label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--gear--regular',
+                    label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                    icon: 'ph--hammer--regular',
+                    disposition: 'pin-end',
+                    position: 'fallback',
                   },
+                  nodes: [
+                    ...(space && node.type === `${SPACE_PLUGIN}/settings`
+                      ? [
+                          {
+                            id: `debug-${node.id}`,
+                            type: 'dxos.org/plugin/debug/space',
+                            data: { space, type: 'dxos.org/plugin/debug/space' },
+                            properties: {
+                              label: ['debug label', { ns: DEBUG_PLUGIN }],
+                              icon: 'ph--bug--regular',
+                            },
+                          },
+                        ]
+                      : []),
+                    {
+                      id: `${Devtools.Client.id}-${node.id}`,
+                      data: null,
+                      type: DEVTOOLS_TYPE,
+                      properties: {
+                        label: ['client label', { ns: DEBUG_PLUGIN }],
+                        icon: 'ph--users--regular',
+                      },
+                      nodes: [
+                        {
+                          id: `${Devtools.Client.Config}-${node.id}`,
+                          data: Devtools.Client.Config,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['config label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--gear--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Client.Storage}-${node.id}`,
+                          data: Devtools.Client.Storage,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['storage label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--hard-drives--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Client.Logs}-${node.id}`,
+                          data: Devtools.Client.Logs,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['logs label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--file-text--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Client.Diagnostics}-${node.id}`,
+                          data: Devtools.Client.Diagnostics,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['diagnostics label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--chart-line--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Client.Tracing}-${node.id}`,
+                          data: Devtools.Client.Tracing,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['tracing label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--fire--regular',
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      id: `${Devtools.Halo.id}-${node.id}`,
+                      data: null,
+                      type: DEVTOOLS_TYPE,
+                      properties: {
+                        label: ['halo label', { ns: DEBUG_PLUGIN }],
+                        icon: 'ph--identification-badge--regular',
+                      },
+                      nodes: [
+                        {
+                          id: `${Devtools.Halo.Identity}-${node.id}`,
+                          data: Devtools.Halo.Identity,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['identity label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--identification-badge--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Halo.Devices}-${node.id}`,
+                          data: Devtools.Halo.Devices,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['devices label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--devices--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Halo.Keyring}-${node.id}`,
+                          data: Devtools.Halo.Keyring,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['keyring label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--key--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Halo.Credentials}-${node.id}`,
+                          data: Devtools.Halo.Credentials,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['credentials label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--credit-card--regular',
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      id: `${Devtools.Echo.id}-${node.id}`,
+                      data: null,
+                      type: DEVTOOLS_TYPE,
+                      properties: {
+                        label: ['echo label', { ns: DEBUG_PLUGIN }],
+                        icon: 'ph--database--regular',
+                      },
+                      nodes: [
+                        {
+                          id: `${Devtools.Echo.Spaces}-${node.id}`,
+                          data: Devtools.Echo.Spaces,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['spaces label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--graph--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Echo.Space}-${node.id}`,
+                          data: Devtools.Echo.Space,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['space label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--planet--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Echo.Feeds}-${node.id}`,
+                          data: Devtools.Echo.Feeds,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['feeds label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--list-bullets--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Echo.Objects}-${node.id}`,
+                          data: Devtools.Echo.Objects,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['objects label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--cube--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Echo.Schema}-${node.id}`,
+                          data: Devtools.Echo.Schema,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['schema label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--database--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Echo.Automerge}-${node.id}`,
+                          data: Devtools.Echo.Automerge,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['automerge label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--gear-six--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Echo.Queues}-${node.id}`,
+                          data: Devtools.Echo.Queues,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['queues label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--queue--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Echo.Members}-${node.id}`,
+                          data: Devtools.Echo.Members,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['members label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--users--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Echo.Metadata}-${node.id}`,
+                          data: Devtools.Echo.Metadata,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['metadata label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--hard-drive--regular',
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      id: `${Devtools.Mesh.id}-${node.id}`,
+                      data: null,
+                      type: DEVTOOLS_TYPE,
+                      properties: {
+                        label: ['mesh label', { ns: DEBUG_PLUGIN }],
+                        icon: 'ph--graph--regular',
+                      },
+                      nodes: [
+                        {
+                          id: `${Devtools.Mesh.Signal}-${node.id}`,
+                          data: Devtools.Mesh.Signal,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['signal label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--wifi-high--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Mesh.Swarm}-${node.id}`,
+                          data: Devtools.Mesh.Swarm,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['swarm label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--users-three--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Mesh.Network}-${node.id}`,
+                          data: Devtools.Mesh.Network,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['network label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--polygon--regular',
+                          },
+                        },
+                      ],
+                    },
+                    // TODO(wittjosiah): Remove?
+                    // {
+                    //   id: `${prefix}-${Devtools.Agent.id}`,
+                    //   data: null,
+                    //   type: DEVTOOLS_TYPE,
+                    //   properties: {
+                    //     label: ['agent label', { ns: DEBUG_PLUGIN }],
+                    //     icon: 'ph--robot--regular',
+                    //   },
+                    //   nodes: [
+                    //     {
+                    //       id: `${prefix}-${Devtools.Agent.Dashboard}`,
+                    //       data: Devtools.Agent.Dashboard,
+                    //       type: DEVTOOLS_TYPE,
+                    //       properties: {
+                    //         label: ['dashboard label', { ns: DEBUG_PLUGIN }],
+                    //         icon: 'ph--computer-tower--regular',
+                    //       },
+                    //     },
+                    //   ],
+                    // },
+                    {
+                      id: `${Devtools.Edge.id}-${node.id}`,
+                      data: null,
+                      type: DEVTOOLS_TYPE,
+                      properties: {
+                        label: ['edge label', { ns: DEBUG_PLUGIN }],
+                        icon: 'ph--cloud--regular',
+                      },
+                      nodes: [
+                        {
+                          id: `${Devtools.Edge.Dashboard}-${node.id}`,
+                          data: Devtools.Edge.Dashboard,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['dashboard label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--computer-tower--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Edge.Workflows}-${node.id}`,
+                          data: Devtools.Edge.Workflows,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['workflows label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--function--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Edge.Traces}-${node.id}`,
+                          data: Devtools.Edge.Traces,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['traces label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--line-segments--regular',
+                          },
+                        },
+                        {
+                          id: `${Devtools.Edge.Testing}-${node.id}`,
+                          data: Devtools.Edge.Testing,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['testing label', { ns: DEBUG_PLUGIN }],
+                            icon: 'ph--flask--regular',
+                          },
+                        },
+                      ],
+                    },
+                  ],
                 },
-                {
-                  id: Devtools.Client.Storage,
-                  data: Devtools.Client.Storage,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['storage label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--hard-drives--regular',
-                  },
-                },
-                {
-                  id: Devtools.Client.Logs,
-                  data: Devtools.Client.Logs,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['logs label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--file-text--regular',
-                  },
-                },
-                {
-                  id: Devtools.Client.Diagnostics,
-                  data: Devtools.Client.Diagnostics,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['diagnostics label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--chart-line--regular',
-                  },
-                },
-                {
-                  id: Devtools.Client.Tracing,
-                  data: Devtools.Client.Tracing,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['tracing label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--fire--regular',
-                  },
-                },
-              ],
-            },
-            {
-              id: Devtools.Halo.id,
-              data: null,
-              type: DEVTOOLS_TYPE,
-              properties: {
-                label: ['halo label', { ns: DEBUG_PLUGIN }],
-                icon: 'ph--identification-badge--regular',
-              },
-              nodes: [
-                {
-                  id: Devtools.Halo.Identity,
-                  data: Devtools.Halo.Identity,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['identity label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--identification-badge--regular',
-                  },
-                },
-                {
-                  id: Devtools.Halo.Devices,
-                  data: Devtools.Halo.Devices,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['devices label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--devices--regular',
-                  },
-                },
-                {
-                  id: Devtools.Halo.Keyring,
-                  data: Devtools.Halo.Keyring,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['keyring label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--key--regular',
-                  },
-                },
-                {
-                  id: Devtools.Halo.Credentials,
-                  data: Devtools.Halo.Credentials,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['credentials label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--credit-card--regular',
-                  },
-                },
-              ],
-            },
-            {
-              id: Devtools.Echo.id,
-              data: null,
-              type: DEVTOOLS_TYPE,
-              properties: {
-                label: ['echo label', { ns: DEBUG_PLUGIN }],
-                icon: 'ph--database--regular',
-              },
-              nodes: [
-                {
-                  id: Devtools.Echo.Spaces,
-                  data: Devtools.Echo.Spaces,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['spaces label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--graph--regular',
-                  },
-                },
-                {
-                  id: Devtools.Echo.Space,
-                  data: Devtools.Echo.Space,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['space label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--planet--regular',
-                  },
-                },
-                {
-                  id: Devtools.Echo.Feeds,
-                  data: Devtools.Echo.Feeds,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['feeds label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--list-bullets--regular',
-                  },
-                },
-                {
-                  id: Devtools.Echo.Objects,
-                  data: Devtools.Echo.Objects,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['objects label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--database--regular',
-                  },
-                },
-                {
-                  id: Devtools.Echo.Automerge,
-                  data: Devtools.Echo.Automerge,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['automerge label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--gear-six--regular',
-                  },
-                },
-                {
-                  id: Devtools.Echo.Queues,
-                  data: Devtools.Echo.Queues,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['queues label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--queue--regular',
-                  },
-                },
-                {
-                  id: Devtools.Echo.Members,
-                  data: Devtools.Echo.Members,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['members label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--users--regular',
-                  },
-                },
-                {
-                  id: Devtools.Echo.Metadata,
-                  data: Devtools.Echo.Metadata,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['metadata label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--hard-drive--regular',
-                  },
-                },
-              ],
-            },
-            {
-              id: Devtools.Mesh.id,
-              data: null,
-              type: DEVTOOLS_TYPE,
-              properties: {
-                label: ['mesh label', { ns: DEBUG_PLUGIN }],
-                icon: 'ph--graph--regular',
-              },
-              nodes: [
-                {
-                  id: Devtools.Mesh.Signal,
-                  data: Devtools.Mesh.Signal,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['signal label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--wifi-high--regular',
-                  },
-                },
-                {
-                  id: Devtools.Mesh.Swarm,
-                  data: Devtools.Mesh.Swarm,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['swarm label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--users-three--regular',
-                  },
-                },
-                {
-                  id: Devtools.Mesh.Network,
-                  data: Devtools.Mesh.Network,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['network label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--polygon--regular',
-                  },
-                },
-              ],
-            },
-            {
-              id: Devtools.Agent.id,
-              data: null,
-              type: DEVTOOLS_TYPE,
-              properties: {
-                label: ['agent label', { ns: DEBUG_PLUGIN }],
-                icon: 'ph--robot--regular',
-              },
-              nodes: [
-                {
-                  id: Devtools.Agent.Dashboard,
-                  data: Devtools.Agent.Dashboard,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['dashboard label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--computer-tower--regular',
-                  },
-                },
-              ],
-            },
-            {
-              id: Devtools.Edge.id,
-              data: null,
-              type: DEVTOOLS_TYPE,
-              properties: {
-                label: ['edge label', { ns: DEBUG_PLUGIN }],
-                icon: 'ph--cloud--regular',
-              },
-              nodes: [
-                {
-                  id: Devtools.Edge.Dashboard,
-                  data: Devtools.Edge.Dashboard,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['dashboard label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--computer-tower--regular',
-                  },
-                },
-                {
-                  id: Devtools.Edge.Workflows,
-                  data: Devtools.Edge.Workflows,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['workflows label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--function--regular',
-                  },
-                },
-                {
-                  id: Devtools.Edge.Traces,
-                  data: Devtools.Edge.Traces,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['traces label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--line-segments--regular',
-                  },
-                },
-              ],
-            },
-          ],
-        },
-      ],
+              ];
+            }),
+            Option.getOrElse(() => []),
+          ),
+        ),
     }),
 
     // Debug node.
     createExtension({
       id: 'dxos.org/plugin/debug/debug',
-      filter: (node): node is Node<null> => {
-        // TODO(wittjosiah): Plank is currently blank. Remove?
-        // const settings = context
-        //   .requestCapabilities(Capabilities.SettingsStore)[0]
-        //   ?.getStore<DebugSettingsProps>(DEBUG_PLUGIN)?.value;
-        // return !!settings?.debug && node.id === 'root';
-        return false;
-      },
-      connector: () => {
-        const [graph] = context.requestCapabilities(Capabilities.AppGraph);
-        if (!graph) {
-          return;
-        }
-
-        return [
-          {
-            id: 'dxos.org/plugin/debug/debug',
-            type: 'dxos.org/plugin/debug/debug',
-            data: { graph },
-            properties: {
-              label: ['debug label', { ns: DEBUG_PLUGIN }],
-              disposition: 'navigation',
-              icon: 'ph--bug--regular',
-            },
-          },
-        ];
-      },
-    }),
-
-    // Space debug nodes.
-    createExtension({
-      id: 'dxos.org/plugin/debug/spaces',
-      filter: (node): node is Node<Space> => {
-        const settings = context
-          .requestCapabilities(Capabilities.SettingsStore)[0]
-          ?.getStore<DebugSettingsProps>(DEBUG_PLUGIN)?.value;
-        return !!settings?.debug && isSpace(node.data);
-      },
-      connector: ({ node }) => {
-        const space = node.data;
-        const state = toSignal(
-          (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
-          () => space.state.get(),
-          space.id,
-        );
-        if (state !== SpaceState.SPACE_READY) {
-          return;
-        }
-
-        // Not adding the debug node until the root collection is available aligns the behaviour of this
-        // extension with that of the space plugin adding objects. This ensures that the debug node is added at
-        // the same time as objects and prevents order from changing as the nodes are added.
-        const collection = space.properties[CollectionType.typename]?.target as CollectionType | undefined;
-        if (!collection) {
-          return;
-        }
-
-        return [
-          {
-            id: `${space.id}-${Devtools.id}`,
-            data: null,
-            type: DEVTOOLS_TYPE,
-            properties: {
-              label: ['devtools label', { ns: DEBUG_PLUGIN }],
-              icon: 'ph--hammer--regular',
-            },
-            nodes: [
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap(() => {
+              const [graph] = get(context.capabilities(Capabilities.AppGraph));
+              return graph ? Option.some(graph) : Option.none();
+            }),
+            Option.flatMap((graph) => {
+              // TODO(wittjosiah): Plank is currently blank. Remove?
+              // const settings = context
+              //   .requestCapabilities(Capabilities.SettingsStore)[0]
+              //   ?.getStore<DebugSettingsProps>(DEBUG_PLUGIN)?.value;
+              // return !!settings?.debug && node.id === 'root';
+              return Option.none();
+            }),
+            Option.map((graph) => [
               {
-                // TODO(wittjosiah): Cannot use slashes in ids until we have a router which decouples ids from url paths.
-                id: `${space.id}-debug`,
-                type: 'dxos.org/plugin/debug/space',
-                data: { space, type: 'dxos.org/plugin/debug/space' },
+                id: 'dxos.org/plugin/debug/debug',
+                type: 'dxos.org/plugin/debug/debug',
+                data: { graph },
                 properties: {
                   label: ['debug label', { ns: DEBUG_PLUGIN }],
+                  disposition: 'navigation',
                   icon: 'ph--bug--regular',
                 },
               },
+            ]),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
+
+    // Debug object companion.
+    createExtension({
+      id: `${DEBUG_PLUGIN}/debug-object`,
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (isEchoObject(node.data) ? Option.some(node) : Option.none())),
+            Option.map((node) => [
               {
-                id: `${space.id}-${Devtools.Echo.Space}`,
-                data: Devtools.Echo.Space,
-                type: DEVTOOLS_TYPE,
+                id: [node.id, 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
+                type: PLANK_COMPANION_TYPE,
+                data: 'debug',
                 properties: {
-                  label: ['space label', { ns: DEBUG_PLUGIN }],
-                  icon: 'ph--planet--regular',
+                  label: ['debug label', { ns: DEBUG_PLUGIN }],
+                  icon: 'ph--bug--regular',
+                  disposition: 'hidden',
+                  position: 'fallback',
                 },
               },
+            ]),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
+
+    // Devtools deck companion.
+    createExtension({
+      id: `${DEBUG_PLUGIN}/devtools-overview`,
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.map((node) => [
               {
-                id: `${space.id}-${Devtools.Echo.Objects}`,
-                data: Devtools.Echo.Objects,
-                type: DEVTOOLS_TYPE,
+                id: [node.id, 'devtools'].join(ATTENDABLE_PATH_SEPARATOR),
+                type: DECK_COMPANION_TYPE,
+                data: null,
                 properties: {
-                  label: ['objects label', { ns: DEBUG_PLUGIN }],
-                  icon: 'ph--database--regular',
+                  label: ['devtools overview label', { ns: DEBUG_PLUGIN }],
+                  icon: 'ph--equalizer--regular',
+                  disposition: 'hidden',
+                  position: 'fallback',
                 },
               },
-              {
-                id: `${space.id}-${Devtools.Edge.Traces}`,
-                data: Devtools.Edge.Traces,
-                type: DEVTOOLS_TYPE,
-                properties: {
-                  label: ['traces label', { ns: DEBUG_PLUGIN }],
-                  icon: 'ph--line-segments--regular',
-                },
-              },
-            ],
-          },
-        ];
-      },
+            ]),
+            Option.getOrElse(() => []),
+          ),
+        ),
     }),
   ]);

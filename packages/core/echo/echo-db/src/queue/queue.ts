@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type HasId } from '@dxos/echo-schema';
+import { getTypename, type BaseEchoObject, type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { failedInvariant } from '@dxos/invariant';
+import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
 
 import type { QueuesService } from './queue-service';
@@ -13,7 +13,9 @@ import type { Queue } from './types';
 /**
  * Client-side view onto an EDGE queue.
  */
-export class QueueImpl<T> implements Queue<T> {
+// TODO(burdon): Move to echo-queue.
+// TODO(burdon): T should be constrained to EchoObject.
+export class QueueImpl<T extends BaseEchoObject = BaseEchoObject> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
 
   private readonly _subspaceTag: string;
@@ -58,6 +60,11 @@ export class QueueImpl<T> implements Queue<T> {
    * Insert into queue with optimistic update.
    */
   async append(items: T[]): Promise<void> {
+    assertArgument(
+      items.every((item) => item.id !== undefined && !!getTypename(item)),
+      'items must be valid echo objects',
+    );
+
     // Optimistic update.
     this._items = [...this._items, ...items];
     this._signal.notifyWrite();

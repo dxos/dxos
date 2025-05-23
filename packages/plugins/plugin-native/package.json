@@ -1,0 +1,42 @@
+{
+  "name": "@dxos/plugin-native",
+  "version": "0.8.1",
+  "description": "Composer plugin that runs when on a native device.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-help": "workspace:*",
+    "@dxos/plugin-navtree": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "^3.13.3"
+  },
+  "devDependencies": {
+    "vite": "5.4.7"
+  },
+  "peerDependencies": {
+    "effect": "^3.13.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

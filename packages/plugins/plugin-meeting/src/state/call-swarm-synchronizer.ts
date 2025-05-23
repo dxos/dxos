@@ -4,7 +4,7 @@
 
 import md5Hex from 'md5-hex';
 
-import { DeferredTask, Event, synchronized } from '@dxos/async';
+import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
@@ -13,12 +13,12 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
-import { TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
+import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Device, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { ConnectionState, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { isNonNullable } from '@dxos/util';
 
-import { codec, type TranscriptionState, type UserState } from '../types';
+import { codec, type ActivityState, type UserState } from '../types';
 
 export type CallState = {
   /**
@@ -39,7 +39,7 @@ export type CallState = {
   /**
    * Swarm synchronized CRDT transcription. Last write wins.
    */
-  transcription?: TranscriptionState;
+  activities?: Record<string, ActivityState>;
 
   raisedHand?: boolean;
   speaking?: boolean;
@@ -54,15 +54,20 @@ export type CallState = {
 export type CallSwarmSynchronizerParams = { networkService: NetworkService };
 
 /**
+ * Period for peer to reconnect to the call swarm gracefully if connection was lost abruptly.
+ */
+const DISCONNECTED_ABRUPT_TIMEOUT = 2_000; // [ms]
+
+/**
  * Sends and receives state to/from Swarm network.
  */
 export class CallSwarmSynchronizer extends Resource {
   public readonly stateUpdated = new Event<CallState>();
-  private readonly _state: CallState = {
-    transcription: { enabled: false, lamportTimestamp: { id: '', version: 0 } },
-  };
 
+  private readonly _state: CallState = { activities: {} };
   private readonly _networkService: NetworkService;
+  private _lastSwarmEvent?: SwarmResponse = undefined;
+  private _reconcileSwarmStateTask?: DeferredTask = undefined;
 
   private _identityKey?: string = undefined;
   private _deviceKey?: string = undefined;
@@ -115,13 +120,11 @@ export class CallSwarmSynchronizer extends Resource {
     this._notifyAndSchedule();
   }
 
-  setTranscription(transcription: TranscriptionState) {
-    const currentTranscription = this._state.transcription;
-    this._state.transcription = {
-      ...currentTranscription,
-      ...transcription,
-      lamportTimestamp: LamportTimestampCrdt.increment(currentTranscription?.lamportTimestamp ?? {}) as any,
-    };
+  setActivity(key: string, payload: ActivityState['payload']) {
+    const lamportTimestamp = LamportTimestampCrdt.increment(
+      this._state.activities?.[key]?.lamportTimestamp ?? { id: this._deviceKey },
+    );
+    this._state.activities![key] = { lamportTimestamp, payload };
 
     this._notifyAndSchedule();
   }
@@ -139,7 +142,6 @@ export class CallSwarmSynchronizer extends Resource {
    */
   _setDevice(device: Device) {
     this._deviceKey = device.deviceKey.toHex();
-    this._state.transcription!.lamportTimestamp!.id = this._deviceKey;
   }
 
   /**
@@ -158,16 +160,23 @@ export class CallSwarmSynchronizer extends Resource {
     this._sendStateTask = new DeferredTask(this._ctx, async () => {
       await this._sendState();
     });
+
+    this._reconcileSwarmStateTask = new DeferredTask(this._ctx, async () => {
+      await this._reconcileSwarmState();
+    });
   }
 
   protected override async _close() {
     this._sendStateTask = undefined;
+    this._reconcileSwarmStateTask = undefined;
   }
 
   @synchronized
   async join() {
     invariant(this._state.roomId);
-    this._stream = this._networkService.subscribeSwarmState({ topic: getTopic(this._state.roomId) });
+    const topic = getTopic(this._state.roomId);
+    log('joining swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
+    this._stream = this._networkService.subscribeSwarmState({ topic });
     this._stream.subscribe((event) => this._processSwarmEvent(event));
 
     this._notifyAndSchedule();
@@ -175,17 +184,27 @@ export class CallSwarmSynchronizer extends Resource {
 
   @synchronized
   async leave() {
-    const roomId = this._state.roomId;
-    void this._stream?.close();
+    if (!this._state.roomId) {
+      log.warn('leaving room without roomId');
+    }
+    const topic = this._state.roomId ? getTopic(this._state.roomId) : undefined;
+    await this._stream?.close();
     this._stream = undefined;
-    if (roomId && this._identityKey && this._deviceKey) {
-      void this._networkService.leaveSwarm({
-        topic: getTopic(roomId),
+    if (topic && this._identityKey && this._deviceKey) {
+      log('leaving swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
+      await this._networkService.leaveSwarm({
+        topic,
         peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
       });
     }
     this._state.users = undefined;
     this._state.self = undefined;
+  }
+
+  async querySwarm(roomId: string) {
+    const topic = getTopic(roomId);
+    const swarm = await this._networkService.querySwarm({ topic });
+    return swarm.peers ?? [];
   }
 
   /**
@@ -199,7 +218,7 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private async _sendState() {
-    if (!this._state.roomId || !this._identityKey || !this._deviceKey) {
+    if (!this._state.roomId || !this._identityKey || !this._deviceKey || !this._state.joined) {
       return;
     }
 
@@ -207,7 +226,14 @@ export class CallSwarmSynchronizer extends Resource {
       ...this._state,
       id: this._deviceKey,
       name: this._displayName,
-      transcription: buf.create(TranscriptionSchema, this._state.transcription),
+      activities: this._state.activities
+        ? Object.fromEntries(
+            Object.entries(this._state.activities).map(([key, activity]) => [
+              key,
+              buf.create(ActivitySchema, activity),
+            ]),
+          )
+        : {},
     };
 
     await this._networkService.joinSwarm({
@@ -221,29 +247,70 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private _processSwarmEvent(swarmEvent: SwarmResponse) {
-    const users = swarmEvent.peers?.map((peer) => codec.decode(peer.state!)) ?? [];
+    this._lastSwarmEvent = swarmEvent;
+    this._reconcileSwarmStateTask!.schedule();
+  }
+
+  private async _reconcileSwarmState() {
+    const swarmEvent = this._lastSwarmEvent;
+    invariant(swarmEvent);
+    // We include inactive peers that were disconnected abruptly and have not yet reconnected to not drop them from call.
+    // Websocket connection could be unstable and we include graceful period for peers to reconnect.
+    const peers = [
+      ...(swarmEvent.peers ?? []),
+      ...(swarmEvent.inactivePeers ?? []).filter(
+        ({ disconnected, connectionState }) =>
+          connectionState === ConnectionState.DISCONNECTED_ABRUPT &&
+          disconnected &&
+          disconnected > Date.now() - DISCONNECTED_ABRUPT_TIMEOUT,
+      ),
+    ].sort((peer1, peer2) => peer1.peerKey.localeCompare(peer2.peerKey));
+    const users = peers
+      .map((peer) => {
+        try {
+          return codec.decode(peer.state!);
+        } catch (error) {
+          log.error('error decoding peer state', { error, peer });
+          return undefined;
+        }
+      })
+      .filter(isNonNullable);
     this._state.users = users;
     this._state.self = users.find((user) => user.id === this._deviceKey);
+    log('reconciling swarm state', { users });
     if (users.length === 0) {
       return;
     }
 
-    const lastTranscription = LamportTimestampCrdt.getLastState(
-      users.map((user) => user.transcription).filter(isNonNullable),
-    );
-    if (lastTranscription.lamportTimestamp!.version! > (this._state.transcription?.lamportTimestamp?.version ?? 0)) {
-      this._state.transcription = lastTranscription;
-    }
-
+    const activityKeys = new Set<string>(users.flatMap((user) => Object.keys(user.activities)));
+    [...activityKeys].forEach((key) => {
+      const activities = users.map((user) => user.activities?.[key]).filter(isNonNullable);
+      const lastActivity = LamportTimestampCrdt.getLastState(activities);
+      if (
+        lastActivity &&
+        lastActivity.lamportTimestamp!.version! > (this._state.activities![key]?.lamportTimestamp?.version ?? 0)
+      ) {
+        this._state.activities![key] = lastActivity;
+      }
+    });
     this.stateUpdated.emit(this._state);
+
+    // Schedule next reconcile if there are inactive peer to drop them after timeout.
+    if (peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
+      scheduleTaskInterval(
+        this._ctx,
+        async () => this._reconcileSwarmStateTask!.schedule(),
+        DISCONNECTED_ABRUPT_TIMEOUT / 2,
+      );
+    }
   }
 }
 
-type LamportTimestamp = TranscriptionState['lamportTimestamp'];
+type LamportTimestamp = ActivityState['lamportTimestamp'];
 
 // TODO(mykola): Factor out.
 class LamportTimestampCrdt {
-  static getLastState<T extends { lamportTimestamp?: LamportTimestamp }>(states: T[]): T {
+  static getLastState<T extends { lamportTimestamp?: LamportTimestamp }>(states: T[]): T | undefined {
     const maxTimestamp = Math.max(...states.map((state) => state.lamportTimestamp?.version ?? 0));
     const sortedStates = states
       .filter(
@@ -251,7 +318,6 @@ class LamportTimestampCrdt {
           state.lamportTimestamp && state.lamportTimestamp.version === maxTimestamp && state.lamportTimestamp.id,
       )
       .sort((a, b) => a.lamportTimestamp!.id!.localeCompare(b.lamportTimestamp!.id!));
-    invariant(sortedStates.length > 0, 'No states found');
     return sortedStates[0];
   }
 

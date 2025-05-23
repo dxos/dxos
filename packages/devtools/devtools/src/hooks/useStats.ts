@@ -10,6 +10,7 @@ import { type NetworkStatus } from '@dxos/client/mesh';
 import { type FilterParams } from '@dxos/echo-db';
 import { type EchoStatsDiagnostic, type EchoDataStats, type QueryMetrics } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
+import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -62,6 +63,7 @@ export type Stats = {
   queries?: QueryInfo[];
   memory?: MemoryInfo;
   network?: NetworkStatus;
+  edge?: QueryEdgeStatusResponse;
 };
 
 /**
@@ -102,7 +104,7 @@ export const useStats = (): [Stats, () => void] => {
       // TODO(burdon): Reconcile with diagnostics.
       const objects = TRACE_PROCESSOR.findResourcesByClassName('RepoProxy')
         .flatMap((r) => Object.values(r.instance.deref()?.handles ?? {}))
-        .map((handle: any) => handle.docSync())
+        .map((handle: any) => handle.doc())
         .filter(Boolean);
 
       const database: DatabaseInfo = {
@@ -112,13 +114,15 @@ export const useStats = (): [Stats, () => void] => {
         documentsToReconcile: 0,
       };
 
-      const memory: MemoryInfo = (window.performance as any).memory;
       if ('measureUserAgentSpecificMemory' in window.performance) {
         // TODO(burdon): Breakdown.
         // https://developer.mozilla.org/en-US/docs/Web/API/Performance/measureUserAgentSpecificMemory
         // const { bytes } = (await (window.performance as any).measureUserAgentSpecificMemory()) as { bytes: number };
       }
-      memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      const memory: MemoryInfo = (window.performance as any).memory;
+      if (memory && typeof memory === 'object' && 'usedJSHeapSize' in memory) {
+        memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      }
 
       log('collected stats', { elapsed: performance.now() - begin });
       if (isMounted()) {
@@ -181,6 +185,21 @@ export const useStats = (): [Stats, () => void] => {
       setStats((stats) =>
         Object.assign({}, stats, {
           network,
+        }),
+      );
+    });
+
+    return () => {
+      void stream.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    const stream = client.services.services.EdgeAgentService!.queryEdgeStatus();
+    stream.subscribe((edge) => {
+      setStats((stats) =>
+        Object.assign({}, stats, {
+          edge,
         }),
       );
     });

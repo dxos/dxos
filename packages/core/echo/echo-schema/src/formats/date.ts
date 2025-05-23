@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 
-import { FormatAnnotationId, FormatEnum } from './types';
+import { FormatAnnotation, FormatEnum } from './types';
 
 /**
  * Datetime values should be stored as ISO strings or unix numbers (ms) in UTC.
@@ -26,13 +26,13 @@ import { FormatAnnotationId, FormatEnum } from './types';
 /**
  * Simple date compatible with HF.
  */
-export const SimpleDate = S.Struct({
-  year: S.Number.pipe(S.between(1900, 9999)),
-  month: S.Number.pipe(S.between(1, 12)),
-  day: S.Number.pipe(S.between(1, 31)),
+export const SimpleDate = Schema.Struct({
+  year: Schema.Number.pipe(Schema.between(1900, 9999)),
+  month: Schema.Number.pipe(Schema.between(1, 12)),
+  day: Schema.Number.pipe(Schema.between(1, 31)),
 });
 
-export type SimpleDate = S.Schema.Type<typeof SimpleDate>;
+export type SimpleDate = Schema.Schema.Type<typeof SimpleDate>;
 
 export const toSimpleDate = (date: Date): SimpleDate => ({
   year: date.getUTCFullYear(),
@@ -43,13 +43,13 @@ export const toSimpleDate = (date: Date): SimpleDate => ({
 /**
  * Simple time compatible with HF.
  */
-export const SimpleTime = S.Struct({
-  hours: S.Number.pipe(S.between(0, 23)),
-  minutes: S.Number.pipe(S.between(0, 59)),
-  seconds: S.Number.pipe(S.between(0, 59)),
+export const SimpleTime = Schema.Struct({
+  hours: Schema.Number.pipe(Schema.between(0, 23)),
+  minutes: Schema.Number.pipe(Schema.between(0, 59)),
+  seconds: Schema.Number.pipe(Schema.between(0, 59)),
 });
 
-export type SimpleTime = S.Schema.Type<typeof SimpleTime>;
+export type SimpleTime = Schema.Schema.Type<typeof SimpleTime>;
 
 export const toSimpleTime = (date: Date): SimpleTime => ({
   hours: date.getUTCHours(),
@@ -60,9 +60,9 @@ export const toSimpleTime = (date: Date): SimpleTime => ({
 /**
  * Simple date-time compatible with HF.
  */
-export const SimpleDateTime = S.extend(SimpleDate, SimpleTime);
+export const SimpleDateTime = Schema.extend(SimpleDate, SimpleTime);
 
-export type SimpleDateTime = S.Schema.Type<typeof SimpleDateTime>;
+export type SimpleDateTime = Schema.Schema.Type<typeof SimpleDateTime>;
 
 export const toSimpleDateTime = (date: Date): SimpleDateTime => ({
   ...toSimpleDate(date),
@@ -78,7 +78,7 @@ export const toSimpleDateTime = (date: Date): SimpleDateTime => ({
 /**
  * Format: 2018-11-13
  */
-export const DateOnly = /* S.transformOrFail(S.String, SimpleDate, {
+export const DateOnly = /* Schema.transformOrFail(Schema.String, SimpleDate, {
   strict: true,
   decode: (str, _, ast) => {
     if (!isValidDateFormat(str)) {
@@ -100,16 +100,18 @@ export const DateOnly = /* S.transformOrFail(S.String, SimpleDate, {
       ].join('-'),
     );
   },
-}) */ S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.Date,
-  [AST.TitleAnnotationId]: 'Date',
-  [AST.DescriptionAnnotationId]: 'Valid date in ISO format',
-});
+}) */ Schema.String.pipe(
+  FormatAnnotation.set(FormatEnum.Date),
+  Schema.annotations({
+    [SchemaAST.TitleAnnotationId]: 'Date',
+    [SchemaAST.DescriptionAnnotationId]: 'Valid date in ISO format',
+  }),
+);
 
 /**
  * Format: 20:20:39+00:00
  */
-export const TimeOnly = /* S.transformOrFail(S.String, SimpleTime, {
+export const TimeOnly = /* Schema.transformOrFail(Schema.String, SimpleTime, {
   strict: true,
   decode: (str, _, ast) => {
     if (!isValidTimeFormat(str)) {
@@ -128,16 +130,18 @@ export const TimeOnly = /* S.transformOrFail(S.String, SimpleTime, {
       ].join(':'),
     );
   },
-}) */ S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.Date,
-  [AST.TitleAnnotationId]: 'Time',
-  [AST.DescriptionAnnotationId]: 'Valid time in ISO format',
-});
+}) */ Schema.String.pipe(
+  FormatAnnotation.set(FormatEnum.Time),
+  Schema.annotations({
+    [SchemaAST.TitleAnnotationId]: 'Time',
+    [SchemaAST.DescriptionAnnotationId]: 'Valid time in ISO format',
+  }),
+);
 
 /**
  * Format: 2018-11-13T20:20:39+00:00
  */
-export const DateTime = /* S.transformOrFail(S.String, SimpleDateTime, {
+export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime, {
   strict: false,
   decode: (str, _, ast) => {
     const [date, time] = str.split('T');
@@ -171,18 +175,26 @@ export const DateTime = /* S.transformOrFail(S.String, SimpleDateTime, {
       ].join('T'),
     );
   },
-}) */ S.String.annotations({
-  [FormatAnnotationId]: FormatEnum.DateTime,
-  [AST.TitleAnnotationId]: 'DateTime',
-});
+}) */ Schema.String.pipe(
+  FormatAnnotation.set(FormatEnum.DateTime),
+  Schema.annotations({
+    [SchemaAST.TitleAnnotationId]: 'DateTime',
+    [SchemaAST.DescriptionAnnotationId]: 'Valid date and time in ISO format',
+  }),
+);
 
 /**
  * https://datatracker.ietf.org/doc/html/rfc3339#appendix-A
  */
 // TODO(burdon): Define duration type.
-export const Duration = S.String.annotations({
-  examples: ['1h', '3D'],
-});
+export const Duration = Schema.String.pipe(
+  FormatAnnotation.set(FormatEnum.Duration),
+  Schema.annotations({
+    [SchemaAST.TitleAnnotationId]: 'Duration',
+    [SchemaAST.DescriptionAnnotationId]: 'Duration in ISO 8601 format',
+    [SchemaAST.ExamplesAnnotationId]: ['1h', '3D'],
+  }),
+);
 
 //
 // Utils

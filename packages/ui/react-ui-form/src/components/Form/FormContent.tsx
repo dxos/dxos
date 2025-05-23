@@ -1,12 +1,11 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Schema, SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
-import { AST, S } from '@dxos/echo-schema';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
@@ -17,17 +16,10 @@ import { SelectInput } from './Defaults';
 import { type ComponentLookup } from './Form';
 import { useInputProps, useFormValues } from './FormContext';
 import { type InputComponent } from './Input';
+import { RefField } from './RefField';
 import { getInputComponent } from './factory';
-
-export type FormContentProps = {
-  schema: S.Schema.All;
-  path?: (string | number)[];
-  filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
-  sort?: string[];
-  readonly?: boolean;
-  lookupComponent?: ComponentLookup;
-  Custom?: Partial<Record<string, InputComponent>>;
-};
+import { type QueryRefOptions } from '../../hooks';
+import { getRefProps } from '../../util';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
@@ -35,11 +27,20 @@ export type FormFieldProps = {
   readonly?: boolean;
   /** Used to indicate if input should be presented inline (e.g. for array items). */
   inline?: boolean;
+  onQueryRefOptions?: QueryRefOptions;
   lookupComponent?: ComponentLookup;
   Custom?: Partial<Record<string, InputComponent>>;
 };
 
-export const FormField = ({ property, path, readonly, inline, lookupComponent, Custom }: FormFieldProps) => {
+export const FormField = ({
+  property,
+  path,
+  readonly,
+  inline,
+  onQueryRefOptions,
+  lookupComponent,
+  Custom,
+}: FormFieldProps) => {
   const inputProps = useInputProps(path);
   const { ast, name, type, format, title, description, options, examples, array } = property;
 
@@ -49,9 +50,13 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
     [examples, description],
   );
 
+  //
+  // Registry and Custom.
+  //
+
   const FoundComponent = lookupComponent?.({
     prop: name,
-    schema: S.make(ast),
+    schema: Schema.make(ast),
     inputProps: {
       type,
       format,
@@ -82,9 +87,39 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
     );
   }
 
+  //
+  // Refs.
+  //
+
+  const refProps = getRefProps(property);
+  if (refProps) {
+    return (
+      <RefField
+        ast={refProps.ast}
+        array={refProps.isArray}
+        type={type}
+        format={format}
+        label={label}
+        placeholder={placeholder}
+        disabled={readonly}
+        inputOnly={inline}
+        onQueryRefOptions={onQueryRefOptions}
+        {...inputProps}
+      />
+    );
+  }
+
+  //
+  // Arrays.
+  //
+
   if (array) {
     return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
   }
+
+  //
+  // Standard Inputs.
+  //
 
   const InputComponent = getInputComponent(type, format);
   if (InputComponent) {
@@ -103,6 +138,10 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
     );
   }
 
+  //
+  // Select.
+  //
+
   if (options) {
     return (
       <div role='none'>
@@ -120,17 +159,28 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
     );
   }
 
+  //
+  // Nested Objects.
+  //
+
   if (type === 'object') {
     const baseNode = findNode(ast, isDiscriminatedUnion);
     const typeLiteral = baseNode
       ? getDiscriminatedType(baseNode, inputProps.getValue() as any)
-      : findNode(ast, AST.isTypeLiteral);
+      : findNode(ast, SchemaAST.isTypeLiteral);
 
     if (typeLiteral) {
       return (
         <div role='none'>
-          {!inline && <div>{label}</div>}
-          <FormFields schema={S.make(typeLiteral)} path={path} readonly={readonly} Custom={Custom} />
+          {!inline && <h3 className='text-lg mbs-2 mbe-1'>{label}</h3>}
+          <FormFields
+            schema={Schema.make(typeLiteral)}
+            path={path}
+            readonly={readonly}
+            onQueryRefOptions={onQueryRefOptions}
+            Custom={Custom}
+            lookupComponent={lookupComponent}
+          />
         </div>
       );
     }
@@ -139,7 +189,27 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
   return null;
 };
 
-export const FormFields = ({ schema, path, filter, sort, readonly, lookupComponent, Custom }: FormContentProps) => {
+export type FormContentProps = {
+  schema: Schema.Schema.All;
+  path?: (string | number)[];
+  filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
+  sort?: string[];
+  readonly?: boolean;
+  onQueryRefOptions?: QueryRefOptions;
+  lookupComponent?: ComponentLookup;
+  Custom?: Partial<Record<string, InputComponent>>;
+};
+
+export const FormFields = ({
+  schema,
+  path,
+  filter,
+  sort,
+  readonly,
+  onQueryRefOptions,
+  lookupComponent,
+  Custom,
+}: FormContentProps) => {
   const values = useFormValues(path);
 
   const properties = useMemo(() => {
@@ -159,6 +229,7 @@ export const FormFields = ({ schema, path, filter, sort, readonly, lookupCompone
               property={property}
               path={[...(path ?? []), property.name]}
               readonly={readonly}
+              onQueryRefOptions={onQueryRefOptions}
               lookupComponent={lookupComponent}
               Custom={Custom}
             />

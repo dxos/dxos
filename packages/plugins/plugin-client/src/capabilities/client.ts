@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginsContext } from '@dxos/app-framework';
+import { contributes, type PluginContext } from '@dxos/app-framework';
 import { Client } from '@dxos/react-client';
 
 import { ClientCapabilities } from './capabilities';
@@ -10,7 +10,7 @@ import { ClientEvents } from '../events';
 import { type ClientPluginOptions } from '../types';
 
 type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationParam' | 'onReset'> & {
-  context: PluginsContext;
+  context: PluginContext;
 };
 
 export default async ({ context, onClientInitialized, ...options }: ClientCapabilityOptions) => {
@@ -29,7 +29,7 @@ export default async ({ context, onClientInitialized, ...options }: ClientCapabi
 
   const subscription = client.spaces.isReady.subscribe(async (ready) => {
     if (ready) {
-      await context.activate(ClientEvents.SpacesReady);
+      await context.activatePromise(ClientEvents.SpacesReady);
     }
   });
 

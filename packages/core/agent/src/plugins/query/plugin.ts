@@ -5,10 +5,10 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { getObjectCore, QueryOptions } from '@dxos/client/echo';
-import { type ReactiveEchoObject } from '@dxos/client/echo';
+import { type AnyLiveObject } from '@dxos/client/echo';
 import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
-import { Filter } from '@dxos/echo-db';
+import { DeprecatedFilter } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
@@ -45,7 +45,7 @@ export class QueryPlugin extends Plugin {
   }
 
   private async _processRequest(request: QueryRequest) {
-    const filter = Filter.fromProto(
+    const filter = DeprecatedFilter.fromProto(
       defaultsDeep({}, { options: { dataLocation: QueryOptions.DataLocation.LOCAL } }, request.filter),
     );
     const { results: queryResults } = await this.context.client.spaces.query(filter, filter.options).run();
@@ -82,7 +82,7 @@ export class QueryPlugin extends Plugin {
   }
 }
 
-const createSnapshot = (item: ReactiveEchoObject<any>): EchoObjectProto => {
+const createSnapshot = (item: AnyLiveObject<any>): EchoObjectProto => {
   // const item = getEchoObjectItem(object[base] as any)!;
   let model: WithTypeUrl<Any> | undefined;
   // if (!item?.modelMeta?.snapshotCodec) {

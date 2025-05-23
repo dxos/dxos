@@ -38,7 +38,7 @@ import {
   createArtifactCircuit,
 } from './testing';
 
-// const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
+// const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 
 const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'controller', 'selected'] as const;
 
@@ -50,7 +50,7 @@ type RenderProps = EditorRootProps<ComputeShape> &
     controller?: ComputeGraphController | null;
   }>;
 
-const Render = ({
+const DefaultStory = ({
   id = 'test',
   children,
   graph,
@@ -172,12 +172,12 @@ const Render = ({
 const meta: Meta<RenderProps> = {
   title: 'ui/react-ui-canvas-compute/compute',
   component: Editor.Root,
-  render: Render,
+  render: DefaultStory,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true }),
     withTheme,
     withAttention,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true }),
     withPluginManager({ capabilities }),
   ],
 };

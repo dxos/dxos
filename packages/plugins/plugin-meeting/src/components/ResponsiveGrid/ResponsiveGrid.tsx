@@ -2,22 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useLayoutEffect, useState, useEffect, useMemo, type ComponentType, useCallback } from 'react';
+import React, { type ComponentType, type FC, useLayoutEffect, useState, useEffect, useMemo, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
-import { resizeAttributes, ResizeHandle, sizeStyle, type Size } from '@dxos/react-ui-dnd';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { type Size } from '@dxos/react-ui-dnd';
+import { mx } from '@dxos/react-ui-theme';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
-const MIN_HEIGHT_REM = 15;
-const DEFAULT_HEIGHT_REM = 30;
+const ASPECT_RATIO = 16 / 9;
+const MIN_GALLERY_HEIGHT = 250;
+
+const DEFAULT_GAP = 8;
+
+const maxImageSize = 'w-[2560px] h-[1440px]';
 
 /**
  * Props for the ResponsiveGrid component.
  */
-export type ResponsiveGridProps<T extends object = any> = {
+export type ResponsiveGridProps<T extends object = any> = ThemedClassName<{
   /** Cell component. */
   Cell: ComponentType<ResponsiveGridItemProps<T>>;
 
@@ -33,12 +39,18 @@ export type ResponsiveGridProps<T extends object = any> = {
   /** ID of the pinned item. */
   pinned?: string;
 
+  /** Whether to hide the gallery (unpinned items) when an item is pinned. */
+  autoHideGallery?: boolean;
+
+  /** Whether the divider is resizable. */
+  resizable?: boolean;
+
   /** Debug mode. */
   debug?: boolean;
 
   /** Callback when the pinned item changes. */
   onPinnedChange?: (pinned: string | undefined) => void;
-};
+}>;
 
 const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
 
@@ -47,138 +59,136 @@ const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
  * Maintains aspect ratio of items while ensuring uniform gaps between them.
  */
 export const ResponsiveGrid = <T extends object = any>({
+  classNames,
   Cell,
-  gap = 16,
+  gap = DEFAULT_GAP,
   getId = defaultGetId,
   items,
   pinned,
+  autoHideGallery = false,
+  debug,
   onPinnedChange,
 }: ResponsiveGridProps<T>) => {
-  const { height: containerHeight = 0, ref: containerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
-  const [dividerHeight, setDividerHeight] = useState<Size>(DEFAULT_HEIGHT_REM);
-  const maxDividerHeight = Math.max(DEFAULT_HEIGHT_REM, containerHeight / 16 - MIN_HEIGHT_REM);
+  const {
+    width: containerWidth = 0,
+    height: containerHeight = 0,
+    ref: containerRef,
+  } = useResizeDetector<HTMLDivElement>({ refreshRate: 100 });
+  const [dividerHeight, setDividerHeight] = useState<Size>(0);
   useEffect(() => {
-    if (typeof dividerHeight === 'number' && dividerHeight > maxDividerHeight) {
-      setDividerHeight(maxDividerHeight);
+    if (containerWidth && containerHeight) {
+      const { height } = fitAspectRatio(containerWidth, containerHeight, ASPECT_RATIO);
+      setDividerHeight(Math.min(height, containerHeight - MIN_GALLERY_HEIGHT));
     }
-  }, [containerHeight, dividerHeight, maxDividerHeight]);
+  }, [containerWidth, containerHeight]);
 
   const pinnedItem = useMemo(() => items.find((item) => getId(item) === pinned), [items, pinned]);
   const mainItems = useMemo(() => items.filter((item) => getId(item) !== pinned), [items, pinned]);
+  const hideGallery = autoHideGallery && pinnedItem !== undefined;
 
-  // Recalculate optimal columns when container size or items change.
-  const [{ columns, cellWidth }, setOptimalColumns] = useState<OptimalColumns>({ columns: 0, cellWidth: 0 });
+  //
+  // Recalculate optimal layout when container size or items change.
+  //
+  const [{ time, columns, cellWidth }, setLayout] = useState<Layout>({ time: 0, columns: 0, cellWidth: 0 });
   const { width = 0, height = 0, ref: gridContainerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
   useEffect(() => {
-    if (width > 0 && height > 0) {
-      setOptimalColumns(calculateOptimalColumns(width, height, mainItems.length, gap));
+    if (containerHeight && width && height) {
+      const layout = calculateLayout(width, height, mainItems.length, gap);
+      setLayout({ time: Date.now(), ...layout });
     }
-  }, [width, height, mainItems.length, gap]);
+  }, [containerHeight, width, height, mainItems.length, gap, pinned]);
 
-  // Absolutely positioned items.
+  //
+  // We use the browser to layout invisible divs and then calculate the absolute position of these items,
+  // which are animated into position.
+  //
   const [bounds, setBounds] = useState<[T, DOMRectBounds][]>([]);
   useLayoutEffect(() => {
-    if (!gridContainerRef.current) {
+    if ((!hideGallery && !gridContainerRef.current) || !containerHeight) {
       return;
     }
 
-    // TODO(burdon): Consider directly setting bounds instead of state update.
+    // TODO(burdon): Consider directly setting bounds on DOM elementsinstead of state update?
     const t = setTimeout(() => {
       setBounds(
         items
+          .filter((item) => !hideGallery || item === pinnedItem)
           .map((item) => {
             invariant(containerRef.current);
             const el = containerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
             if (!el) {
               return null;
             }
+
             const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
             return [item, bounds];
           })
           .filter((item): item is [T, DOMRectBounds] => item !== null),
       );
     });
+
     return () => clearTimeout(t);
-  }, [mainItems, width, height]);
+  }, [containerHeight, items, pinnedItem, hideGallery, time]);
 
   const handleClick = useCallback(
     (item: T) => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item)),
     [pinned, onPinnedChange],
   );
 
-  const SoloItem = ({ item }: { item: T }) => {
-    return (
-      <ResponsiveContainer>
-        <div {...{ 'data-grid-item': getId(item) }} className='aspect-video overflow-hidden'>
-          {/* Placeholder image. */}
-          <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
-        </div>
-      </ResponsiveContainer>
-    );
-  };
-
   return (
-    <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
-      {pinnedItem && (
-        <>
-          {/* Pinned item. */}
+    <div ref={containerRef} className={mx('relative w-full h-full', classNames)}>
+      {/* Placeholder elements to calculate layout. */}
+      <div className='absolute inset-0 flex flex-col grow gap-2'>
+        {/* Pinned item. */}
+        {pinnedItem && (
           <div
-            {...resizeAttributes}
-            className='relative flex shrink-0 w-full overflow-hidden border-be border-separator'
-            style={{
-              ...sizeStyle(dividerHeight, 'vertical'),
-              paddingTop: gap,
-              paddingBottom: gap,
-            }}
+            className={mx('flex grow-[2] shrink overflow-hidden justify-center items-center', hideGallery && 'h-full')}
+            style={hideGallery ? {} : { height: dividerHeight }}
           >
-            <SoloItem item={pinnedItem} />
-
-            <ResizeHandle
-              side='block-end'
-              classNames='z-10'
-              defaultSize='min-content'
-              minSize={MIN_HEIGHT_REM}
-              maxSize={maxDividerHeight}
-              fallbackSize={DEFAULT_HEIGHT_REM}
-              iconPosition='center'
-              onSizeChange={setDividerHeight}
-            />
+            <SoloItem id={getId(pinnedItem)} debug={debug} />
           </div>
-        </>
-      )}
+        )}
 
-      {/* Placeholder grid. */}
-      <div
-        ref={gridContainerRef}
-        className='flex w-full grow overflow-hidden items-center'
-        style={{
-          paddingTop: gap,
-          paddingBottom: gap,
-        }}
-      >
-        {mainItems.length === 1 && <SoloItem item={mainItems[0]} />}
-        {mainItems.length > 1 && columns > 0 && (
+        {/* Gallery. */}
+        {!hideGallery && (
           <div
-            role='grid'
-            style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
-              gap: `${gap}px`,
-            }}
+            ref={gridContainerRef}
+            className='flex grow-[1] overflow-hidden justify-center items-center'
+            style={hideGallery ? {} : { minHeight: MIN_GALLERY_HEIGHT }}
           >
-            {mainItems.map((item) => (
+            {mainItems.length === 1 && (
+              <div style={{ width: cellWidth }} className='flex h-full'>
+                <SoloItem id={getId(mainItems[0])} debug={debug} />
+              </div>
+            )}
+
+            {mainItems.length > 1 && columns > 0 && (
               <div
-                key={getId(item)}
-                {...{ 'data-grid-item': getId(item) }}
-                className='aspect-video max-h-full max-w-full w-auto h-auto'
-              />
-            ))}
+                role='grid'
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
+                  gap: `${gap}px`,
+                }}
+              >
+                {mainItems.map((item) => (
+                  <div
+                    key={getId(item)}
+                    {...{ 'data-grid-item': getId(item) }}
+                    className={mx(
+                      'aspect-video max-h-full max-w-full w-auto h-auto',
+                      debug && 'border border-primary-500',
+                    )}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Absolutely positioned items. */}
-      <div>
+      <div className={mx(debug && 'opacity-10')}>
         {bounds.map(([item, bounds]) => (
           <Cell
             key={getId(item)}
@@ -191,6 +201,20 @@ export const ResponsiveGrid = <T extends object = any>({
         ))}
       </div>
     </div>
+  );
+};
+
+const SoloItem: FC<Pick<ResponsiveGridProps, 'debug'> & { id: string }> = ({ debug, id }) => {
+  return (
+    <ResponsiveContainer>
+      <div
+        {...{ 'data-grid-item': id }}
+        className={mx('aspect-video overflow-hidden', debug && 'z-20 border-2 border-primary-500')}
+      >
+        {/* Maximum size placeholder image forces aspect ratio. */}
+        <img alt='placeholder video' className={mx('opacity-0', maxImageSize)} />
+      </div>
+    </ResponsiveContainer>
   );
 };
 
@@ -208,7 +232,8 @@ const getRelativeBounds = (container: HTMLElement, el: HTMLElement): DOMRectBoun
   };
 };
 
-type OptimalColumns = {
+type Layout = {
+  time?: number;
   columns: number;
   cellWidth: number;
 };
@@ -222,54 +247,95 @@ type OptimalColumns = {
  * @param aspectRatio - Desired aspect ratio of items (width/height).
  * @returns The optimal number of columns.
  */
-const calculateOptimalColumns = (
+const calculateLayout = (
   containerWidth: number,
   containerHeight: number,
   count: number,
   gap: number,
-  aspectRatio = 16 / 9,
-): OptimalColumns => {
+  aspectRatio = ASPECT_RATIO,
+): Layout => {
   if (count === 0) {
     return { columns: 1, cellWidth: 1 };
   }
 
-  let bestRows = 1;
-  let bestColumns = 1;
   let minWastedSpace = Infinity;
+  let bestColumns = 1;
+  let cellWidth = 0;
 
-  // TODO(burdon): Balance rows and columns.
-
-  // Try different column counts to find the optimal layout that minimizes wasted space.
-  for (let cols = 1; cols <= count; cols++) {
-    const rows = Math.ceil(count / cols);
+  // Try different rows counts to find the optimal layout that minimizes wasted space.
+  for (let rows = 1; rows <= count; rows++) {
+    const cols = Math.ceil(count / rows);
 
     // Calculate available space accounting for gaps.
-    const availableWidth = containerWidth - gap * (cols - 1);
-    const itemWidth = availableWidth / cols;
-    const itemHeight = itemWidth / aspectRatio;
-
-    // Skip configurations that exceed container height.
-    const totalHeight = itemHeight * rows + gap * (rows - 1);
-    if (totalHeight > containerHeight) {
-      continue;
-    }
+    const { width: itemWidth, height: itemHeight } = fitItemsToGrid(
+      containerWidth,
+      containerHeight,
+      cols,
+      rows,
+      aspectRatio,
+      gap,
+    );
 
     // Calculate total wasted space for this configuration.
-    const usedWidth = itemWidth * cols + gap * (cols - 1);
-    const usedHeight = itemHeight * rows + gap * (rows - 1);
+    const usedWidth = itemWidth * cols + gap * cols - 1;
+    const usedHeight = itemHeight * rows + gap * rows - 1;
+
+    // Determine if optimal.
     const wastedSpace = containerWidth * containerHeight - usedWidth * usedHeight;
     if (wastedSpace < minWastedSpace) {
       minWastedSpace = wastedSpace;
-      bestRows = rows;
       bestColumns = cols;
+      cellWidth = itemWidth;
     }
   }
 
-  // Prefer fewer columns to balance rows and columns.
-  const cellWidth = Math.floor((containerWidth - gap * (bestColumns - 1)) / bestColumns);
-  while (bestColumns > 1 && count / (bestColumns - 1) < bestRows) {
-    bestColumns--;
+  return { columns: bestColumns, cellWidth };
+};
+
+/**
+ * Returns the size of the largest rectangle with the given aspect ration that fits within the grid.
+ */
+const fitItemsToGrid = (
+  outerWidth: number,
+  outerHeight: number,
+  numCols: number,
+  numRows: number,
+  aspectRatio: number,
+  gap: number,
+): { width: number; height: number } => {
+  // Calculate available space accounting for gaps.
+  const availableWidth = outerWidth - gap * (numCols - 1);
+  const availableHeight = outerHeight - gap * (numRows - 1);
+
+  // Calculate max dimensions.
+  const maxCellWidth = availableWidth / numCols;
+  const maxCellHeight = availableHeight / numRows;
+
+  // Use fitAspectRatio to get dimensions that fit within max cell size while maintaining the desired aspect ratio
+  return fitAspectRatio(maxCellWidth, maxCellHeight, aspectRatio);
+};
+
+/**
+ * Returns the size of the largest rectangle the given aspect ratio that fits within the outer rectangle.
+ */
+const fitAspectRatio = (
+  outerWidth: number,
+  outerHeight: number,
+  aspectRatio: number,
+): { width: number; height: number } => {
+  if (outerWidth <= 0 || outerHeight <= 0 || aspectRatio <= 0) {
+    return { width: 0, height: 0 };
   }
 
-  return { columns: bestColumns, cellWidth };
+  // First try fitting to width.
+  let width = outerWidth;
+  let height = width / aspectRatio;
+
+  // If too tall, fit to height instead.
+  if (height > outerHeight) {
+    height = outerHeight;
+    width = height * aspectRatio;
+  }
+
+  return { width, height };
 };

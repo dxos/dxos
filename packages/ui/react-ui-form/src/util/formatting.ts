@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { format as formatDate } from 'date-fns/format';
+
 import { FormatEnum, GeoLocation, TypeEnum } from '@dxos/echo-schema';
 
 type ValueFormatProps = {
@@ -61,16 +63,25 @@ export const formatForDisplay = ({ type, format, value, locale = undefined }: Va
         maximumFractionDigits: 2,
       });
     }
-    case FormatEnum.DateTime:
-    case FormatEnum.Date:
+    case FormatEnum.Date: {
+      try {
+        return formatDate(new Date(value as number), 'yyyy-MM-dd');
+      } catch (error) {
+        return 'Invalid Date';
+      }
+    }
     case FormatEnum.Time: {
-      const date = new Date(value as number);
-      if (format === FormatEnum.DateTime) {
-        return date.toLocaleString(locale);
-      } else if (format === FormatEnum.Date) {
-        return date.toLocaleDateString(locale);
-      } else {
-        return date.toLocaleTimeString(locale);
+      try {
+        return formatDate(new Date(value as number), 'HH:mm:ss');
+      } catch (error) {
+        return 'Invalid Time';
+      }
+    }
+    case FormatEnum.DateTime: {
+      try {
+        return formatDate(new Date(value as number), 'yyyy-MM-dd HH:mm:ss');
+      } catch (error) {
+        return 'Invalid DateTime';
       }
     }
     case FormatEnum.GeoPoint: {

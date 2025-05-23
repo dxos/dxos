@@ -4,16 +4,14 @@
 
 import { type Decorator } from '@storybook/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type JSX } from 'react';
+import React, { type PropsWithChildren, type JSX, type FC } from 'react';
 
 import { type Density, DensityProvider, type ThemedClassName } from '@dxos/react-ui';
-import { Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 type ProviderOptions = {
   fullscreen?: boolean;
   density?: Density;
-  tooltips?: boolean;
 };
 
 const defaultOptions: ProviderOptions = {
@@ -24,29 +22,58 @@ type Provider = (children: JSX.Element, options: ProviderOptions) => JSX.Element
 
 const providers: Provider[] = [
   (children, options) => {
-    return options.tooltips ? <Tooltip.Provider>{children}</Tooltip.Provider> : children;
-  },
-  (children, options) => {
     return options?.density ? <DensityProvider density={options.density}>{children}</DensityProvider> : children;
   },
 ];
 
-export type WithFullscreenProps = ThemedClassName<ProviderOptions>;
+export type ContainerProps = ThemedClassName<PropsWithChildren<Pick<ProviderOptions, 'fullscreen'>>>;
+
+export type WithLayoutProps = ThemedClassName<ProviderOptions & { Container?: FC<ContainerProps> }>;
 
 /**
  * Decorator to layout the story container, adding optional providers.
  */
-export const withLayout = ({ classNames, fullscreen, ..._options }: WithFullscreenProps = {}): Decorator => {
+export const withLayout = ({
+  classNames,
+  fullscreen,
+  Container = fullscreen ? FixedContainer : DefaultContainer,
+  ...providedOptions
+}: WithLayoutProps = {}): Decorator => {
   // TODO(burdon): Inspect "fullscreen" parameter in context.
   return (Story, _context) => {
-    const options = defaultsDeep({}, _options, defaultOptions);
     const children = (
-      // NOTE: Do not change the flex direction to flex-col by default.
-      <div role='none' className={mx(fullscreen && 'fixed inset-0 flex overflow-hidden', classNames)}>
+      <Container classNames={classNames} fullscreen={fullscreen}>
         <Story />
-      </div>
+      </Container>
     );
 
+    const options = defaultsDeep({}, providedOptions, defaultOptions);
     return providers.reduceRight((acc, provider) => provider(acc, options), children);
   };
+};
+
+export const DefaultContainer: FC<ContainerProps> = ({ children, classNames }) => {
+  return (
+    <div role='none' className={mx(classNames)}>
+      {children}
+    </div>
+  );
+};
+
+export const FixedContainer: FC<ContainerProps> = ({ children, classNames }) => {
+  return (
+    <div role='none' className={mx('fixed inset-0 flex overflow-hidden', classNames)}>
+      {children}
+    </div>
+  );
+};
+
+export const ColumnContainer: FC<ContainerProps> = ({ children, classNames = 'w-[30rem]', ...props }) => {
+  return (
+    <FixedContainer classNames='justify-center bg-modalSurface' {...props}>
+      <div role='none' className={mx('flex flex-col h-full overflow-y-auto bg-baseSurface', classNames)}>
+        {children}
+      </div>
+    </FixedContainer>
+  );
 };

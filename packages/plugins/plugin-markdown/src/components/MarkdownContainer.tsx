@@ -7,7 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { TextType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
@@ -19,11 +19,10 @@ export type MarkdownContainerProps = Pick<
   'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
 > & {
   id: string;
-  object: DocumentType | TextType | any;
+  object: DocumentType | DataType.Text | any;
   settings: MarkdownSettingsProps;
 };
 
-// TODO(burdon): Move toolbar here.
 // TODO(burdon): Factor out difference for ECHO and non-ECHO objects; i.e., single component.
 const MarkdownContainer = ({
   id,
@@ -36,7 +35,7 @@ const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
   const doc = isInstanceOf(DocumentType, object) ? object : undefined;
-  const text = isInstanceOf(TextType, object) ? object : undefined;
+  const text = isInstanceOf(DataType.Text, object) ? object : undefined;
   const extensions = useExtensions({ document: doc, text, id, settings, viewMode, editorStateStore });
 
   if (doc) {
@@ -68,6 +67,7 @@ const MarkdownContainer = ({
       />
     );
   } else {
+    // TODO(burdon): Normalize with above.
     return (
       <MarkdownEditor
         id={id}

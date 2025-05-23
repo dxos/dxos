@@ -2,13 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import { SchemaAST } from 'effect';
 import React, { useMemo, useState } from 'react';
 
 import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
 import { Filter } from '@dxos/echo-db';
-import { AST, FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
@@ -18,11 +19,12 @@ import { ControlledSelector, MasterDetailTable, PanelContainer } from '../../../
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
-export const WorkflowPanel = () => {
-  const { space } = useDevtoolsState();
+export const WorkflowPanel = (props: { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
   const [displayMode, setDisplayMode] = useState(DisplayMode.COMPILED);
   const [executionMode, setExecutionMode] = useState(WorkflowDebugPanelMode.LOCAL);
-  const graphs = useQuery(space, Filter.schema(ComputeGraph));
+  const graphs = useQuery(space, Filter.type(ComputeGraph));
   const [selectedId, setSelectedId] = useState<string>();
   const selected = useMemo(() => graphs.find((graph) => graph.id === selectedId), [graphs, selectedId]);
 
@@ -72,7 +74,7 @@ export const WorkflowPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <DataSpaceSelector />
+          {!props.space && <DataSpaceSelector />}
           <ControlledSelector values={Object.values(DisplayMode)} value={displayMode} setValue={setDisplayMode} />
           <ControlledSelector
             values={Object.values(WorkflowDebugPanelMode)}
@@ -91,11 +93,7 @@ export const WorkflowPanel = () => {
         />
 
         <div className={mx('bs-full')}>
-          {selected ? (
-            <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />
-          ) : (
-            'Select an object to enable executor'
-          )}
+          {selected && <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />}
         </div>
       </div>
     </PanelContainer>
@@ -105,8 +103,8 @@ export const WorkflowPanel = () => {
 const toWorkflow = async (loader: WorkflowLoader, graph: ComputeGraph) => {
   try {
     const loaded = await loader.load(DXN.fromLocalObjectId(graph.id));
-    const mapProps = (ast: AST.AST) =>
-      Object.fromEntries(AST.getPropertySignatures(ast).map((prop) => [prop.name, prop.type]));
+    const mapProps = (ast: SchemaAST.AST) =>
+      Object.fromEntries(SchemaAST.getPropertySignatures(ast).map((prop) => [prop.name, prop.type]));
     const workflowMeta = loaded.resolveMeta();
     return {
       compiled: true,

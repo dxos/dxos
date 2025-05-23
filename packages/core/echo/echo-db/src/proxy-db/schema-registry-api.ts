@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type UnsubscribeCallback } from '@dxos/async';
-import { type EchoSchema, type ObjectId, type S } from '@dxos/echo-schema';
+import { type Schema } from 'effect';
+
+import { type CleanupFn } from '@dxos/async';
+import { type EchoSchema, type ObjectId } from '@dxos/echo-schema';
 
 export type SchemaSubscriptionCallback = (schema: EchoSchema[]) => void;
 
@@ -13,9 +15,9 @@ export type SchemaSubscriptionCallback = (schema: EchoSchema[]) => void;
  */
 export type SchemaId = string & { __SchemaId: never };
 
-// TODO(dmaretskyi): Change to S.Struct instance.
-export type AnyEchoObjectSchema = S.Schema.AnyNoContext;
-// export type AnyEchoObjectSchema = S.Struct<{ [key: string]: S.Schema.AnyNoContext }>;
+// TODO(dmaretskyi): Change to Schema.Struct instance.
+export type AnyEchoObjectSchema = Schema.Schema.AnyNoContext;
+// export type AnyEchoObjectSchema = Schema.Struct<{ [key: string]: Schema.Schema.AnyNoContext }>;
 
 export interface SchemaRegistry {
   query(query?: SchemaRegistryQuery): SchemaRegistryPreparedQuery<EchoSchema>;
@@ -95,7 +97,7 @@ export interface SchemaRegistryPreparedQuery<T> {
    * Subscribe to the query results reactively.
    * Enables signals notifications for `results`.
    */
-  subscribe(cb?: (self: this) => void, opts?: { fire?: boolean }): UnsubscribeCallback;
+  subscribe(cb?: (self: this) => void, opts?: { fire?: boolean }): CleanupFn;
 }
 
 /**

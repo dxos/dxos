@@ -2,14 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DeferredTask, Event, scheduleTaskInterval, sleep, synchronized, waitForCondition } from '@dxos/async';
+import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { cancelWithContext, type Context, Resource } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { SpeakingMonitor } from './speaking-monitor';
 import { TrackNameCodec, type EncodedTrackName, type TrackObject } from '../types';
-import { type CallsServiceConfig, CallsServicePeer, getScreenshare, getUserMediaTrack } from '../util';
+import {
+  type CallsServiceConfig,
+  CallsServicePeer,
+  createBlackCanvasStreamTrack,
+  createInaudibleAudioStreamTrack,
+  getScreenshare,
+  getUserMediaTrack,
+} from '../util';
 
 export type MediaState = {
   audioDeviceId?: string;
@@ -55,6 +61,7 @@ export class MediaManager extends Resource {
 
   private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
+  private _inaudibleAudioStreamTrack?: MediaStreamTrack = undefined;
   private _pushTracksTask?: DeferredTask = undefined;
   private _pullTracksTask?: DeferredTask = undefined;
 
@@ -70,15 +77,21 @@ export class MediaManager extends Resource {
   }
 
   protected override async _open() {
-    this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack(this._ctx);
+    this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack({
+      ctx: this._ctx,
+      width: VIDEO_WIDTH,
+      height: VIDEO_HEIGHT,
+    });
     this._state.videoTrack = this._blackCanvasStreamTrack;
     this._state.videoStream = new MediaStream();
     this._state.videoStream.addTrack(this._state.videoTrack);
 
+    this._inaudibleAudioStreamTrack = await createInaudibleAudioStreamTrack({ ctx: this._ctx });
+    this._state.audioTrack = this._inaudibleAudioStreamTrack;
+
     this._pushTracksTask = new DeferredTask(this._ctx, async () => {
       await this._pushTracks();
     });
-
     this._pullTracksTask = new DeferredTask(this._ctx, async () => {
       await this._reconcilePulledMedia();
     });
@@ -108,6 +121,11 @@ export class MediaManager extends Resource {
     this._trackToReconcile = [];
     await this._state.peer?.close();
     this._state.peer = undefined;
+    this._state.pushedVideoTrack = undefined;
+    this._state.pushedAudioTrack = undefined;
+    this._state.pushedScreenshareTrack = undefined;
+    this._state.pulledAudioTracks = {};
+    this._state.pulledVideoStreams = {};
   }
 
   async turnVideoOn() {
@@ -135,12 +153,10 @@ export class MediaManager extends Resource {
   // TODO(mykola): Change to `setAudioEnabled(enabled: boolean)`.
   async turnAudioOn() {
     void this._speakingMonitor?.close();
-
     this._state.audioEnabled = true;
     this._state.audioTrack = await getUserMediaTrack('audioinput');
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
-
     this._speakingMonitor = new SpeakingMonitor(this._state.audioTrack!);
     this._speakingMonitor.speakingChanged.on(this._ctx, () => this.stateUpdated.emit(this._state));
     void this._speakingMonitor.open();
@@ -149,10 +165,11 @@ export class MediaManager extends Resource {
   async turnAudioOff() {
     void this._speakingMonitor?.close();
     this._speakingMonitor = undefined;
-
+    if (this._state.audioTrack !== this._inaudibleAudioStreamTrack) {
+      this._state.audioTrack?.stop();
+      this._state.audioTrack = this._inaudibleAudioStreamTrack;
+    }
     this._state.audioEnabled = false;
-    this._state.audioTrack?.stop();
-    this._state.audioTrack = undefined;
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
   }
@@ -211,8 +228,11 @@ export class MediaManager extends Resource {
 
     log('reconciling tracks', {
       trackNames,
-      pulledAudioTracks: Object.keys(this._state.pulledAudioTracks),
-      pulledVideoStreams: Object.keys(this._state.pulledVideoStreams),
+      tracksToPull,
+      videoStreamsToClose,
+      audioTracksToClose,
+      currentAudioTracks: Object.keys(this._state.pulledAudioTracks),
+      currentVideoStreams: Object.keys(this._state.pulledVideoStreams),
     });
 
     // Pull new tracks.
@@ -222,8 +242,8 @@ export class MediaManager extends Resource {
     await Promise.all([...audioTracksToClose, ...videoStreamsToClose].map(([_, { ctx }]) => ctx.dispose()));
 
     log('reconciled tracks', {
-      audioTracks: Object.keys(this._state.pulledAudioTracks),
-      videoStreams: Object.keys(this._state.pulledVideoStreams),
+      currentAudioTracks: Object.keys(this._state.pulledAudioTracks),
+      currentVideoStreams: Object.keys(this._state.pulledVideoStreams),
     });
     this.stateUpdated.emit(this._state);
   }
@@ -266,6 +286,9 @@ export class MediaManager extends Resource {
     try {
       const trackData = TrackNameCodec.decode(name);
       const track = await this._state.peer!.pullTrack({ trackData, ctx });
+      if (track?.readyState === 'ended') {
+        throw new Error('Pulled track ended immediately');
+      }
 
       switch (track?.kind) {
         case 'audio': {
@@ -279,6 +302,7 @@ export class MediaManager extends Resource {
           this._state.pulledVideoStreams[name] = { stream: mediaStream, ctx };
           ctx.onDispose(() => {
             mediaStream.removeTrack(track);
+            track.stop();
             delete this._state.pulledVideoStreams[name];
           });
           break;
@@ -311,28 +335,3 @@ export class MediaManager extends Resource {
     });
   }
 }
-
-/**
- * Creates a black canvas stream track.
- * We need this to to have black rectangle video that is live (have frames) when video feed is disabled.
- */
-const createBlackCanvasStreamTrack = async (ctx: Context) => {
-  const canvas = document.createElement('canvas');
-  canvas.width = VIDEO_WIDTH;
-  canvas.height = VIDEO_HEIGHT;
-
-  const canvasCtx = canvas.getContext('2d');
-  invariant(canvasCtx);
-  const drawFrame = () => {
-    canvasCtx.fillStyle = 'black';
-    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-  };
-  scheduleTaskInterval(ctx, async () => drawFrame(), 1_000);
-
-  const track = canvas.captureStream().getVideoTracks()[0];
-  drawFrame();
-
-  await cancelWithContext(ctx, waitForCondition({ condition: () => track.readyState === 'live', timeout: 1_000 }));
-
-  return track;
-};

@@ -4,7 +4,7 @@
 
 import { type MaybePromise } from '@dxos/util';
 
-import { type AnyCapability, type PluginsContext } from './capabilities';
+import { type AnyCapability, type PluginContext } from './capabilities';
 import { type ActivationEvent, type ActivationEvents } from './events';
 
 interface PluginModuleInterface {
@@ -36,13 +36,13 @@ interface PluginModuleInterface {
    * @returns The capabilities of the module.
    */
   activate: (
-    context: PluginsContext,
+    context: PluginContext,
   ) => MaybePromise<AnyCapability | AnyCapability[]> | Promise<() => Promise<AnyCapability | AnyCapability[]>>;
 }
 
 /**
  * A unit of containment of modular functionality that can be provided to an application.
- * Plugins provide things like components, state, actions, etc. to the application.
+ * Activation of a module is async allowing for code to split and loaded lazily.
  */
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
 export class PluginModule implements PluginModuleInterface {
@@ -79,7 +79,7 @@ export type PluginMeta = {
   /**
    * Human-readable name.
    */
-  name?: string;
+  name: string;
 
   /**
    * Short description of plugin functionality.
@@ -114,6 +114,7 @@ export type PluginMeta = {
 
 /**
  * A collection of modules that are be enabled/disabled as a unit.
+ * Plugins provide things such as components, state, actions, etc. to the application.
  */
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
 export class Plugin {

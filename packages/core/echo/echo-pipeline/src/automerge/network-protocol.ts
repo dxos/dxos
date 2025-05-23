@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Message } from '@dxos/automerge/automerge-repo';
+import type { Message } from '@automerge/automerge-repo';
+
 import {
   type CollectionQueryMessage,
   type CollectionStateMessage,

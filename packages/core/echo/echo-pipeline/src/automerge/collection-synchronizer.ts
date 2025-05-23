@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as am } from '@automerge/automerge';
+import type { DocumentId, PeerId } from '@automerge/automerge-repo';
+
 import { asyncReturn, Event, scheduleTask, scheduleTaskInterval } from '@dxos/async';
-import { next as am } from '@dxos/automerge/automerge';
-import type { DocumentId, PeerId } from '@dxos/automerge/automerge-repo';
 import { Resource, type Context } from '@dxos/context';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
 const MIN_QUERY_INTERVAL = 5_000;
@@ -22,6 +24,7 @@ export type CollectionSynchronizerParams = {
 /**
  * Implements collection sync protocol.
  */
+@trace.resource()
 export class CollectionSynchronizer extends Resource {
   private readonly _sendCollectionState: CollectionSynchronizerParams['sendCollectionState'];
   private readonly _queryCollectionState: CollectionSynchronizerParams['queryCollectionState'];
@@ -114,6 +117,15 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a connection to a peer is established.
    */
   onConnectionOpen(peerId: PeerId) {
+    const spanId = getSpanName(peerId);
+    trace.spanStart({
+      id: spanId,
+      methodName: spanId,
+      instance: this,
+      parentCtx: this._ctx,
+      showInBrowserTimeline: true,
+      attributes: { peerId },
+    });
     this._connectedPeers.add(peerId);
 
     queueMicrotask(async () => {
@@ -161,6 +173,19 @@ export class CollectionSynchronizer extends Resource {
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
     const existingState = perCollectionState.remoteStates.get(peerId) ?? { documents: {} };
     const diff = diffCollectionState(existingState, state);
+    const spanId = getSpanName(peerId);
+    if (diff.different.length === 0) {
+      trace.spanEnd(spanId);
+    } else {
+      trace.spanStart({
+        id: spanId,
+        methodName: spanId,
+        instance: this,
+        parentCtx: this._ctx,
+        showInBrowserTimeline: true,
+        attributes: { peerId },
+      });
+    }
     if (diff.missingOnLocal.length > 0 || diff.different.length > 0) {
       perCollectionState.remoteStates.set(peerId, state);
       this.remoteStateUpdated.emit({ peerId, collectionId, newDocsAppeared: diff.missingOnLocal.length > 0 });
@@ -243,4 +268,8 @@ const validateCollectionState = (state: CollectionState) => {
 
 const isValidDocumentId = (documentId: DocumentId) => {
   return typeof documentId === 'string' && !documentId.includes(':');
+};
+
+const getSpanName = (peerId: PeerId) => {
+  return `collection-sync-${peerId}`;
 };

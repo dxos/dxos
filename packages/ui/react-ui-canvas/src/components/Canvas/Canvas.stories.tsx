@@ -22,7 +22,7 @@ const points: Point[] = [0, (2 * Math.PI) / 3, (2 * Math.PI * 2) / 3].map((a, i)
   y: Math.round(Math.sin(a - Math.PI / 2) * size * 1.5),
 }));
 
-const Render = (props: GridProps) => {
+const DefaultStory = (props: GridProps) => {
   return (
     <Canvas>
       <Grid {...props} />
@@ -91,7 +91,7 @@ const Item = (p: Point) => {
 const meta: Meta<GridProps> = {
   title: 'ui/react-ui-canvas/Canvas',
   component: Grid,
-  render: Render,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

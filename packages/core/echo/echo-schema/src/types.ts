@@ -2,22 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, Schema as S } from 'effect';
+import { SchemaAST, Schema } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
 import { splitJsonPath, type JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
-import { ObjectId, type ObjectMeta, getTypename } from './object';
+import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation, type HasId } from './ast';
+import { getTypename, ObjectId, type ObjectMeta } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_META = '@meta';
-
-//
-// Objects
-//
 
 /**
  * Base type for all data objects (reactive, ECHO, and other raw objects).
@@ -26,24 +22,24 @@ export const ECHO_ATTR_META = '@meta';
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
 // TODO(dmaretskyi): Rename AnyProperties.
-export type BaseObject = { [key: string]: any };
+export type BaseObject = Record<string, any>;
+
+// TODO(burdon): Reconcile with AnyLiveObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
+export type WithId = BaseObject & HasId;
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
-
-// TODO(burdon): Reconcile with ReactiveEchoObject.
-export type WithId = HasId & BaseObject;
 
 export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.
  */
-export const RawObject = <S extends S.Schema.AnyNoContext>(
+export const RawObject = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
-): S.Schema<ExcludeId<S.Schema.Type<S>> & WithMeta, S.Schema.Encoded<S>> => {
-  return S.make(AST.omit(schema.ast, ['id']));
+): Schema.Schema<ExcludeId<Schema.Schema.Type<S>> & WithMeta, Schema.Schema.Encoded<S>> => {
+  return Schema.make(SchemaAST.omit(schema.ast, ['id']));
 };
 
 //
@@ -71,7 +67,7 @@ export interface AnyObjectData extends CommonObjectData {
  * `__typename` is the string DXN of the object type.
  * Meta is added under `__meta` key.
  */
-export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
+export type ObjectData<S> = Schema.Schema.Encoded<S> & CommonObjectData;
 
 //
 // Utils
@@ -104,22 +100,23 @@ export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): 
 /**
  * Returns a typename of a schema.
  */
-export const getTypenameOrThrow = (schema: S.Schema.AnyNoContext): string => requireTypeReference(schema).objectId;
+export const getTypenameOrThrow = (schema: Schema.Schema.AnyNoContext): string => requireTypeReference(schema).objectId;
 
 /**
  * Returns a reference that will be used to point to a schema.
  */
-export const getTypeReference = (schema: S.Schema.AnyNoContext | undefined): Reference | undefined => {
+// TODO(dmaretskyi): Unify with `getSchemaDXN`.
+export const getTypeReference = (schema: Schema.Schema.All | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
   }
 
-  const echoId = getEchoIdentifierAnnotation(schema);
+  const echoId = getTypeIdentifierAnnotation(schema);
   if (echoId) {
     return Reference.fromDXN(DXN.parse(echoId));
   }
 
-  const annotation = getObjectAnnotation(schema);
+  const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     return undefined;
   }
@@ -131,7 +128,7 @@ export const getTypeReference = (schema: S.Schema.AnyNoContext | undefined): Ref
  * Returns a reference that will be used to point to a schema.
  * @throws If it is not possible to reference this schema.
  */
-export const requireTypeReference = (schema: S.Schema.AnyNoContext): Reference => {
+export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     // TODO(burdon): Catalog user-facing errors (this is too verbose).
@@ -141,40 +138,34 @@ export const requireTypeReference = (schema: S.Schema.AnyNoContext): Reference =
   return typeReference;
 };
 
-// TODO(dmaretskyi): Unify with `getTypeReference`.
-export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
-  // TODO(dmaretskyi): Add support for dynamic schema.
-  const objectAnnotation = getObjectAnnotation(schema);
-  if (!objectAnnotation) {
-    return undefined;
-  }
-
-  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
-};
-
-export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
+// TODO(burdon): Can we use `Schema.is`?
+export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
   schema: Schema,
   object: any,
-): object is S.Schema.Type<Schema> => {
+): object is Schema.Schema.Type<Schema> => {
+  if (object == null) {
+    return false;
+  }
+
   const schemaDXN = getSchemaDXN(schema);
   if (!schemaDXN) {
     throw new Error('Schema must have an object annotation.');
   }
 
-  const objectTypename = getTypename(object);
-  if (!objectTypename) {
+  const typename = getTypename(object);
+  if (!typename) {
     return false;
   }
 
-  if (objectTypename.startsWith('dxn:')) {
-    return schemaDXN.toString() === objectTypename;
+  if (typename.startsWith('dxn:')) {
+    return schemaDXN.toString() === typename;
   } else {
     const typeDXN = schemaDXN.asTypeDXN();
     if (!typeDXN) {
       return false;
     }
 
-    return typeDXN.type === objectTypename;
+    return typeDXN.type === typename;
   }
 };
 
@@ -189,7 +180,7 @@ export type HasTypename = {};
  * Returns a DXN for an object or schema.
  */
 export const getDXN = (object: any): DXN | undefined => {
-  if (S.isSchema(object)) {
+  if (Schema.isSchema(object)) {
     return getSchemaDXN(object as any);
   }
 
@@ -204,4 +195,5 @@ export const getDXN = (object: any): DXN | undefined => {
   return DXN.fromLocalObjectId(object.id);
 };
 
+// TODO(burdon): Reconcile with Type.Any.
 export type BaseEchoObject = HasId & HasTypename;

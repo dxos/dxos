@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Random data generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,6 +28,7 @@
   ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@ngneat/falso": "^7.1.1"
   },
   "devDependencies": {},

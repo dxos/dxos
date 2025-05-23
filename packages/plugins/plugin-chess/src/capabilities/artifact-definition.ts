@@ -3,12 +3,12 @@
 //
 
 import { Chess } from 'chess.js';
-import { pipe } from 'effect';
+import { pipe, Schema } from 'effect';
 
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
-import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf, S } from '@dxos/echo-schema';
+import { createArtifactElement, VersionPin } from '@dxos/assistant';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
@@ -26,7 +26,7 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: meta.id,
+    id: `artifact:${meta.id}`,
     name: meta.name,
     description: 'Provides a simple chess engine.',
     instructions: `
@@ -39,8 +39,8 @@ export default () => {
         name: 'create',
         description: 'Create a new chess game. Returns the artifact definition for the game.',
         caption: 'Creating chess game...',
-        schema: S.Struct({
-          fen: S.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
+        schema: Schema.Struct({
+          fen: Schema.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
         }),
         execute: async ({ fen }, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -54,17 +54,19 @@ export default () => {
             return ToolResult.Error(error?.message ?? 'Failed to create chess game');
           }
 
-          return ToolResult.Success(createArtifactElement(data.id));
+          return ToolResult.Success(createArtifactElement(data.id), [
+            VersionPin.createBlock(VersionPin.fromObject(data.object)),
+          ]);
         },
       }),
       defineTool(meta.id, {
         name: 'list',
         description: 'Query all active chess games.',
         caption: 'Getting games...',
-        schema: S.Struct({}),
+        schema: Schema.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const { objects: games } = await extensions.space.db.query(Filter.schema(ChessType)).run();
+          const { objects: games } = await extensions.space.db.query(Filter.type(ChessType)).run();
           invariant(games.length > 0, 'No chess games found');
           return ToolResult.Success(games);
         },
@@ -73,10 +75,12 @@ export default () => {
         name: 'inspect',
         description: 'Get the current state of the chess game.',
         caption: 'Inspecting game...',
-        schema: S.Struct({ id: ArtifactId }),
+        schema: Schema.Struct({ id: ArtifactId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const game = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          const game = await extensions.space.db
+            .query({ id: ArtifactId.toDXN(id, extensions.space.id).toString() })
+            .first();
           invariant(isInstanceOf(ChessType, game));
 
           return ToolResult.Success(game.fen);
@@ -86,16 +90,18 @@ export default () => {
         name: 'move',
         description: 'Make a move in the chess game.',
         caption: 'Making chess move...',
-        schema: S.Struct({
+        schema: Schema.Struct({
           id: ArtifactId,
-          move: S.String.annotations({
+          move: Schema.String.annotations({
             description: 'The move to make in the chess game.',
             examples: ['e4', 'Bf3'],
           }),
         }),
         execute: async ({ id, move }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const game = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          const game = await extensions.space.db
+            .query({ id: ArtifactId.toDXN(id, extensions.space.id).toString() })
+            .first();
           invariant(isInstanceOf(ChessType, game));
 
           const board = new Chess(game.fen);

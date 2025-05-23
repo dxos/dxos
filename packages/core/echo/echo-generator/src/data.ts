@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as A } from '@dxos/automerge/automerge';
+import { next as A } from '@automerge/automerge';
+import { Schema } from 'effect';
+
 import { createDocAccessor, type Space } from '@dxos/client/echo';
-import { Ref, S } from '@dxos/echo-schema';
-import { createEchoSchema, makeRef } from '@dxos/live-object';
+import { Ref } from '@dxos/echo-schema';
+import { createEchoSchema } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -33,8 +35,8 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       version: '0.1.0',
     },
     {
-      title: S.String.annotations({ description: 'title of the document' }),
-      content: S.String,
+      title: Schema.String.annotations({ description: 'title of the document' }),
+      content: Schema.String,
     },
   );
 
@@ -44,9 +46,9 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       version: '0.1.0',
     },
     {
-      name: S.String.annotations({ description: 'name of the company or organization' }),
-      website: S.String.annotations({ description: 'public website URL' }),
-      description: S.String.annotations({ description: 'short summary of the company' }),
+      name: Schema.String.annotations({ description: 'name of the company or organization' }),
+      website: Schema.String.annotations({ description: 'public website URL' }),
+      description: Schema.String.annotations({ description: 'short summary of the company' }),
     },
   );
 
@@ -56,11 +58,11 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       version: '0.1.0',
     },
     {
-      name: S.String.annotations({ description: 'name of the person' }),
-      email: S.String,
+      name: Schema.String.annotations({ description: 'name of the person' }),
+      email: Schema.String,
       org: Ref(organization),
-      lat: S.Number,
-      lng: S.Number,
+      lat: Schema.Number,
+      lng: Schema.Number,
     },
   );
 
@@ -70,13 +72,13 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       version: '0.1.0',
     },
     {
-      name: S.String.annotations({ description: 'name of the project' }),
-      description: S.String,
-      website: S.String,
-      repo: S.String,
-      status: S.String,
-      priority: S.Number,
-      active: S.Boolean,
+      name: Schema.String.annotations({ description: 'name of the project' }),
+      description: Schema.String,
+      website: Schema.String,
+      repo: Schema.String,
+      status: Schema.String,
+      priority: Schema.Number,
+      active: Schema.Boolean,
       org: Ref(organization),
     },
   );
@@ -109,7 +111,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
       email: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.email() : undefined,
       org:
         organizations?.length && faker.datatype.boolean({ probability: 0.3 })
-          ? makeRef(faker.helpers.arrayElement(organizations))
+          ? Ref.make(faker.helpers.arrayElement(organizations))
           : undefined,
       ...location,
     };

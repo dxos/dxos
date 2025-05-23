@@ -2,23 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
 import { defineTool, ToolResult } from '@dxos/artifact';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../cypher';
+import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../experimental';
 import { trim } from '../util';
 
-export const createCypherTool = (dataSource: DataSource, schemaTypes: S.Schema.Any[] = []) =>
+export const createCypherTool = (dataSource: DataSource, schemaTypes: Schema.Schema.Any[] = []) =>
   defineTool('dxos.org/echo', {
     name: 'query',
     description:
       'Query the ECHO graph database in cypher query language. Returns data from the database.' +
       (schemaTypes.length > 0 ? `\n\n${createSystemPrompt(schemaTypes)}` : ''),
-    schema: S.Struct({
-      query: S.String.annotations({
+    schema: Schema.Struct({
+      query: Schema.String.annotations({
         description: `
           A valid cypher query string to execute.
           Query must have one MATCH clause.
@@ -55,7 +55,7 @@ export const createCypherTool = (dataSource: DataSource, schemaTypes: S.Schema.A
     },
   });
 
-export const createSystemPrompt = (schemaTypes: S.Schema.Any[]) => trim`
+export const createSystemPrompt = (schemaTypes: Schema.Schema.Any[]) => trim`
   You have access to ECHO graph database. You can query the database to get data to satisfy user prompts.
 
   Database schema is defined in pseud-cypher syntax. The schema is:

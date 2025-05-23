@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, type PropsWithChildren } from 'react';
+import React, { useEffect, useState, type CSSProperties, type PropsWithChildren } from 'react';
 
 import { Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { Waveform } from '@dxos/react-ui-sfx';
-import { mx } from '@dxos/react-ui-theme';
+import { hoverableHidden, mx } from '@dxos/react-ui-theme';
 
 import { MEETING_PLUGIN } from '../../meta';
-
-const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-100');
 
 export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
   ThemedClassName<{
@@ -20,6 +18,7 @@ export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
     name?: string;
     self?: boolean;
     screenshare?: boolean;
+    video?: boolean;
     mute?: boolean;
     wave?: boolean;
     speaking?: boolean;
@@ -40,6 +39,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   self,
   pinned,
   screenshare,
+  video,
   mute,
   wave,
   speaking,
@@ -60,18 +60,39 @@ export const ResponsiveGridItem = <T extends object = any>({
 
   const props = wave && !pinned ? iconProps.wave : mute ? iconProps.mute : speaking ? iconProps.speaking : undefined;
 
+  // Debounce speaking indicator.
+  const [speakingIndicator, setSpeakingIndicator] = useState(speaking);
+  useEffect(() => {
+    if (speaking) {
+      setSpeakingIndicator(true);
+    } else {
+      const timeout = setTimeout(() => {
+        setSpeakingIndicator(false);
+      }, 1_000);
+      return () => clearTimeout(timeout);
+    }
+  }, [speaking]);
+
   return (
-    <div className={mx('w-full h-full aspect-video group relative', classNames)} style={style}>
+    <div
+      className={mx(
+        'relative w-full h-full group',
+        'rounded-md outline outline-2 outline-neutral-900 transition-[outline-color] duration-500',
+        speakingIndicator ? 'outline-green-500' : !video && 'outline-separator',
+        classNames,
+      )}
+      style={style}
+    >
       {children}
 
       {/* Action. */}
       {onClick && (
         <div className='z-10 absolute top-1 right-1 flex'>
           <IconButton
-            classNames={mx('p-1 min-bs-1 rounded', hover)}
+            classNames={mx('p-1 min-bs-1 rounded', hoverableHidden)}
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
-            size={pinned ? 5 : 3}
+            size={pinned ? 5 : 4}
             label={pinned ? t('icon unpin') : t('icon pin')}
             onClick={() => onClick?.(item)}
           />
@@ -81,8 +102,9 @@ export const ResponsiveGridItem = <T extends object = any>({
       {/* Name. */}
       {name && (
         <div className='z-10 absolute bottom-1 left-8 right-1 flex justify-end gap-1 items-center'>
-          {self && <Icon icon='ph--asterisk--regular' size={pinned ? 5 : 3} />}
-          {screenshare && <Icon icon='ph--broadcast--regular' size={pinned ? 5 : 3} />}
+          {/* TODO(burdon): Replace with avatar for everyone. */}
+          {/* {self && <Icon icon='ph--asterisk--regular' size={pinned ? 5 : 4} />} */}
+          {screenshare && <Icon icon='ph--broadcast--regular' size={pinned ? 5 : 4} />}
           <div
             className={mx('bg-neutral-800 text-neutral-100 py-0.5 truncate rounded', pinned ? 'px-2' : 'px-1 text-xs')}
           >
@@ -93,13 +115,13 @@ export const ResponsiveGridItem = <T extends object = any>({
 
       {/* Activity. */}
       <div className='z-10 absolute bottom-1 left-1 flex'>
-        {(speaking && <Waveform active size={pinned ? 5 : 3} />) ||
+        {(speaking && <Waveform active size={pinned ? 5 : 4} />) ||
           (props && (
             <IconButton
               classNames={mx('p-1 min-bs-1 rounded', props?.classNames)}
               icon={props?.icon}
               label={props?.label}
-              size={pinned ? 5 : 3}
+              size={pinned ? 5 : 4}
               iconOnly
             />
           ))}

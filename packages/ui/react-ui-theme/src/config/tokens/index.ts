@@ -7,7 +7,7 @@ import adapter from '@ch-ui/tailwind-tokens';
 import { type TokenSet } from '@ch-ui/tokens';
 
 import { aliasColors } from './alias-colors';
-import { lengthsFacet } from './lengths';
+import { lengthsFacet, maxSizesFacet } from './lengths';
 import { huePalettes, physicalColors } from './physical-colors';
 import { semanticColors } from './semantic-colors';
 import { systemAliases, systemSememes } from './sememes-system';
@@ -19,6 +19,7 @@ export const tokenSet = {
     alias: aliasColors,
   },
   lengths: lengthsFacet,
+  maxSizes: maxSizesFacet,
 } satisfies TokenSet;
 
 export const hues = Object.keys(huePalettes);

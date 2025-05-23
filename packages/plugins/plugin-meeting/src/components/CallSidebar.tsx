@@ -4,15 +4,14 @@
 
 import React from 'react';
 
-import { Call } from './Call';
+import { useCapability } from '@dxos/app-framework';
+
+import { CallContainer } from './CallContainer';
+import { MeetingCapabilities } from '../capabilities';
 
 export const CallSidebar = () => {
-  return (
-    <div className='flex flex-col h-full overflow-hidden'>
-      <Call.Room />
-      <Call.Toolbar />
-    </div>
-  );
+  const call = useCapability(MeetingCapabilities.CallManager);
+  return <CallContainer roomId={call.roomId} />;
 };
 
 export default CallSidebar;

@@ -19,16 +19,42 @@ package dxos.edge.messenger;
 //  - Do peers without a HALO (that are joining existing identity) have the indentity key missing? How are they identified.
 //  - Do point-to-point messages need to go through a swarm, or can routers communicate directly?
 
+
+enum ConnectionState {
+  CONNECTED = 0;
+  DISCONNECTED_NORMAL = 1;
+  DISCONNECTED_ABRUPT = 2; 
+}
+
 //
 // Network peer.
 //
 // TODO(burdon): Distinguish between point-to-point and broadcast messaging.
 // TODO(burdon): Rename PeerInfo?
+// TODO(mykola): Separate peer info and peer state into different messages.
 message Peer {
+  
   // TODO(burdon): Rename topic?
-  optional string swarmKey = 1;
-  optional string identityKey = 2;
-  string peerKey = 3;
+  optional string swarm_key = 1;
+  optional string identity_key = 2;
+  string peer_key = 3;
+
+  /**
+   * State of the connection to the swarm.
+   */
+  optional ConnectionState connection_state = 5;
+  /**
+   * UNIX timestamp of the connection.
+   * @example 1715142000000
+   */
+  // Note: it is not `int64` because `int64` is compiled as a `string` in 'buf' and as a `number` in 'proto-js'.
+  optional double connected = 6;
+  /**
+   * UNIX timestamp of the disconnection.
+   * @example 1715142000000
+   */
+  optional double disconnected = 7;
+
   /**
    * Optional opeage data that represents peer state is updated on `join` request and all peers in swarm are notified.
    * Is not used for WebRTC protocol, but is useful for another purposes of Swarms, e. g. call room users states.
@@ -73,6 +99,11 @@ message SwarmResponse {
    * The list of peers in the swarm.
    */
   repeated Peer peers = 2;
+
+  /**
+   * The list of peers that recently left the swarm.
+   */
+  repeated Peer inactive_peers = 3;
 }
 
 //

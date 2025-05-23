@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Message, type PeerId } from '@automerge/automerge-repo';
 import { Redis, type RedisOptions } from 'ioredis';
 import { onTestFinished, describe, expect, test } from 'vitest';
 
-import { type Message, type PeerId } from '@dxos/automerge/automerge-repo';
 import { type TaggedType } from '@dxos/codec-protobuf';
 import { EchoTestBuilder, TestReplicator, TestReplicatorConnection, createDataAssertion } from '@dxos/echo-db/testing';
 import { PublicKey } from '@dxos/keys';

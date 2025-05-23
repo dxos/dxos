@@ -23,6 +23,10 @@ export const codeMirrorSememes = {
     dark: ['neutral', 100],
   },
   cmSelection: {
+    light: ['primary', '400/.5'],
+    dark: ['primary', '600/.5'],
+  },
+  cmFocusedSelection: {
     light: ['primary', 400],
     dark: ['primary', 600],
   },
@@ -34,6 +38,7 @@ export const codeMirrorSememes = {
     light: ['sky', 200],
     dark: ['cyan', 600],
   },
+  // TODO(burdon): Factor out def (in common with sheet).
   cmComment: {
     light: ['neutral', 950],
     dark: ['neutral', 50],

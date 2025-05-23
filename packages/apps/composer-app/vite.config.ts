@@ -17,9 +17,10 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { mergeConfig } from 'vitest/config';
 import { baseConfig } from '../../../vitest.shared';
 
-import { appKey } from './src/constants';
+import { APP_KEY } from './src/constants';
 
 const rootDir = resolve(__dirname, '../../..');
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -32,7 +33,7 @@ const isFalse = (str?: string) => str === 'false' || str === '0';
  */
 export default defineConfig((env) => ({
   // Vitest config.
-  test: baseConfig({ cwd: __dirname })['test'] as any,
+  test: mergeConfig(baseConfig({ cwd: __dirname }), defineConfig({ test: { environment: 'jsdom' } }))['test'] as any,
   server: {
     host: true,
     https:
@@ -86,6 +87,7 @@ export default defineConfig((env) => ({
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
+      'node:util': '@dxos/node-std/util',
     },
   },
   worker: {
@@ -177,7 +179,7 @@ export default defineConfig((env) => ({
         '@dxos/client-protocol',
         '@dxos/client-services',
         '@dxos/config',
-        '@dxos/echo-schema',
+        '@dxos/echo',
         '@dxos/echo-signals',
         '@dxos/live-object',
         '@dxos/react-client',
@@ -213,26 +215,26 @@ export default defineConfig((env) => ({
         theme_color: '#003E70',
         icons: [
           {
-            "src": "pwa-64x64.png",
-            "sizes": "64x64",
-            "type": "image/png"
+            src: 'pwa-64x64.png',
+            sizes: '64x64',
+            type: 'image/png',
           },
           {
-            "src": "pwa-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
           },
           {
-            "src": "pwa-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png"
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
           },
           {
-            "src": "maskable-icon-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-          }
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
         ],
       },
     }),
@@ -247,7 +249,7 @@ export default defineConfig((env) => ({
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
       disable: process.env.DX_ENVIRONMENT !== 'production',
       release: {
-        name: `${appKey}@${process.env.npm_package_version}`,
+        name: `${APP_KEY}@${process.env.npm_package_version}`,
       },
     }),
     ...(process.env.DX_STATS
@@ -328,26 +330,28 @@ function importMapPlugin(options: { modules: string[] }) {
       },
 
       generateBundle() {
-        imports = Object.fromEntries(options.modules.map(m => [m, `/${this.getFileName(chunkRefIds[m])}`]));
-      }
+        imports = Object.fromEntries(options.modules.map((m) => [m, `/${this.getFileName(chunkRefIds[m])}`]));
+      },
     },
     {
       name: 'import-map:transform-index-html',
       enforce: 'post',
       transformIndexHtml(html: string) {
-        const tags = [{
-          tag: 'script',
-          attrs: {
-            type: 'importmap',
+        const tags = [
+          {
+            tag: 'script',
+            attrs: {
+              type: 'importmap',
+            },
+            children: JSON.stringify({ imports }, null, 2),
           },
-          children: JSON.stringify({ imports }, null, 2),
-        }];
+        ];
 
         return {
           html,
           tags,
-        }
-      }
-    }
+        };
+      },
+    },
   ] satisfies Plugin[];
 }

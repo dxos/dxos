@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, expect, it, beforeEach } from 'vitest';
 
-import { S, TypedObject } from '@dxos/echo-schema';
-import { create, makeRef } from '@dxos/live-object';
+import { TypedObject } from '@dxos/echo-schema';
+import { live, makeRef } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView, ViewProjection } from '@dxos/schema';
 
@@ -22,7 +23,7 @@ describe('TablePresentation', () => {
 
     beforeEach(async () => {
       updateCount = 0;
-      ({ data } = create({
+      ({ data } = live({
         data: [
           { col1: 'A', col2: 1, col3: true },
           { col1: 'B', col2: 2, col3: false },
@@ -89,14 +90,14 @@ describe('TablePresentation', () => {
 });
 
 class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  title: S.String,
-  completed: S.Boolean,
+  title: Schema.String,
+  completed: Schema.Boolean,
 }) {}
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
-  const projection = new ViewProjection(schema, view);
-  const table = create(TableType, { view: makeRef(view) });
+  const projection = new ViewProjection(schema.jsonSchema, view);
+  const table = live(TableType, { view: makeRef(view) });
   return new TableModel({ id: table.id, view, projection, ...props });
 };

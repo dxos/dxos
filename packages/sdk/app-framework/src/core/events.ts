@@ -3,7 +3,10 @@
 //
 
 /**
- * An event which activates a plugin module.
+ * A unique string identifier representing an event.
+ * This is expected to be a URI, where initial parts are often the id of the plugin whose package defines the event.
+ *
+ * @example dxos.org/plugin/example/event/ready
  */
 export type ActivationEvent = {
   id: string;

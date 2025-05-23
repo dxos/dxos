@@ -2,26 +2,45 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from 'effect';
+import { Schema } from 'effect';
 
-import { Ref, TypedObject } from '@dxos/echo-schema';
-import { ChannelType } from '@dxos/plugin-space/types';
-import { TranscriptType } from '@dxos/plugin-transcription/types';
-import { TextType } from '@dxos/schema';
+import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
 
 // TODO(wittjosiah): Factor out. Brand.
-const IdentityDidSchema = S.String;
+const IdentityDidSchema = Schema.String;
 
-export const MeetingSchema = S.Struct({
-  name: S.optional(S.String),
-  participants: S.mutable(S.Array(IdentityDidSchema)),
-  channel: S.optional(Ref(ChannelType)),
-  transcript: S.optional(Ref(TranscriptType)),
-  notes: S.optional(Ref(TextType)),
-  summary: S.optional(Ref(TextType)),
+export const MeetingSchema = Schema.Struct({
+  /**
+   * User-defined name of the meeting.
+   */
+  name: Schema.optional(Schema.String),
+
+  /**
+   * The time the meeting was created.
+   * Used to generate a fallback name if one is not provided.
+   */
+  created: Schema.String.annotations({ description: 'ISO timestamp' }),
+
+  /**
+   * List of dids of identities which joined some portion of the meeting.
+   */
+  participants: Schema.mutable(Schema.Array(IdentityDidSchema)),
+
+  /**
+   * Set of artifacts created during the meeting.
+   * Keys are the typename of the artifact.
+   * Values are a reference to the artifact object.
+   * For example, a meeting may have a transcript, notes, and a summary.
+   */
+  artifacts: Schema.mutable(
+    Schema.Record({
+      key: Schema.String,
+      value: Ref(Expando),
+    }),
+  ),
 });
 
 export class MeetingType extends TypedObject({
   typename: 'dxos.org/type/Meeting',
-  version: '0.1.0',
+  version: '0.2.0',
 })(MeetingSchema.fields) {}

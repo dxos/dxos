@@ -2,10 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormatEnum, formatToType, S, TypedObject, TypeEnum, type SelectOptionSchema } from '@dxos/echo-schema';
+import { Schema } from 'effect';
+
+import {
+  formatToType,
+  type EchoSchema,
+  FormatEnum,
+  type SelectOptionSchema,
+  TypeEnum,
+  TypedObject,
+} from '@dxos/echo-schema';
 import { createEchoSchema } from '@dxos/live-object/testing';
 
-import { makeSingleSelectAnnotations } from './util';
+import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';
 
 export type SelectOptionType = typeof SelectOptionSchema.Type;
 
@@ -17,13 +26,19 @@ export type SchemaPropertyDefinition = {
   config?: { options?: SelectOptionType[] };
 };
 
-export const echoSchemaFromPropertyDefinitions = (typename: string, properties: SchemaPropertyDefinition[]) => {
-  const typeToSchema: Record<TypeEnum, S.Any> = {
-    [TypeEnum.String]: S.String.pipe(S.optional),
-    [TypeEnum.Number]: S.Number.pipe(S.optional),
-    [TypeEnum.Boolean]: S.Boolean.pipe(S.optional),
-    [TypeEnum.Object]: S.Object.pipe(S.optional),
-    [TypeEnum.Ref]: S.String.pipe(S.optional), // TODO(burdon): Is this correct for refs?
+export const getSchemaFromPropertyDefinitions = (
+  typename: string,
+  properties: SchemaPropertyDefinition[],
+): EchoSchema => {
+  // TODO(burdon): Move to echo-schema.
+  const typeToSchema: Record<TypeEnum, Schema.Any> = {
+    [TypeEnum.String]: Schema.String.pipe(Schema.optional),
+    [TypeEnum.Number]: Schema.Number.pipe(Schema.optional),
+    [TypeEnum.Boolean]: Schema.Boolean.pipe(Schema.optional),
+    [TypeEnum.Object]: Schema.Object.pipe(Schema.optional),
+    // TODO(ZaymonFC): Arrays are undercooked, we should specify the item type / format as well.
+    [TypeEnum.Array]: Schema.Array(Schema.Any),
+    [TypeEnum.Ref]: Schema.String.pipe(Schema.optional), // TODO(burdon): Is this correct for refs?
   };
 
   const fields: any = Object.fromEntries(
@@ -33,8 +48,13 @@ export const echoSchemaFromPropertyDefinitions = (typename: string, properties: 
   const schema = createEchoSchema(TypedObject({ typename, version: '0.1.0' })(fields));
 
   for (const prop of properties) {
-    if (prop.format === FormatEnum.SingleSelect && prop.config?.options) {
-      makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+    if (prop.config?.options) {
+      if (prop.format === FormatEnum.SingleSelect) {
+        makeSingleSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+      }
+      if (prop.format === FormatEnum.MultiSelect) {
+        makeMultiSelectAnnotations(schema.jsonSchema.properties![prop.name], [...prop.config.options]);
+      }
     }
 
     if (prop.format === FormatEnum.GeoPoint) {

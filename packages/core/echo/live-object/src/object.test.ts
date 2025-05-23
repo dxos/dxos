@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { getSnapshot } from './accessors';
-import { create } from './object';
+import { live } from './object';
+import { getSnapshot } from './snapshot';
 
 describe('Object', () => {
   test.skip('ulid stress test', () => {
@@ -42,7 +42,7 @@ describe('Object', () => {
       ],
     };
     // NOTE: create doesn't clone `data`!!!!
-    const obj = create(structuredClone(data));
+    const obj = live(structuredClone(data));
     const snapshot = getSnapshot(obj);
     expect(snapshot).toEqual(data);
     obj.arr = [];

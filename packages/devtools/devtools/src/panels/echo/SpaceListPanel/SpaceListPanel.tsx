@@ -11,7 +11,7 @@ import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { DialogRestoreSpace } from './DialogRestoreSpace';
 import { exportData, importData } from './backup';
@@ -32,14 +32,12 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const spaces = useSpaces({ all: true });
   const setState = useDevtoolsDispatch();
   const download = useFileDownload();
-  const initialSelectRef = React.useRef(true);
 
-  const tableData = useMemo(() => {
+  const rows = useMemo(() => {
     return spaces.map((space) => {
       const { open, ready } = space.internal.data.metrics ?? {};
       return {
-        id: space.key.toString(),
-        key: space.key.toString(),
+        id: space.id.toString(),
         name: space.isOpen ? space.properties.name : undefined,
         objects: -1, // TODO(dmaretskyi): Fix this.
         members: space.members.get().length,
@@ -57,25 +55,18 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     });
   }, [spaces]);
 
-  const handleSelect = useCallback(
-    (selectedItems: string[]) => {
-      // Skip the first automatic selection on mount
-      if (initialSelectRef.current) {
-        initialSelectRef.current = false;
+  const handleRowClicked = useCallback(
+    (row: any) => {
+      if (!row) {
         return;
       }
 
-      if (selectedItems.length === 0) {
-        return;
-      }
-
-      const selectedId = selectedItems[0];
+      const selectedId = row.id;
       const space = spaces.find((space) => space.key.toString() === selectedId);
       setState((state) => ({ ...state, space }));
-      const spaceData = tableData.find((data) => data.id === selectedId);
-      onSelect?.(spaceData?._original);
+      onSelect?.(row._original);
     },
-    [onSelect, setState, spaces, tableData],
+    [onSelect, setState, spaces],
   );
 
   const handleToggleOpen = useCallback(
@@ -153,7 +144,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'key', format: FormatEnum.DID },
+      { name: 'id', format: FormatEnum.DID },
       { name: 'name', format: FormatEnum.String },
       { name: 'objects', format: FormatEnum.Number, size: 120 },
       { name: 'members', format: FormatEnum.Number, size: 120 },
@@ -174,18 +165,21 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     }
   };
 
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
   return (
     <PanelContainer classNames='overflow-auto flex-1'>
       <DialogRestoreSpace handleFile={handleImport} />
       <DynamicTable
         properties={properties}
-        data={tableData}
-        onSelectionChanged={handleSelect}
+        rows={rows}
+        features={features}
         rowActions={[
           { id: 'toggleOpen', translationKey: 'toggle space open closed label' },
           { id: 'backup', translationKey: 'download space backup label' },
           { id: 'archive', translationKey: 'download space archive label' },
         ]}
+        onRowClick={handleRowClicked}
         onRowAction={handleRowAction}
       />
     </PanelContainer>

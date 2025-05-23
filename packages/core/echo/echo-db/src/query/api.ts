@@ -2,21 +2,51 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type PublicKey } from '@dxos/keys';
-import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
+//
+// Copyright 2025 DXOS.org
+//
 
-import type { Filter$, FilterSource } from './filter';
-import { type Query } from './query';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { Schema } from 'effect';
+import type { Simplify } from 'effect/Schema';
+
+import { raise } from '@dxos/debug';
+import {
+  getTypeReference,
+  ObjectId,
+  Ref,
+  type ForeignKey,
+  type RelationSource,
+  type RelationTarget,
+} from '@dxos/echo-schema';
+import { assertArgument } from '@dxos/invariant';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import type { Live } from '@dxos/live-object';
+import { log } from '@dxos/log';
+import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
+
+import type * as AST from './ast';
+import type { FilterSource } from './deprecated';
+import { type QueryResult } from './query-result';
 
 /**
  * `query` API function declaration.
  */
-// TODO(dmaretskyi): Type based on the result format.
 export interface QueryFn {
-  (): Query;
-  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): Query<ReactiveEchoObject<Filter$.Object<F>>>;
-  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): Query<ReactiveEchoObject<any>>;
+  // TODO(dmaretskyi): Remove query options.
+  <Q extends Query.Any>(query: Q, options?: QueryOptions | undefined): QueryResult<Live<Query.Type<Q>>>;
+
+  /**
+   * @deprecated Pass `Query` instead.
+   */
+  (): QueryResult;
+  /**
+   * @deprecated Pass `Query` instead.
+   */
+  <F extends Filter.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<Live<Filter.Type<F>>>;
+  /**
+   * @deprecated Pass `Query` instead.
+   */
+  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): QueryResult<Live<any>>;
 }
 
 /**
@@ -41,9 +71,10 @@ export enum ResultFormat {
   AutomergeDocAccessor = 'automergeDocAccessor',
 }
 
+/**
+ * @deprecated Use `Query.options` instead.
+ */
 export type QueryOptions = {
-  format?: ResultFormat;
-
   /**
    * Query only in specific spaces.
    */
@@ -72,14 +103,19 @@ export type QueryOptions = {
   include?: QueryJoinSpec;
 
   /**
-   * @deprecated Use `spaceIds` instead.
-   */
-  spaces?: PublicKey[];
-
-  /**
    * Return only the first `limit` results.
    */
   limit?: number;
+
+  /**
+   * @deprecated Stick to live format.
+   */
+  format?: ResultFormat;
+
+  /**
+   * @deprecated Use `spaceIds` instead.
+   */
+  spaces?: PublicKey[];
 };
 
 export interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
@@ -93,4 +129,644 @@ export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
     limit: options.limit,
     spaces: options.spaces,
   };
+};
+
+// TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
+// TODO(dmaretskyi): Undirected relation traversals.
+
+export interface Query<T> {
+  // TODO(dmaretskyi): See new effect-schema approach to variance.
+  '~Query': { value: T };
+
+  ast: AST.Query;
+
+  /**
+   * Filter the current selection based on a filter.
+   * @param filter - Filter to select the objects.
+   * @returns Query for the selected objects.
+   */
+  select(filter: Filter<T>): Query<T>;
+  select(props: Filter.Props<T>): Query<T>;
+
+  /**
+   * Traverse an outgoing reference.
+   * @param key - Property path inside T that is a reference.
+   * @returns Query for the target of the reference.
+   */
+  reference<K extends RefPropKey<T>>(key: K): Query<Ref.Target<T[K]>>;
+
+  /**
+   * Find objects referencing this object.
+   * @param target - Schema of the referencing object.
+   * @param key - Property path inside the referencing object that is a reference.
+   * @returns Query for the referencing objects.
+   */
+  // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
+  referencedBy<S extends Schema.Schema.All>(
+    target: S,
+    key: RefPropKey<Schema.Schema.Type<S>>,
+  ): Query<Schema.Schema.Type<S>>;
+
+  /**
+   * Find relations where this object is the source.
+   * @returns Query for the relation objects.
+   * @param relation - Schema of the relation.
+   * @param predicates - Predicates to filter the relation objects.
+   */
+  sourceOf<S extends Schema.Schema.All>(
+    relation: S,
+    predicates?: Filter.Props<Schema.Schema.Type<S>>,
+  ): Query<Schema.Schema.Type<S>>;
+
+  /**
+   * Find relations where this object is the target.
+   * @returns Query for the relation objects.
+   * @param relation - Schema of the relation.
+   * @param predicates - Predicates to filter the relation objects.
+   */
+  targetOf<S extends Schema.Schema.All>(
+    relation: S,
+    predicates?: Filter.Props<Schema.Schema.Type<S>>,
+  ): Query<Schema.Schema.Type<S>>;
+
+  /**
+   * For a query for relations, get the source objects.
+   * @returns Query for the source objects.
+   */
+  source(): Query<RelationSource<T>>;
+
+  /**
+   * For a query for relations, get the target objects.
+   * @returns Query for the target objects.
+   */
+  target(): Query<RelationTarget<T>>;
+
+  /**
+   * Add options to a query.
+   */
+  options(options: AST.QueryOptions): Query<T>;
+}
+
+interface QueryAPI {
+  is(value: unknown): value is Query.Any;
+
+  /**
+   * Select objects based on a filter.
+   * @param filter - Filter to select the objects.
+   * @returns Query for the selected objects.
+   */
+  select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>>;
+
+  /**
+   * Query for objects of a given schema.
+   * @param schema - Schema of the objects.
+   * @param predicates - Predicates to filter the objects.
+   * @returns Query for the objects.
+   *
+   * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
+   */
+  type<S extends Schema.Schema.All>(
+    schema: S,
+    predicates?: Filter.Props<Schema.Schema.Type<S>>,
+  ): Query<Schema.Schema.Type<S>>;
+
+  /**
+   * Combine results of multiple queries.
+   * @param queries - Queries to combine.
+   * @returns Query for the combined results.
+   */
+  // TODO(dmaretskyi): Rename to `combine` or `union`.
+  all<T>(...queries: Query<T>[]): Query<T>;
+}
+
+export declare namespace Query {
+  export type Any = Query<any>;
+
+  export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
+
+  export type TextSearchOptions = {
+    type?: 'full-text' | 'vector';
+  };
+}
+
+export interface Filter<T> {
+  // TODO(dmaretskyi): See new effect-schema approach to variance.
+  '~Filter': { value: T };
+
+  ast: AST.Filter;
+}
+
+type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
+  ? First & Intersection<Rest>
+  : unknown;
+
+interface FilterAPI {
+  is(value: unknown): value is Filter<any>;
+
+  /**
+   * Filter that matches all objects.
+   */
+  everything(): Filter<any>;
+
+  /**
+   * Filter that matches no objects.
+   */
+  nothing(): Filter<any>;
+
+  ids(...id: ObjectId[]): Filter<any>;
+
+  /**
+   * Filter by type.
+   */
+  type<S extends Schema.Schema.All>(
+    schema: S,
+    props?: Filter.Props<Schema.Schema.Type<S>>,
+  ): Filter<Schema.Schema.Type<S>>;
+
+  /**
+   * Filter by non-qualified typename.
+   */
+  typename(typename: string): Filter<any>;
+
+  /**
+   * Filter by fully qualified type DXN.
+   */
+  typeDXN(dxn: DXN): Filter<any>;
+
+  /**
+   * Filter by properties.
+   */
+  // props<T>(props: Filter.Props<T>): Filter<T>;
+
+  /**
+   * Full-text or vector search.
+   */
+  text<S extends Schema.Schema.All>(
+    // TODO(dmaretskyi): Allow passing an array of schema here.
+    schema: S,
+    // TODO(dmaretskyi): Consider passing a vector here, but really the embedding should be done on the query-executor side.
+    text: string,
+    options?: Query.TextSearchOptions,
+  ): Filter<Schema.Schema.Type<S>>;
+
+  /**
+   * Filter by foreign keys.
+   */
+  foreignKeys<S extends Schema.Schema.All>(schema: S, keys: ForeignKey[]): Filter<Schema.Schema.Type<S>>;
+
+  /**
+   * Predicate for property to be equal to the provided value.
+   */
+  eq<T>(value: T): Filter<T>;
+
+  /**
+   * Predicate for property to be not equal to the provided value.
+   */
+  neq<T>(value: T): Filter<T>;
+
+  /**
+   * Predicate for property to be greater than the provided value.
+   */
+  gt<T>(value: T): Filter<T>;
+
+  /**
+   * Predicate for property to be greater than the provided value.
+   */
+  gt<T>(value: T): Filter<T>;
+
+  /**
+   * Predicate for property to be greater than or equal to the provided value.
+   */
+  gte<T>(value: T): Filter<T>;
+
+  /**
+   * Predicate for property to be less than the provided value.
+   */
+  lt<T>(value: T): Filter<T>;
+
+  /**
+   * Predicate for property to be less than or equal to the provided value.
+   */
+  lte<T>(value: T): Filter<T>;
+
+  /**
+   * Predicate for property to be in the provided array.
+   * @param values - Values to check against.
+   */
+  in<T>(...values: T[]): Filter<T>;
+
+  /**
+   * Predicate for property to be in the provided range.
+   * @param from - Start of the range (inclusive).
+   * @param to - End of the range (exclusive).
+   */
+  between<T>(from: T, to: T): Filter<T>;
+
+  /**
+   * Negate the filter.
+   */
+  not<F extends Filter.Any>(filter: F): Filter<Filter.Type<F>>;
+
+  /**
+   * Combine filters with a logical AND.
+   */
+  and<FS extends Filter.Any[]>(...filters: FS): Filter<Filter.And<FS>>;
+
+  /**
+   * Combine filters with a logical OR.
+   */
+  or<FS extends Filter.Any[]>(...filters: FS): Filter<Filter.Or<FS>>;
+
+  // TODO(dmaretskyi): Add `Filter.match` to support pattern matching on string props.
+}
+
+export declare namespace Filter {
+  type Props<T> = {
+    // Predicate or a value as a shorthand for `eq`.
+    [K in keyof T & string]?: Filter<T[K]> | T[K];
+  };
+
+  type Any = Filter<any>;
+
+  type Type<F extends Any> = F extends Filter<infer T> ? T : never;
+
+  type And<FS extends readonly Any[]> = Simplify<Intersection<{ [K in keyof FS]: Type<FS[K]> }>>;
+
+  type Or<FS extends readonly Any[]> = Simplify<{ [K in keyof FS]: Type<FS[K]> }[number]>;
+}
+
+class FilterClass implements Filter<any> {
+  private static variance: Filter<any>['~Filter'] = {} as Filter<any>['~Filter'];
+
+  static is(value: unknown): value is Filter<any> {
+    return typeof value === 'object' && value !== null && '~Filter' in value;
+  }
+
+  static everything() {
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      props: {},
+    });
+  }
+
+  static nothing() {
+    return new FilterClass({
+      type: 'not',
+      filter: {
+        type: 'object',
+        typename: null,
+        props: {},
+      },
+    });
+  }
+
+  static ids(...ids: ObjectId[]): Filter<any> {
+    assertArgument(
+      ids.every((id) => ObjectId.isValid(id)),
+      'ids must be valid',
+    );
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      id: ids,
+      props: {},
+    });
+  }
+
+  static type<S extends Schema.Schema.All>(
+    schema: S,
+    props?: Filter.Props<Schema.Schema.Type<S>>,
+  ): Filter<Schema.Schema.Type<S>> {
+    const dxn = getTypeReference(schema)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+    return new FilterClass({
+      type: 'object',
+      typename: dxn.toString(),
+      ...propsFilterToAst(props ?? {}),
+    });
+  }
+
+  static typename(typename: string): Filter<any> {
+    assertArgument(!typename.startsWith('dxn:'), 'Typename must no be qualified');
+    return new FilterClass({
+      type: 'object',
+      typename: DXN.fromTypename(typename).toString(),
+      props: {},
+    });
+  }
+
+  static typeDXN(dxn: DXN): Filter<any> {
+    return new FilterClass({
+      type: 'object',
+      typename: dxn.toString(),
+      props: {},
+    });
+  }
+
+  /**
+   * @internal
+   */
+  static props<T>(props: Filter.Props<T>): Filter<T> {
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      ...propsFilterToAst(props),
+    });
+  }
+
+  static text<S extends Schema.Schema.All>(
+    schema: S,
+    text: string,
+    options?: Query.TextSearchOptions,
+  ): Filter<Schema.Schema.Type<S>> {
+    const dxn = getTypeReference(schema)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+    return new FilterClass({
+      type: 'text-search',
+      typename: dxn.toString(),
+      text,
+      searchKind: options?.type,
+    });
+  }
+
+  static foreignKeys<S extends Schema.Schema.All>(schema: S, keys: ForeignKey[]): Filter<Schema.Schema.Type<S>> {
+    const dxn = getTypeReference(schema)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+    return new FilterClass({
+      type: 'object',
+      typename: dxn.toString(),
+      props: {},
+      foreignKeys: keys,
+    });
+  }
+
+  static eq<T>(value: T): Filter<T> {
+    return new FilterClass({
+      type: 'compare',
+      operator: 'eq',
+      value: Ref.isRef(value) ? value.noInline().encode() : value,
+    });
+  }
+
+  static neq<T>(value: T): Filter<T> {
+    return new FilterClass({
+      type: 'compare',
+      operator: 'neq',
+      value,
+    });
+  }
+
+  static gt<T>(value: T): Filter<T> {
+    return new FilterClass({
+      type: 'compare',
+      operator: 'gt',
+      value,
+    });
+  }
+
+  static gte<T>(value: T): Filter<T> {
+    return new FilterClass({
+      type: 'compare',
+      operator: 'gte',
+      value,
+    });
+  }
+
+  static lt<T>(value: T): Filter<T> {
+    return new FilterClass({
+      type: 'compare',
+      operator: 'lt',
+      value,
+    });
+  }
+
+  static lte<T>(value: T): Filter<T> {
+    return new FilterClass({
+      type: 'compare',
+      operator: 'lte',
+      value,
+    });
+  }
+
+  static in<T>(...values: T[]): Filter<T> {
+    return new FilterClass({
+      type: 'in',
+      values,
+    });
+  }
+
+  static between<T>(from: T, to: T): Filter<T> {
+    return new FilterClass({
+      type: 'range',
+      from,
+      to,
+    });
+  }
+
+  static not<F extends Filter.Any>(filter: F): Filter<Filter.Type<F>> {
+    return new FilterClass({
+      type: 'not',
+      filter: filter.ast,
+    });
+  }
+
+  static and<T>(...filters: Filter<T>[]): Filter<T> {
+    return new FilterClass({
+      type: 'and',
+      filters: filters.map((f) => f.ast),
+    });
+  }
+
+  static or<T>(...filters: Filter<T>[]): Filter<T> {
+    return new FilterClass({
+      type: 'or',
+      filters: filters.map((f) => f.ast),
+    });
+  }
+
+  private constructor(public readonly ast: AST.Filter) {}
+
+  '~Filter' = FilterClass.variance;
+}
+
+export const Filter: FilterAPI = FilterClass;
+
+/**
+ * All property paths inside T that are references.
+ */
+type RefPropKey<T> = { [K in keyof T]: T[K] extends Ref<infer _U> ? K : never }[keyof T] & string;
+
+const propsFilterToAst = (predicates: Filter.Props<any>): Pick<AST.FilterObject, 'id' | 'props'> => {
+  let idFilter: readonly ObjectId[] | undefined;
+  if ('id' in predicates) {
+    assertArgument(typeof predicates.id === 'string' || Array.isArray(predicates.id), 'invalid id filter');
+    idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
+    Schema.Array(ObjectId).pipe(Schema.validateSync)(idFilter);
+  }
+
+  return {
+    id: idFilter,
+    props: Object.fromEntries(
+      Object.entries(predicates)
+        .filter(([prop, _value]) => prop !== 'id')
+        .map(([prop, predicate]) => [prop, Filter.is(predicate) ? predicate.ast : Filter.eq(predicate).ast]),
+    ) as Record<string, AST.Filter>,
+  };
+};
+
+class QueryClass implements Query<any> {
+  private static variance: Query<any>['~Query'] = {} as Query<any>['~Query'];
+
+  static is(value: unknown): value is Query<any> {
+    return typeof value === 'object' && value !== null && '~Query' in value;
+  }
+
+  static select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>> {
+    return new QueryClass({
+      type: 'select',
+      filter: filter.ast,
+    });
+  }
+
+  static type(schema: Schema.Schema.All, predicates?: Filter.Props<unknown>): Query<any> {
+    return new QueryClass({
+      type: 'select',
+      filter: FilterClass.type(schema, predicates).ast,
+    });
+  }
+
+  static all(...queries: Query<any>[]): Query<any> {
+    if (queries.length === 0) {
+      throw new TypeError(
+        'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.everything())',
+      );
+    }
+    return new QueryClass({
+      type: 'union',
+      queries: queries.map((q) => q.ast),
+    });
+  }
+
+  constructor(public readonly ast: AST.Query) {}
+
+  '~Query' = QueryClass.variance;
+
+  select(filter: Filter<any> | Filter.Props<any>): Query<any> {
+    if (Filter.is(filter)) {
+      return new QueryClass({
+        type: 'filter',
+        selection: this.ast,
+        filter: filter.ast,
+      });
+    } else {
+      return new QueryClass({
+        type: 'filter',
+        selection: this.ast,
+        filter: FilterClass.props(filter).ast,
+      });
+    }
+  }
+
+  reference(key: string): Query<any> {
+    return new QueryClass({
+      type: 'reference-traversal',
+      anchor: this.ast,
+      property: key,
+    });
+  }
+
+  referencedBy(target: Schema.Schema.All, key: string): Query<any> {
+    const dxn = getTypeReference(target)?.toDXN() ?? raise(new TypeError('Target schema has no DXN'));
+    return new QueryClass({
+      type: 'incoming-references',
+      anchor: this.ast,
+      property: key,
+      typename: dxn.toString(),
+    });
+  }
+
+  sourceOf(relation: Schema.Schema.All, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+    return new QueryClass({
+      type: 'relation',
+      anchor: this.ast,
+      direction: 'outgoing',
+      filter: FilterClass.type(relation, predicates).ast,
+    });
+  }
+
+  targetOf(relation: Schema.Schema.All, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+    return new QueryClass({
+      type: 'relation',
+      anchor: this.ast,
+      direction: 'incoming',
+      filter: FilterClass.type(relation, predicates).ast,
+    });
+  }
+
+  source(): Query<any> {
+    return new QueryClass({
+      type: 'relation-traversal',
+      anchor: this.ast,
+      direction: 'source',
+    });
+  }
+
+  target(): Query<any> {
+    return new QueryClass({
+      type: 'relation-traversal',
+      anchor: this.ast,
+      direction: 'target',
+    });
+  }
+
+  options(options: AST.QueryOptions): Query<any> {
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options,
+    });
+  }
+}
+
+export const Query: QueryAPI = QueryClass;
+
+type NormalizeQueryOptions = {
+  defaultSpaceId?: SpaceId;
+};
+
+export const normalizeQuery = (
+  query_: unknown | undefined,
+  userOptions: QueryOptions | undefined,
+  opts?: NormalizeQueryOptions,
+) => {
+  let query: Query.Any;
+
+  if (Query.is(query_)) {
+    query = query_;
+  } else if (Filter.is(query_)) {
+    query = Query.select(query_);
+  } else if (query_ === undefined) {
+    query = Query.select(Filter.everything());
+  } else if (typeof query_ === 'object' && query_ !== null) {
+    query = Query.select(FilterClass.props(query_));
+  } else if (typeof query_ === 'function') {
+    throw new TypeError('Functions are not supported as queries');
+  } else {
+    log.error('Invalid query', { query: query_ });
+    throw new TypeError('Invalid query');
+  }
+
+  if (userOptions) {
+    query = query.options({
+      spaceIds: userOptions.spaceIds ?? (opts?.defaultSpaceId ? [opts.defaultSpaceId] : undefined),
+      deleted:
+        userOptions?.deleted === undefined
+          ? undefined
+          : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.SHOW_DELETED
+            ? 'include'
+            : userOptions?.deleted === QueryOptionsProto.ShowDeletedOption.HIDE_DELETED
+              ? 'exclude'
+              : 'only',
+    });
+  }
+
+  return query;
 };

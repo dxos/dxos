@@ -4,9 +4,6 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
-
 import {
   type DelPatch,
   type InsertPatch,
@@ -14,7 +11,9 @@ import {
   type Prop,
   type PutPatch,
   type SpliceTextPatch,
-} from '@dxos/automerge/automerge';
+} from '@automerge/automerge';
+import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
 
 import { reconcileAnnotation } from './defs';
 

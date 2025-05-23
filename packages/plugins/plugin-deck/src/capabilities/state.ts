@@ -4,13 +4,13 @@
 
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
+import { live } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type SidebarState } from '@dxos/react-ui';
 
 import { DeckCapabilities } from './capabilities';
 import { DECK_PLUGIN } from '../meta';
-import { getMode, type Deck, type DeckState, defaultDeck } from '../types';
+import { getMode, type DeckPluginState, defaultDeck, type DeckState } from '../types';
 
 const boolean = /true|false/;
 
@@ -29,10 +29,10 @@ const migrateSidebarState = () => {
   });
 };
 
-export default () => {
+const DeckStateFactory = () => {
   migrateSidebarState();
 
-  const state = new LocalStorageStore<DeckState>(DECK_PLUGIN, {
+  const state = new LocalStorageStore<DeckPluginState>(DECK_PLUGIN, {
     sidebarState: 'expanded',
     complementarySidebarState: 'collapsed',
     complementarySidebarPanel: undefined,
@@ -41,6 +41,7 @@ export default () => {
     dialogBlockAlign: undefined,
     dialogType: undefined,
     popoverContent: null,
+    popoverAnchor: undefined,
     popoverAnchorId: undefined,
     popoverOpen: false,
     toasts: [],
@@ -63,11 +64,11 @@ export default () => {
     .prop({ key: 'sidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'complementarySidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'complementarySidebarPanel', type: LocalStorageStore.string({ allowUndefined: true }) })
-    .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, Deck>>() })
+    .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, DeckState>>() })
     .prop({ key: 'activeDeck', type: LocalStorageStore.string() })
     .prop({ key: 'previousDeck', type: LocalStorageStore.string() });
 
-  const layout = create<Capabilities.Layout>({
+  const layout = live<Capabilities.Layout>({
     get mode() {
       return getMode(state.values.deck);
     },
@@ -99,3 +100,5 @@ export default () => {
     contributes(Capabilities.Layout, layout),
   ];
 };
+
+export default DeckStateFactory;

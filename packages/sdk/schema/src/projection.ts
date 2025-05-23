@@ -3,14 +3,13 @@
 //
 
 import { computed, untracked } from '@preact/signals-core';
+import { Schema } from 'effect';
 
 import {
   formatToType,
   typeToFormat,
   FormatEnum,
   type JsonProp,
-  type EchoSchema,
-  S,
   TypeEnum,
   type JsonSchemaType,
 } from '@dxos/echo-schema';
@@ -22,7 +21,7 @@ import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
 import { PropertySchema, type PropertyType } from './format';
-import { makeSingleSelectAnnotations } from './util';
+import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';
 import { type ViewType, type FieldType } from './view';
 
 export const VIEW_FIELD_LIMIT = 32;
@@ -39,16 +38,17 @@ export type FieldProjection = {
  * Wrapper for View that manages Field and Format updates.
  */
 export class ViewProjection {
-  private readonly _encode = S.encodeSync(PropertySchema);
-  private readonly _decode = S.decodeSync(PropertySchema, {});
+  private readonly _encode = Schema.encodeSync(PropertySchema);
+  private readonly _decode = Schema.decodeSync(PropertySchema, {});
 
   private _fieldProjections = computed(() => this._view.fields.map((field) => this.getFieldProjection(field.id)));
   private _hiddenProperties = computed(() => this._view.hiddenFields?.map((field) => field.path as string) ?? []);
 
+  // TOOD(burdon): Should this take an instane of S.S.AnyNoContext and derive the JsonSchemaType itselft (and watch for reactivity)?
   constructor(
-    // TODO(burdon): This could be StoredSchema?
-    // TODO(burdon): How to use tables with static schema.
-    private readonly _schema: EchoSchema,
+    /** Possibly reactive object. */
+    // TODO(burdon): Pass in boolean readonly?
+    private readonly _schema: JsonSchemaType,
     private readonly _view: ViewType,
   ) {
     this.normalizeView();
@@ -57,6 +57,10 @@ export class ViewProjection {
 
   get view() {
     return this._view;
+  }
+
+  get schema() {
+    return this._schema;
   }
 
   /**
@@ -83,28 +87,40 @@ export class ViewProjection {
    * Get projection of View fields and JSON schema property annotations.
    */
   getFieldProjection(fieldId: string): FieldProjection {
-    invariant(this._schema.jsonSchema.properties);
+    invariant(this._schema.properties);
     const field = this._view.fields.find((field) => field.id === fieldId);
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
-    const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? { format: FormatEnum.None };
-    const { type: schemaType, format: schemaFormat = FormatEnum.None, echo, ...rest } = jsonProperty;
+    const jsonProperty: JsonSchemaType = this._schema.properties[field.path] ?? { format: FormatEnum.None };
+    const { type: schemaType, format: schemaFormat = FormatEnum.None, annotations, ...rest } = jsonProperty;
 
     const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
     const type = referenceSchema ? TypeEnum.Ref : (schemaType as TypeEnum);
-    const format = referenceSchema
-      ? FormatEnum.Ref
-      : schemaFormat === FormatEnum.None
-        ? typeToFormat[type]!
-        : (schemaFormat as FormatEnum);
 
-    const options =
-      format === FormatEnum.SingleSelect && echo?.annotations?.singleSelect?.options
-        ? echo.annotations.singleSelect.options
-        : undefined;
+    const format =
+      (() => {
+        if (referenceSchema) {
+          return FormatEnum.Ref;
+        } else if (schemaFormat === FormatEnum.None) {
+          return typeToFormat[type];
+        } else {
+          return schemaFormat as FormatEnum;
+        }
+      })() ?? FormatEnum.None;
 
-    const values = {
+    const getOptions = () => {
+      if (format === FormatEnum.SingleSelect) {
+        return annotations?.meta?.singleSelect?.options;
+      }
+      if (format === FormatEnum.MultiSelect) {
+        return annotations?.meta?.multiSelect?.options;
+      }
+    };
+
+    const options = getOptions();
+
+    const values: typeof PropertySchema.Type = {
       type,
       format,
       property: field.path as JsonProp,
@@ -124,7 +140,7 @@ export class ViewProjection {
    * @param fieldId The ID of the field to get projection for
    */
   tryGetFieldProjection(fieldId: string): FieldProjection | undefined {
-    invariant(this._schema.jsonSchema.properties);
+    invariant(this._schema.properties);
     const field = this._view.fields.find((field) => field.id === fieldId);
     if (!field) {
       return undefined;
@@ -171,8 +187,8 @@ export class ViewProjection {
 
   showFieldProjection(property: JsonProp): void {
     untracked(() => {
-      invariant(this._schema.jsonSchema.properties);
-      invariant(property in this._schema.jsonSchema.properties);
+      invariant(this._schema.properties);
+      invariant(property in this._schema.properties);
 
       const existingField = this._view.fields.find((field) => field.path === property);
       if (existingField) {
@@ -210,7 +226,8 @@ export class ViewProjection {
     untracked(() => {
       const sourcePropertyName = field?.path;
       const targetPropertyName = props?.property;
-      const isRename = !!(sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName);
+      const hasSourceAndTarget = !!sourcePropertyName && !!targetPropertyName;
+      const isRename = hasSourceAndTarget && sourcePropertyName !== targetPropertyName;
 
       if (targetPropertyName && this._view.hiddenFields) {
         const hiddenIndex = this._view.hiddenFields.findIndex((field) => field.path === targetPropertyName);
@@ -257,15 +274,21 @@ export class ViewProjection {
           type = formatToType[format];
         }
 
-        if (format === FormatEnum.SingleSelect && options) {
-          makeSingleSelectAnnotations(jsonProperty, options);
+        if (options) {
+          if (format === FormatEnum.SingleSelect) {
+            makeSingleSelectAnnotations(jsonProperty, options);
+          }
+
+          if (format === FormatEnum.MultiSelect) {
+            makeMultiSelectAnnotations(jsonProperty, options);
+          }
         }
 
         invariant(type !== TypeEnum.Ref);
-        this._schema.jsonSchema.properties ??= {};
-        this._schema.jsonSchema.properties[property] = { type, format, ...jsonProperty, ...rest };
+        this._schema.properties ??= {};
+        this._schema.properties[property] = { type, format, ...jsonProperty, ...rest };
         if (isRename) {
-          delete this._schema.jsonSchema.properties[sourcePropertyName!];
+          delete this._schema.properties[sourcePropertyName!];
         }
       }
     });
@@ -289,12 +312,12 @@ export class ViewProjection {
       }
 
       // Delete property.
-      invariant(this._schema.jsonSchema.properties, 'Schema properties must exist');
+      invariant(this._schema.properties, 'Schema properties must exist');
       invariant(snapshot.field.path, 'Field path must exist');
-      delete this._schema.jsonSchema.properties[snapshot.field.path];
+      delete this._schema.properties[snapshot.field.path];
 
       // check that it's actually gone
-      invariant(!this._schema.jsonSchema.properties[snapshot.field.path], 'Field path still exists');
+      invariant(!this._schema.properties[snapshot.field.path], 'Field path still exists');
 
       return { deleted: snapshot, index: fieldIndex };
     });
@@ -308,7 +331,7 @@ export class ViewProjection {
   private normalizeView(): void {
     untracked(() => {
       // Get all properties from the schema.
-      const schemaProperties = new Set(Object.keys(this._schema.jsonSchema.properties ?? {}));
+      const schemaProperties = new Set(Object.keys(this._schema.properties ?? {}));
 
       // 1. Process view.fields - keep ID fields, remove other fields not in schema.
       for (let i = this._view.fields.length - 1; i >= 0; i--) {
@@ -356,10 +379,10 @@ export class ViewProjection {
    * Migrate legacy single-select format to new format.
    */
   private migrateSingleSelectStoredFormat(): void {
-    invariant(this._schema.jsonSchema.properties);
+    invariant(this._schema.properties);
 
     for (const field of this._view.fields) {
-      const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? {
+      const jsonProperty: JsonSchemaType = this._schema.properties[field.path] ?? {
         format: FormatEnum.None,
       };
       const { format: schemaFormat = FormatEnum.None, oneOf } = jsonProperty;

@@ -2,23 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { Format, S } from '@dxos/echo-schema';
+import { Format } from '@dxos/echo-schema';
 
 import { getSchemaProperties } from './properties';
 
-const TestSchema = S.Struct({
-  name: S.String,
-  active: S.Boolean,
+const TestSchema = Schema.Struct({
+  name: Schema.String,
+  active: Schema.Boolean,
   email: Format.Email,
-  age: S.Number,
+  age: Schema.Number,
   location: Format.GeoPoint,
-  address: S.Struct({
-    city: S.String,
-    zip: S.String,
+  address: Schema.Struct({
+    city: Schema.String,
+    zip: Schema.String,
   }),
-  scores: S.optional(S.Array(S.Number)),
+  scores: Schema.optional(Schema.Array(Schema.Number)),
 });
 
 describe('properties', () => {
@@ -46,12 +47,12 @@ describe('properties', () => {
   });
 
   test('discriminated unions', ({ expect }) => {
-    const TestSpecSchema = S.Union(
-      S.Struct({ kind: S.Literal('a'), label: S.String }),
-      S.Struct({ kind: S.Literal('b'), count: S.Number, active: S.Boolean }),
+    const TestSpecSchema = Schema.Union(
+      Schema.Struct({ kind: Schema.Literal('a'), label: Schema.String }),
+      Schema.Struct({ kind: Schema.Literal('b'), count: Schema.Number, active: Schema.Boolean }),
     );
 
-    type TestSpecType = S.Schema.Type<typeof TestSpecSchema>;
+    type TestSpecType = Schema.Schema.Type<typeof TestSpecSchema>;
 
     {
       const obj: TestSpecType = {
@@ -80,12 +81,12 @@ describe('properties', () => {
     }
 
     {
-      const TestSchema = S.Struct({
-        name: S.String,
-        spec: S.optional(TestSpecSchema),
+      const TestSchema = Schema.Struct({
+        name: Schema.String,
+        spec: Schema.optional(TestSpecSchema),
       });
 
-      type TestType = S.Schema.Type<typeof TestSchema>;
+      type TestType = Schema.Schema.Type<typeof TestSchema>;
 
       const obj: TestType = {
         name: 'DXOS',
@@ -102,8 +103,8 @@ describe('properties', () => {
   });
 
   test('literal unions', ({ expect }) => {
-    const ColorSchema = S.Struct({
-      color: S.Union(S.Literal('red'), S.Literal('green'), S.Literal('blue')),
+    const ColorSchema = Schema.Struct({
+      color: Schema.Union(Schema.Literal('red'), Schema.Literal('green'), Schema.Literal('blue')),
     });
 
     const props = getSchemaProperties(ColorSchema.ast);

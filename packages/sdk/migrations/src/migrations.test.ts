@@ -5,7 +5,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { create, Filter, type Space } from '@dxos/client/echo';
+import { live, Filter, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Expando } from '@dxos/echo-schema';
 
@@ -65,7 +65,7 @@ describe('Migrations', () => {
 
   test('if no migrations have been run before, runs all migrations', async () => {
     await Migrations.migrate(space);
-    const { objects } = await space.db.query(Filter.schema(Expando, { namespace: 'test' })).run();
+    const { objects } = await space.db.query(Filter.type(Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);
     expect(objects[0].count).to.equal(6);
     expect(space.properties['test.version']).to.equal('1970-01-03');
@@ -73,9 +73,9 @@ describe('Migrations', () => {
 
   test('if some migrations have been run before, runs only the remaining migrations', async () => {
     space.properties['test.version'] = '1970-01-02';
-    space.db.add(create(Expando, { namespace: 'test', count: 5 }));
+    space.db.add(live(Expando, { namespace: 'test', count: 5 }));
     await Migrations.migrate(space);
-    const { objects } = await space.db.query(Filter.schema(Expando, { namespace: 'test' })).run();
+    const { objects } = await space.db.query(Filter.type(Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);
     expect(objects[0].count).to.equal(15);
     expect(space.properties['test.version']).to.equal('1970-01-03');
@@ -84,13 +84,13 @@ describe('Migrations', () => {
   test('if all migrations have been run before, does nothing', async () => {
     space.properties['test.version'] = '1970-01-03';
     await Migrations.migrate(space);
-    const { objects } = await space.db.query(Filter.schema(Expando, { namespace: 'test' })).run();
+    const { objects } = await space.db.query(Filter.type(Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(0);
   });
 
   test('if target version is specified, runs only the migrations up to that version', async () => {
     await Migrations.migrate(space, '1970-01-02');
-    const { objects } = await space.db.query(Filter.schema(Expando, { namespace: 'test' })).run();
+    const { objects } = await space.db.query(Filter.type(Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);
     expect(objects[0].count).to.equal(2);
     expect(space.properties['test.version']).to.equal('1970-01-02');

@@ -59,5 +59,8 @@
     "console",
     "effect/Effect",
     "effect/Console"
-  ]
+  ],
+  "circleci.notifications.mine": true,
+  "search.useParentIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": false
 }

@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { PanelContainer, Searchbar } from '../../../components';
@@ -33,7 +33,7 @@ export const QueuesPanel = () => {
     [],
   );
 
-  const tableData = useMemo(() => {
+  const rows = useMemo(() => {
     return (queue?.items ?? []).map((item: any) => ({
       id: item.id,
       type: item['@type'],
@@ -41,19 +41,21 @@ export const QueuesPanel = () => {
     }));
   }, [queue?.items]);
 
-  const handleSelectionChanged = (selectedIds: string[]) => {
-    if (selectedIds.length === 0) {
+  const handleRowClicked = (row: any) => {
+    if (!row) {
       setSelected(undefined);
       return;
     }
 
-    // Always pick the last item in the queue
+    // Always pick the last item in the queue.
     const lastItem = queue?.items[queue?.items.length - 1];
     if (lastItem) {
       setSelectedVersionObject(null);
       setSelected(lastItem);
     }
   };
+
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
     <PanelContainer
@@ -64,15 +66,11 @@ export const QueuesPanel = () => {
         </Toolbar.Root>
       }
     >
-      <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
-        <DynamicTable properties={properties} data={tableData} onSelectionChanged={handleSelectionChanged} />
-
+      {/* TODO(burdon): Convert to MasterDetailTable. */}
+      <div className={mx('flex grow flex-col divide-y divide-separator overflow-hidden', styles.border)}>
+        <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />
         <div className={mx('flex overflow-auto', 'h-1/2')}>
-          {selected ? (
-            <ObjectDataViewer object={selectedVersionObject ?? selected} />
-          ) : (
-            'Select an object to inspect the contents'
-          )}
+          {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
         </div>
       </div>
     </PanelContainer>
@@ -116,7 +114,7 @@ const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
 interface rendererNode {
   type: 'element' | 'text';
   value?: string | number | undefined;
-  tagName?: keyof React.JSX.IntrinsicElements | React.ComponentType<any> | undefined;
+  tagName?: keyof JSX.IntrinsicElements | ComponentType<any> | undefined;
   properties?: { className: any[]; [key: string]: any };
   children?: rendererNode[];
 }

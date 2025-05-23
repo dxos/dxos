@@ -5,10 +5,9 @@
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
-import { stringify, table, type TableOptions } from '@dxos/cli-base';
+import { table, type TableOptions } from '@dxos/cli-base';
 import { Filter } from '@dxos/client/echo';
-import { FunctionTrigger } from '@dxos/functions/types';
-import { omit } from '@dxos/log';
+import { FunctionTrigger } from '@dxos/functions';
 
 import { BaseCommand } from '../../../base';
 
@@ -26,7 +25,7 @@ export default class List extends BaseCommand<typeof List> {
   async run(): Promise<any> {
     return await this.execWithSpace(
       async ({ space }) => {
-        const { objects: triggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
+        const { objects: triggers } = await space.db.query(Filter.type(FunctionTrigger)).run();
         const filtered = this.flags.id ? triggers.filter((filter) => filter.id.startsWith(this.flags.id!)) : triggers;
         if (this.flags.enable !== undefined || this.flags.disable !== undefined) {
           for (const trigger of filtered) {
@@ -57,8 +56,7 @@ export const printTriggers = (functions: FunctionTrigger[], options: TableOption
         id: { primary: true, truncate: true },
         enabled: { get: (row) => (row.enabled ? `${chalk.green('✔')}` : '') },
         function: {},
-        spec: { get: (row) => row.spec.type },
-        meta: { get: (row) => stringify(omit(row.spec, 'type')) },
+        spec: { get: (row) => row.spec.kind },
       },
       options,
     ),

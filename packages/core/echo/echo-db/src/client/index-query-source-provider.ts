@@ -18,10 +18,10 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type AnyLiveObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
-import { type Filter, type QueryResult } from '../query';
+import { type DeprecatedFilter, type QueryResultEntry } from '../query';
 
 export type LoadObjectParams = {
   spaceId: SpaceId;
@@ -30,7 +30,7 @@ export type LoadObjectParams = {
 };
 
 export interface ObjectLoader {
-  loadObject(params: LoadObjectParams): Promise<ReactiveEchoObject<any> | undefined>;
+  loadObject(params: LoadObjectParams): Promise<AnyLiveObject<any> | undefined>;
 }
 
 export type IndexQueryProviderParams = {
@@ -61,8 +61,8 @@ export type IndexQuerySourceParams = {
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
-  private _filter?: Filter = undefined;
-  private _results?: QueryResult[] = [];
+  private _filter?: DeprecatedFilter = undefined;
+  private _results?: QueryResultEntry[] = [];
   private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
@@ -74,18 +74,18 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
   }
 
-  getResults(): QueryResult[] {
+  getResults(): QueryResultEntry[] {
     return this._results ?? [];
   }
 
-  async run(filter: Filter): Promise<QueryResult[]> {
+  async run(filter: DeprecatedFilter): Promise<QueryResultEntry[]> {
     this._filter = filter;
     return new Promise((resolve, reject) => {
       this._queryIndex(filter, QueryReactivity.ONE_SHOT, resolve, reject);
     });
   }
 
-  update(filter: Filter): void {
+  update(filter: DeprecatedFilter): void {
     if (filter.options?.dataLocation === QueryOptions.DataLocation.LOCAL) {
       return;
     }
@@ -102,9 +102,9 @@ export class IndexQuerySource implements QuerySource {
   }
 
   private _queryIndex(
-    filter: Filter,
+    filter: DeprecatedFilter,
     queryType: QueryReactivity,
-    onResult: (results: QueryResult[]) => void,
+    onResult: (results: QueryResultEntry[]) => void,
     onError?: (error: Error) => void,
   ) {
     const queryId = nextQueryId++;
@@ -127,23 +127,30 @@ export class IndexQuerySource implements QuerySource {
 
     stream.subscribe(
       async (response) => {
-        if (queryType === QueryReactivity.ONE_SHOT) {
-          if (currentCtx) {
-            return;
-          }
-          void stream.close().catch(() => {});
-        }
-
-        await currentCtx?.dispose();
-        const ctx = new Context();
-        currentCtx = ctx;
-
-        log('queryIndex raw results', {
-          queryId,
-          length: response.results?.length ?? 0,
-        });
-
         try {
+          if (filter.options?.spaceIds && filter.options?.spaceIds.length > 0) {
+            invariant(
+              response.results?.every((r) => filter.options.spaceIds?.includes(r.spaceId)),
+              'Result spaceId mismatch',
+            );
+          }
+
+          if (queryType === QueryReactivity.ONE_SHOT) {
+            if (currentCtx) {
+              return;
+            }
+            void stream.close().catch(() => {});
+          }
+
+          await currentCtx?.dispose();
+          const ctx = new Context();
+          currentCtx = ctx;
+
+          log('queryIndex raw results', {
+            queryId,
+            length: response.results?.length ?? 0,
+          });
+
           const processedResults = await Promise.all(
             (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
           );
@@ -184,7 +191,7 @@ export class IndexQuerySource implements QuerySource {
     ctx: Context,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
-  ): Promise<QueryResult | null> {
+  ): Promise<QueryResultEntry | null> {
     if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {
         objectId: result.id,
@@ -209,7 +216,7 @@ export class IndexQuerySource implements QuerySource {
     }
 
     const core = getObjectCore(object);
-    const queryResult: QueryResult = {
+    const queryResult: QueryResultEntry = {
       id: object.id,
       spaceId: core.database!.spaceId,
       spaceKey: core.database!.spaceKey,

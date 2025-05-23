@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST as AST, type JSONSchema } from 'effect';
-import { Option, pipe } from 'effect';
+import { Option, SchemaAST, type JSONSchema, pipe } from 'effect';
 
-import type { JsonSchemaType } from '../ast';
+import { type JsonSchemaType } from '../ast';
+import { createAnnotationHelper } from '../ast/annotation-helper';
 
 export enum TypeEnum {
   Object = 'object',
+  Array = 'array',
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',
@@ -25,6 +26,8 @@ export type ScalarType =
 // TODO(burdon): Ref.
 export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
   switch ((property as any).type) {
+    case 'array':
+      return TypeEnum.Array;
     case 'object':
       return TypeEnum.Object;
     case 'string':
@@ -42,9 +45,12 @@ export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
  */
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
-export const getFormatAnnotation = (node: AST.AST): FormatEnum | undefined =>
-  pipe(AST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
+export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotationId);
 
+export const getFormatAnnotation = (node: SchemaAST.AST): FormatEnum | undefined =>
+  pipe(SchemaAST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
+
+// TODO(burdon): Rename Format.
 export enum FormatEnum {
   None = 'none',
   String = 'string',
@@ -65,6 +71,7 @@ export enum FormatEnum {
   Markdown = 'markdown',
   Regex = 'regex',
   SingleSelect = 'single-select',
+  MultiSelect = 'multi-select',
   URL = 'url',
   UUID = 'uuid',
 
@@ -116,7 +123,6 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.None]: undefined as any,
   [FormatEnum.String]: TypeEnum.String,
   [FormatEnum.Number]: TypeEnum.Number,
-  // Schema for options in the form
   [FormatEnum.Boolean]: TypeEnum.Boolean,
   [FormatEnum.Ref]: TypeEnum.Ref,
 
@@ -132,6 +138,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.URL]: TypeEnum.String,
   [FormatEnum.UUID]: TypeEnum.String,
   [FormatEnum.SingleSelect]: TypeEnum.String,
+  [FormatEnum.MultiSelect]: TypeEnum.Object,
 
   // Dates
   [FormatEnum.Date]: TypeEnum.String,
@@ -154,7 +161,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
  */
 export const OptionsAnnotationId = Symbol.for('@dxos/schema/annotation/Options');
 
-export const getOptionsAnnotation = (node: AST.AST): OptionsAnnotationType[] | undefined =>
-  pipe(AST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
+export const getOptionsAnnotation = (node: SchemaAST.AST): OptionsAnnotationType[] | undefined =>
+  pipe(SchemaAST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
 
 export type OptionsAnnotationType = string | number;

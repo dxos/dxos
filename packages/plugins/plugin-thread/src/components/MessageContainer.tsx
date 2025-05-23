@@ -8,9 +8,8 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'rea
 
 import { Surface } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
-import { type MessageType } from '@dxos/plugin-space/types';
 import { PublicKey } from '@dxos/react-client';
-import { type ReactiveEchoObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
+import { type AnyLiveObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
@@ -22,6 +21,7 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
+import { type DataType } from '@dxos/schema';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
@@ -31,77 +31,66 @@ import { getMessageMetadata } from '../util';
 // TODO(thure): #8149
 const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverableControlItem];
 
-export const MessageContainer = ({
-  message,
-  members,
-  onDelete,
-}: {
-  message: MessageType;
+export type MessageContainerProps = {
+  message: DataType.Message;
   members: SpaceMember[];
+  editable?: boolean;
   onDelete?: (id: string) => void;
-}) => {
+};
+
+export const MessageContainer = ({ message, members, editable = false, onDelete }: MessageContainerProps) => {
   const senderIdentity = members.find(
-    (member) => message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey),
+    (member) =>
+      (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
+      (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
   )?.identity;
   const messageMetadata = getMessageMetadata(message.id, senderIdentity);
-  const userIsAuthor = useIdentity()?.identityKey.toHex() === messageMetadata.authorId;
+  const userIsAuthor = useIdentity()?.did === messageMetadata.authorId;
   const [editing, setEditing] = useState(false);
   const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
   const { t } = useTranslation(THREAD_PLUGIN);
   const editLabel = t(editing ? 'save message label' : 'edit message label');
   const deleteLabel = t('delete message label');
+  const textBlock = message.blocks.find((block) => block.type === 'text');
+  const references = message.blocks.filter((block) => block.type === 'reference').map((block) => block.reference);
+
+  useOnEditAnalytics(message, textBlock, !!editing);
 
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
         <ButtonGroup classNames='mie-1'>
-          {userIsAuthor && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-                  classNames={messageControlClassNames}
-                  onClick={() => setEditing((editing) => !editing)}
-                >
-                  <span className='sr-only'>{editLabel}</span>
-                  {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  {editLabel}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
+          {userIsAuthor && editable && (
+            <Tooltip.Trigger asChild content={editLabel}>
+              <Button
+                variant='ghost'
+                data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+                classNames={messageControlClassNames}
+                onClick={() => setEditing((editing) => !editing)}
+              >
+                <span className='sr-only'>{editLabel}</span>
+                {editing ? <Check className={getSize(4)} /> : <PencilSimple className={getSize(4)} />}
+              </Button>
+            </Tooltip.Trigger>
           )}
           {onDelete && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  data-testid='thread.message.delete'
-                  classNames={messageControlClassNames}
-                  onClick={() => handleDelete()}
-                >
-                  <span className='sr-only'>{deleteLabel}</span>
-                  <X className={getSize(4)} />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content>
-                  {deleteLabel}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
+            <Tooltip.Trigger asChild content={deleteLabel}>
+              <Button
+                variant='ghost'
+                data-testid='thread.message.delete'
+                classNames={messageControlClassNames}
+                onClick={() => handleDelete()}
+              >
+                <span className='sr-only'>{deleteLabel}</span>
+                <X className={getSize(4)} />
+              </Button>
+            </Tooltip.Trigger>
           )}
         </ButtonGroup>
       </MessageHeading>
-      <TextboxBlock message={message} isAuthor={userIsAuthor} editing={editing} />
-      {RefArray.allResolvedTargets(message.parts ?? []).map((part, index) => (
-        <MessagePart key={index} part={part} />
+      {textBlock && <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} />}
+      {RefArray.targets(references).map((reference, index) => (
+        <MessagePart key={index} part={reference} />
       ))}
     </MessageRoot>
   );
@@ -112,33 +101,33 @@ const MessagePart = ({ part }: { part: Expando }) => {
 };
 
 const TextboxBlock = ({
-  message,
+  block,
   isAuthor,
   editing,
 }: {
-  message: MessageType;
+  block: DataType.MessageBlock.Text;
   editing?: boolean;
   isAuthor?: boolean;
   identity?: Identity;
 }) => {
   const { themeMode } = useThemeContext();
-  const inMemoryContentRef = useRef(message.text);
+  const inMemoryContentRef = useRef(block.text);
 
   const handleDocumentChange = useCallback((newState: string) => {
     inMemoryContentRef.current = newState;
   }, []);
 
   const saveDocumentChange = useCallback(() => {
-    message.text = inMemoryContentRef.current;
-  }, [message]);
+    block.text = inMemoryContentRef.current;
+  }, [block]);
 
   useOnTransition(editing, true, false, saveDocumentChange);
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
-      initialValue: message.text,
+      initialValue: block.text,
       extensions: [
-        createBasicExtensions({ readonly: !isAuthor || !editing }),
+        createBasicExtensions({ readOnly: !isAuthor || !editing }),
         createThemeExtensions({ themeMode }),
         command,
         EditorView.updateListener.of((update) => {
@@ -148,19 +137,17 @@ const TextboxBlock = ({
         }),
       ],
     }),
-    [message.text, editing, isAuthor, themeMode, handleDocumentChange],
+    [block.text, editing, isAuthor, themeMode, handleDocumentChange],
   );
 
   useEffect(() => {
     editing && view?.focus();
   }, [editing, view]);
 
-  useOnEditAnalytics(message, !!editing);
-
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: ReactiveEchoObject<any> }>(
+const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: AnyLiveObject<any> }>(
   ({ subject }, forwardedRef) => {
     let title = subject.name ?? subject.title ?? subject.type ?? 'Object';
     if (typeof title !== 'string') {

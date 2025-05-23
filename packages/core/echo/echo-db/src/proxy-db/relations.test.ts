@@ -6,8 +6,8 @@ import { afterEach } from 'node:test';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
-import { Contact, HasManager } from '@dxos/echo-schema/testing';
-import { create } from '@dxos/live-object';
+import { Testing } from '@dxos/echo-schema/testing';
+import { live } from '@dxos/live-object';
 
 import type { EchoDatabase } from './database';
 import { getSource, getTarget, isRelation } from '../echo-handler/relations';
@@ -21,7 +21,7 @@ describe('Relations', () => {
     testBuilder = await new EchoTestBuilder().open();
     ({ db, graph } = await testBuilder.createDatabase());
 
-    graph.schemaRegistry.addSchema([Contact, HasManager]);
+    graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
   });
 
   afterEach(async () => {
@@ -30,17 +30,17 @@ describe('Relations', () => {
 
   test('create relation between two objects', async () => {
     const alice = db.add(
-      create(Contact, {
+      live(Testing.Contact, {
         name: 'Alice',
       }),
     );
     const bob = db.add(
-      create(Contact, {
+      live(Testing.Contact, {
         name: 'Bob',
       }),
     );
     const hasManager = db.add(
-      create(HasManager, {
+      live(Testing.HasManager, {
         [RelationSourceId]: bob,
         [RelationTargetId]: alice,
         since: '2022',

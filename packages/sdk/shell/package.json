@@ -1,6 +1,6 @@
 {
   "name": "@dxos/shell",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,8 +10,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/bundle/shell.js",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/bundle/shell.js"
     },
     "./style.css": "./dist/bundle/style.css",
     "./react": {

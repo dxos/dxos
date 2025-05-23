@@ -2,13 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Doc, next as am } from '@dxos/automerge/automerge';
-import { type AnyDocumentId, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { type Doc, next as am } from '@automerge/automerge';
+import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
+import { type Schema } from 'effect';
+
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { ObjectCore, migrateDocument, type RepoProxy, type DocHandleProxy } from '@dxos/echo-db';
 import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc, Reference } from '@dxos/echo-protocol';
-import { requireTypeReference, type S } from '@dxos/echo-schema';
+import { requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
@@ -28,7 +30,7 @@ export class MigrationBuilder {
     // TODO(wittjosiah): Accessing private API.
     this._rootDoc = (this._space.db.coreDatabase as any)._automergeDocLoader
       .getSpaceRootDocHandle()
-      .docSync() as Doc<SpaceDoc>;
+      .doc() as Doc<SpaceDoc>;
   }
 
   async findObject(id: string): Promise<ObjectStructure | undefined> {
@@ -39,13 +41,13 @@ export class MigrationBuilder {
     }
 
     await docHandle.whenReady();
-    const doc = docHandle.docSync() as Doc<SpaceDoc>;
+    const doc = docHandle.doc() as Doc<SpaceDoc>;
     return doc.objects?.[id];
   }
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: S.Schema.AnyNoContext; props: any }>,
+    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: Schema.Schema.AnyNoContext; props: any }>,
   ) {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
@@ -74,13 +76,13 @@ export class MigrationBuilder {
         },
       },
     };
-    const migratedDoc = migrateDocument(oldHandle.docSync() as Doc<SpaceDoc>, newState);
+    const migratedDoc = migrateDocument(oldHandle.doc() as Doc<SpaceDoc>, newState);
     const newHandle = this._repo.import<SpaceDoc>(am.save(migratedDoc));
     this._newLinks[id] = newHandle.url;
     this._addHandleToFlushList(newHandle);
   }
 
-  async addObject(schema: S.Schema.AnyNoContext, props: any) {
+  async addObject(schema: Schema.Schema.AnyNoContext, props: any) {
     const core = this._createObject({ schema, props });
     return core.id;
   }
@@ -156,7 +158,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(this._newRoot);
   }
 
-  private _createObject({ id, schema, props }: { id?: string; schema: S.Schema.AnyNoContext; props: any }) {
+  private _createObject({ id, schema, props }: { id?: string; schema: Schema.Schema.AnyNoContext; props: any }) {
     const core = new ObjectCore();
     if (id) {
       core.id = id;

@@ -9,7 +9,7 @@ import { type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { getTypename } from '@dxos/echo-schema';
-import { FunctionType } from '@dxos/functions/types';
+import { FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -73,14 +73,13 @@ export class ComputeGraph extends Resource {
   ) {
     super();
 
-    const contextOptions = {
+    this.context = new FunctionContext(this._hf, this._space, {
       ...this._options,
       onUpdate: (update) => {
         this._options?.onUpdate?.(update);
         this.update.emit({ type: 'valuesUpdated' });
       },
-    } satisfies Partial<FunctionContextOptions>;
-    this.context = new FunctionContext(this._hf, this._space, contextOptions);
+    });
     this._hf.updateConfig({ context: this.context });
 
     // TODO(burdon): If debounce then aggregate changes.
@@ -242,7 +241,7 @@ export class ComputeGraph extends Resource {
   protected override async _open() {
     if (this._space) {
       // Subscribe to remote function definitions.
-      const query = this._space.db.query(Filter.schema(FunctionType));
+      const query = this._space.db.query(Filter.type(FunctionType));
       const unsubscribe = query.subscribe(({ objects }) => {
         this._remoteFunctions = objects.filter(({ binding }) => binding);
         this.update.emit({ type: 'functionsUpdated' });

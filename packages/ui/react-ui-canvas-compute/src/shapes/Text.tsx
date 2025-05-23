@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
 import React from 'react';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
 import { TextBox, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
@@ -13,14 +13,14 @@ import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 
-export const TextShape = S.extend(
+export const TextShape = Schema.extend(
   ComputeShape,
-  S.Struct({
-    type: S.Literal('text'),
+  Schema.Struct({
+    type: Schema.Literal('text'),
   }),
 );
 
-export type TextShape = S.Schema.Type<typeof TextShape>;
+export type TextShape = Schema.Schema.Type<typeof TextShape>;
 
 export type CreateTextProps = CreateShapeProps<TextShape>;
 

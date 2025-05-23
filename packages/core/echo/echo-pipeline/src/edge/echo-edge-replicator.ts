@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { cbor } from '@automerge/automerge-repo';
+
 import { Mutex, scheduleTask, scheduleMicroTask } from '@dxos/async';
-import { cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
@@ -57,7 +58,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 
   async connect(context: EchoReplicatorContext): Promise<void> {
-    log.info('connect', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
+    log.info('connecting...', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
     this._context = context;
 
     this._ctx = Context.default();
@@ -248,7 +249,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   protected override async _open(ctx: Context): Promise<void> {
-    log('open');
+    log('opening...');
 
     await this._requestLimiter.open();
 
@@ -263,7 +264,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }
 
   protected override async _close(): Promise<void> {
-    log('close');
+    log('closing...');
     this._readableStreamController.close();
 
     await this._requestLimiter.close();
@@ -287,7 +288,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
         peerId: this._remotePeerId as PeerId,
       });
 
-      log.verbose('edge-replicator document not found locally for share policy check', {
+      log.verbose('document not found locally for share policy check', {
         documentId: params.documentId,
         acceptDocument: remoteDocumentExists,
         remoteId: this._remotePeerId,
@@ -316,7 +317,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     }
 
     const payload = cbor.decode(message.payload!.value) as AutomergeProtocolMessage;
-    log.verbose('edge replicator receive', {
+    log.verbose('received', {
       type: payload.type,
       documentId: payload.type === 'sync' && payload.documentId,
       remoteId: this._remotePeerId,
@@ -345,7 +346,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // Fix the peer id.
     (message as any).targetId = this._targetServiceId as PeerId;
 
-    log.verbose('edge replicator send', {
+    log.verbose('sending...', {
       type: message.type,
       documentId: message.type === 'sync' && message.documentId,
       remoteId: this._remotePeerId,

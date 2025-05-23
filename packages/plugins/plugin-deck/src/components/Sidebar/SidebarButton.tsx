@@ -1,0 +1,91 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { useCallback } from 'react';
+
+import { createIntent, LayoutAction, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+
+import { DeckCapabilities } from '../../capabilities';
+import { useDeckCompanions } from '../../hooks';
+import { getCompanionId } from '../../hooks/useDeckCompanions';
+import { DECK_PLUGIN } from '../../meta';
+
+export const ToggleSidebarButton = ({
+  classNames,
+  variant = 'ghost',
+}: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
+  const { t } = useTranslation(DECK_PLUGIN);
+  return (
+    <IconButton
+      variant={variant}
+      iconOnly
+      icon='ph--sidebar--regular'
+      size={4}
+      label={t('open navigation sidebar label')}
+      onClick={() =>
+        (layoutContext.sidebarState = layoutContext.sidebarState === 'expanded' ? 'collapsed' : 'expanded')
+      }
+      classNames={classNames}
+    />
+  );
+};
+
+export const CloseSidebarButton = () => {
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
+  const { t } = useTranslation(DECK_PLUGIN);
+  return (
+    <IconButton
+      variant='ghost'
+      iconOnly
+      icon='ph--caret-line-left--regular'
+      size={4}
+      label={t('close navigation sidebar label')}
+      onClick={() => (layoutContext.sidebarState = 'collapsed')}
+      classNames='rounded-none pli-1 dx-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-left))]'
+    />
+  );
+};
+
+export const ToggleComplementarySidebarButton = ({
+  inR0,
+  classNames,
+  current,
+}: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
+  const { t } = useTranslation(DECK_PLUGIN);
+
+  const companions = useDeckCompanions();
+  const handleClick = useCallback(async () => {
+    layoutContext.complementarySidebarState =
+      layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
+    const firstCompanion = companions[0];
+    if (layoutContext.complementarySidebarState === 'expanded' && !current && firstCompanion) {
+      await dispatch(
+        createIntent(LayoutAction.UpdateComplementary, {
+          part: 'complementary',
+          subject: getCompanionId(firstCompanion.id),
+        }),
+      );
+    }
+  }, [layoutContext, current, companions, dispatch]);
+
+  // TODO(thure): This should have a tooltip but is suppressed because focus is getting set on this twice when the app
+  //  first mounts, causing even `suppressNextTooltip` not to have the intended effect.
+  return (
+    <IconButton
+      noTooltip
+      iconOnly
+      onClick={handleClick}
+      variant='ghost'
+      label={t('open complementary sidebar label')}
+      classNames={['[&>svg]:-scale-x-100', classNames]}
+      icon='ph--sidebar-simple--regular'
+      size={inR0 ? 5 : 4}
+      tooltipSide={inR0 ? 'left' : undefined}
+    />
+  );
+};

@@ -5,10 +5,10 @@
 import { ObjectId } from '@dxos/echo-schema';
 import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
-import { create, makeRef } from '@dxos/live-object';
+import { live, makeRef } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
-import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from './graph';
+import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
 
 // TODO(burdon): DXN from echo-schema is a different type.
@@ -21,7 +21,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
 > {
   static create(graph?: Partial<Graph>): ComputeGraphModel {
     return new ComputeGraphModel(
-      create(ComputeGraph, {
+      live(ComputeGraph, {
         graph: {
           id: graph?.id ?? ObjectId.random(),
           nodes: graph?.nodes ?? [],

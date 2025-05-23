@@ -3,14 +3,15 @@
 //
 
 import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
+import { type Schema } from 'effect';
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
-import { type S } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { Type } from '@dxos/echo';
+import { live, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import { Filter, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Query, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 
 import { AppToolbar } from './AppToolbar';
@@ -19,7 +20,7 @@ import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
 import { StatusBar } from './status';
-import { DocumentType, ItemType } from '../data';
+import { Document, Item } from '../data';
 import { defs } from '../defs';
 import { exportData, importData } from '../util';
 
@@ -49,19 +50,18 @@ export const Main = () => {
   // TODO(burdon): Remove restricted list of objects.
   const typeMap = useMemo(
     () =>
-      [ItemType, DocumentType].reduce((map, type) => {
-        map.set(type.typename, type);
+      [Item, Document].reduce((map, type) => {
+        map.set(Type.getTypename(type), type);
         return map;
-      }, new Map<string, S.Schema<any>>()),
+      }, new Map<string, Schema.Schema<any>>()),
     [],
   );
 
-  const getSchema = (type: string | undefined) => typeMap.get(type ?? ItemType.typename) ?? ItemType;
-  const objects = useQuery(
-    space,
-    Filter.schema(getSchema(type), (object: ItemType) => match(filter, object.content)),
-    {},
-    [type, filter],
+  const getSchema = (type: string | undefined) => typeMap.get(type ?? Item.typename) ?? Item;
+  const objectsOfSchema = useQuery(space, Query.type(getSchema(type)));
+  const objects = useMemo(
+    () => objectsOfSchema.filter((object) => match(filter, object.content)),
+    [objectsOfSchema, filter],
   );
 
   const identity = client.halo.identity.get();
@@ -91,19 +91,19 @@ export const Main = () => {
 
     // TODO(burdon): Migrate generator from DebugPlugin.
     Array.from({ length: n }).forEach(() => {
-      let object: ReactiveObject<any>;
+      let object: Live<any>;
       switch (type) {
-        case DocumentType.typename: {
-          object = create(DocumentType, {
+        case Document.typename: {
+          object = live(Document, {
             title: randWord(),
             content: randSentence(),
           });
           break;
         }
 
-        case ItemType.typename:
+        case Item.typename:
         default: {
-          object = create(ItemType, {
+          object = live(Item, {
             content: randSentence(),
             // due: randBetweenDate(dateRange)
           });

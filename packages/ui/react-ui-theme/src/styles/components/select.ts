@@ -6,7 +6,6 @@ import { type ComponentFunction, type Elevation, type Theme } from '@dxos/react-
 
 import { mx } from '../../util';
 import {
-  arrow,
   blockSeparator,
   getSize,
   ghostHighlighted,
@@ -43,7 +42,7 @@ export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) 
 
 export const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
 
-export const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(arrow, ...etc);
+export const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
 
 export const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(blockSeparator, separatorBorderColor, ...etc);
