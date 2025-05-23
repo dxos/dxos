@@ -16,7 +16,7 @@ import { type Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query'
 import { trace } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
 
-import { type IdToHeads } from './types';
+import { type IdToHeads } from '../types';
 
 export type IndexMetadataStoreParams = {
   db: SublevelDB;

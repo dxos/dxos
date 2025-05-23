@@ -20,8 +20,11 @@ import {
   type IndexStaticProps,
   type LoadParams,
   staticImplements,
-} from './types';
+} from '../types';
 
+/**
+ * Indexes objects by their typename.
+ */
 @trace.resource()
 @staticImplements<IndexStaticProps>()
 export class IndexSchema extends Resource implements Index {
@@ -40,7 +43,7 @@ export class IndexSchema extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async update(id: string, object: Partial<ObjectStructure>) {
+  async update(id: ObjectPointerEncoded, object: Partial<ObjectStructure>) {
     if (this._index.get(getTypeFromObject(object))?.has(id)) {
       return false;
     }
@@ -48,7 +51,7 @@ export class IndexSchema extends Resource implements Index {
     return true;
   }
 
-  async remove(id: string) {
+  async remove(id: ObjectPointerEncoded) {
     for (const [_, ids] of this._index.entries()) {
       if (ids.has(id)) {
         ids.delete(id);
@@ -75,15 +78,18 @@ export class IndexSchema extends Resource implements Index {
 
     const results: FindResult[] = [];
     for (const typename of filter.typenames) {
-      if (typename === EXPANDO_TYPENAME) {
+      if (
+        typename === EXPANDO_TYPENAME ||
+        (DXN.isDXNString(typename) && DXN.parse(typename).asTypeDXN()?.type === EXPANDO_TYPENAME)
+      ) {
         results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 0 })));
       } else if (DXN.isDXNString(typename)) {
         const dxn = DXN.parse(typename);
         if (dxn.isLocalObjectId()) {
           const objectId = dxn.parts[1];
           results.push(...Array.from(this._index.get(objectId) ?? []).map((id) => ({ id, rank: 0 })));
-        } else if (dxn.parts[0] === DXN.kind.TYPE) {
-          const typename = dxn.parts[1];
+        } else if (dxn.kind === DXN.kind.TYPE) {
+          const typename = dxn.parts[0];
           results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
         } else {
           log.warn('Unsupported DXN', { dxn });

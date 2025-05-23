@@ -5,12 +5,14 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { create, EchoObject, EchoRelation, Ref } from '@dxos/echo-schema';
+import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Filter, Query } from './api';
-import * as QueryAST from './ast';
+import { Filter, Query } from './dsl';
+import { EchoObject, EchoRelation } from '../ast';
+import { create } from '../object';
+import { Ref } from '../ref';
 
 // TODO(dmaretskyi): Move those out.
 const Type = {
@@ -24,6 +26,7 @@ const Relation = {
 // Example schema
 //
 
+// TODO(dmaretskyi): Need common set of test types.
 const Person = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
@@ -61,7 +64,7 @@ interface WorksFor extends Schema.Schema.Type<typeof WorksFor> {}
 const Task = Schema.Struct({
   title: Schema.String,
   createdAt: Schema.String,
-  assignee: Ref(Person),
+  assignee: Schema.optional(Ref(Person)),
 }).pipe(Type.def({ typename: 'dxos.org/type/Task', version: '0.1.0' }));
 interface Task extends Schema.Schema.Type<typeof Task> {}
 
@@ -75,6 +78,7 @@ describe('query api', () => {
 
     log('query', { ast: getAllPeople.ast });
     Schema.validateSync(QueryAST.Query)(getAllPeople.ast);
+    console.log('getAllPeople', JSON.stringify(getAllPeople.ast, null, 2));
   });
 
   test('get all people named Fred', () => {
@@ -82,6 +86,7 @@ describe('query api', () => {
 
     log('query', { ast: PeopleNamedFred.ast });
     Schema.validateSync(QueryAST.Query)(PeopleNamedFred.ast);
+    console.log('PeopleNamedFred', JSON.stringify(PeopleNamedFred.ast, null, 2));
   });
 
   test('get all orgs Fred worked for since 2020', () => {
@@ -92,6 +97,10 @@ describe('query api', () => {
 
     log('query', { ast: OrganizationsFredWorkedForSince2020.ast });
     Schema.validateSync(QueryAST.Query)(OrganizationsFredWorkedForSince2020.ast);
+    console.log(
+      'OrganizationsFredWorkedForSince2020',
+      JSON.stringify(OrganizationsFredWorkedForSince2020.ast, null, 2),
+    );
   });
 
   test('get all tasks for Fred', () => {
@@ -100,6 +109,7 @@ describe('query api', () => {
 
     log('query', { ast: TasksForFred.ast });
     Schema.validateSync(QueryAST.Query)(TasksForFred.ast);
+    console.log('TasksForFred', JSON.stringify(TasksForFred.ast, null, 2));
   });
 
   test('get all tasks for employees of Cyberdyne', () => {
@@ -110,6 +120,7 @@ describe('query api', () => {
 
     log('query', { ast: TasksForEmployeesOfCyberdyne.ast });
     Schema.validateSync(QueryAST.Query)(TasksForEmployeesOfCyberdyne.ast);
+    console.log('TasksForEmployeesOfCyberdyne', JSON.stringify(TasksForEmployeesOfCyberdyne.ast, null, 2));
   });
 
   test('get all people or orgs', () => {
@@ -117,6 +128,7 @@ describe('query api', () => {
 
     log('query', { ast: PeopleOrOrganizations.ast });
     Schema.validateSync(QueryAST.Query)(PeopleOrOrganizations.ast);
+    console.log('PeopleOrOrganizations', JSON.stringify(PeopleOrOrganizations.ast, null, 2));
   });
 
   test('get assignees of all tasks created after 2020', () => {
@@ -126,6 +138,10 @@ describe('query api', () => {
 
     log('query', { ast: AssigneesOfAllTasksCreatedAfter2020.ast });
     Schema.validateSync(QueryAST.Query)(AssigneesOfAllTasksCreatedAfter2020.ast);
+    console.log(
+      'AssigneesOfAllTasksCreatedAfter2020',
+      JSON.stringify(AssigneesOfAllTasksCreatedAfter2020.ast, null, 2),
+    );
   });
 
   test('contact full-text search', () => {
@@ -133,6 +149,7 @@ describe('query api', () => {
 
     log('query', { ast: contactFullTextSearch.ast });
     Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
+    console.log('contactFullTextSearch', JSON.stringify(contactFullTextSearch.ast, null, 2));
   });
 
   test('filter by ref', () => {
@@ -151,6 +168,93 @@ describe('query api', () => {
       type: 'object',
       typename: 'dxn:type:dxos.org/type/Task:0.1.0',
     });
+    console.log('tasksByFred', JSON.stringify(tasksByFred.ast, null, 2));
+  });
+
+  test('select orgs and people', () => {
+    const orgsAndPeople = Query.select(Filter.or(Filter.type(Organization), Filter.type(Person)));
+
+    Schema.validateSync(QueryAST.Query)(orgsAndPeople.ast);
+    expect(orgsAndPeople.ast).toMatchInlineSnapshot(`
+      {
+        "filter": {
+          "filters": [
+            {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+            },
+            {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+            },
+          ],
+          "type": "or",
+        },
+        "type": "select",
+      }
+    `);
+  });
+
+  test('select everything but orgs and people', () => {
+    const everythingButOrgsAndPeople = Query.select(
+      Filter.not(Filter.or(Filter.type(Organization), Filter.type(Person))),
+    );
+
+    Schema.validateSync(QueryAST.Query)(everythingButOrgsAndPeople.ast);
+    expect(everythingButOrgsAndPeople.ast).toMatchInlineSnapshot(`
+      {
+        "filter": {
+          "filter": {
+            "filters": [
+              {
+                "id": undefined,
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:dxos.org/type/Organization:0.1.0",
+              },
+              {
+                "id": undefined,
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+              },
+            ],
+            "type": "or",
+          },
+          "type": "not",
+        },
+        "type": "select",
+      }
+    `);
+  });
+
+  test('select deleted tasks', () => {
+    const deletedTasks = Query.select(Filter.type(Task)).options({
+      deleted: 'only',
+    });
+
+    Schema.validateSync(QueryAST.Query)(deletedTasks.ast);
+    expect(deletedTasks.ast).toMatchInlineSnapshot(`
+      {
+        "options": {
+          "deleted": "only",
+        },
+        "query": {
+          "filter": {
+            "id": undefined,
+            "props": {},
+            "type": "object",
+            "typename": "dxn:type:dxos.org/type/Task:0.1.0",
+          },
+          "type": "select",
+        },
+        "type": "options",
+      }
+    `);
   });
 
   test.skip('chain', () => {

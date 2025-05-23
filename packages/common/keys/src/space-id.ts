@@ -34,6 +34,7 @@ export const SpaceId: Schema.Schema<SpaceId, string> & {
   encode: (value: Uint8Array) => SpaceId;
   decode: (value: SpaceId) => Uint8Array;
   isValid: (value: string) => value is SpaceId;
+  make: (value: string) => SpaceId;
   random: () => SpaceId;
 } = class extends Schema.String.pipe(Schema.filter(isValid)) {
   static byteLength = 20;
@@ -50,6 +51,7 @@ export const SpaceId: Schema.Schema<SpaceId, string> & {
   };
 
   static isValid = isValid;
+
   static random = (): SpaceId => {
     return SpaceId.encode(randomBytes(SpaceId.byteLength));
   };

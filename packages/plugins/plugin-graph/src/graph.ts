@@ -33,11 +33,11 @@ export default async (context: PluginContext) => {
   // TODO(wittjosiah): Stop expanding the graph eagerly.
   builder.graph.onNodeChanged.on(({ id, node }) => {
     if (Option.isSome(node)) {
-      builder.graph.expand(id);
+      void builder.graph.expand(id);
     }
   });
   // await builder.initialize();
-  builder.graph.expand(ROOT_ID);
+  void builder.graph.expand(ROOT_ID);
 
   setupDevtools(builder.graph);
 

@@ -6,12 +6,11 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type BaseObject, Expando, getTypename, Ref } from '@dxos/echo-schema';
-import { getSchema } from '@dxos/echo-schema';
+import { type BaseObject, Expando, getSchema, getTypename, Query, Ref } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import { live, dangerouslySetProxyId, getMeta, getType, type Live } from '@dxos/live-object';
+import { dangerouslySetProxyId, getMeta, getType, live, type Live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -30,6 +29,18 @@ describe('Database', () => {
 
   afterEach(async () => {
     await builder.close();
+  });
+
+  test('create database and query nothing', { timeout: 1_000 }, async () => {
+    await using peer = await builder.createPeer();
+    await using db = await peer.createDatabase(PublicKey.random(), {
+      reactiveSchemaQuery: false,
+      preloadSchemaOnOpen: false,
+    });
+
+    const { objects } = await db.query(Query.select(Filter.nothing())).run();
+    expect(objects).to.have.length(0);
+    await db.close();
   });
 
   test('flush', async () => {

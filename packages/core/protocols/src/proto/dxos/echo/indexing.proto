@@ -8,9 +8,16 @@ package dxos.echo.indexing;
 
 message IndexKind {
   enum Kind {
+    /// Match by typename.
     SCHEMA_MATCH = 0;
+    /// Match by field value.
     FIELD_MATCH = 1;
+    /// Match by full text.
     FULL_TEXT = 2;
+    /// Match by vector.
+    VECTOR = 3;
+    /// Match by graph relationships.
+    GRAPH = 4;
   }
   
   Kind kind = 1;
