@@ -28,7 +28,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { outlinerTree, treeFacet } from './tree';
 
-// TODO(burdon): Cursor up/down.
 // TODO(burdon): Alt+ENTER to create a continuation line.
 // TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): Menu option to toggle list/task mode
@@ -322,6 +321,26 @@ export const outliner = (): Extension => [
         preventDefault: true,
         run: indentItemMore,
         shift: indentItemLess,
+      },
+      {
+        key: 'ArrowDown',
+        // Jump to next item.
+        run: (view) => {
+          const tree = view.state.facet(treeFacet);
+          const item = tree.find(getSelection(view).from);
+          if (
+            item &&
+            view.state.doc.lineAt(item.docRange.to).number - view.state.doc.lineAt(item.docRange.from).number === 0
+          ) {
+            const next = tree.next(item);
+            if (next) {
+              view.dispatch({ selection: EditorSelection.cursor(next.contentRange.from) });
+              return true;
+            }
+          }
+
+          return false;
+        },
       },
       {
         key: 'Alt-ArrowDown',
