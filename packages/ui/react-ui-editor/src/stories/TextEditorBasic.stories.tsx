@@ -254,7 +254,11 @@ export const CommentedOut = {
   render: () => (
     <EditorStory
       text={str('# Commented out', '', content.comment, content.footer)}
-      extensions={[decorateMarkdown(), markdown(), commentBlock()]}
+      extensions={[
+        decorateMarkdown(),
+        markdown(),
+        // commentBlock()
+      ]}
     />
   ),
 };
