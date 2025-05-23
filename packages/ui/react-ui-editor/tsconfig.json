@@ -81,6 +81,9 @@
       "path": "../react-ui-menu"
     },
     {
+      "path": "../react-ui-syntax-highlighter"
+    },
+    {
       "path": "../react-ui-theme"
     }
   ]

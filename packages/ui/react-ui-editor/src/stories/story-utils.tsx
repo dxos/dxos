@@ -13,6 +13,7 @@ import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { useThemeContext, Icon } from '@dxos/react-ui';
+import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { editorContent, editorGutter } from '../defaults';
@@ -259,7 +260,7 @@ export type StoryProps = {
 } & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
 
 // Default story component
-export const DefaultStory = ({
+export const EditorStory = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   debug,
   text,
@@ -311,15 +312,13 @@ export const DefaultStory = ({
     <div className='flex w-full'>
       <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />
       {debug && (
-        <div className='flex flex-col w-[800px] border-l border-separator divide-y divide-separator overflow-auto'>
+        <div className='grid grid-rows-[1fr_2fr] w-[800px] border-l border-separator divide-y divide-separator overflow-hidden'>
           {(debug === 'raw' || debug === 'raw+tree') && (
-            <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>{view?.state.doc.toString()}</pre>
-          )}
-          {(debug === 'tree' || debug === 'raw+tree') && (
-            <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>
-              {JSON.stringify(tree, null, 2)}
+            <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200 overflow-auto'>
+              {view?.state.doc.toString()}
             </pre>
           )}
+          {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
         </div>
       )}
     </div>

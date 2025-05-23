@@ -2,27 +2,39 @@
 // Copyright 2025 DXOS.org
 //
 
+import { indentLess, indentMore } from '@codemirror/commands';
 import { syntaxTree } from '@codemirror/language';
 import {
   type ChangeSpec,
+  EditorState,
   type Extension,
   type Line,
+  Prec,
+  type Range,
   StateField,
   type Transaction,
-  EditorState,
-  type Range,
 } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, keymap } from '@codemirror/view';
+import { type SyntaxNode, type Tree } from '@lezer/common';
 
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
+
+// TODO(burdon): Traversal (e.g., indenting).
+// TODO(burdon): State field for current range of active lines (and decoration).
+// TODO(burdon): Move items (by key).
 
 // TODO(burdon): Cut-and-paste.
 // TODO(burdon): Toggle list/task mode (in gutter?)
 // TODO(burdon): Convert to task object and insert link (menu button).
 // TOOD(burdon): Continuation lines and rich formatting?
+// TODO(burdon): Menu.
+// TODO(burdon): DND.
 
 const indentLevel = 2;
+
+const getIndent = (text: string) => (text.match(/^\s*/)?.[0]?.length ?? 0) / indentLevel;
+
 const matchTaskMarker = /^\s*- (\[ \]|\[x\])? /;
 
 /**
@@ -105,23 +117,7 @@ export const outliner = (): Extension => [
           return;
         }
 
-        // Check appropriate indentation relative to previous line.
-        if (insert.length === indentLevel) {
-          if (line.number === 1) {
-            log.info('skip');
-            changes.push({ from: 0, to: 0 });
-            return;
-          } else {
-            const getIndent = (text: string) => (text.match(/^\s*/)?.[0]?.length ?? 0) / indentLevel;
-            const currentIndent = getIndent(line.text);
-            const indentPrevious = getIndent(tr.state.doc.lineAt(fromA - 1).text);
-            if (currentIndent > indentPrevious) {
-              log.info('skip');
-              changes.push({ from: 0, to: 0 });
-              return;
-            }
-          }
-        }
+        // TODO(burdon): Intercept tab to manage indentation.
 
         // TODO(burdon): Detect pressing ENTER on empty line that is indented.
         // Don't allow empty line.
@@ -164,6 +160,44 @@ export const outliner = (): Extension => [
     },
     provide: (field) => EditorView.decorations.from(field),
   }),
+
+  // TODO(burdon): Maintain state field for each item, indent, pos, etc?
+  Prec.highest(
+    keymap.of([
+      {
+        // Indentation.
+        key: 'Tab',
+        run: (view) => {
+          const node = findNode(syntaxTree(view.state), view.state.selection.main.from, 'ListItem');
+          if (node) {
+            const previous = findPreviousNode(node.node, 'ListItem');
+            if (previous) {
+              const currentIndent = getIndent(view.state.doc.lineAt(node.from).text);
+              const previousIndent = getIndent(view.state.doc.lineAt(previous.from).text);
+              if (currentIndent <= previousIndent) {
+                indentMore(view);
+              }
+            }
+          }
+          return true;
+        },
+        shift: (view) => {
+          const node = findNode(syntaxTree(view.state), view.state.selection.main.from, 'ListItem');
+          if (node) {
+            const previous = findPreviousNode(node.node, 'ListItem');
+            if (previous) {
+              const currentIndent = getIndent(view.state.doc.lineAt(node.from).text);
+              if (currentIndent > 0) {
+                indentLess(view);
+                // TODO(burdon): Unindent descendents.
+              }
+            }
+          }
+          return true;
+        },
+      },
+    ]),
+  ),
 
   // TODO(burdon): Increase indent padding by configuring decorate extension.
   // TODO(burdon): Hover to select entire group.
@@ -209,9 +243,9 @@ const buildDecorations = (from: number, to: number, state: EditorState) => {
   syntaxTree(state).iterate({
     enter: (node) => {
       if (node.name === 'ListItem') {
-        const sub = node.node.getChild('BulletList');
+        const next = findNextNode(node.node, 'ListItem');
         const lineStart = state.doc.lineAt(node.from);
-        const lineEnd = sub ? state.doc.lineAt(state.doc.lineAt(sub.from).from - 1) : state.doc.lineAt(node.to);
+        const lineEnd = next ? state.doc.lineAt(state.doc.lineAt(next.from).from - 1) : state.doc.lineAt(node.to);
 
         decorations.push(
           Decoration.line({
@@ -219,6 +253,7 @@ const buildDecorations = (from: number, to: number, state: EditorState) => {
           }).range(lineStart.from, lineStart.from),
         );
 
+        // TODO(burdon): Hide continuation indentation so that it can't be deleted.
         for (let i = lineStart.from + 1; i < lineEnd.from; i++) {
           decorations.push(Decoration.line({ class: mx('cm-list-item-continuation') }).range(i, i));
         }
@@ -232,4 +267,44 @@ const buildDecorations = (from: number, to: number, state: EditorState) => {
   });
 
   return decorations;
+};
+
+//
+// TODO(burdon): Factor out tree traversal utils.
+//
+
+export const findNode = (tree: Tree, pos: number, type: string): SyntaxNode | undefined => {
+  const cursor = tree.cursor();
+  cursor.moveTo(pos, -1);
+  return findNextNode(cursor.node, type);
+};
+
+export const findNextNode = (node: SyntaxNode, type: string): SyntaxNode | undefined => {
+  const cursor = node.cursor();
+  while (cursor.next()) {
+    if (cursor.node.name === type) {
+      return cursor.node;
+    }
+  }
+
+  return undefined;
+};
+
+export const findPreviousNode = (node: SyntaxNode, type: string): SyntaxNode | undefined => {
+  const cursor = node.cursor();
+  do {
+    if (!cursor.prevSibling()) {
+      if (!cursor.parent()) {
+        break;
+      }
+    }
+  } while (cursor.node);
+
+  // while (cursor.prevSibling() || cursor.parent()) {
+  //   if (cursor.node.name === type) {
+  //     return cursor.node;
+  //   }
+  // }
+
+  return undefined;
 };
