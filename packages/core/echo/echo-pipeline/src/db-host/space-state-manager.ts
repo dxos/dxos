@@ -8,11 +8,10 @@ import { Event, UpdateScheduler } from '@dxos/async';
 import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource, Context, LifecycleState } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 
 import { DatabaseRoot } from './database-root';
-import { log } from '@dxos/log';
-import { invariant } from '@dxos/invariant';
 
 export class SpaceStateManager extends Resource {
   private readonly _roots = new Map<DocumentId, DatabaseRoot>();

@@ -13,6 +13,7 @@ import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live, getMeta } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -21,7 +22,6 @@ import { Filter, Query } from './api';
 import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
-import { log } from '@dxos/log';
 
 const createTestObject = (idx: number, label?: string) => {
   return live(Expando, { idx, title: `Task ${idx}`, label });

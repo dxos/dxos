@@ -6,6 +6,7 @@ import type { AutomergeUrl, DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
+import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
@@ -18,7 +19,6 @@ import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject } from '../filter';
-import { invariant } from '@dxos/invariant';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
