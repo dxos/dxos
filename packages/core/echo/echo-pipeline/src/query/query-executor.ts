@@ -519,7 +519,7 @@ export class QueryExecutor extends Resource {
     const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(hit.id);
 
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId);
-    const doc = handle.docSync();
+    const doc = handle.doc();
     if (!doc) {
       return null;
     }
@@ -556,7 +556,7 @@ export class QueryExecutor extends Resource {
       log.warn('no space state found for', { spaceId });
       return null;
     }
-    const dbDirectory = spaceRoot.docSync();
+    const dbDirectory = spaceRoot.doc();
     if (!dbDirectory) {
       log.warn('no space state found for', { spaceId });
       return null;
