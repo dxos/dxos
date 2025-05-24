@@ -175,6 +175,7 @@ export const outlinerTree = ({ debug = false }: TreeOptions = {}): Extension => 
       enter: (node) => {
         switch (node.name) {
           case 'Document': {
+            console.log('##');
             tree = new Tree(node.node);
             current = tree;
             break;
@@ -189,11 +190,11 @@ export const outlinerTree = ({ debug = false }: TreeOptions = {}): Extension => 
           }
           case 'ListItem': {
             invariant(parent);
-            const nextSibling = node.node.nextSibling;
+            // Include all content up to the next sibling or the end of the document.
+            const nextSibling = node.node.nextSibling ?? node.node.parent?.nextSibling;
             const docRange: Range = {
               from: state.doc.lineAt(node.from).from,
-              // Include all content up to the next sibling or the end of the document.
-              to: nextSibling ? nextSibling.from - 1 : state.doc.length,
+              to: nextSibling ? nextSibling.from - 1 : node.node.to,
             };
             current = {
               type: 'unknown',
@@ -207,11 +208,11 @@ export const outlinerTree = ({ debug = false }: TreeOptions = {}): Extension => 
             };
             parent.children.push(current);
             if (parent.lineRange.to === parent.node.from) {
-              parent.lineRange.to = current.lineRange.from - 1;
-              parent.contentRange.to = parent.lineRange.to;
+              parent.lineRange.to = parent.contentRange.to = current.lineRange.from - 1;
             }
             if (prevSibling) {
               prevSibling.nextSibling = current;
+              prevSibling.lineRange.to = prevSibling.contentRange.to = current.lineRange.from - 1;
             }
             prevSibling = current;
             break;

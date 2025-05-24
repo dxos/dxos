@@ -28,6 +28,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { outlinerTree, treeFacet } from './tree';
 
+// TODO(burdon): Change indentation while moving lines.
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): Menu option to toggle list/task mode
@@ -86,7 +87,6 @@ export const indentItemLess: Command = (view: EditorView) => {
 
 //
 // Moving commands.
-// TODO(burdon): Should moving affect indentation (of current and target rows)?
 //
 
 export const moveItemDown: Command = (view: EditorView) => {
@@ -113,7 +113,7 @@ export const moveItemDown: Command = (view: EditorView) => {
 
       view.dispatch({
         changes,
-        selection: EditorSelection.cursor(next.lineRange.from),
+        selection: EditorSelection.cursor(pos + nextContent.length + 1),
         scrollIntoView: true,
       });
     }
@@ -146,7 +146,7 @@ export const moveItemUp: Command = (view: EditorView) => {
 
       view.dispatch({
         changes,
-        selection: EditorSelection.cursor(prev.lineRange.from),
+        selection: EditorSelection.cursor(pos - prevContent.length - 1),
         scrollIntoView: true,
       });
     }
@@ -376,7 +376,7 @@ export const outliner = (): Extension => [
       borderRight: '1px solid var(--dx-separator)',
 
       // TODO(burdon): Increase indent padding by configuring decorate extension.
-      paddingLeft: '24px',
+      paddingLeft: '32px',
     },
     '.cm-list-item.cm-codeblock-start': {
       borderRadius: '0',

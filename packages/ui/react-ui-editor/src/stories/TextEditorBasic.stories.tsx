@@ -223,8 +223,9 @@ export const Outliner = {
         //
         '- [ ] A',
         '- [ ] B',
-        '  Continuation line.',
+        'Continuation line.',
         '- [ ] C',
+        '',
         '- [ ] D',
         '- [ ] E',
         '',
