@@ -30,7 +30,7 @@ export type Item = {
    * Starts at the start of the line containing the item and ends at the end of the line before the
    * first child or next sibling.
    */
-  docRange: Range;
+  lineRange: Range;
   /**
    * Range of the editable content.
    * This doesn't include the list or task marker or indentation.
@@ -46,14 +46,14 @@ export class Tree implements Item {
   type: Item['type'] = 'root';
   node: Item['node'];
   level: number = -1;
-  docRange: Item['docRange'];
+  lineRange: Item['lineRange'];
   contentRange: Item['contentRange'];
   children: Item['children'] = [];
 
   constructor(node: SyntaxNode) {
     this.node = node;
-    this.docRange = { from: node.from, to: node.to };
-    this.contentRange = this.docRange;
+    this.lineRange = { from: node.from, to: node.to };
+    this.contentRange = this.lineRange;
   }
 
   get root(): Item {
@@ -77,7 +77,7 @@ export class Tree implements Item {
    * Return the closest item.
    */
   find(pos: number): Item | undefined {
-    return this.traverse((item) => (item.docRange.from <= pos && item.docRange.to >= pos ? item : undefined));
+    return this.traverse((item) => (item.lineRange.from <= pos && item.lineRange.to >= pos ? item : undefined));
   }
 
   /**
@@ -144,7 +144,7 @@ export const listItemToString = (item: Item, level = 0) => {
   const data = {
     level: item.level,
     node: [item.node.from, item.node.to],
-    doc: [item.docRange.from, item.docRange.to],
+    doc: [item.lineRange.from, item.lineRange.to],
     content: [item.contentRange.from, item.contentRange.to],
   };
 
@@ -157,11 +157,15 @@ export const treeFacet = Facet.define<Tree, Tree>({
   combine: (values) => values[0],
 });
 
+export type TreeOptions = {
+  debug?: boolean;
+};
+
 /**
  * Creates a shadow tree of `ListItem` nodes whenever the document changes.
  * This adds overhead relative to the markdown AST, but allows for efficient traversal of the list items.
  */
-export const outlinerTree = (): Extension => {
+export const outlinerTree = ({ debug = false }: TreeOptions = {}): Extension => {
   const buildTree = (state: EditorState): Tree => {
     let tree: Tree | undefined;
     let parent: Item | undefined;
@@ -179,28 +183,32 @@ export const outlinerTree = (): Extension => {
             parent = current;
             prevSibling = undefined;
             if (current) {
-              current.docRange.to = current.node.from;
+              current.lineRange.to = current.node.from;
             }
             break;
           }
           case 'ListItem': {
             invariant(parent);
-            // TODO(burdon): Doesn't include the continuation line if it just contains the indent.
-            const docRange: Range = { from: state.doc.lineAt(node.from).from, to: node.to };
+            const nextSibling = node.node.nextSibling;
+            const docRange: Range = {
+              from: state.doc.lineAt(node.from).from,
+              // Include all content up to the next sibling or the end of the document.
+              to: nextSibling ? nextSibling.from - 1 : state.doc.length,
+            };
             current = {
               type: 'unknown',
               node: node.node,
               level: parent.level + 1,
-              docRange,
+              lineRange: docRange,
               contentRange: { ...docRange },
               parent,
               prevSibling,
               children: [],
             };
             parent.children.push(current);
-            if (parent.docRange.to === parent.node.from) {
-              parent.docRange.to = current.docRange.from - 1;
-              parent.contentRange.to = parent.docRange.to;
+            if (parent.lineRange.to === parent.node.from) {
+              parent.lineRange.to = current.lineRange.from - 1;
+              parent.contentRange.to = parent.lineRange.to;
             }
             if (prevSibling) {
               prevSibling.nextSibling = current;
@@ -249,9 +257,12 @@ export const outlinerTree = (): Extension => {
         }
 
         const tree = buildTree(tr.state);
-        tree?.traverse((item) => {
-          console.log(listItemToString(item));
-        });
+        if (debug) {
+          tree?.traverse((item) => {
+            // eslint-disable-next-line no-console
+            console.log(listItemToString(item));
+          });
+        }
         return tree;
       },
       provide: (field) => treeFacet.from(field),

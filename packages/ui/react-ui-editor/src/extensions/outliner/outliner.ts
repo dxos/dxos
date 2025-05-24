@@ -28,13 +28,14 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { outlinerTree, treeFacet } from './tree';
 
+// TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): Menu option to toggle list/task mode
 // TODO(burdon): Convert to task object and insert link (menu button).
 // TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
 // TODO(burdon): DND.
 // TODO(burdon): What if a different editor "breaks" the layout?
-// TODO(burdon): Rendered cursor is not fullheight if there is not text on the task line.
+// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
 
 const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
 
@@ -70,7 +71,7 @@ export const indentItemLess: Command = (view: EditorView) => {
       const indentUnit = getIndentUnit(view.state);
       const changes: ChangeSpec[] = [];
       tree.traverse(current, (item) => {
-        const line = view.state.doc.lineAt(item.docRange.from);
+        const line = view.state.doc.lineAt(item.lineRange.from);
         changes.push({ from: line.from, to: line.from + indentUnit });
       });
 
@@ -95,20 +96,24 @@ export const moveItemDown: Command = (view: EditorView) => {
   if (current) {
     const next = tree.next(current);
     if (next) {
-      const currentContent = view.state.doc.sliceString(current.docRange.from, current.docRange.to + 1);
-      const nextContent = view.state.doc.sliceString(
-        next.docRange.from,
-        Math.min(view.state.doc.length, next.docRange.to + 1),
-      );
-      const eol = nextContent.endsWith('\n') ? '' : '\n';
+      const currentContent = view.state.doc.sliceString(current.lineRange.from, current.lineRange.to);
+      const nextContent = view.state.doc.sliceString(next.lineRange.from, next.lineRange.to);
       const changes: ChangeSpec[] = [
-        { from: current.docRange.from, to: current.docRange.from + currentContent.length, insert: nextContent + eol },
-        { from: next.docRange.from, to: next.docRange.from + nextContent.length, insert: currentContent },
+        {
+          from: current.lineRange.from,
+          to: current.lineRange.from + currentContent.length,
+          insert: nextContent,
+        },
+        {
+          from: next.lineRange.from,
+          to: next.lineRange.from + nextContent.length,
+          insert: currentContent,
+        },
       ];
 
       view.dispatch({
         changes,
-        selection: EditorSelection.cursor(next.docRange.from),
+        selection: EditorSelection.cursor(next.lineRange.from),
         scrollIntoView: true,
       });
     }
@@ -124,20 +129,24 @@ export const moveItemUp: Command = (view: EditorView) => {
   if (current) {
     const prev = tree.prev(current);
     if (prev) {
-      const prevContent = view.state.doc.sliceString(prev.docRange.from, prev.docRange.to + 1);
-      const currentContent = view.state.doc.sliceString(
-        current.docRange.from,
-        Math.min(view.state.doc.length, current.docRange.to + 1),
-      );
-      const eol = currentContent.endsWith('\n') ? '' : '\n';
+      const prevContent = view.state.doc.sliceString(prev.lineRange.from, prev.lineRange.to);
+      const currentContent = view.state.doc.sliceString(current.lineRange.from, current.lineRange.to);
       const changes: ChangeSpec[] = [
-        { from: prev.docRange.from, to: prev.docRange.from + prevContent.length, insert: currentContent + eol },
-        { from: current.docRange.from, to: current.docRange.from + currentContent.length, insert: prevContent },
+        {
+          from: prev.lineRange.from,
+          to: prev.lineRange.from + prevContent.length,
+          insert: currentContent,
+        },
+        {
+          from: current.lineRange.from,
+          to: current.lineRange.from + currentContent.length,
+          insert: prevContent,
+        },
       ];
 
       view.dispatch({
         changes,
-        selection: EditorSelection.cursor(prev.docRange.from),
+        selection: EditorSelection.cursor(prev.lineRange.from),
         scrollIntoView: true,
       });
     }
@@ -148,12 +157,10 @@ export const moveItemUp: Command = (view: EditorView) => {
 
 /**
  * Outliner extension.
- * - Store outline as a standard markdown document with task and list markers.
- * - Support continuation lines and rich formatting (with Shift+Enter).
- * - Constrain editor to outline structure.
- * - Support smart cut-and-paste.
- * - Support extracted links.
- * - Drag/drop lines or move them via shortcuts.
+ * - Stores outline as a standard markdown document with task and list markers.
+ * - Supports continuation lines and rich formatting (with Shift+Enter).
+ * - Constrains editor to outline structure.
+ * - Supports smart cut-and-paste.
  */
 export const outliner = (): Extension => [
   outlinerTree(),
@@ -236,8 +243,6 @@ export const outliner = (): Extension => [
           return;
         }
 
-        // TODO(burdon): Handle backspace at start of line (or empty line).
-
         log('change', {
           item,
           line: { from: line.from, to: line.to },
@@ -262,7 +267,6 @@ export const outliner = (): Extension => [
   /**
    * Line decorations (for border and selection).
    */
-  // TODO(burdon): Create widget decorations to make indent uneditable.
   ViewPlugin.fromClass(
     class {
       decorations: DecorationSet = Decoration.none;
@@ -341,7 +345,7 @@ export const outliner = (): Extension => [
           const item = tree.find(getSelection(view).from);
           if (
             item &&
-            view.state.doc.lineAt(item.docRange.to).number - view.state.doc.lineAt(item.docRange.from).number === 0
+            view.state.doc.lineAt(item.lineRange.to).number - view.state.doc.lineAt(item.lineRange.from).number === 0
           ) {
             const next = tree.next(item);
             if (next) {

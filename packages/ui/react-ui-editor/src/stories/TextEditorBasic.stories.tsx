@@ -227,6 +227,7 @@ export const Outliner = {
         '- [ ] C',
         '- [ ] D',
         '- [ ] E',
+        '',
       )}
       extensions={[decorateMarkdown({ listPaddingLeft: 8 }), outliner()]}
       debug='raw+tree'

@@ -24,7 +24,7 @@ const doc = str(
 
 const extensions = [createMarkdownExtensions(), outlinerTree()];
 
-describe('tree (basic)', () => {
+describe('tree (boundary conditions)', () => {
   test('empty', ({ expect }) => {
     const state = EditorState.create({ doc: str(''), extensions });
     const tree = state.facet(treeFacet);
@@ -32,7 +32,7 @@ describe('tree (basic)', () => {
   });
 
   test.only('empty continuation', ({ expect }) => {
-    const state = EditorState.create({ doc: str('- [ ] A', '  x'), extensions });
+    const state = EditorState.create({ doc: str('- [ ] A', '  '), extensions });
     const tree = state.facet(treeFacet);
     tree.traverse((item, level) => {
       console.log(listItemToString(item, level));
@@ -59,7 +59,7 @@ describe('tree (advanced)', () => {
     const tree = state.facet(treeFacet);
     const ranges: Range[] = [];
     tree.traverse((item) => {
-      ranges.push(item.docRange);
+      ranges.push(item.lineRange);
     });
 
     // Check no gaps between ranges.
