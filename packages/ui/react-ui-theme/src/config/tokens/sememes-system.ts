@@ -81,6 +81,8 @@ const surface: Record<string, Sememe> = {
     light: ['neutral', lightCadence(8)],
     dark: ['neutral', darkCadence(8)],
   },
+
+  // TODO(burdon): Why are these the same for light/dark?
   '400': {
     light: ['neutral', 400],
     dark: ['neutral', 400],
@@ -107,6 +109,9 @@ export const systemSememes = {
   'surface-60': surface['60'],
   'surface-70': surface['70'],
   'surface-80': surface['80'],
+
+  // TODO(burdon): Confusing mix of -NN with light and dark valence (above), and -400/450 that have the same value.
+  //   I assume 10,20,30, etc. are on a nominal 0-100 "intensity" range and 400/450 are in the 0-1000 light-to-darkrange?
   'surface-400': surface['400'],
   'surface-450': surface['450'],
   'surface-450t': applyAlpha(surface['450'], 0.1),
@@ -115,15 +120,15 @@ export const systemSememes = {
   // Special surfaces.
   //
 
-  'accentSurface-300t': {
+  ['accentSurfaceRelated' as const]: {
     light: ['primary', '300/.1'],
     dark: ['primary', '400/.1'],
   },
-  'accentSurface-400': {
+  ['accentSurfaceHover' as const]: {
     light: ['primary', 600],
     dark: ['primary', 475],
   },
-  'accentSurface-500': {
+  ['accentSurface' as const]: {
     light: ['primary', 500],
     dark: ['primary', 500],
   },
@@ -230,16 +235,17 @@ const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName 
   headerSurface: { root: 'surface-30', attention: 'surface-20' },
   toolbarSurface: { root: 'surface-30', attention: 'surface-20' },
   hoverSurface: { root: 'surface-70', attention: 'surface-60' },
-  accentSurface: { root: 'accentSurface-500' },
-  accentSurfaceHover: { root: 'accentSurface-400' },
+  accentSurface: { root: 'accentSurface' },
+  accentSurfaceHover: { root: 'accentSurfaceHover' },
   scrimSurface: { root: 'surface-10t' },
 
   attention: { root: 'surface-10' },
-  currentRelated: { root: 'accentSurface-300t' },
+  currentRelated: { root: 'accentSurfaceRelated' },
   hoverOverlay: { root: 'surface-450t' },
   input: { root: 'surface-35', attention: 'surface-35' },
   separator: { root: 'surface-50' },
   subduedSeparator: { root: 'surface-30' },
+
   unAccent: { root: 'surface-400' },
   unAccentHover: { root: 'surface-450' },
 };
