@@ -10,6 +10,7 @@
   "sideEffects": true,
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "type": "module",
   "bin": {
     "x": "./bin/x.js"
   },
