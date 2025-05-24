@@ -18,9 +18,9 @@ import {
   Decoration,
   type DecorationSet,
   EditorView,
-  keymap,
   ViewPlugin,
   type ViewUpdate,
+  keymap,
 } from '@codemirror/view';
 
 import { log } from '@dxos/log';
@@ -28,14 +28,13 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { outlinerTree, treeFacet } from './tree';
 
-// TODO(burdon): Alt+ENTER to create a continuation line.
 // TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): Menu option to toggle list/task mode
 // TODO(burdon): Convert to task object and insert link (menu button).
-// TODO(burdon): Rendered cursor is not fullheight if there is not text on the task line.
 // TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
 // TODO(burdon): DND.
 // TODO(burdon): What if a different editor "breaks" the layout?
+// TODO(burdon): Rendered cursor is not fullheight if there is not text on the task line.
 
 const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
 
@@ -321,6 +320,18 @@ export const outliner = (): Extension => [
         preventDefault: true,
         run: indentItemMore,
         shift: indentItemLess,
+      },
+      {
+        key: 'Enter',
+        shift: (view) => {
+          const pos = getSelection(view).from;
+          const insert = '\n  '; // TODO(burdon): Fix parsing.
+          view.dispatch({
+            changes: [{ from: pos, to: pos, insert }],
+            selection: EditorSelection.cursor(pos + insert.length),
+          });
+          return true;
+        },
       },
       {
         key: 'ArrowDown',

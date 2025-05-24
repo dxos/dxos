@@ -22,11 +22,28 @@ const doc = str(
   '- [ ] 3',
 );
 
-describe('tree', () => {
-  const state = EditorState.create({
-    doc,
-    extensions: [createMarkdownExtensions(), outlinerTree()],
+const extensions = [createMarkdownExtensions(), outlinerTree()];
+
+describe('tree (basic)', () => {
+  test('empty', ({ expect }) => {
+    const state = EditorState.create({ doc: str(''), extensions });
+    const tree = state.facet(treeFacet);
+    expect(tree).to.exist;
   });
+
+  test.only('empty continuation', ({ expect }) => {
+    const state = EditorState.create({ doc: str('- [ ] A', '  x'), extensions });
+    const tree = state.facet(treeFacet);
+    tree.traverse((item, level) => {
+      console.log(listItemToString(item, level));
+    });
+    const item = tree.find(0);
+    expect(item?.contentRange).to.include({ from: 6, to: state.doc.length });
+  });
+});
+
+describe('tree (advanced)', () => {
+  const state = EditorState.create({ doc, extensions });
 
   test('traverse', ({ expect }) => {
     const tree = state.facet(treeFacet);

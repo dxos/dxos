@@ -147,6 +147,7 @@ export const listItemToString = (item: Item, level = 0) => {
     doc: [item.docRange.from, item.docRange.to],
     content: [item.contentRange.from, item.contentRange.to],
   };
+
   return `${indent}${item.type}(${Object.entries(data)
     .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
     .join(', ')})`;
@@ -161,7 +162,7 @@ export const treeFacet = Facet.define<Tree, Tree>({
  * This adds overhead relative to the markdown AST, but allows for efficient traversal of the list items.
  */
 export const outlinerTree = (): Extension => {
-  const buildTree = (state: EditorState): Tree | undefined => {
+  const buildTree = (state: EditorState): Tree => {
     let tree: Tree | undefined;
     let parent: Item | undefined;
     let current: Item | undefined;
@@ -169,11 +170,12 @@ export const outlinerTree = (): Extension => {
     syntaxTree(state).iterate({
       enter: (node) => {
         switch (node.name) {
+          case 'Document': {
+            tree = new Tree(node.node);
+            current = tree;
+            break;
+          }
           case 'BulletList': {
-            if (tree == null) {
-              tree = new Tree(node.node);
-              current = tree;
-            }
             parent = current;
             prevSibling = undefined;
             if (current) {
@@ -183,6 +185,7 @@ export const outlinerTree = (): Extension => {
           }
           case 'ListItem': {
             invariant(parent);
+            // TODO(burdon): Doesn't include the continuation line if it just contains the indent.
             const docRange: Range = { from: state.doc.lineAt(node.from).from, to: node.to };
             current = {
               type: 'unknown',
@@ -224,14 +227,13 @@ export const outlinerTree = (): Extension => {
         }
       },
       leave: (node) => {
-        switch (node.name) {
-          case 'BulletList':
-            parent = parent?.parent;
-            break;
+        if (node.name === 'BulletList') {
+          parent = parent?.parent;
         }
       },
     });
 
+    invariant(tree);
     return tree;
   };
 
@@ -242,7 +244,15 @@ export const outlinerTree = (): Extension => {
       },
       update: (value: Tree | undefined, tr: Transaction) => {
         // TODO(burdon): Filter specific changes?
-        return tr.docChanged ? buildTree(tr.state) : value;
+        if (!tr.docChanged) {
+          return value;
+        }
+
+        const tree = buildTree(tr.state);
+        tree?.traverse((item) => {
+          console.log(listItemToString(item));
+        });
+        return tree;
       },
       provide: (field) => treeFacet.from(field),
     }),
