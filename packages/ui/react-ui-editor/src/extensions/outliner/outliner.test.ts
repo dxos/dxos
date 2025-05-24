@@ -7,12 +7,11 @@ import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './outliner';
-import { getListItemContent, listItemToString, outlinerTree, treeFacet } from './tree';
+import { listItemToString, outlinerTree, treeFacet } from './tree';
 import { str } from '../../stories';
 import { createMarkdownExtensions } from '../markdown';
 
-const doc = str(
-  //
+const lines = [
   '- [ ] 1',
   '- [ ] 2',
   '  - [ ] 2.1',
@@ -22,25 +21,31 @@ const doc = str(
   '    - 2.2.3',
   '  - [ ] 2.3',
   '- [ ] 3',
-);
+];
+
+const getPos = (line: number) => {
+  return lines.slice(0, line).reduce((acc, line) => acc + line.length + 1, 0);
+};
 
 describe('outliner', () => {
   const state = EditorState.create({
-    doc,
+    doc: str(...lines),
     extensions: [createMarkdownExtensions(), outlinerTree()],
   });
 
-  // TOOD(burdon): Test move up/down commands.
   test('sanity', ({ expect }) => {
     const tree = state.facet(treeFacet);
+    let i = 0;
     tree.traverse((item, level) => {
-      console.log(listItemToString(item, level));
+      const pos = getPos(i++);
+      expect(item.lineRange.from).toBe(pos);
+      console.log(listItemToString(item, level), pos);
     });
   });
 
   test('indent', ({ expect }) => {
     const view = new EditorView({ state });
-    const pos = 8; // Line 2.
+    const pos = getPos(1);
 
     {
       const tree = view.state.facet(treeFacet);
@@ -60,7 +65,7 @@ describe('outliner', () => {
 
   test('unindent', ({ expect }) => {
     const view = new EditorView({ state });
-    const pos = 18; // Line 3.
+    const pos = getPos(2);
 
     {
       const tree = view.state.facet(treeFacet);
@@ -79,29 +84,20 @@ describe('outliner', () => {
   });
 
   test('move down', ({ expect }) => {
-    const tree = state.facet(treeFacet);
     const view = new EditorView({ state });
 
-    const line1 = getListItemContent(view.state, tree.find(0)!);
-    const line2 = getListItemContent(view.state, tree.find(8)!);
-
-    view.dispatch({ selection: EditorSelection.cursor(0) });
+    view.dispatch({ selection: EditorSelection.cursor(getPos(0)) });
     moveItemDown(view);
 
-    expect(getListItemContent(view.state, tree.find(0)!)).toBe(line2);
+    expect(view.state.doc.sliceString(0, view.state.doc.length)).toBe(str(...lines.slice(1, 8), lines[0], lines[8]));
   });
 
   test('move up', ({ expect }) => {
-    const tree = state.facet(treeFacet);
     const view = new EditorView({ state });
 
-    const line1 = getListItemContent(view.state, tree.find(0)!);
-    const line2 = getListItemContent(view.state, tree.find(8)!);
-
-    view.dispatch({ selection: EditorSelection.cursor(8) });
+    view.dispatch({ selection: EditorSelection.cursor(getPos(8)) });
     moveItemUp(view);
 
-    // expect(getListItemContent(view.state, tree.find(0)!)).toBe(line2);
-    // expect(getListItemContent(view.state, tree.find(8)!)).toBe(line1);
+    expect(view.state.doc.sliceString(0, view.state.doc.length)).toBe(str(lines[0], lines[8], ...lines.slice(1, 8)));
   });
 });
