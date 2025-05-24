@@ -11,7 +11,7 @@ import { Button, Icon, IconButton, Input, Popover } from '@dxos/react-ui';
 import { mx, hoverableHidden } from '@dxos/react-ui-theme';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { DefaultStory, str } from './story-utils';
+import { EditorStory, str } from './story-utils';
 import { editorWidth } from '../defaults';
 import {
   preview,
@@ -26,10 +26,10 @@ import {
 import { RefPopover, useRefPopover } from '../testing';
 import { createRenderer } from '../util';
 
-const meta: Meta<typeof DefaultStory> = {
+const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: DefaultStory,
+  render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 
@@ -42,7 +42,7 @@ export default meta;
 export const Preview = {
   render: () => (
     <RefPopover.Provider onLookup={handlePreviewLookup}>
-      <DefaultStory
+      <EditorStory
         text={str(
           '# Preview',
           '',
@@ -159,7 +159,7 @@ const PreviewBlock: FC<PreviewRenderProps> = ({ readonly, link, onAction, onLook
 
 export const Command = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str(
         '# Preview',
         '',

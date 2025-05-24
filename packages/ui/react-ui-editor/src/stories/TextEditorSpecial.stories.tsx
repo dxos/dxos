@@ -11,13 +11,13 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
 
-import { DefaultStory, str, content } from './story-utils';
+import { EditorStory, str, content } from './story-utils';
 import { typewriter, blast, defaultOptions, dropFile, listener } from '../extensions';
 
-const meta: Meta<typeof DefaultStory> = {
+const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: DefaultStory,
+  render: EditorStory,
   parameters: { layout: 'fullscreen' },
 };
 
@@ -29,7 +29,7 @@ export default meta;
 
 export const Listener = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# Listener', '', content.footer)}
       extensions={[
         listener({
@@ -53,7 +53,7 @@ const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewrite
 
 export const Typewriter = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# Typewriter', '', content.paragraphs, content.footer)}
       extensions={[typewriter({ items: typewriterItems })]}
     />
@@ -66,7 +66,7 @@ export const Typewriter = {
 
 export const Blast = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
       extensions={[
         typewriter({ items: typewriterItems }),
@@ -93,7 +93,7 @@ export const Blast = {
 
 export const DND = {
   render: () => (
-    <DefaultStory
+    <EditorStory
       text={str('# DND', '')}
       extensions={[
         dropFile({
