@@ -37,15 +37,16 @@ import { getRange, outlinerTree, treeFacet } from './tree';
 // TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
 
 // NEXT:
+// TODO(burdon): Selection state.
 // TODO(burdon): Handle backspace at start of line (or empty line).
-// TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): Menu option to toggle list/task mode
 // TODO(burdon): Convert to task object and insert link (menu button).
+// TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): DND.
 
 const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
 
-const getSelection = (state: EditorState): SelectionRange => state.selection.ranges[state.selection.mainIndex];
+const getSelection = (state: EditorState): SelectionRange => state.selection.main;
 
 //
 // Indentation comnmands.
