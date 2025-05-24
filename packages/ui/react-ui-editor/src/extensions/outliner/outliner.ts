@@ -45,14 +45,14 @@ import { getRange, outlinerTree, treeFacet } from './tree';
 
 const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
 
-const getSelection = (view: EditorView): SelectionRange => view.state.selection.ranges[view.state.selection.mainIndex];
+const getSelection = (state: EditorState): SelectionRange => state.selection.ranges[state.selection.mainIndex];
 
 //
 // Indentation comnmands.
 //
 
 export const indentItemMore: Command = (view: EditorView) => {
-  const pos = getSelection(view).from;
+  const pos = getSelection(view.state).from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
   if (current) {
@@ -67,7 +67,7 @@ export const indentItemMore: Command = (view: EditorView) => {
 };
 
 export const indentItemLess: Command = (view: EditorView) => {
-  const pos = getSelection(view).from;
+  const pos = getSelection(view.state).from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
   if (current) {
@@ -95,7 +95,7 @@ export const indentItemLess: Command = (view: EditorView) => {
 //
 
 export const moveItemDown: Command = (view: EditorView) => {
-  const pos = getSelection(view)?.from;
+  const pos = getSelection(view.state)?.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
   if (current && current.nextSibling) {
@@ -126,7 +126,7 @@ export const moveItemDown: Command = (view: EditorView) => {
 };
 
 export const moveItemUp: Command = (view: EditorView) => {
-  const pos = getSelection(view)?.from;
+  const pos = getSelection(view.state)?.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
   if (current && current.prevSibling) {
@@ -170,26 +170,35 @@ export const outliner = (): Extension => [
 
     // Check cursor is in a valid position.
     if (!tr.docChanged) {
-      const prev = tr.startState.selection.ranges[tr.startState.selection.mainIndex]?.from;
-      const pos = tr.selection?.ranges[tr.selection?.mainIndex]?.from;
-      const item = pos != null ? tree.find(pos) : undefined;
-      if (pos != null) {
-        if (item) {
-          if (pos < item.contentRange.from || pos > item.contentRange.to) {
-            if (pos - prev < 0) {
-              const prev = tree.prev(item);
-              if (prev) {
-                return [{ selection: EditorSelection.cursor(prev.contentRange.to) }];
-              } else {
-                const first = tree.next(tree.root);
-                if (first) {
-                  return [{ selection: EditorSelection.cursor(first.contentRange.from) }];
-                }
+      const current = getSelection(tr.state).from;
+      if (current != null) {
+        const currentItem = tree.find(current);
+        if (!currentItem) {
+          return [];
+        }
 
-                return [];
-              }
+        // Check if outside of editable range.
+        if (current < currentItem.contentRange.from || current > currentItem.contentRange.to) {
+          const prev = getSelection(tr.startState).from;
+          const prevItem = prev != null ? tree.find(prev) : undefined;
+          if (!prevItem) {
+            return [{ selection: EditorSelection.cursor(currentItem.contentRange.from) }];
+          } else {
+            if (currentItem.index < prevItem.index) {
+              // Moving up.
+              return [{ selection: EditorSelection.cursor(currentItem.contentRange.to) }];
+            } else if (currentItem.index > prevItem.index) {
+              // Moving down.
+              return [{ selection: EditorSelection.cursor(currentItem.contentRange.from) }];
             } else {
-              return [{ selection: EditorSelection.cursor(item.contentRange.from) }];
+              if (current < prev) {
+                // Moving left.
+                if (currentItem.index === 0) {
+                  return [];
+                } else {
+                  return [{ selection: EditorSelection.cursor(currentItem.lineRange.from - 1) }];
+                }
+              }
             }
           }
         }
@@ -329,7 +338,7 @@ export const outliner = (): Extension => [
       {
         key: 'Enter',
         shift: (view) => {
-          const pos = getSelection(view).from;
+          const pos = getSelection(view.state).from;
           const insert = '\n  '; // TODO(burdon): Fix parsing.
           view.dispatch({
             changes: [{ from: pos, to: pos, insert }],
@@ -343,7 +352,7 @@ export const outliner = (): Extension => [
         // Jump to next item.
         run: (view) => {
           const tree = view.state.facet(treeFacet);
-          const item = tree.find(getSelection(view).from);
+          const item = tree.find(getSelection(view.state).from);
           if (
             item &&
             view.state.doc.lineAt(item.lineRange.to).number - view.state.doc.lineAt(item.lineRange.from).number === 0

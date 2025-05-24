@@ -27,11 +27,10 @@ const getPos = (line: number) => {
   return lines.slice(0, line).reduce((acc, line) => acc + line.length + 1, 0);
 };
 
+const extensions = [createMarkdownExtensions(), outlinerTree()];
+
 describe('outliner', () => {
-  const state = EditorState.create({
-    doc: str(...lines),
-    extensions: [createMarkdownExtensions(), outlinerTree()],
-  });
+  const state = EditorState.create({ doc: str(...lines), extensions });
 
   test('sanity', ({ expect }) => {
     const tree = state.facet(treeFacet);
