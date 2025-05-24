@@ -28,15 +28,19 @@ import { mx } from '@dxos/react-ui-theme';
 import { getRange, outlinerTree, treeFacet } from './tree';
 import { type Range } from '../../types';
 
-// TODO(burdon): Change indentation while moving lines.
+// ISSUES:
+// TODO(burdon): Prevent unterminated fenced code from breaking subsequent items ("firewall" markdown parsing within each item?)
+// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
+// TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
+// TODO(burdon): What if a different editor "breaks" the layout?
+// TODO(burdon): Check Automerge recognizes text that is moved/indented (e.g., concurrent editing item while being moved).
+
+// NEXT:
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Smart Cut-and-paste.
 // TODO(burdon): Menu option to toggle list/task mode
 // TODO(burdon): Convert to task object and insert link (menu button).
-// TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
 // TODO(burdon): DND.
-// TODO(burdon): What if a different editor "breaks" the layout?
-// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
 
 const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
 
