@@ -29,11 +29,12 @@ import { getRange, outlinerTree, treeFacet } from './tree';
 import { type Range } from '../../types';
 
 // ISSUES:
+// TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
 // TODO(burdon): Prevent unterminated fenced code from breaking subsequent items ("firewall" markdown parsing within each item?)
-// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
 // TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
 // TODO(burdon): What if a different editor "breaks" the layout?
 // TODO(burdon): Check Automerge recognizes text that is moved/indented (e.g., concurrent editing item while being moved).
+// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
 
 // NEXT:
 // TODO(burdon): Handle backspace at start of line (or empty line).
