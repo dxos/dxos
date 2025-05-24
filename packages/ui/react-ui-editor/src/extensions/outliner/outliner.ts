@@ -10,6 +10,7 @@ import {
   EditorState,
   type Extension,
   Prec,
+  type Range,
   type SelectionRange,
 } from '@codemirror/state';
 import {
@@ -26,7 +27,6 @@ import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
 import { getRange, outlinerTree, treeFacet } from './tree';
-import { type Range } from '../../types';
 
 // ISSUES:
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
