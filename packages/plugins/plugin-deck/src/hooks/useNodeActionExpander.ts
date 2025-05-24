@@ -11,7 +11,7 @@ export const useNodeActionExpander = (node?: Node) => {
     if (node) {
       const frame = requestAnimationFrame(() => {
         const graph = getGraph(node);
-        graph.expand(node.id);
+        void graph.expand(node.id);
       });
       return () => cancelAnimationFrame(frame);
     }

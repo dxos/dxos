@@ -6,11 +6,11 @@ import { SchemaAST, Schema } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
 import { splitJsonPath, type JsonPath } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation, type HasId } from './ast';
-import { getTypename, ObjectId, type ObjectMeta } from './object';
+import { getTypename, type ObjectMeta } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_META = '@meta';

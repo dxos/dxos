@@ -51,3 +51,4 @@ export * from './sliding-window-summary';
 export * from './string';
 export * from './remove-undefined-keys';
 export * from './clear-undefined';
+export * from './object';

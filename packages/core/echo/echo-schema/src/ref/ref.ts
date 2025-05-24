@@ -7,11 +7,9 @@ import { Effect, Option, ParseResult, Schema, SchemaAST } from 'effect';
 import { Reference, type EncodedReference } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 
-import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
-import { type JsonSchemaType } from '../ast';
-import { ObjectId } from '../object';
+import { getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId, type JsonSchemaType } from '../ast';
 import type { BaseObject, WithId } from '../types';
 
 /**

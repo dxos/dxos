@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 export type ObjectPointerDecoded = {
   spaceKey: string | undefined;
   documentId: string;
@@ -15,6 +17,8 @@ export type ObjectPointerDecoded = {
  * Space key is encoded in the front to allow prefix iteration.
  */
 export type ObjectPointerEncoded = string;
+
+export const ObjectPointerEncoded = Schema.String.annotations({ title: 'ObjectPointerEncoded' });
 
 const V1_PREFIX = '#01';
 

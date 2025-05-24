@@ -1665,6 +1665,9 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
+      ulidx:
+        specifier: ^2.3.0
+        version: 2.3.0
     devDependencies:
       base32-decode:
         specifier: ^1.0.0
@@ -2625,6 +2628,9 @@ importers:
       crc-32:
         specifier: ^1.2.2
         version: 1.2.2
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
@@ -2650,6 +2656,9 @@ importers:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -2659,6 +2668,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
 
   packages/core/echo/echo-query:
     dependencies:
@@ -2669,8 +2681,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@orama/orama':
-        specifier: ^2.0.8
-        version: 2.0.8
+        specifier: ^3.1.7
+        version: 3.1.7
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -2714,9 +2726,6 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
-      ulidx:
-        specifier: ^2.3.0
-        version: 2.3.0
 
   packages/core/echo/echo-signals:
     dependencies:
@@ -2751,12 +2760,18 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2785,8 +2800,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@orama/orama':
-        specifier: ^2.0.8
-        version: 2.0.8
+        specifier: ^3.1.7
+        version: 3.1.7
+      '@xenova/transformers':
+        specifier: ^2.17.2
+        version: 2.17.2
+      effect:
+        specifier: 3.14.21
+        version: 3.14.21
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
@@ -2839,9 +2860,6 @@ importers:
       effect:
         specifier: 3.14.21
         version: 3.14.21
-      ulidx:
-        specifier: ^2.3.0
-        version: 2.3.0
 
   packages/core/functions:
     dependencies:
@@ -4666,9 +4684,6 @@ importers:
       parsimmon:
         specifier: ^1.18.1
         version: 1.18.1
-      ulidx:
-        specifier: ^2.3.0
-        version: 2.3.0
     devDependencies:
       '@types/parsimmon':
         specifier: ^1.10.9
@@ -13961,6 +13976,9 @@ importers:
 
   tools/lockfile-explorer:
     dependencies:
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../packages/common/util
       fuzzy:
         specifier: ^0.1.3
         version: 0.1.3
@@ -18847,9 +18865,9 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
 
-  '@orama/orama@2.0.8':
-    resolution: {integrity: sha512-qaku4eOWLH80pneJ/PtqvF/VXGO3b1W1X6NSji3Yh6s3BNuoyprOifNfSWEkIbymzT89/B+ZFoq6PKG43fW6PA==}
-    engines: {node: '>= 16.0.0'}
+  '@orama/orama@3.1.7':
+    resolution: {integrity: sha512-6yB0117ZjsgNevZw3LP+bkrZa9mU/POPVaXgzMPOBbBc35w2P3R+1vMMhEfC06kYCpd5bf0jodBaTkYQW5TVeQ==}
+    engines: {node: '>= 20.0.0'}
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
@@ -42272,7 +42290,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
 
-  '@orama/orama@2.0.8': {}
+  '@orama/orama@3.1.7': {}
 
   '@oslojs/encoding@1.1.0': {}
 

@@ -28,7 +28,7 @@ import {
 
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
-import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
+import { DatabaseDirectory, type CollectionId } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -285,7 +285,7 @@ export class AutomergeHost extends Resource {
     if (headsToWait.length > 0) {
       await Promise.all(
         headsToWait.map(async (entry, index) => {
-          const handle = await this.loadDoc<SpaceDoc>(Context.default(), entry.documentId as DocumentId);
+          const handle = await this.loadDoc<DatabaseDirectory>(Context.default(), entry.documentId as DocumentId);
           await waitForHeads(handle, entry.heads!);
         }),
       );
@@ -348,7 +348,7 @@ export class AutomergeHost extends Resource {
     const heads = getHeads(doc);
     this._headsStore.setHeads(handle.documentId, heads, batch);
 
-    const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
+    const spaceKey = DatabaseDirectory.getSpaceKey(doc) ?? undefined;
     const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) =>
       objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
@@ -402,7 +402,7 @@ export class AutomergeHost extends Resource {
       await handle.whenReady();
     }
     if (handle && handle.isReady() && handle.doc()) {
-      const spaceKeyHex = getSpaceKeyFromDoc(handle.doc());
+      const spaceKeyHex = DatabaseDirectory.getSpaceKey(handle.doc());
       if (spaceKeyHex) {
         return PublicKey.from(spaceKeyHex);
       }
@@ -583,21 +583,11 @@ export class AutomergeHost extends Resource {
   }
 }
 
-export const getSpaceKeyFromDoc = (doc: Doc<SpaceDoc>): string | null => {
-  // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
-  const rawSpaceKey = doc.access?.spaceKey ?? (doc as any).experimental_spaceKey;
-  if (rawSpaceKey == null) {
-    return null;
-  }
-
-  return String(rawSpaceKey);
-};
-
-const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
+const waitForHeads = async (handle: DocHandle<DatabaseDirectory>, heads: Heads) => {
   const unavailableHeads = new Set(heads);
 
   await handle.whenReady();
-  await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
+  await Event.wrap<DocHandleChangePayload<DatabaseDirectory>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
       if (changeIsPresentInDoc(handle.doc()!, changeHash)) {

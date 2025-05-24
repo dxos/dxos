@@ -7,7 +7,8 @@ import { next as A } from '@automerge/automerge';
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { isEncodedReference, type SpaceDoc } from '@dxos/echo-protocol';
+import { filterMatchObject } from '@dxos/echo-pipeline/filter';
+import { isEncodedReference, type DatabaseDirectory, type QueryAST } from '@dxos/echo-protocol';
 import { type AnyObjectData } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
@@ -21,19 +22,14 @@ import { isNonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';
-import {
-  filterMatch,
-  type DeprecatedFilter,
-  type QueryContext,
-  type QueryJoinSpec,
-  type QueryResultEntry,
-} from '../query';
+import { isTrivialSelectionQuery, type QueryContext, type QueryJoinSpec, type QueryResultEntry } from '../query';
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
 /**
  * Services plain data queries from the CoreDatabase class
  */
+// TODO(dmaretskyi): Restructure client-side query sub-systems: working-set query, host query (via service), remote agent/edge query
 export class CoreDatabaseQueryContext implements QueryContext {
   private _lastResult: QueryResultEntry<any>[] = [];
 
@@ -54,7 +50,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     return this._lastResult;
   }
 
-  async run(filter: DeprecatedFilter<any>): Promise<QueryResultEntry<any>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResultEntry<any>[]> {
     const queryId = nextQueryId++;
     // Disposed when this method exists.
     await using ctx = new Context();
@@ -62,9 +58,14 @@ export class CoreDatabaseQueryContext implements QueryContext {
     const start = Date.now();
 
     // Special case for object id filter.
-    if (filter.isObjectIdFilter()) {
-      invariant(filter.objectIds?.length === 1);
-      const core = await this._coreDatabase.loadObjectCoreById(filter.objectIds[0]);
+    const trivial = isTrivialSelectionQuery(query);
+    if (!trivial) {
+      return [];
+    }
+    const { filter, options: _options } = trivial;
+
+    if (filter.type === 'object' && filter.id?.length === 1) {
+      const core = await this._coreDatabase.loadObjectCoreById(filter.id[0]);
 
       if (!core || ctx.disposed) {
         return [];
@@ -76,7 +77,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     // TODO(dmaretskyi): Ensure the space id is set on filter.
     const response = await Stream.first(
       this._queryService.execQuery(
-        { filter: filter.toProto(), reactivity: QueryReactivity.ONE_SHOT },
+        { query: JSON.stringify(query), reactivity: QueryReactivity.ONE_SHOT },
         { timeout: QUERY_SERVICE_TIMEOUT },
       ),
     );
@@ -93,7 +94,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     const processedResults = await Promise.all(
       (response.results ?? []).map((result) => this._filterMapResult(ctx, filter, start, result)),
     );
-    let results = processedResults.filter(isNonNullable);
+    const results = processedResults.filter(isNonNullable);
 
     // TODO(dmaretskyi): Merge in results from local working set.
 
@@ -103,18 +104,19 @@ export class CoreDatabaseQueryContext implements QueryContext {
       loaded: results.length,
     });
 
-    if (typeof filter.options.limit === 'number') {
-      results = results.slice(0, filter.options.limit);
-    }
+    // TODO(dmaretskyi): Limit.
+    // if (typeof filter.options.limit === 'number') {
+    //   results = results.slice(0, filter.options.limit);
+    // }
 
     return results;
   }
 
-  update(filter: DeprecatedFilter<any>): void {}
+  update(query: QueryAST.Query): void {}
 
   private async _filterMapResult(
     ctx: Context,
-    filter: DeprecatedFilter,
+    filter: QueryAST.Filter,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<QueryResultEntry | null> {
@@ -140,7 +142,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
       } satisfies QueryResultEntry;
     } else if (!FORCE_DATA_SERVICE_FETCH && result.documentAutomerge) {
       // Return snapshot from automerge CRDT.
-      const doc = A.load(result.documentAutomerge) as SpaceDoc;
+      const doc = A.load(result.documentAutomerge) as DatabaseDirectory;
 
       const object = doc.objects?.[result.id];
       if (!object) {
@@ -177,26 +179,33 @@ export class CoreDatabaseQueryContext implements QueryContext {
   }
 
   private async _filterMapCore(
-    filter: DeprecatedFilter,
+    filter: QueryAST.Filter,
     core: ObjectCore,
     queryStartTimestamp: number,
     result: RemoteQueryResult | undefined,
   ): Promise<QueryResultEntry | null> {
-    if (!filterMatch(filter, core)) {
+    if (
+      !filterMatchObject(filter, {
+        doc: core.getObjectStructure(),
+        id: core.id,
+        spaceId: core.database!.spaceId,
+      })
+    ) {
       return null;
     }
 
-    if (filter.options.include) {
-      validateJoinSpec(filter.options.include);
-    }
+    // TODO(dmaretskyi): Joins.
+    // if (filter.options.include) {
+    //   validateJoinSpec(filter.options.include);
+    // }
 
-    const data = await this._recursivelyJoinFields(core.toPlainObject(), filter.options.include);
+    // const data = await this._recursivelyJoinFields(core.toPlainObject(), filter.options.include);
 
     return {
       id: core.id,
       spaceId: core.database!.spaceId,
       spaceKey: core.database!.spaceKey,
-      object: data,
+      object: core.toPlainObject(),
       match: result && { rank: result.rank },
       resolution: { source: 'remote', time: Date.now() - queryStartTimestamp },
     } satisfies QueryResultEntry;
@@ -228,15 +237,6 @@ export class CoreDatabaseQueryContext implements QueryContext {
     return newData;
   }
 }
-
-const validateJoinSpec = (joinSpec: QueryJoinSpec) => {
-  try {
-    // This will throw if the join spec is a recursive object.
-    JSON.stringify(joinSpec);
-  } catch {
-    throw new Error('Invalid join spec');
-  }
-};
 
 /**
  * Used for logging.

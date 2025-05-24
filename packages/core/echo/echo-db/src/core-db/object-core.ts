@@ -14,7 +14,7 @@ import {
   isEncodedReference,
   type ObjectStructure,
   Reference,
-  type SpaceDoc,
+  type DatabaseDirectory,
 } from '@dxos/echo-protocol';
 import { ObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -74,7 +74,7 @@ export class ObjectCore {
   /**
    * Set if when the object is bound to a database.
    */
-  public docHandle?: DocHandleProxy<SpaceDoc> = undefined;
+  public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -128,7 +128,7 @@ export class ObjectCore {
       // Prevent recursive change calls.
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
-      this.docHandle.change((newDoc: SpaceDoc) => {
+      this.docHandle.change((newDoc: DatabaseDirectory) => {
         setDeep(newDoc, this.mountPath, doc);
       });
     }
@@ -138,6 +138,10 @@ export class ObjectCore {
 
   getDoc() {
     return this.doc ?? this.docHandle?.doc() ?? failedInvariant('Invalid state');
+  }
+
+  getObjectStructure(): ObjectStructure {
+    return getDeep(this.getDoc(), this.mountPath) as ObjectStructure;
   }
 
   /**
@@ -475,7 +479,7 @@ export class ObjectCore {
 
 export type BindOptions = {
   db: CoreDatabase;
-  docHandle: DocHandleProxy<SpaceDoc>;
+  docHandle: DocHandleProxy<DatabaseDirectory>;
   path: KeyPath;
 
   /**
@@ -484,7 +488,7 @@ export type BindOptions = {
   assignFromLocalState?: boolean;
 };
 
-export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<SpaceDoc>) => {
+export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DatabaseDirectory>) => {
   if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objId)) {
     return true;
   }

@@ -30,7 +30,8 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "effect": "3.14.21"
+    "effect": "3.14.21",
+    "ulidx": "^2.3.0"
   },
   "devDependencies": {
     "base32-decode": "^1.0.0",

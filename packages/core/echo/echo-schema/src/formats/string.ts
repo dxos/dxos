@@ -9,6 +9,7 @@ import { FormatAnnotation, FormatEnum } from './types';
 /**
  * Decentralized name.
  */
+// TODO(dmaretskyi): Reconcile with @dxos/keys#DXN.Schema
 export const DXN = Schema.NonEmptyString.pipe(
   Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
   FormatAnnotation.set(FormatEnum.DXN),

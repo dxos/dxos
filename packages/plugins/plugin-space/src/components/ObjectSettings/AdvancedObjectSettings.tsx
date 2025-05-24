@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type ForeignKey, ForeignKeySchema } from '@dxos/echo-schema';
+import { ForeignKey } from '@dxos/echo-schema';
 import { getMeta, type AnyLiveObject } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -66,7 +66,7 @@ export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) 
         {!adding && <ForeignKeys keys={keys} onDelete={handleDelete} />}
       </div>
 
-      {adding && <Form schema={ForeignKeySchema} values={initialValues} onSave={handleSave} onCancel={handleCancel} />}
+      {adding && <Form schema={ForeignKey} values={initialValues} onSave={handleSave} onCancel={handleCancel} />}
     </>
   );
 };

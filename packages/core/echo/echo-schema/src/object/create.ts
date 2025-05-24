@@ -5,8 +5,8 @@
 import { type Schema } from 'effect';
 
 import { failedInvariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
 
-import { ObjectId } from './ids';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { setTypename } from './typename';
