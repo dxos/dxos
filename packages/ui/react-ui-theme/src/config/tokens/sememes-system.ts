@@ -194,7 +194,6 @@ type SememeName = keyof typeof systemSememes;
 type Alias =
   //
   // Surfaces
-  // TODO(burdon): Define surface for list selection, sheet ranges, etc.
   //
 
   // Base surface for text (e.g., Document, Table, Sheet.)
