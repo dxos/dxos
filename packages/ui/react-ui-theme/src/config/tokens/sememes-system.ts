@@ -191,57 +191,51 @@ export const systemSememes = {
 
 type SememeName = keyof typeof systemSememes;
 
-type Alias =
-  //
-  // Surfaces
-  //
-
+/**
+ * Alias map.
+ */
+const aliasDefs: Record<string, { root?: SememeName; attention?: SememeName }> = {
   // Base surface for text (e.g., Document, Table, Sheet.)
-  | 'baseSurface'
-  // Forms, cards, etc.
-  | 'groupSurface'
-  // Dialogs, menus, popovers, etc.
-  | 'modalSurface'
-  // Main sidebar panel.
-  | 'sidebarSurface'
-  // Plank header.
-  | 'headerSurface'
-  // Toolbars, table/sheet headers, etc.
-  | 'toolbarSurface'
-  | 'hoverSurface'
-  | 'accentSurface'
-  | 'accentSurfaceHover'
-  // Screen overlay for modal dialogs.
-  | 'scrimSurface'
-
-  //
-  // TODO(burdon): Why are these here, but not deck, text, above?
-  //
-  | 'attention'
-  | 'currentRelated'
-  | 'hoverOverlay'
-  | 'input'
-  | 'separator'
-  | 'subduedSeparator'
-  | 'unAccent'
-  | 'unAccentHover';
-
-const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName }> = {
   baseSurface: { root: 'surface-20', attention: 'surface-0' },
+
+  // Forms, cards, etc.
   groupSurface: { root: 'surface-50', attention: 'surface-40' },
+
+  // Main sidebar panel.
   sidebarSurface: { root: 'surface-30' },
+
+  // Dialogs, menus, popovers, etc.
   modalSurface: { root: 'surface-50' },
+
+  // Plank header.
   headerSurface: { root: 'surface-30', attention: 'surface-20' },
+
+  // Toolbars, table/sheet headers, etc.
   toolbarSurface: { root: 'surface-30', attention: 'surface-20' },
+
+  // Mouse-over hover.
   hoverSurface: { root: 'surface-70', attention: 'surface-60' },
-  accentSurface: { root: 'accentSurface' },
-  accentSurfaceHover: { root: 'accentSurfaceHover' },
+
+  // Screen overlay for modal dialogs.
   scrimSurface: { root: 'surface-10t' },
 
+  // Primary accent.
+  accentSurface: { root: 'accentSurface' },
+  accentSurfaceHover: { root: 'accentSurfaceHover' },
+
+  //
+  // TODO(burdon): Why are these here, but not deck, text, above? Are these all surfaces?
+  //
+
   attention: { root: 'surface-10' },
+
   currentRelated: { root: 'accentSurfaceRelated' },
+
+  // TODO(burdon): Different from hoverSurface?
   hoverOverlay: { root: 'surface-450t' },
+
   input: { root: 'surface-35', attention: 'surface-35' },
+
   separator: { root: 'surface-50' },
   subduedSeparator: { root: 'surface-30' },
 
@@ -249,7 +243,7 @@ const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName 
   unAccentHover: { root: 'surface-450' },
 };
 
-export const systemAliases: ColorAliases = Object.entries(aliasDefssDefs).reduce((aliases, [alias, values]) => {
+export const systemAliases: ColorAliases = Object.entries(aliasDefs).reduce((aliases, [alias, values]) => {
   Object.entries(values).forEach(([key, sememe]) => {
     const record = getMapValue(aliases, sememe, () => ({}));
     const list = getMapValue<string[]>(record, key, () => []);
