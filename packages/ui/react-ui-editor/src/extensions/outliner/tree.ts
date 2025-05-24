@@ -9,18 +9,16 @@ import { type SyntaxNode } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
 
-export type Range = {
-  from: number;
-  to: number;
-};
+import { type Range } from '../../types';
 
 /**
  * Represents a single item in the tree.
  */
 export type Item = {
-  type: 'root' | 'bullet' | 'task' | 'unknown'; // TODO(burdon): Numbered?
-  node: SyntaxNode;
+  type: 'root' | 'bullet' | 'task' | 'unknown';
+  index: number;
   level: number;
+  node: SyntaxNode;
   parent?: Item;
   nextSibling?: Item;
   prevSibling?: Item;
@@ -41,11 +39,11 @@ export type Item = {
 /**
  * Tree assumes the entire document is a single contiguous well-formed hierarchy of markdown LiteItem nodes.
  */
-// TOOD(burdon): Cancel any mutation that breaks the tree?
 export class Tree implements Item {
   type: Item['type'] = 'root';
+  index = -1;
+  level = -1;
   node: Item['node'];
-  level: number = -1;
   lineRange: Item['lineRange'];
   contentRange: Item['contentRange'];
   children: Item['children'] = [];
@@ -104,12 +102,24 @@ export class Tree implements Item {
    */
   prev(item: Item): Item | undefined {
     if (item.prevSibling) {
-      return item.prevSibling;
+      return this.lastDescendant(item.prevSibling);
     }
 
     return item.parent?.type === 'root' ? undefined : item.parent;
   }
+
+  /**
+   * Return the last descendant of the item, or the item itself if it has no children.
+   */
+  lastDescendant(item: Item): Item {
+    return item.children.length > 0 ? this.lastDescendant(item.children[item.children.length - 1]) : item;
+  }
 }
+
+export const getRange = (tree: Tree, item: Item): [number, number] => {
+  const lastDescendant = tree.lastDescendant(item);
+  return [item.lineRange.from, lastDescendant.lineRange.to];
+};
 
 /**
  * Traverse the tree, calling the callback for each item.
@@ -142,47 +152,57 @@ export const getListItemContent = (state: EditorState, item: Item): string => {
 export const listItemToString = (item: Item, level = 0) => {
   const indent = '  '.repeat(level);
   const data = {
+    i: item.index,
+    n: item.nextSibling?.index ?? '∅',
+    p: item.prevSibling?.index ?? '∅',
     level: item.level,
-    node: [item.node.from, item.node.to],
-    doc: [item.lineRange.from, item.lineRange.to],
-    content: [item.contentRange.from, item.contentRange.to],
+    node: format([item.node.from, item.node.to]),
+    line: format([item.lineRange.from, item.lineRange.to]),
+    content: format([item.contentRange.from, item.contentRange.to]),
   };
 
-  return `${indent}${item.type}(${Object.entries(data)
-    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+  return `${indent}${item.type[0].toUpperCase()}(${Object.entries(data)
+    .map(([k, v]) => `${k}=${v}`)
     .join(', ')})`;
 };
+
+const format = (value: any) =>
+  JSON.stringify(value, (key: string, value: any) => {
+    if (typeof value === 'number') {
+      return value.toString().padStart(3, ' ');
+    }
+    return value;
+  }).replaceAll('"', '');
 
 export const treeFacet = Facet.define<Tree, Tree>({
   combine: (values) => values[0],
 });
 
-export type TreeOptions = {
-  debug?: boolean;
-};
+export type TreeOptions = {};
 
 /**
  * Creates a shadow tree of `ListItem` nodes whenever the document changes.
  * This adds overhead relative to the markdown AST, but allows for efficient traversal of the list items.
  */
-export const outlinerTree = ({ debug = false }: TreeOptions = {}): Extension => {
+export const outlinerTree = (options: TreeOptions = {}): Extension => {
   const buildTree = (state: EditorState): Tree => {
     let tree: Tree | undefined;
     let parent: Item | undefined;
     let current: Item | undefined;
-    let prevSibling: Item | undefined;
+    let prevSiblings: Item[] = []; // Array to track previous siblings at each level.
+    let prev: Item | undefined;
+    let index = 0;
     syntaxTree(state).iterate({
       enter: (node) => {
         switch (node.name) {
           case 'Document': {
-            console.log('##');
             tree = new Tree(node.node);
             current = tree;
+            prevSiblings = []; // Reset prevSiblings array.
             break;
           }
           case 'BulletList': {
             parent = current;
-            prevSibling = undefined;
             if (current) {
               current.lineRange.to = current.node.from;
             }
@@ -190,31 +210,47 @@ export const outlinerTree = ({ debug = false }: TreeOptions = {}): Extension => 
           }
           case 'ListItem': {
             invariant(parent);
+            const level = parent.level + 1;
+
             // Include all content up to the next sibling or the end of the document.
             const nextSibling = node.node.nextSibling ?? node.node.parent?.nextSibling;
             const docRange: Range = {
               from: state.doc.lineAt(node.from).from,
-              to: nextSibling ? nextSibling.from - 1 : node.node.to,
+              to: nextSibling ? nextSibling.from - 1 : state.doc.length,
             };
+
             current = {
               type: 'unknown',
+              index: index++,
+              level,
               node: node.node,
-              level: parent.level + 1,
               lineRange: docRange,
               contentRange: { ...docRange },
               parent,
-              prevSibling,
+              prevSibling: prevSiblings[level],
               children: [],
             };
+
+            // Update sibling refs.
+            if (current.prevSibling) {
+              current.prevSibling.nextSibling = current;
+            }
+
+            // Update previous siblings array at current level.
+            prevSiblings[level] = current;
+
+            // Update previous item (not sibling).
+            if (prev) {
+              prev.lineRange.to = prev.contentRange.to = current.lineRange.from - 1;
+            }
+            prev = current;
+
+            // Update parent.
             parent.children.push(current);
             if (parent.lineRange.to === parent.node.from) {
               parent.lineRange.to = parent.contentRange.to = current.lineRange.from - 1;
             }
-            if (prevSibling) {
-              prevSibling.nextSibling = current;
-              prevSibling.lineRange.to = prevSibling.contentRange.to = current.lineRange.from - 1;
-            }
-            prevSibling = current;
+
             break;
           }
           case 'ListMark': {
@@ -252,19 +288,11 @@ export const outlinerTree = ({ debug = false }: TreeOptions = {}): Extension => 
         return buildTree(state);
       },
       update: (value: Tree | undefined, tr: Transaction) => {
-        // TODO(burdon): Filter specific changes?
         if (!tr.docChanged) {
           return value;
         }
 
-        const tree = buildTree(tr.state);
-        if (debug) {
-          tree?.traverse((item) => {
-            // eslint-disable-next-line no-console
-            console.log(listItemToString(item));
-          });
-        }
-        return tree;
+        return buildTree(tr.state);
       },
       provide: (field) => treeFacet.from(field),
     }),

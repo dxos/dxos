@@ -40,6 +40,7 @@ import {
   mention,
   outliner,
 } from '../extensions';
+import { listItemToString, treeFacet } from '../extensions/outliner/tree';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',
@@ -215,23 +216,60 @@ export const TaskList = {
 // Outliner
 //
 
+const lists = {
+  simple: str(
+    //
+    '- [ ] A',
+    '- [ ] B',
+    '- [ ] C',
+    '- [ ] D',
+    '- [ ] E',
+    '- [ ] F',
+    '- [ ] G',
+  ),
+  nested: str(
+    //
+    '- [ ] A',
+    '- [ ] B',
+    '- [ ] C',
+    '  - [ ] D',
+    '    - [ ] E',
+    '    - [ ] F',
+    '- [ ] G',
+  ),
+  complex: str(
+    //
+    '- [ ] A',
+    '- [ ] B',
+    'Continuation line.',
+    '- [ ] C',
+    '',
+    '- [ ] D',
+    '- [ ] E',
+    '- [ ] F',
+    '- [ ] G',
+    '',
+  ),
+};
+
 export const Outliner = {
   render: () => (
     <EditorStory
-      // text={str(...content.tasks.split('\n').filter((line) => line.trim().startsWith('-')))}
-      text={str(
+      text={lists.nested}
+      extensions={[
         //
-        '- [ ] A',
-        '- [ ] B',
-        'Continuation line.',
-        '- [ ] C',
-        '',
-        '- [ ] D',
-        '- [ ] E',
-        '',
-      )}
-      extensions={[decorateMarkdown({ listPaddingLeft: 8 }), outliner()]}
+        decorateMarkdown({ listPaddingLeft: 8 }),
+        outliner(),
+      ]}
       debug='raw+tree'
+      debugCustom={(view) => {
+        const tree = view.state.facet(treeFacet);
+        const lines: string[] = [];
+        tree.traverse((item) => {
+          lines.push(listItemToString(item));
+        });
+        return <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>{lines.join('\n')}</pre>;
+      }}
     />
   ),
 };

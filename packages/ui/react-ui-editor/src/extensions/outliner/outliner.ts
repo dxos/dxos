@@ -10,7 +10,6 @@ import {
   EditorState,
   type Extension,
   Prec,
-  type Range,
   type SelectionRange,
 } from '@codemirror/state';
 import {
@@ -26,7 +25,8 @@ import {
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
-import { outlinerTree, treeFacet } from './tree';
+import { getRange, outlinerTree, treeFacet } from './tree';
+import { type Range } from '../../types';
 
 // TODO(burdon): Change indentation while moving lines.
 // TODO(burdon): Handle backspace at start of line (or empty line).
@@ -93,30 +93,28 @@ export const moveItemDown: Command = (view: EditorView) => {
   const pos = getSelection(view)?.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
-  if (current) {
-    const next = tree.next(current);
-    if (next) {
-      const currentContent = view.state.doc.sliceString(current.lineRange.from, current.lineRange.to);
-      const nextContent = view.state.doc.sliceString(next.lineRange.from, next.lineRange.to);
-      const changes: ChangeSpec[] = [
-        {
-          from: current.lineRange.from,
-          to: current.lineRange.from + currentContent.length,
-          insert: nextContent,
-        },
-        {
-          from: next.lineRange.from,
-          to: next.lineRange.from + nextContent.length,
-          insert: currentContent,
-        },
-      ];
+  if (current && current.nextSibling) {
+    const next = current.nextSibling;
+    const currentContent = view.state.doc.sliceString(...getRange(tree, current));
+    const nextContent = view.state.doc.sliceString(...getRange(tree, next));
+    const changes: ChangeSpec[] = [
+      {
+        from: current.lineRange.from,
+        to: current.lineRange.from + currentContent.length,
+        insert: nextContent,
+      },
+      {
+        from: next.lineRange.from,
+        to: next.lineRange.from + nextContent.length,
+        insert: currentContent,
+      },
+    ];
 
-      view.dispatch({
-        changes,
-        selection: EditorSelection.cursor(pos + nextContent.length + 1),
-        scrollIntoView: true,
-      });
-    }
+    view.dispatch({
+      changes,
+      selection: EditorSelection.cursor(pos + nextContent.length + 1),
+      scrollIntoView: true,
+    });
   }
 
   return true;
@@ -126,30 +124,28 @@ export const moveItemUp: Command = (view: EditorView) => {
   const pos = getSelection(view)?.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
-  if (current) {
-    const prev = tree.prev(current);
-    if (prev) {
-      const prevContent = view.state.doc.sliceString(prev.lineRange.from, prev.lineRange.to);
-      const currentContent = view.state.doc.sliceString(current.lineRange.from, current.lineRange.to);
-      const changes: ChangeSpec[] = [
-        {
-          from: prev.lineRange.from,
-          to: prev.lineRange.from + prevContent.length,
-          insert: currentContent,
-        },
-        {
-          from: current.lineRange.from,
-          to: current.lineRange.from + currentContent.length,
-          insert: prevContent,
-        },
-      ];
+  if (current && current.prevSibling) {
+    const prev = current.prevSibling;
+    const currentContent = view.state.doc.sliceString(...getRange(tree, current));
+    const prevContent = view.state.doc.sliceString(...getRange(tree, prev));
+    const changes: ChangeSpec[] = [
+      {
+        from: prev.lineRange.from,
+        to: prev.lineRange.from + prevContent.length,
+        insert: currentContent,
+      },
+      {
+        from: current.lineRange.from,
+        to: current.lineRange.from + currentContent.length,
+        insert: prevContent,
+      },
+    ];
 
-      view.dispatch({
-        changes,
-        selection: EditorSelection.cursor(pos - prevContent.length - 1),
-        scrollIntoView: true,
-      });
-    }
+    view.dispatch({
+      changes,
+      selection: EditorSelection.cursor(pos - prevContent.length - 1),
+      scrollIntoView: true,
+    });
   }
 
   return true;

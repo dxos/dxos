@@ -5,7 +5,7 @@
 import { type Completion } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import React, { useEffect, useState, type FC } from 'react';
+import React, { type ReactNode, useEffect, useState, type FC } from 'react';
 
 import { Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -252,6 +252,7 @@ export type DebugMode = 'raw' | 'tree' | 'raw+tree';
 export type StoryProps = {
   id?: string;
   debug?: DebugMode;
+  debugCustom?: (view: EditorView) => ReactNode;
   text?: string;
   readOnly?: boolean;
   placeholder?: string;
@@ -263,6 +264,7 @@ export type StoryProps = {
 export const EditorStory = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   debug,
+  debugCustom,
   text,
   extensions,
   readOnly,
@@ -309,12 +311,13 @@ export const EditorStory = ({
   }, [view]);
 
   return (
-    <div className='flex w-full'>
-      <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />
+    <div className='w-full h-full grid grid-cols-[1fr_600px] overflow-hidden'>
+      <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} />
       {debug && (
-        <div className='grid grid-rows-[1fr_2fr] w-[800px] border-l border-separator divide-y divide-separator overflow-hidden'>
+        <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>
+          {view && debugCustom?.(view)}
           {(debug === 'raw' || debug === 'raw+tree') && (
-            <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200 overflow-auto'>
+            <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>
               {view?.state.doc.toString()}
             </pre>
           )}
