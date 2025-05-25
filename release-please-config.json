@@ -434,6 +434,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/plexus/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/react-metagraph/package.json",
           "jsonpath": "$.version"
         },

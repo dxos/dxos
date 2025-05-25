@@ -247,6 +247,9 @@
       "path": "packages/experimental/metagraph/tsconfig.json"
     },
     {
+      "path": "packages/experimental/plexus/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/react-metagraph/tsconfig.json"
     },
     {
