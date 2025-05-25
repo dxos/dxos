@@ -5,8 +5,14 @@
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
+<<<<<<< HEAD
 import { type Range, outlinerTree, treeFacet, listItemToString, type Item } from './tree';
 import { str } from '../../stories';
+=======
+import { outlinerTree, treeFacet, listItemToString, type Item } from './tree';
+import { str } from '../../stories';
+import { type Range } from '../../types';
+>>>>>>> origin/main
 import { createMarkdownExtensions } from '../markdown';
 
 const doc = str(
@@ -31,7 +37,11 @@ describe('tree (boundary conditions)', () => {
     expect(tree).to.exist;
   });
 
+<<<<<<< HEAD
   test.only('empty continuation', ({ expect }) => {
+=======
+  test('empty continuation', ({ expect }) => {
+>>>>>>> origin/main
     const state = EditorState.create({ doc: str('- [ ] A', '  '), extensions });
     const tree = state.facet(treeFacet);
     tree.traverse((item, level) => {
@@ -60,6 +70,10 @@ describe('tree (advanced)', () => {
     const ranges: Range[] = [];
     tree.traverse((item) => {
       ranges.push(item.lineRange);
+<<<<<<< HEAD
+=======
+      console.log(listItemToString(item));
+>>>>>>> origin/main
     });
 
     // Check no gaps between ranges.
@@ -81,6 +95,23 @@ describe('tree (advanced)', () => {
     expect(tree.find(state.doc.length)).to.include({ type: 'task' });
   });
 
+<<<<<<< HEAD
+=======
+  test('siblings', ({ expect }) => {
+    const tree = state.facet(treeFacet);
+    const items: Item[] = [];
+    tree.traverse((item) => {
+      items.push(item);
+    });
+
+    expect(items[0].nextSibling).toBe(items[1]);
+    expect(items[1].prevSibling).toBe(items[0]);
+
+    expect(items[1].nextSibling).toBe(items[8]);
+    expect(items[8].prevSibling).toBe(items[1]);
+  });
+
+>>>>>>> origin/main
   test('next/previous', ({ expect }) => {
     const tree = state.facet(treeFacet);
     const items: Item[] = [];
@@ -94,8 +125,26 @@ describe('tree (advanced)', () => {
     for (let i = 0; i < items.length - 1; i++) {
       const current = items[i];
       const next = items[i + 1];
+<<<<<<< HEAD
       expect(tree.next(current)).toEqual(next);
       expect(tree.prev(next)).toEqual(current);
+=======
+      expect(tree.next(current)?.index).toEqual(next.index);
+      expect(tree.prev(next)?.index).toEqual(current.index);
+    }
+  });
+
+  test('lastDescendant', ({ expect }) => {
+    const tree = state.facet(treeFacet);
+    {
+      const item = tree.find(0)!;
+      expect(tree.lastDescendant(item).index).toBe(item.index);
+    }
+    {
+      const item = tree.find(8)!;
+      const last = tree.find(76)!;
+      expect(tree.lastDescendant(item).index).toBe(last.index);
+>>>>>>> origin/main
     }
   });
 });

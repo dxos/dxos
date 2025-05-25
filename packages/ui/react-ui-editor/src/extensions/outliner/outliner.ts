@@ -26,6 +26,7 @@ import {
 import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 
+<<<<<<< HEAD
 import { outlinerTree, treeFacet } from './tree';
 
 // TODO(burdon): When moving, move all descendants (does this disrupt automerge?)
@@ -37,6 +38,24 @@ import { outlinerTree, treeFacet } from './tree';
 // TODO(burdon): DND.
 // TODO(burdon): What if a different editor "breaks" the layout?
 // TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
+=======
+import { getRange, outlinerTree, treeFacet } from './tree';
+
+// ISSUES:
+// TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
+// TODO(burdon): Prevent unterminated fenced code from breaking subsequent items ("firewall" markdown parsing within each item?)
+// TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
+// TODO(burdon): What if a different editor "breaks" the layout?
+// TODO(burdon): Check Automerge recognizes text that is moved/indented (e.g., concurrent editing item while being moved).
+// TODO(burdon): Rendered cursor is not full height if there is not text on the task line.
+
+// NEXT:
+// TODO(burdon): Handle backspace at start of line (or empty line).
+// TODO(burdon): Smart Cut-and-paste.
+// TODO(burdon): Menu option to toggle list/task mode
+// TODO(burdon): Convert to task object and insert link (menu button).
+// TODO(burdon): DND.
+>>>>>>> origin/main
 
 const listItemRegex = /^\s*- (\[ \]|\[x\])? /;
 
@@ -93,6 +112,7 @@ export const moveItemDown: Command = (view: EditorView) => {
   const pos = getSelection(view)?.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
+<<<<<<< HEAD
   if (current) {
     const next = tree.next(current);
     if (next) {
@@ -117,6 +137,30 @@ export const moveItemDown: Command = (view: EditorView) => {
         scrollIntoView: true,
       });
     }
+=======
+  if (current && current.nextSibling) {
+    const next = current.nextSibling;
+    const currentContent = view.state.doc.sliceString(...getRange(tree, current));
+    const nextContent = view.state.doc.sliceString(...getRange(tree, next));
+    const changes: ChangeSpec[] = [
+      {
+        from: current.lineRange.from,
+        to: current.lineRange.from + currentContent.length,
+        insert: nextContent,
+      },
+      {
+        from: next.lineRange.from,
+        to: next.lineRange.from + nextContent.length,
+        insert: currentContent,
+      },
+    ];
+
+    view.dispatch({
+      changes,
+      selection: EditorSelection.cursor(pos + nextContent.length + 1),
+      scrollIntoView: true,
+    });
+>>>>>>> origin/main
   }
 
   return true;
@@ -126,6 +170,7 @@ export const moveItemUp: Command = (view: EditorView) => {
   const pos = getSelection(view)?.from;
   const tree = view.state.facet(treeFacet);
   const current = tree.find(pos);
+<<<<<<< HEAD
   if (current) {
     const prev = tree.prev(current);
     if (prev) {
@@ -150,6 +195,30 @@ export const moveItemUp: Command = (view: EditorView) => {
         scrollIntoView: true,
       });
     }
+=======
+  if (current && current.prevSibling) {
+    const prev = current.prevSibling;
+    const currentContent = view.state.doc.sliceString(...getRange(tree, current));
+    const prevContent = view.state.doc.sliceString(...getRange(tree, prev));
+    const changes: ChangeSpec[] = [
+      {
+        from: prev.lineRange.from,
+        to: prev.lineRange.from + prevContent.length,
+        insert: currentContent,
+      },
+      {
+        from: current.lineRange.from,
+        to: current.lineRange.from + currentContent.length,
+        insert: prevContent,
+      },
+    ];
+
+    view.dispatch({
+      changes,
+      selection: EditorSelection.cursor(pos - prevContent.length - 1),
+      scrollIntoView: true,
+    });
+>>>>>>> origin/main
   }
 
   return true;
