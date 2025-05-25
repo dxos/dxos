@@ -28,10 +28,10 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { outlinerTree, treeFacet } from './tree';
 
-// TODO(burdon): Change indentation while moving lines.
+// TODO(burdon): When moving, move all descendants (does this disrupt automerge?)
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Smart Cut-and-paste.
-// TODO(burdon): Menu option to toggle list/task mode
+// TODO(burdon): Menu option to toggle list/task mode.
 // TODO(burdon): Convert to task object and insert link (menu button).
 // TODO(burdon): When selecting across items, select entire items (don't show selection that spans the gaps).
 // TODO(burdon): DND.
