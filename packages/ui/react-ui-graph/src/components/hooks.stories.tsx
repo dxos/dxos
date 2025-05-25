@@ -9,9 +9,9 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { useThemeContext } from '@dxos/react-ui';
-import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/react-ui-graph';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { SVGRoot } from './SVGRoot';
 import { defaultStyles } from './styles';
 import {
   GraphForceProjector,
@@ -22,6 +22,8 @@ import {
   createSimulationDrag,
   linkerRenderer,
 } from '../graph';
+import { useSvgContext, useZoom, useGrid } from '../hooks';
+import { defaultGridStyles } from '../styles';
 import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '../testing';
 
 import '../../styles/defaults.css';

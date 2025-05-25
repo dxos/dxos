@@ -16,7 +16,7 @@ export type ZoomOptions = {
   onDblClick?: (zoom: ZoomHandler) => void;
 };
 
-export const defaultOptions: ZoomOptions = {
+const defaultZoomOptions: ZoomOptions = {
   enabled: true,
   extent: [1 / 2, 2],
   onDblClick: (zoom: ZoomHandler) => zoom.reset(),
@@ -35,11 +35,11 @@ export class ZoomHandler {
     private readonly _context: SVGContext,
     options: ZoomOptions,
   ) {
-    this._options = defaultsDeep({}, options, defaultOptions);
+    this._options = defaultsDeep({}, options, defaultZoomOptions);
     this._enabled = this._options.enabled ?? true;
 
     // https://github.com/d3/d3-zoom#zoom
-    this._zoom = zoom().scaleExtent(this._options.extent ?? (defaultOptions.extent as any));
+    this._zoom = zoom().scaleExtent(this._options.extent ?? (defaultZoomOptions.extent as any));
   }
 
   /**
@@ -98,7 +98,7 @@ export class ZoomHandler {
  * Creates the zoom handler.
  * @param options
  */
-export const useZoom = (options: ZoomOptions = defaultOptions): ZoomHandler => {
+export const useZoom = (options: ZoomOptions = defaultZoomOptions): ZoomHandler => {
   const context = useSvgContext();
   const ref = useRef<SVGGElement>(null);
   const handler = useMemo(() => new ZoomHandler(ref, context, options), []);

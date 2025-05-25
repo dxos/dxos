@@ -4,10 +4,9 @@
 
 import { line, select } from 'd3';
 
-import { type Point } from '@dxos/react-ui-graph';
-
 import { type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
+import { type Point } from '../util';
 
 const createLine = line();
 

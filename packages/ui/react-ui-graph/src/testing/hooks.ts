@@ -6,10 +6,10 @@ import update from 'immutability-helper';
 
 import { type Graph } from '@dxos/graph';
 import { faker } from '@dxos/random';
-import { useStateRef } from '@dxos/react-ui-graph';
 
 import { createNode, createEdge } from './data';
 import { type TestNode } from './model';
+import { useStateRef } from '../hooks';
 
 export type ObjectMutator<T> = [
   T, // Current value.

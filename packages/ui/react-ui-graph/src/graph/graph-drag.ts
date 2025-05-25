@@ -4,9 +4,10 @@
 
 import { drag, pointer, select, type Simulation } from 'd3';
 
-import { type D3DragEvent, type Point, type SVGContext } from '@dxos/react-ui-graph';
-
 import { type GraphLayoutEdge, type GraphLayoutNode } from './types';
+import { type SVGContext } from '../hooks';
+import { type D3DragEvent } from '../typings';
+import { type Point } from '../util';
 
 export interface DragOptions<N> {
   dragMod?: string;
@@ -16,7 +17,7 @@ export interface DragOptions<N> {
   onDrop?: (source: GraphLayoutNode<N>, target?: GraphLayoutNode<N>) => void;
 }
 
-export const defaultOptions: DragOptions<any> = {
+const defaultDragOptions: DragOptions<any> = {
   edgeMod: 'metaKey',
   freezeMod: 'shiftKey',
 };
@@ -34,14 +35,14 @@ enum Mode {
 export const createSimulationDrag = <N>(
   context: SVGContext,
   simulation: Simulation<GraphLayoutNode<N>, GraphLayoutEdge<N>>,
-  options: DragOptions<N> = defaultOptions,
+  options: DragOptions<N> = defaultDragOptions,
 ) => {
   let mode: Mode;
   let source: GraphLayoutNode<N>;
   let target: GraphLayoutNode<N>;
 
   const keyMod = (event: MouseEvent, key: string): boolean => {
-    const modKey = options?.[key] ?? defaultOptions[key];
+    const modKey = options?.[key] ?? defaultDragOptions[key];
     return modKey === undefined || event[modKey];
   };
 

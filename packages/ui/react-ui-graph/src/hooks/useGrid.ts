@@ -122,7 +122,7 @@ export type GridOptions = {
   axis?: boolean;
 };
 
-const defaultOptions: GridOptions = {
+const defaultGridOptions: GridOptions = {
   visible: true,
   axis: true,
 };
@@ -180,7 +180,7 @@ export class GridController {
  * Creates a reference to a SVG Group element which renders a grid.
  * @param options
  */
-export const useGrid = (options: GridOptions = defaultOptions): GridController => {
+export const useGrid = (options: GridOptions = defaultGridOptions): GridController => {
   const ref = useRef<SVGGElement>(null);
   const context = useSvgContext();
   const grid = useMemo(() => new GridController(ref, context, options), []);

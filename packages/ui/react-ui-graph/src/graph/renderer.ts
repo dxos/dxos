@@ -4,9 +4,8 @@
 
 import { type RefObject } from 'react';
 
-import { type SVGContext } from '@dxos/react-ui-graph';
-
 import { defaultIdAccessor, type IdAccessor } from './types';
+import { type SVGContext } from '../hooks';
 
 export type RendererOptions = {
   idAccessor: IdAccessor;

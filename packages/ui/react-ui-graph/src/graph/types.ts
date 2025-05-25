@@ -9,7 +9,8 @@
 
 import { type Graph } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
-import { type Point } from '@dxos/react-ui-graph';
+
+import { type Point } from '../util';
 
 export type IdAccessor<N = any> = (node: N) => string;
 

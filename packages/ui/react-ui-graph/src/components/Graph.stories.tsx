@@ -7,12 +7,17 @@ import '@dxos-theme';
 import React, { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/react-ui-graph';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';
+import { Grid } from './Grid';
 import { Markers } from './Markers';
+import { SVG } from './SVG';
+import { SVGRoot } from './SVGRoot';
+import { Zoom } from './Zoom';
 import { GraphForceProjector, type GraphLayoutNode } from '../graph';
+import { createSvgContext } from '../hooks';
+import { defaultGridStyles } from '../styles';
 import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type TestNode } from '../testing';
 
 import '../../styles/defaults.css';

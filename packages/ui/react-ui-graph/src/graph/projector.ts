@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EventEmitter, type SVGContext } from '@dxos/react-ui-graph';
-
 import { defaultIdAccessor, type IdAccessor } from './types';
+import { type SVGContext } from '../hooks';
+import { EventEmitter } from '../util';
 
 export type ProjectorOptions = {
   idAccessor: IdAccessor;

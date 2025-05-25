@@ -7,7 +7,6 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { type GraphModel } from '@dxos/graph';
-import { useSvgContext } from '@dxos/react-ui-graph';
 
 import { defaultStyles } from './styles';
 import {
@@ -18,6 +17,7 @@ import {
   GraphRenderer,
   type LabelOptions,
 } from '../graph';
+import { useSvgContext } from '../hooks';
 
 export type GraphProps = {
   className?: string;

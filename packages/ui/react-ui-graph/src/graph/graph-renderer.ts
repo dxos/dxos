@@ -4,12 +4,12 @@
 
 import { line, select } from 'd3';
 
-import { type D3Callable, type D3Selection, type Point } from '@dxos/react-ui-graph';
-
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
 import { type GraphGuide, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
+import { type D3Selection, type D3Callable } from '../typings';
+import { type Point } from '../util';
 
 const createLine = line<Point>();
 
