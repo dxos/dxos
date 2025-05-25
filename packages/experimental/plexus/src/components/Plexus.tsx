@@ -8,8 +8,8 @@ import defaulstDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSvgContext } from '@dxos/gem-core';
-import { type GraphLayoutNode, GraphRenderer, type GraphRendererOptions } from '@dxos/gem-spore';
 import { type ReactiveGraphModel } from '@dxos/graph';
+import { type GraphLayoutNode, GraphRenderer, type GraphRendererOptions } from '@dxos/react-ui-graph';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TreeProjector, type TreeProjectorOptions } from './tree-projector';

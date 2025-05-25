@@ -33,7 +33,7 @@
       "@dxos/timeframe",
       "@dxos/tracing",
       "@dxos/lit-grid",
-      "@dxos/gem-spore",
+      "@dxos/react-ui-graph",
       "@dxos/test-utils",
       "@dxos/react-ui-stack",
       "@dxos/random"

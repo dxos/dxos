@@ -5,18 +5,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { SVG, SVGRoot, createSvgContext } from '@dxos/gem-core';
+import { GraphModel, type Graph } from '@dxos/graph';
+import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { type SpaceMember, useMembers, type Space } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Toolbar } from '@dxos/react-ui';
 import {
   Graph as GraphComponent,
   GraphForceProjector,
   type GraphLayoutNode,
   Markers,
   defaultStyles,
-} from '@dxos/gem-spore';
-import { GraphModel, type Graph } from '@dxos/graph';
-import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
-import { type SpaceMember, useMembers, type Space } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { Toolbar } from '@dxos/react-ui';
+} from '@dxos/react-ui-graph';
 import { mx } from '@dxos/react-ui-theme';
 
 import { PanelContainer } from '../../../components';

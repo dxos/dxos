@@ -91,9 +91,6 @@
       "path": "../../experimental/gem-core"
     },
     {
-      "path": "../../experimental/gem-spore"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -113,6 +110,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-graph"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
