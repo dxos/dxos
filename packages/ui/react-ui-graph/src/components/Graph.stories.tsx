@@ -125,8 +125,6 @@ export const Select = ({ graph = true }) => {
               } else {
                 selected.add(node.id);
               }
-
-              // model.triggerUpdate();
             }}
           />
         </Zoom>

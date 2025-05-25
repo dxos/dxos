@@ -10,5 +10,4 @@ export * from './linker-renderer';
 export * from './markers';
 export * from './projector';
 export * from './renderer';
-export * from './selection';
 export * from './types';
