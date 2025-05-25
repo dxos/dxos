@@ -23,6 +23,7 @@ export type GraphLink = {
   target: string;
 };
 
+// TODO(burdon): Replace with dxos/graph.
 export type GraphData<T> = {
   nodes: T[];
   links: GraphLink[];

@@ -42,6 +42,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/gem-core": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "d3": "^7.9.0",
     "d3-force": "~3.0.0",
