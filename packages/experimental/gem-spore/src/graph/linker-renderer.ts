@@ -31,7 +31,7 @@ export const linkerRenderer = (
     .join('g')
     .attr('class', 'linker')
     .selectAll<SVGPathElement, any>('path')
-    .data(source ? [{ id: 'link' }] : [])
+    .data(source ? [{ id: 'edge' }] : [])
     .join('path')
     .attr('marker-end', () => (target ? 'url(#marker-arrow-end)' : 'url(#marker-dot)'))
     .attr('d', () => {

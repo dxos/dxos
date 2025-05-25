@@ -24,13 +24,13 @@ export const createBullets = (group: SVGGElement, nodeId: string, options: Bulle
   return (selection: D3Selection) => {
     const { max = 32, radius = 3, delay = 50, minDuration = 100, maxDuration = 500 } = options;
 
-    // Link selection.
-    selection.each(function (d, i, links) {
+    // Edge selection.
+    selection.each(function (d, i, edges) {
       const { source, target } = d;
 
       // Match source node.
       if (source.id === nodeId) {
-        const path = select(links[i]);
+        const path = select(edges[i]);
         const p = path.node().getPointAtLength(0);
 
         const bullet = select(group)

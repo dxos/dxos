@@ -6,6 +6,8 @@ import { Schema } from 'effect';
 
 import { type Specialize } from '@dxos/util';
 
+// TODO(burdon): Generalize `id` via accessor.
+
 //
 // Node
 //
@@ -13,6 +15,8 @@ import { type Specialize } from '@dxos/util';
 export const BaseGraphNode = Schema.Struct({
   id: Schema.String,
   type: Schema.optional(Schema.String),
+
+  // TODO(burdon): Reconcile with ExtendableBaseGraphNode (one or the other).
   data: Schema.optional(Schema.Any),
 });
 
@@ -64,9 +68,6 @@ export declare namespace GraphEdge {
 // Graph
 //
 
-/**
- * Generic graph.
- */
 export const Graph = Schema.Struct({
   id: Schema.optional(Schema.String),
   nodes: Schema.mutable(Schema.Array(ExtendableBaseGraphNode)),

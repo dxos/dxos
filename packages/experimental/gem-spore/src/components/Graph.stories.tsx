@@ -120,7 +120,7 @@ export const Select = ({ graph = true }) => {
                 selected.add(node.id);
               }
 
-              model.triggerUpdate();
+              // model.triggerUpdate();
             }}
           />
         </Zoom>

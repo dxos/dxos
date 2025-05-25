@@ -15,7 +15,7 @@ import { defaultStyles } from './styles';
 import {
   GraphForceProjector,
   type GraphLayoutNode,
-  type GraphLayoutLink,
+  type GraphLayoutEdge,
   GraphRenderer,
   createMarkers,
   createSimulationDrag,
@@ -62,13 +62,13 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   );
 
   useEffect(() => {
-    const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
+    // const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
     const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
-    model.triggerUpdate();
+    // model.triggerUpdate();
 
     return () => {
-      unsubscribeModel();
+      // unsubscribeModel();
       unsubscribeProjector();
       void projector.stop();
     };
@@ -105,7 +105,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   const markersRef = useRef<SVGGElement>();
 
   const { projector, renderer } = useMemo(() => {
-    const projector = new GraphForceProjector<TestNode>(context, {
+    const projector = new GraphForceProjector(context, {
       guides: true,
       forces: {
         link: {
@@ -127,7 +127,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
         const parent = model.getNode(source.id);
         if (target) {
           const child = model.getNode(target.id);
-          model.createLink(parent, child);
+          model.addEdge({ source: parent.id, target: child.id });
         } else {
           // TODO(burdon): Set start position.
           model.createNodes(parent);
@@ -143,9 +143,9 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
       onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
         renderer.fireBullet(node);
       },
-      onLinkClick: (link: GraphLayoutLink<TestNode>, event: MouseEvent) => {
+      onEdgeClick: (edge: GraphLayoutEdge<TestNode>, event: MouseEvent) => {
         if (event.metaKey) {
-          model.deleteLink(link.id);
+          model.removeEdge(edge.id);
         }
       },
       arrows: {
@@ -160,13 +160,13 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   useEffect(() => {
-    const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
+    // const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
     const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
-    model.triggerUpdate();
+    // model.triggerUpdate();
 
     return () => {
-      unsubscribeModel();
+      // unsubscribeModel();
       unsubscribeProjector();
       void projector.stop();
     };
@@ -189,7 +189,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
 
 const Info = () => (
   <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>
-    ⌘-DRAG to link or create node; ⌘-CLICK to delete link.
+    ⌘-DRAG to edge or create node; ⌘-CLICK to delete edge.
   </div>
 );
 

@@ -5,11 +5,11 @@
 import update from 'immutability-helper';
 
 import { useStateRef } from '@dxos/gem-core';
+import { type Graph } from '@dxos/graph';
 import { faker } from '@dxos/random';
 
-import { createNode, createLink } from './data';
-import { type TestNode } from './types';
-import { type GraphData } from '../graph';
+import { createNode, createEdge } from './data';
+import { type TestNode } from './model';
 
 export type ObjectMutator<T> = [
   T, // Current value.
@@ -46,8 +46,8 @@ export const useObjectMutator = <T>(initalValue: T): ObjectMutator<T> => {
 /**
  * Test data set generator and mutator.
  */
-export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
-  const [data, setData, updateData] = useObjectMutator(options.data || { nodes: [], links: [] });
+export const useGraphGenerator = (options: { data?: Graph } = {}) => {
+  const [data, setData, updateData] = useObjectMutator(options.data || { nodes: [], edges: [] });
 
   let interval;
 
@@ -59,10 +59,10 @@ export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
       nodes: {
         $push: [node],
       },
-      links: Object.assign(
+      edges: Object.assign(
         {},
         parent && {
-          $push: [createLink(parent as TestNode, node)],
+          $push: [createEdge(parent as TestNode, node)],
         },
       ),
     });
@@ -72,7 +72,7 @@ export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
     const { count = 0 } = options;
     setData({
       nodes: [],
-      links: [],
+      edges: [],
     });
 
     for (let i = 0; i < count; i++) {

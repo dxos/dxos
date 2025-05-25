@@ -46,6 +46,7 @@
     "@antv/layout": "^1.2.13",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6"
   },

@@ -6,24 +6,24 @@ import { drag, pointer, select, type Simulation } from 'd3';
 
 import { type D3DragEvent, type Point, type SVGContext } from '@dxos/gem-core';
 
-import { type GraphLayoutLink, type GraphLayoutNode } from './types';
+import { type GraphLayoutEdge, type GraphLayoutNode } from './types';
 
 export interface DragOptions<N> {
   dragMod?: string;
-  linkMod?: string;
+  edgeMod?: string;
   freezeMod?: string;
   onDrag?: (source?: GraphLayoutNode<N>, target?: GraphLayoutNode<N>, point?: Point) => void;
   onDrop?: (source: GraphLayoutNode<N>, target?: GraphLayoutNode<N>) => void;
 }
 
 export const defaultOptions: DragOptions<any> = {
-  linkMod: 'metaKey',
+  edgeMod: 'metaKey',
   freezeMod: 'shiftKey',
 };
 
 enum Mode {
   MOVE = 0,
-  LINK = 1,
+  EDGE = 1,
 }
 
 /**
@@ -33,7 +33,7 @@ enum Mode {
  */
 export const createSimulationDrag = <N>(
   context: SVGContext,
-  simulation: Simulation<GraphLayoutNode<N>, GraphLayoutLink<N>>,
+  simulation: Simulation<GraphLayoutNode<N>, GraphLayoutEdge<N>>,
   options: DragOptions<N> = defaultOptions,
 ) => {
   let mode: Mode;
@@ -49,8 +49,8 @@ export const createSimulationDrag = <N>(
     .filter((event: MouseEvent) => !event.ctrlKey)
     .on('start', (event: D3DragEvent) => {
       source = event.subject;
-      if (options?.onDrop && keyMod(event.sourceEvent, 'linkMod')) {
-        mode = Mode.LINK;
+      if (options?.onDrop && keyMod(event.sourceEvent, 'edgeMod')) {
+        mode = Mode.EDGE;
       } else if (keyMod(event.sourceEvent, 'dragMod')) {
         mode = Mode.MOVE;
       }
@@ -68,7 +68,7 @@ export const createSimulationDrag = <N>(
           break;
         }
 
-        case Mode.LINK: {
+        case Mode.EDGE: {
           // Get drop target.
           if (options?.onDrag) {
             const point: Point = pointer(event, this);
@@ -87,7 +87,7 @@ export const createSimulationDrag = <N>(
     .on('end', (event: D3DragEvent) => {
       // d3.select(this).style('pointer-events', undefined);
       switch (mode) {
-        case Mode.LINK: {
+        case Mode.EDGE: {
           options?.onDrop?.(source, target);
           break;
         }

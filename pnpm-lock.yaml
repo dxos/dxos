@@ -1541,6 +1541,9 @@ importers:
       '@antv/layout':
         specifier: ^1.2.13
         version: 1.2.13(workerize-loader@2.0.2(webpack@5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.17))(esbuild@0.23.1)))
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
       '@dxos/random':
         specifier: workspace:*
         version: link:../random
@@ -4160,6 +4163,9 @@ importers:
       '@dxos/gem-spore':
         specifier: workspace:*
         version: link:../../experimental/gem-spore
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -6430,6 +6436,9 @@ importers:
       '@dxos/gem-spore':
         specifier: workspace:*
         version: link:../../experimental/gem-spore
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object

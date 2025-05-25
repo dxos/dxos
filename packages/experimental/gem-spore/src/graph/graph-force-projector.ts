@@ -4,8 +4,10 @@
 
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceRadial, forceSimulation, forceX, forceY } from 'd3';
 
+import { type Graph } from '@dxos/graph';
+
 import { Projector, type ProjectorOptions } from './projector';
-import { emptyGraph, type GraphData, type GraphLayout, type GraphLayoutLink, type GraphLayoutNode } from './types';
+import { emptyGraph, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
 
 /**
  * Return value or invoke function.
@@ -33,13 +35,13 @@ const maybeCreate = <T>(options: T | boolean, cb, def = undefined) => {
 
 //
 // Forces
-// TODO(burdon): Provide utils for function properties (e.g., count links).
+// TODO(burdon): Provide utils for function properties (e.g., count edges).
 //
 
 // https://github.com/d3/d3-force#forceLink
 export type ForceLinkOptions = {
-  // Default: link => 1 / Math.min(2, count(link.source), count(link.target))
-  strength?: number | ((link: GraphLayoutLink<any>) => number);
+  // Default: edge => 1 / Math.min(2, count(edge.source), count(edge.target))
+  strength?: number | ((edge: GraphLayoutEdge<any>) => number);
   distance?: number;
   iterations?: number;
 };
@@ -106,20 +108,20 @@ export type GraphForceProjectorOptions = ProjectorOptions &
 /**
  * D3 force layout.
  */
-export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, GraphForceProjectorOptions> {
+export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
-  _simulation = forceSimulation<GraphLayoutNode<N>, GraphLayoutLink<N>>();
+  _simulation = forceSimulation<GraphLayoutNode, GraphLayoutEdge>();
 
   // Current layout.
-  _layout: GraphLayout<N> = {
+  _layout: GraphLayout = {
     graph: {
       nodes: [],
-      links: [],
+      edges: [],
     },
   };
 
   numChildren = (node) =>
-    this._layout.graph.links.filter((link) => link.source.id === this.options.idAccessor(node)).length;
+    this._layout.graph.edges.filter((edge) => edge.source.id === this.options.idAccessor(node)).length;
 
   get layout() {
     return this._layout;
@@ -129,7 +131,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
     return this._simulation;
   }
 
-  override onUpdate(data?: GraphData<N>) {
+  override onUpdate(data?: Graph) {
     this.mergeData(data);
     this.updateForces();
 
@@ -149,15 +151,15 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
     // Initialize nodes.
     this._layout.graph.nodes.forEach((node) => {
       if (!node.initialized) {
-        // Get starting point from linked element.
-        const link = this._layout.graph.links.find((link) => link.target.id === this.options.idAccessor(node));
+        // Get starting point from edgeed element.
+        const edge = this._layout.graph.edges.find((edge) => edge.target.id === this.options.idAccessor(node));
 
         // Initial positions.
         Object.assign(node, {
           initialized: true,
           // Position around center or parent; must have delta to avoid spike.
-          x: (link?.source?.x || 0) + (Math.random() - 0.5) * 30,
-          y: (link?.source?.y || 0) + (Math.random() - 0.5) * 30,
+          x: (edge?.source?.x || 0) + (Math.random() - 0.5) * 30,
+          y: (edge?.source?.y || 0) + (Math.random() - 0.5) * 30,
         });
       }
 
@@ -178,7 +180,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
       // https://github.com/d3/d3-force#simulation_nodes
       .nodes(this._layout.graph.nodes)
 
-      // Links.
+      // Edges.
       // https://github.com/d3/d3-force#forceLink
       .force(
         'link',
@@ -186,8 +188,8 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
           forces?.link,
           (config: ForceLinkOptions) => {
             const force = forceLink()
-              .id((d: GraphLayoutNode<N>) => d.id)
-              .links(this._layout.graph.links);
+              .id((d: GraphLayoutNode) => d.id)
+              .links(this._layout.graph.edges);
 
             if (config.distance) {
               force.distance(config.distance);
@@ -216,10 +218,10 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
    * Merge external data with internal representation (e.g., so force properties like position are preserved).
    * @param data
    */
-  private mergeData(data: GraphData<N> = emptyGraph): GraphLayout<N> {
+  private mergeData(data: Graph = emptyGraph): GraphLayout {
     // Merge nodes.
-    const nodes: GraphLayoutNode<N>[] = data.nodes.map((node) => {
-      let existing: GraphLayoutNode<N> = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));
+    const nodes: GraphLayoutNode[] = data.nodes.map((node) => {
+      let existing: GraphLayoutNode = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));
       if (!existing) {
         existing = {
           id: this.options.idAccessor(node),
@@ -230,17 +232,17 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
       return existing;
     });
 
-    // Replace links.
-    const links = data.links.map((link) => ({
-      id: link.id,
-      source: nodes.find((n) => n.id === link.source),
-      target: nodes.find((n) => n.id === link.target),
+    // Replace edges.
+    const edges = data.edges.map((edge) => ({
+      id: edge.id,
+      source: nodes.find((n) => n.id === edge.source),
+      target: nodes.find((n) => n.id === edge.target),
     }));
 
     this._layout = {
       graph: {
         nodes,
-        links,
+        edges,
       },
     };
 

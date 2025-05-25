@@ -4,29 +4,30 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import { combine } from '@dxos/async';
 import { useSvgContext } from '@dxos/gem-core';
+import { type ReadonlyGraphModel } from '@dxos/graph';
 
 import { defaultStyles } from './styles';
 import {
   createSimulationDrag,
   type AttributesOptions,
   GraphForceProjector,
-  type GraphModel,
   type GraphLayoutNode,
   GraphRenderer,
   type LabelOptions,
 } from '../graph';
 
-export interface GraphProps {
+export type GraphProps = {
   className?: string;
-  model?: GraphModel<any>;
-  projector?: GraphForceProjector<any>;
+  model?: ReadonlyGraphModel;
+  projector?: GraphForceProjector;
   drag?: boolean;
   arrows?: boolean;
   labels?: LabelOptions<any>;
   attributes?: AttributesOptions<any>;
   onSelect?: (node: GraphLayoutNode<any>) => void;
-}
+};
 
 /**
  * SVG Graph controller.
@@ -63,14 +64,19 @@ export const Graph = ({
   }, []);
 
   useEffect(() => {
-    const subscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
-    const subscribeModel = model?.subscribe((graph) => projector.update(graph));
-    projector.update(model?.graph);
+    return combine(
+      //
+      projector.updated.on(({ layout }) => renderer.update(layout)),
+    );
 
-    return () => {
-      subscribeProjector();
-      subscribeModel?.();
-    };
+    // const subscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
+    // const subscribeModel = model?.subscribe((graph) => projector.update(graph));
+    // projector.update(model?.graph);
+
+    // return () => {
+    //   subscribeProjector();
+    //   subscribeModel?.();
+    // };
   }, [model]);
 
   useEffect(() => {

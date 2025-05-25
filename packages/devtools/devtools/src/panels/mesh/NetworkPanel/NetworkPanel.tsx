@@ -6,22 +6,18 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { SVG, SVGRoot, createSvgContext } from '@dxos/gem-core';
 import {
-  Graph,
-  type GraphData,
+  Graph as GraphComponent,
   GraphForceProjector,
   type GraphLayoutNode,
-  type GraphLink,
-  GraphModel,
-  emptyGraph,
   Markers,
   defaultStyles,
 } from '@dxos/gem-spore';
+import { GraphModel, type Graph } from '@dxos/graph';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type SpaceMember, useMembers, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { defaultMap } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -33,48 +29,35 @@ export type NetworkGraphNode = {
   member?: SpaceMember;
 };
 
-class NetworkGraphModel extends GraphModel<NetworkGraphNode> {
-  constructor(private _graph: GraphData<NetworkGraphNode> = emptyGraph) {
-    super();
-  }
-
-  get graph() {
-    return this._graph;
-  }
-
-  setData(graph: GraphData<NetworkGraphNode>) {
-    this._graph = graph;
-    this.triggerUpdate();
+// TODO(burdon): Update to use new GraphModel.
+class NetworkGraphModel extends GraphModel {
+  setData(graph: Graph) {
+    // this._graph = graph;
   }
 
   setFromMemberList(members: SpaceMember[]) {
-    const nodes = new Map<string, NetworkGraphNode>();
-    const links: GraphLink[] = [];
-
-    for (const member of members) {
-      for (const peer of member.peerStates ?? []) {
-        if (!peer.peerId) {
-          continue;
-        }
-
-        const node = defaultMap(nodes, peer.peerId.toHex(), { id: peer.peerId.toHex() });
-        node.peer ??= peer;
-        node.member ??= member;
-
-        for (const other of peer.connections ?? []) {
-          defaultMap(nodes, peer.peerId.toHex(), { id: peer.peerId.toHex() });
-          defaultMap(nodes, other.toHex(), { id: other.toHex() });
-
-          links.push({
-            id: `${peer.peerId.toHex()}-${other.toHex()}`,
-            source: peer.peerId.toHex(),
-            target: other.toHex(),
-          });
-        }
-      }
-    }
-
-    this.setData({ nodes: Array.from(nodes.values()), links });
+    // const nodes = new Map<string, NetworkGraphNode>();
+    // const edges: GraphEdge[] = [];
+    // for (const member of members) {
+    //   for (const peer of member.peerStates ?? []) {
+    //     if (!peer.peerId) {
+    //       continue;
+    //     }
+    //     const node = defaultMap(nodes, peer.peerId.toHex(), { id: peer.peerId.toHex() });
+    //     node.peer ??= peer;
+    //     node.member ??= member;
+    //     for (const other of peer.connections ?? []) {
+    //       defaultMap(nodes, peer.peerId.toHex(), { id: peer.peerId.toHex() });
+    //       defaultMap(nodes, other.toHex(), { id: other.toHex() });
+    //       edges.push({
+    //         id: `${peer.peerId.toHex()}-${other.toHex()}`,
+    //         source: peer.peerId.toHex(),
+    //         target: other.toHex(),
+    //       });
+    //     }
+    //   }
+    // }
+    // this.setData({ nodes: Array.from(nodes.values()), edges });
   }
 }
 
@@ -110,7 +93,7 @@ export const NetworkPanel = (props: { space?: Space }) => {
   const context = createSvgContext();
   const projector = useMemo(
     () =>
-      new GraphForceProjector<NetworkGraphNode>(context, {
+      new GraphForceProjector(context, {
         forces: {
           manyBody: {
             strength: -160,
@@ -147,7 +130,7 @@ export const NetworkPanel = (props: { space?: Space }) => {
       <SVGRoot context={context}>
         <SVG>
           <Markers />
-          <Graph
+          <GraphComponent
             className={defaultStyles}
             model={model}
             drag

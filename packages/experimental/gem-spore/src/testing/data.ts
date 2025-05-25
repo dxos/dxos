@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type BaseGraphEdge, type Graph } from '@dxos/graph';
 import { faker } from '@dxos/random';
 
-import { type TestNode } from './types';
-import { type GraphData, type GraphLink } from '../graph';
+import { type TestNode } from './model';
 
 // https://www.npmjs.com/package/faker#setting-a-randomness-seed
 export const seed = (seed: number) => faker.seed(seed);
@@ -22,7 +22,7 @@ export const createNode = (type: string = undefined): TestNode => ({
 
 export const createNodes = (n = 0): TestNode[] => Array.from({ length: n }).map(createNode);
 
-export const createLink = (source: TestNode, target: TestNode): GraphLink => ({
+export const createEdge = (source: TestNode, target: TestNode): BaseGraphEdge => ({
   id: `${source.id}-${target.id}`,
   source: source.id,
   target: target.id,
@@ -53,11 +53,11 @@ export const createTree = ({ depth = 2, children = 3 } = {}): TestNode => {
  * Converts a tree into a graph.
  * @param root
  */
-export const convertTreeToGraph = (root: TestNode): GraphData<TestNode> => {
-  const traverse = (node: TestNode, graph: GraphData<TestNode>) => {
+export const convertTreeToGraph = (root: TestNode): Graph => {
+  const traverse = (node: TestNode, graph: Graph) => {
     graph.nodes.push(node);
     node.children?.forEach((child) => {
-      graph.links.push(createLink(node, child));
+      graph.edges.push(createEdge(node, child));
       traverse(child, graph);
     });
 
@@ -66,28 +66,28 @@ export const convertTreeToGraph = (root: TestNode): GraphData<TestNode> => {
 
   return traverse(root, {
     nodes: [],
-    links: [],
+    edges: [],
   });
 };
 
 /**
  * Creates a random graph.
  * @param numNodes
- * @param numLinks
+ * @param numEdges
  */
-export const createGraph = (numNodes = 0, numLinks = 0): GraphData<TestNode> => {
+export const createGraph = (numNodes = 0, numEdges = 0): Graph => {
   const nodes = createNodes(numNodes);
-  const links = new Map();
+  const edges = new Map();
 
-  if (numLinks && nodes.length >= 2) {
-    for (let i = 0; i < numLinks; i++) {
+  if (numEdges && nodes.length >= 2) {
+    for (let i = 0; i < numEdges; i++) {
       const source = faker.helpers.arrayElement(nodes);
       const target = faker.helpers.arrayElement(nodes);
 
       if (source.id !== target.id) {
-        const link = createLink(source, target);
-        if (!links.get(link.id)) {
-          links.set(link.id, link);
+        const edge = createEdge(source, target);
+        if (!edges.get(edge.id)) {
+          edges.set(edge.id, edge);
         }
       }
     }
@@ -95,14 +95,6 @@ export const createGraph = (numNodes = 0, numLinks = 0): GraphData<TestNode> => 
 
   return {
     nodes,
-    links: Array.from(links.values()),
+    edges: Array.from(edges.values()),
   };
-};
-
-/**
- * Delete nodes and related links.
- */
-export const deleteNodes = (graph: GraphData<TestNode>, ids: string[]) => {
-  graph.nodes = graph.nodes.filter(({ id }) => ids.indexOf(id) === -1);
-  graph.links = graph.links.filter(({ source, target }) => ids.indexOf(source) === -1 && ids.indexOf(target) === -1);
 };

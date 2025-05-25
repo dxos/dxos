@@ -11,7 +11,7 @@ import { type BaseGraphEdge, type BaseGraphNode, type Graph, type GraphEdge, typ
 import { createEdgeId } from './util';
 
 /**
- * Wrapper class contains reactive nodes and edges.
+ * Readonly Graph wrapper.
  */
 export class ReadonlyGraphModel<
   Node extends BaseGraphNode = BaseGraphNode,
@@ -23,7 +23,10 @@ export class ReadonlyGraphModel<
    * NOTE: Pass in simple Graph or Live.
    */
   constructor(graph?: Graph) {
-    this._graph = graph ?? { nodes: [], edges: [] };
+    this._graph = graph ?? {
+      nodes: [],
+      edges: [],
+    };
   }
 
   [inspectCustom]() {
@@ -35,7 +38,7 @@ export class ReadonlyGraphModel<
    */
   // TODO(burdon): Create separate toJson method with computed signal.
   toJSON() {
-    const { id, nodes, edges } = getSnapshot(this._graph);
+    const { id, nodes, edges } = getSnapshot(this._graph); // TODO(burdon): Remove dependency.
     nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
     edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
     return stripUndefined({ id, nodes, edges });
@@ -111,13 +114,13 @@ export class ReadonlyGraphModel<
 }
 
 /**
- * Typed wrapper.
+ * Mutable Graph wrapper.
  */
 export abstract class AbstractGraphModel<
-  Node extends BaseGraphNode,
-  Edge extends BaseGraphEdge,
-  Model extends AbstractGraphModel<Node, Edge, Model, Builder>,
-  Builder extends AbstractGraphBuilder<Node, Edge, Model>,
+  Node extends BaseGraphNode = BaseGraphNode,
+  Edge extends BaseGraphEdge = BaseGraphEdge,
+  Model extends AbstractGraphModel<Node, Edge, Model, Builder> = any,
+  Builder extends AbstractGraphBuilder<Node, Edge, Model> = AbstractGraphBuilder<Node, Edge, Model>,
 > extends ReadonlyGraphModel<Node, Edge> {
   /**
    * Allows chaining.
@@ -199,7 +202,7 @@ export abstract class AbstractGraphModel<
 }
 
 /**
- * Chainable wrapper
+ * Chainable builder wrapper
  */
 export abstract class AbstractGraphBuilder<
   Node extends BaseGraphNode,
@@ -242,6 +245,9 @@ export abstract class AbstractGraphBuilder<
   }
 }
 
+/**
+ * Basic model.
+ */
 export class GraphModel<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,
@@ -255,6 +261,9 @@ export class GraphModel<
   }
 }
 
+/**
+ * Basic builder.
+ */
 export class GraphBuilder<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,

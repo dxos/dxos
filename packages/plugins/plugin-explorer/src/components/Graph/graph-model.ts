@@ -13,7 +13,7 @@ import {
   SchemaValidator,
   StoredSchema,
 } from '@dxos/echo-schema';
-import { type GraphData, GraphModel } from '@dxos/gem-spore';
+import { AbstractGraphModel, type GraphEdge, AbstractGraphBuilder, type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { Filter, type AnyLiveObject, type Space } from '@dxos/react-client/echo';
@@ -22,30 +22,41 @@ export type SpaceGraphModelOptions = {
   schema?: boolean;
 };
 
-// TODO(burdon): Convert to common/graph.
-
 type SchemaGraphNode = {
   id: string;
   type: 'schema';
-  data: { typename: string };
+  data: {
+    typename: string;
+  };
 };
 
 type ObjectGraphNode = {
   id: string;
   type: 'object';
-  data: { typename: string; object: AnyLiveObject<any> };
+  data: {
+    typename: string;
+    object: AnyLiveObject<any>;
+  };
 };
 
 export type EchoGraphNode = SchemaGraphNode | ObjectGraphNode;
 
+class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, GraphEdge, SpaceGraphModel> {}
+
 /**
  * Converts ECHO objects to a graph.
  */
-export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
-  private readonly _graph: GraphData<EchoGraphNode> = {
-    nodes: [],
-    links: [],
-  };
+export class SpaceGraphModel extends AbstractGraphModel<EchoGraphNode, GraphEdge, SpaceGraphModel, SpaceGraphBuilder> {
+  static create(graph?: Partial<Graph>): SpaceGraphModel {
+    return new SpaceGraphModel();
+    // live(Graph, {
+    //   graph: {
+    //     id: graph?.id ?? ObjectId.random(),
+    //     nodes: graph?.nodes ?? [],
+    //     edges: graph?.edges ?? [],
+    //   },
+    // }),
+  }
 
   private _schema?: EchoSchema[];
   private _schemaSubscription?: CleanupFn;
@@ -56,8 +67,12 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
     super();
   }
 
-  override get graph(): GraphData<EchoGraphNode> {
-    return this._graph;
+  override get builder() {
+    return new SpaceGraphBuilder(this);
+  }
+
+  override copy(graph?: Partial<Graph>) {
+    return SpaceGraphModel.create(graph);
   }
 
   get objects(): AnyLiveObject<any>[] {
@@ -71,6 +86,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
   // - https://observablehq.com/@d3/psr-b1919-21
   // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
+  // TODO(burdon): Factor out builder.
   async open(space: Space, objectId?: string) {
     // TODO(burdon): Factor out graph builder to lib (use common/graph abstraction).
     if (!this._schemaSubscription) {
@@ -95,7 +111,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
             const currentNodes = this._graph.nodes;
 
             this._graph.nodes = [];
-            this._graph.links = [];
+            this._graph.edges = [];
 
             const addSchema = (typename: string) => {
               const current = currentNodes.find((node) => node.id === typename);
@@ -188,7 +204,6 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
     this._schemaSubscription = undefined;
     this._objectsSubscription?.();
     this._objectsSubscription = undefined;
-
     return this;
   }
 }

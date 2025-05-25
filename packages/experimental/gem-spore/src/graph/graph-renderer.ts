@@ -8,7 +8,7 @@ import { type D3Callable, type D3Selection, type Point } from '@dxos/gem-core';
 
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
-import { type GraphGuide, type GraphLayout, type GraphLayoutLink, type GraphLayoutNode } from './types';
+import { type GraphGuide, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
 
 const createLine = line<Point>();
@@ -25,7 +25,7 @@ export type AttributesOptions<N> = {
     class?: string;
   };
 
-  link?: (link: GraphLayoutLink<N>) => {
+  edge?: (edge: GraphLayoutEdge<N>) => {
     class?: string;
   };
 };
@@ -41,7 +41,7 @@ export type GraphRendererOptions<N> = RendererOptions &
     labels?: LabelOptions<N>;
     attributes?: AttributesOptions<N>;
     onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
-    onLinkClick?: (node: GraphLayoutLink<N>, event: MouseEvent) => void;
+    onEdgeClick?: (node: GraphLayoutEdge<N>, event: MouseEvent) => void;
     transition?: () => any;
   }>;
 
@@ -145,30 +145,30 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
 };
 
 /**
- * Create link elements.
+ * Create edge elements.
  * @param group
  * @param options
  * @param nodes
  */
-const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>, nodes) => {
-  // if (options.onLinkClick) {
+const createEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>, nodes) => {
+  // if (options.onEdgeClick) {
   //   // Shadow path with wide stroke for click handler.
   //   group.append('path')
   //     .attr('class', 'click')
   //     .on('click', (event: MouseEvent) => {
-  //       const link = select<SVGLineElement, GraphLayoutLink<N>>(event.target as SVGLineElement).datum();
-  //       options.onLinkClick(link, event);
+  //       const edge = select<SVGLineElement, GraphLayoutEdge<N>>(event.target as SVGLineElement).datum();
+  //       options.onEdgeClick(edge, event);
   //     });
   // }
 
   group
     .append('path')
-    .attr('class', 'link')
+    .attr('class', 'edge')
     .attr('pointer-events', 'none')
     .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
     .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined))
     .attr('class', function () {
-      return (select(this.parentNode as any).datum() as GraphLayoutLink<N>).classes?.path;
+      return (select(this.parentNode as any).datum() as GraphLayoutEdge<N>).classes?.path;
     })
     .attr('d', (d) => {
       const { source, target } = d;
@@ -193,15 +193,15 @@ const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
 };
 
 /**
- * Update link elements.
+ * Update edge elements.
  * @param group
  * @param options
  */
-const updateLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const updateEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
   // Custom attributes.
-  if (options.attributes?.link) {
+  if (options.attributes?.edge) {
     group.each((d, i, nodes) => {
-      const { class: className } = options.attributes?.link(d);
+      const { class: className } = options.attributes?.edge(d);
       select(nodes[i]).attr('class', className);
     });
   }
@@ -211,7 +211,7 @@ const updateLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     ? (group.transition(options.transition()) as unknown as D3Selection)
     : group;
 
-  groupOrTransition.selectAll<SVGPathElement, GraphLayoutLink<N>>('path').attr('d', (d) => {
+  groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<N>>('path').attr('d', (d) => {
     const { source, target } = d;
     if (!source.initialized || !target.initialized) {
       return;
@@ -250,18 +250,18 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .attr('r', (d) => d.r);
 
     //
-    // Links
+    // Edges
     //
 
     root
-      .selectAll('g.links')
-      .data([{ id: 'links' }])
+      .selectAll('g.edges')
+      .data([{ id: 'edges' }])
       .join('g')
-      .attr('class', 'links')
-      .selectAll<SVGPathElement, GraphLayoutLink<N>>('g')
-      .data(layout.graph?.links ?? [], (d) => d.id)
-      .join((enter) => enter.append('g').call(createLink, this.options, root.selectAll('g.nodes')))
-      .call(updateLink, this.options, layout.graph.nodes);
+      .attr('class', 'edges')
+      .selectAll<SVGPathElement, GraphLayoutEdge<N>>('g')
+      .data(layout.graph?.edges ?? [], (d) => d.id)
+      .join((enter) => enter.append('g').call(createEdge, this.options, root.selectAll('g.nodes')))
+      .call(updateEdge, this.options, layout.graph.nodes);
 
     //
     // Nodes
@@ -284,6 +284,6 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
    * @param node
    */
   fireBullet(node: GraphLayoutNode<N>) {
-    select(this.root).selectAll('g.links').selectAll('path').call(createBullets(this.root, node.id));
+    select(this.root).selectAll('g.edges').selectAll('path').call(createBullets(this.root, node.id));
   }
 }
