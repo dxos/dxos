@@ -64,9 +64,9 @@ svg g.graph, svg.graph {
   }
 
   /**
-   * Links.
+   * Edges.
    */
-  g.links {
+  g.edges {
     path {
       fill: none;
       stroke: #555;
