@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Point } from '@dxos/gem-core';
+import { type Point } from '@dxos/react-ui-graph';
 
 /**
  * Creates an array of points on the the circumference of two circles.

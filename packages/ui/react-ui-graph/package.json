@@ -43,7 +43,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
-    "@dxos/gem-core": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",

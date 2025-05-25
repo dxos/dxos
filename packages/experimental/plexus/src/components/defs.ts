@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Point } from '@dxos/gem-core';
+import { type Point } from '@dxos/react-ui-graph';
 import { type Graph } from '@dxos/graph';
 
 export interface Layout<N> {

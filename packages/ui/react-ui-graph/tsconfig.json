@@ -33,9 +33,6 @@
       "path": "../../core/echo/echo-signals"
     },
     {
-      "path": "../../experimental/gem-core"
-    },
-    {
       "path": "../react-ui"
     },
     {

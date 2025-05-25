@@ -8,8 +8,8 @@ import { select } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
+import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/react-ui-graph';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { defaultStyles } from './styles';

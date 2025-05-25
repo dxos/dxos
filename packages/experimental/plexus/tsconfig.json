@@ -30,9 +30,6 @@
     },
     {
       "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../gem-core"
     }
   ],
   "ts-node": {

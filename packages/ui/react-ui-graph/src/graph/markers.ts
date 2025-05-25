@@ -4,7 +4,7 @@
 
 import { line, select } from 'd3';
 
-import { type D3Callable } from '@dxos/gem-core';
+import { type D3Callable } from '@dxos/react-ui-graph';
 
 const createLine = line();
 

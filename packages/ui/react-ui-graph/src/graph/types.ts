@@ -7,7 +7,7 @@
 // Generic graph data type.
 //
 
-import { type Point } from '@dxos/gem-core';
+import { type Point } from '@dxos/react-ui-graph';
 import { type Graph } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 

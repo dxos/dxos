@@ -4,7 +4,7 @@
 
 import { line, select } from 'd3';
 
-import { type D3Callable, type D3Selection, type Point } from '@dxos/gem-core';
+import { type D3Callable, type D3Selection, type Point } from '@dxos/react-ui-graph';
 
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';

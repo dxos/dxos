@@ -4,7 +4,7 @@
 
 import defaulstDeep from 'lodash.defaultsdeep';
 
-import { type Point, type SVGContext } from '@dxos/gem-core';
+import { type Point, type SVGContext } from '@dxos/react-ui-graph';
 import { type GraphEdge, type GraphModel } from '@dxos/graph';
 import { type GraphLayout, type GraphLayoutNode, Projector, type ProjectorOptions } from '@dxos/react-ui-graph';
 

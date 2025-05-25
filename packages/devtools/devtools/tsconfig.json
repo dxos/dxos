@@ -88,9 +88,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../experimental/gem-core"
-    },
-    {
       "path": "../../sdk/client"
     },
     {

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EventEmitter, type SVGContext } from '@dxos/gem-core';
+import { EventEmitter, type SVGContext } from '@dxos/react-ui-graph';
 
 import { defaultIdAccessor, type IdAccessor } from './types';
 

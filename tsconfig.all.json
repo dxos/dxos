@@ -238,9 +238,6 @@
       "path": "packages/experimental/env-tests/tsconfig.json"
     },
     {
-      "path": "packages/experimental/gem-core/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/metagraph/tsconfig.json"
     },
     {

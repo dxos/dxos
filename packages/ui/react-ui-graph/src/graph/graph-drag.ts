@@ -4,7 +4,7 @@
 
 import { drag, pointer, select, type Simulation } from 'd3';
 
-import { type D3DragEvent, type Point, type SVGContext } from '@dxos/gem-core';
+import { type D3DragEvent, type Point, type SVGContext } from '@dxos/react-ui-graph';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from './types';
 

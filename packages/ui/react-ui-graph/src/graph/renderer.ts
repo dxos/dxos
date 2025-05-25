@@ -4,7 +4,7 @@
 
 import { type RefObject } from 'react';
 
-import { type SVGContext } from '@dxos/gem-core';
+import { type SVGContext } from '@dxos/react-ui-graph';
 
 import { defaultIdAccessor, type IdAccessor } from './types';
 

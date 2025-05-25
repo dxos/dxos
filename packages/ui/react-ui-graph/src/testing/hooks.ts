@@ -4,7 +4,7 @@
 
 import update from 'immutability-helper';
 
-import { useStateRef } from '@dxos/gem-core';
+import { useStateRef } from '@dxos/react-ui-graph';
 import { type Graph } from '@dxos/graph';
 import { faker } from '@dxos/random';
 

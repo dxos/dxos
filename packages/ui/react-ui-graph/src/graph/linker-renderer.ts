@@ -4,7 +4,7 @@
 
 import { line, select } from 'd3';
 
-import { type Point } from '@dxos/gem-core';
+import { type Point } from '@dxos/react-ui-graph';
 
 import { type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';

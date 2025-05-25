@@ -4,7 +4,7 @@
 
 import { easeLinear, interpolate, select } from 'd3';
 
-import { type D3Callable, type D3Selection } from '@dxos/gem-core';
+import { type D3Callable, type D3Selection } from '@dxos/react-ui-graph';
 
 interface BulletOptions {
   max?: number;

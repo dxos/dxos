@@ -4157,9 +4157,6 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
-      '@dxos/gem-core':
-        specifier: workspace:*
-        version: link:../../experimental/gem-core
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -4782,64 +4779,6 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
 
-  packages/experimental/gem-core:
-    dependencies:
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      d3:
-        specifier: ^7.9.0
-        version: 7.9.0
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-      react-resize-detector:
-        specifier: ^11.0.1
-        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      topojson-client:
-        specifier: ^3.1.0
-        version: 3.1.0
-    devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@types/d3':
-        specifier: ^7.4.3
-        version: 7.4.3
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      '@types/topojson-client':
-        specifier: ^3.1.4
-        version: 3.1.4
-      '@types/topojson-specification':
-        specifier: ^1.0.5
-        version: 1.0.5
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-
   packages/experimental/metagraph:
     dependencies:
       '@dxos/async':
@@ -4863,9 +4802,6 @@ importers:
 
   packages/experimental/plexus:
     dependencies:
-      '@dxos/gem-core':
-        specifier: workspace:*
-        version: link:../gem-core
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -6374,9 +6310,6 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/gem-core':
-        specifier: workspace:*
-        version: link:../../experimental/gem-core
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -12723,9 +12656,6 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
-      '@dxos/gem-core':
-        specifier: workspace:*
-        version: link:../../experimental/gem-core
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './styles';
-
-export * from './Graph';
-export * from './Markers';
+export * from './Grid';
+export * from './SVG';
+export * from './SVGRoot';
+export * from './Zoom';

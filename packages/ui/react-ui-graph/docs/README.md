@@ -19,16 +19,16 @@ subgraph experimental [experimental]
   style experimental fill:transparent
   dxos/react-ui-graph("@dxos/react-ui-graph"):::root
   click dxos/react-ui-graph "dxos/dxos/tree/main/packages/ui/react-ui-graph/docs"
-  dxos/gem-core("@dxos/gem-core"):::def
-  click dxos/gem-core "dxos/dxos/tree/main/packages/experimental/gem-core/docs"
+  dxos/react-ui-graph("@dxos/react-ui-graph"):::def
+  click dxos/react-ui-graph "dxos/dxos/tree/main/packages/ui/react-ui-graph/docs"
 end
 
 %% Links
-dxos/react-ui-graph --> dxos/gem-core
+dxos/react-ui-graph --> dxos/react-ui-graph
 ```
 
 ## Dependencies
 
 | Module | Direct |
 |---|---|
-| [`@dxos/gem-core`](../../gem-core/docs/README.md) | &check; |
+| [`@dxos/react-ui-graph`](../../gem-core/docs/README.md) | &check; |
