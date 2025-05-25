@@ -1,0 +1,45 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "exclude": [
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/graph"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
+    }
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    },
+    "files": true,
+    "transpileOnly": true
+  }
+}
