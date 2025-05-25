@@ -28,16 +28,9 @@ import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '.
 
 import '../../styles/defaults.css';
 
-const meta: Meta = {
-  title: 'ui/react-ui-graph/hooks',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
-
-export default meta;
-
-interface ComponentProps {
+type ComponentProps = {
   model: TestGraphModel;
-}
+};
 
 const PrimaryComponent = ({ model }: ComponentProps) => {
   const { themeMode } = useThemeContext();
@@ -187,6 +180,13 @@ const Info = () => (
     ⌘-DRAG to edge or create node; ⌘-CLICK to delete edge.
   </div>
 );
+
+const meta: Meta = {
+  title: 'ui/react-ui-graph/hooks',
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+};
+
+export default meta;
 
 export const Default = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);

@@ -7,12 +7,12 @@ import '@dxos-theme';
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Mesh } from './Mesh';
 
 // TODO(burdon): Create waves/game of life.
-const Story = () => {
+const DefaultStory = () => {
   return (
     <Mesh.Root>
       <Mesh.SVG
@@ -27,11 +27,13 @@ const Story = () => {
   );
 };
 
-export default {
+const meta: Meta<typeof Mesh.Root> = {
   title: 'ui/react-ui-graph/Mesh',
-  component: Mesh,
-  render: () => <Story />,
+  component: Mesh.Root,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#111]' })],
 };
+
+export default meta;
 
 export const Default = {};

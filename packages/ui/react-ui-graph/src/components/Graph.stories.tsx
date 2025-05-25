@@ -24,8 +24,9 @@ import '../../styles/defaults.css';
 
 seed(1);
 
-const meta: Meta = {
+const meta: Meta<typeof Graph> = {
   title: 'ui/react-ui-graph/Graph',
+  component: Graph,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 

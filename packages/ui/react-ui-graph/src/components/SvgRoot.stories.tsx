@@ -7,19 +7,20 @@ import '@dxos-theme';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SVGRoot } from './SVGRoot';
 import { useGrid, useZoom, createSvgContext, useSvgContext } from '../hooks';
 import { defaultGridStyles } from '../styles';
 
-interface ComponentProps {
+type ComponentProps = {
   grid?: boolean;
   zoom?: boolean;
-}
+};
 
-const Story = (props: ComponentProps) => {
+const DefaultStory = (props: ComponentProps) => {
   const context = createSvgContext();
+
   return (
     <SVGRoot context={context}>
       <Component {...props} />
@@ -43,12 +44,13 @@ const Component = (options: ComponentProps) => {
   );
 };
 
-export default {
+const meta: Meta<typeof Component> = {
   title: 'ui/react-ui-graph/SVGRoot',
-  component: SVGRoot,
-  render: (props: ComponentProps) => <Story {...props} />,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
+
+export default meta;
 
 export const Default = {
   args: {
