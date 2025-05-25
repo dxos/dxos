@@ -57,7 +57,6 @@
       <project name="examples" file="file://$PROJECT_DIR$/packages/sdk/examples/project.json" />
       <project name="feed-store" file="file://$PROJECT_DIR$/packages/common/feed-store/project.json" />
       <project name="functions" file="file://$PROJECT_DIR$/packages/core/functions/project.json" />
-      <project name="gem-core" file="file://$PROJECT_DIR$/packages/ui/react-ui-graph/project.json" />
       <project name="gem-spore" file="file://$PROJECT_DIR$/packages/ui/react-ui-graph/project.json" />
       <project name="graph" file="file://$PROJECT_DIR$/packages/common/graph/project.json" />
       <project name="hypercore" file="file://$PROJECT_DIR$/packages/common/hypercore/project.json" />

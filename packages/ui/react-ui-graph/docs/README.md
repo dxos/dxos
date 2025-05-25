@@ -31,4 +31,4 @@ dxos/react-ui-graph --> dxos/react-ui-graph
 
 | Module | Direct |
 |---|---|
-| [`@dxos/react-ui-graph`](../../gem-core/docs/README.md) | &check; |
+| [`@dxos/react-ui-graph`](../../react-ui-graph/docs/README.md) | &check; |

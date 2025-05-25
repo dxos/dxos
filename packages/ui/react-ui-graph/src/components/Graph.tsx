@@ -6,8 +6,8 @@ import { effect } from '@preact/signals-core';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { useSvgContext } from '@dxos/react-ui-graph';
 import { type GraphModel } from '@dxos/graph';
+import { useSvgContext } from '@dxos/react-ui-graph';
 
 import { defaultStyles } from './styles';
 import {

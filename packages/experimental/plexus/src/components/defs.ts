@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Point } from '@dxos/react-ui-graph';
 import { type Graph } from '@dxos/graph';
+import { type Point } from '@dxos/react-ui-graph';
 
 export interface Layout<N> {
   center: Point;

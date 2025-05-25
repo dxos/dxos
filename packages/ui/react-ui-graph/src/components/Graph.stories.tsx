@@ -6,8 +6,8 @@ import '@dxos-theme';
 
 import React, { useMemo } from 'react';
 
-import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/react-ui-graph';
 import { useThemeContext } from '@dxos/react-ui';
+import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/react-ui-graph';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';

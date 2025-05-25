@@ -7,9 +7,8 @@ import { transition, easeLinear } from 'd3';
 import defaulstDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { useSvgContext } from '@dxos/react-ui-graph';
 import { type ReactiveGraphModel } from '@dxos/graph';
-import { type GraphLayoutNode, GraphRenderer, type GraphRendererOptions } from '@dxos/react-ui-graph';
+import { type GraphLayoutNode, GraphRenderer, type GraphRendererOptions, useSvgContext } from '@dxos/react-ui-graph';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TreeProjector, type TreeProjectorOptions } from './tree-projector';

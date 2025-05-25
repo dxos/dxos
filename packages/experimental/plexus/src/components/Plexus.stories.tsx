@@ -20,9 +20,8 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
-import { Grid, SVG, SVGRoot, Zoom } from '@dxos/react-ui-graph';
 import { faker } from '@dxos/random';
-import { Markers, SelectionModel, type GraphLayoutNode } from '@dxos/react-ui-graph';
+import { Grid, SVG, SVGRoot, Zoom, Markers, SelectionModel, type GraphLayoutNode } from '@dxos/react-ui-graph';
 import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/react-ui-graph/testing';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';

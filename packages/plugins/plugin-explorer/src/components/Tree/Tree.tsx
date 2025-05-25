@@ -6,8 +6,8 @@ import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type Space } from '@dxos/client/echo';
-import { createSvgContext, SVG, SVGRoot } from '@dxos/react-ui-graph';
 import { useAsyncState } from '@dxos/react-ui';
+import { createSvgContext, SVG, SVGRoot } from '@dxos/react-ui-graph';
 
 import { HierarchicalEdgeBundling, RadialTree, TidyTree } from './layout';
 import { mapGraphToTreeData, type TreeNode } from './types';

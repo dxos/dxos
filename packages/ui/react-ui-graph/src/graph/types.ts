@@ -7,9 +7,9 @@
 // Generic graph data type.
 //
 
-import { type Point } from '@dxos/react-ui-graph';
 import { type Graph } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
+import { type Point } from '@dxos/react-ui-graph';
 
 export type IdAccessor<N = any> = (node: N) => string;
 
