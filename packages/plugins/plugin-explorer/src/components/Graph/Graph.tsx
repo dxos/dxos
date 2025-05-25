@@ -3,7 +3,7 @@
 //
 
 import { forceLink, forceManyBody } from 'd3';
-import ForceGraph from 'force-graph';
+import ForceGraph, { type GraphData } from 'force-graph';
 import React, { type FC, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -24,7 +24,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
   const forceGraph = useRef<ForceGraph>();
 
   const [model] = useAsyncState(
-    async () => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined),
+    async () => (space ? new SpaceGraphModel({}, { schema: true }).open(space) : undefined),
     [space],
   );
 
@@ -71,7 +71,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
         // .d3AlphaDecay(0.0228)
         // .d3VelocityDecay(0.4)
 
-        .graphData(model.graph)
+        .graphData(new GraphDataAdapter(model))
         .warmupTicks(100)
         .cooldownTime(1000)
         .resumeAnimation();
@@ -88,3 +88,15 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
     </div>
   );
 };
+
+class GraphDataAdapter implements GraphData {
+  constructor(private readonly _model: SpaceGraphModel) {}
+
+  get nodes() {
+    return this._model.graph.nodes;
+  }
+
+  get links() {
+    return this._model.graph.edges;
+  }
+}

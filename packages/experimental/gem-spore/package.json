@@ -41,9 +41,11 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
     "d3": "^7.9.0",
     "d3-force": "~3.0.0",
     "immutability-helper": "^3.0.2"

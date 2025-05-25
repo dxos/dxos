@@ -10,7 +10,7 @@ import { Trigger } from '@dxos/async';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { live } from '@dxos/live-object';
 
-import { GraphModel } from './model';
+import { GraphModel, ReactiveGraphModel } from './model';
 import { BaseGraphNode, type Graph, type GraphNode } from './types';
 
 registerSignalsRuntime();
@@ -41,11 +41,12 @@ describe('Graph', () => {
   });
 
   test('reactive', async ({ expect }) => {
-    // NOTE: Requires `registerSignalsRuntime` to be called.
     const graph = new GraphModel(live({ nodes: [], edges: [] }));
 
     const done = new Trigger<Graph>();
-    effect(() => {
+
+    // NOTE: Requires `registerSignalsRuntime` to be called.
+    const unsubscribe = effect(() => {
       if (graph.edges.length === 2) {
         done.wake(graph.graph);
       }
@@ -67,6 +68,38 @@ describe('Graph', () => {
       expect(graph.nodes).to.have.length(3);
       expect(graph.edges).to.have.length(2);
     }
+
+    unsubscribe();
+  });
+
+  test('reactive model', async ({ expect }) => {
+    const graph = new ReactiveGraphModel();
+
+    const done = new Trigger<Graph>();
+    const unsubscribe = graph.subscribe((graph) => {
+      if (graph.edges.length === 2) {
+        done.wake(graph.graph);
+      }
+    });
+
+    setTimeout(() => {
+      graph.builder.addNode({ id: 'node-1' });
+      graph.builder.addNode({ id: 'node-2' });
+      graph.builder.addNode({ id: 'node-3' });
+    });
+
+    setTimeout(() => {
+      graph.builder.addEdge({ source: 'node-1', target: 'node-2' });
+      graph.builder.addEdge({ source: 'node-2', target: 'node-3' });
+    });
+
+    {
+      const graph = await done.wait();
+      expect(graph.nodes).to.have.length(3);
+      expect(graph.edges).to.have.length(2);
+    }
+
+    unsubscribe();
   });
 
   test('optional', ({ expect }) => {

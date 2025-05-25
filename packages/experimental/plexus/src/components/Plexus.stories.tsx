@@ -21,7 +21,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
 import { Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
-import { Markers, type GraphLayoutNode } from '@dxos/gem-spore';
+import { Markers, SelectionModel, type GraphLayoutNode } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/gem-spore/testing';
 import { faker } from '@dxos/random';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -75,11 +75,12 @@ const Test = () => {
   // TODO(burdon): Pass down state to context (set nav, etc.)
   const [spinning, setSpinning] = useState(true);
 
+  const selection = useMemo(() => new SelectionModel(), []);
   const model = useMemo(() => {
     const root = createTree({ depth: 5, children: 3 });
     const model = new TestGraphModel(convertTreeToGraph(root));
-    model.setSelected(root.id);
-    setHistory([model.selected!]);
+    selection.setSelected(root.id);
+    setHistory([root.id]);
     return model;
   }, []);
 
@@ -93,11 +94,11 @@ const Test = () => {
 
   // Do transition on history change.
   useEffect(() => {
-    model.setSelected(history[index]);
+    selection.setSelected(history[index]);
   }, [index]);
 
   const handleGenerate = () => {
-    model.createNodes(model.getNode(model.selected!));
+    model.createNodes(model.getNode(selection.selected!));
   };
 
   const handleSelect = (node: TestNode) => {

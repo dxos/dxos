@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
+
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { getSnapshot } from '@dxos/live-object';
+import { getSnapshot, type Live, live } from '@dxos/live-object';
 import { type MakeOptional, isNotFalsy, removeBy, stripUndefined } from '@dxos/util';
 
 import { type BaseGraphEdge, type BaseGraphNode, type Graph, type GraphEdge, type GraphNode } from './types';
@@ -258,6 +260,42 @@ export class GraphModel<
 
   override copy(graph?: Partial<Graph>) {
     return new GraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
+  }
+}
+
+export type GraphModelSubscription = (model: GraphModel, graph: Live<Graph>) => void;
+
+/**
+ * Subscription.
+ * NOTE: Requires `registerSignalsRuntime` to be called.
+ */
+export const subscribe = (model: GraphModel, cb: GraphModelSubscription, fire = false) => {
+  if (fire) {
+    cb(model, model.graph);
+  }
+
+  return effect(() => {
+    cb(model, model.graph);
+  });
+};
+
+/**
+ * Basic reactive model.
+ */
+export class ReactiveGraphModel<
+  Node extends BaseGraphNode = BaseGraphNode,
+  Edge extends BaseGraphEdge = BaseGraphEdge,
+> extends GraphModel<Node, Edge> {
+  constructor(graph?: Graph) {
+    super(live({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] }));
+  }
+
+  override copy(graph?: Partial<Graph>) {
+    return new ReactiveGraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
+  }
+
+  subscribe(cb: GraphModelSubscription, fire = false): () => void {
+    return subscribe(this, cb, fire);
   }
 }
 

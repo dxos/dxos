@@ -23,6 +23,7 @@
   "dependencies": {
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",

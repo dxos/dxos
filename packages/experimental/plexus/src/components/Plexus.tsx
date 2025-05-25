@@ -8,7 +8,8 @@ import defaulstDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSvgContext } from '@dxos/gem-core';
-import { type GraphLayoutNode, type GraphModel, GraphRenderer, type GraphRendererOptions } from '@dxos/gem-spore';
+import { type GraphLayoutNode, GraphRenderer, type GraphRendererOptions } from '@dxos/gem-spore';
+import { type ReactiveGraphModel } from '@dxos/graph';
 import { mx } from '@dxos/react-ui-theme';
 
 import { TreeProjector, type TreeProjectorOptions } from './tree-projector';
@@ -28,7 +29,7 @@ export type PlexusSlots<N> = {
 };
 
 export type PlexusProps<N> = {
-  model: GraphModel<N>;
+  model: ReactiveGraphModel;
   className?: string;
   slots?: PlexusSlots<N>;
   onSelect?: (node: N) => void;

@@ -13,10 +13,10 @@ import {
   SchemaValidator,
   StoredSchema,
 } from '@dxos/echo-schema';
-import { AbstractGraphModel, type GraphEdge, AbstractGraphBuilder, type Graph } from '@dxos/graph';
+import { type GraphEdge, AbstractGraphBuilder, Graph, ReactiveGraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { Filter, type AnyLiveObject, type Space } from '@dxos/react-client/echo';
+import { Filter, live, type AnyLiveObject, type Space } from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
@@ -41,30 +41,25 @@ type ObjectGraphNode = {
 
 export type EchoGraphNode = SchemaGraphNode | ObjectGraphNode;
 
-class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, GraphEdge, SpaceGraphModel> {}
+// TODO(burdon): Differentiate between refs and relations.
+export type EchoGraphEdge = GraphEdge.Optional;
+
+class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, EchoGraphEdge, SpaceGraphModel> {}
 
 /**
  * Converts ECHO objects to a graph.
  */
-export class SpaceGraphModel extends AbstractGraphModel<EchoGraphNode, GraphEdge, SpaceGraphModel, SpaceGraphBuilder> {
-  static create(graph?: Partial<Graph>): SpaceGraphModel {
-    return new SpaceGraphModel();
-    // live(Graph, {
-    //   graph: {
-    //     id: graph?.id ?? ObjectId.random(),
-    //     nodes: graph?.nodes ?? [],
-    //     edges: graph?.edges ?? [],
-    //   },
-    // }),
-  }
-
+export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraphEdge> {
   private _schema?: EchoSchema[];
   private _schemaSubscription?: CleanupFn;
   private _objects?: AnyLiveObject<any>[];
   private _objectsSubscription?: CleanupFn;
 
-  constructor(private readonly _options: SpaceGraphModelOptions = {}) {
-    super();
+  constructor(
+    graph?: Partial<Graph>,
+    private readonly _options: SpaceGraphModelOptions = {},
+  ) {
+    super(live(Graph, { nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] }));
   }
 
   override get builder() {
@@ -72,7 +67,7 @@ export class SpaceGraphModel extends AbstractGraphModel<EchoGraphNode, GraphEdge
   }
 
   override copy(graph?: Partial<Graph>) {
-    return SpaceGraphModel.create(graph);
+    return new SpaceGraphModel(graph);
   }
 
   get objects(): AnyLiveObject<any>[] {
@@ -110,8 +105,7 @@ export class SpaceGraphModel extends AbstractGraphModel<EchoGraphNode, GraphEdge
             // Merge with current nodes.
             const currentNodes = this._graph.nodes;
 
-            this._graph.nodes = [];
-            this._graph.edges = [];
+            this.clear();
 
             const addSchema = (typename: string) => {
               const current = currentNodes.find((node) => node.id === typename);
@@ -155,7 +149,7 @@ export class SpaceGraphModel extends AbstractGraphModel<EchoGraphNode, GraphEdge
                     (node) => node.type === 'schema' && node.data.typename === typename,
                   );
                   if (schemaNode) {
-                    this._graph.links.push({
+                    this.addEdge({
                       id: `${object.id}-${schemaNode.id}`,
                       source: object.id,
                       target: schemaNode.id,
@@ -176,7 +170,7 @@ export class SpaceGraphModel extends AbstractGraphModel<EchoGraphNode, GraphEdge
                       const refs = Array.isArray(value) ? value : [value];
                       for (const ref of refs) {
                         if (objects.findIndex((obj) => obj.id === ref.id) !== -1) {
-                          this._graph.links.push({
+                          this.addEdge({
                             id: `${object.id}-${String(prop.name)}-${ref.id}`,
                             source: object.id,
                             target: ref.id,
@@ -188,14 +182,13 @@ export class SpaceGraphModel extends AbstractGraphModel<EchoGraphNode, GraphEdge
                 }
               }
             });
-
-            this.triggerUpdate();
           },
           { fire: true },
         );
     }
 
-    this.setSelected(objectId);
+    // TODO(burdon): Selection model.
+    // this.setSelected(objectId);
     return this;
   }
 

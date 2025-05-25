@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { useSvgContext } from '@dxos/gem-core';
-import { type ReadonlyGraphModel } from '@dxos/graph';
+import { type GraphModel } from '@dxos/graph';
 
 import { defaultStyles } from './styles';
 import {
@@ -20,7 +21,7 @@ import {
 
 export type GraphProps = {
   className?: string;
-  model?: ReadonlyGraphModel;
+  model?: GraphModel;
   projector?: GraphForceProjector;
   drag?: boolean;
   arrows?: boolean;
@@ -64,19 +65,13 @@ export const Graph = ({
   }, []);
 
   useEffect(() => {
+    projector.update(model?.graph);
     return combine(
-      //
       projector.updated.on(({ layout }) => renderer.update(layout)),
+      effect(() => {
+        projector.update(model?.graph);
+      }),
     );
-
-    // const subscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
-    // const subscribeModel = model?.subscribe((graph) => projector.update(graph));
-    // projector.update(model?.graph);
-
-    // return () => {
-    //   subscribeProjector();
-    //   subscribeModel?.();
-    // };
   }, [model]);
 
   useEffect(() => {
