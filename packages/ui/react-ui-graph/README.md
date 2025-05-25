@@ -1,4 +1,4 @@
-# GEM Spore
+# react-ui-graph
 
 A small, usually single-celled reproductive body that is resistant to adverse environmental conditions 
 and is capable of growing into a new organism, produced especially by certain fungi, algae, protozoans, 

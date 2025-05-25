@@ -11,7 +11,6 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
 import {
   createSvgContext,
-  defaultStyles,
   Graph as GraphComponent,
   GraphForceProjector,
   type GraphLayoutNode,
@@ -133,7 +132,6 @@ export const NetworkPanel = (props: { space?: Space }) => {
         <SVG>
           <Markers />
           <GraphComponent
-            className={defaultStyles}
             model={model}
             drag
             arrows
