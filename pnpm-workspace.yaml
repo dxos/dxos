@@ -3,7 +3,6 @@ packages:
   - packages/**/*
   - tools/**/*
   - '!packages/deprecated/**'
-  - '!packages/experimental/plexus/**'
   - '!packages/sdk/examples/src/template'
   - '!**/build/**'
   - '!**/dist/**'
