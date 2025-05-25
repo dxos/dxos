@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { select } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import { combine } from '@dxos/async';
 import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -62,16 +63,12 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   );
 
   useEffect(() => {
-    // const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
-    const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
-    // model.triggerUpdate();
-
-    return () => {
-      // unsubscribeModel();
-      unsubscribeProjector();
-      void projector.stop();
-    };
+    return combine(
+      model.subscribe((graph) => projector.update(graph)),
+      projector.updated.on(({ layout }) => renderer.update(layout)),
+      () => projector.stop(),
+    );
   }, []);
 
   useEffect(() => {
@@ -160,16 +157,12 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   useEffect(() => {
-    // const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
-    const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
-    // model.triggerUpdate();
-
-    return () => {
-      // unsubscribeModel();
-      unsubscribeProjector();
-      void projector.stop();
-    };
+    return combine(
+      model.subscribe((graph) => projector.update(graph)),
+      projector.updated.on(({ layout }) => renderer.update(layout)),
+      () => projector.stop(),
+    );
   }, []);
 
   useEffect(() => {
