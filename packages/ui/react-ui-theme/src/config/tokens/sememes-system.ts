@@ -219,10 +219,6 @@ const aliasDefs: Record<string, { root?: SememeName; attention?: SememeName }> =
   // Screen overlay for modal dialogs.
   scrimSurface: { root: 'surface-10t' },
 
-  // Primary accent.
-  accentSurface: { root: 'accentSurface' },
-  accentSurfaceHover: { root: 'accentSurfaceHover' },
-
   //
   // TODO(burdon): Why are these here, but not deck, text, above? Are these all surfaces?
   //
