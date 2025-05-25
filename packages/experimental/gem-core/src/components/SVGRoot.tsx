@@ -15,18 +15,16 @@ export type SVGRootProps = PropsWithChildren<{ context?: SVGContext }>;
  * Automatically resizes the SVG element, which expands to fit the container.
  */
 // TODO(burdon): Create radix-style components.
-// TODO(burdon): Can't pass in context. Instead imperative handle.
 export const SVGRoot = ({ context: provided, children }: SVGRootProps) => {
-  const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
+  const { ref, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
 
   // TODO(burdon): Move size to state and pass into context.
-  // console.log(width, height);
-  const context = useMemo<SVGContext>(() => provided || new SVGContext(), [width, height]);
+  const context = useMemo<SVGContext>(() => provided || new SVGContext(), []);
 
   useEffect(() => {
     if (width && height) {
-      // TODO(burdon): Does not trigger resize.
       context.setSize({ width, height });
+
       select(context.svg)
         .attr('display', 'block')
         .attr('viewBox', context.viewBox)
@@ -35,12 +33,12 @@ export const SVGRoot = ({ context: provided, children }: SVGRootProps) => {
     } else {
       select(context.svg).attr('display', 'none'); // Hide until mounted.
     }
-  }, [width, height]);
+  }, [context, width, height]);
 
   return (
     <SVGContextProvider value={context}>
       {/* Flex is important otherwise div has extra padding. */}
-      <div ref={resizeRef} className='flex w-full h-full overflow-hidden'>
+      <div ref={ref} className='flex w-full h-full overflow-hidden'>
         {width !== 0 && height !== 0 && children}
       </div>
     </SVGContextProvider>

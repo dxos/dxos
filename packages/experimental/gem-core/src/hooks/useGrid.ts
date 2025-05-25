@@ -127,9 +127,6 @@ const defaultOptions: GridOptions = {
   axis: true,
 };
 
-/**
- * Grid handler.
- */
 export class GridController {
   _visible = false;
 
@@ -187,6 +184,13 @@ export const useGrid = (options: GridOptions = defaultOptions): GridController =
   const ref = useRef<SVGGElement>(null);
   const context = useSvgContext();
   const grid = useMemo(() => new GridController(ref, context, options), []);
-  useEffect(() => context.resized.on(() => grid.draw()), []);
+  useEffect(
+    () =>
+      context.resized.on(() => {
+        grid.draw();
+      }),
+    [context, grid],
+  );
+
   return grid;
 };
