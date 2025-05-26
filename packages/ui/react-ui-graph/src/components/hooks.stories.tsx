@@ -26,8 +26,6 @@ import { useSvgContext, useZoom, useGrid } from '../hooks';
 import { defaultGridStyles } from '../styles';
 import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '../testing';
 
-import '../../styles/defaults.css';
-
 type ComponentProps = {
   model: TestGraphModel;
 };

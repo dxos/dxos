@@ -83,22 +83,10 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   if (options.highlight !== false) {
     group
       .on('mouseover', function () {
-        // log.info('over', { node: select(this).datum() });
-        select(this).classed('highlight', true);
-        if (options.labels) {
-          select<SVGGElement, GraphLayoutNode<N>>(this.closest('g.node'))
-            .raise()
-            .select('text')
-            .text((d) => options.labels.text(d, true));
-        }
+        select(this).raise();
       })
       .on('mouseout', function () {
-        select(this).classed('highlight', false);
-        if (options.labels) {
-          select<SVGGElement, GraphLayoutNode<N>>(this.closest('g.node'))
-            .select('text')
-            .text((d) => options.labels.text(d));
-        }
+        select(this);
       });
   }
 };
@@ -150,8 +138,6 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
         const height = bbox.height + 4;
         select(this.parentElement)
           .select('rect')
-          .attr('fill', 'black')
-          .attr('stroke', 'gray')
           .attr('rx', 4)
           .attr('x', (d.x > 0 ? 0 : -1) * width + dx(d, 4))
           .attr('y', -height / 2 - 1)
@@ -297,7 +283,7 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .data(layout.graph?.nodes ?? [], (d) => d.id)
       .join((enter) =>
         //
-        enter.append('g').classed('node', true).call(createNode, this.options),
+        enter.append('g').classed('node group', true).call(createNode, this.options),
       )
       .call(updateNode, this.options);
   }

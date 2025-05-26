@@ -8,10 +8,11 @@ import React, { type FC, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type Space } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
 import { useAsyncState } from '@dxos/react-ui';
 
-import { SpaceGraphModel } from './graph-model';
+import { SpaceGraphModel } from './model';
 
 export type GraphProps = {
   space: Space;
@@ -36,15 +37,12 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
       // https://github.com/vasturiano/force-graph
       // https://github.com/vasturiano/3d-force-graph
       forceGraph.current = new ForceGraph(rootRef.current)
+        // https://github.com/vasturiano/force-graph?tab=readme-ov-file#node-styling
         .nodeRelSize(6)
-        .nodeLabel((node: any) => {
-          if (node.type === 'schema') {
-            return node.data.typename;
-          }
-
-          return node.id;
-        })
+        .nodeLabel((node: any) => (node.type === 'schema' ? node.data.typename : node.id))
         .nodeAutoColorBy((node: any) => (node.type === 'schema' ? 'schema' : node.data.typename))
+
+        // https://github.com/vasturiano/force-graph?tab=readme-ov-file#link-styling
         .linkColor(() => 'rgba(255,255,255,0.25)');
     }
 
@@ -56,12 +54,17 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
 
   useEffect(() => {
     if (forceGraph.current && width && height && model) {
+      // https://github.com/vasturiano/force-graph?tab=readme-ov-file#container-layout
       forceGraph.current
         .pauseAnimation()
         .width(width)
         .height(height)
         .onEngineStop(() => {
           handleZoomToFit();
+        })
+        .onNodeClick((node: any) => {
+          log.info('click', { node });
+          forceGraph.current?.emitParticle(node);
         })
 
         // https://github.com/vasturiano/force-graph?tab=readme-ov-file#force-engine-d3-force-configuration
@@ -72,8 +75,9 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
         // .d3VelocityDecay(0.4)
 
         .graphData(new GraphDataAdapter(model))
+        .linkDirectionalParticles(2)
         .warmupTicks(100)
-        .cooldownTime(1000)
+        .cooldownTime(1_000)
         .resumeAnimation();
     }
   }, [model, width, height]);
@@ -97,6 +101,10 @@ class GraphDataAdapter implements GraphData {
   }
 
   get links() {
-    return this._model.graph.edges;
+    return this._model.graph.edges.map((edge) => ({
+      source: edge.source,
+      target: edge.target,
+      data: edge,
+    }));
   }
 }

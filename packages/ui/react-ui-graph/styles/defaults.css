@@ -3,9 +3,6 @@
  * TODO(burdon): Light/dark theme.
  */
 svg g.graph, svg.graph {
-  /**
-   * Arrows.
-   */
   marker {
     &.arrow path {
       fill: none;
@@ -20,9 +17,6 @@ svg g.graph, svg.graph {
     }
   }
 
-  /**
-   * Guides.
-   */
   g.guides {
     circle {
       fill: #333;
@@ -33,50 +27,44 @@ svg g.graph, svg.graph {
     }
   }
 
-  /**
-   * Nodes.
-   */
   g.nodes {
-    .selected {
+    g.node {
       circle {
-        fill: cornflowerblue;
-        stroke: #333;
-        stroke-width: 2px;
+        fill: #777;
       }
+      rect {
+        visibility: hidden;
+        /* stroke-width: 0.5px;
+        stroke: #555; */
+      }
+      text {
+        visibility: hidden;
+        /* fill: #555;
+        cursor: pointer; */
+      }      
     }
 
-    circle {
-      fill: #cfd8dc;
-      stroke: #333;
-    }
-
-    circle.highlight {
-      fill: #fff;
-      stroke: #333;
-      stroke-width: 2px;
-    }
-
-    text {
-      fill: #555;
-      font-family: sans-serif;
-      font-size: 14px;
+    g.node:hover {
+      circle {
+        fill: #AAA;
+      }
+      rect {
+        visibility: visible;
+        stroke: #999;
+      }
+      text {
+        visibility: visible;
+        fill: #AAA;
+      }      
     }
   }
 
-  /**
-   * Edges.
-   */
   g.edges {
-    path {
-      fill: none;
-      stroke: #555;
-      stroke-width: 1px;
-    }
-
-    path.click {
-      stroke: transparent;
-      stroke-width: 16px;
-      opacity: 0.2;
+    g.edge {
+      path {
+        stroke: #555;
+        stroke-width: 1px;
+      }
     }
   }
 

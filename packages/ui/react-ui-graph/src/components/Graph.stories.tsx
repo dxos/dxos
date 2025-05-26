@@ -22,6 +22,7 @@ import { createSvgContext } from '../hooks';
 import { defaultGridStyles } from '../styles';
 import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type TestNode } from '../testing';
 
+// TODO(burdon): Remove.
 import '../../styles/defaults.css';
 
 seed(1);
