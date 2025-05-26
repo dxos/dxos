@@ -49,6 +49,7 @@ class SpaceGraphBuilder extends AbstractGraphBuilder<EchoGraphNode, EchoGraphEdg
 /**
  * Converts ECHO objects to a graph.
  */
+// TODO(burdon): Factor out.
 export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraphEdge> {
   private _schema?: EchoSchema[];
   private _schemaSubscription?: CleanupFn;
