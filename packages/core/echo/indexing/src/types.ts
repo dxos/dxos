@@ -9,6 +9,7 @@ import type { SchemaClass } from 'effect/Schema';
 import { type Event } from '@dxos/async';
 import { type ObjectPropPath, type ObjectStructure } from '@dxos/echo-protocol';
 import type { ObjectId } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
@@ -118,7 +119,24 @@ export const EscapedPropPath: SchemaClass<string, string> & {
   }
 
   static unescape(path: EscapedPropPath): ObjectPropPath {
-    return path.split(/(?<!\\)\./).map((p) => p.replaceAll('\\\\', '\\').replaceAll('\\.', '.'));
+    const parts: string[] = [];
+    let current = '';
+
+    for (let i = 0; i < path.length; i++) {
+      if (path[i] === '\\') {
+        invariant(i + 1 < path.length && (path[i + 1] === '.' || path[i + 1] === '\\'), 'Malformed escaping.');
+        current = current + path[i + 1];
+        i++;
+      } else if (path[i] === '.') {
+        parts.push(current);
+        current = '';
+      } else {
+        current += path[i];
+      }
+    }
+    parts.push(current);
+
+    return parts;
   }
 };
 export type EscapedPropPath = Schema.Schema.Type<typeof EscapedPropPath>;
