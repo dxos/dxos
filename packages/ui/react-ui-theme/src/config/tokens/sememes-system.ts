@@ -81,6 +81,8 @@ const surface: Record<string, Sememe> = {
     light: ['neutral', lightCadence(8)],
     dark: ['neutral', darkCadence(8)],
   },
+
+  // TODO(burdon): Why are these the same for light/dark?
   '400': {
     light: ['neutral', 400],
     dark: ['neutral', 400],
@@ -107,6 +109,9 @@ export const systemSememes = {
   'surface-60': surface['60'],
   'surface-70': surface['70'],
   'surface-80': surface['80'],
+
+  // TODO(burdon): Confusing mix of -NN with light and dark valence (above), and -400/450 that have the same value.
+  //   I assume 10,20,30, etc. are on a nominal 0-100 "intensity" range and 400/450 are in the 0-1000 light-to-darkrange?
   'surface-400': surface['400'],
   'surface-450': surface['450'],
   'surface-450t': applyAlpha(surface['450'], 0.1),
@@ -115,15 +120,15 @@ export const systemSememes = {
   // Special surfaces.
   //
 
-  'accentSurface-300t': {
+  ['accentSurfaceRelated' as const]: {
     light: ['primary', '300/.1'],
     dark: ['primary', '400/.1'],
   },
-  'accentSurface-400': {
+  ['accentSurfaceHover' as const]: {
     light: ['primary', 600],
     dark: ['primary', 475],
   },
-  'accentSurface-500': {
+  ['accentSurface' as const]: {
     light: ['primary', 500],
     dark: ['primary', 500],
   },
@@ -186,65 +191,55 @@ export const systemSememes = {
 
 type SememeName = keyof typeof systemSememes;
 
-type Alias =
-  //
-  // Surfaces
-  // TODO(burdon): Define surface for list selection, sheet ranges, etc.
-  //
-
+/**
+ * Alias map.
+ */
+const aliasDefs: Record<string, { root?: SememeName; attention?: SememeName }> = {
   // Base surface for text (e.g., Document, Table, Sheet.)
-  | 'baseSurface'
-  // Forms, cards, etc.
-  | 'groupSurface'
-  // Dialogs, menus, popovers, etc.
-  | 'modalSurface'
-  // Main sidebar panel.
-  | 'sidebarSurface'
-  // Plank header.
-  | 'headerSurface'
-  // Toolbars, table/sheet headers, etc.
-  | 'toolbarSurface'
-  | 'hoverSurface'
-  | 'accentSurface'
-  | 'accentSurfaceHover'
-  // Screen overlay for modal dialogs.
-  | 'scrimSurface'
-
-  //
-  // TODO(burdon): Why are these here, but not deck, text, above?
-  //
-  | 'attention'
-  | 'currentRelated'
-  | 'hoverOverlay'
-  | 'input'
-  | 'separator'
-  | 'subduedSeparator'
-  | 'unAccent'
-  | 'unAccentHover';
-
-const aliasDefssDefs: Record<Alias, { root?: SememeName; attention?: SememeName }> = {
   baseSurface: { root: 'surface-20', attention: 'surface-0' },
+
+  // Forms, cards, etc.
   groupSurface: { root: 'surface-50', attention: 'surface-40' },
+
+  // Main sidebar panel.
   sidebarSurface: { root: 'surface-30' },
+
+  // Dialogs, menus, popovers, etc.
   modalSurface: { root: 'surface-50' },
+
+  // Plank header.
   headerSurface: { root: 'surface-30', attention: 'surface-20' },
+
+  // Toolbars, table/sheet headers, etc.
   toolbarSurface: { root: 'surface-30', attention: 'surface-20' },
+
+  // Mouse-over hover.
   hoverSurface: { root: 'surface-70', attention: 'surface-60' },
-  accentSurface: { root: 'accentSurface-500' },
-  accentSurfaceHover: { root: 'accentSurface-400' },
+
+  // Screen overlay for modal dialogs.
   scrimSurface: { root: 'surface-10t' },
 
+  //
+  // TODO(burdon): Why are these here, but not deck, text, above? Are these all surfaces?
+  //
+
   attention: { root: 'surface-10' },
-  currentRelated: { root: 'accentSurface-300t' },
+
+  currentRelated: { root: 'accentSurfaceRelated' },
+
+  // TODO(burdon): Different from hoverSurface?
   hoverOverlay: { root: 'surface-450t' },
+
   input: { root: 'surface-35', attention: 'surface-35' },
+
   separator: { root: 'surface-50' },
   subduedSeparator: { root: 'surface-30' },
+
   unAccent: { root: 'surface-400' },
   unAccentHover: { root: 'surface-450' },
 };
 
-export const systemAliases: ColorAliases = Object.entries(aliasDefssDefs).reduce((aliases, [alias, values]) => {
+export const systemAliases: ColorAliases = Object.entries(aliasDefs).reduce((aliases, [alias, values]) => {
   Object.entries(values).forEach(([key, sememe]) => {
     const record = getMapValue(aliases, sememe, () => ({}));
     const list = getMapValue<string[]>(record, key, () => []);
