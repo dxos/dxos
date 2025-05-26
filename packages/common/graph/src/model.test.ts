@@ -2,11 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { GraphModel } from './model';
-import { BaseGraphNode, type GraphNode } from './types';
+import { Trigger } from '@dxos/async';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { live } from '@dxos/live-object';
+
+import { GraphModel, ReactiveGraphModel } from './model';
+import { BaseGraphNode, type Graph, type GraphNode } from './types';
+
+registerSignalsRuntime();
 
 const TestNode = Schema.extend(
   BaseGraphNode,
@@ -31,6 +38,68 @@ describe('Graph', () => {
     const graph = new GraphModel<TestNode>();
     const node = graph.addNode({ id: 'test', value: 'test' });
     expect(node.value.length).to.eq(4);
+  });
+
+  test('reactive', async ({ expect }) => {
+    const graph = new GraphModel(live({ nodes: [], edges: [] }));
+
+    const done = new Trigger<Graph>();
+
+    // NOTE: Requires `registerSignalsRuntime` to be called.
+    const unsubscribe = effect(() => {
+      if (graph.edges.length === 2) {
+        done.wake(graph.graph);
+      }
+    });
+
+    setTimeout(() => {
+      graph.builder.addNode({ id: 'node-1' });
+      graph.builder.addNode({ id: 'node-2' });
+      graph.builder.addNode({ id: 'node-3' });
+    });
+
+    setTimeout(() => {
+      graph.builder.addEdge({ source: 'node-1', target: 'node-2' });
+      graph.builder.addEdge({ source: 'node-2', target: 'node-3' });
+    });
+
+    {
+      const graph = await done.wait();
+      expect(graph.nodes).to.have.length(3);
+      expect(graph.edges).to.have.length(2);
+    }
+
+    unsubscribe();
+  });
+
+  test('reactive model', async ({ expect }) => {
+    const graph = new ReactiveGraphModel();
+
+    const done = new Trigger<Graph>();
+    const unsubscribe = graph.subscribe((graph) => {
+      if (graph.edges.length === 2) {
+        done.wake(graph.graph);
+      }
+    });
+
+    setTimeout(() => {
+      graph.builder.addNode({ id: 'node-1' });
+      graph.builder.addNode({ id: 'node-2' });
+      graph.builder.addNode({ id: 'node-3' });
+    });
+
+    setTimeout(() => {
+      graph.builder.addEdge({ source: 'node-1', target: 'node-2' });
+      graph.builder.addEdge({ source: 'node-2', target: 'node-3' });
+    });
+
+    {
+      const graph = await done.wait();
+      expect(graph.nodes).to.have.length(3);
+      expect(graph.edges).to.have.length(2);
+    }
+
+    unsubscribe();
   });
 
   test('optional', ({ expect }) => {
