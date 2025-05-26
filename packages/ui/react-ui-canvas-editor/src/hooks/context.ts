@@ -4,13 +4,13 @@
 
 import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
+import { type SelectionModel } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
-import { type SelectionModel } from './selection';
 import { type DragMonitor } from './useDragMonitor';
 import { type ActionHandler } from '../actions';
 import { type ShapeLayout, type ShapeRegistry } from '../components';
-import type { CanvasGraphModel, Connection, Shape } from '../types';
+import { type CanvasGraphModel, type Connection, type Shape } from '../types';
 
 export type EditingState<S extends Shape> = {
   shape: S;

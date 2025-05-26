@@ -7,6 +7,8 @@ import { describe, test } from 'vitest';
 import { live } from './object';
 import { getSnapshot } from './snapshot';
 
+// TODO(burdon): Add reactive tests.
+
 describe('Object', () => {
   test('getSnapshot', ({ expect }) => {
     const data = {
@@ -24,7 +26,8 @@ describe('Object', () => {
         },
       ],
     };
-    // NOTE: create doesn't clone `data`!!!!
+
+    // NOTE: create doesn't clone `data`.
     const obj = live(structuredClone(data));
     const snapshot = getSnapshot(obj);
     expect(snapshot).toEqual(data);
