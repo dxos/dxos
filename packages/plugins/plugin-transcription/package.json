@@ -93,6 +93,7 @@
     "@dxos/test-utils": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "0.80.12",
+    "@types/dom-speech-recognition": "^0.0.6",
     "@types/react": "~18.2.0",
     "effect": "3.14.21",
     "react": "~18.2.0",

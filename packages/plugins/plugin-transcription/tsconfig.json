@@ -4,7 +4,9 @@
   ],
   "compilerOptions": {
     "types": [
-      "node"
+      "node",
+      "dom",
+      "dom-speech-recognition"
     ]
   },
   "exclude": [

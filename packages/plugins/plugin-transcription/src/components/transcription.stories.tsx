@@ -31,7 +31,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { seedTestData, Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -262,6 +262,87 @@ const meta: Meta<typeof AudioFile> = {
   ],
 };
 
+const DetectKeyWord = ({ keyword }: { keyword: string }) => {
+  const [running, setRunning] = useState(false);
+  const queueDxn = useMemo(() => createQueueDxn(), []);
+  const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
+  const model = useQueueModelAdapter(renderMarkdown([]), queue);
+  const [found, setFound] = useState(false);
+
+  const recognition = useMemo(() => {
+    // Check if browser supports speech recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+    if (!SpeechRecognition || !SpeechGrammarList) {
+      console.error('Speech recognition not supported in this browser');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+    // Add this line to enable punctuation
+    recognition.grammars = new SpeechGrammarList();
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      log.info('recognition result', { event });
+      const current = event.resultIndex;
+      const transcript = event.results[current][0].transcript;
+      // Remove punctuation and normalize whitespace for comparison
+      const normalizeText = (text: string) =>
+        text
+          .toLowerCase()
+          .replace(/[.,!?]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      const normalizedTranscript = normalizeText(transcript);
+      const normalizedKeyword = normalizeText(keyword);
+      const found = normalizedTranscript.includes(normalizedKeyword);
+      setFound(found);
+      setTimeout(() => {
+        setFound(false);
+      }, 1000);
+
+      const message = create(DataType.Message, {
+        sender: { name: 'You' },
+        created: new Date().toISOString(),
+        blocks: [
+          {
+            type: 'transcription',
+            started: new Date().toISOString(),
+            text: transcript, // Keep original transcript with punctuation
+          },
+        ],
+      });
+      log.info('found', { found, transcript, normalizedTranscript, normalizedKeyword });
+      void queue.append([message]);
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error('Speech recognition error:', event.error);
+      setRunning(false);
+    };
+
+    return recognition;
+  }, []);
+
+  useEffect(() => {
+    if (running) {
+      recognition?.start();
+    } else {
+      recognition?.stop();
+    }
+  }, [running, recognition]);
+
+  return (
+    <div className={mx('flex', found && 'bg-green-500')}>
+      <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />
+    </div>
+  );
+};
+
 export default meta;
 
 export const Default: StoryObj<typeof Microphone> = {
@@ -284,5 +365,12 @@ export const File: StoryObj<typeof AudioFile> = {
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     transcriptUrl: 'https://dxos.network/audio-london.txt',
     audioUrl: 'https://dxos.network/audio-london.m4a',
+  },
+};
+
+export const WordDetection: StoryObj<typeof DetectKeyWord> = {
+  render: DetectKeyWord,
+  args: {
+    keyword: 'hey, rich',
   },
 };
