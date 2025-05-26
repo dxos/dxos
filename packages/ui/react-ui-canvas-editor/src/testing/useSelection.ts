@@ -4,9 +4,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { SelectionModel } from '@dxos/graph';
 import { omit } from '@dxos/util';
 
-import { SelectionModel } from '../hooks';
 import type { CanvasGraphModel, Shape } from '../types';
 
 export const useSelection = (graph?: CanvasGraphModel): [SelectionModel, Shape | undefined] => {

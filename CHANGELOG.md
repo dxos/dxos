@@ -411,7 +411,7 @@
 * Deck polish ([#8216](https://github.com/dxos/dxos/issues/8216)) ([2ded716](https://github.com/dxos/dxos/commit/2ded716e9d81de377b594f28c26bcaf51eb5c9b2))
 * edge-client concurrency issues ([#8140](https://github.com/dxos/dxos/issues/8140)) ([8e45caf](https://github.com/dxos/dxos/commit/8e45caf4abe3d95a3c45929554f213a5aed33428))
 * Enable feed replicator on main.composer ([#8110](https://github.com/dxos/dxos/issues/8110)) ([2a40316](https://github.com/dxos/dxos/commit/2a403165441e4290985f6991302b49631fd1244f))
-* Fix @dxos/gem-spore exports ([#8089](https://github.com/dxos/dxos/issues/8089)) ([231cad4](https://github.com/dxos/dxos/commit/231cad469b06d2e0201b23e5f1c06d9c28aab81e))
+* Fix @dxos/react-ui-graph exports ([#8089](https://github.com/dxos/dxos/issues/8089)) ([231cad4](https://github.com/dxos/dxos/commit/231cad469b06d2e0201b23e5f1c06d9c28aab81e))
 * Fix client status enum. ([#7784](https://github.com/dxos/dxos/issues/7784)) ([a51e4be](https://github.com/dxos/dxos/commit/a51e4bed0995f93cb1c2685edc56f6695ffe471d))
 * Fix merge ([#8064](https://github.com/dxos/dxos/issues/8064)) ([6600e6a](https://github.com/dxos/dxos/commit/6600e6a3ddd7075224ac6d9b7c64cb332c355aab))
 * Fix settings dialog tabs ([#8043](https://github.com/dxos/dxos/issues/8043)) ([5f93e54](https://github.com/dxos/dxos/commit/5f93e54d24bef68df931f1807617e3d2dec79626))

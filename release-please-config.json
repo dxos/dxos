@@ -419,16 +419,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/gem-core/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/gem-spore/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/metagraph/package.json",
           "jsonpath": "$.version"
         },
@@ -840,6 +830,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-geo/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-graph/package.json",
           "jsonpath": "$.version"
         },
         {
