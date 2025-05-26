@@ -15,6 +15,7 @@ describe('EscapedPropPath', () => {
     [['a.', 'b'], 'a\\..b'] as const,
     [['a\\b'], 'a\\\\b'] as const,
     [['\\a'], '\\\\a'] as const,
+    [['a\\', 'b\\\\', 'c'], 'a\\\\.b\\\\\\\\.c'] as const,
   ];
 
   test('should escape and unescape', () => {

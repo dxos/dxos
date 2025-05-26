@@ -118,7 +118,7 @@ export const EscapedPropPath: SchemaClass<string, string> & {
   }
 
   static unescape(path: EscapedPropPath): ObjectPropPath {
-    return path.split(/(?<!\\)\./).map((p) => p.replaceAll('\\\\', '\\').replaceAll('\\.', '.'));
+    return path.split(/(?<![^\\]\\)\./).map((p) => p.replaceAll('\\\\', '\\').replaceAll('\\.', '.'));
   }
 };
 export type EscapedPropPath = Schema.Schema.Type<typeof EscapedPropPath>;
