@@ -159,13 +159,7 @@ const AudioFile = ({ audioUrl }: { audioUrl: string; transcriptUrl: string }) =>
   const [running, setRunning] = useState(false);
 
   // Audio.
-  const audioElement = useRef<HTMLAudioElement>(null);
-  const { audio, stream, track } = useAudioFile(audioUrl);
-  useEffect(() => {
-    if (stream && audioElement.current) {
-      audioElement.current.srcObject = stream;
-    }
-  }, [stream, audioElement.current]);
+  const { audio, track } = useAudioFile(audioUrl);
 
   useEffect(() => {
     if (!audio) {
