@@ -18,10 +18,11 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MeetingAction.Create,
-      resolve: ({ name }) => {
+      resolve: ({ name, channel }) => {
         const meeting = live(MeetingType, {
           name,
           created: new Date().toISOString(),
+          channel: makeRef(channel),
           participants: [],
           artifacts: {},
         });
@@ -29,6 +30,23 @@ export default (context: PluginContext) =>
         return { data: { object: meeting } };
       },
     }),
+    // createResolver({
+    //   intent: MeetingAction.FindOrCreate,
+    //   resolve: ({ object: channel }) =>
+    //     Effect.gen(function* () {
+    //       const space = getSpace(channel);
+    //       invariant(space, 'Space not found.');
+    //       try {
+    //         const meeting = yield*  space?.db.query(Filter.schema(MeetingType, { channel })).first();
+    //         return { data: { object: meeting } };
+    //       } catch {
+    //         const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+    //         const { object } = yield* dispatch(createIntent(MeetingAction.Create, { channel }));
+    //         yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
+    //         return { data: { object } };
+    //       }
+    //     }),
+    // }),
     createResolver({
       intent: MeetingAction.Summarize,
       resolve: async ({ meeting }) => {

@@ -5,10 +5,13 @@
 import { defineCapability } from '@dxos/app-framework';
 import { type DeepReadonly } from '@dxos/util';
 
+import { type CallManager } from '../calls';
 import { THREAD_PLUGIN } from '../meta';
 import { type ViewState, type ThreadState } from '../types';
 
 export namespace ThreadCapabilities {
+  export const CallManager = defineCapability<CallManager>(`${THREAD_PLUGIN}/capability/call-manager`);
+
   type GetViewState = (subjectId: string) => ViewState;
   export const State = defineCapability<{ state: DeepReadonly<ThreadState>; getViewState: GetViewState }>(
     `${THREAD_PLUGIN}/capability/state`,

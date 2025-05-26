@@ -7302,18 +7302,12 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/devtools':
-        specifier: workspace:*
-        version: link:../../devtools/devtools
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
@@ -7356,9 +7350,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/protocols':
+      '@dxos/plugin-thread':
         specifier: workspace:*
-        version: link:../../core/protocols
+        version: link:../plugin-thread
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -7368,21 +7362,12 @@ importers:
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
-      '@dxos/react-ui-dnd':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-sfx
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
@@ -7395,36 +7380,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@peermetrics/webrtc-stats':
-        specifier: 5.7.1
-        version: 5.7.1
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      extendable-media-recorder:
-        specifier: ^9.2.19
-        version: 9.2.24
-      extendable-media-recorder-wav-encoder:
-        specifier: ^7.0.123
-        version: 7.0.127
-      md5-hex:
-        specifier: 5.0.0
-        version: 5.0.0
-      react-resize-detector:
-        specifier: ^12.0.2
-        version: 12.0.2(react@18.2.0)
-      react-router-dom:
-        specifier: ^6.4.0
-        version: 6.4.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react-use:
-        specifier: ^17.5.1
-        version: 17.5.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      wavefile:
-        specifier: ^11.0.0
-        version: 11.0.0
     optionalDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -7451,6 +7412,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -9620,6 +9584,15 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/codec-protobuf':
+        specifier: workspace:*
+        version: link:../../common/codec-protobuf
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/devtools':
+        specifier: workspace:*
+        version: link:../../devtools/devtools
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
@@ -9665,12 +9638,18 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -9680,9 +9659,15 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-sfx':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-sfx
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
@@ -9695,15 +9680,33 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@peermetrics/webrtc-stats':
+        specifier: 5.7.1
+        version: 5.7.1
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      extendable-media-recorder:
+        specifier: ^9.2.19
+        version: 9.2.24
+      extendable-media-recorder-wav-encoder:
+        specifier: ^7.0.123
+        version: 7.0.127
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      md5-hex:
+        specifier: 5.0.0
+        version: 5.0.0
+      react-resize-detector:
+        specifier: ^12.0.2
+        version: 12.0.2(react@18.2.0)
+      wavefile:
+        specifier: ^11.0.0
+        version: 11.0.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -9913,6 +9916,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

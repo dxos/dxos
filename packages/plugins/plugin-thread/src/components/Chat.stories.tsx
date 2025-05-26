@@ -11,7 +11,7 @@ import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/ap
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { createQueueDxn } from '@dxos/echo-schema';
 import { refFromDXN } from '@dxos/live-object';
-import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { live, type Space } from '@dxos/react-client/echo';
@@ -23,6 +23,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
 import translations from '../translations';
+import { ChannelType } from '../types';
 
 faker.seed(1);
 

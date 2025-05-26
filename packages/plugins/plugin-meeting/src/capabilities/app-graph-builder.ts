@@ -15,46 +15,11 @@ import { COMPOSER_SPACE_LOCK, rxFromQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
 import { Query, type QueryResult, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 
-import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingAction, MeetingType } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
-      id: `${MEETING_PLUGIN}/active-meeting`,
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map((node) => {
-              const [call] = get(context.capabilities(MeetingCapabilities.CallManager));
-              return get(
-                rxFromSignal(() =>
-                  call?.joined
-                    ? [
-                        {
-                          id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
-                          type: DECK_COMPANION_TYPE,
-                          data: null,
-                          properties: {
-                            label: ['meeting panel label', { ns: MEETING_PLUGIN }],
-                            icon: 'ph--video-conference--regular',
-                            position: 'hoist',
-                            disposition: 'hidden',
-                          },
-                        },
-                      ]
-                    : [],
-                ),
-              );
-            }),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-
     createExtension({
       id: `${MEETING_PLUGIN}/root`,
       connector: (node) => {

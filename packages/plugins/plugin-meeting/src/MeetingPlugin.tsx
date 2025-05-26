@@ -8,18 +8,13 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, CallManager, IntentResolver, ReactRoot, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 import { MeetingAction, MeetingType } from './types';
 
 export const MeetingPlugin = () =>
   definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/call-manager`,
-      activatesOn: ClientEvents.ClientReady,
-      activate: CallManager,
-    }),
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
@@ -51,11 +46,6 @@ export const MeetingPlugin = () =>
             getIntent: () => createIntent(MeetingAction.Create),
           }),
         ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-root`,
-      activatesOn: Events.Startup,
-      activate: ReactRoot,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

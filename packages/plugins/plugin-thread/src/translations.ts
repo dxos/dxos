@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChannelType } from '@dxos/plugin-space/types';
-
 import { THREAD_PLUGIN } from './meta';
+import { ChannelType } from './types';
 
 export default [
   {

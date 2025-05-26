@@ -6,14 +6,82 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension } from '@dxos/plugin-graph';
-import { isLiveObject } from '@dxos/react-client/echo';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
+import { fullyQualifiedId, isLiveObject } from '@dxos/react-client/echo';
 
-import { meta } from '../meta';
+import { ThreadCapabilities } from './capabilities';
+import { meta, THREAD_PLUGIN } from '../meta';
+import { ChannelType } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    createExtension({
+      id: `${THREAD_PLUGIN}/active-call`,
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.map((node) => {
+              const [call] = get(context.capabilities(ThreadCapabilities.CallManager));
+              return get(
+                rxFromSignal(() =>
+                  call?.joined
+                    ? [
+                        {
+                          id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-meeting`,
+                          type: DECK_COMPANION_TYPE,
+                          data: null,
+                          properties: {
+                            label: ['call panel label', { ns: THREAD_PLUGIN }],
+                            icon: 'ph--video-conference--regular',
+                            position: 'hoist',
+                            disposition: 'hidden',
+                          },
+                        },
+                      ]
+                    : [],
+                ),
+              );
+            }),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
+    createExtension({
+      id: `${THREAD_PLUGIN}/channel-chat-companion`,
+      connector: (node) => {
+        return Rx.make((get) => {
+          return pipe(
+            get(node),
+            Option.flatMap((node) => (isInstanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.map((channel) => {
+              const callManager = context.getCapability(ThreadCapabilities.CallManager);
+              if (!callManager.joined || callManager.roomId !== fullyQualifiedId(channel)) {
+                return [];
+              }
+
+              return [
+                {
+                  id: `${fullyQualifiedId(channel)}${ATTENDABLE_PATH_SEPARATOR}chat`,
+                  type: PLANK_COMPANION_TYPE,
+                  data: 'chat',
+                  properties: {
+                    label: ['chat label', { ns: THREAD_PLUGIN }],
+                    icon: 'ph--chat-text--regular',
+                    position: 'hoist',
+                    disposition: 'hidden',
+                  },
+                },
+              ];
+            }),
+            Option.getOrElse(() => []),
+          );
+        });
+      },
+    }),
     createExtension({
       id: `${meta.id}/comments`,
       connector: (node) =>

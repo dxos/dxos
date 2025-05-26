@@ -3,7 +3,7 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe, type Schema } from 'effect';
+import { Option, pipe, Schema } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { AIServiceEdgeClient, type AIServiceClient } from '@dxos/assistant';
@@ -17,8 +17,8 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { MeetingCapabilities, type CallState, type MediaState } from '@dxos/plugin-meeting';
-import { MeetingType, type MeetingCallProperties } from '@dxos/plugin-meeting/types';
+import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
+import { type ChannelType, type CallProperties } from '@dxos/plugin-thread/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type TranscriptionPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { DataType } from '@dxos/schema';
@@ -32,6 +32,10 @@ import { TranscriptionAction, type TranscriptionSettingsProps, TranscriptType } 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type TranscriptionPayload = buf.MessageInitShape<typeof TranscriptionPayloadSchema>;
+
+// TODO(wittjosiah): Remove.
+type MeetingType = any;
+const MeetingType = Schema.Any;
 
 const getMeetingTranscript = async (
   context: PluginContext,
@@ -75,7 +79,7 @@ export default (context: PluginContext) =>
                     const transcript = await getMeetingTranscript(context, meeting);
                     invariant(transcript, 'Failed to create transcript');
 
-                    const callManager = context.getCapability(MeetingCapabilities.CallManager);
+                    const callManager = context.getCapability(ThreadCapabilities.CallManager);
                     callManager.setActivity(getSchemaTypename(TranscriptType)!, {
                       queueDxn: transcript.queue.dxn.toString(),
                       enabled: !enabled,
@@ -129,10 +133,10 @@ export default (context: PluginContext) =>
                       createIntent(TranscriptionAction.Create, { spaceId: space.id }),
 
                     // TODO(burdon): Is this the right place to inisitalize the state? Change to a capability?
-                    onJoin: async ({ meeting }: { meeting?: MeetingType }) => {
+                    onJoin: async ({ channel }: { channel?: ChannelType }) => {
                       const identity = client.halo.identity.get();
                       invariant(identity);
-                      const space = getSpace(meeting);
+                      const space = getSpace(channel);
                       invariant(space);
 
                       let messageEnricher;
@@ -179,7 +183,7 @@ export default (context: PluginContext) =>
                       void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
                       void state.transcriptionManager?.setRecording(isSpeaking);
                     },
-                  } satisfies MeetingCallProperties,
+                  } satisfies CallProperties,
                 },
               ];
             }),

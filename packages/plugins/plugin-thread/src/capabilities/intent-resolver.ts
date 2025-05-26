@@ -9,13 +9,13 @@ import { refFromDXN } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { live, fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { ThreadCapabilities } from './capabilities';
 import { THREAD_PLUGIN } from '../meta';
-import { ThreadAction } from '../types';
+import { ChannelType, ThreadAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
