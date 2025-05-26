@@ -14,19 +14,13 @@ import React, {
   forwardRef,
 } from 'react';
 
+import { SelectionModel } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
-import {
-  DragMonitor,
-  type EditingState,
-  EditorContext,
-  type EditorContextType,
-  type EditorOptions,
-  SelectionModel,
-} from '../../hooks';
+import { DragMonitor, type EditingState, EditorContext, type EditorContextType, type EditorOptions } from '../../hooks';
 import { defaultShapes } from '../../shapes';
 import { CanvasGraphModel, type Shape } from '../../types';
 import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas';

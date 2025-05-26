@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj } from '@storybook/react';
 import React, { useMemo } from 'react';
 
-import { type Graph } from '@dxos/graph';
+import { SelectionModel, type Graph } from '@dxos/graph';
 import { useThemeContext } from '@dxos/react-ui';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -35,8 +35,7 @@ type DefaultStoryProps = GraphProps & {
 const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryProps) => {
   const { themeMode } = useThemeContext();
   const model = useMemo(() => new TestGraphModel(graph), [graph]);
-  // TODO(burdon): Change to SelectionModel (react-ui-canvas-editor).
-  const selected = useMemo(() => new Set(), []);
+  const selected = useMemo(() => new SelectionModel(), []);
   const context = createSvgContext();
   const projector = useMemo(
     () => projectorOptions && new GraphForceProjector(context, projectorOptions),
@@ -54,19 +53,20 @@ const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryP
             projector={projector}
             labels={{
               text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
-                return highlight || selected.has(node.id) ? node.data.label : undefined;
+                return node.data.label;
+                // return highlight || selected.contains(node.id) ? node.data.label : undefined;
               },
             }}
             attributes={{
               node: (node: GraphLayoutNode<TestNode>) => ({
-                class: selected.has(node.id) ? 'selected' : undefined,
+                class: selected.contains(node.id) ? 'selected' : undefined,
               }),
             }}
             onSelect={(node: GraphLayoutNode<TestNode>) => {
-              if (selected.has(node.id)) {
-                selected.delete(node.id);
+              if (selected.contains(node.id)) {
+                selected.remove(node.id);
               } else {
-                selected.add(node.id);
+                selected.contains(node.id);
               }
             }}
             {...props}
@@ -99,7 +99,7 @@ export const Default: Story = {
 
 export const Force: Story = {
   args: {
-    graph: convertTreeToGraph(createTree({ depth: 5 })),
+    graph: convertTreeToGraph(createTree({ depth: 4 })),
     drag: true,
     delay: 500,
     projectorOptions: {

@@ -4,6 +4,8 @@
 
 import { line, select } from 'd3';
 
+import { log } from '@dxos/log';
+
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
 import { type GraphGuide, type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from './types';
@@ -51,14 +53,6 @@ export type GraphRendererOptions<N> = RendererOptions &
  * @param options
  */
 const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
-  // Label.
-  if (options.labels) {
-    group
-      .append('text')
-      .style('dominant-baseline', 'middle')
-      .text((d) => options.labels.text(d));
-  }
-
   // Circle.
   const circle = group.append('circle');
 
@@ -69,30 +63,39 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
 
   // Click.
   if (options.onNodeClick) {
-    circle.on('click', (event: MouseEvent) => {
+    group.on('click', function (event: MouseEvent) {
+      log.info('click', { node: select(this).datum() });
       const node = select<SVGElement, GraphLayoutNode<N>>(event.target as SVGGElement).datum();
       options.onNodeClick(node, event);
     });
   }
 
+  // Label.
+  if (options.labels) {
+    const g = group.append('g');
+    g.append('rect');
+    g.append('text')
+      .style('dominant-baseline', 'middle')
+      .text((d) => options.labels.text(d));
+  }
+
   // Highlight.
   if (options.highlight !== false) {
-    circle
+    group
       .on('mouseover', function () {
-        // console.log(d3.select(this).datum());
+        // log.info('over', { node: select(this).datum() });
         select(this).classed('highlight', true);
         if (options.labels) {
-          select<SVGGElement, GraphLayoutNode<N>>(this.closest('g'))
+          select<SVGGElement, GraphLayoutNode<N>>(this.closest('g.node'))
             .raise()
             .select('text')
             .text((d) => options.labels.text(d, true));
         }
       })
       .on('mouseout', function () {
-        // console.log(d3.select(this).datum());
         select(this).classed('highlight', false);
         if (options.labels) {
-          select<SVGGElement, GraphLayoutNode<N>>(this.closest('g'))
+          select<SVGGElement, GraphLayoutNode<N>>(this.closest('g.node'))
             .select('text')
             .text((d) => options.labels.text(d));
         }
@@ -106,11 +109,13 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  * @param options
  */
 const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
+  group.attr('transform', (d) => `translate(${d.x},${d.y})`);
+
   // Custom attributes.
   if (options.attributes?.node) {
     group.each((d, i, nodes) => {
       const { class: className } = options.attributes?.node(d);
-      select(nodes[i]).attr('class', className);
+      select(nodes[i]).classed(className, !!className);
     });
   }
 
@@ -125,22 +130,34 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     .attr('class', function () {
       return (select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.circle;
     })
-    .attr('cx', (d) => d.x)
-    .attr('cy', (d) => d.y)
     .attr('r', (d) => d.r ?? 16);
 
   // Update labels.
   if (options.labels) {
+    const dx = (d: any, padding = 0) => ((d.r ?? 0) + 6 - padding) * (d.x > 0 ? 1 : -1);
+
     groupOrTransition
       .select<SVGTextElement>('text')
       .attr('class', function () {
         return (select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
       })
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
+      .attr('dx', (d) => dx(d))
       .text((d) => options.labels.text(d))
-      .attr('dx', (d) => ((d.r ?? 0) + 6) * (d.x > 0 ? 1 : -1))
-      .attr('x', (d) => d.x)
-      .attr('y', (d) => d.y);
+      .each(function (d) {
+        const bbox = this.getBBox();
+        const width = bbox.width + 8;
+        const height = bbox.height + 4;
+        select(this.parentElement)
+          .select('rect')
+          .attr('fill', 'black')
+          .attr('stroke', 'gray')
+          .attr('rx', 4)
+          .attr('x', (d.x > 0 ? 0 : -1) * width + dx(d, 4))
+          .attr('y', -height / 2 - 1)
+          .attr('width', width)
+          .attr('height', height);
+      });
   }
 };
 
@@ -163,7 +180,7 @@ const createEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
 
   group
     .append('path')
-    .attr('class', 'edge')
+    .classed('edge', true)
     .attr('pointer-events', 'none')
     .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
     .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined))
@@ -177,7 +194,7 @@ const createEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
       let initSource: Point;
       let initTarget: Point;
       const getPoint = (el): Point => [parseFloat(el.attr('cx')), parseFloat(el.attr('cy'))];
-      nodes.selectAll('g').each(function (d) {
+      nodes.selectAll('g.node').each(function (d) {
         if (options.idAccessor(d) === source.id) {
           initSource = getPoint(select(this).select('circle'));
         } else if (options.idAccessor(d) === target.id) {
@@ -202,7 +219,7 @@ const updateEdge: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   if (options.attributes?.edge) {
     group.each((d, i, nodes) => {
       const { class: className } = options.attributes?.edge(d);
-      select(nodes[i]).attr('class', className);
+      select(nodes[i]).classed(className, true);
     });
   }
 
@@ -236,7 +253,7 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .selectAll('g.guides')
       .data([{ id: 'guides' }])
       .join('g')
-      .attr('class', 'guides')
+      .classed('guides', true)
       .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle')
       .data(layout.guides ?? [], (d: GraphGuide) => d.id)
       .join(
@@ -257,11 +274,15 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .selectAll('g.edges')
       .data([{ id: 'edges' }])
       .join('g')
-      .attr('class', 'edges')
-      .selectAll<SVGPathElement, GraphLayoutEdge<N>>('g')
+      .classed('edges', true)
+      .selectAll<SVGPathElement, GraphLayoutEdge<N>>('g.edge')
       .data(layout.graph?.edges ?? [], (d) => d.id)
-      .join((enter) => enter.append('g').call(createEdge, this.options, root.selectAll('g.nodes')))
-      .call(updateEdge, this.options, layout.graph.nodes);
+      .join((enter) =>
+        //
+        enter.append('g').classed('edge', true).call(createEdge, this.options, root.select('g.nodes')),
+      )
+      .call(updateEdge, this.options, layout.graph.nodes)
+      .classed('node', true);
 
     //
     // Nodes
@@ -271,12 +292,14 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .selectAll('g.nodes')
       .data([{ id: 'nodes' }])
       .join('g')
-      .attr('class', 'nodes')
-      .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g')
+      .classed('nodes', true)
+      .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g.node')
       .data(layout.graph?.nodes ?? [], (d) => d.id)
-      .join((enter) => enter.append('g').call(createNode, this.options))
+      .join((enter) =>
+        //
+        enter.append('g').classed('node', true).call(createNode, this.options),
+      )
       .call(updateNode, this.options);
-    // .attr('class', d => clsx('node', this.options.classes?.node?.(d)));
   }
 
   /**
