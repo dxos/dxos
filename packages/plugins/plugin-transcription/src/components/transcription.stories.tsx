@@ -22,14 +22,13 @@ import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { Filter, MemoryQueue } from '@dxos/echo-db';
 import { create, createQueueDxn } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { useQueue, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -127,7 +126,7 @@ const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
   );
 
   const config = useRef<TranscriberParams['config']>({
-    transcribeAfterChunksAmount: 20,
+    transcribeAfterChunksAmount: 10,
     prefixBufferChunksAmount: 5,
   });
 
@@ -156,7 +155,7 @@ const Microphone = ({ entityExtraction }: { entityExtraction?: boolean }) => {
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
 
-const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; transcriptUrl: string }) => {
+const AudioFile = ({ audioUrl }: { audioUrl: string; transcriptUrl: string }) => {
   const [running, setRunning] = useState(false);
 
   // Audio.
@@ -182,7 +181,8 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   }, [audio, running]);
 
   // Transcriber.
-  const queue = useQueue<DataType.Message>(queueDxn, { pollInterval: 500 });
+  const queueDxn = useMemo(() => createQueueDxn(), []);
+  const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
@@ -287,7 +287,6 @@ export const EntityExtraction: StoryObj<typeof Microphone> = {
 export const File: StoryObj<typeof AudioFile> = {
   render: AudioFile,
   args: {
-    queueDxn: createQueueDxn(),
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     transcriptUrl: 'https://dxos.network/audio-london.txt',
     audioUrl: 'https://dxos.network/audio-london.m4a',
