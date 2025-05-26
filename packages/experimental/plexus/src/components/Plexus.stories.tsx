@@ -21,7 +21,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
 import { faker } from '@dxos/random';
-import { Grid, SVG, SVGRoot, Zoom, Markers, SelectionModel, type GraphLayoutNode } from '@dxos/react-ui-graph';
+import { Grid, SVG, SVGRoot, Zoom, Markers, type GraphLayoutNode } from '@dxos/react-ui-graph';
 import { convertTreeToGraph, createTree, type TestNode, TestGraphModel } from '@dxos/react-ui-graph/testing';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -38,13 +38,6 @@ export default {
   render: () => <Test />,
   decorators: [withTheme],
 };
-
-// TODO(burdon): Factor testing out of gem-spore/testing
-// TODO(burdon): Generate typed tree data.
-// TODO(burdon): Layout around focused element (up/down); hide distant items.
-//  - large collections (scroll/zoom/lens?)
-//  - square off leaf nodes (HTML list blocks) with radial lines into circles
-//  - search
 
 const Panel: FC<{ node: TestNode; className?: string }> = ({ node, className }) => {
   const Icon = icons[hash(node.label ?? '') % icons.length];
@@ -74,11 +67,11 @@ const Test = () => {
   // TODO(burdon): Pass down state to context (set nav, etc.)
   const [spinning, setSpinning] = useState(true);
 
-  const selection = useMemo(() => new SelectionModel(), []);
+  // const selection = useMemo(() => new SelectionModel(), []);
   const model = useMemo(() => {
     const root = createTree({ depth: 5, children: 3 });
     const model = new TestGraphModel(convertTreeToGraph(root));
-    selection.setSelected(root.id);
+    // selection.setSelected(root.id);
     setHistory([root.id]);
     return model;
   }, []);
@@ -93,11 +86,11 @@ const Test = () => {
 
   // Do transition on history change.
   useEffect(() => {
-    selection.setSelected(history[index]);
+    // selection.setSelected(history[index]);
   }, [index]);
 
   const handleGenerate = () => {
-    model.createNodes(model.getNode(selection.selected!));
+    // model.createNodes(model.getNode(selection.selected!));
   };
 
   const handleSelect = (node: TestNode) => {
