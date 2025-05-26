@@ -15,6 +15,7 @@ import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } fro
 import { TestAgentBuilder, TestFeedBuilder } from '../testing';
 
 describe('space/space-protocol', () => {
+  // Flaky.
   test('two peers discover each other via presence', async () => {
     const builder = new TestAgentBuilder();
     onTestFinished(async () => {

@@ -180,7 +180,7 @@ export class QueryExecutor extends Resource {
     //   trace: ExecutionTrace.format(trace),
     // });
     // eslint-disable-next-line no-console
-    console.log(ExecutionTrace.format(trace));
+    // console.log(ExecutionTrace.format(trace));
 
     return {
       changed,

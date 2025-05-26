@@ -21,9 +21,9 @@
     "*": {}
   },
   "dependencies": {
-    "@dxos/gem-core": "workspace:*",
-    "@dxos/gem-spore": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",

@@ -3,15 +3,16 @@
 //
 
 import { forceLink, forceManyBody } from 'd3';
-import ForceGraph from 'force-graph';
+import ForceGraph, { type NodeObject, type LinkObject, type GraphData } from 'force-graph';
 import React, { type FC, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type Space } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
 import { useAsyncState } from '@dxos/react-ui';
 
-import { SpaceGraphModel } from './graph-model';
+import { SpaceGraphModel } from './model';
 
 export type GraphProps = {
   space: Space;
@@ -24,7 +25,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
   const forceGraph = useRef<ForceGraph>();
 
   const [model] = useAsyncState(
-    async () => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined),
+    async () => (space ? new SpaceGraphModel({}, { schema: true }).open(space) : undefined),
     [space],
   );
 
@@ -36,15 +37,12 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
       // https://github.com/vasturiano/force-graph
       // https://github.com/vasturiano/3d-force-graph
       forceGraph.current = new ForceGraph(rootRef.current)
+        // https://github.com/vasturiano/force-graph?tab=readme-ov-file#node-styling
         .nodeRelSize(6)
-        .nodeLabel((node: any) => {
-          if (node.type === 'schema') {
-            return node.data.typename;
-          }
-
-          return node.id;
-        })
+        .nodeLabel((node: any) => (node.type === 'schema' ? node.data.typename : node.id))
         .nodeAutoColorBy((node: any) => (node.type === 'schema' ? 'schema' : node.data.typename))
+
+        // https://github.com/vasturiano/force-graph?tab=readme-ov-file#link-styling
         .linkColor(() => 'rgba(255,255,255,0.25)');
     }
 
@@ -56,12 +54,17 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
 
   useEffect(() => {
     if (forceGraph.current && width && height && model) {
+      // https://github.com/vasturiano/force-graph?tab=readme-ov-file#container-layout
       forceGraph.current
         .pauseAnimation()
         .width(width)
         .height(height)
         .onEngineStop(() => {
           handleZoomToFit();
+        })
+        .onNodeClick((node: any) => {
+          log.info('click', { node });
+          forceGraph.current?.emitParticle(node);
         })
 
         // https://github.com/vasturiano/force-graph?tab=readme-ov-file#force-engine-d3-force-configuration
@@ -71,9 +74,9 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
         // .d3AlphaDecay(0.0228)
         // .d3VelocityDecay(0.4)
 
-        .graphData(model.graph)
+        .graphData(new GraphDataAdapter(model))
         .warmupTicks(100)
-        .cooldownTime(1000)
+        .cooldownTime(1_000)
         .resumeAnimation();
     }
   }, [model, width, height]);
@@ -88,3 +91,29 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
     </div>
   );
 };
+
+class GraphDataAdapter implements GraphData {
+  private readonly _nodes: NodeObject[] = [];
+  private readonly _links: LinkObject[] = [];
+
+  // TODO(burdon): Merge and make reactive.
+  constructor(private readonly _model: SpaceGraphModel) {
+    this._nodes = this._model.graph.nodes.map((node) => ({
+      id: node.id,
+      data: node.data,
+    }));
+    this._links = this._model.graph.edges.map((edge) => ({
+      source: edge.source,
+      target: edge.target,
+      data: edge,
+    }));
+  }
+
+  get nodes() {
+    return this._nodes;
+  }
+
+  get links() {
+    return this._links;
+  }
+}
