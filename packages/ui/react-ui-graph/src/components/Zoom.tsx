@@ -6,11 +6,11 @@ import React, { type ReactNode } from 'react';
 
 import { useZoom, type ZoomExtent } from '../hooks';
 
-export interface ZoomProps {
+export type ZoomProps = {
   extent?: ZoomExtent;
   className?: string;
   children?: ReactNode;
-}
+};
 
 /**
  * SVG zoomable component wrapper.

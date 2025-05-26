@@ -170,7 +170,7 @@ const Test = () => {
     <div ref={containerRef} className='flex flex-col absolute left-0 right-0 top-0 bottom-0'>
       <div className='flex flex-1 relative'>
         <SVGRoot>
-          <SVG className={slots?.root}>
+          <SVG classNames={slots?.root}>
             <Markers arrowSize={6} />
             <Grid className={slots?.grid?.className} />
             <Zoom extent={[1, 4]}>

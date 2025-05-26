@@ -17,15 +17,18 @@ const MeshRoot = ({ children }: PropsWithChildren) => {
   return <SVGRoot context={context}>{children}</SVGRoot>;
 };
 
-type HexProps = { radius?: number };
+type HexProps = {
+  radius?: number;
+  value?: number;
+};
 
 // https://d3og.com/mbostock/5249328
-const Hex = ({ radius = 16 }: HexProps) => {
+const Hex = ({ radius = 16, value = 0.5 }: HexProps) => {
   const { svg, size } = useSvgContext();
   useEffect(() => {
     if (size) {
       // TODO(burdon): Resize doesn't trigger.
-      const topology = hexTopology(size, radius);
+      const topology = hexTopology(size, radius, value);
       const projection = hexProjection(radius);
       const path = geoPath().projection(projection);
 
@@ -59,7 +62,7 @@ const Hex = ({ radius = 16 }: HexProps) => {
 
       select(svg).append('path').attr('class', 'border').call(redraw);
     }
-  }, [size]);
+  }, [size, value]);
 
   return null;
 };
@@ -76,7 +79,7 @@ interface HexObjects extends Objects<{ fill: boolean }> {
   hexagons: GeometryCollection<Custom>;
 }
 
-const hexTopology = ({ width, height }: Size, radius: number): Topology<HexObjects> => {
+const hexTopology = ({ width, height }: Size, radius: number, value = 1): Topology<HexObjects> => {
   const dx = radius * 2 * Math.sin(Math.PI / 3);
   const dy = radius * 1.5;
   const m = Math.ceil((height + radius) / dy) + 1;
@@ -111,7 +114,7 @@ const hexTopology = ({ width, height }: Size, radius: number): Topology<HexObjec
         type: 'Polygon',
         arcs: [[q, q + 1, q + 2, ~(q + (n + 2 - (j & 1)) * 3), ~(q - 2), ~(q - (n + 2 + (j & 1)) * 3 + 2)]],
         properties: {
-          fill: Math.random() > (i / n) * 2,
+          fill: Math.random() > (i / n) * (1 / value),
         },
       });
     }

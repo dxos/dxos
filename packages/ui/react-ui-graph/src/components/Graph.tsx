@@ -23,6 +23,7 @@ export type GraphProps = {
   className?: string;
   model?: GraphModel;
   projector?: GraphForceProjector;
+  delay?: number;
   drag?: boolean;
   arrows?: boolean;
   labels?: LabelOptions<any>;
@@ -36,7 +37,8 @@ export type GraphProps = {
 export const Graph = ({
   className = defaultStyles,
   model,
-  projector: controlledProjector,
+  projector: _projector,
+  delay,
   drag,
   arrows,
   labels,
@@ -47,7 +49,7 @@ export const Graph = ({
   const graphRef = useRef<SVGGElement>();
 
   const { projector, renderer } = useMemo(() => {
-    const projector = controlledProjector ?? new GraphForceProjector(context);
+    const projector = _projector ?? new GraphForceProjector(context);
     const renderer = new GraphRenderer(context, graphRef, {
       drag: drag ? createSimulationDrag(context, projector.simulation) : undefined,
       arrows: {
@@ -66,20 +68,28 @@ export const Graph = ({
 
   useEffect(() => {
     projector.update(model?.graph);
+
+    let unsubscribe;
+    const t = setTimeout(() => {
+      // Delay rendering until projector has settled.
+      unsubscribe = projector.updated.on(({ layout }) => renderer.update(layout));
+    }, delay);
+
     return combine(
-      projector.updated.on(({ layout }) => renderer.update(layout)),
-      effect(() => {
-        projector.update(model?.graph);
-      }),
+      effect(() => projector.update(model?.graph)),
+      () => {
+        clearTimeout(t);
+        unsubscribe?.();
+      },
     );
-  }, [model]);
+  }, [projector, model]);
 
   useEffect(() => {
     void projector.start();
     return () => {
       void projector.stop();
     };
-  }, []);
+  }, [projector]);
 
   return <g ref={graphRef} className={className} />;
 };

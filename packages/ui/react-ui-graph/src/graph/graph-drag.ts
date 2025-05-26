@@ -11,14 +11,14 @@ import { type Point } from '../util';
 
 export interface DragOptions<N> {
   dragMod?: string;
-  edgeMod?: string;
+  linkMod?: string;
   freezeMod?: string;
   onDrag?: (source?: GraphLayoutNode<N>, target?: GraphLayoutNode<N>, point?: Point) => void;
   onDrop?: (source: GraphLayoutNode<N>, target?: GraphLayoutNode<N>) => void;
 }
 
 const defaultDragOptions: DragOptions<any> = {
-  edgeMod: 'metaKey',
+  linkMod: 'metaKey',
   freezeMod: 'shiftKey',
 };
 
@@ -50,7 +50,7 @@ export const createSimulationDrag = <N>(
     .filter((event: MouseEvent) => !event.ctrlKey)
     .on('start', (event: D3DragEvent) => {
       source = event.subject;
-      if (options?.onDrop && keyMod(event.sourceEvent, 'edgeMod')) {
+      if (options?.onDrop && keyMod(event.sourceEvent, 'linkMod')) {
         mode = Mode.EDGE;
       } else if (keyMod(event.sourceEvent, 'dragMod')) {
         mode = Mode.MOVE;

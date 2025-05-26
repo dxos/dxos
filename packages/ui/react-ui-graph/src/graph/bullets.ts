@@ -6,13 +6,13 @@ import { easeLinear, interpolate, select } from 'd3';
 
 import { type D3Callable, type D3Selection } from '../typings';
 
-interface BulletOptions {
+export type BulletOptions = {
   max?: number;
   radius?: number;
   delay?: number;
   minDuration?: number;
   maxDuration?: number;
-}
+};
 
 /**
  * Generate animated bullets that follow selected paths.

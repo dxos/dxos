@@ -77,13 +77,12 @@ export const convertTreeToGraph = (root: TestNode): Graph => {
  */
 export const createGraph = (numNodes = 0, numEdges = 0): Graph => {
   const nodes = createNodes(numNodes);
-  const edges = new Map();
 
+  const edges = new Map();
   if (numEdges && nodes.length >= 2) {
     for (let i = 0; i < numEdges; i++) {
       const source = faker.helpers.arrayElement(nodes);
       const target = faker.helpers.arrayElement(nodes);
-
       if (source.id !== target.id) {
         const edge = createEdge(source, target);
         if (!edges.get(edge.id)) {

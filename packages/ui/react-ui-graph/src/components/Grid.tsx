@@ -12,11 +12,11 @@ export type GridSlots = {
   };
 };
 
-export interface GridProps {
+export type GridProps = {
   axis?: boolean;
   className?: string;
   slots?: GridSlots;
-}
+};
 
 /**
  * SVG grid wrapper.
