@@ -14,6 +14,7 @@ import {
   EchoObject,
   EntityKind,
   FieldLookupAnnotationId,
+  GeneratorAnnotationId,
   getNormalizedEchoAnnotations,
   getSchemaProperty,
   getTypeAnnotation,
@@ -459,6 +460,34 @@ describe('json-to-effect', () => {
     const jsonSchema = toJsonSchema(schema);
     const effectSchema = toEffectSchema(jsonSchema);
     expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
+  });
+
+  test('generator annotation', () => {
+    const schema = Schema.Struct({
+      name: Schema.String.annotations({ [GeneratorAnnotationId]: 'commerce.productName' }),
+    });
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "annotations": {
+              "generator": "commerce.productName",
+            },
+            "type": "string",
+          },
+        },
+        "propertyOrder": [
+          "name",
+        ],
+        "required": [
+          "name",
+        ],
+        "type": "object",
+      }
+    `);
   });
 });
 
