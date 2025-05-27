@@ -152,7 +152,7 @@ export const createObjectPipeline = <T extends BaseObject>(
 ): ((obj: ExcludeId<T>) => Effect.Effect<Live<T>, never, never>) => {
   if (!db) {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* (_) {
+      const pipeline: Effect.Effect<Live<T>> = Effect.gen(function* () {
         // logObject('before')(obj);
         const withProps = createProps(generator, type, optional)(obj);
         const liveObj = createReactiveObject(type)(withProps);
@@ -164,7 +164,7 @@ export const createObjectPipeline = <T extends BaseObject>(
     };
   } else {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* (_) {
+      const pipeline: Effect.Effect<AnyLiveObject<any>, never, never> = Effect.gen(function* () {
         // logObject('before')(obj);
         const withProps = createProps(generator, type, optional)(obj);
         const liveObj = createReactiveObject(type)(withProps);
@@ -186,6 +186,7 @@ export type ObjectGenerator<T extends BaseObject> = {
 
 // TODO(ZaymonFC): Sync generator doesn't work with db -- createReferences is async and
 //   can't be invoked with `Effect.runSync`.
+// TODO(dmaretskyi): Expose effect API instead of pairs of sync/async APIs.
 export const createGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
   type: Schema.Schema<T>,
