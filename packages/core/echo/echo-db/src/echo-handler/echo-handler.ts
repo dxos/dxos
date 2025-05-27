@@ -32,6 +32,8 @@ import {
   symbolMeta,
   DeletedSymbol,
   TypeSymbol,
+  getSchemaTypename,
+  getTypeAnnotation,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -221,6 +223,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return true;
   }
 
+  /**
+   * @returns The typename without version for static schema or object id for dynamic schema.
+   */
   private _getTypename(target: ProxyTarget): string | undefined {
     const schema = this.getSchema(target);
     // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
@@ -720,9 +725,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {
+    const schema = this.getSchema(target);
+    const typename = schema ? getTypeAnnotation(schema)?.typename : undefined;
+
     return {
-      header: (config?: any) =>
-        getHeader(this.getTypeReference(target)?.objectId ?? 'EchoObject', target[symbolInternals].core.id, config),
+      header: (config?: any) => getHeader(typename ?? 'EchoObject', target[symbolInternals].core.id, config),
       hasBody: () => true,
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
