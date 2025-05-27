@@ -6,7 +6,6 @@
 
 import chTokens from '@ch-ui/tokens';
 import autoprefixer from 'autoprefixer';
-import { globbySync } from 'globby';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import postcss from 'postcss';
@@ -71,10 +70,6 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
 
   if (process.env.DEBUG) {
     console.log('ThemePlugin config:\n', JSON.stringify(config, null, 2));
-    const files = globbySync(config.content ?? [], {
-      ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/out/**'],
-    });
-    console.log('Content files:', files.length);
   }
 
   return {

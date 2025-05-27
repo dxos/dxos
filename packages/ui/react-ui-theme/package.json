@@ -26,7 +26,6 @@
     "autoprefixer": "^10.4.12",
     "esbuild-style-plugin": "^1.6.1",
     "glob": "^7.2.3",
-    "globby": "^14.1.0",
     "lodash.get": "^4.4.2",
     "lodash.merge": "^4.6.2",
     "postcss": "^8.4.41",
