@@ -1,13 +1,12 @@
 /**
  * Graph styles.
- * TODO(burdon): Light/dark theme.
  */
-svg g.graph, svg.graph {
+
+/* TODO(burdon): Implement light/dark theme or use semantic tokens. */
+svg.graph {
   marker {
     &.arrow path {
-      fill: none;
-      stroke: #555;
-      stroke-width: 1px;
+      @apply stroke-neutral-600 fill-none stroke-1;
     }
 
     &.dot circle {
@@ -19,42 +18,32 @@ svg g.graph, svg.graph {
 
   g.guides {
     circle {
-      fill: #333;
-      stroke: black;
-      stroke-width: 2px;
-      stroke-dasharray: 10, 2;
-      opacity: 0.2;
+      @apply fill-neutral-700 stroke-neutral-900 stroke-2 opacity-20; 
     }
   }
 
   g.nodes {
     g.node {
       circle {
-        fill: #777;
+        @apply fill-neutral-500;
       }
       rect {
-        visibility: hidden;
-        /* stroke-width: 0.5px;
-        stroke: #555; */
+        @apply invisible;
       }
       text {
-        visibility: hidden;
-        /* fill: #555;
-        cursor: pointer; */
+        @apply invisible;
       }      
     }
 
     g.node:hover {
       circle {
-        fill: #AAA;
+        @apply fill-red-500;
       }
       rect {
-        visibility: visible;
-        stroke: #999;
+        @apply visible stroke-neutral-700;
       }
       text {
-        visibility: visible;
-        fill: #AAA;
+        @apply visible fill-neutral-500;
       }      
     }
   }
@@ -62,8 +51,7 @@ svg g.graph, svg.graph {
   g.edges {
     g.edge {
       path {
-        stroke: #555;
-        stroke-width: 1px;
+        @apply stroke-neutral-600 stroke-1;
       }
     }
   }

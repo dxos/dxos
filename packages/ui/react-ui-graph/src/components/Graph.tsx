@@ -19,6 +19,8 @@ import {
 } from '../graph';
 import { useSvgContext } from '../hooks';
 
+import '../../styles/graph.css';
+
 export type GraphProps = {
   className?: string;
   model?: GraphModel;
@@ -64,7 +66,7 @@ export const Graph = ({
       projector,
       renderer,
     };
-  }, []);
+  }, [context, drag]);
 
   useEffect(() => {
     projector.update(model?.graph);
@@ -82,7 +84,7 @@ export const Graph = ({
         unsubscribe?.();
       },
     );
-  }, [projector, model]);
+  }, [projector, renderer, model]);
 
   useEffect(() => {
     void projector.start();

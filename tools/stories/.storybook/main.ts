@@ -5,7 +5,7 @@
 import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import TurbosnapPlugin from 'vite-plugin-turbosnap';
@@ -16,6 +16,8 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
+
+const contentFiles = '*.{ts,tsx,js,jsx,css}';
 
 /**
  * https://storybook.js.org/docs/configure
@@ -43,6 +45,8 @@ export const config = (
     '@storybook/addon-themes',
     'storybook-dark-mode',
   ],
+  ...baseConfig,
+
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
    */
@@ -99,15 +103,17 @@ export const config = (
             assetPath: (name, variant) =>
               `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
             spriteFile: 'icons.svg',
-            contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
+            contentPaths: [resolve(packages, '**/src/**', contentFiles)],
           }),
           ThemePlugin({
             root: __dirname,
             content: [
-              join(packages, '/*/*/src/**/*.css'),
-              join(packages, '/*/*/src/**/*.{ts,tsx,js,jsx}'),
-              join(packages, '/plugins/*/src/**/*.{ts,tsx,js,jsx}'),
-              join(packages, '/plugins/experimental/*/src/**/*.{ts,tsx,js,jsx}'),
+              resolve(packages, 'app/*/src/**', contentFiles),
+              resolve(packages, 'experimental/*/src/**', contentFiles),
+              resolve(packages, 'plugins/*/src/**', contentFiles),
+              resolve(packages, 'plugins/experimental/*/src/**', contentFiles),
+              resolve(packages, 'sdk/*/src/**', contentFiles),
+              resolve(packages, 'ui/*/src/**', contentFiles),
             ],
           }),
           TopLevelAwaitPlugin(),
@@ -117,5 +123,4 @@ export const config = (
       } satisfies InlineConfig,
     );
   },
-  ...baseConfig,
 });

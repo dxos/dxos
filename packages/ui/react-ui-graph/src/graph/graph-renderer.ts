@@ -72,11 +72,11 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
 
   // Label.
   if (options.labels) {
-    const g = group.append('g');
-    g.append('rect');
-    g.append('text')
-      .style('dominant-baseline', 'middle')
-      .text((d) => options.labels.text(d));
+    // const g = group.append('g');
+    // g.append('rect');
+    // g.append('text')
+    //   .style('dominant-baseline', 'middle')
+    //   .text((d) => options.labels.text(d));
   }
 
   // Highlight.

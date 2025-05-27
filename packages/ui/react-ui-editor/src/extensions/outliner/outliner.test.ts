@@ -6,7 +6,7 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './outliner';
+import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './commands';
 import { listItemToString, outlinerTree, treeFacet } from './tree';
 import { str } from '../../stories';
 import { createMarkdownExtensions } from '../markdown';
@@ -27,11 +27,10 @@ const getPos = (line: number) => {
   return lines.slice(0, line).reduce((acc, line) => acc + line.length + 1, 0);
 };
 
+const extensions = [createMarkdownExtensions(), outlinerTree()];
+
 describe('outliner', () => {
-  const state = EditorState.create({
-    doc: str(...lines),
-    extensions: [createMarkdownExtensions(), outlinerTree()],
-  });
+  const state = EditorState.create({ doc: str(...lines), extensions });
 
   test('sanity', ({ expect }) => {
     const tree = state.facet(treeFacet);
