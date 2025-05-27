@@ -187,15 +187,15 @@ export type ObjectGenerator<T extends BaseObject> = {
 // TODO(ZaymonFC): Sync generator doesn't work with db -- createReferences is async and
 //   can't be invoked with `Effect.runSync`.
 // TODO(dmaretskyi): Expose effect API instead of pairs of sync/async APIs.
-export const createGenerator = <T extends BaseObject>(
+export const createGenerator = <S extends Schema.Schema.AnyNoContext>(
   generator: ValueGenerator,
-  type: Schema.Schema<T>,
+  type: S,
   options: Omit<CreateOptions, 'db'> = {},
-): ObjectGenerator<T> => {
+): ObjectGenerator<Schema.Schema.Type<S>> => {
   const pipeline = createObjectPipeline(generator, type, options);
 
   return {
-    createObject: () => Effect.runSync(pipeline({} as ExcludeId<T>)),
+    createObject: () => Effect.runSync(pipeline({} as ExcludeId<Schema.Schema.Type<S>>)),
     createObjects: (n: number) => Effect.runSync(createArrayPipeline(n, pipeline)),
   };
 };
