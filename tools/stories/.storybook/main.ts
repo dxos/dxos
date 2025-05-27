@@ -17,6 +17,9 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
+// NOTE: Do not include CSS files here.
+const contentFiles = '*.{ts,tsx,js,jsx}';
+
 /**
  * https://storybook.js.org/docs/configure
  * https://storybook.js.org/docs/api/main-config/main-config
@@ -43,6 +46,8 @@ export const config = (
     '@storybook/addon-themes',
     'storybook-dark-mode',
   ],
+  ...baseConfig,
+
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
    */
@@ -104,10 +109,11 @@ export const config = (
           ThemePlugin({
             root: __dirname,
             content: [
-              join(packages, '/*/*/src/**/*.css'),
-              join(packages, '/*/*/src/**/*.{ts,tsx,js,jsx}'),
-              join(packages, '/plugins/*/src/**/*.{ts,tsx,js,jsx}'),
-              join(packages, '/plugins/experimental/*/src/**/*.{ts,tsx,js,jsx}'),
+              resolve(packages, '**/*/src/**', contentFiles),
+              resolve(packages, 'experimental/*/src/**', contentFiles),
+              resolve(packages, 'plugins/*/src/**', contentFiles),
+              resolve(packages, 'plugins/experimental/*/src/**', contentFiles),
+              // resolve(packages, 'ui/*/src/**', contentFiles),
             ],
           }),
           TopLevelAwaitPlugin(),
@@ -117,5 +123,4 @@ export const config = (
       } satisfies InlineConfig,
     );
   },
-  ...baseConfig,
 });

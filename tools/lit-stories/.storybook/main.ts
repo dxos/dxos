@@ -33,16 +33,22 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
     autodocs: 'tag',
   },
   staticDirs: [resolve(__dirname, '../static')],
+  ...baseConfig,
+
+  /**
+   * https://storybook.js.org/docs/api/main-config/main-config-vite-final
+   */
   viteFinal: async (config) => {
     return mergeConfig(config, {
       plugins: [
         ThemePlugin({
           root: __dirname,
           content: [
-            resolve(packages, '*/*/src/**', contentFiles),
+            resolve(packages, '**/*/src/**', contentFiles),
             resolve(packages, 'experimental/*/src/**', contentFiles),
             resolve(packages, 'plugins/*/src/**', contentFiles),
             resolve(packages, 'plugins/experimental/*/src/**', contentFiles),
+            resolve(packages, 'ui/*/src/**', contentFiles),
           ],
         }),
         IconsPlugin({
@@ -58,5 +64,4 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
       ],
     });
   },
-  ...baseConfig,
 });

@@ -43,8 +43,7 @@ const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryP
   );
 
   return (
-    <>
-      <Debug classNames='absolute top-1 right-1' model={model} />
+    <div className='w-full grid grid-cols-[1fr_20rem] divide-x divide-separator'>
       <SVGRoot context={context}>
         <SVG>
           <Markers />
@@ -76,7 +75,8 @@ const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryP
           </Zoom>
         </SVG>
       </SVGRoot>
-    </>
+      <Debug model={model} />
+    </div>
   );
 };
 
@@ -152,8 +152,8 @@ export const Select = {
 
 const Debug = ({ classNames, model }: ThemedClassName & { model: GraphModel }) => {
   return (
-    <div className={mx('flex w-[300px] overflow-auto border border-separator', classNames)}>
-      <JsonFilter data={model.toJSON()} classNames='w-10' />
+    <div className={mx('w-[20rem] h-full overflow-hidden', classNames)}>
+      <JsonFilter data={model.toJSON()} classNames='text-sm' />
     </div>
   );
 };
