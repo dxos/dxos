@@ -173,8 +173,8 @@ export class GraphForceProjector extends Projector<Graph, GraphLayout, GraphForc
         Object.assign(node, {
           initialized: true,
           // Position around center or parent; must have delta to avoid spike.
-          x: (edge?.source?.x || 0) + (Math.random() - 0.5) * (this.options.radius ?? 100),
-          y: (edge?.source?.y || 0) + (Math.random() - 0.5) * (this.options.radius ?? 100),
+          x: edge?.source?.x + (Math.random() - 0.5) * (this.options.radius ?? 100),
+          y: edge?.source?.y + (Math.random() - 0.5) * (this.options.radius ?? 100),
         });
       }
 
