@@ -80,7 +80,12 @@ export const toPropType = (type?: PropType): string => {
 export const toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
   invariant(schema);
   const schemaWithRefinements = Schema.make(withEchoRefinements(schema.ast, '#'));
-  let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
+  let jsonSchema = JSONSchema.fromAST(schemaWithRefinements.ast, {
+    definitions: {},
+  }) as JsonSchemaType;
+
+  jsonSchema.$schema = 'http://json-schema.org/draft-07/schema#';
+
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
     jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);

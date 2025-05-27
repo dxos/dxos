@@ -329,6 +329,34 @@ describe('effect-to-json', () => {
     });
   });
 
+  test('object id with description', () => {
+    const schema = Schema.Struct({
+      id: ObjectId.annotations({ description: 'The id' }),
+    });
+    log.info('schema', { schema: ObjectId.ast });
+    const jsonSchema = toJsonSchema(schema);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The id",
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+            "type": "string",
+          },
+        },
+        "propertyOrder": [
+          "id",
+        ],
+        "required": [
+          "id",
+        ],
+        "type": "object",
+      }
+    `);
+  });
+
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
     expect(object.reference).to.deep.eq({
       schema: {
