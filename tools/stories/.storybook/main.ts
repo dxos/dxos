@@ -17,8 +17,7 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
-// NOTE: Do not include CSS files here.
-const contentFiles = '*.{ts,tsx,js,jsx}';
+const contentFiles = '*.{ts,tsx,js,jsx,css}';
 
 /**
  * https://storybook.js.org/docs/configure
@@ -32,7 +31,7 @@ export const config = (
   framework: {
     name: '@storybook/react-vite',
     options: {
-      strictMode: true,
+      strictMode: false,
     },
   },
   typescript: {
@@ -104,16 +103,17 @@ export const config = (
             assetPath: (name, variant) =>
               `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
             spriteFile: 'icons.svg',
-            contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
+            contentPaths: [resolve(packages, '**/src/**', contentFiles)],
           }),
           ThemePlugin({
             root: __dirname,
             content: [
-              resolve(packages, '**/*/src/**', contentFiles),
+              resolve(packages, 'app/*/src/**', contentFiles),
               resolve(packages, 'experimental/*/src/**', contentFiles),
               resolve(packages, 'plugins/*/src/**', contentFiles),
               resolve(packages, 'plugins/experimental/*/src/**', contentFiles),
-              // resolve(packages, 'ui/*/src/**', contentFiles),
+              resolve(packages, 'sdk/*/src/**', contentFiles),
+              resolve(packages, 'ui/*/src/**', contentFiles),
             ],
           }),
           TopLevelAwaitPlugin(),

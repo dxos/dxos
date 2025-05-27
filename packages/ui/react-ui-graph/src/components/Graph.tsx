@@ -66,7 +66,7 @@ export const Graph = ({
       projector,
       renderer,
     };
-  }, []);
+  }, [context, drag]);
 
   useEffect(() => {
     projector.update(model?.graph);
@@ -84,7 +84,7 @@ export const Graph = ({
         unsubscribe?.();
       },
     );
-  }, [projector, model]);
+  }, [projector, renderer, model]);
 
   useEffect(() => {
     void projector.start();

@@ -8,9 +8,8 @@ import { type StoryObj } from '@storybook/react';
 import React, { useMemo } from 'react';
 
 import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { useThemeContext } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphProps } from './Graph';
@@ -43,9 +42,9 @@ const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryP
   );
 
   return (
-    <div className='w-full grid grid-cols-[1fr_20rem] divide-x divide-separator'>
+    <div className='w-full grid grid-cols-[1fr_30rem] divide-x divide-separator'>
       <SVGRoot context={context}>
-        <SVG>
+        <SVG classNames='graph'>
           <Markers />
           {grid && <Grid axis className={defaultGridStyles(themeMode)} />}
           <Zoom extent={[1 / 2, 2]}>
@@ -53,10 +52,7 @@ const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryP
               model={model}
               projector={projector}
               labels={{
-                text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
-                  return node.data.label;
-                  // return highlight || selected.contains(node.id) ? node.data.label : undefined;
-                },
+                text: (node: GraphLayoutNode<TestNode>) => node.data.label,
               }}
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
@@ -150,10 +146,6 @@ export const Select = {
   },
 };
 
-const Debug = ({ classNames, model }: ThemedClassName & { model: GraphModel }) => {
-  return (
-    <div className={mx('w-[20rem] h-full overflow-hidden', classNames)}>
-      <JsonFilter data={model.toJSON()} classNames='text-sm' />
-    </div>
-  );
+const Debug = ({ model }: { model: GraphModel }) => {
+  return <JsonFilter data={model.toJSON()} classNames='text-sm' />;
 };

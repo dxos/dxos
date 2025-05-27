@@ -73,7 +73,6 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     console.log('ThemePlugin config:\n', JSON.stringify(config, null, 2));
     const files = globbySync(config.content ?? [], {
       ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/out/**'],
-      maxDepth: 3,
     });
     console.log('Content files:', files.length);
   }
