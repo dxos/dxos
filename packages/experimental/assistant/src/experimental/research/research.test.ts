@@ -2,22 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, Schema, SchemaAST } from 'effect';
+import { identity, Option, Schema, SchemaAST } from 'effect';
 import { describe, test } from 'vitest';
 
 import { structuredOutputParser } from '@dxos/artifact';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { create, getSchemaDXN, ObjectId, ReferenceAnnotationId } from '@dxos/echo-schema';
+import {
+  create,
+  getEntityKind,
+  getSchemaDXN,
+  ObjectId,
+  ReferenceAnnotationId,
+  RelationSourceId,
+  RelationTargetId,
+} from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 import { deepMapValues } from '@dxos/util';
 
-import { createExaTool } from './exa';
+import { createExaTool, createMockExaTool } from './exa';
 import INSTRUCTIONS from './instructions.tpl?raw';
 import { AIServiceEdgeClient, OllamaClient } from '../../ai-service';
 import { AISession } from '../../session';
 import { AI_SERVICE_ENDPOINT, ConsolePrinter } from '../../testing';
+import { Relation } from '@dxos/echo';
+import { inspect } from 'node:util';
 
 const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
 const REMOTE_AI = true;
@@ -32,11 +42,36 @@ const aiService = REMOTE_AI
       },
     });
 
-const TYPES = [DataType.Event, DataType.Organization, DataType.Person, DataType.Project, DataType.Task, DataType.Text];
+const Develops = Schema.Struct({
+  since: Schema.optional(Schema.String),
+})
+  .pipe(
+    Relation.def({
+      typename: 'example.com/relation/Develops',
+      version: '0.1.0',
+      source: DataType.Organization,
+      target: DataType.Project,
+    }),
+  )
+  .annotations({
+    description: 'A relation between an organization and a project.',
+  });
 
-describe.skip('Research', () => {
+const TYPES = [
+  DataType.Event,
+  DataType.Organization,
+  DataType.Person,
+  DataType.Project,
+  DataType.Task,
+  DataType.Text,
+  Develops,
+];
+
+const MOCK_SEARCH = true;
+
+describe('Research', () => {
   test('should generate a research report', { timeout: 1000000 }, async () => {
-    const searchTool = createExaTool({ apiKey: EXA_API_KEY });
+    const searchTool = MOCK_SEARCH ? createMockExaTool() : createExaTool({ apiKey: EXA_API_KEY });
 
     const session = new AISession({ operationModel: 'configured' });
 
@@ -60,7 +95,7 @@ describe.skip('Research', () => {
     });
     const data = sanitizeObjects(TYPES, result as any);
 
-    log.info('result', { data });
+    console.log(inspect(data, { depth: null, colors: true }));
   });
 });
 
@@ -232,6 +267,21 @@ const sanitizeObjects = (types: Schema.Schema.AnyNoContext[], data: Record<strin
         return recurse(value);
       });
 
+      if (getEntityKind(entry.schema) === 'relation') {
+        const sourceId = idMap.get(data.source)!;
+        if (!sourceId) {
+          log.warn('source not found', { source: data.source });
+        }
+        const targetId = idMap.get(data.target)!;
+        if (!targetId) {
+          log.warn('target not found', { target: data.target });
+        }
+        delete data.source;
+        delete data.target;
+        data[RelationSourceId] = sourceId;
+        data[RelationTargetId] = targetId;
+      }
+
       return create(entry.schema, data);
     });
 };
@@ -243,6 +293,8 @@ const SoftRef = Schema.Struct({
 });
 
 const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
+  const isRelationSchema = getEntityKind(schema) === 'relation';
+
   const go = (ast: SchemaAST.AST): SchemaAST.AST => {
     if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
       return SoftRef.ast;
@@ -251,13 +303,26 @@ const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
     return mapAst(ast, go);
   };
 
-  const processed = Schema.make<any, any, never>(mapAst(schema.ast, go));
-  return Schema.extend(
-    processed.pipe(Schema.omit('id')),
-    Schema.Struct({
-      id: Schema.String.annotations({
-        description: 'The id of this object. Come up with a unique id based on your judgement.',
+  return Schema.make<any, any, never>(mapAst(schema.ast, go)).pipe(
+    Schema.omit('id'),
+    Schema.extend(
+      Schema.Struct({
+        id: Schema.String.annotations({
+          description: 'The id of this object. Come up with a unique id based on your judgement.',
+        }),
       }),
-    }),
+    ),
+    isRelationSchema
+      ? Schema.extend(
+          Schema.Struct({
+            source: Schema.String.annotations({
+              description: 'The id of the source object for this relation.',
+            }),
+            target: Schema.String.annotations({
+              description: 'The id of the target object for this relation.',
+            }),
+          }),
+        )
+      : identity<Schema.Schema.AnyNoContext>,
   );
 };
