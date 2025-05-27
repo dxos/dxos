@@ -19,6 +19,8 @@ import {
 } from '../graph';
 import { useSvgContext } from '../hooks';
 
+import '../../styles/graph.css';
+
 export type GraphProps = {
   className?: string;
   model?: GraphModel;

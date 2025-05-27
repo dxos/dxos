@@ -7,8 +7,10 @@ import '@dxos-theme';
 import { type StoryObj } from '@storybook/react';
 import React, { useMemo } from 'react';
 
-import { SelectionModel, type Graph } from '@dxos/graph';
-import { useThemeContext } from '@dxos/react-ui';
+import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph as GraphComponent, type GraphProps } from './Graph';
@@ -21,9 +23,6 @@ import { GraphForceProjector, type GraphForceProjectorOptions, type GraphLayoutN
 import { createSvgContext } from '../hooks';
 import { defaultGridStyles } from '../styles';
 import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type TestNode } from '../testing';
-
-// TODO(burdon): Remove.
-import '../../styles/defaults.css';
 
 seed(1);
 
@@ -44,37 +43,40 @@ const DefaultStory = ({ grid, graph, projectorOptions, ...props }: DefaultStoryP
   );
 
   return (
-    <SVGRoot context={context}>
-      <SVG>
-        <Markers />
-        {grid && <Grid axis className={defaultGridStyles(themeMode)} />}
-        <Zoom extent={[1 / 2, 2]}>
-          <GraphComponent
-            model={model}
-            projector={projector}
-            labels={{
-              text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
-                return node.data.label;
-                // return highlight || selected.contains(node.id) ? node.data.label : undefined;
-              },
-            }}
-            attributes={{
-              node: (node: GraphLayoutNode<TestNode>) => ({
-                class: selected.contains(node.id) ? 'selected' : undefined,
-              }),
-            }}
-            onSelect={(node: GraphLayoutNode<TestNode>) => {
-              if (selected.contains(node.id)) {
-                selected.remove(node.id);
-              } else {
-                selected.contains(node.id);
-              }
-            }}
-            {...props}
-          />
-        </Zoom>
-      </SVG>
-    </SVGRoot>
+    <>
+      <Debug classNames='absolute top-1 right-1' model={model} />
+      <SVGRoot context={context}>
+        <SVG>
+          <Markers />
+          {grid && <Grid axis className={defaultGridStyles(themeMode)} />}
+          <Zoom extent={[1 / 2, 2]}>
+            <GraphComponent
+              model={model}
+              projector={projector}
+              labels={{
+                text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
+                  return node.data.label;
+                  // return highlight || selected.contains(node.id) ? node.data.label : undefined;
+                },
+              }}
+              attributes={{
+                node: (node: GraphLayoutNode<TestNode>) => ({
+                  class: selected.contains(node.id) ? 'selected' : undefined,
+                }),
+              }}
+              onSelect={(node: GraphLayoutNode<TestNode>) => {
+                if (selected.contains(node.id)) {
+                  selected.remove(node.id);
+                } else {
+                  selected.contains(node.id);
+                }
+              }}
+              {...props}
+            />
+          </Zoom>
+        </SVG>
+      </SVGRoot>
+    </>
   );
 };
 
@@ -146,4 +148,12 @@ export const Select = {
       },
     },
   },
+};
+
+const Debug = ({ classNames, model }: ThemedClassName & { model: GraphModel }) => {
+  return (
+    <div className={mx('flex w-[300px] overflow-auto border border-separator', classNames)}>
+      <JsonFilter data={model.toJSON()} classNames='w-10' />
+    </div>
+  );
 };
