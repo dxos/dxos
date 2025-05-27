@@ -25,6 +25,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -85,12 +88,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../experimental/gem-core"
-    },
-    {
-      "path": "../../experimental/gem-spore"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -110,6 +107,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-graph"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

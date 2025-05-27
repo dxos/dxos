@@ -11,6 +11,9 @@
   ],
   "references": [
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/node-std"
     },
     {
@@ -23,13 +26,10 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
       "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../gem-core"
-    },
-    {
-      "path": "../gem-spore"
     }
   ],
   "ts-node": {

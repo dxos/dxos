@@ -5,7 +5,7 @@
 import { type Completion } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import React, { useEffect, useState, type FC } from 'react';
+import React, { type ReactNode, useEffect, useState, type FC } from 'react';
 
 import { Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -13,6 +13,7 @@ import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { useThemeContext, Icon } from '@dxos/react-ui';
+import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { editorContent, editorGutter } from '../defaults';
@@ -251,6 +252,7 @@ export type DebugMode = 'raw' | 'tree' | 'raw+tree';
 export type StoryProps = {
   id?: string;
   debug?: DebugMode;
+  debugCustom?: (view: EditorView) => ReactNode;
   text?: string;
   readOnly?: boolean;
   placeholder?: string;
@@ -259,9 +261,10 @@ export type StoryProps = {
 } & Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'>;
 
 // Default story component
-export const DefaultStory = ({
+export const EditorStory = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
   debug,
+  debugCustom,
   text,
   extensions,
   readOnly,
@@ -308,18 +311,17 @@ export const DefaultStory = ({
   }, [view]);
 
   return (
-    <div className='flex w-full'>
-      <div role='none' className='flex w-full overflow-hidden' ref={parentRef} {...focusAttributes} />
+    <div className='w-full h-full grid grid-cols-[1fr_600px] overflow-hidden'>
+      <div role='none' className='flex overflow-hidden' ref={parentRef} {...focusAttributes} />
       {debug && (
-        <div className='flex flex-col w-[800px] border-l border-separator divide-y divide-separator overflow-auto'>
+        <div className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'>
+          {view && debugCustom?.(view)}
           {(debug === 'raw' || debug === 'raw+tree') && (
-            <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>{view?.state.doc.toString()}</pre>
-          )}
-          {(debug === 'tree' || debug === 'raw+tree') && (
-            <pre className='p-1 font-mono text-xs text-green-800 dark:text-green-200'>
-              {JSON.stringify(tree, null, 2)}
+            <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>
+              {view?.state.doc.toString()}
             </pre>
           )}
+          {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
         </div>
       )}
     </div>
