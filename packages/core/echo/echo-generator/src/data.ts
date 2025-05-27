@@ -6,8 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { Schema } from 'effect';
 
 import { createDocAccessor, type Space } from '@dxos/client/echo';
-import { Ref } from '@dxos/echo-schema';
-import { createEchoSchema } from '@dxos/live-object';
+import { EchoObject, Ref } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -29,59 +28,35 @@ export enum TestSchemaType {
 }
 
 const testSchemas = (): TestSchemaMap<TestSchemaType> => {
-  const document = createEchoSchema(
-    {
-      typename: TestSchemaType.document,
-      version: '0.1.0',
-    },
-    {
-      title: Schema.String.annotations({ description: 'title of the document' }),
-      content: Schema.String,
-    },
-  );
+  const document = Schema.Struct({
+    title: Schema.String.annotations({ description: 'title of the document' }),
+    content: Schema.String,
+  }).pipe(EchoObject({ typename: TestSchemaType.document, version: '0.1.0' }));
 
-  const organization = createEchoSchema(
-    {
-      typename: TestSchemaType.organization,
-      version: '0.1.0',
-    },
-    {
-      name: Schema.String.annotations({ description: 'name of the company or organization' }),
-      website: Schema.String.annotations({ description: 'public website URL' }),
-      description: Schema.String.annotations({ description: 'short summary of the company' }),
-    },
-  );
+  const organization = Schema.Struct({
+    name: Schema.String.annotations({ description: 'name of the company or organization' }),
+    website: Schema.optional(Schema.String.annotations({ description: 'public website URL' })),
+    description: Schema.String.annotations({ description: 'short summary of the company' }),
+  }).pipe(EchoObject({ typename: TestSchemaType.organization, version: '0.1.0' }));
 
-  const contact = createEchoSchema(
-    {
-      typename: TestSchemaType.contact,
-      version: '0.1.0',
-    },
-    {
-      name: Schema.String.annotations({ description: 'name of the person' }),
-      email: Schema.String,
-      org: Ref(organization),
-      lat: Schema.Number,
-      lng: Schema.Number,
-    },
-  );
+  const contact = Schema.Struct({
+    name: Schema.String.annotations({ description: 'name of the person' }),
+    email: Schema.optional(Schema.String),
+    org: Schema.optional(Ref(organization)),
+    lat: Schema.optional(Schema.Number),
+    lng: Schema.optional(Schema.Number),
+  }).pipe(EchoObject({ typename: TestSchemaType.contact, version: '0.1.0' }));
 
-  const project = createEchoSchema(
-    {
-      typename: TestSchemaType.project,
-      version: '0.1.0',
-    },
-    {
-      name: Schema.String.annotations({ description: 'name of the project' }),
-      description: Schema.String,
-      website: Schema.String,
-      repo: Schema.String,
-      status: Schema.String,
-      priority: Schema.Number,
-      active: Schema.Boolean,
-      org: Ref(organization),
-    },
-  );
+  const project = Schema.Struct({
+    name: Schema.String.annotations({ description: 'name of the project' }),
+    description: Schema.String,
+    website: Schema.String,
+    repo: Schema.String,
+    status: Schema.String,
+    priority: Schema.Number,
+    active: Schema.Boolean,
+    org: Schema.optional(Ref(organization)),
+  }).pipe(EchoObject({ typename: TestSchemaType.project, version: '0.1.0' }));
 
   return {
     [TestSchemaType.document]: document,
@@ -111,7 +86,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
       name: faker.person.fullName(),
       email: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.email() : undefined,
       org:
-        organizations?.length && faker.datatype.boolean({ probability: 0.3 })
+        organizations?.length && faker.datatype.boolean({ probability: 0.8 })
           ? Ref.make(faker.helpers.arrayElement(organizations))
           : undefined,
       ...location,

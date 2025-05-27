@@ -4,7 +4,7 @@
 
 import { SchemaAST } from 'effect';
 
-import { type CleanupFn } from '@dxos/async';
+import { Event, type CleanupFn, type ReadOnlyEvent } from '@dxos/async';
 import {
   getSchema,
   getSchemaDXN,
@@ -16,7 +16,17 @@ import {
 import { type GraphEdge, AbstractGraphBuilder, Graph, ReactiveGraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { Filter, live, type AnyLiveObject, type Space } from '@dxos/react-client/echo';
+import {
+  Filter,
+  getSource,
+  getTarget,
+  isRelation,
+  live,
+  type AnyLiveObject,
+  type Space,
+} from '@dxos/react-client/echo';
+import { visitValues } from '@dxos/util';
+import { Ref } from '@dxos/echo-schema';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
@@ -103,6 +113,8 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
           ({ objects }) => {
             this._objects = objects;
 
+            console.log('objects', objects);
+
             // Merge with current nodes.
             const currentNodes = this._graph.nodes;
 
@@ -139,7 +151,10 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
             // Database Objects.
             this._objects.forEach((object) => {
               const schema = getSchema(object);
-              if (schema) {
+              if (!schema) {
+                return;
+              }
+              if (!(isRelation(object) as boolean)) {
                 const typename = getSchemaDXN(schema)?.typename;
                 if (typename) {
                   const current = currentNodes.find((node) => node.id === object.id);
@@ -154,6 +169,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
                       id: `${object.id}-${schemaNode.id}`,
                       source: object.id,
                       target: schemaNode.id,
+                      type: 'schema',
                     });
                   } else {
                     log.info('schema node not found', { typename });
@@ -161,26 +177,26 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
 
                   // Link ot refs.
                   // TODO(burdon): This isn't working.
-                  SchemaAST.getPropertySignatures(schema.ast).forEach((prop) => {
-                    if (!SchemaValidator.hasTypeAnnotation(schema, prop.name.toString(), ReferenceAnnotationId)) {
-                      return;
+                  const refs = getOutgoingReferences(object);
+                  for (const ref of refs) {
+                    if (!ref.target) {
+                      continue;
                     }
-
-                    const value = object[String(prop.name)];
-                    if (value) {
-                      const refs = Array.isArray(value) ? value : [value];
-                      for (const ref of refs) {
-                        if (objects.findIndex((obj) => obj.id === ref.id) !== -1) {
-                          this.addEdge({
-                            id: `${object.id}-${String(prop.name)}-${ref.id}`,
-                            source: object.id,
-                            target: ref.id,
-                          });
-                        }
-                      }
-                    }
-                  });
+                    this.addEdge({
+                      id: `${object.id}-${ref.dxn.toString()}`,
+                      source: object.id,
+                      target: ref.target.id,
+                      type: 'ref',
+                    });
+                  }
                 }
+              } else {
+                this.addEdge({
+                  id: object.id,
+                  source: getSource(object).id,
+                  target: getTarget(object).id,
+                  type: 'relation',
+                });
               }
             });
           },
@@ -201,3 +217,16 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
     return this;
   }
 }
+
+const getOutgoingReferences = (object: AnyLiveObject): Ref<any>[] => {
+  const refs: Ref<any>[] = [];
+  const go = (value: unknown) => {
+    if (Ref.isRef(value)) {
+      refs.push(value);
+    } else {
+      visitValues(value, go);
+    }
+  };
+  visitValues(object, go);
+  return refs;
+};

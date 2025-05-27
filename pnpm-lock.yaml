@@ -2510,6 +2510,9 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
