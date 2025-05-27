@@ -165,12 +165,12 @@ export class SpaceGraphModel extends ReactiveGraphModel<EchoGraphNode, EchoGraph
                     (node) => node.type === 'schema' && node.data.typename === typename,
                   );
                   if (schemaNode) {
-                    this.addEdge({
-                      id: `${object.id}-${schemaNode.id}`,
-                      source: object.id,
-                      target: schemaNode.id,
-                      type: 'schema',
-                    });
+                    // this.addEdge({
+                    //   id: `${object.id}-${schemaNode.id}`,
+                    //   source: object.id,
+                    //   target: schemaNode.id,
+                    //   type: 'schema',
+                    // });
                   } else {
                     log.info('schema node not found', { typename });
                   }

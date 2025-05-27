@@ -43,7 +43,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
         .nodeAutoColorBy((node: any) => (node.type === 'schema' ? 'schema' : node.data.typename))
 
         // https://github.com/vasturiano/force-graph?tab=readme-ov-file#link-styling
-        .linkColor(() => 'rgba(255,255,255,0.25)');
+        .linkAutoColorBy((link: any) => link.type);
     }
 
     return () => {
@@ -100,12 +100,14 @@ class GraphDataAdapter implements GraphData {
   constructor(private readonly _model: SpaceGraphModel) {
     this._nodes = this._model.graph.nodes.map((node) => ({
       id: node.id,
+      type: node.type,
       data: node.data,
     }));
     this._links = this._model.graph.edges.map((edge) => ({
+      type: edge.type,
       source: edge.source,
       target: edge.target,
-      data: edge,
+      data: edge.data,
     }));
   }
 
