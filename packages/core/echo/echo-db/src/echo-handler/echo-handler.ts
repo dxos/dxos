@@ -32,6 +32,7 @@ import {
   symbolMeta,
   DeletedSymbol,
   TypeSymbol,
+  isInstanceOf,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -281,7 +282,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
-    if (database && Schema.is(StoredSchema)(object)) {
+    // TODO(dmaretskyi): isInstanceOf(StoredSchema, object)
+    if (database && isInstanceOf(StoredSchema, object)) {
       return database.schemaRegistry._registerSchema(object);
     }
 

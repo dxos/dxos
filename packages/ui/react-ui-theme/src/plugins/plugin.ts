@@ -68,6 +68,10 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     ...options,
   };
 
+  if (process.env.DEBUG) {
+    console.log('ThemePlugin config:\n', JSON.stringify(config, null, 2));
+  }
+
   return {
     name: 'vite-plugin-dxos-ui-theme',
     config: async ({ root }, env): Promise<UserConfig> => {
@@ -77,7 +81,13 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
         console.log('content', content);
       }
 
-      return { css: { postcss: { plugins: createPostCSSPipeline(environment, config) } } };
+      return {
+        css: {
+          postcss: {
+            plugins: createPostCSSPipeline(environment, config),
+          },
+        },
+      };
     },
     resolveId: (id) => {
       if (id === config.virtualFileId) {
@@ -95,9 +105,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
           if (module) {
             // Read the source theme file that imports all other CSS files.
             const css = await readFile(config.srcCssPath!, 'utf8');
-
             const processor = postcss(createPostCSSPipeline(environment, config));
-
             console.log('[theme-plugin] Reprocessing CSS with PostCSS.');
             const result = await processor.process(css, {
               from: config.srcCssPath,

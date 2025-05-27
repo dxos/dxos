@@ -24,7 +24,7 @@ const defaultDragOptions: DragOptions<any> = {
 
 enum Mode {
   MOVE = 0,
-  EDGE = 1,
+  LINK = 1,
 }
 
 /**
@@ -40,6 +40,7 @@ export const createSimulationDrag = <N>(
   let mode: Mode;
   let source: GraphLayoutNode<N>;
   let target: GraphLayoutNode<N>;
+  let offset: Point | undefined;
 
   const keyMod = (event: MouseEvent, key: string): boolean => {
     const modKey = options?.[key] ?? defaultDragOptions[key];
@@ -48,28 +49,41 @@ export const createSimulationDrag = <N>(
 
   return drag()
     .filter((event: MouseEvent) => !event.ctrlKey)
-    .on('start', (event: D3DragEvent) => {
-      source = event.subject;
+    .on('start', function (event: D3DragEvent) {
+      const node = select(this).node();
+      offset = pointer(event, node.parentElement);
+
       if (options?.onDrop && keyMod(event.sourceEvent, 'linkMod')) {
-        mode = Mode.EDGE;
+        mode = Mode.LINK;
       } else if (keyMod(event.sourceEvent, 'dragMod')) {
         mode = Mode.MOVE;
       }
     })
-    .on('drag', function (event: D3DragEvent) {
+    .on('drag', function (event: D3DragEvent, d) {
       // d3.select(this).style('pointer-events', 'none');
       switch (mode) {
         case Mode.MOVE: {
-          select(context.svg).attr('cursor', 'grabbing');
+          const node = select(this).node();
+          const data = select(node).datum() as GraphLayoutNode<N>;
+          if (data !== d) {
+            return;
+          }
+
+          // Calculate position relative to center.
+          const [dx, dy] = pointer(event, node.parentElement);
+          const x = data.x + dx - offset[0];
+          const y = data.y + dy - offset[1];
 
           // Freeze node while dragging.
-          event.subject.fx = event.x;
-          event.subject.fy = event.y;
+          event.subject.x = event.subject.fx = x;
+          event.subject.y = event.subject.fy = y;
+
           simulation.alphaTarget(0).alpha(1).restart();
+          select(context.svg).attr('cursor', 'grabbing');
           break;
         }
 
-        case Mode.EDGE: {
+        case Mode.LINK: {
           // Get drop target.
           if (options?.onDrag) {
             const point: Point = pointer(event, this);
@@ -88,7 +102,7 @@ export const createSimulationDrag = <N>(
     .on('end', (event: D3DragEvent) => {
       // d3.select(this).style('pointer-events', undefined);
       switch (mode) {
-        case Mode.EDGE: {
+        case Mode.LINK: {
           options?.onDrop?.(source, target);
           break;
         }
@@ -96,12 +110,14 @@ export const createSimulationDrag = <N>(
 
       // Freeze node.
       if (!keyMod(event.sourceEvent, 'freezeMod')) {
-        event.subject.fx = undefined;
-        event.subject.fy = undefined;
+        event.subject.fx = null;
+        event.subject.fy = null;
       }
 
       mode = undefined;
       source = undefined;
+      target = undefined;
+      offset = undefined;
       select(context.svg).attr('cursor', undefined);
     });
 };
