@@ -270,9 +270,9 @@ const DetectKeyWord = ({ keyword }: { keyword: string }) => {
   const [found, setFound] = useState(false);
 
   const recognition = useMemo(() => {
-    // Check if browser supports speech recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+    // TODO(mykola): Fix types
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechGrammarList = (window as any).SpeechGrammarList || (window as any).webkitSpeechGrammarList;
     if (!SpeechRecognition || !SpeechGrammarList) {
       console.error('Speech recognition not supported in this browser');
       return;
@@ -286,7 +286,8 @@ const DetectKeyWord = ({ keyword }: { keyword: string }) => {
     // Add this line to enable punctuation
     recognition.grammars = new SpeechGrammarList();
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    // TODO(mykola): Fix types
+    recognition.onresult = (event: any) => {
       log.info('recognition result', { event });
       const current = event.resultIndex;
       const transcript = event.results[current][0].transcript;
@@ -320,7 +321,8 @@ const DetectKeyWord = ({ keyword }: { keyword: string }) => {
       void queue.append([message]);
     };
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    // TODO(mykola): Fix types
+    recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
       setRunning(false);
     };
