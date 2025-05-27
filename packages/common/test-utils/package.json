@@ -11,18 +11,12 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      }
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./playwright": {
       "types": "./dist/types/src/playwright.d.ts",
       "browser": "./dist/lib/browser/playwright.mjs",
-      "node": {
-        "require": "./dist/lib/node/playwright.cjs",
-        "default": "./dist/lib/node-esm/playwright.mjs"
-      }
+      "node": "./dist/lib/node-esm/playwright.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
