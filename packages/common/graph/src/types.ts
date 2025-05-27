@@ -6,11 +6,25 @@ import { Schema } from 'effect';
 
 import { type Specialize } from '@dxos/util';
 
+// TODO(burdon): Generalize `id` via accessor.
+
+//
+// Node
+//
+
 export const BaseGraphNode = Schema.Struct({
   id: Schema.String,
   type: Schema.optional(Schema.String),
+
+  // TODO(burdon): Reconcile with ExtendableBaseGraphNode (one or the other).
   data: Schema.optional(Schema.Any),
 });
+
+// TODO(burdon): Why not just add to `data`?
+export const ExtendableBaseGraphNode = Schema.extend(
+  BaseGraphNode,
+  Schema.Struct({}, { key: Schema.String, value: Schema.Any }),
+);
 
 /** Raw base type. */
 export type BaseGraphNode = Schema.Schema.Type<typeof BaseGraphNode>;
@@ -24,6 +38,10 @@ export type GraphNode<Data = any, Optional extends boolean = false> = Specialize
 export declare namespace GraphNode {
   export type Optional<T = any> = GraphNode<T, true>;
 }
+
+//
+// Edge
+//
 
 export const BaseGraphEdge = Schema.Struct({
   id: Schema.String,
@@ -46,17 +64,10 @@ export declare namespace GraphEdge {
   export type Optional<T = any> = GraphEdge<T, true>;
 }
 
-/**
- * Allows any additional properties on graph nodes.
- */
-const ExtendableBaseGraphNode = Schema.extend(
-  BaseGraphNode,
-  Schema.Struct({}, { key: Schema.String, value: Schema.Any }),
-);
+//
+// Graph
+//
 
-/**
- * Generic graph.
- */
 export const Graph = Schema.Struct({
   id: Schema.optional(Schema.String),
   nodes: Schema.mutable(Schema.Array(ExtendableBaseGraphNode)),

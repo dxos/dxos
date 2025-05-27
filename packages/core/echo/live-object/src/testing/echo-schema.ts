@@ -30,6 +30,7 @@ export const createEchoSchema = (schema: Schema.Schema.AnyNoContext): EchoSchema
     }),
   );
 
+  // TODO(burdon): Unsubscribe is never called.
   effect(() => {
     const _ = echoSchema.jsonSchema;
     echoSchema._invalidate();

@@ -77,7 +77,7 @@ const systemPalettes = {
     torsion: 0,
     // Values used directly.
     // TODO(burdon): Audit.
-    values: [25, 75, 100, 150, 250, 300, 500, 700, 750, 800, 850, 900],
+    values: [25, 50, 75, 100, 150, 200, 250, 300, 400, 500, 600, 700, 750, 800, 850, 900],
   } satisfies PhysicalPalette,
 
   // https://oklch.com/#0.5,0.2,260,100 (#0559d2)
@@ -98,6 +98,7 @@ const physicalSeries = {
 };
 
 export const physicalColors: ColorsPhysicalLayer = {
+  namespace: 'dx-',
   conditions: {
     srgb: [':root'],
     p3: ['@media (color-gamut: p3)', ':root'],
@@ -110,5 +111,4 @@ export const physicalColors: ColorsPhysicalLayer = {
     }, {});
     return acc;
   }, {}),
-  namespace: 'dx-',
 };

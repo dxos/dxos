@@ -15,6 +15,8 @@ describe('EscapedPropPath', () => {
     [['a.', 'b'], 'a\\..b'] as const,
     [['a\\b'], 'a\\\\b'] as const,
     [['\\a'], '\\\\a'] as const,
+    [['a\\', 'b\\\\', 'c'], 'a\\\\.b\\\\\\\\.c'] as const,
+    [['a\\.\\.', 'b\\.\\'], 'a\\\\\\.\\\\\\..b\\\\\\.\\\\'] as const,
   ];
 
   test('should escape and unescape', () => {
@@ -24,5 +26,10 @@ describe('EscapedPropPath', () => {
       const unescaped = EscapedPropPath.unescape(escaped);
       expect(unescaped).toEqual(path);
     }
+  });
+
+  test('throws on malformed escaping', () => {
+    expect(() => EscapedPropPath.unescape('a\\')).throws();
+    expect(() => EscapedPropPath.unescape('a\\*')).throws();
   });
 });

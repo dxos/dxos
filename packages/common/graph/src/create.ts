@@ -3,7 +3,7 @@
 //
 
 import { type AnyLiveObject } from '@dxos/echo-db';
-import { FormatEnum, getSchema } from '@dxos/echo-schema';
+import { type BaseObject, FormatEnum, getSchema } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSchemaProperties } from '@dxos/schema';
@@ -16,8 +16,10 @@ import { createEdgeId } from './util';
  * Creates a new reactive graph from a set of ECHO objects.
  * References are mapped onto graph edges.
  */
-export const createGraph = (objects: AnyLiveObject<any>[]): GraphModel<GraphNode<AnyLiveObject<any>>> => {
-  const graph = new GraphModel<GraphNode<AnyLiveObject<any>>>(live(Graph, { nodes: [], edges: [] }));
+export const createGraph = <T extends BaseObject>(
+  objects: AnyLiveObject<T>[],
+): GraphModel<GraphNode<AnyLiveObject<T>>> => {
+  const graph = new GraphModel<GraphNode<AnyLiveObject<T>>>(live(Graph, { nodes: [], edges: [] }));
 
   // Map objects.
   objects.forEach((object) => {
