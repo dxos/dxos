@@ -1,0 +1,88 @@
+/**
+ * Graph styles.
+ * TODO(burdon): Light/dark theme.
+ */
+svg g.graph, 
+svg.graph {
+  marker {
+    path {
+      fill: red;
+    }
+    
+    &.arrow path {
+      fill: none;
+      stroke: #555;
+      stroke-width: 1px;
+    }
+
+    &.dot circle {
+      fill: none;
+      stroke: red;
+      stroke-width: 2px;
+    }
+  }
+
+  g.guides {
+    circle {
+      fill: #333;
+      stroke: black;
+      stroke-width: 2px;
+      stroke-dasharray: 10, 2;
+      opacity: 0.2;
+    }
+  }
+
+  g.nodes {
+    g.node {
+      circle {
+        @apply fill-neutral-500;
+      }
+      rect {
+        visibility: hidden;
+      }
+      text {
+        visibility: hidden;
+      }      
+    }
+
+    g.node:hover {
+      circle {
+        @apply fill-red-500;
+      }
+      rect {
+        visibility: visible;
+        @apply fill-neutral-900;
+        @apply stroke-neutral-700;
+      }
+      text {
+        visibility: visible;
+        @apply fill-neutral-500;
+      }      
+    }
+  }
+
+  g.edges {
+    g.edge {
+      path {
+        @apply stroke-neutral-600;
+        stroke-width: 1px;
+      }
+    }
+  }
+
+  .linker {
+    path {
+      stroke: orange;
+      stroke-dasharray: 10, 5;
+    }
+
+    path::marker {
+      stroke: red;
+    }
+  }
+
+  circle.bullet {
+    fill: red;
+    stroke: none;
+  }
+}
