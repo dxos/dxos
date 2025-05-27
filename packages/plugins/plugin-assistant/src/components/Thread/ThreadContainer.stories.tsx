@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import { genericTools, localServiceEndpoints } from '@dxos/artifact-testing';
+import { genericTools, localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { DXN, Type } from '@dxos/echo';
 import { createQueueDxn, create } from '@dxos/echo-schema';
@@ -39,8 +39,10 @@ import { Thread, type ThreadProps } from './Thread';
 import { ChatProcessor } from '../../hooks';
 import { createProcessorOptions } from '../../testing';
 import translations from '../../translations';
+import { useClient } from '@dxos/react-client';
 
-const endpoints = localServiceEndpoints;
+// const endpoints = localServiceEndpoints;
+const endpoints = remoteServiceEndpoints;
 
 type RenderProps = {
   items?: Type.AnyObject[];
@@ -49,7 +51,9 @@ type RenderProps = {
 
 // TODO(burdon): Use ChatContainer.
 const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) => {
-  const space = useSpace();
+  const client = useClient();
+  const space = client.spaces.default;
+
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useMemo<Tool[]>(() => [...genericTools], []);
 
@@ -76,7 +80,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn().toString());
+  const [queueDxn, setQueueDxn] = useState<string>(() => createQueueDxn(space.id).toString());
   const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   useEffect(() => {
