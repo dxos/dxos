@@ -12,7 +12,7 @@ export const RelationSourceId: unique symbol = Symbol('@dxos/echo-db/RelationSou
  * Used to access relation target ref on live ECHO objects.
  * Reading this symbol must return `Ref<Live<EchoObject<any>>>`
  */
-export const RelationTargetId: unique symbol = Symbol('@dxos/echo-db/RelationSource');
+export const RelationTargetId: unique symbol = Symbol('@dxos/echo-db/RelationTarget');
 
 /**
  * Source and target props on relations.
