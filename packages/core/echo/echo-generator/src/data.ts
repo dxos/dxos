@@ -105,7 +105,8 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
 
   [TestSchemaType.contact]: async (provider) => {
     const organizations = await provider?.(TestSchemaType.organization);
-    const { location } = faker.datatype.boolean() ? faker.geo.airport() : {};
+    const location = faker.datatype.boolean() ? faker.geo.airport() : {};
+
     return {
       name: faker.person.fullName(),
       email: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.email() : undefined,

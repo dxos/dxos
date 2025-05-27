@@ -124,4 +124,18 @@ describe('TestObjectGenerator', () => {
     const todo = await generator.createObject({ types: [Types.task] });
     expect(getType(todo)).to.exist;
   });
+
+  test('references', async () => {
+    const { space } = await setupTest();
+    const generator = createSpaceObjectGenerator(space);
+    await generator.addSchemas();
+
+    // Create raw object.
+    const objects = await generator.createObjects({
+      [TestSchemaType.organization]: 1,
+      [TestSchemaType.contact]: 1,
+    });
+    expect(objects).to.exist;
+    expect(objects.length).to.be.eq(2);
+  });
 });

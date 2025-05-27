@@ -37,6 +37,7 @@ export const createStoredSchema = (
 /**
  * Create runtime representation of a schema.
  */
+// TODO(dmaretskyi): Just take an effect schema with annotations.
 export const createEchoSchema = ({ typename, version }: TypeMeta, fields: Schema.Struct.Fields): EchoSchema => {
   const schema = Schema.partial(Schema.Struct(fields).omit('id')).pipe(EchoObject({ typename, version }));
   const objectAnnotation = getTypeAnnotation(schema)!;
