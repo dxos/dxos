@@ -5,7 +5,7 @@
 import { type StorybookConfig } from '@storybook/react-vite';
 import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import TurbosnapPlugin from 'vite-plugin-turbosnap';
@@ -31,7 +31,7 @@ export const config = (
   framework: {
     name: '@storybook/react-vite',
     options: {
-      strictMode: false,
+      strictMode: true,
     },
   },
   typescript: {
