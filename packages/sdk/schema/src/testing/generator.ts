@@ -76,6 +76,7 @@ export const createProps = <T extends BaseObject>(
             throw new Error(`Unknown generator: ${gen}`);
           }
 
+          // TODO(dmaretskyi): Support generating nested objects here.
           if (fn) {
             obj[property.name] = fn();
           } else if (property.defaultValue) {
